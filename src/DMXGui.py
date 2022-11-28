@@ -1,8 +1,9 @@
 import sys
 
 from enum import Enum
+
 from PySide6 import QtWidgets, QtGui, QtCore
-from DMXModel import Channel, Universe, ConnectionTest
+from DMXModel import Channel, Universe
 
 
 class Style(str, Enum):
@@ -37,14 +38,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # DMX data. Each universe contains 512 channels
         self._universes: list[Universe] = [Universe(universe_id) for universe_id in range(4)]
-        [ConnectionTest(universe) for universe in self._universes]
 
         self.setCentralWidget(QtWidgets.QWidget(self))
         self.centralWidget().setFixedSize(self.size())
+        layout = QtWidgets.QGridLayout(self.centralWidget())
+
+        layout.setColumnStretch(376, 0)
+        layout.setColumnStretch(376, 1)
+
+        self._custom_editor: CustomEditorWidget = CustomEditorWidget(self._universes, parent=self.centralWidget())
+        layout.addWidget(self._custom_editor, 0, 0, 1, 1)
 
         # QWidget to edit channels directly.
-        self._manual_editor: ManualUniverseEditorWidget = ManualUniverseEditorWidget(self.centralWidget(),
-                                                                                     self._universes)
+        self._direct_editor: DirectEditorWidget = DirectEditorWidget(self._universes, parent=self.centralWidget())
+        layout.addWidget(self._direct_editor, 1, 0, 1, 2)
+
         self._setup_menubar()
         self._setup_toolbar()
 
@@ -82,97 +90,156 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
 
 
-class ManualUniverseEditorWidget(QtWidgets.QFrame):
+class CustomEditorWidget(QtWidgets.QTabWidget):
+    """Widget to add and edit specific channels. Individual channels can be named."""
+
+    def __init__(self, universes: list[Universe], parent=None):
+        super().__init__(parent=parent)
+
+        self._universes = universes
+        self.setFixedSize(800, 500)
+
+        self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
+
+        self.addTab(CustomEditorTabWidget(universes), str(1))
+
+        self.addTab(QtWidgets.QWidget(), "+")
+        self.addTab(QtWidgets.QWidget(), "-")
+
+        self.tabBarClicked.connect(self._tab_bar)
+
+    def _tab_bar(self, index: int) -> None:
+        if index == self.tabBar().count() - 2:
+            text, ok = QtWidgets.QInputDialog.getText(self, "Add Custom Tab", "Tab Name")
+
+            # TODO Create new tab and rearrange tab bar
+
+        elif index == self.tabBar().count() - 1:
+            text, ok = QtWidgets.QInputDialog.getText(self, "Remove Custom Tab", "Tab Name")
+
+            # TODO Remove tab and rearrange tab bar
+
+
+class CustomEditorTabWidget(QtWidgets.QWidget):
+    """Widget for group of channels for CustomEditorWidget"""
+
+    def __init__(self, universes: list[Universe], parent=None):
+        super().__init__(parent=parent)
+
+        self.testInt = 0
+
+        self._channel_widgets: dict[ChannelWidget, str] = {}
+        self._universes: list[Universe] = universes
+        self.setFixedSize(752, 810)
+
+        self._layout: QtWidgets.QGridLayout = QtWidgets.QGridLayout(self)
+        self._layout.setColumnStretch(0, 400)
+        self._layout.setColumnStretch(1, 400)
+        for i in range(18):
+            self._layout.setRowStretch(i, 30)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setVerticalSpacing(0)
+        self.setContentsMargins(0, 0, 0, 0)
+
+        self._add_button = QtWidgets.QPushButton("+", self)
+        self._add_button.setFixedSize(376, 30)
+        self._add_button.clicked.connect(self._show_dialog)
+
+        self._layout.addWidget(self._add_button, 0, 0, 1, 1)
+
+        self.setLayout(self._layout)
+
+    def _show_dialog(self):
+        if len(self._channel_widgets) >= 16:
+            return
+
+        dlg = CustomEditorDialog()
+
+        if dlg.exec():
+            u_id, address, description = dlg.get_inputs()
+            description = description if description != "" else f"Universe {u_id + 1} Channel {address + 1}"
+            self._add_channel(self._universes[u_id].channels[address], description)
+
+    def _add_channel(self, channel: Channel, description: str):
+        channel_widget = ChannelWidget(channel, draw_horizontally=True)
+        self._channel_widgets[channel_widget] = description
+
+        self._layout.addWidget(channel_widget, len(self._channel_widgets), 0, 1, 1)
+
+        label = QtWidgets.QLabel(description)
+        label.setFixedSize(376, 30)
+        self._layout.addWidget(label, len(self._channel_widgets), 3, 1, 1)
+
+
+class CustomEditorDialog(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+        self.setWindowTitle("Choose a channel")
+
+        layout = QtWidgets.QFormLayout(self)
+        self._universe_label = QtWidgets.QLabel("Universe")
+        self._universe_input = QtWidgets.QLineEdit()
+        layout.addRow(self._universe_label, self._universe_input)
+
+        self._channel_label = QtWidgets.QLabel("Channel")
+        self._channel_input = QtWidgets.QLineEdit()
+        layout.addRow(self._channel_label, self._channel_input)
+
+        self._description_label = QtWidgets.QLabel("Description")
+        self._description_input = QtWidgets.QLineEdit()
+        layout.addRow(self._description_label, self._description_input)
+
+        btnBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, self)
+        layout.addWidget(btnBox)
+
+        btnBox.accepted.connect(self.accept)
+        btnBox.rejected.connect(self.reject)
+
+    def get_inputs(self) -> tuple[int, int, str]:
+        return int(self._universe_input.text()) - 1, int(self._channel_input.text()) - 1, self._description_input.text()
+
+
+class DirectEditorWidget(QtWidgets.QTabWidget):
     """Widget to directly edit channels of one or multiple universes.
     Allows editing of channels of the specified universes. One universe is shown and editable at a time.
     Buttons allow to change the selected universe.
     """
 
-    def __init__(self, parent: QtWidgets.QWidget, universes: list[Universe]):
+    def __init__(self, universes: list[Universe], parent=None):
         """Constructs a ManualUniverseEditorWidget"""
         super().__init__(parent=parent)
 
-        # Move widget to the specified position with the specified size. Max height is 500
-        self.setFixedSize(self.parent().width() - 50, 500)
-        self.move(25, self.parent().height() - 600)
+        # Move widget to the specified position with the specified size.
+        self.setFixedSize(self.parent().width() - 50, 430)
+        self.move(25, self.parent().height() - self.height() - 25)
 
         # Specifying style options. See Style.WIDGET
         self.setObjectName("ManualEditor")
         self.setStyleSheet(Style.WIDGET)
 
-        ####################################
-        # Setting up area for button to select a universe
-
-        self._universe_selection_label: QtWidgets.QLabel = QtWidgets.QLabel(
-            "Universes", self)
-        self._universe_selection_label.setFixedSize(100, 20)
-        self._universe_selection_label.move(0, 0)
-
-        # QWidget used as parent for all selection elements
-        self._universe_selection: QtWidgets.QWidget = QtWidgets.QWidget(self)
-        self._universe_selection.setFixedSize(280, 50)
-        self._universe_selection.move(0, self._universe_selection_label.y() + self._universe_selection_label.height())
-
-        # QButtonGroup to group for all buttons
-        self._universe_selection_group: QtWidgets.QButtonGroup = QtWidgets.QButtonGroup(self._universe_selection)
-        self._universe_selection_group.buttonClicked.connect(self._set_active_universe)
-
-        ####################################
-        # Setting up area for channel slider and info
-
-        self._universe_label: QtWidgets.QLabel = QtWidgets.QLabel("Channels", self)
-        self._universe_label.setFixedSize(100, 20)
-        self._universe_label.move(0, self._universe_selection.y() + self._universe_selection.height())
-
-        # QStackedWidget to manage which universe is shown
-        self._stacked_universes_widget: QtWidgets.QStackedWidget = QtWidgets.QStackedWidget()
-
-        # QScrollArea to allow all 512 channels of a universe to be shown horizontally
-        self._scroll_area: QtWidgets.QScrollArea = QtWidgets.QScrollArea(self)
-        self._scroll_area.setFixedSize(self.width(), self.height() - (
-                    self._universe_selection_label.height() + self._universe_selection.height() + self._universe_label.height()))
-        self._scroll_area.move(0, self._universe_label.y() + self._universe_label.height())
-        self._scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self._scroll_area.setStyleSheet(Style.SCROLL)
-
-        ####################################
-        # Adding dmx universes and their channels to a QStackedWidget. The selected universe is shown on,
-        # all the others are hidden
+        # Tabs left of the content
+        self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
 
         for universe in universes:
-            universe_widget = QtWidgets.QWidget()
 
-            # The channels are arranged horizontally
+            # Scroll area left to right
+            scroll_area = QtWidgets.QScrollArea()
+            scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+            scroll_area.setStyleSheet(Style.SCROLL)
+
+            universe_widget = QtWidgets.QWidget()
             universe_widget.setLayout(QtWidgets.QHBoxLayout(universe_widget))
 
             # Add all channels of the universe
             for channel in universe.channels:
                 universe_widget.layout().addWidget(ChannelWidget(channel))
 
-            # Create selector button for the universe
-            universe_selector = QtWidgets.QPushButton(str(universe.id + 1), self)
-            universe_selector.setStyleSheet(Style.BUTTON)
-            universe_selector.setFixedSize(30, 30)
-            universe_selector.move(universe.id * 30,
-                                   self._universe_selection_label.y() + self._universe_selection_label.height())
+            scroll_area.setWidget(universe_widget)
 
-            self._universe_selection_group.addButton(universe_selector, universe.id)
-            self._stacked_universes_widget.addWidget(universe_widget)
-
-        self._scroll_area.setWidget(self._stacked_universes_widget)
-
-        # Showing universe 0 by default
-        self._set_active_universe(self._universe_selection_group.button(0))
-
-    def _set_active_universe(self, selected_button: QtWidgets.QAbstractButton) -> None:
-        """Change the currently shown universe to the selected"""
-        universe_id = self._universe_selection_group.id(selected_button)
-        self._stacked_universes_widget.setCurrentIndex(universe_id)
-        # Resetting the style of all buttons
-        for button in self._universe_selection_group.buttons():
-            button.setStyleSheet(Style.BUTTON)
-        selected_button.setStyleSheet(Style.ACTIVE_BUTTON)
+            # Add universe with tab name in human-readable form
+            self.addTab(scroll_area, str(universe.address + 1))
 
 
 class ChannelWidget(QtWidgets.QWidget):
@@ -184,11 +251,14 @@ class ChannelWidget(QtWidgets.QWidget):
     Updates linked channel upon change and monitors linked channels updated signal.
     """
 
-    def __init__(self, channel: Channel):
-        super().__init__()
+    def __init__(self, channel: Channel, draw_horizontally: bool = False, parent=None):
+        super().__init__(parent=parent)
 
-        self.setFixedSize(30, 356)
-        self.move(channel.address * 60, 0)
+        # general width and height for all components
+        element_size = 30
+
+        # specific length of the slider
+        slider_len = 256
 
         # The associated dmx channel
         self._channel: Channel = channel
@@ -203,7 +273,8 @@ class ChannelWidget(QtWidgets.QWidget):
         self._max_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Max", self)
 
         # Slider to change the value and display the current value graphically
-        self._slider: QtWidgets.QSlider = QtWidgets.QSlider(self)
+        direction = QtCore.Qt.Horizontal if draw_horizontally else QtCore.Qt.Vertical
+        self._slider: QtWidgets.QSlider = QtWidgets.QSlider(direction, self)
 
         # Button to set the channel to the min value 0
         self._min_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Min", self)
@@ -217,30 +288,55 @@ class ChannelWidget(QtWidgets.QWidget):
 
         self._channel.updated.connect(lambda x: self._update(x))
 
-        self._address_label.setFixedSize(30, 20)
+        # Offset to address_label -- value_label and value_label -- max/min button
+        dx = element_size if draw_horizontally else 0
+        dy = 0 if draw_horizontally else element_size
+
+        self._address_label.setFixedSize(element_size, element_size)
         self._address_label.move(0, 0)
         self._address_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
-        self._value_label.setFixedSize(30, 20)
-        self._value_label.move(0, 20)
+        self._value_label.setFixedSize(element_size, element_size)
+        self._value_label.move(self._address_label.x() + dx, self._address_label.y() + dy)
         self._value_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
-        self._max_button.setFixedSize(30, 20)
-        self._max_button.move(0, 60)
-        self._max_button.setStyleSheet(Style.BUTTON)
-        self._max_button.clicked.connect(lambda: self._channel.update(255))
+        # Slider format depending on if widget is vertical or horizontal
+        slider_pos_x = (self._value_label.x() + 2 * dx) if draw_horizontally else 0
+        slider_pos_y = 0 if draw_horizontally else (self._value_label.y() + 2 * dy)
+        slider_width = slider_len if draw_horizontally else element_size
+        slider_height = element_size if draw_horizontally else slider_len
 
         self._slider.setMinimum(0)
         self._slider.setMaximum(255)
-        self._slider.setFixedSize(30, 256)
-        self._slider.move(0, 80)
+        self._slider.setFixedSize(slider_width, slider_height)
+        self._slider.move(slider_pos_x, slider_pos_y)
         self._slider.setStyleSheet(Style.SLIDER)
-        self._slider.valueChanged.connect(lambda x: self._channel.update(x))
+        self._slider.sliderMoved.connect(lambda x: self._channel.update(x))
 
-        self._min_button.setFixedSize(30, 20)
-        self._min_button.move(0, 336)
+        # Position of max and min button changes when the widget is shown horizontally
+        max_btn_pos_x = (self._slider.x() + slider_len) if draw_horizontally else 0
+        max_btn_pos_y = 0 if draw_horizontally else (self._value_label.y() + element_size)
+        min_btn_pos_x = (self._value_label.x() + element_size) if draw_horizontally else 0
+        min_btn_pos_y = 0 if draw_horizontally else (self._slider.y() + slider_len)
+
+        self._max_button.setFixedSize(30, 30)
+        self._max_button.move(max_btn_pos_x, max_btn_pos_y)
+        self._max_button.setStyleSheet(Style.BUTTON)
+        self._max_button.clicked.connect(lambda: self._channel.update(255))
+
+        self._min_button.setFixedSize(30, 30)
+        self._min_button.move(min_btn_pos_x, min_btn_pos_y)
         self._min_button.setStyleSheet(Style.ACTIVE_BUTTON)
         self._min_button.clicked.connect(lambda: self._channel.update(0))
+
+        # Set widget position and size depending on its components and direction
+        pos_x = (channel.address * 60) if draw_horizontally else 0
+        pos_y = 0 if draw_horizontally else (channel.address * 60)
+        width = self._value_label.width() + self._address_label.width() + self._max_button.width() + self._slider.width() + self._min_button.width() if draw_horizontally else 30
+        height = 30 if draw_horizontally else self._value_label.height() + self._address_label.height() + self._max_button.height() + self._slider.height() + self._min_button.height()
+        self.setFixedSize(width, height)
+        self.move(pos_x, pos_y)
+        self.setContentsMargins(0, 0, 0, 0)
 
     def _update(self, value: int) -> None:
         """Updates the slider and value label"""
