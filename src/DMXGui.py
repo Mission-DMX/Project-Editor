@@ -5,8 +5,8 @@ import sys
 from enum import Enum
 
 from PySide6 import QtWidgets, QtGui, QtCore
-from sphinx.addnodes import index
 
+import Network
 from DMXModel import Channel, Universe
 
 
@@ -77,6 +77,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # DMX data. Each universe contains 512 channels
         self._universes: list[Universe] = [Universe(universe_id) for universe_id in range(4)]
+
+        network = Network.NetworkManager(self._universes, message_interval=1000, parent=self)
+        network.start('127.0.0.1', 9000)
 
         self.setCentralWidget(QtWidgets.QWidget(self))
         self.centralWidget().setFixedSize(self.size())
