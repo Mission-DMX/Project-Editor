@@ -1,6 +1,5 @@
 from unittest import TestCase
-
-from DMXModel import Channel, Universe
+from src.DMXModel import Channel, Universe
 
 
 class TestChannel(TestCase):
@@ -25,14 +24,16 @@ class TestChannel(TestCase):
 
         channel.updated.connect(lambda x: self.assertEqual(new_value, x))
         channel.updated.connect(lambda x: self.assertEqual(new_value, channel.value))
-        channel.update(new_value)
+        channel.value = new_value
 
     def test_invalid_update(self):
         channel = Channel(0)
         value = -1
-        self.assertRaises(ValueError, channel.update, value)
+        with self.assertRaises(ValueError):
+            channel.value = value
         value = 288
-        self.assertRaises(ValueError, channel.update, value)
+        with self.assertRaises(ValueError):
+            channel.value = value
 
 
 class TestUniverse(TestCase):
@@ -53,4 +54,3 @@ class TestUniverse(TestCase):
             self.assertEqual(0, channel.value)
             self.assertEqual(last_address + 1, channel.address)
             last_address += 1
-

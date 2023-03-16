@@ -9,37 +9,26 @@ from DMXModel import Universe
 class NetworkManager(QtCore.QObject):
     """Handles connection to Fish.
 
-    Sends the current data of all universes every message_interval milliseconds.
+    Sends the current data of a universe
     """
 
-    def __init__(self, universes: list[Universe], message_interval: int = 1000, parent=None):
+    def __init__(self, parent=None):
         """Inits the network connection.
-
-        Args:
-            universes: List of active universes.
-            message_interval: Time in milliseconds to wait between sending universe info.
         """
         super().__init__(parent=parent)
 
-        self._universes = universes
-
-        self._socket: QtNetwork.QAbstractSocket = QtNetwork.QTcpSocket(self)
+        self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
+        self._socket.setServerName("/var/run/fish.sock")
+#        self._socket.setServerName("/tmp/fish.sock")
         self._socket.stateChanged.connect(self._on_state_changed)
+        self._socket.errorOccurred.connect(self.on_error)
         self._socket.readyRead.connect(self.on_ready_read)
-        self._timer: QtCore.QTimer = QtCore.QTimer(self)
-        self._timer.setInterval(message_interval)
-        self._timer.timeout.connect(self._send)
 
-    def start(self, address=QtNetwork.QHostAddress.Any, port=9999):
+    def start(self):
         """Establishes the connection.
-
-        Args:
-            address: Address of Fish software host. Must be parseable to be QtNetwork.QHostAddress.
-            port: Port of Fish software.
         """
-        self._socket.connectToHost(QtNetwork.QHostAddress(address), port)
+        self._socket.connectToServer()
 
-    @QtCore.Slot(QtNetwork.QAbstractSocket.SocketState)
     def _on_state_changed(self, state):
         """Starts or stops to send messages if the connection state changes.
 
@@ -47,21 +36,27 @@ class NetworkManager(QtCore.QObject):
             state: The connection state of the current connection.
         """
         if state == QtNetwork.QAbstractSocket.SocketState.ConnectedState:
-            self._timer.start()
-            print(f"Connected to {self._socket.peerAddress()}:{self._socket.peerPort()}.")
+            print(f"Connected to {self._socket.serverName()}.")
         elif state == QtNetwork.QAbstractSocket.SocketState.UnconnectedState:
-            print(f"Disconnected from {self._socket.peerAddress()}:{self._socket.peerPort()}.")
+            print(f"Disconnected from {self._socket.serverName()}.")
 
-    @QtCore.Slot()
-    def _send(self):
-        """Sends the current dmx data of all universes."""
+    def on_error(self, error):
+        print(error)
+
+    def send(self, universe: Universe) -> None:
+        """
+        Sends the current dmx data of an universes.
+
+        :param universe: universe to send to fish
+        """
         if self._socket.state() == QtNetwork.QAbstractSocket.SocketState.ConnectedState:
-            for universe in self._universes:
-                msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.address,
-                                                      channel_data=[channel.value for channel in universe.channels])
-                self._socket.write(bytearray(str(msg), encoding='utf8'))
+            msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.address,
+                                                  channel_data=[channel.value for channel in universe.channels])
+            self._socket.write(bytearray(str(msg), encoding='utf8'))
 
-    @QtCore.Slot()
+    def _read(self) -> QtCore.QByteArray:
+        return self._socket.readAll()
+
     def on_ready_read(self):
         """Processes incoming data."""
         print(f"Response: {self._socket.readAll()}")

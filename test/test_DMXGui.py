@@ -1,7 +1,8 @@
 from unittest import TestCase
 
-from DMXGui import ChannelWidget, Style
-from DMXModel import Channel
+from src.DMXModel import Channel
+from src.Style import Style
+from src.widgets.DirectEditor.ChannelWidget import ChannelWidget
 
 
 class TestChannelWidget(TestCase):
