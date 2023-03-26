@@ -6,13 +6,15 @@ import sys
 class ServerManager(QtCore.QObject):
     def __init__(self, parent=None):
         super(ServerManager, self).__init__(parent)
-        self._server = QtNetwork.QTcpServer(self)
+        self._server = QtNetwork.QLocalServer(self)
         self._server.newConnection.connect(self._on_new_connection)
         self._clients = {}
 
-    def start(self, address=QtNetwork.QHostAddress.Any, port=9999):
-        print(f"Launching: {address}:{port}")
-        return self._server.listen(QtNetwork.QHostAddress(address), port)
+
+
+    def start(self):
+        print("[DEV] Launching FishServer")
+        return self._server.listen("FishServer")
 
     @QtCore.Slot()
     def _on_new_connection(self):
@@ -33,6 +35,6 @@ class ServerManager(QtCore.QObject):
 if __name__ == '__main__':
     app = QtCore.QCoreApplication(sys.argv)
     server = ServerManager()
-    if not server.start('127.0.0.1', 9000):
+    if not server.start():
         sys.exit(-1)
     sys.exit(app.exec())
