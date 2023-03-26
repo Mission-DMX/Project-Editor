@@ -48,9 +48,9 @@ class NetworkManager(QtCore.QObject):
         """
         if state == QtNetwork.QAbstractSocket.SocketState.ConnectedState:
             self._timer.start()
-            print(f"Connected to {self._socket.peerAddress()}:{self._socket.peerPort()}.")
+            print(f"Connected to {self._socket.peerAddress().toString()}:{self._socket.peerPort()}.")
         elif state == QtNetwork.QAbstractSocket.SocketState.UnconnectedState:
-            print(f"Disconnected from {self._socket.peerAddress()}:{self._socket.peerPort()}.")
+            print(f"Disconnected from {self._socket.peerAddress().toString()}:{self._socket.peerPort()}.")
 
     @QtCore.Slot()
     def _send(self):
