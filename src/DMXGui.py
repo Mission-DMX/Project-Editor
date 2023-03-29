@@ -41,9 +41,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._direct_editor: DirectEditorWidget = DirectEditorWidget(self._universes, parent=self.centralWidget())
         splitter.addWidget(self._direct_editor)
 
-        # QWidget for NodeEditor
-        self._node_editor: NodeEditorWidget = NodeEditorWidget(parent=self.centralWidget())
-
         self._setup_menubar()
         self._setup_toolbar()
 
