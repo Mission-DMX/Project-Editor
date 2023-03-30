@@ -15,16 +15,17 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x44irectMode.proto\x12\x1bmissiondmx.fish.ipcmessages\";\n\ndmx_output\x12\x13\n\x0buniverse_id\x18\x01 \x01(\x05\x12\x18\n\x0c\x63hannel_data\x18\x02 \x03(\x05\x42\x02\x10\x01\"\'\n\x10request_dmx_data\x12\x13\n\x0buniverse_id\x18\x01 \x01(\x05\x42\x02H\x03\x62\x06proto3')
 
-_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'DirectMode_pb2', globals())
+_globals = globals()
+_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'DirectMode_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'H\003'
   _DMX_OUTPUT.fields_by_name['channel_data']._options = None
   _DMX_OUTPUT.fields_by_name['channel_data']._serialized_options = b'\020\001'
-  _DMX_OUTPUT._serialized_start=49
-  _DMX_OUTPUT._serialized_end=108
-  _REQUEST_DMX_DATA._serialized_start=110
-  _REQUEST_DMX_DATA._serialized_end=149
+  _globals['_DMX_OUTPUT']._serialized_start=49
+  _globals['_DMX_OUTPUT']._serialized_end=108
+  _globals['_REQUEST_DMX_DATA']._serialized_start=110
+  _globals['_REQUEST_DMX_DATA']._serialized_end=149
 # @@protoc_insertion_point(module_scope)

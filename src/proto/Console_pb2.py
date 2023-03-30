@@ -15,18 +15,19 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rConsole.proto\x12\x1bmissiondmx.fish.ipcmessages\"b\n\x13\x62utton_state_change\x12\x0e\n\x06\x62utton\x18\x01 \x01(\x05\x12;\n\tnew_state\x18\x02 \x01(\x0e\x32(.missiondmx.fish.ipcmessages.ButtonState\"4\n\x0e\x66\x61\x64\x65r_position\x12\x10\n\x08\x66\x61\x64\x65r_id\x18\x01 \x01(\x05\x12\x10\n\x08position\x18\x02 \x01(\x05\";\n\x15rotary_encoder_change\x12\x12\n\nencoder_id\x18\x01 \x01(\x05\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x11*\x7f\n\x0b\x42uttonState\x12\x19\n\x15\x42S_SET_LED_NOT_ACTIVE\x10\x00\x12\r\n\tBS_ACTIVE\x10\x01\x12\x17\n\x13\x42S_SET_LED_BLINKING\x10\x02\x12\x15\n\x11\x42S_BUTTON_PRESSED\x10\x03\x12\x16\n\x12\x42S_BUTTON_RELEASED\x10\x04\x42\x02H\x03\x62\x06proto3')
 
-_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'Console_pb2', globals())
+_globals = globals()
+_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'Console_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'H\003'
-  _BUTTONSTATE._serialized_start=261
-  _BUTTONSTATE._serialized_end=388
-  _BUTTON_STATE_CHANGE._serialized_start=46
-  _BUTTON_STATE_CHANGE._serialized_end=144
-  _FADER_POSITION._serialized_start=146
-  _FADER_POSITION._serialized_end=198
-  _ROTARY_ENCODER_CHANGE._serialized_start=200
-  _ROTARY_ENCODER_CHANGE._serialized_end=259
+  _globals['_BUTTONSTATE']._serialized_start=261
+  _globals['_BUTTONSTATE']._serialized_end=388
+  _globals['_BUTTON_STATE_CHANGE']._serialized_start=46
+  _globals['_BUTTON_STATE_CHANGE']._serialized_end=144
+  _globals['_FADER_POSITION']._serialized_start=146
+  _globals['_FADER_POSITION']._serialized_end=198
+  _globals['_ROTARY_ENCODER_CHANGE']._serialized_start=200
+  _globals['_ROTARY_ENCODER_CHANGE']._serialized_end=259
 # @@protoc_insertion_point(module_scope)
