@@ -29,6 +29,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._universes: list[Universe] = [Universe(universe_id) for universe_id in range(4)]
 
         Globals.FISH_CONNECTOR.start()
+#        Globals.FISH_CONNECTOR.sendMsg(bytearray(str("Hallo"), encoding='utf8'))
+
+#        for universe in self._universes:
+        Globals.FISH_CONNECTOR.generate_universe(self._universes[0])
 
         splitter = QtWidgets.QSplitter(self)
         splitter.setOrientation(Qt.Vertical)
