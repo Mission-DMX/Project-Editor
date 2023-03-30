@@ -2,7 +2,8 @@
 
 from PySide6 import QtCore, QtNetwork
 
-import proto.DirectMode_pb2
+import proto
+import varint
 from DMXModel import Universe
 
 
@@ -18,8 +19,8 @@ class NetworkManager(QtCore.QObject):
         super().__init__(parent=parent)
 
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
-        self._socket.setServerName("/var/run/fish.sock")
-#        self._socket.setServerName("/tmp/fish.sock")
+#        self._socket.setServerName("/var/run/fish.sock")
+        self._socket.setServerName("/tmp/fish.sock")
         self._socket.stateChanged.connect(self._on_state_changed)
         self._socket.errorOccurred.connect(self.on_error)
         self._socket.readyRead.connect(self.on_ready_read)
@@ -35,17 +36,14 @@ class NetworkManager(QtCore.QObject):
         Args:
             state: The connection state of the current connection.
         """
-        if state == QtNetwork.QAbstractSocket.SocketState.ConnectedState:
-            print(f"Connected to {self._socket.serverName()}.")
-        elif state == QtNetwork.QAbstractSocket.SocketState.UnconnectedState:
-            print(f"Disconnected from {self._socket.serverName()}.")
+        print(f"connection change to {str(self._socket.state())}")
 
     def on_error(self, error):
         print(error)
 
     def send(self, universe: Universe) -> None:
         """
-        Sends the current dmx data of an universes.
+        Sends the current dmx data of an universes.#
 
         :param universe: universe to send to fish
         """
