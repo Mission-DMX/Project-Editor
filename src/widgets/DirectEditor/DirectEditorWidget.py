@@ -2,7 +2,7 @@ from PySide6 import QtWidgets, QtCore
 
 from src.DMXModel import Universe
 from .ChannelWidget import ChannelWidget
-from ...Style import Style
+from src.Style import Style
 
 
 class DirectEditorWidget(QtWidgets.QTabWidget):
