@@ -1,12 +1,14 @@
 """GUI and control elements for the software."""
 
 import sys
-import Globals
+import logging
+
 
 from PySide6 import QtWidgets, QtGui
 from PySide6.QtCore import Qt
 
 from DMXModel import Universe
+from Network import NetworkManager
 from src.Style import Style
 from src.widgets.CustomEditor.CustomEditor import CustomEditorWidget
 from src.widgets.DirectEditor.DirectEditorWidget import DirectEditorWidget
@@ -28,7 +30,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # DMX data. Each universe contains 512 channels
         self._universes: list[Universe] = [Universe(universe_id) for universe_id in range(4)]
 
-        Globals.FISH_CONNECTOR.start()
+        self._fisch_connector: NetworkManager = NetworkManager()
+        self._fisch_connector.start()
+#        Globals.FISH_CONNECTOR.sendMsg(bytearray(str("Hallo"), encoding='utf8'))
+
+#        for universe in self._universes:
+        self._fisch_connector.generate_universe(self._universes[0])
 
         splitter = QtWidgets.QSplitter(self)
         splitter.setOrientation(Qt.Vertical)
@@ -38,7 +45,8 @@ class MainWindow(QtWidgets.QMainWindow):
         splitter.addWidget(self._custom_editor)
 
         # QWidget to edit channels directly.
-        self._direct_editor: DirectEditorWidget = DirectEditorWidget(self._universes, parent=self.centralWidget())
+        self._direct_editor: DirectEditorWidget = DirectEditorWidget(self._universes, self._fisch_connector,
+                                                                     parent=self.centralWidget())
         splitter.addWidget(self._direct_editor)
 
         self._setup_menubar()
@@ -79,6 +87,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(encoding='utf-8', level=logging.INFO)
+    logging.info("start DMXGui")
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
     screen_width = app.primaryScreen().size().width()

@@ -1,8 +1,9 @@
 from PySide6 import QtWidgets, QtCore
 
+from Network import NetworkManager
 from src.DMXModel import Universe
 from .ChannelWidget import ChannelWidget
-from ...Style import Style
+from src.Style import Style
 
 
 class DirectEditorWidget(QtWidgets.QTabWidget):
@@ -12,7 +13,7 @@ class DirectEditorWidget(QtWidgets.QTabWidget):
     Buttons allow to change the selected universe.
     """
 
-    def __init__(self, universes: list[Universe], parent=None):
+    def __init__(self, universes: list[Universe], fisch_connector: NetworkManager, parent=None):
         """Inits a ManualUniverseEditorWidget.
 
         Args:
@@ -41,7 +42,7 @@ class DirectEditorWidget(QtWidgets.QTabWidget):
 
             # Add all channels of the universe
             for channel in universe.channels:
-                universe_widget.layout().addWidget(ChannelWidget(channel, universe))
+                universe_widget.layout().addWidget(ChannelWidget(channel, universe, fisch_connector))
 
             scroll_area.setWidget(universe_widget)
 

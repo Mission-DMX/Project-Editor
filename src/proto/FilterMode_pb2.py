@@ -15,18 +15,19 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x46ilterMode.proto\x12\x1bmissiondmx.fish.ipcmessages\"\x1f\n\x0b\x65nter_scene\x12\x10\n\x08scene_id\x18\x01 \x01(\x05\"?\n\x0eload_show_file\x12\x11\n\tshow_data\x18\x01 \x01(\t\x12\x1a\n\x12goto_default_scene\x18\x02 \x01(\x08\"U\n\x10update_parameter\x12\x11\n\tfilter_id\x18\x01 \x01(\t\x12\x15\n\rparameter_key\x18\x02 \x01(\t\x12\x17\n\x0fparameter_value\x18\x03 \x01(\t*\xa0\x01\n\x12ShowFileApplyState\x12\x10\n\x0cSFAS_INVALID\x10\x00\x12\x14\n\x10SFAS_SHOW_ACTIVE\x10\x01\x12\x15\n\x11SFAS_SHOW_LOADING\x10\x02\x12\x16\n\x12SFAS_SHOW_UPDATING\x10\x03\x12\x16\n\x12SFAS_NO_SHOW_ERROR\x10\x04\x12\x1b\n\x17SFAS_ERROR_SHOW_RUNNING\x10\x05\x42\x02H\x03\x62\x06proto3')
 
-_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'FilterMode_pb2', globals())
+_globals = globals()
+_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'FilterMode_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'H\003'
-  _SHOWFILEAPPLYSTATE._serialized_start=235
-  _SHOWFILEAPPLYSTATE._serialized_end=395
-  _ENTER_SCENE._serialized_start=49
-  _ENTER_SCENE._serialized_end=80
-  _LOAD_SHOW_FILE._serialized_start=82
-  _LOAD_SHOW_FILE._serialized_end=145
-  _UPDATE_PARAMETER._serialized_start=147
-  _UPDATE_PARAMETER._serialized_end=232
+  _globals['_SHOWFILEAPPLYSTATE']._serialized_start=235
+  _globals['_SHOWFILEAPPLYSTATE']._serialized_end=395
+  _globals['_ENTER_SCENE']._serialized_start=49
+  _globals['_ENTER_SCENE']._serialized_end=80
+  _globals['_LOAD_SHOW_FILE']._serialized_start=82
+  _globals['_LOAD_SHOW_FILE']._serialized_end=145
+  _globals['_UPDATE_PARAMETER']._serialized_start=147
+  _globals['_UPDATE_PARAMETER']._serialized_end=232
 # @@protoc_insertion_point(module_scope)
