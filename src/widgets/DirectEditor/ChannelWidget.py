@@ -1,6 +1,6 @@
 from PySide6 import QtWidgets, QtCore
 
-from src import Globals
+from Network import NetworkManager
 from src.Style import Style
 from src.DMXModel import Channel, Universe
 
@@ -18,7 +18,7 @@ class ChannelWidget(QtWidgets.QWidget):
     The min button is on the left side, the max button on the right side of the slider.
     """
 
-    def __init__(self, channel: Channel, universe: Universe, draw_horizontally: bool = False, parent=None):
+    def __init__(self, channel: Channel, universe: Universe, fisch_connector: NetworkManager, draw_horizontally: bool = False, parent=None):
         """Inits the ChannelWidget.
 
         Args:
@@ -38,6 +38,8 @@ class ChannelWidget(QtWidgets.QWidget):
         self._channel: Channel = channel
 
         self._universe = universe
+
+        self._fisch_connector = fisch_connector
 
         # Displays the address of the channel + 1 for human readability
         self._address_label: QtWidgets.QLabel = QtWidgets.QLabel(str(channel.address + 1), self)
@@ -129,5 +131,6 @@ class ChannelWidget(QtWidgets.QWidget):
             self._max_button.setStyleSheet(Style.BUTTON)
 
     def update_value(self, v: int):
-        self._channel.value = v
-        Globals.FISH_CONNECTOR.send(self._universe)
+        if self._channel.value != v:
+            self._channel.value = v
+            self._fisch_connector.send(self._universe)

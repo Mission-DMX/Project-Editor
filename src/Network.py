@@ -1,9 +1,14 @@
 """Module to handle connection with real-time software Fish."""
+import logging
 
 from PySide6 import QtCore, QtNetwork
 
 import proto
 import varint
+import proto.MessageTypes_pb2
+import proto.DirectMode_pb2
+import proto.UniverseControl_pb2
+
 from DMXModel import Universe
 
 
@@ -17,7 +22,7 @@ class NetworkManager(QtCore.QObject):
         """Inits the network connection.
         """
         super().__init__(parent=parent)
-
+        logging.info("generate new Network Manager")
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
 #        self._socket.setServerName("/var/run/fish.sock")
         self._socket.setServerName("/tmp/fish.sock")
@@ -28,22 +33,22 @@ class NetworkManager(QtCore.QObject):
     def start(self):
         """Establishes the connection.
         """
+        logging.info(f"connect local socket to Server")
         self._socket.connectToServer()
 
     def _on_state_changed(self, state):
         """Starts or stops to send messages if the connection state changes.
-
         Args:
             state: The connection state of the current connection.
         """
-        print(f"connection change to {str(self._socket.state())}")
+        logging.warning(f"connection change to {str(self._socket.state())}")
 
     def send(self, universe: Universe) -> None:
         """
         Sends the current dmx data of an universes.#
 
-#        :param universe: universe to send to fish
-#        """
+        :param universe: universe to send to fish
+        """
         #       if self._socket.state() == QtNetwork.QAbstractSocket.SocketState.ConnectedState:
 
         msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.address,
@@ -54,7 +59,6 @@ class NetworkManager(QtCore.QObject):
     def generate_universe(self, universe: Universe) -> None:
         print(self._socket.state())
         # if self._socket.state() == QtNetwork.QAbstractSocket.SocketState.ConnectedState:
-
         msg = proto.UniverseControl_pb2.Universe(id=1,
                                                  remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
                                                      ip_address="192.168.0.2",
@@ -63,14 +67,14 @@ class NetworkManager(QtCore.QObject):
                                                  ))
         self.send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
-    def send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2):
+    def send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType):
+        logging.info(f"send Message to server {msg}")
         self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
 
     def on_ready_read(self):
         """Processes incoming data."""
+        logging.debug(f"Response: {self._socket.readAll()}")
 
-
-#        print(f"Response: {self._socket.readAll()}")
 
 def on_error(error):
     print(error)
