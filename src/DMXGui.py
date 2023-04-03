@@ -28,14 +28,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Project-Editor")
 
         # DMX data. Each universe contains 512 channels
-        self._universes: list[Universe] = [Universe(universe_id) for universe_id in range(4)]
+        self._universes: list[Universe] = [Universe(universe_id) for universe_id in range(1, 5)]
 
         self._fisch_connector: NetworkManager = NetworkManager()
         self._fisch_connector.start()
-#        Globals.FISH_CONNECTOR.sendMsg(bytearray(str("Hallo"), encoding='utf8'))
 
-#        for universe in self._universes:
-        self._fisch_connector.generate_universe(self._universes[0])
+        for universe in self._universes:
+            self._fisch_connector.generate_universe(universe)
 
         splitter = QtWidgets.QSplitter(self)
         splitter.setOrientation(Qt.Vertical)

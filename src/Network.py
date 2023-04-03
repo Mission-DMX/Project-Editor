@@ -54,13 +54,11 @@ class NetworkManager(QtCore.QObject):
         self.send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
     def generate_universe(self, universe: Universe) -> None:
-        print(self._socket.state())
-        # if self._socket.state() == QtNetwork.QAbstractSocket.SocketState.ConnectedState:
-        msg = proto.UniverseControl_pb2.Universe(id=1,
+        msg = proto.UniverseControl_pb2.Universe(id=universe.address,
                                                  remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
                                                      ip_address="192.168.0.2",
                                                      port=6454,
-                                                     universe_on_device=1
+                                                     universe_on_device=universe.address
                                                  ))
         self.send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
