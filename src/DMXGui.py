@@ -5,13 +5,11 @@ import logging
 
 
 from PySide6 import QtWidgets, QtGui
-from PySide6.QtCore import Qt
 
 from DMXModel import Universe
 from Network import NetworkManager
 from src.Style import Style
-from src.widgets.CustomEditor.CustomEditor import CustomEditorWidget
-from src.widgets.DirectEditor.DirectEditorWidget import DirectEditorWidget
+from widgets.universe_selector import UniverseSelector
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -36,17 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for universe in self._universes:
             self._fisch_connector.generate_universe(universe)
 
-        splitter = QtWidgets.QSplitter(self)
-        splitter.setOrientation(Qt.Vertical)
-        self.setCentralWidget(splitter)
-
-        self._custom_editor: CustomEditorWidget = CustomEditorWidget(self._universes, parent=self.centralWidget())
-        splitter.addWidget(self._custom_editor)
-
-        # QWidget to edit channels directly.
-        self._direct_editor: DirectEditorWidget = DirectEditorWidget(self._universes, self._fisch_connector,
-                                                                     parent=self.centralWidget())
-        splitter.addWidget(self._direct_editor)
+        self.setCentralWidget(UniverseSelector(self._universes, self._fisch_connector, self))
 
         self._setup_menubar()
         self._setup_toolbar()
