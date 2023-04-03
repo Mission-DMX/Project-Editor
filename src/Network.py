@@ -3,7 +3,6 @@ import logging
 
 from PySide6 import QtCore, QtNetwork
 
-import proto
 import varint
 import proto.MessageTypes_pb2
 import proto.DirectMode_pb2
@@ -43,14 +42,12 @@ class NetworkManager(QtCore.QObject):
         """
         logging.warning(f"connection change to {str(self._socket.state())}")
 
-    def send(self, universe: Universe) -> None:
+    def send_universe(self, universe: Universe) -> None:
         """
         Sends the current dmx data of an universes.#
 
         :param universe: universe to send to fish
         """
-        #       if self._socket.state() == QtNetwork.QAbstractSocket.SocketState.ConnectedState:
-
         msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.address,
                                               channel_data=[channel.value for channel in universe.channels])
 
@@ -68,8 +65,12 @@ class NetworkManager(QtCore.QObject):
         self.send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
     def send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType):
-        logging.info(f"send Message to server {msg}")
-        self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
+        logging.debug(f"message to send: {msg}")
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            logging.info(f"send Message to server {msg}")
+            self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
+        else:
+            logging.error("not Connected with fish server")
 
     def on_ready_read(self):
         """Processes incoming data."""
@@ -77,4 +78,4 @@ class NetworkManager(QtCore.QObject):
 
 
 def on_error(error):
-    print(error)
+    logging.error(error)

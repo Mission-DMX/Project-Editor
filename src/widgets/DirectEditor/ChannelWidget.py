@@ -18,7 +18,8 @@ class ChannelWidget(QtWidgets.QWidget):
     The min button is on the left side, the max button on the right side of the slider.
     """
 
-    def __init__(self, channel: Channel, universe: Universe, fisch_connector: NetworkManager, draw_horizontally: bool = False, parent=None):
+    def __init__(self, channel: Channel, universe: Universe, fisch_connector: NetworkManager,
+                 draw_horizontally: bool = False, parent=None):
         """Inits the ChannelWidget.
 
         Args:
@@ -133,4 +134,4 @@ class ChannelWidget(QtWidgets.QWidget):
     def update_value(self, v: int):
         if self._channel.value != v:
             self._channel.value = v
-            self._fisch_connector.send(self._universe)
+            self._fisch_connector.send_universe(self._universe)
