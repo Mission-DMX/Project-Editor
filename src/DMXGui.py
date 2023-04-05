@@ -44,7 +44,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                                        "Universe": [["add", self._add_universe],
                                                                     ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
-                                                                ["Disconnect", self._fish_connector.disconnect]]}
+                                                                ["Disconnect", self._fish_connector.disconnect],
+                                                                ["Change", self._change_server_name]]}
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
@@ -64,11 +65,17 @@ class MainWindow(QtWidgets.QMainWindow):
         """TODO"""
         pass
 
-    def _start_connection(self):
+    def _start_connection(self) -> None:
         self._fish_connector.start()
         for universe in self._universes:
             if self._fish_connector.already_started:
                 self._fish_connector.generate_universe(universe)
+
+    def _change_server_name(self) -> None:
+        self._fish_connector.change_server_name(self._get_server_name())
+
+
+
 
     def _setup_toolbar(self) -> None:
         """Adds a toolbar with actions."""
@@ -91,6 +98,12 @@ class MainWindow(QtWidgets.QMainWindow):
         TODO implement saving to xml file with xsd schema. See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
         """
         pass
+
+
+    def _get_server_name(self) -> str:
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Server Name', 'Enter Server Name:')
+        if ok:
+            return str(text)
 
 
 if __name__ == "__main__":

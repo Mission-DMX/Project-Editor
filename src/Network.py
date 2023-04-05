@@ -34,11 +34,14 @@ class NetworkManager(QtCore.QObject):
     def already_started(self) -> bool:
         return self._already_started
 
+    def change_server_name(self, name: str) -> None:
+        self._socket.setServerName(name)
+
     def start(self) -> None:
         """Establishes the connection.
         """
         if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            logging.info(f"connect local socket to Server")
+            logging.info(f"connect local socket to Server: {self._socket.serverName()}")
             self._socket.connectToServer()
             if self._socket.state == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
                 self._already_started = True
@@ -46,6 +49,7 @@ class NetworkManager(QtCore.QObject):
     def disconnect(self) -> None:
         logging.info(f"disconnect local socket to Server")
         self._socket.disconnectFromServer()
+        self._already_started = False
 
     def send_universe(self, universe: Universe) -> None:
         """
