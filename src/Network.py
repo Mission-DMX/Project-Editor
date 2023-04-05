@@ -22,17 +22,26 @@ class NetworkManager(QtCore.QObject):
         super().__init__(parent=parent)
         logging.info("generate new Network Manager")
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
+        self._already_started: bool = False
+
         # self._socket.setServerName("/var/run/fish.sock")
         self._socket.setServerName("/tmp/fish.sock")
         self._socket.stateChanged.connect(self._on_state_changed)
         self._socket.errorOccurred.connect(on_error)
         self._socket.readyRead.connect(self._on_ready_read)
 
+    @property
+    def already_started(self) -> bool:
+        return self._already_started
+
     def start(self) -> None:
         """Establishes the connection.
         """
-        logging.info(f"connect local socket to Server")
-        self._socket.connectToServer()
+        if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            logging.info(f"connect local socket to Server")
+            self._socket.connectToServer()
+            if self._socket.state == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+                self._already_started = True
 
     def disconnect(self) -> None:
         logging.info(f"disconnect local socket to Server")
