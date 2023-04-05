@@ -1,5 +1,4 @@
 """Provides data structures with accessors and modifiers for DMX"""
-
 from PySide6 import QtCore
 
 
@@ -15,6 +14,8 @@ class Channel(QtCore.QObject):
             raise ValueError(f"Tried to create a channel with address {channel_address}")
         self._address: int = channel_address
         self._value: int = 0
+#       self._device: Device = Globals.EMPTY_DEVICE
+        self._device: Device = Device("<empty>")
 
     @property
     def address(self) -> int:
@@ -25,6 +26,10 @@ class Channel(QtCore.QObject):
     def value(self) -> int:
         """The current value of the channel"""
         return self._value
+
+    @property
+    def device(self):
+        return self._device
 
     @value.setter
     def value(self, value: int):
@@ -43,19 +48,13 @@ class Channel(QtCore.QObject):
 class Device:
     """A DMX device"""
 
-    def __init__(self, device_id: int, channels: list[Channel]):
-        self._address: int = device_id
-        self._channels: list[Channel] = channels
+    def __init__(self, name: str):
+        self._name: str = name
 
     @property
-    def address(self) -> int:
+    def name(self) -> str:
         """ID of the dmx device"""
-        return self._address
-
-    @property
-    def channels(self) -> list[Channel]:
-        """List of DMX channels used by this device"""
-        return self._channels
+        return self._name
 
 
 class Universe:

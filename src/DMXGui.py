@@ -74,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(encoding='utf-8', level=logging.INFO)
+    logging.basicConfig(encoding='utf-8', level=logging.ERROR)
     logging.info("start DMXGui")
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
