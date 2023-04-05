@@ -61,7 +61,7 @@ class NetworkManager(QtCore.QObject):
     def generate_universe(self, universe: Universe) -> None:
         msg = proto.UniverseControl_pb2.Universe(id=universe.address,
                                                  remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
-                                                     ip_address="192.168.0.2",
+                                                     ip_address="10.0.15.1",
                                                      port=6454,
                                                      universe_on_device=universe.address
                                                  ))
