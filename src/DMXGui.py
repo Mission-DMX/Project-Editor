@@ -1,8 +1,8 @@
 """GUI and control elements for the software."""
 
-import sys
 import logging
-
+import sys
+from typing import Callable
 
 from PySide6 import QtWidgets, QtGui
 
@@ -26,15 +26,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Project-Editor")
 
         # DMX data. Each universe contains 512 channels
-        self._universes: list[Universe] = [Universe(universe_id) for universe_id in range(1, 5)]
+        self._universes: list[Universe] = [Universe(1)]
 
         self._fisch_connector: NetworkManager = NetworkManager()
-        self._fisch_connector.start()
+        self._universe_selector = UniverseSelector(self._universes, self._fisch_connector, self)
 
-        for universe in self._universes:
-            self._fisch_connector.generate_universe(universe)
-
-        self.setCentralWidget(UniverseSelector(self._universes, self._fisch_connector, self))
+        self.setCentralWidget(self._universe_selector)
 
         self._setup_menubar()
         self._setup_toolbar()
@@ -42,13 +39,35 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menu_file = QtWidgets.QMenu(self.menuBar())
-        menu_file.setTitle("File")
-        action_save = QtGui.QAction(self)
-        action_save.setText("Save")
-        action_save.triggered.connect(self._save_scene)
-        self.menuBar().addAction(menu_file.menuAction())
-        menu_file.addAction(action_save)
+        menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scene]],
+                                                       "Universe": [["add", self._add_universe],
+                                                                    ["remove", self._remove_universe]],
+                                                       "Fish": [["Connect", self._start_connection],
+                                                                ["Disconnect", self._fisch_connector.disconnect]]}
+        for name, entries in menus.items():
+            menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
+            self._add_entries_to_menu(menu, entries)
+            self.menuBar().addAction(menu.menuAction())
+
+    def _add_entries_to_menu(self, menu, entries: list[list[str, Callable]]) -> None:
+        for entry in entries:
+            menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
+            menu_entry.triggered.connect(entry[1])
+            menu.addAction(menu_entry)
+
+    def _add_universe(self) -> None:
+        self._universes.append(Universe(len(self._universes) + 1))
+        self._universe_selector.add_universe(self._universes[len(self._universes) - 1])
+        self._fisch_connector.generate_universe(self._universes[len(self._universes) - 1])
+
+    def _remove_universe(self) -> None:
+        """TODO"""
+        pass
+
+    def _start_connection(self):
+        self._fisch_connector.start()
+        for universe in self._universes:
+            self._fisch_connector.generate_universe(universe)
 
     def _setup_toolbar(self) -> None:
         """Adds a toolbar with actions."""

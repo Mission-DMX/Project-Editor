@@ -3,11 +3,10 @@ import logging
 
 from PySide6 import QtCore, QtNetwork
 
-import varint
-import proto.MessageTypes_pb2
 import proto.DirectMode_pb2
+import proto.MessageTypes_pb2
 import proto.UniverseControl_pb2
-
+import varint
 from DMXModel import Universe
 
 
@@ -23,24 +22,21 @@ class NetworkManager(QtCore.QObject):
         super().__init__(parent=parent)
         logging.info("generate new Network Manager")
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
-#        self._socket.setServerName("/var/run/fish.sock")
+        # self._socket.setServerName("/var/run/fish.sock")
         self._socket.setServerName("/tmp/fish.sock")
         self._socket.stateChanged.connect(self._on_state_changed)
         self._socket.errorOccurred.connect(on_error)
-        self._socket.readyRead.connect(self.on_ready_read)
+        self._socket.readyRead.connect(self._on_ready_read)
 
-    def start(self):
+    def start(self) -> None:
         """Establishes the connection.
         """
         logging.info(f"connect local socket to Server")
         self._socket.connectToServer()
 
-    def _on_state_changed(self, state):
-        """Starts or stops to send messages if the connection state changes.
-        Args:
-            state: The connection state of the current connection.
-        """
-        logging.warning(f"connection change to {str(self._socket.state())}")
+    def disconnect(self) -> None:
+        logging.info(f"disconnect local socket to Server")
+        self._socket.disconnectFromServer()
 
     def send_universe(self, universe: Universe) -> None:
         """
@@ -51,7 +47,7 @@ class NetworkManager(QtCore.QObject):
         msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.address,
                                               channel_data=[channel.value for channel in universe.channels])
 
-        self.send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
     def generate_universe(self, universe: Universe) -> None:
         msg = proto.UniverseControl_pb2.Universe(id=universe.address,
@@ -60,9 +56,9 @@ class NetworkManager(QtCore.QObject):
                                                      port=6454,
                                                      universe_on_device=universe.address
                                                  ))
-        self.send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
-    def send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType):
+    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         logging.debug(f"message to send: {msg}")
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             logging.info(f"send Message to server {msg}")
@@ -70,9 +66,16 @@ class NetworkManager(QtCore.QObject):
         else:
             logging.error("not Connected with fish server")
 
-    def on_ready_read(self):
+    def _on_ready_read(self) -> None:
         """Processes incoming data."""
         logging.debug(f"Response: {self._socket.readAll()}")
+
+    def _on_state_changed(self) -> None:
+        """Starts or stops to send messages if the connection state changes.
+        Args:
+            state: The connection state of the current connection.
+        """
+        logging.info(f"connection change to {str(self._socket.state())}")
 
 
 def on_error(error):
