@@ -28,8 +28,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # DMX data. Each universe contains 512 channels
         self._universes: list[Universe] = [Universe(1)]
 
-        self._fisch_connector: NetworkManager = NetworkManager()
-        self._universe_selector = UniverseSelector(self._universes, self._fisch_connector, self)
+        self._fish_connector: NetworkManager = NetworkManager()
+        self._fish_connector.start()
+        self._universe_selector = UniverseSelector(self._universes, self._fish_connector, self)
 
         self.setCentralWidget(self._universe_selector)
 
@@ -43,7 +44,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                        "Universe": [["add", self._add_universe],
                                                                     ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
-                                                                ["Disconnect", self._fisch_connector.disconnect]]}
+                                                                ["Disconnect", self._fish_connector.disconnect]]}
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
@@ -58,16 +59,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def _add_universe(self) -> None:
         self._universes.append(Universe(len(self._universes) + 1))
         self._universe_selector.add_universe(self._universes[len(self._universes) - 1])
-        self._fisch_connector.generate_universe(self._universes[len(self._universes) - 1])
 
     def _remove_universe(self) -> None:
         """TODO"""
         pass
 
     def _start_connection(self):
-        self._fisch_connector.start()
+        self._fish_connector.start()
         for universe in self._universes:
-            self._fisch_connector.generate_universe(universe)
+            if self._fish_connector.already_started:
+                self._fish_connector.generate_universe(universe)
 
     def _setup_toolbar(self) -> None:
         """Adds a toolbar with actions."""
