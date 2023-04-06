@@ -47,8 +47,10 @@ class NetworkManager(QtCore.QObject):
                 self._already_started = True
 
     def disconnect(self) -> None:
-        logging.info(f"disconnect local socket to Server")
+        logging.info(f"disconnect local socket from Server")
+        server = self._socket.serverName()
         self._socket.disconnectFromServer()
+        self._socket.setServerName(server)
         self._already_started = False
 
     def send_universe(self, universe: Universe) -> None:
