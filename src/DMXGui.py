@@ -1,17 +1,16 @@
 """GUI and control elements for the software."""
 
-import sys
 import logging
+import sys
+from typing import Callable
 
-
+import pyqtgraph
 from PySide6 import QtWidgets, QtGui
-from PySide6.QtCore import Qt
 
 from DMXModel import Universe
 from Network import NetworkManager
 from src.Style import Style
-from src.widgets.CustomEditor.CustomEditor import CustomEditorWidget
-from src.widgets.DirectEditor.DirectEditorWidget import DirectEditorWidget
+from widgets.universe_selector import UniverseSelector
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -28,40 +27,65 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Project-Editor")
 
         # DMX data. Each universe contains 512 channels
-        self._universes: list[Universe] = [Universe(universe_id) for universe_id in range(4)]
+        self._universes: list[Universe] = [Universe(1)]
 
-        self._fisch_connector: NetworkManager = NetworkManager()
-        self._fisch_connector.start()
-#        Globals.FISH_CONNECTOR.sendMsg(bytearray(str("Hallo"), encoding='utf8'))
+        self._fish_connector: NetworkManager = NetworkManager()
+        self._fish_connector.start()
+        self._universe_selector = UniverseSelector(self._universes, self._fish_connector, self)
 
-#        for universe in self._universes:
-        self._fisch_connector.generate_universe(self._universes[0])
-
-        splitter = QtWidgets.QSplitter(self)
-        splitter.setOrientation(Qt.Vertical)
-        self.setCentralWidget(splitter)
-
-        self._custom_editor: CustomEditorWidget = CustomEditorWidget(self._universes, parent=self.centralWidget())
-        splitter.addWidget(self._custom_editor)
-
-        # QWidget to edit channels directly.
-        self._direct_editor: DirectEditorWidget = DirectEditorWidget(self._universes, self._fisch_connector,
-                                                                     parent=self.centralWidget())
-        splitter.addWidget(self._direct_editor)
+        self.setCentralWidget(self._universe_selector)
 
         self._setup_menubar()
         self._setup_toolbar()
+        self._setup_statusbar()
 
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menu_file = QtWidgets.QMenu(self.menuBar())
-        menu_file.setTitle("File")
-        action_save = QtGui.QAction(self)
-        action_save.setText("Save")
-        action_save.triggered.connect(self._save_scene)
-        self.menuBar().addAction(menu_file.menuAction())
-        menu_file.addAction(action_save)
+        menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scene]],
+                                                       "Universe": [["add", self._add_universe],
+                                                                    ["remove", self._remove_universe]],
+                                                       "Fish": [["Connect", self._start_connection],
+                                                                ["Disconnect", self._fish_connector.disconnect],
+                                                                ["Change", self._change_server_name]]}
+        for name, entries in menus.items():
+            menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
+            self._add_entries_to_menu(menu, entries)
+            self.menuBar().addAction(menu.menuAction())
+
+    def _add_entries_to_menu(self, menu, entries: list[list[str, Callable]]) -> None:
+        for entry in entries:
+            menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
+            menu_entry.triggered.connect(entry[1])
+            menu.addAction(menu_entry)
+
+    def _add_universe(self) -> None:
+        self._universes.append(Universe(len(self._universes) + 1))
+        self._universe_selector.add_universe(self._universes[len(self._universes) - 1])
+
+    def _remove_universe(self) -> None:
+        """TODO"""
+        pass
+
+    def _start_connection(self) -> None:
+        self._fish_connector.start()
+        for universe in self._universes:
+            if self._fish_connector.already_started:
+                self._fish_connector.generate_universe(universe)
+
+    def _change_server_name(self) -> None:
+        self._fish_connector.change_server_name(self._get_server_name())
+
+    def _save_scene(self) -> None:
+        """Safes the current scene to a file.
+        TODO implement saving to xml file with xsd schema. See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
+        """
+        pass
+
+    def _get_server_name(self) -> str:
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Server Name', 'Enter Server Name:')
+        if ok:
+            return str(text)
 
     def _setup_toolbar(self) -> None:
         """Adds a toolbar with actions."""
@@ -79,15 +103,45 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.__switch_mode_action.setText("Direct Mode")
 
-    def _save_scene(self) -> None:
-        """Safes the current scene to a file.
-        TODO implement saving to xml file with xsd schema. See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
-        """
-        pass
+    def _setup_statusbar(self) -> None:
+        status_bar = QtWidgets.QStatusBar()
+        status_bar.setMaximumHeight(50)
+        self.setStatusBar(status_bar)
+
+        status_item = [[self._fish_connector.connection_state_updated, self._fish_connector.connection_state()]]  # ,
+        # [self._fish_connector.status_updated, None]]
+
+        for item in status_item:
+            if not item[1] is None:
+                label = QtWidgets.QLabel(item[1], status_bar)
+            else:
+                label = QtWidgets.QLabel(status_bar)
+            item[0].connect(lambda txt: label.setText(txt))
+            status_bar.addWidget(label)
+
+        last_cycle_time_widget = pyqtgraph.plot()
+        last_cycle_time_widget.getPlotItem().hideAxis('bottom')
+        #        last_cycle_time_widget.getPlotItem().hideAxis('left')
+
+        items = 500
+        self.time = list(range(items))
+        self._last_cycle_time = [0] * items
+
+        self._last_cycle_time_plot = last_cycle_time_widget.plot(self.time, self._last_cycle_time)
+        last_cycle_time_widget.setXRange(0, items, padding=0)
+        last_cycle_time_widget.setYRange(0, 3000, padding=0)
+        self._fish_connector.last_cycle_time_update.connect(lambda cycle: self._update_last_cycle_time(cycle))
+        status_bar.addWidget(last_cycle_time_widget)
+
+    def _update_last_cycle_time(self, new_value: int):
+        self._last_cycle_time = self._last_cycle_time[1:]  # Remove the first y element.
+        self._last_cycle_time.append(new_value)  # Add a new value
+
+        self._last_cycle_time_plot.setData(self.time, self._last_cycle_time)
 
 
 if __name__ == "__main__":
-    logging.basicConfig(encoding='utf-8', level=logging.INFO)
+    logging.basicConfig(encoding='utf-8', level=logging.ERROR)
     logging.info("start DMXGui")
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)

@@ -6,14 +6,14 @@ from .ChannelWidget import ChannelWidget
 from src.Style import Style
 
 
-class DirectEditorWidget(QtWidgets.QTabWidget):
+class DirectEditorWidget(QtWidgets.QScrollArea):
     """Widget to directly edit channels of one or multiple universes.
 
     Allows editing of channels of the specified universes. One universe is shown and editable at a time.
     Buttons allow to change the selected universe.
     """
 
-    def __init__(self, universes: list[Universe], fisch_connector: NetworkManager, parent=None):
+    def __init__(self, universe: Universe, fisch_connector: NetworkManager, parent=None):
         """Inits a ManualUniverseEditorWidget.
 
         Args:
@@ -27,25 +27,15 @@ class DirectEditorWidget(QtWidgets.QTabWidget):
         self.setObjectName("ManualEditor")
         self.setStyleSheet(Style.WIDGET)
 
-        # Tabs left of the content
-        self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.setStyleSheet(Style.SCROLL)
 
-        for universe in universes:
-            # Scroll area left to right
-            scroll_area = QtWidgets.QScrollArea()
-            scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-            scroll_area.setStyleSheet(Style.SCROLL)
+        universe_widget = QtWidgets.QWidget()
+        universe_widget.setLayout(QtWidgets.QHBoxLayout(universe_widget))
 
-            universe_widget = QtWidgets.QWidget()
-            universe_widget.setLayout(QtWidgets.QHBoxLayout(universe_widget))
+        # Add all channels of the universe
+        for channel in universe.channels:
+            universe_widget.layout().addWidget(ChannelWidget(channel, universe, fisch_connector))
 
-            # Add all channels of the universe
-            for channel in universe.channels:
-                universe_widget.layout().addWidget(ChannelWidget(channel, universe, fisch_connector))
-
-            scroll_area.setWidget(universe_widget)
-
-            # Add universe with tab name in human-readable form
-            self.addTab(scroll_area, str(universe.address + 1))
-
+        self.setWidget(universe_widget)
