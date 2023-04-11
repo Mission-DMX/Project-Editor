@@ -4,6 +4,7 @@ import logging
 import sys
 from typing import Callable
 
+import pyqtgraph
 from PySide6 import QtWidgets, QtGui
 
 from DMXModel import Universe
@@ -36,6 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._setup_menubar()
         self._setup_toolbar()
+        self._setup_statusbar()
 
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
@@ -101,17 +103,41 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.__switch_mode_action.setText("Direct Mode")
 
-    def _save_scene(self) -> None:
-        """Safes the current scene to a file.
-        TODO implement saving to xml file with xsd schema. See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
-        """
-        pass
+    def _setup_statusbar(self) -> None:
+        status_bar = QtWidgets.QStatusBar()
+        status_bar.setMaximumHeight(50)
+        self.setStatusBar(status_bar)
 
+        status_item = [[self._fish_connector.connection_state_updated, self._fish_connector.connection_state()]]  # ,
+        # [self._fish_connector.status_updated, None]]
 
-    def _get_server_name(self) -> str:
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Server Name', 'Enter Server Name:')
-        if ok:
-            return str(text)
+        for item in status_item:
+            if not item[1] is None:
+                label = QtWidgets.QLabel(item[1], status_bar)
+            else:
+                label = QtWidgets.QLabel(status_bar)
+            item[0].connect(lambda txt: label.setText(txt))
+            status_bar.addWidget(label)
+
+        last_cycle_time_widget = pyqtgraph.plot()
+        last_cycle_time_widget.getPlotItem().hideAxis('bottom')
+        #        last_cycle_time_widget.getPlotItem().hideAxis('left')
+
+        items = 500
+        self.time = list(range(items))
+        self._last_cycle_time = [0] * items
+
+        self._last_cycle_time_plot = last_cycle_time_widget.plot(self.time, self._last_cycle_time)
+        last_cycle_time_widget.setXRange(0, items, padding=0)
+        last_cycle_time_widget.setYRange(0, 3000, padding=0)
+        self._fish_connector.last_cycle_time_update.connect(lambda cycle: self._update_last_cycle_time(cycle))
+        status_bar.addWidget(last_cycle_time_widget)
+
+    def _update_last_cycle_time(self, new_value: int):
+        self._last_cycle_time = self._last_cycle_time[1:]  # Remove the first y element.
+        self._last_cycle_time.append(new_value)  # Add a new value
+
+        self._last_cycle_time_plot.setData(self.time, self._last_cycle_time)
 
 
 if __name__ == "__main__":
