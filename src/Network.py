@@ -4,7 +4,9 @@ import logging
 from PySide6 import QtCore, QtNetwork
 
 import proto.DirectMode_pb2
+import proto.FilterMode_pb2
 import proto.MessageTypes_pb2
+import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
 from DMXModel import Universe
@@ -83,14 +85,40 @@ class NetworkManager(QtCore.QObject):
 
     def _on_ready_read(self) -> None:
         """Processes incoming data."""
-        logging.debug(f"Response: {self._socket.readAll()}")
+        msg_bytes = self._socket.readAll()
+        while len(msg_bytes) > 0:
+            msg_type = varint.decode_bytes(msg_bytes[0])
+            msg_len = varint.decode_bytes(msg_bytes[1])
+            msg = msg_bytes[2:msg_len + 2]
+            msg_bytes = msg_bytes[msg_len + 2:]
+            match msg_type:
+                case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
+                    update: proto.RealTimeControl_pb2.current_state_update = \
+                        proto.RealTimeControl_pb2.current_state_update()
+                    update.ParseFromString(bytes(msg))
+                    self._fish_update(update)
+                case _:
+                    pass
+
+    def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
+        self.last_cycle_time_update.emit(int(msg.last_cycle_time))
+        new_message: str = msg.last_error
+        if self._fish_status != new_message:
+            self.status_updated.emit(new_message)
+            self._fish_status = new_message
 
     def _on_state_changed(self) -> None:
         """Starts or stops to send messages if the connection state changes.
         Args:
             state: The connection state of the current connection.
         """
-        logging.info(f"connection change to {str(self._socket.state())}")
+        self.connection_state_updated.emit(self.connection_state())
+
+    def connection_state(self) -> str:
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            return "connected"
+        else:
+            return "not connected"
 
 
 def on_error(error):
