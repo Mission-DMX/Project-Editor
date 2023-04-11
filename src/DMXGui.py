@@ -74,8 +74,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def _change_server_name(self) -> None:
         self._fish_connector.change_server_name(self._get_server_name())
 
+    def _save_scene(self) -> None:
+        """Safes the current scene to a file.
+        TODO implement saving to xml file with xsd schema. See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
+        """
+        pass
 
-
+    def _get_server_name(self) -> str:
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Server Name', 'Enter Server Name:')
+        if ok:
+            return str(text)
 
     def _setup_toolbar(self) -> None:
         """Adds a toolbar with actions."""
