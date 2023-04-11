@@ -15,6 +15,9 @@ class NetworkManager(QtCore.QObject):
 
     Sends the current data of a universe
     """
+    connection_state_updated: QtCore.Signal = QtCore.Signal(str)
+    status_updated: QtCore.Signal = QtCore.Signal(str)
+    last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
 
     def __init__(self, parent=None):
         """Inits the network connection.
