@@ -21,7 +21,7 @@ class DirectEditorWidget(QtWidgets.QScrollArea):
         """
         super().__init__(parent=parent)
 
-        self.setMaximumHeight(420)
+        self.setFixedHeight(420)
 
         # Specifying style options. See Style.WIDGET
         self.setObjectName("ManualEditor")
