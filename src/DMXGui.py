@@ -53,13 +53,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
 
-    def _add_entries_to_menu(self, menu, entries: list[list[str, Callable]]) -> None:
+    def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, Callable]]) -> None:
+        """ add entries to a menu"""
         for entry in entries:
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
             menu_entry.triggered.connect(entry[1])
             menu.addAction(menu_entry)
 
     def _add_universe(self) -> None:
+        """add a new universe"""
         self._universes.append(Universe(len(self._universes) + 1))
         self._universe_selector.add_universe(self._universes[len(self._universes) - 1])
 
@@ -68,12 +70,14 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
 
     def _start_connection(self) -> None:
+        """start connection with fish server"""
         self._fish_connector.start()
         for universe in self._universes:
             if self._fish_connector.already_started:
                 self._fish_connector.generate_universe(universe)
 
     def _change_server_name(self) -> None:
+        """change fish socket name"""
         self._fish_connector.change_server_name(self._get_server_name())
 
     def _save_scene(self) -> None:
@@ -83,6 +87,7 @@ class MainWindow(QtWidgets.QMainWindow):
         pass
 
     def _get_server_name(self) -> str:
+        """select a new socket name over an input dialog"""
         text, ok = QtWidgets.QInputDialog.getText(self, 'Server Name', 'Enter Server Name:')
         if ok:
             return str(text)
@@ -104,26 +109,24 @@ class MainWindow(QtWidgets.QMainWindow):
             self.__switch_mode_action.setText("Direct Mode")
 
     def _setup_statusbar(self) -> None:
+        """ build statusbor"""
         status_bar = QtWidgets.QStatusBar()
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
 
-        status_item = [[self._fish_connector.connection_state_updated, self._fish_connector.connection_state()]]  # ,
-        # [self._fish_connector.status_updated, None]]
+        label_state_update = QtWidgets.QLabel(self._fish_connector.connection_state(), status_bar)
+        self._fish_connector.connection_state_updated.connect(lambda txt: label_state_update.setText(txt))
+        status_bar.addWidget(label_state_update)
 
-        for item in status_item:
-            if not item[1] is None:
-                label = QtWidgets.QLabel(item[1], status_bar)
-            else:
-                label = QtWidgets.QLabel(status_bar)
-            item[0].connect(lambda txt: label.setText(txt))
-            status_bar.addWidget(label)
+        label_last_error = QtWidgets.QLabel("Error", status_bar)
+        self._fish_connector.status_updated.connect(lambda txt: label_last_error.setText(txt))
+        status_bar.addWidget(label_last_error)
 
         last_cycle_time_widget = pyqtgraph.plot()
         last_cycle_time_widget.getPlotItem().hideAxis('bottom')
-        #        last_cycle_time_widget.getPlotItem().hideAxis('left')
+        # last_cycle_time_widget.getPlotItem().hideAxis('left')
 
-        items = 500
+        items = 1000
         self.time = list(range(items))
         self._last_cycle_time = [0] * items
 
@@ -134,6 +137,7 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.addWidget(last_cycle_time_widget)
 
     def _update_last_cycle_time(self, new_value: int):
+        """update plot of fish last cycle Time"""
         self._last_cycle_time = self._last_cycle_time[1:]  # Remove the first y element.
         self._last_cycle_time.append(new_value)  # Add a new value
 
