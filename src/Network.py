@@ -52,7 +52,7 @@ class NetworkManager(QtCore.QObject):
         if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             logging.info(f"connect local socket to Server: {self._server_name}")
             self._socket.connectToServer(self._server_name)
-            if self._socket.state == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
                 self._is_running = True
 
     def disconnect(self) -> None:

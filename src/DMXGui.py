@@ -11,7 +11,7 @@ from PySide6 import QtWidgets, QtGui
 from DMXModel import Universe
 from Network import NetworkManager
 from src.Style import Style
-from widgets.UniverseSelector.universe_selector import UniverseSelector
+from widgets.SzeneEditor.szene_editor import SzeneEditor
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -135,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._last_cycle_time_plot = last_cycle_time_widget.plot(self.time, self._last_cycle_time)
         last_cycle_time_widget.setXRange(0, items, padding=0)
-        last_cycle_time_widget.setYRange(0, 3000, padding=0)
+        last_cycle_time_widget.setYRange(0, 40000, padding=0)
         self._fish_connector.last_cycle_time_update.connect(lambda cycle: self._update_last_cycle_time(cycle))
         status_bar.addWidget(last_cycle_time_widget)
 
