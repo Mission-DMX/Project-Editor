@@ -1,3 +1,4 @@
+# coding=utf-8
 """Module to handle connection with real-time software Fish."""
 import logging
 
@@ -13,21 +14,20 @@ from DMXModel import Universe
 
 
 class NetworkManager(QtCore.QObject):
-    """Handles connection to Fish.
-
-    Sends the current data of a universe
-    """
+    """Handles connection to Fish."""
     connection_state_updated: QtCore.Signal = QtCore.Signal(str)
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         """Inits the network connection.
+        Args:
+            parent: parent GUI Object
         """
         super().__init__(parent=parent)
         logging.info("generate new Network Manager")
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
-        self._already_started: bool = False
+        self._is_running: bool = False
         self._fish_status: str = ""
         self._server_name = "/tmp/fish.sock"
         self._socket.stateChanged.connect(self._on_state_changed)
@@ -35,31 +35,37 @@ class NetworkManager(QtCore.QObject):
         self._socket.readyRead.connect(self._on_ready_read)
 
     @property
-    def already_started(self) -> bool:
-        return self._already_started
+    def is_running(self) -> bool:
+        """is fish socket already running"""
+        return self._is_running
 
     def change_server_name(self, name: str) -> None:
+        """change fish socket name
+
+        Args:
+            name:  new socket name
+        """
         self._server_name = name
 
     def start(self) -> None:
-        """Establishes the connection.
-        """
+        """establish connection with current fish socket"""
         if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             logging.info(f"connect local socket to Server: {self._server_name}")
             self._socket.connectToServer(self._server_name)
             if self._socket.state == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-                self._already_started = True
+                self._is_running = True
 
     def disconnect(self) -> None:
+        """disconnect from fish socket"""
         logging.info(f"disconnect local socket from Server")
         self._socket.disconnectFromServer()
-        self._already_started = False
+        self._is_running = False
 
     def send_universe(self, universe: Universe) -> None:
-        """
-        Sends the current dmx data of an universes.#
+        """sends the current dmx data of an universes.
 
-        :param universe: universe to send to fish
+        Args:
+            universe: universe to send to fish
         """
         msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.address,
                                               channel_data=[channel.value for channel in universe.channels])
@@ -67,6 +73,7 @@ class NetworkManager(QtCore.QObject):
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
     def generate_universe(self, universe: Universe) -> None:
+        """send a new universe to the fish socket"""
         msg = proto.UniverseControl_pb2.Universe(id=universe.address,
                                                  remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
                                                      ip_address="10.0.15.1",
@@ -76,6 +83,7 @@ class NetworkManager(QtCore.QObject):
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
+        """send message in correct format to fish"""
         logging.debug(f"message to send: {msg}")
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             logging.info(f"send Message to server {msg}")
@@ -108,18 +116,25 @@ class NetworkManager(QtCore.QObject):
             self._fish_status = new_message
 
     def _on_state_changed(self) -> None:
-        """Starts or stops to send messages if the connection state changes.
-        Args:
-            state: The connection state of the current connection.
-        """
+        """Starts or stops to send messages if the connection state changes."""
         self.connection_state_updated.emit(self.connection_state())
 
     def connection_state(self) -> str:
+        """current connection state
+        Returns:
+            str: Connected or Not Connected
+
+        """
+
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            return "connected"
+            return "Connected"
         else:
-            return "not connected"
+            return "Not Connected"
 
 
-def on_error(error):
+def on_error(error) -> None:
+    """logging current error
+    Args:
+        error: thrown error
+    """
     logging.error(error)

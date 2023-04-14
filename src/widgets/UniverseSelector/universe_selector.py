@@ -19,7 +19,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
             self.add_universe(universe)
 
     def add_universe(self, universe: Universe) -> None:
-        if self._fish_connector.already_started:
+        if self._fish_connector.is_running:
             self._fish_connector.generate_universe(universe)
             self._fish_connector.send_universe(universe)
 

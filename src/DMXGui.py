@@ -1,3 +1,4 @@
+# coding=utf-8
 """GUI and control elements for the software."""
 
 import logging
@@ -16,7 +17,7 @@ from widgets.universe_selector import UniverseSelector
 class MainWindow(QtWidgets.QMainWindow):
     """Main window of the app. All widget are children of its central widget."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         """Inits the MainWindow.
 
         Args:
@@ -73,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """start connection with fish server"""
         self._fish_connector.start()
         for universe in self._universes:
-            if self._fish_connector.already_started:
+            if self._fish_connector.is_running:
                 self._fish_connector.generate_universe(universe)
 
     def _change_server_name(self) -> None:
@@ -82,7 +83,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _save_scene(self) -> None:
         """Safes the current scene to a file.
-        TODO implement saving to xml file with xsd schema. See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
+        TODO implement saving to xml file with xsd schema.
+         See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
         """
         pass
 
