@@ -1,3 +1,4 @@
+# coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
 from PySide6 import QtCore
 

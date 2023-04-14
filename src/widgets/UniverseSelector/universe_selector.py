@@ -17,7 +17,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         super().__init__(parent=parent)
         self._fish_connector = fish_connector
         self.setStyleSheet(Style.WIDGET)
-        self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
+        self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
 
         for universe in universes:
             self.add_universe(universe)
