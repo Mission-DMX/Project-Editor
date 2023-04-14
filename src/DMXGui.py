@@ -32,9 +32,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
-        self._universe_selector = UniverseSelector(self._universes, self._fish_connector, self)
+        self._szene_editor = SzeneEditor(self._universes, self._fish_connector, self)
 
-        self.setCentralWidget(self._universe_selector)
+        self.setCentralWidget(self._szene_editor)
 
         self._setup_menubar()
         self._setup_toolbar()
@@ -44,6 +44,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scene]],
+                                                       "Szene": [["add", self._szene_editor.add_szene]],
                                                        "Universe": [["add", self._add_universe],
                                                                     ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
@@ -64,7 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _add_universe(self) -> None:
         """add a new universe"""
         self._universes.append(Universe(len(self._universes) + 1))
-        self._universe_selector.add_universe(self._universes[len(self._universes) - 1])
+        self._szene_editor.add_universe(self._universes[len(self._universes) - 1])
 
     def _remove_universe(self) -> None:
         """TODO"""
