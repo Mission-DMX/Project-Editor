@@ -1,3 +1,5 @@
+# coding=utf-8
+"""select Universe"""
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 
@@ -9,7 +11,9 @@ from widgets.PatchPlan.patch_plan_widget import PatchPlanWidget
 
 
 class UniverseSelector(QtWidgets.QTabWidget):
-    def __init__(self, universes: list[Universe], fish_connector: NetworkManager, parent=None):
+    """select Universe from Tab Widget"""
+
+    def __init__(self, universes: list[Universe], fish_connector: NetworkManager, parent=None) -> None:
         super().__init__(parent=parent)
         self._fish_connector = fish_connector
         self.setStyleSheet(Style.WIDGET)
@@ -19,7 +23,12 @@ class UniverseSelector(QtWidgets.QTabWidget):
             self.add_universe(universe)
 
     def add_universe(self, universe: Universe) -> None:
-        if self._fish_connector.already_started:
+        """
+        add a new Universe to universe Selector
+        Args:
+            universe: the new universe to select
+        """
+        if self._fish_connector.is_running:
             self._fish_connector.generate_universe(universe)
             self._fish_connector.send_universe(universe)
 
