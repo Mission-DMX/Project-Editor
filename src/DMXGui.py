@@ -11,7 +11,7 @@ from PySide6 import QtWidgets, QtGui
 from DMXModel import Universe
 from Network import NetworkManager
 from src.Style import Style
-from widgets.universe_selector import UniverseSelector
+from widgets.UniverseSelector.universe_selector import UniverseSelector
 
 
 class MainWindow(QtWidgets.QMainWindow):
