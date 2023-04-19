@@ -75,10 +75,11 @@ class NetworkManager(QtCore.QObject):
     def generate_universe(self, universe: Universe) -> None:
         """send a new universe to the fish socket"""
         msg = proto.UniverseControl_pb2.Universe(id=universe.address,
-                                                 remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
-                                                     ip_address="10.0.15.1",
-                                                     port=6454,
-                                                     universe_on_device=universe.address
+                                                 ftdi_dongle=proto.UniverseControl_pb2.Universe.USBConfig(
+                                                     device_name="",
+                                                     product_id=0x6001,
+                                                     vendor_id=0x0403,
+                                                     serial=""
                                                  ))
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
