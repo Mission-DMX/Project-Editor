@@ -8,7 +8,6 @@ from typing import Callable
 import pyqtgraph
 from PySide6 import QtWidgets, QtGui
 
-from DMXModel import Universe
 from Network import NetworkManager
 from src.Style import Style
 from widgets.SzeneEditor.szene_editor import SzeneEditor
@@ -32,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
-        self._szene_editor = SzeneEditor(self._universes, self._fish_connector, self)
+        self._szene_editor = SzeneEditor(self._fish_connector, self)
 
         self.setCentralWidget(self._szene_editor)
 
@@ -43,7 +42,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scene]],
+        menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scenes],
+                                                                ["load", self._load_scenes]],
                                                        "Szene": [["add", self._szene_editor.add_szene]],
                                                        "Universe": [["add", self._add_universe],
                                                                     ["remove", self._remove_universe]],
@@ -64,8 +64,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _add_universe(self) -> None:
         """add a new universe"""
-        self._universes.append(Universe(len(self._universes) + 1))
-        self._szene_editor.add_universe(self._universes[len(self._universes) - 1])
+        self._szene_editor.add_universe()
 
     def _remove_universe(self) -> None:
         """TODO"""
@@ -74,19 +73,32 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_connection(self) -> None:
         """start connection with fish server"""
         self._fish_connector.start()
-        for universe in self._universes:
-            if self._fish_connector.is_running:
-                self._fish_connector.generate_universe(universe)
+        self._szene_editor.start()
 
     def _change_server_name(self) -> None:
         """change fish socket name"""
         self._fish_connector.change_server_name(self._get_server_name())
 
-    def _save_scene(self) -> None:
+    def _save_scenes(self) -> None:
         """Safes the current scene to a file.
         TODO implement saving to xml file with xsd schema.
          See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
         """
+        data: str = ""
+        for szene in self._szene_editor.scenes:
+            for universe in szene.universes:
+                data += ""
+                for channel in universe.channels:
+                    data += str(channel.value) + ","
+                data = data[:-1]
+                data += ";"
+            data = data[:-1]
+            data += "\n"
+
+        with open("szenes.txt", "w") as f:
+            f.write(data)
+
+    def _load_scenes(self):
         pass
 
     def _get_server_name(self) -> str:
