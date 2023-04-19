@@ -5,10 +5,8 @@ import logging
 import sys
 from typing import Callable
 
-import pyqtgraph
 from PySide6 import QtWidgets, QtGui
 
-from DMXModel import Universe
 from Network import NetworkManager
 from src.Style import Style
 from widgets.SzeneEditor.szene_editor import SzeneEditor
@@ -27,12 +25,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("Project-Editor")
 
-        # DMX data. Each universe contains 512 channels
-        self._universes: list[Universe] = [Universe(1)]
-
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
-        self._szene_editor = SzeneEditor(self._universes, self._fish_connector, self)
+        self._szene_editor = SzeneEditor(self._fish_connector, self)
 
         self.setCentralWidget(self._szene_editor)
 
@@ -43,9 +38,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scene]],
-                                                       "Szene": [["add", self._szene_editor.add_szene]],
-                                                       "Universe": [["add", self._add_universe],
+        menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scenes],
+                                                                ["load", self._load_scenes]],
+                                                       "Szene": [["add", self._add_szene]],
+                                                       "Universe": [["add", self._szene_editor.add_universe],
                                                                     ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
                                                                 ["Disconnect", self._fish_connector.disconnect],
@@ -62,10 +58,9 @@ class MainWindow(QtWidgets.QMainWindow):
             menu_entry.triggered.connect(entry[1])
             menu.addAction(menu_entry)
 
-    def _add_universe(self) -> None:
-        """add a new universe"""
-        self._universes.append(Universe(len(self._universes) + 1))
-        self._szene_editor.add_universe(self._universes[len(self._universes) - 1])
+    def _add_szene(self) -> None:
+        """add a new szene"""
+        self._szene_editor.add_szene(self._get_name("Szene Name", "Enter Szene Name:"))
 
     def _remove_universe(self) -> None:
         """TODO"""
@@ -74,24 +69,47 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_connection(self) -> None:
         """start connection with fish server"""
         self._fish_connector.start()
-        for universe in self._universes:
-            if self._fish_connector.is_running:
-                self._fish_connector.generate_universe(universe)
+        self._szene_editor.start()
 
     def _change_server_name(self) -> None:
         """change fish socket name"""
-        self._fish_connector.change_server_name(self._get_server_name())
+        self._fish_connector.change_server_name(self._get_name("Server Name", "Enter Server Name:"))
 
-    def _save_scene(self) -> None:
+    def _save_scenes(self) -> None:
         """Safes the current scene to a file.
         TODO implement saving to xml file with xsd schema.
          See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
         """
-        pass
+        data: str = ""
+        for szene in self._szene_editor.scenes:
+            for universe in szene.universes:
+                data += ""
+                for channel in universe.channels:
+                    data += str(channel.value) + ","
+                data = data[:-1]
+                data += ";"
+            data = data[:-1]
+            data += "\n"
 
-    def _get_server_name(self) -> str:
+        with open("szenes.txt", "w") as f:
+            f.write(data)
+
+    def _load_scenes(self):
+        pass
+        with open("szenes.txt", "r") as f:
+            for line in f:
+                universes = line.split(";")
+                universe_id = 0
+                for universe in universes:
+                    universe_id += 1
+                    chanel = 0
+                    for value in universe.split(","):
+                        chanel += 1
+                        self._szene_editor.scenes[0].universes[universe_id].channels[chanel].value = int(value)
+
+    def _get_name(self, title: str, msg: str) -> str:
         """select a new socket name over an input dialog"""
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Server Name', 'Enter Server Name:')
+        text, ok = QtWidgets.QInputDialog.getText(self, title, msg)
         if ok:
             return str(text)
 

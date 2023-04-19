@@ -31,3 +31,6 @@ class Style(str, Enum):
     """
     ACTIVE_BUTTON = "background-color : rgba(169,222,245,1); border-radius : 5;"
     SLIDER = ""
+    LABEL_OKAY = "background-color : rgba(0,255,0,1)"
+    LABEL_WARN = "background-color : rgba(255,127,0,1)"
+    LABEL_ERROR = "background-color : rgba(255,0,0,1)"
