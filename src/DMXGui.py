@@ -44,8 +44,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scenes],
                                                                 ["load", self._load_scenes]],
-                                                       "Szene": [["add", self._szene_editor.add_szene]],
-                                                       "Universe": [["add", self._add_universe],
+                                                       "Szene": [["add", self._add_szene]],
+                                                       "Universe": [["add", self._szene_editor.add_universe],
                                                                     ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
                                                                 ["Disconnect", self._fish_connector.disconnect],
@@ -62,9 +62,9 @@ class MainWindow(QtWidgets.QMainWindow):
             menu_entry.triggered.connect(entry[1])
             menu.addAction(menu_entry)
 
-    def _add_universe(self) -> None:
-        """add a new universe"""
-        self._szene_editor.add_universe()
+    def _add_szene(self) -> None:
+        """add a new szene"""
+        self._szene_editor.add_szene("Baum")
 
     def _remove_universe(self) -> None:
         """TODO"""
