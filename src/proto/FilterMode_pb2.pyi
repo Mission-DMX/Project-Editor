@@ -100,19 +100,23 @@ class update_parameter(google.protobuf.message.Message):
     FILTER_ID_FIELD_NUMBER: builtins.int
     PARAMETER_KEY_FIELD_NUMBER: builtins.int
     PARAMETER_VALUE_FIELD_NUMBER: builtins.int
+    SCENE_ID_FIELD_NUMBER: builtins.int
     filter_id: builtins.str
     """The filter whose update_paramter method should be called"""
     parameter_key: builtins.str
     """The key of the parameter to update"""
     parameter_value: builtins.str
     """The value of the parameter to set"""
+    scene_id: builtins.int
+    """The scene where the filter is located"""
     def __init__(
         self,
         *,
         filter_id: builtins.str = ...,
         parameter_key: builtins.str = ...,
         parameter_value: builtins.str = ...,
+        scene_id: builtins.int = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["filter_id", b"filter_id", "parameter_key", b"parameter_key", "parameter_value", b"parameter_value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["filter_id", b"filter_id", "parameter_key", b"parameter_key", "parameter_value", b"parameter_value", "scene_id", b"scene_id"]) -> None: ...
 
 global___update_parameter = update_parameter

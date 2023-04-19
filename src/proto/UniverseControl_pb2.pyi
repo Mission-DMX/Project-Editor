@@ -45,23 +45,49 @@ class Universe(google.protobuf.message.Message):
         ) -> None: ...
         def ClearField(self, field_name: typing_extensions.Literal["ip_address", b"ip_address", "port", b"port", "universe_on_device", b"universe_on_device"]) -> None: ...
 
+    @typing_extensions.final
+    class USBConfig(google.protobuf.message.Message):
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        PRODUCT_ID_FIELD_NUMBER: builtins.int
+        VENDOR_ID_FIELD_NUMBER: builtins.int
+        DEVICE_NAME_FIELD_NUMBER: builtins.int
+        SERIAL_FIELD_NUMBER: builtins.int
+        product_id: builtins.int
+        vendor_id: builtins.int
+        device_name: builtins.str
+        serial: builtins.str
+        def __init__(
+            self,
+            *,
+            product_id: builtins.int = ...,
+            vendor_id: builtins.int = ...,
+            device_name: builtins.str = ...,
+            serial: builtins.str = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["device_name", b"device_name", "product_id", b"product_id", "serial", b"serial", "vendor_id", b"vendor_id"]) -> None: ...
+
     ID_FIELD_NUMBER: builtins.int
     PHYSICAL_LOCATION_FIELD_NUMBER: builtins.int
     REMOTE_LOCATION_FIELD_NUMBER: builtins.int
+    FTDI_DONGLE_FIELD_NUMBER: builtins.int
     id: builtins.int
     physical_location: builtins.int
     @property
     def remote_location(self) -> global___Universe.ArtNet: ...
+    @property
+    def ftdi_dongle(self) -> global___Universe.USBConfig: ...
     def __init__(
         self,
         *,
         id: builtins.int = ...,
         physical_location: builtins.int = ...,
         remote_location: global___Universe.ArtNet | None = ...,
+        ftdi_dongle: global___Universe.USBConfig | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["Location", b"Location", "physical_location", b"physical_location", "remote_location", b"remote_location"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["Location", b"Location", "id", b"id", "physical_location", b"physical_location", "remote_location", b"remote_location"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["Location", b"Location"]) -> typing_extensions.Literal["physical_location", "remote_location"] | None: ...
+    def HasField(self, field_name: typing_extensions.Literal["Location", b"Location", "ftdi_dongle", b"ftdi_dongle", "physical_location", b"physical_location", "remote_location", b"remote_location"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["Location", b"Location", "ftdi_dongle", b"ftdi_dongle", "id", b"id", "physical_location", b"physical_location", "remote_location", b"remote_location"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["Location", b"Location"]) -> typing_extensions.Literal["physical_location", "remote_location", "ftdi_dongle"] | None: ...
 
 global___Universe = Universe
 

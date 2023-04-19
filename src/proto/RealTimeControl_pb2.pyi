@@ -77,6 +77,25 @@ RM_STOP: RunMode.ValueType  # 2
 """Stop the real time server if transmitted"""
 global___RunMode = RunMode
 
+class _LogLevel:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _LogLevelEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_LogLevel.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    LL_DEBUG: _LogLevel.ValueType  # 0
+    LL_INFO: _LogLevel.ValueType  # 1
+    LL_WARNING: _LogLevel.ValueType  # 2
+    LL_ERROR: _LogLevel.ValueType  # 3
+
+class LogLevel(_LogLevel, metaclass=_LogLevelEnumTypeWrapper): ...
+
+LL_DEBUG: LogLevel.ValueType  # 0
+LL_INFO: LogLevel.ValueType  # 1
+LL_WARNING: LogLevel.ValueType  # 2
+LL_ERROR: LogLevel.ValueType  # 3
+global___LogLevel = LogLevel
+
 @typing_extensions.final
 class update_state(google.protobuf.message.Message):
     """Tell Fish to enter a new run mode"""
@@ -108,7 +127,7 @@ class current_state_update(google.protobuf.message.Message):
     current_state: global___RunMode.ValueType
     showfile_apply_state: FilterMode_pb2.ShowFileApplyState.ValueType
     current_scene: builtins.int
-    """Will be -1 if not applicable"""
+    """Will be -1 if not applicable, -2 if filter mode requested but no show loaded"""
     last_cycle_time: builtins.int
     """Cycle time in ms"""
     last_error: builtins.str
@@ -125,3 +144,28 @@ class current_state_update(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["current_scene", b"current_scene", "current_state", b"current_state", "last_cycle_time", b"last_cycle_time", "last_error", b"last_error", "showfile_apply_state", b"showfile_apply_state"]) -> None: ...
 
 global___current_state_update = current_state_update
+
+@typing_extensions.final
+class long_log_update(google.protobuf.message.Message):
+    """This message will post log content to the GUI for every issue that is too long to be displayed within the status bar"""
+
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    LEVEL_FIELD_NUMBER: builtins.int
+    TIME_STAMP_FIELD_NUMBER: builtins.int
+    WHAT_FIELD_NUMBER: builtins.int
+    level: global___LogLevel.ValueType
+    time_stamp: builtins.int
+    """Unix time stamp of event"""
+    what: builtins.str
+    """Content of the log entry"""
+    def __init__(
+        self,
+        *,
+        level: global___LogLevel.ValueType = ...,
+        time_stamp: builtins.int = ...,
+        what: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["level", b"level", "time_stamp", b"time_stamp", "what", b"what"]) -> None: ...
+
+global___long_log_update = long_log_update

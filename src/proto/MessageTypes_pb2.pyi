@@ -36,6 +36,7 @@ class _MsgTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTy
     MSGT_ENTER_SCENE: _MsgType.ValueType  # 12
     MSGT_LOAD_SHOW_FILE: _MsgType.ValueType  # 13
     MSGT_UPDATE_PARAMETER: _MsgType.ValueType  # 14
+    MSGT_LOG_MESSAGE: _MsgType.ValueType  # 15
 
 class MsgType(_MsgType, metaclass=_MsgTypeEnumTypeWrapper): ...
 
@@ -54,4 +55,5 @@ MSGT_REQUEST_DMX_DATA: MsgType.ValueType  # 11
 MSGT_ENTER_SCENE: MsgType.ValueType  # 12
 MSGT_LOAD_SHOW_FILE: MsgType.ValueType  # 13
 MSGT_UPDATE_PARAMETER: MsgType.ValueType  # 14
+MSGT_LOG_MESSAGE: MsgType.ValueType  # 15
 global___MsgType = MsgType
