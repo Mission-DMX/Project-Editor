@@ -123,9 +123,7 @@ class NetworkManager(QtCore.QObject):
         """current connection state
         Returns:
             str: Connected or Not Connected
-
         """
-
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             return "Connected"
         else:

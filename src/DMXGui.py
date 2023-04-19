@@ -5,7 +5,6 @@ import logging
 import sys
 from typing import Callable
 
-import pyqtgraph
 from PySide6 import QtWidgets, QtGui
 
 from Network import NetworkManager
@@ -25,9 +24,6 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self.setWindowTitle("Project-Editor")
-
-        # DMX data. Each universe contains 512 channels
-        self._universes: list[Universe] = [Universe(1)]
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
@@ -147,26 +143,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector.status_updated.connect(lambda txt: label_last_error.setText(txt))
         status_bar.addWidget(label_last_error)
 
-        last_cycle_time_widget = pyqtgraph.plot()
-        last_cycle_time_widget.getPlotItem().hideAxis('bottom')
-        # last_cycle_time_widget.getPlotItem().hideAxis('left')
+        self._last_cycle_time = [0] * 45
+        self._last_cycle_time_widget = QtWidgets.QLabel(str(max(self._last_cycle_time)))
 
-        items = 1000
-        self.time = list(range(items))
-        self._last_cycle_time = [0] * items
-
-        self._last_cycle_time_plot = last_cycle_time_widget.plot(self.time, self._last_cycle_time)
-        last_cycle_time_widget.setXRange(0, items, padding=0)
-        last_cycle_time_widget.setYRange(0, 40000, padding=0)
         self._fish_connector.last_cycle_time_update.connect(lambda cycle: self._update_last_cycle_time(cycle))
-        status_bar.addWidget(last_cycle_time_widget)
+        status_bar.addWidget(self._last_cycle_time_widget)
 
     def _update_last_cycle_time(self, new_value: int):
         """update plot of fish last cycle Time"""
         self._last_cycle_time = self._last_cycle_time[1:]  # Remove the first y element.
         self._last_cycle_time.append(new_value)  # Add a new value
 
-        self._last_cycle_time_plot.setData(self.time, self._last_cycle_time)
+        maximum = max(self._last_cycle_time)
+        self._last_cycle_time_widget.setText(str(maximum))
+        match maximum:
+            case num if 0 <= num < 15:
+                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_OKAY)
+            case num if 15 <= num < 19:
+                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_WARN)
+            case _:
+                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_ERROR)
 
 
 if __name__ == "__main__":
