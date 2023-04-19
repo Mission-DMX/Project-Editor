@@ -1,3 +1,5 @@
+# coding=utf-8
+"""directly edit channels of a universe"""
 from PySide6 import QtWidgets, QtCore
 
 from Network import NetworkManager
@@ -7,7 +9,7 @@ from src.Style import Style
 
 
 class DirectEditorWidget(QtWidgets.QScrollArea):
-    """Widget to directly edit channels of one or multiple universes.
+    """Widget to directly edit channels of one universe.
 
     Allows editing of channels of the specified universes. One universe is shown and editable at a time.
     Buttons allow to change the selected universe.
@@ -17,6 +19,7 @@ class DirectEditorWidget(QtWidgets.QScrollArea):
         """Inits a ManualUniverseEditorWidget.
 
         Args:
+            universe: the Universe to edit
             parent: Qt parent of the widget.
         """
         super().__init__(parent=parent)
