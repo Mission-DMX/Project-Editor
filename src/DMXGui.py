@@ -64,7 +64,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _add_szene(self) -> None:
         """add a new szene"""
-        self._szene_editor.add_szene("Baum")
+        self._szene_editor.add_szene(self._get_name("Szene Name", "Enter Szene Name:"))
 
     def _remove_universe(self) -> None:
         """TODO"""
@@ -77,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _change_server_name(self) -> None:
         """change fish socket name"""
-        self._fish_connector.change_server_name(self._get_server_name())
+        self._fish_connector.change_server_name(self._get_name("Server Name", "Enter Server Name:"))
 
     def _save_scenes(self) -> None:
         """Safes the current scene to a file.
@@ -111,9 +111,9 @@ class MainWindow(QtWidgets.QMainWindow):
                         chanel += 1
                         self._szene_editor.scenes[0].universes[universe_id].channels[chanel].value = int(value)
 
-    def _get_server_name(self) -> str:
+    def _get_name(self, title: str, msg: str) -> str:
         """select a new socket name over an input dialog"""
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Server Name', 'Enter Server Name:')
+        text, ok = QtWidgets.QInputDialog.getText(self, title, msg)
         if ok:
             return str(text)
 
