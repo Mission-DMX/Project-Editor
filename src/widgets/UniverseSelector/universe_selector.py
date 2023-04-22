@@ -63,3 +63,12 @@ class UniverseSelector(QtWidgets.QTabWidget):
             universe_copy = Universe(universe.address)
             universes_copy.append(universe_copy)
         return universes_copy
+
+    def start(self):
+        for universe in self._universes:
+            if self._fish_connector.is_running:
+                self._fish_connector.generate_universe(universe)
+
+    def send_all_universe(self):
+        for universe in self._universes:
+            self._fish_connector.send_universe(universe)

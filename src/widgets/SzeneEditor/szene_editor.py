@@ -32,6 +32,6 @@ class SzeneEditor(QtWidgets.QTabWidget):
             scene.add_universe()
 
     def start(self):
-        for universe in self._universes:
-            if self._fish_connector.is_running:
-                self._fish_connector.generate_universe(universe)
+        for szene in self._scenes:
+            szene.start()
+
