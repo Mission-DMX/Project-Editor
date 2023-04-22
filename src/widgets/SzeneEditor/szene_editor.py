@@ -17,6 +17,7 @@ class SzeneEditor(QtWidgets.QTabWidget):
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self._scenes: list[UniverseSelector] = [UniverseSelector(self._fish_connector, None, self)]
         self.addTab(self._scenes[0], "start")
+        self.currentChanged.connect(self.tabChanged)
 
     @property
     def scenes(self) -> list[UniverseSelector]:
@@ -35,3 +36,5 @@ class SzeneEditor(QtWidgets.QTabWidget):
         for szene in self._scenes:
             szene.start()
 
+    def tabChanged(self, index: int):
+        self._scenes[index].send_all_universe()
