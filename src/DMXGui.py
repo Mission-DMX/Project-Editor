@@ -160,7 +160,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._last_cycle_time.append(new_value)  # Add a new value
 
         maximum = max(self._last_cycle_time)
-        self._last_cycle_time_widget.setText(str(maximum))
+        self._last_cycle_time_widget.setText(str(maximum) + " ms")
         match maximum:
             case num if 0 <= num < 15:
                 self._last_cycle_time_widget.setStyleSheet(Style.LABEL_OKAY)
