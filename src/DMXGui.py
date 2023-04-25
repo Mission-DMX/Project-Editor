@@ -94,18 +94,15 @@ class MainWindow(QtWidgets.QMainWindow):
         with open("szenes.txt", "w") as f:
             f.write(data)
 
-    def _load_scenes(self):
-        pass
+    def _load_scenes(self) -> None:
+        """load szene from file"""
         with open("szenes.txt", "r") as f:
-            for line in f:
+            for (szene_index, line) in enumerate(f):
                 universes = line.split(";")
-                universe_id = 0
-                for universe in universes:
-                    universe_id += 1
-                    chanel = 0
-                    for value in universe.split(","):
-                        chanel += 1
-                        self._szene_editor.scenes[0].universes[universe_id].channels[chanel].value = int(value)
+                for (universe_index, universe) in enumerate(universes):
+                    for (chanel, value) in enumerate(universe.split(",")):
+                        self._szene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
+                            = int(value)
 
     def _get_name(self, title: str, msg: str) -> str:
         """select a new socket name over an input dialog"""
