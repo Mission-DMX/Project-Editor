@@ -1,8 +1,10 @@
+# coding=utf-8
+"""Widget to edit a channel."""
 from PySide6 import QtWidgets, QtCore
 
 from Network import NetworkManager
-from src.Style import Style
 from src.DMXModel import Channel, Universe
+from src.Style import Style
 
 
 class ChannelWidget(QtWidgets.QWidget):
@@ -30,7 +32,7 @@ class ChannelWidget(QtWidgets.QWidget):
         super().__init__(parent=parent)
 
         # general width and height for all components
-        element_size = 30
+        element_size = 35
 
         # specific length of the slider
         slider_len = 256
@@ -46,7 +48,12 @@ class ChannelWidget(QtWidgets.QWidget):
         self._address_label: QtWidgets.QLabel = QtWidgets.QLabel(str(channel.address + 1), self)
 
         # Displays the current channel value
-        self._value_label: QtWidgets.QLabel = QtWidgets.QLabel(str(channel.value), self)
+        self._value_editor: QtWidgets.QSpinBox = QtWidgets.QSpinBox(self)
+        self._value_editor.setValue(channel.value)
+        self._value_editor.setMaximum(255)
+        self._value_editor.setMinimum(0)
+        self._value_editor.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self._value_editor.textChanged.connect(self.update_value)
 
         # Button to set the channel to the max value 255
         self._max_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Max", self)
@@ -75,13 +82,13 @@ class ChannelWidget(QtWidgets.QWidget):
         self._address_label.move(0, 0)
         self._address_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
-        self._value_label.setFixedSize(element_size, element_size)
-        self._value_label.move(self._address_label.x() + dx, self._address_label.y() + dy)
-        self._value_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self._value_editor.setFixedSize(element_size, element_size)
+        self._value_editor.move(self._address_label.x() + dx, self._address_label.y() + dy)
+        self._value_editor.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         # Slider format depending on if widget is vertical or horizontal
-        slider_pos_x = (self._value_label.x() + 2 * dx) if draw_horizontally else 0
-        slider_pos_y = 0 if draw_horizontally else (self._value_label.y() + 2 * dy)
+        slider_pos_x = (self._value_editor.x() + 2 * dx) if draw_horizontally else 0
+        slider_pos_y = 0 if draw_horizontally else (self._value_editor.y() + 2 * dy)
         slider_width = slider_len if draw_horizontally else element_size
         slider_height = element_size if draw_horizontally else slider_len
 
@@ -94,16 +101,16 @@ class ChannelWidget(QtWidgets.QWidget):
 
         # Position of max and min button changes when the widget is shown horizontally
         max_btn_pos_x = (self._slider.x() + slider_len) if draw_horizontally else 0
-        max_btn_pos_y = 0 if draw_horizontally else (self._value_label.y() + element_size)
-        min_btn_pos_x = (self._value_label.x() + element_size) if draw_horizontally else 0
+        max_btn_pos_y = 0 if draw_horizontally else (self._value_editor.y() + element_size)
+        min_btn_pos_x = (self._value_editor.x() + element_size) if draw_horizontally else 0
         min_btn_pos_y = 0 if draw_horizontally else (self._slider.y() + slider_len)
 
-        self._max_button.setFixedSize(30, 30)
+        self._max_button.setFixedSize(element_size, element_size)
         self._max_button.move(max_btn_pos_x, max_btn_pos_y)
         self._max_button.setStyleSheet(Style.BUTTON)
         self._max_button.clicked.connect(lambda: self.update_value(255))
 
-        self._min_button.setFixedSize(30, 30)
+        self._min_button.setFixedSize(element_size, element_size)
         self._min_button.move(min_btn_pos_x, min_btn_pos_y)
         self._min_button.setStyleSheet(Style.ACTIVE_BUTTON)
         self._min_button.clicked.connect(lambda: self.update_value(0))
@@ -111,8 +118,8 @@ class ChannelWidget(QtWidgets.QWidget):
         # Set widget position and size depending on its components and direction
         pos_x = (channel.address * 60) if draw_horizontally else 0
         pos_y = 0 if draw_horizontally else (channel.address * 60)
-        width = self._value_label.width() + self._address_label.width() + self._max_button.width() + self._slider.width() + self._min_button.width() if draw_horizontally else 30
-        height = 30 if draw_horizontally else self._value_label.height() + self._address_label.height() + self._max_button.height() + self._slider.height() + self._min_button.height()
+        width = self._value_editor.width() + self._address_label.width() + self._max_button.width() + self._slider.width() + self._min_button.width() if draw_horizontally else element_size
+        height = element_size if draw_horizontally else self._value_editor.height() + self._address_label.height() + self._max_button.height() + self._slider.height() + self._min_button.height()
         self.setFixedSize(width, height)
         self.move(pos_x, pos_y)
         self.setContentsMargins(0, 0, 0, 0)
@@ -120,7 +127,7 @@ class ChannelWidget(QtWidgets.QWidget):
     def _update(self, value: int) -> None:
         """Updates the slider and value label."""
         self._slider.setValue(value)
-        self._value_label.setText(str(value))
+        self._value_editor.setValue(value)
         if value == 0:
             self._min_button.setStyleSheet(Style.ACTIVE_BUTTON)
             self._max_button.setStyleSheet(Style.BUTTON)
@@ -131,7 +138,8 @@ class ChannelWidget(QtWidgets.QWidget):
             self._min_button.setStyleSheet(Style.BUTTON)
             self._max_button.setStyleSheet(Style.BUTTON)
 
-    def update_value(self, v: int):
+    def update_value(self, v: int | str):
+        v = int(v)
         if self._channel.value != v:
             self._channel.value = v
             self._fisch_connector.send_universe(self._universe)
