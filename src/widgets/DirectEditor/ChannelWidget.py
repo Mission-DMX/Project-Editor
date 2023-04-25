@@ -54,6 +54,8 @@ class ChannelWidget(QtWidgets.QWidget):
         # Slider to change the value and display the current value graphically
         direction = QtCore.Qt.Horizontal if draw_horizontally else QtCore.Qt.Vertical
         self._slider: QtWidgets.QSlider = QtWidgets.QSlider(direction, self)
+        self._slider.setSingleStep(1)
+        self._slider.setPageStep(1)
 
         # Button to set the channel to the min value 0
         self._min_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Min", self)
