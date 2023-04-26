@@ -40,7 +40,7 @@ class TestUniverse(TestCase):
     def test_valid_address(self):
         address = 12
         universe = Universe(address)
-        self.assertEqual(address, universe.address)
+        self.assertEqual(address, universe.universe_proto.id)
 
     def test_invalid_address(self):
         address = -5

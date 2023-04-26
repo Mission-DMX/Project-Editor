@@ -2,6 +2,8 @@
 """Provides data structures with accessors and modifiers for DMX"""
 from PySide6 import QtCore
 
+import proto.UniverseControl_pb2
+
 
 class Channel(QtCore.QObject):
     """Basic dmx channel with 256 values"""
@@ -60,18 +62,20 @@ class Device:
 
 class Universe:
     """DMX universe with 512 channels"""
-
-    def __init__(self, address: int):
-        if address < 0:
-            raise ValueError(f"Tried to create a universe with address {address}. address must be non negative")
-        self._id: int = address
+    def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe):
+        self._universe_proto = universe_proto
         self._channels: list[Channel] = [Channel(channel_address) for channel_address in range(512)]
         self._devices: list[Device] = []
 
     @property
     def address(self) -> int:
         """ID of the dmx universe. 0-indexed"""
-        return self._id
+        return self._universe_proto.id
+
+    @property
+    def universe_proto(self) -> proto.UniverseControl_pb2.Universe:
+        """property oy universeProto"""
+        return self._universe_proto
 
     @property
     def channels(self) -> list[Channel]:
