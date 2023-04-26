@@ -75,6 +75,11 @@ class MainWindow(QtWidgets.QMainWindow):
         """change fish socket name"""
         self._fish_connector.change_server_name(self._get_name("Server Name", "Enter Server Name:"))
 
+    def _get_file_name(self, title: str):
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, title, "",
+                                                             "Text Files (*.txt);;All Files (*)", )
+        return file_name
+
     def _save_scenes(self) -> None:
         """Safes the current scene to a file.
         TODO implement saving to xml file with xsd schema.
@@ -90,22 +95,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 data += ";"
             data = data[:-1]
             data += "\n"
+        file_name = self._get_file_name("save Szene")
+        if file_name:
+            with open(file_name, "w") as f:
+                f.write(data)
 
-        with open("szenes.txt", "w") as f:
-            f.write(data)
-
-    def _load_scenes(self):
-        pass
-        with open("szenes.txt", "r") as f:
-            for line in f:
-                universes = line.split(";")
-                universe_id = 0
-                for universe in universes:
-                    universe_id += 1
-                    chanel = 0
-                    for value in universe.split(","):
-                        chanel += 1
-                        self._szene_editor.scenes[0].universes[universe_id].channels[chanel].value = int(value)
+    def _load_scenes(self) -> None:
+        """load szene from file"""
+        file_name = self._get_file_name("load Szene")
+        if file_name:
+            with open(file_name, "r") as f:
+                for (szene_index, line) in enumerate(f):
+                    universes = line.split(";")
+                    for (universe_index, universe) in enumerate(universes):
+                        for (chanel, value) in enumerate(universe.split(",")):
+                            self._szene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
+                                = int(value)
 
     def _get_name(self, title: str, msg: str) -> str:
         """select a new socket name over an input dialog"""

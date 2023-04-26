@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets, QtCore
-from PySide6.examples.widgets.layouts.flowlayout.flowlayout import FlowLayout
+#from PySide6.examples.widgets.layouts.flowlayout.flowlayout import FlowLayout
 
 from src.DMXModel import Universe
 from widgets.PatchPlan.patch_item import PatchItem
@@ -13,12 +13,12 @@ class PatchPlanWidget(QtWidgets.QScrollArea):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         container = QtWidgets.QWidget()
-        container_layout = FlowLayout()
+        #container_layout = FlowLayout()
 
-        for i, channel in enumerate(universe.channels):
-            container_layout.addWidget(PatchItem(channel, universe))
+        #for i, channel in enumerate(universe.channels):
+        #    container_layout.addWidget(PatchItem(channel, universe))
 
-        container.setLayout(container_layout)
+        #container.setLayout(container_layout)
 
         self.setWidgetResizable(True)
         self.setWidget(container)
