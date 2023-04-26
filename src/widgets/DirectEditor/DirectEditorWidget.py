@@ -4,8 +4,8 @@ from PySide6 import QtWidgets, QtCore
 
 from Network import NetworkManager
 from src.DMXModel import Universe
-from .ChannelWidget import ChannelWidget
 from src.Style import Style
+from .ChannelWidget import ChannelWidget
 
 
 class DirectEditorWidget(QtWidgets.QScrollArea):
@@ -24,7 +24,7 @@ class DirectEditorWidget(QtWidgets.QScrollArea):
         """
         super().__init__(parent=parent)
 
-        self.setFixedHeight(420)
+        self.setFixedHeight(430)
 
         # Specifying style options. See Style.WIDGET
         self.setObjectName("ManualEditor")

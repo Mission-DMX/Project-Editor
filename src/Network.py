@@ -67,20 +67,14 @@ class NetworkManager(QtCore.QObject):
         Args:
             universe: universe to send to fish
         """
-        msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.address,
+        msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.universe_proto.id,
                                               channel_data=[channel.value for channel in universe.channels])
 
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
     def generate_universe(self, universe: Universe) -> None:
         """send a new universe to the fish socket"""
-        msg = proto.UniverseControl_pb2.Universe(id=universe.address,
-                                                 remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
-                                                     ip_address="10.0.15.1",
-                                                     port=6454,
-                                                     universe_on_device=universe.address
-                                                 ))
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
+        self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """send message in correct format to fish"""
