@@ -72,6 +72,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self.addTab(splitter, str(universe.universe_proto.id))
 
     def universe_coppy(self) -> list[Universe]:
+        """coppy a whole universe by creating a new one"""
         universes_copy: list[Universe] = []
         for universe in self._universes:
             universe_copy = Universe(universe.universe_proto)
