@@ -13,14 +13,24 @@ class Constants8BitNode(Node):
         super().__init__(name, terminals={
             'value': {'io': 'out'}
         })
-        self._filter = Filters.Constants8Bit()
-        self._widget = NodeWidgets.Constants8BitWidget()
 
-    def process(self, **kargs):
-        return {'value': 0}
 
-    def ctrlWidget(self):
-        return self._widget
+class Constants16BitNode(Node):
+    nodeName = 'Constants16Bit'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value': {'io': 'out'}
+        })
+
+
+class ConstantsFloatNode(Node):
+    nodeName = 'ConstantsFloat'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value': {'io': 'out'}
+        })
 
 
 class ConstantsColorNode(Node):
@@ -30,39 +40,75 @@ class ConstantsColorNode(Node):
         super().__init__(name, terminals={
             'value': {'io': 'out'}
         })
-        self._filter = Filters.ConstantsColor()
-        self._widget = NodeWidgets.ConstantsColorWidget()
-
-    def process(self, **kargs):
-        return {'value': 1}
-
-    def ctrlWidget(self):
-        return self._widget
 
 
-class ColorToRGBNode(Node):
-    nodeName = 'ColorToRGB'
+class Debug8BitNode(Node):
+    nodeName = 'Debug8Bit'
 
     def __init__(self, name):
         super().__init__(name, terminals={
-            'value': {'io': 'in'},
-            'r': {'io': 'out'},
-            'g': {'io': 'out'},
-            'b': {'io': 'out'}
+            '8bit)': {'io': 'in'}
         })
-        self._filter = Filters.ColorToRGB()
-        self._widget = NodeWidgets.ColorToRGBWidget()
 
-    def process(self, value):
-        if not value:
-            return {'r': 0, 'g': 106, 'b': 163}
-        if value == 0:
-            return {'r': 0, 'g': 0, 'b': 0}
-        if value == 1:
-            return {'r': 255, 'g': 255, 'b': 255}
 
-    def ctrlWidget(self):
-        return self._widget
+class Debug16BitNode(Node):
+    nodeName = 'Debug16Bit'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            '16bit': {'io': 'in'}
+        })
+
+
+class DebugFloatNode(Node):
+    nodeName = 'DebugFloat'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'double': {'io': 'in'}
+        })
+
+
+class DebugColorNode(Node):
+    nodeName = 'DebugColor'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'color': {'io': 'in'}
+        })
+
+
+class Adapters16To8Bit(Node):
+    nodeName = 'Adapters16To8Bit'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            '16bit': {'io': 'in'},
+            'value_lower': {'io': 'out'},
+            'value_upper': {'io': 'out'},
+        })
+
+
+class Adapters16ToBool(Node):
+    nodeName = 'Adapters16ToBool'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            '16bit': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class ArithmeticsMAC(Node):
+    nodeName = 'ArithmeticsMAC'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'factor1': {'io': 'in'},
+            'factor2': {'io': 'in'},
+            'summand': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
 
 
 class UniverseNode(Node):
@@ -72,11 +118,72 @@ class UniverseNode(Node):
         super().__init__(name, terminals={
             f"channel{i}": {'io': 'in'} for i in range(8)
         }, allowAddInput=True)
-        self._filter = Filters.Universe()
-        self._widget = NodeWidgets.UniverseWidget()
+        
+        
+class ArithmeticsFloatTo8Bit(Node):
+    nodeName = 'ArithmeticsFloatTo8Bit'
 
-    def process(self, **kargs):
-        return {}
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'double': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+          
 
-    def ctrlWidget(self):
-        return self._widget
+class ArithmeticsFloatTo16Bit(Node):
+    nodeName = 'ArithmeticsFloatTo16Bit'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'double': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+        
+
+class ArithmeticsRound(Node):
+    nodeName = 'ArithmeticsRound'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'double': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+        
+
+class ColorToRGBNode(Node):
+    nodeName = 'ColorToRGB'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'color': {'io': 'in'},
+            'r': {'io': 'out'},
+            'g': {'io': 'out'},
+            'b': {'io': 'out'}
+        })
+        
+
+class ColorToRGBWNode(Node):
+    nodeName = 'ColorToRGBW'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'color': {'io': 'in'},
+            'r': {'io': 'out'},
+            'g': {'io': 'out'},
+            'b': {'io': 'out'},
+            'w': {'io': 'out'}
+        })
+        
+        
+class ColorToRGBWANode(Node):
+    nodeName = 'ColorToRGBWA'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'color': {'io': 'in'},
+            'r': {'io': 'out'},
+            'g': {'io': 'out'},
+            'b': {'io': 'out'},
+            'w': {'io': 'out'},
+            'a': {'io': 'out'}
+        })
