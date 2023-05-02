@@ -10,6 +10,7 @@ from PySide6 import QtWidgets, QtGui
 from Network import NetworkManager
 from src.Style import Style
 from widgets.SzeneEditor.szene_editor import SzeneEditor
+from widgets.NodeEditor.NodeEditor import NodeEditorWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -24,12 +25,21 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self.setWindowTitle("Project-Editor")
+        
+        self._widgets = QtWidgets.QStackedWidget()
+        self._filter_mode: bool = True
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
         self._szene_editor = SzeneEditor(self._fish_connector, self)
+        
+        self._node_editor = NodeEditorWidget(self)
+        self._node_editor.move(200, 200)
 
-        self.setCentralWidget(self._szene_editor)
+        self._widgets.addWidget(self._szene_editor)
+        self._widgets.addWidget(self._node_editor)
+
+        self.setCentralWidget(self._widgets)
 
         self._setup_menubar()
         self._setup_toolbar()
@@ -128,11 +138,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _switch_mode(self) -> None:
         """Switches between direct and filter mode."""
-        current_mode = self.__switch_mode_action.text()
-        if current_mode == "Direct Mode":
+        if self._filter_mode:
             self.__switch_mode_action.setText("Filter Mode")
+            self._widgets.setCurrentIndex(1)
         else:
             self.__switch_mode_action.setText("Direct Mode")
+            self._widgets.setCurrentIndex(0)
+            
+        self._filter_mode = not self._filter_mode
 
     def _setup_statusbar(self) -> None:
         """ build statusbor"""
