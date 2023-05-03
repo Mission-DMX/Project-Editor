@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rConsole.proto\x12\x1bmissiondmx.fish.ipcmessages\"b\n\x13\x62utton_state_change\x12\x0e\n\x06\x62utton\x18\x01 \x01(\x05\x12;\n\tnew_state\x18\x02 \x01(\x0e\x32(.missiondmx.fish.ipcmessages.ButtonState\"4\n\x0e\x66\x61\x64\x65r_position\x12\x10\n\x08\x66\x61\x64\x65r_id\x18\x01 \x01(\x05\x12\x10\n\x08position\x18\x02 \x01(\x05\";\n\x15rotary_encoder_change\x12\x12\n\nencoder_id\x18\x01 \x01(\x05\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x11*\x7f\n\x0b\x42uttonState\x12\x19\n\x15\x42S_SET_LED_NOT_ACTIVE\x10\x00\x12\r\n\tBS_ACTIVE\x10\x01\x12\x17\n\x13\x42S_SET_LED_BLINKING\x10\x02\x12\x15\n\x11\x42S_BUTTON_PRESSED\x10\x03\x12\x16\n\x12\x42S_BUTTON_RELEASED\x10\x04\x42\x02H\x03\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rConsole.proto\x12\x1bmissiondmx.fish.ipcmessages\"b\n\x13\x62utton_state_change\x12\x0e\n\x06\x62utton\x18\x01 \x01(\x05\x12;\n\tnew_state\x18\x02 \x01(\x0e\x32(.missiondmx.fish.ipcmessages.ButtonState\"5\n\x0e\x66\x61\x64\x65r_position\x12\x11\n\tcolumn_id\x18\x01 \x01(\t\x12\x10\n\x08position\x18\x02 \x01(\r\":\n\x15rotary_encoder_change\x12\x11\n\tcolumn_id\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x11\"(\n\x15remove_fader_bank_set\x12\x0f\n\x07\x62\x61nk_id\x18\x01 \x01(\t\"\xad\x06\n\x0c\x66\x61\x64\x65r_column\x12\x11\n\tcolumn_id\x18\x01 \x01(\t\x12\x1a\n\x12upper_display_text\x18\x03 \x01(\t\x12\x1a\n\x12lower_display_text\x18\x04 \x01(\t\x12\x15\n\rdisplay_color\x18\x05 \x01(\r\x12J\n\x0bplain_color\x18\x06 \x01(\x0b\x32\x33.missiondmx.fish.ipcmessages.fader_column.hsi_colorH\x00\x12N\n\rcolor_with_uv\x18\x07 \x01(\x0b\x32\x35.missiondmx.fish.ipcmessages.fader_column.hsi_u_colorH\x00\x12L\n\x08raw_data\x18\x08 \x01(\x0b\x32\x38.missiondmx.fish.ipcmessages.fader_column.raw_fader_dataH\x00\x1a?\n\thsi_color\x12\x0b\n\x03hue\x18\x01 \x01(\x01\x12\x12\n\nsaturation\x18\x02 \x01(\x01\x12\x11\n\tintensity\x18\x03 \x01(\x01\x1a\\\n\x0bhsi_u_color\x12\x41\n\x04\x62\x61se\x18\x01 \x01(\x0b\x32\x33.missiondmx.fish.ipcmessages.fader_column.hsi_color\x12\n\n\x02uv\x18\x02 \x01(\r\x1a\xa8\x02\n\x0eraw_fader_data\x12\r\n\x05\x66\x61\x64\x65r\x18\x01 \x01(\r\x12\x17\n\x0frotary_position\x18\x02 \x01(\x11\x12\x12\n\nmeter_leds\x18\x03 \x01(\r\x12\x38\n\x06select\x18\x04 \x01(\x0e\x32(.missiondmx.fish.ipcmessages.ButtonState\x12\x34\n\x02\x62\x31\x18\x05 \x01(\x0e\x32(.missiondmx.fish.ipcmessages.ButtonState\x12\x34\n\x02\x62\x32\x18\x06 \x01(\x0e\x32(.missiondmx.fish.ipcmessages.ButtonState\x12\x34\n\x02\x62\x33\x18\x07 \x01(\x0e\x32(.missiondmx.fish.ipcmessages.ButtonStateB\x07\n\x05value\"\xda\x01\n\x12\x61\x64\x64_fader_bank_set\x12\x0f\n\x07\x62\x61nk_id\x18\x01 \x01(\t\x12!\n\x19\x64\x65\x66\x61ult_active_fader_bank\x18\x02 \x01(\r\x12I\n\x05\x62\x61nks\x18\x03 \x03(\x0b\x32:.missiondmx.fish.ipcmessages.add_fader_bank_set.fader_bank\x1a\x45\n\nfader_bank\x12\x37\n\x04\x63ols\x18\x01 \x03(\x0b\x32).missiondmx.fish.ipcmessages.fader_column*\x7f\n\x0b\x42uttonState\x12\x19\n\x15\x42S_SET_LED_NOT_ACTIVE\x10\x00\x12\r\n\tBS_ACTIVE\x10\x01\x12\x17\n\x13\x42S_SET_LED_BLINKING\x10\x02\x12\x15\n\x11\x42S_BUTTON_PRESSED\x10\x03\x12\x16\n\x12\x42S_BUTTON_RELEASED\x10\x04\x42\x02H\x03\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,12 +22,26 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'H\003'
-  _globals['_BUTTONSTATE']._serialized_start=261
-  _globals['_BUTTONSTATE']._serialized_end=388
+  _globals['_BUTTONSTATE']._serialized_start=1340
+  _globals['_BUTTONSTATE']._serialized_end=1467
   _globals['_BUTTON_STATE_CHANGE']._serialized_start=46
   _globals['_BUTTON_STATE_CHANGE']._serialized_end=144
   _globals['_FADER_POSITION']._serialized_start=146
-  _globals['_FADER_POSITION']._serialized_end=198
-  _globals['_ROTARY_ENCODER_CHANGE']._serialized_start=200
+  _globals['_FADER_POSITION']._serialized_end=199
+  _globals['_ROTARY_ENCODER_CHANGE']._serialized_start=201
   _globals['_ROTARY_ENCODER_CHANGE']._serialized_end=259
+  _globals['_REMOVE_FADER_BANK_SET']._serialized_start=261
+  _globals['_REMOVE_FADER_BANK_SET']._serialized_end=301
+  _globals['_FADER_COLUMN']._serialized_start=304
+  _globals['_FADER_COLUMN']._serialized_end=1117
+  _globals['_FADER_COLUMN_HSI_COLOR']._serialized_start=652
+  _globals['_FADER_COLUMN_HSI_COLOR']._serialized_end=715
+  _globals['_FADER_COLUMN_HSI_U_COLOR']._serialized_start=717
+  _globals['_FADER_COLUMN_HSI_U_COLOR']._serialized_end=809
+  _globals['_FADER_COLUMN_RAW_FADER_DATA']._serialized_start=812
+  _globals['_FADER_COLUMN_RAW_FADER_DATA']._serialized_end=1108
+  _globals['_ADD_FADER_BANK_SET']._serialized_start=1120
+  _globals['_ADD_FADER_BANK_SET']._serialized_end=1338
+  _globals['_ADD_FADER_BANK_SET_FADER_BANK']._serialized_start=1269
+  _globals['_ADD_FADER_BANK_SET_FADER_BANK']._serialized_end=1338
 # @@protoc_insertion_point(module_scope)

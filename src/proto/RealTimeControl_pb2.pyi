@@ -21,8 +21,11 @@ from Console_pb2 import (
     BS_SET_LED_BLINKING as BS_SET_LED_BLINKING,
     BS_SET_LED_NOT_ACTIVE as BS_SET_LED_NOT_ACTIVE,
     ButtonState as ButtonState,
+    add_fader_bank_set as add_fader_bank_set,
     button_state_change as button_state_change,
+    fader_column as fader_column,
     fader_position as fader_position,
+    remove_fader_bank_set as remove_fader_bank_set,
     rotary_encoder_change as rotary_encoder_change,
 )
 from DirectMode_pb2 import (
