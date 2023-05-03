@@ -3,7 +3,9 @@
 isort:skip_file
 """
 import builtins
+import collections.abc
 import google.protobuf.descriptor
+import google.protobuf.internal.containers
 import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import sys
@@ -69,17 +71,17 @@ class fader_position(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    FADER_ID_FIELD_NUMBER: builtins.int
+    COLUMN_ID_FIELD_NUMBER: builtins.int
     POSITION_FIELD_NUMBER: builtins.int
-    fader_id: builtins.int
+    column_id: builtins.str
     position: builtins.int
     def __init__(
         self,
         *,
-        fader_id: builtins.int = ...,
+        column_id: builtins.str = ...,
         position: builtins.int = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["fader_id", b"fader_id", "position", b"position"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["column_id", b"column_id", "position", b"position"]) -> None: ...
 
 global___fader_position = fader_position
 
@@ -91,16 +93,178 @@ class rotary_encoder_change(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    ENCODER_ID_FIELD_NUMBER: builtins.int
+    COLUMN_ID_FIELD_NUMBER: builtins.int
     AMOUNT_FIELD_NUMBER: builtins.int
-    encoder_id: builtins.int
+    column_id: builtins.str
     amount: builtins.int
     def __init__(
         self,
         *,
-        encoder_id: builtins.int = ...,
+        column_id: builtins.str = ...,
         amount: builtins.int = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["amount", b"amount", "encoder_id", b"encoder_id"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["amount", b"amount", "column_id", b"column_id"]) -> None: ...
 
 global___rotary_encoder_change = rotary_encoder_change
+
+@typing_extensions.final
+class remove_fader_bank_set(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    BANK_ID_FIELD_NUMBER: builtins.int
+    bank_id: builtins.str
+    def __init__(
+        self,
+        *,
+        bank_id: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["bank_id", b"bank_id"]) -> None: ...
+
+global___remove_fader_bank_set = remove_fader_bank_set
+
+@typing_extensions.final
+class fader_column(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    @typing_extensions.final
+    class hsi_color(google.protobuf.message.Message):
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        HUE_FIELD_NUMBER: builtins.int
+        SATURATION_FIELD_NUMBER: builtins.int
+        INTENSITY_FIELD_NUMBER: builtins.int
+        hue: builtins.float
+        saturation: builtins.float
+        intensity: builtins.float
+        def __init__(
+            self,
+            *,
+            hue: builtins.float = ...,
+            saturation: builtins.float = ...,
+            intensity: builtins.float = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["hue", b"hue", "intensity", b"intensity", "saturation", b"saturation"]) -> None: ...
+
+    @typing_extensions.final
+    class hsi_u_color(google.protobuf.message.Message):
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        BASE_FIELD_NUMBER: builtins.int
+        UV_FIELD_NUMBER: builtins.int
+        @property
+        def base(self) -> global___fader_column.hsi_color: ...
+        uv: builtins.int
+        def __init__(
+            self,
+            *,
+            base: global___fader_column.hsi_color | None = ...,
+            uv: builtins.int = ...,
+        ) -> None: ...
+        def HasField(self, field_name: typing_extensions.Literal["base", b"base"]) -> builtins.bool: ...
+        def ClearField(self, field_name: typing_extensions.Literal["base", b"base", "uv", b"uv"]) -> None: ...
+
+    @typing_extensions.final
+    class raw_fader_data(google.protobuf.message.Message):
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        FADER_FIELD_NUMBER: builtins.int
+        ROTARY_POSITION_FIELD_NUMBER: builtins.int
+        METER_LEDS_FIELD_NUMBER: builtins.int
+        SELECT_FIELD_NUMBER: builtins.int
+        B1_FIELD_NUMBER: builtins.int
+        B2_FIELD_NUMBER: builtins.int
+        B3_FIELD_NUMBER: builtins.int
+        fader: builtins.int
+        rotary_position: builtins.int
+        meter_leds: builtins.int
+        select: global___ButtonState.ValueType
+        b1: global___ButtonState.ValueType
+        b2: global___ButtonState.ValueType
+        b3: global___ButtonState.ValueType
+        def __init__(
+            self,
+            *,
+            fader: builtins.int = ...,
+            rotary_position: builtins.int = ...,
+            meter_leds: builtins.int = ...,
+            select: global___ButtonState.ValueType = ...,
+            b1: global___ButtonState.ValueType = ...,
+            b2: global___ButtonState.ValueType = ...,
+            b3: global___ButtonState.ValueType = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["b1", b"b1", "b2", b"b2", "b3", b"b3", "fader", b"fader", "meter_leds", b"meter_leds", "rotary_position", b"rotary_position", "select", b"select"]) -> None: ...
+
+    COLUMN_ID_FIELD_NUMBER: builtins.int
+    UPPER_DISPLAY_TEXT_FIELD_NUMBER: builtins.int
+    LOWER_DISPLAY_TEXT_FIELD_NUMBER: builtins.int
+    DISPLAY_COLOR_FIELD_NUMBER: builtins.int
+    PLAIN_COLOR_FIELD_NUMBER: builtins.int
+    COLOR_WITH_UV_FIELD_NUMBER: builtins.int
+    RAW_DATA_FIELD_NUMBER: builtins.int
+    column_id: builtins.str
+    upper_display_text: builtins.str
+    lower_display_text: builtins.str
+    display_color: builtins.int
+    @property
+    def plain_color(self) -> global___fader_column.hsi_color: ...
+    @property
+    def color_with_uv(self) -> global___fader_column.hsi_u_color: ...
+    @property
+    def raw_data(self) -> global___fader_column.raw_fader_data: ...
+    def __init__(
+        self,
+        *,
+        column_id: builtins.str = ...,
+        upper_display_text: builtins.str = ...,
+        lower_display_text: builtins.str = ...,
+        display_color: builtins.int = ...,
+        plain_color: global___fader_column.hsi_color | None = ...,
+        color_with_uv: global___fader_column.hsi_u_color | None = ...,
+        raw_data: global___fader_column.raw_fader_data | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["color_with_uv", b"color_with_uv", "plain_color", b"plain_color", "raw_data", b"raw_data", "value", b"value"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["color_with_uv", b"color_with_uv", "column_id", b"column_id", "display_color", b"display_color", "lower_display_text", b"lower_display_text", "plain_color", b"plain_color", "raw_data", b"raw_data", "upper_display_text", b"upper_display_text", "value", b"value"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["value", b"value"]) -> typing_extensions.Literal["plain_color", "color_with_uv", "raw_data"] | None: ...
+
+global___fader_column = fader_column
+
+@typing_extensions.final
+class add_fader_bank_set(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    @typing_extensions.final
+    class fader_bank(google.protobuf.message.Message):
+        """This message defines a fader bank. Please be aware that it is not possible
+        to use more columns than there are physically on the board. For example 8 if
+        only a single X-Touch is attached.
+        """
+
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+        COLS_FIELD_NUMBER: builtins.int
+        @property
+        def cols(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___fader_column]: ...
+        def __init__(
+            self,
+            *,
+            cols: collections.abc.Iterable[global___fader_column] | None = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["cols", b"cols"]) -> None: ...
+
+    BANK_ID_FIELD_NUMBER: builtins.int
+    DEFAULT_ACTIVE_FADER_BANK_FIELD_NUMBER: builtins.int
+    BANKS_FIELD_NUMBER: builtins.int
+    bank_id: builtins.str
+    default_active_fader_bank: builtins.int
+    @property
+    def banks(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___add_fader_bank_set.fader_bank]: ...
+    def __init__(
+        self,
+        *,
+        bank_id: builtins.str = ...,
+        default_active_fader_bank: builtins.int = ...,
+        banks: collections.abc.Iterable[global___add_fader_bank_set.fader_bank] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["bank_id", b"bank_id", "banks", b"banks", "default_active_fader_bank", b"default_active_fader_bank"]) -> None: ...
+
+global___add_fader_bank_set = add_fader_bank_set
