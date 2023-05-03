@@ -14,8 +14,8 @@ class SceneTabWidget(QWidget):
         
         self._fc.removeNode(self._fc.outputNode)
         self._fc.removeNode(self._fc.inputNode)
-        
+
         self.setLayout(QGridLayout())
-        self.layout().addWidget(self._fc.widget())
+        self.layout().addWidget(self._fc.widget().chartWidget)
 
 

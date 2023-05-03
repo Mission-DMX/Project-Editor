@@ -4,7 +4,6 @@ from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
 from . import Nodes
 from .SceneTabWidget import SceneTabWidget
-from .NodeEditorDialogs import SceneCreationDialog, SceneDeletionDialog
 
 class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
