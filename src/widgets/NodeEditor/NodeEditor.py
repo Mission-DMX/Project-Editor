@@ -1,45 +1,59 @@
-from PySide6.QtWidgets import QWidget, QGridLayout
+from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog, QDialogButtonBox
 
-from pyqtgraph.flowchart import Flowchart, Node
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
-
 from . import Nodes
+from .SceneTabWidget import SceneTabWidget
+from .NodeEditorDialogs import SceneCreationDialog, SceneDeletionDialog
 
-class NodeEditorWidget(QWidget):
+class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         
-        library = NodeLibrary()
+        self._library = NodeLibrary()
         
-        library.addNodeType(Nodes.Constants8BitNode, [('Constants',)])
-        library.addNodeType(Nodes.Constants16BitNode, [('Constants',)])
-        library.addNodeType(Nodes.ConstantsFloatNode, [('Constants',)])
-        library.addNodeType(Nodes.ConstantsColorNode, [('Constants',)])
+        self._library.addNodeType(Nodes.Constants8BitNode, [('Constants',)])
+        self._library.addNodeType(Nodes.Constants16BitNode, [('Constants',)])
+        self._library.addNodeType(Nodes.ConstantsFloatNode, [('Constants',)])
+        self._library.addNodeType(Nodes.ConstantsColorNode, [('Constants',)])
         
-        library.addNodeType(Nodes.Debug8BitNode, [('Debug',)])
-        library.addNodeType(Nodes.Debug16BitNode, [('Debug',)])
-        library.addNodeType(Nodes.DebugFloatNode, [('Debug',)])
-        library.addNodeType(Nodes.DebugColorNode, [('Debug',)])
+        self._library.addNodeType(Nodes.Debug8BitNode, [('Debug',)])
+        self._library.addNodeType(Nodes.Debug16BitNode, [('Debug',)])
+        self._library.addNodeType(Nodes.DebugFloatNode, [('Debug',)])
+        self._library.addNodeType(Nodes.DebugColorNode, [('Debug',)])
         
-        library.addNodeType(Nodes.Adapters16To8Bit, [('Adapters',)])
-        library.addNodeType(Nodes.Adapters16ToBool, [('Adapters',)])
-        library.addNodeType(Nodes.UniverseNode, [('Adapters',)])
-        library.addNodeType(Nodes.ColorToRGBNode, [('Adapters',)])
-        library.addNodeType(Nodes.ColorToRGBWNode, [('Adapters',)])
-        library.addNodeType(Nodes.ColorToRGBWANode, [('Adapters',)])
+        self._library.addNodeType(Nodes.Adapters16To8Bit, [('Adapters',)])
+        self._library.addNodeType(Nodes.Adapters16ToBool, [('Adapters',)])
+        self._library.addNodeType(Nodes.UniverseNode, [('Adapters',)])
+        self._library.addNodeType(Nodes.ColorToRGBNode, [('Adapters',)])
+        self._library.addNodeType(Nodes.ColorToRGBWNode, [('Adapters',)])
+        self._library.addNodeType(Nodes.ColorToRGBWANode, [('Adapters',)])
         
-        library.addNodeType(Nodes.ArithmeticsMAC, [('Arithmetics',)])
-        library.addNodeType(Nodes.ArithmeticsFloatTo8Bit, [('Arithmetics',)])
-        library.addNodeType(Nodes.ArithmeticsFloatTo16Bit, [('Arithmetics',)])
-        library.addNodeType(Nodes.ArithmeticsRound, [('Arithmetics',)])
+        self._library.addNodeType(Nodes.ArithmeticsMAC, [('Arithmetics',)])
+        self._library.addNodeType(Nodes.ArithmeticsFloatTo8Bit, [('Arithmetics',)])
+        self._library.addNodeType(Nodes.ArithmeticsFloatTo16Bit, [('Arithmetics',)])
+        self._library.addNodeType(Nodes.ArithmeticsRound, [('Arithmetics',)])
+
+        self.addTab(QWidget(), "+")
+        self.addTab(QWidget(), "-")
+
+        self.tabBarClicked.connect(self.tab_bar_clicked)
         
-        fc = Flowchart()
-        fc.setLibrary(library)
-        
-        fc.removeNode(fc.outputNode)
-        fc.removeNode(fc.inputNode)
-        
-        self.setLayout(QGridLayout())
-        self.layout().addWidget(fc.widget())
+    def tab_bar_clicked(self, index: int):
+        if index == self.tabBar().count() - 2:
+            self.add_scene_tab()
+        if index == self.tabBar().count() - 1:
+            self.remove_scene_tab()
+
+    def add_scene_tab(self) -> None:
+
+        text, ok = QInputDialog.getText(self, "Create a new scene", "Scene name")
+        if ok:
+            scene_tab = SceneTabWidget(text, self._library.copy())
+            self.insertTab(self.tabBar().count() - 2, scene_tab, text)
+
+    def remove_scene_tab(self):
+        index, ok = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
+        if ok and 0 <= index < self.tabBar().count() - 2:
+            self.tabBar().removeTab(index)
