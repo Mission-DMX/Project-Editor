@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog, QDialogButtonBox
+from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog
 
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 

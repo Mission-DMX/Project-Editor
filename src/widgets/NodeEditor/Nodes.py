@@ -1,12 +1,36 @@
-from PySide6.QtWidgets import QWidget, QLabel
+from pyqtgraph.flowchart.Node import Node
 
-from pyqtgraph.flowchart.Node import Node, NodeGraphicsItem
-
-from . import Filters
-from . import NodeWidgets
+from .Filters import Filter
 
 
-class Constants8BitNode(Node):
+class FilterNode(Node):
+    """Basic filter node."""
+    def __init__(self, name, terminals=None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
+        super().__init__(name, terminals, allowAddInput, allowAddOutput, allowRemove)
+        self._filter_configurations: dict[str, str] = {}
+        self._initial_paramters: dict[str, str] = {}
+
+    @property 
+    def filter_configuration(self) -> dict[str, str]:
+        """The current configuration details."""
+        return self._filter_configurations
+    
+    @property
+    def initial_parameters(self) -> dict[str, str]:
+        """The initial parameters."""
+        return self._initial_paramters
+    
+    @property
+    def channel_link(self) -> dict[str, str]:
+        """List of connections for the filter's inputs.
+        TODO Implement
+        """
+        pass 
+
+
+
+class Constants8BitNode(FilterNode):
+    """Filter to represent an 8 bit value."""
     nodeName = 'Constants8Bit'
 
     def __init__(self, name):
@@ -15,7 +39,8 @@ class Constants8BitNode(Node):
         })
 
 
-class Constants16BitNode(Node):
+class Constants16BitNode(FilterNode):
+    """Filter to represent a 16 bit value."""
     nodeName = 'Constants16Bit'
 
     def __init__(self, name):
@@ -24,7 +49,8 @@ class Constants16BitNode(Node):
         })
 
 
-class ConstantsFloatNode(Node):
+class ConstantsFloatNode(FilterNode):
+    """Filter to represent a float/double value."""
     nodeName = 'ConstantsFloat'
 
     def __init__(self, name):
@@ -33,7 +59,10 @@ class ConstantsFloatNode(Node):
         })
 
 
-class ConstantsColorNode(Node):
+class ConstantsColorNode(FilterNode):
+    """Filter to represent a color value.
+    TODO specify color format
+    """
     nodeName = 'ConstantsColor'
 
     def __init__(self, name):
@@ -42,7 +71,10 @@ class ConstantsColorNode(Node):
         })
 
 
-class Debug8BitNode(Node):
+class Debug8BitNode(FilterNode):
+    """Filter to debug an 8 bit value.
+    TODO implement visualization
+    """
     nodeName = 'Debug8Bit'
 
     def __init__(self, name):
@@ -51,7 +83,10 @@ class Debug8BitNode(Node):
         })
 
 
-class Debug16BitNode(Node):
+class Debug16BitNode(FilterNode):
+    """Filter to debug a 16 bit value.
+    TODO implement visualization
+    """
     nodeName = 'Debug16Bit'
 
     def __init__(self, name):
@@ -60,7 +95,10 @@ class Debug16BitNode(Node):
         })
 
 
-class DebugFloatNode(Node):
+class DebugFloatNode(FilterNode):
+    """Filter to debug a float/double value.
+    TODO implement visualization
+    """
     nodeName = 'DebugFloat'
 
     def __init__(self, name):
@@ -69,7 +107,10 @@ class DebugFloatNode(Node):
         })
 
 
-class DebugColorNode(Node):
+class DebugColorNode(FilterNode):
+    """Filter to debug a color value.
+    TODO implement visualization
+    """
     nodeName = 'DebugColor'
 
     def __init__(self, name):
@@ -78,7 +119,8 @@ class DebugColorNode(Node):
         })
 
 
-class Adapters16To8Bit(Node):
+class Adapters16To8Bit(FilterNode):
+    """Filter to convert a 16 bit value to two 8 bit values."""
     nodeName = 'Adapters16To8Bit'
 
     def __init__(self, name):
@@ -89,7 +131,10 @@ class Adapters16To8Bit(Node):
         })
 
 
-class Adapters16ToBool(Node):
+class Adapters16ToBool(FilterNode):
+    """Filter to convert a 16 bit value to a boolean.
+    If input is 0, output is 0, else 1.
+    """
     nodeName = 'Adapters16ToBool'
 
     def __init__(self, name):
@@ -99,7 +144,10 @@ class Adapters16ToBool(Node):
         })
 
 
-class ArithmeticsMAC(Node):
+class ArithmeticsMAC(FilterNode):
+    """Filter to calculate MAC value.
+    value = (factor1 * factor2) + summand
+    """
     nodeName = 'ArithmeticsMAC'
 
     def __init__(self, name):
@@ -111,16 +159,25 @@ class ArithmeticsMAC(Node):
         })
 
 
-class UniverseNode(Node):
+class UniverseNode(FilterNode):
+    """Filter to represent a dmx universe. By default, it has 8 outputs, put more can be added."""
     nodeName = 'Universe'
 
     def __init__(self, name):
         super().__init__(name, terminals={
             f"channel{i}": {'io': 'in'} for i in range(8)
         }, allowAddInput=True)
+
+    def addInput(self, name="Input", **args):
+        """Allows to add up to 512 input channels."""
+        current_inputs = len(self.terminals)
+        if current_inputs >= 512:
+            return None
+        return super().addInput(f"channel{current_inputs}", **args)
         
         
-class ArithmeticsFloatTo8Bit(Node):
+class ArithmeticsFloatTo8Bit(FilterNode):
+    """Filter to round a float/double value to an 8 bit value."""
     nodeName = 'ArithmeticsFloatTo8Bit'
 
     def __init__(self, name):
@@ -130,7 +187,8 @@ class ArithmeticsFloatTo8Bit(Node):
         })
           
 
-class ArithmeticsFloatTo16Bit(Node):
+class ArithmeticsFloatTo16Bit(FilterNode):
+    """Filter to round a float/double value to a 16 bit value."""
     nodeName = 'ArithmeticsFloatTo16Bit'
 
     def __init__(self, name):
@@ -140,7 +198,8 @@ class ArithmeticsFloatTo16Bit(Node):
         })
         
 
-class ArithmeticsRound(Node):
+class ArithmeticsRound(FilterNode):
+    """Filter to round a float/double value to a float/double value"""
     nodeName = 'ArithmeticsRound'
 
     def __init__(self, name):
@@ -150,7 +209,8 @@ class ArithmeticsRound(Node):
         })
         
 
-class ColorToRGBNode(Node):
+class ColorToRGBNode(FilterNode):
+    """Filter to convert a color value to a rgb value."""
     nodeName = 'ColorToRGB'
 
     def __init__(self, name):
@@ -162,7 +222,8 @@ class ColorToRGBNode(Node):
         })
         
 
-class ColorToRGBWNode(Node):
+class ColorToRGBWNode(FilterNode):
+    """Filter to convert a color value to a rgbw value."""
     nodeName = 'ColorToRGBW'
 
     def __init__(self, name):
@@ -175,7 +236,8 @@ class ColorToRGBWNode(Node):
         })
         
         
-class ColorToRGBWANode(Node):
+class ColorToRGBWANode(FilterNode):
+    """Filter to convert a color value to a rgbwa value."""
     nodeName = 'ColorToRGBWA'
 
     def __init__(self, name):
