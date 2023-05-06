@@ -249,3 +249,288 @@ class ColorToRGBWANode(FilterNode):
             'w': {'io': 'out'},
             'a': {'io': 'out'}
         })
+
+
+class FloatToColorNode(FilterNode):
+    """Filter to convert a float/double value to a color value."""
+    nodeName = 'FloatToPixel'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'h': {'io': 'in'},
+            's': {'io': 'in'},
+            'i': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class SineNode(FilterNode):
+    """Filter to calculate sine value.
+    value = factor_outer*sin((value_in+phase)*factor_inner) + offset
+    """
+    nodeName = 'Sine'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'factor_outer': {'io': 'in'},
+            'factor_inner': {'io': 'in'},
+            'phase': {'io': 'in'},
+            'offset': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class CosineNode(FilterNode):
+    """Filter to calculate cosine value.
+    value = factor_outer*cos((value_in+phase)*factor_inner) + offset
+    """
+    nodeName = 'Cosine'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'factor_outer': {'io': 'in'},
+            'factor_inner': {'io': 'in'},
+            'phase': {'io': 'in'},
+            'offset': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class TangentNode(FilterNode):
+    """Filter to calculate tangent value.
+    value = factor_outer*tan((value_in+phase)*factor_inner) + offset
+    """
+    nodeName = 'Tangent'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'factor_outer': {'io': 'in'},
+            'factor_inner': {'io': 'in'},
+            'phase': {'io': 'in'},
+            'offset': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class ArcsineNode(FilterNode):
+    """Filter to calculate arcsine value.
+    value = arcsin(value_in)
+    """
+    nodeName = 'Arcsine'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class ArccosineNode(FilterNode):
+    """Filter to calculate arccosine value.
+    value = arccos(value_in)
+    """
+    nodeName = 'Arccosine'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class ArctangentNode(FilterNode):
+    """Filter to calculate arctangent value.
+    value = arctan(value_in)
+    """
+    nodeName = 'Arctangent'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class SquareWaveNode(FilterNode):
+    """Filter to generate a square."""
+    nodeName = 'SquareWave'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'factor_outer': {'io': 'in'},
+            'factor_inner': {'io': 'in'},
+            'phase': {'io': 'in'},
+            'offset': {'io': 'in'},
+            'length': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class TriangleWaveNode(FilterNode):
+    """Filter to generate a trinagle wave."""
+    nodeName = 'TriangelWave'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'factor_outer': {'io': 'in'},
+            'factor_inner': {'io': 'in'},
+            'phase': {'io': 'in'},
+            'offset': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class SawtoothWaveNode(FilterNode):
+    """Filter to generate a sawtooth wave."""
+    nodeName = 'SawtoothWave'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'factor_outer': {'io': 'in'},
+            'factor_inner': {'io': 'in'},
+            'phase': {'io': 'in'},
+            'offset': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class LogarithmNode(FilterNode):
+    """Filter to calculate a logarithm value.
+    value = ln(value_in)
+    """
+    nodeName = 'Logarithm'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class ExponentialNode(FilterNode):
+    """Filter to calculate an exponantial value.
+    value = exp(value_in)
+    """
+    nodeName = 'Exponential'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class MinimumNode(FilterNode):
+    """Filter to calculate the minimum of two values.
+    value = min(param1, param2)
+    """
+    nodeName = 'Minimum'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'param1': {'io': 'in'},
+            'param2': {'io': 'in'}, 
+            'value': {'io': 'out'}
+        })
+
+
+class MaximumNode(FilterNode):
+    """Filter to calculate the maximum of two values.
+    value = max(param1, param2)
+    """
+    nodeName = 'Maximum'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'param1': {'io': 'in'},
+            'param2': {'io': 'in'}, 
+            'value': {'io': 'out'}
+        })
+
+
+class TimeNode(FilterNode):
+    """Filter to represent time."""
+    nodeName = 'Time'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value': {'io': 'out'}
+        })
+
+
+class SwitchOnDelay8BitNode(FilterNode):
+    """Filter to represent an 8 bit - time on-switch."""
+    nodeName = 'SwitchOnDelay8Bit'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'time': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class SwitchOnDelay16BitNode(FilterNode):
+    """Filter to represent a 16 bit - time on-switch."""
+    nodeName = 'SwitchOnDelay16Bit'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'time': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class SwitchOnDelayFloatNode(FilterNode):
+    """Filter to represent a float/double - time on-switch."""
+    nodeName = 'SwitchOnDelayFloat'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'time': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class SwitchOffDelay8BitNode(FilterNode):
+    """Filter to represent an 8 bit - time off-switch."""
+    nodeName = 'SwitchOffDelay8Bit'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'time': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class SwitchOffDelay16BitNode(FilterNode):
+    """Filter to represent a 16 bit - time off-switch."""
+    nodeName = 'SwitchOffDelay16Bit'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'time': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+
+class SwitchOffDelayFloatNode(FilterNode):
+    """Filter to represent a float/double - time off-switch."""
+    nodeName = 'SwitchOffDelayFloat'
+
+    def __init__(self, name):
+        super().__init__(name, terminals={
+            'value_in': {'io': 'in'},
+            'time': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
