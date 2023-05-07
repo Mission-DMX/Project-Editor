@@ -4,7 +4,16 @@ from DMXModel import BoardConfiguration, Scene, Filter, Universe
 from widgets.NodeEditor.Nodes import FilterNode
 import proto.UniverseControl_pb2 as proto
 
-def createDocument(file_name: str, board_configuration: BoardConfiguration) -> bool:
+def writeDocument(file_name: str, xml: ET.Element) -> bool:
+    tree = ET.ElementTree(xml)
+    try:
+        tree.write(file_name)
+        return True
+    except IOError:
+        print(f"Could not save {file_name}")
+        return False
+
+def createXML(board_configuration: BoardConfiguration) -> ET.Element:
 
     root = _create_board_configuration_element(board_configuration)
 
@@ -37,9 +46,7 @@ def createDocument(file_name: str, board_configuration: BoardConfiguration) -> b
     for uihint in board_configuration.ui_hints:
         _create_uihint_element(uihint=uihint, parent=root)
 
-    tree = ET.ElementTree(root)
-    
-    tree.write(file_name)
+    return root
 
 
 def _create_board_configuration_element(board_configuration: BoardConfiguration) -> ET.Element:

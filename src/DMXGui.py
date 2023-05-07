@@ -12,7 +12,7 @@ from src.Style import Style
 from widgets.SzeneEditor.szene_editor import SzeneEditor
 from widgets.NodeEditor.NodeEditor import NodeEditorWidget
 from DMXModel import BoardConfiguration
-from ShowFile import createDocument
+from ShowFile import createXML, writeDocument
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -97,7 +97,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _save_scenes(self) -> None:
         """Safes the current scene to a file."""
-        createDocument("ShowFile.xml", self._board_configuration)
+        xml = createXML(self._board_configuration)
+        writeDocument("ShowFile.xml", xml)
 
     def _load_scenes(self) -> None:
         """load szene from file"""
@@ -125,22 +126,45 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _setup_toolbar(self) -> None:
         """Adds a toolbar with actions."""
-        toolbar = self.addToolBar("Mode")
+        self._toolbar = self.addToolBar("Mode")
         self.__switch_mode_action = QtGui.QAction(self)
         self.__switch_mode_action.setText("Direct Mode")
         self.__switch_mode_action.triggered.connect(self._switch_mode)
-        toolbar.addAction(self.__switch_mode_action)
+        self._toolbar.addAction(self.__switch_mode_action)
+
+        self.__send_show_file_action = QtGui.QAction(self)
+        self.__send_show_file_action.setText("Send Show File")
+        self.__send_show_file_action.triggered.connect(self._send_show_file)
+
+        self.__enter_scene_action = QtGui.QAction(self)
+        self.__enter_scene_action.setText("Change Scene")
+        self.__enter_scene_action.triggered.connect(self._enter_scene)
 
     def _switch_mode(self) -> None:
         """Switches between direct and filter mode."""
         if self._filter_mode:
             self.__switch_mode_action.setText("Filter Mode")
             self._widgets.setCurrentIndex(1)
+            self._toolbar.addAction(self.__send_show_file_action)
+            self._toolbar.addAction(self.__enter_scene_action)
+            
         else:
             self.__switch_mode_action.setText("Direct Mode")
             self._widgets.setCurrentIndex(0)
+            self._toolbar.removeAction(self.__send_show_file_action)
+            self._toolbar.removeAction(self.__enter_scene_action)
             
         self._filter_mode = not self._filter_mode
+
+    def _send_show_file(self) -> None:
+        xml = createXML(self._board_configuration)
+        self._fish_connector.load_show_file(xml=xml, goto_default_scene=True)
+
+    def _enter_scene(self) -> None:
+        id, ok = QtWidgets.QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
+        if ok:
+            print(f"Switching to scene {id}")
+            #self._fish_connector.enter_scene(id)
 
     def _setup_statusbar(self) -> None:
         """ build statusbor"""
