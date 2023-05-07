@@ -10,6 +10,9 @@ from PySide6 import QtWidgets, QtGui
 from Network import NetworkManager
 from src.Style import Style
 from widgets.SzeneEditor.szene_editor import SzeneEditor
+from widgets.NodeEditor.NodeEditor import NodeEditorWidget
+from DMXModel import BoardConfiguration
+from ShowFile import createDocument
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -24,12 +27,23 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self.setWindowTitle("Project-Editor")
+        
+        self._widgets = QtWidgets.QStackedWidget()
+        self._filter_mode: bool = True
+
+        self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
         self._szene_editor = SzeneEditor(self._fish_connector, self)
+        
+        self._node_editor = NodeEditorWidget(self, self._board_configuration)
+        self._node_editor.move(200, 200)
 
-        self.setCentralWidget(self._szene_editor)
+        self._widgets.addWidget(self._szene_editor)
+        self._widgets.addWidget(self._node_editor)
+
+        self.setCentralWidget(self._widgets)
 
         self._setup_menubar()
         self._setup_toolbar()
@@ -39,7 +53,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scenes],
-                                                                ["load", self._load_scenes]],
+                                                                ["load", self._load_scenes],
+                                                                ["Config", self._edit_config]],
                                                        "Szene": [["add", self._add_szene]],
                                                        "Universe": [["add", self._szene_editor.add_universe],
                                                                     ["remove", self._remove_universe]],
@@ -81,24 +96,8 @@ class MainWindow(QtWidgets.QMainWindow):
         return file_name
 
     def _save_scenes(self) -> None:
-        """Safes the current scene to a file.
-        TODO implement saving to xml file with xsd schema.
-         See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
-        """
-        data: str = ""
-        for szene in self._szene_editor.scenes:
-            for universe in szene.universes:
-                data += ""
-                for channel in universe.channels:
-                    data += str(channel.value) + ","
-                data = data[:-1]
-                data += ";"
-            data = data[:-1]
-            data += "\n"
-        file_name = self._get_file_name("save Szene")
-        if file_name:
-            with open(file_name, "w") as f:
-                f.write(data)
+        """Safes the current scene to a file."""
+        createDocument("ShowFile.xml", self._board_configuration)
 
     def _load_scenes(self) -> None:
         """load szene from file"""
@@ -111,6 +110,12 @@ class MainWindow(QtWidgets.QMainWindow):
                         for (chanel, value) in enumerate(universe.split(",")):
                             self._szene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
                                 = int(value)
+                            
+    def _edit_config(self) -> None:
+        """Edit the board configuration.
+        TODO Implement
+        """
+        
 
     def _get_name(self, title: str, msg: str) -> str:
         """select a new socket name over an input dialog"""
@@ -128,11 +133,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _switch_mode(self) -> None:
         """Switches between direct and filter mode."""
-        current_mode = self.__switch_mode_action.text()
-        if current_mode == "Direct Mode":
+        if self._filter_mode:
             self.__switch_mode_action.setText("Filter Mode")
+            self._widgets.setCurrentIndex(1)
         else:
             self.__switch_mode_action.setText("Direct Mode")
+            self._widgets.setCurrentIndex(0)
+            
+        self._filter_mode = not self._filter_mode
 
     def _setup_statusbar(self) -> None:
         """ build statusbor"""
