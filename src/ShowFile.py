@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-import os
 
 from DMXModel import BoardConfiguration, Scene, Filter, Universe
 from widgets.NodeEditor.Nodes import FilterNode

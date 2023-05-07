@@ -1,4 +1,4 @@
-from pyqtgraph.flowchart.Node import Node
+from pyqtgraph.flowchart.Node import Node, Terminal
 
 from DMXModel import Filter
 from src.DMXModel import Filter
@@ -9,10 +9,23 @@ class FilterNode(Node):
 
     def __init__(self, type: int, name: str, terminals: dict[str, dict[str, str]] = None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         super().__init__(name, terminals, allowAddInput, allowAddOutput, allowRemove)
-        self.filter: Filter = Filter(id=name, type=0)
+        self.filter: Filter = Filter(id=name, type=type)
 
-        for key, value in self.terminals.items():
-            self.filter.channel_links[key] = ""
+        for key, terminal in self.terminals.items():
+            if terminal.isInput():
+                self.filter.channel_links[key] = ""
+
+    def connected(self, localTerm: Terminal, remoteTerm: Terminal):
+        if localTerm.isInput() and remoteTerm.isOutput():
+            self.filter.channel_links[localTerm.name()] = remoteTerm.node().name() + ":" + remoteTerm.name()
+
+    def disconnected(self, localTerm, remoteTerm):
+        if localTerm.isInput() and remoteTerm.isOutput():
+            self.filter.channel_links[localTerm.name()] = ""
+
+    def rename(self, name):
+        self.filter.id = name
+        return super().rename(name)
 
 
 class Constants8BitNode(FilterNode):
@@ -23,7 +36,6 @@ class Constants8BitNode(FilterNode):
         super().__init__(type=0, name=name, terminals={
             'value': {'io': 'out'}
         })
-
 
 class Constants16BitNode(FilterNode):
     """Filter to represent a 16 bit value."""
@@ -65,7 +77,7 @@ class Debug8BitNode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=4, name=name, terminals={
-            '8bit)': {'io': 'in'}
+            '8bit': {'io': 'in'}
         })
 
 

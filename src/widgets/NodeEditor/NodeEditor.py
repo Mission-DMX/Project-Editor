@@ -77,7 +77,6 @@ class NodeEditorWidget(QTabWidget):
 
         text, ok = QInputDialog.getText(self, "Create a new scene", "Scene name")
         if ok:
-            print(len(self._board_configuration.scenes))
             scene = Scene(id=len(self._board_configuration.scenes), human_readable_name=text, filters=[])
             scene_tab = SceneTabWidget(scene, self._library.copy())
             self.insertTab(self.tabBar().count() - 2, scene_tab, text)
