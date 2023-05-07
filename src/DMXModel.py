@@ -5,6 +5,8 @@ from PySide6 import QtCore
 
 import proto.UniverseControl_pb2
 
+from pyqtgraph.flowchart.Flowchart import Flowchart
+
 
 class Channel(QtCore.QObject):
     """Basic dmx channel with 256 values"""
@@ -97,20 +99,22 @@ class Universe:
     def location(self):
         pass  
 
-@dataclass
+#@dataclass
 class Filter:
-    id: str
-    type: int 
-    channel_links: dict[str, str] = field(default_factory=dict)  
-    initial_parameters: dict[str, str] = field(default_factory=dict)
-    filter_configurations: dict[str, str] = field(default_factory=dict)  
+    def __init__(self, id: str, type: int) -> None:
+        self.id = id
+        self.type = type
+        self.channel_links: dict[str, str] = {} 
+        self.initial_parameters: dict[str, str] = {} 
+        self.filter_configurations: dict[str, str] = {}
 
 
 @dataclass
 class Scene:
     id: int
     filters: list[Filter]
-    human_readable_name: str = "Scene"
+    human_readable_name: str
+    flowchart: Flowchart = None
 
 
 @dataclass

@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector.start()
         self._szene_editor = SzeneEditor(self._fish_connector, self)
         
-        self._node_editor = NodeEditorWidget(self)
+        self._node_editor = NodeEditorWidget(self, self._board_configuration)
         self._node_editor.move(200, 200)
 
         self._widgets.addWidget(self._szene_editor)
@@ -97,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _save_scenes(self) -> None:
         """Safes the current scene to a file."""
-        createDocument(self._board_configuration)
+        createDocument("ShowFile.xml", self._board_configuration)
 
     def _load_scenes(self) -> None:
         """load szene from file"""

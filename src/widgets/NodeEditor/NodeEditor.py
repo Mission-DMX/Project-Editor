@@ -4,15 +4,17 @@ from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
 from . import Nodes
 from .SceneTabWidget import SceneTabWidget
-
+from DMXModel import BoardConfiguration, Scene
 
 class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
 
-    def __init__(self, parent: QWidget) -> None:
+    def __init__(self, parent: QWidget, board_configuration: BoardConfiguration) -> None:
         super().__init__(parent)
 
         self._library = NodeLibrary()
+
+        self._board_configuration = board_configuration
 
         self._library.addNodeType(Nodes.Constants8BitNode, [('Constants',)])
         self._library.addNodeType(Nodes.Constants16BitNode, [('Constants',)])
@@ -75,8 +77,12 @@ class NodeEditorWidget(QTabWidget):
 
         text, ok = QInputDialog.getText(self, "Create a new scene", "Scene name")
         if ok:
-            scene_tab = SceneTabWidget(text, self._library.copy())
+            print(len(self._board_configuration.scenes))
+            scene = Scene(id=len(self._board_configuration.scenes), human_readable_name=text, filters=[])
+            scene_tab = SceneTabWidget(scene, self._library.copy())
             self.insertTab(self.tabBar().count() - 2, scene_tab, text)
+
+            self._board_configuration.scenes.append(scene)
 
     def remove_scene_tab(self):
         index, ok = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")

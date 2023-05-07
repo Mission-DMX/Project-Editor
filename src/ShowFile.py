@@ -2,26 +2,29 @@ import xml.etree.ElementTree as ET
 import os
 
 from DMXModel import BoardConfiguration, Scene, Filter, Universe
+from widgets.NodeEditor.Nodes import FilterNode
 import proto.UniverseControl_pb2 as proto
-
 
 def createDocument(file_name: str, board_configuration: BoardConfiguration) -> bool:
 
-    root = _create_board_configuration_element()
+    root = _create_board_configuration_element(board_configuration)
 
     for scene in board_configuration.scenes:
-        _create_scene_element(scene=scene, parent=root)
+        scene_element = _create_scene_element(scene=scene, parent=root)
 
-        for filter in scene.filters:
-            filter_element = _create_filter_element(filter=filter, parent=scene)
+        for _, node in scene.flowchart.nodes().items():
+            if not isinstance(node, FilterNode):
+                return False
+
+            filter_element = _create_filter_element(filter=node.filter, parent=scene_element)
             
-            for channel_link in filter.channel_links.items():
+            for channel_link in node.filter.channel_links.items():
                 _create_channel_link_element(channel_link=channel_link, parent=filter_element)
             
-            for initial_parameter in filter.initial_parameters.items():
+            for initial_parameter in node.filter.initial_parameters.items():
                 _create_inital_parameters_element(initial_parameter=initial_parameter, parent=filter_element)
             
-            for filter_configuration in filter.filter_configurations.items():
+            for filter_configuration in node.filter.filter_configurations.items():
                 _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
     for universe in board_configuration.universes:
@@ -37,8 +40,7 @@ def createDocument(file_name: str, board_configuration: BoardConfiguration) -> b
 
     tree = ET.ElementTree(root)
     
-    with open(file_name) as f:
-        tree.write(f)
+    tree.write(file_name)
 
 
 def _create_board_configuration_element(board_configuration: BoardConfiguration) -> ET.Element:
@@ -48,7 +50,7 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
        ...
     </board_configuration>
     """
-    return ET.Element(tag="board_configuration", attrib={
+    return ET.Element("board_configuration", attrib={ 
         "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -65,7 +67,7 @@ def _create_scene_element(scene: Scene, parent: ET.Element) -> ET.Element:
       ...
     </scene>
     """
-    return ET.SubElement(parent=parent, tag="scene", attrib={
+    return ET.SubElement(parent, "scene", attrib={
         "id": str(scene.id),
         "human_readable_name": scene.human_readable_name
     })
@@ -78,7 +80,7 @@ def _create_filter_element(filter: Filter, parent: ET.Element) -> ET.Element:
       ...
     </filter>
     """
-    return ET.SubElement(parent=parent, tag="filter", attrib={
+    return ET.SubElement(parent, "filter", attrib={
         "id": filter.id,
         "type": str(filter.type)
     })
@@ -89,7 +91,7 @@ def _create_channel_link_element(channel_link: tuple[str, str] , parent: ET.Elem
     
     <channellink input_channel_id="id" output_channel_id="id">
     """
-    return ET.SubElement(parent=parent, tag="channellink", attrib={
+    return ET.SubElement(parent, "channellink", attrib={
         "input_channel_id": channel_link[0],
         "output_channel_id": channel_link[1]
     })
@@ -100,7 +102,7 @@ def _create_filter_configuration_element(self, filter_configuration: tuple[str, 
     
     <filterConfiguration name="key" value="value">
     """
-    return ET.SubElement(parent=parent, tag="filterConfiguration", attrib={
+    return ET.SubElement(parent, "filterConfiguration", attrib={
         "name": filter_configuration[0],
         "value": filter_configuration[0]
     })
@@ -111,7 +113,7 @@ def _create_inital_parameters_element(self, initial_parameter: tuple[str, str], 
     
     <initalParameters name="key" value="value">
     """
-    return ET.SubElement(parent=parent, tag="initialParameters", attrib={
+    return ET.SubElement(parent, "initialParameters", attrib={
         "name": initial_parameter[0],
         "value": initial_parameter[1]
     })
@@ -124,7 +126,7 @@ def _create_universe_element(self, universe: Universe, parent: ET.Element) -> ET
         ...
     </universe>
     """
-    return ET.SubElement(parent=parent, tag="universe", attrib={
+    return ET.SubElement(parent, "universe", attrib={
         "id": str(universe.address),
         "name": universe.name,
         "description": universe.description
@@ -136,7 +138,7 @@ def _create_physical_location_element(physical_location: int, parent: ET.Element
 
     <physical_location>0</physical_location>
     """
-    pl = ET.SubElement(parent=parent, tag="physical_location")
+    pl = ET.SubElement(parent, "physical_location")
     pl.text = str(physical_location)
     return pl
 
@@ -146,7 +148,7 @@ def _create_artnet_location_element(self, artnet_location: proto.Universe.ArtNet
     
     <artnet_location ip_address="127.0.0.1" udp_port="666" device_universe_id="0" />
     """
-    return ET.SubElement(parent=parent, tag="artnet_location", attrib={
+    return ET.SubElement(parent, "artnet_location", attrib={
         "ip_address": artnet_location.ip_address,
         "udp_port": str(artnet_location.port),
         "device_universe_id": str(artnet_location.universe_on_device)
@@ -158,7 +160,7 @@ def _create_ftdi_location_element(ftdi_location: proto.Universe.USBConfig, paren
     
     <ftdi_location vendor_id="0" product_id="0" device_name="name"/>
     """
-    return ET.SubElement(parent=parent, tag="ftdi_location", attrib={
+    return ET.SubElement(parent, "ftdi_location", attrib={
         "vendor_id": ftdi_location.vendor_id,
         "product_id": str(ftdi_location.product_id),
         "device_name": ftdi_location.device_name,
@@ -179,7 +181,7 @@ def _create_uihint_element(uihint: tuple[str, str], parent: ET.Element) -> ET.El
     
     <uihint name="key" value="value"/>
     """
-    return ET.SubElement(parent=parent, tag="uihint", attrib={
+    return ET.SubElement(parent, "uihint", attrib={
         "name": uihint[0],
         "value": uihint[1]
     })

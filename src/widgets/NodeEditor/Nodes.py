@@ -1,32 +1,18 @@
 from pyqtgraph.flowchart.Node import Node
 
-from .Filters import Filter
+from DMXModel import Filter
+from src.DMXModel import Filter
 
 
 class FilterNode(Node):
     """Basic filter node."""
-    def __init__(self, name, terminals=None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
+
+    def __init__(self, type: int, name: str, terminals: dict[str, dict[str, str]] = None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         super().__init__(name, terminals, allowAddInput, allowAddOutput, allowRemove)
-        self._filter_configurations: dict[str, str] = {}
-        self._initial_paramters: dict[str, str] = {}
+        self.filter: Filter = Filter(id=name, type=0)
 
-    @property 
-    def filter_configuration(self) -> dict[str, str]:
-        """The current configuration details."""
-        return self._filter_configurations
-    
-    @property
-    def initial_parameters(self) -> dict[str, str]:
-        """The initial parameters."""
-        return self._initial_paramters
-    
-    @property
-    def channel_link(self) -> dict[str, str]:
-        """List of connections for the filter's inputs.
-        TODO Implement
-        """
-        pass 
-
+        for key, value in self.terminals.items():
+            self.filter.channel_links[key] = ""
 
 
 class Constants8BitNode(FilterNode):
@@ -34,7 +20,7 @@ class Constants8BitNode(FilterNode):
     nodeName = 'Constants8Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=0, name=name, terminals={
             'value': {'io': 'out'}
         })
 
@@ -44,7 +30,7 @@ class Constants16BitNode(FilterNode):
     nodeName = 'Constants16Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=1, name=name, terminals={
             'value': {'io': 'out'}
         })
 
@@ -54,7 +40,7 @@ class ConstantsFloatNode(FilterNode):
     nodeName = 'ConstantsFloat'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=2, name=name, terminals={
             'value': {'io': 'out'}
         })
 
@@ -66,7 +52,7 @@ class ConstantsColorNode(FilterNode):
     nodeName = 'ConstantsColor'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=3, name=name, terminals={
             'value': {'io': 'out'}
         })
 
@@ -78,7 +64,7 @@ class Debug8BitNode(FilterNode):
     nodeName = 'Debug8Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=4, name=name, terminals={
             '8bit)': {'io': 'in'}
         })
 
@@ -90,7 +76,7 @@ class Debug16BitNode(FilterNode):
     nodeName = 'Debug16Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=5, name=name, terminals={
             '16bit': {'io': 'in'}
         })
 
@@ -102,7 +88,7 @@ class DebugFloatNode(FilterNode):
     nodeName = 'DebugFloat'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=6, name=name, terminals={
             'double': {'io': 'in'}
         })
 
@@ -114,7 +100,7 @@ class DebugColorNode(FilterNode):
     nodeName = 'DebugColor'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=7, name=name, terminals={
             'color': {'io': 'in'}
         })
 
@@ -124,7 +110,7 @@ class Adapters16To8Bit(FilterNode):
     nodeName = 'Adapters16To8Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=8, name=name, terminals={
             '16bit': {'io': 'in'},
             'value_lower': {'io': 'out'},
             'value_upper': {'io': 'out'},
@@ -138,7 +124,7 @@ class Adapters16ToBool(FilterNode):
     nodeName = 'Adapters16ToBool'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=9, name=name, terminals={
             '16bit': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -151,7 +137,7 @@ class ArithmeticsMAC(FilterNode):
     nodeName = 'ArithmeticsMAC'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=10, name=name, terminals={
             'factor1': {'io': 'in'},
             'factor2': {'io': 'in'},
             'summand': {'io': 'in'},
@@ -164,7 +150,7 @@ class UniverseNode(FilterNode):
     nodeName = 'Universe'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=11, name=name, terminals={
             f"channel{i}": {'io': 'in'} for i in range(8)
         }, allowAddInput=True)
 
@@ -174,74 +160,74 @@ class UniverseNode(FilterNode):
         if current_inputs >= 512:
             return None
         return super().addInput(f"channel{current_inputs}", **args)
-        
-        
+
+
 class ArithmeticsFloatTo8Bit(FilterNode):
     """Filter to round a float/double value to an 8 bit value."""
     nodeName = 'ArithmeticsFloatTo8Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=13, name=name, terminals={
             'double': {'io': 'in'},
             'value': {'io': 'out'}
         })
-          
+
 
 class ArithmeticsFloatTo16Bit(FilterNode):
     """Filter to round a float/double value to a 16 bit value."""
     nodeName = 'ArithmeticsFloatTo16Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=12, name=name, terminals={
             'double': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        
+
 
 class ArithmeticsRound(FilterNode):
     """Filter to round a float/double value to a float/double value"""
     nodeName = 'ArithmeticsRound'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=14, name=name, terminals={
             'double': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        
+
 
 class ColorToRGBNode(FilterNode):
     """Filter to convert a color value to a rgb value."""
     nodeName = 'ColorToRGB'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=15, name=name, terminals={
             'color': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
             'b': {'io': 'out'}
         })
-        
+
 
 class ColorToRGBWNode(FilterNode):
     """Filter to convert a color value to a rgbw value."""
     nodeName = 'ColorToRGBW'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=16, name=name, terminals={
             'color': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
             'b': {'io': 'out'},
             'w': {'io': 'out'}
         })
-        
-        
+
+
 class ColorToRGBWANode(FilterNode):
     """Filter to convert a color value to a rgbwa value."""
     nodeName = 'ColorToRGBWA'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=17, name=name, terminals={
             'color': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
@@ -256,7 +242,7 @@ class FloatToColorNode(FilterNode):
     nodeName = 'FloatToPixel'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=18, name=name, terminals={
             'h': {'io': 'in'},
             's': {'io': 'in'},
             'i': {'io': 'in'},
@@ -271,7 +257,7 @@ class SineNode(FilterNode):
     nodeName = 'Sine'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=19, name=name, terminals={
             'value_in': {'io': 'in'},
             'factor_outer': {'io': 'in'},
             'factor_inner': {'io': 'in'},
@@ -288,7 +274,7 @@ class CosineNode(FilterNode):
     nodeName = 'Cosine'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=20, name=name, terminals={
             'value_in': {'io': 'in'},
             'factor_outer': {'io': 'in'},
             'factor_inner': {'io': 'in'},
@@ -305,7 +291,7 @@ class TangentNode(FilterNode):
     nodeName = 'Tangent'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=21, name=name, terminals={
             'value_in': {'io': 'in'},
             'factor_outer': {'io': 'in'},
             'factor_inner': {'io': 'in'},
@@ -322,7 +308,7 @@ class ArcsineNode(FilterNode):
     nodeName = 'Arcsine'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=22, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -335,7 +321,7 @@ class ArccosineNode(FilterNode):
     nodeName = 'Arccosine'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=23, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -348,7 +334,7 @@ class ArctangentNode(FilterNode):
     nodeName = 'Arctangent'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=24, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -359,7 +345,7 @@ class SquareWaveNode(FilterNode):
     nodeName = 'SquareWave'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=25, name=name, terminals={
             'value_in': {'io': 'in'},
             'factor_outer': {'io': 'in'},
             'factor_inner': {'io': 'in'},
@@ -375,7 +361,7 @@ class TriangleWaveNode(FilterNode):
     nodeName = 'TriangelWave'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=26, name=name, terminals={
             'value_in': {'io': 'in'},
             'factor_outer': {'io': 'in'},
             'factor_inner': {'io': 'in'},
@@ -390,7 +376,7 @@ class SawtoothWaveNode(FilterNode):
     nodeName = 'SawtoothWave'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=27, name=name, terminals={
             'value_in': {'io': 'in'},
             'factor_outer': {'io': 'in'},
             'factor_inner': {'io': 'in'},
@@ -407,7 +393,7 @@ class LogarithmNode(FilterNode):
     nodeName = 'Logarithm'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=28, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -420,7 +406,7 @@ class ExponentialNode(FilterNode):
     nodeName = 'Exponential'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=29, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -433,9 +419,9 @@ class MinimumNode(FilterNode):
     nodeName = 'Minimum'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=30, name=name, terminals={
             'param1': {'io': 'in'},
-            'param2': {'io': 'in'}, 
+            'param2': {'io': 'in'},
             'value': {'io': 'out'}
         })
 
@@ -447,9 +433,9 @@ class MaximumNode(FilterNode):
     nodeName = 'Maximum'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=31, name=name, terminals={
             'param1': {'io': 'in'},
-            'param2': {'io': 'in'}, 
+            'param2': {'io': 'in'},
             'value': {'io': 'out'}
         })
 
@@ -459,7 +445,7 @@ class TimeNode(FilterNode):
     nodeName = 'Time'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=32, name=name, terminals={
             'value': {'io': 'out'}
         })
 
@@ -469,7 +455,7 @@ class SwitchOnDelay8BitNode(FilterNode):
     nodeName = 'SwitchOnDelay8Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=33, name=name, terminals={
             'value_in': {'io': 'in'},
             'time': {'io': 'in'},
             'value': {'io': 'out'}
@@ -481,7 +467,7 @@ class SwitchOnDelay16BitNode(FilterNode):
     nodeName = 'SwitchOnDelay16Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=34, name=name, terminals={
             'value_in': {'io': 'in'},
             'time': {'io': 'in'},
             'value': {'io': 'out'}
@@ -493,7 +479,7 @@ class SwitchOnDelayFloatNode(FilterNode):
     nodeName = 'SwitchOnDelayFloat'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=35, name=name, terminals={
             'value_in': {'io': 'in'},
             'time': {'io': 'in'},
             'value': {'io': 'out'}
@@ -505,7 +491,7 @@ class SwitchOffDelay8BitNode(FilterNode):
     nodeName = 'SwitchOffDelay8Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=36, name=name, terminals={
             'value_in': {'io': 'in'},
             'time': {'io': 'in'},
             'value': {'io': 'out'}
@@ -517,7 +503,7 @@ class SwitchOffDelay16BitNode(FilterNode):
     nodeName = 'SwitchOffDelay16Bit'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=37, name=name, terminals={
             'value_in': {'io': 'in'},
             'time': {'io': 'in'},
             'value': {'io': 'out'}
@@ -529,7 +515,7 @@ class SwitchOffDelayFloatNode(FilterNode):
     nodeName = 'SwitchOffDelayFloat'
 
     def __init__(self, name):
-        super().__init__(name, terminals={
+        super().__init__(type=38, name=name, terminals={
             'value_in': {'io': 'in'},
             'time': {'io': 'in'},
             'value': {'io': 'out'}
