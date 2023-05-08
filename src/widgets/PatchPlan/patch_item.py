@@ -1,3 +1,5 @@
+# coding=utf-8
+""" item of the Patching """
 from PySide6 import QtWidgets
 
 from DMXModel import Channel, Universe
