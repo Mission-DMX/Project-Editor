@@ -1,3 +1,5 @@
+# coding=utf-8
+""" setup for DMX Project"""
 from setuptools import setup, find_packages
 
 setup(name='fish-e',
