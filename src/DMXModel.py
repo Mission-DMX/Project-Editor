@@ -17,7 +17,6 @@ class Channel(QtCore.QObject):
             raise ValueError(f"Tried to create a channel with address {channel_address}")
         self._address: int = channel_address
         self._value: int = 0
-#       self._device: Device = Globals.EMPTY_DEVICE
         self._device: Device = Device("<empty>")
 
     @property
