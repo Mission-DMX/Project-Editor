@@ -1,12 +1,12 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
 from dataclasses import dataclass, field
+
 from PySide6 import QtCore
+from pyqtgraph.flowchart.Flowchart import Flowchart
 
 import proto.UniverseControl_pb2
 from ofl.fixture import UsedFixture, Mode
-
-from pyqtgraph.flowchart.Flowchart import Flowchart
 
 
 class Channel(QtCore.QObject):
@@ -132,19 +132,20 @@ class Universe:
 
     @property
     def name(self) -> str:
-        """Human readable name for the universe."""
-        return f"Universe {self.address}"
+        """Human-readable name for the universe."""
+        return f"Universe {self.universe_proto.id}"
 
     @property
     def description(self) -> str:
-        """Human readable description for the universe."""
+        """Human-readable description for the universe."""
         return self.name
 
     @property
     def location(self):
         pass
 
-#@dataclass
+
+# @dataclass
 class Filter:
     def __init__(self, id: str, type: int) -> None:
         self.id = id
