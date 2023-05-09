@@ -8,6 +8,7 @@ from typing import Callable
 from PySide6 import QtWidgets, QtGui
 
 from Network import NetworkManager
+from ofl.patching_dialog import PatchingDialog
 from src.Style import Style
 from widgets.SzeneEditor.szene_editor import SzeneEditor
 
@@ -45,7 +46,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                     ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
                                                                 ["Disconnect", self._fish_connector.disconnect],
-                                                                ["Change", self._change_server_name]]}
+                                                                ["Change", self._change_server_name]],
+                                                       "Patch": [["add", self._patch]]}
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
@@ -111,6 +113,12 @@ class MainWindow(QtWidgets.QMainWindow):
                         for (chanel, value) in enumerate(universe.split(",")):
                             self._szene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
                                 = int(value)
+
+    def _patch(self) -> None:
+        """ patch a fixture"""
+        form = PatchingDialog(self)
+        if form.exec():
+            self._szene_editor.patch(form.get_used_fixture(), form.patching.text())
 
     def _get_name(self, title: str, msg: str) -> str:
         """select a new socket name over an input dialog"""
