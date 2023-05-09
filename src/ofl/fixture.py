@@ -1,10 +1,12 @@
+# coding=utf-8
+"""Fixture Definitions from OFL """
 import json
 from enum import Enum
 from typing import TypedDict
 
 
-class Categorie(Enum):
-    """"""
+class Category(Enum):
+    """Category of Fixtures"""
     "Barrel Scanner"
     "Blinder"
     "Color Changer"
@@ -24,33 +26,30 @@ class Categorie(Enum):
     "Other"
 
 
-# class ImportPlugin(TypedDict):
-#    plugin: str
-#    date: str
-#    comment: Optional[str]
-class Capabilities:
-    dmxRange: tuple[int, int]
-    #
+# class Capabilities:
+#    dmxRange: tuple[int, int]
 
 
-class Channel(TypedDict):
-    defaultValue: str
-    highlightValue: str
-    capabilities: list[Capabilities]
+# class Channel(TypedDict):
+#    defaultValue: str
+#    highlightValue: str
+#    capabilities: list[Capabilities]
 
 
 class Mode(TypedDict):
+    """ possible Modes of a fixture"""
     name: str
     shortName: str
     #    rdmPersonalityIndex: int
     #    physical: Physical
-    channels: list[Channel]
+    channels: list[str]
 
 
 class Fixture(TypedDict):
+    """a Fixture from OFL"""
     name: str
-    shortName: str | None
-    categories: set[Categorie]
+    shortName: str
+    categories: set[Category]
     #    meta: MetaData
     comment: str
     #    links: Links
@@ -65,17 +64,39 @@ class Fixture(TypedDict):
 
 
 def load_fixture(file) -> Fixture:
+    """load fixture from OFL json"""
     f = open(file)
-    ob = json.load(f)
+    ob: json = json.load(f)
     return Fixture(name=ob["name"],
-                   comment=ob["comment"],
-                   shortName=try_load(ob,"shortName"),
+                   comment=try_load(ob, "comment"),
+                   shortName=try_load(ob, "shortName"),
                    categories=ob["categories"],
                    modes=ob["modes"])
 
-def try_load(ob, name):
+
+def try_load(ob: json, name: object) -> str:
+    """ try to load not required json parts"""
     try:
         return ob[name]
-    except:
+    except KeyError:
         return ""
 
+
+class UsedFixture:
+    """ Fixture in use with a specific mode"""
+
+    def __init__(self, name: str, short_name: str, categories: set[Category], comment: str, mode: Mode) -> None:
+        self.name: str = name
+        self.short_name: str = short_name
+        self.categories: set[Category] = categories
+        self.comment: str = comment
+        self.mode: Mode = mode
+
+
+def make_used_fixture(fixture: Fixture, mode_index: int) -> UsedFixture:
+    """generate a new Used Fixture from a fixture"""
+    return UsedFixture(fixture['name'],
+                       fixture['shortName'],
+                       fixture['categories'],
+                       fixture['comment'],
+                       fixture['modes'][mode_index])
