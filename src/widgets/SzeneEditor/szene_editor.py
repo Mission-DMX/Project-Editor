@@ -4,6 +4,7 @@ from PySide6 import QtWidgets
 
 from Network import NetworkManager
 from Style import Style
+from ofl.fixture import UsedFixture
 from widgets.UniverseSelector.universe_selector import UniverseSelector
 
 
@@ -17,24 +18,49 @@ class SzeneEditor(QtWidgets.QTabWidget):
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self._scenes: list[UniverseSelector] = [UniverseSelector(self._fish_connector, None, self)]
         self.addTab(self._scenes[0], "start")
-        self.currentChanged.connect(self.tabChanged)
+        self.currentChanged.connect(self.tab_changed)
 
     @property
     def scenes(self) -> list[UniverseSelector]:
-        """Scene property"""
+        """current Scenes"""
         return self._scenes
 
     def add_szene(self, name) -> None:
-        self._scenes.append(UniverseSelector(self._fish_connector, self._scenes[0].universe_coppy(), self))
+        """
+        add a new szene
+        Args:
+            name: name of the new szene
+        """
+        self._scenes.append(
+            UniverseSelector(self._fish_connector, self._scenes[0].universe_coppy(), self))
         self.addTab(self._scenes[-1], name)
 
     def add_universe(self) -> None:
+        """ add a new universe """
         for scene in self._scenes:
             scene.add_universe()
 
-    def start(self):
+    def start(self) -> None:
+        """start connection to fish"""
         for szene in self._scenes:
             szene.start()
 
-    def tabChanged(self, index: int):
-        self._scenes[index].send_all_universe()
+    def tab_changed(self, szene_index: int) -> None:
+        """
+        send all universes if tab changed
+        Args:
+            szene_index: index of current szene
+        """
+        self._scenes[szene_index].send_all_universe()
+
+    def patch(self, fixture: UsedFixture, patching: str) -> None:
+        """
+        patch a fixture to all scenes
+        Args:
+            fixture: fixture to patch
+            patching: patching string
+        """
+
+        universe, updated = self._scenes[0].patch(fixture, patching)
+        for szene in self._scenes:
+            szene.patch_update(universe, updated)

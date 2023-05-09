@@ -1,24 +1,34 @@
+# coding=utf-8
+""" item of the Patching """
 from PySide6 import QtWidgets
 
-from DMXModel import Channel, Universe
+from DMXModel import PatchingChannel, Universe
+from Style import Style
 
 
 class PatchItem(QtWidgets.QFrame):
-    def __init__(self, channel: Channel, universe: Universe):
+    """a single item of the PatchPlan"""
+
+    def __init__(self, channel: PatchingChannel, universe: Universe):
         super().__init__()
-        self._channel: Channel = channel
+        self._channel: PatchingChannel = channel
         self._universe = universe
-        self.setFixedSize(80, 80)
-        self.setStyleSheet("background-color: rgb(0,0,0); border:1px solid rgb(255, 255, 255); ")
-        address_label: QtWidgets.QLabel = QtWidgets.QLabel(str(channel.address+1), self)
+        self.setFixedSize(100, 80)
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        address_label: QtWidgets.QLabel = QtWidgets.QLabel(str(channel.address + 1), self)
         address_label.setFixedSize(40, 20)
-        self._device_name: QtWidgets.QLabel = QtWidgets.QLabel(self)
-        self._chanel_value: QtWidgets.QLabel = QtWidgets.QLabel(self)
-        self._device_name.move(0, address_label.height())
-        self._chanel_value.move(address_label.width(), 0)
-        self.update()
+        self._fixture_name: QtWidgets.QLabel = QtWidgets.QLabel(self)
+        self._fixture_channel: QtWidgets.QLabel = QtWidgets.QLabel(self)
+        layout.addWidget(address_label)
+        layout.addWidget(self._fixture_name)
+        layout.addWidget(self._fixture_channel)
+        self.setLayout(layout)
+        self.update_patching()
 
-    def update(self):
-        self._device_name.setText(self._channel.device.name)
-        self._chanel_value.setText(str(self._channel.value))
-
+    def update_patching(self) -> None:
+        """update patch item after patching"""
+        self._fixture_name.setText(self._channel.fixture.name)
+        self._fixture_channel.setText(self._channel.fixture_channel)
+        self.setStyleSheet(Style.PATCH + f"background-color: {self._channel.color};")
