@@ -13,6 +13,7 @@ import proto.UniverseControl_pb2
 import varint
 from DMXModel import Universe
 
+
 class NetworkManager(QtCore.QObject):
     """Handles connection to Fish."""
     connection_state_updated: QtCore.Signal = QtCore.Signal(str)
@@ -95,19 +96,45 @@ class NetworkManager(QtCore.QObject):
             msg_bytes = msg_bytes[msg_len + 2:]
             match msg_type:
                 case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
-                    update: proto.RealTimeControl_pb2.current_state_update = \
+                    message: proto.RealTimeControl_pb2.current_state_update = \
                         proto.RealTimeControl_pb2.current_state_update()
-                    update.ParseFromString(bytes(msg))
-                    self._fish_update(update)
+                    message.ParseFromString(bytes(msg))
+                    self._fish_update(message)
+                case proto.MessageTypes_pb2.MSGT_LOG_MESSAGE:
+                    message: proto.RealTimeControl_pb2.long_log_update = proto.RealTimeControl_pb2.long_log_update()
+                    message.ParseFromString(bytes(msg))
+                    self._log_fish(message)
+
                 case _:
                     pass
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
+        """
+        current state of Fish
+        Args:
+            msg: message from Fish
+        """
         self.last_cycle_time_update.emit(int(msg.last_cycle_time))
         new_message: str = msg.last_error
         if self._fish_status != new_message:
             self.status_updated.emit(new_message)
             self._fish_status = new_message
+
+    def _log_fish(self, msg: proto.RealTimeControl_pb2.long_log_update):
+        """
+        long log messages from Fish
+        Args:
+            msg: message from Fish
+        """
+        match msg.level:
+            case proto.RealTimeControl_pb2.LogLevel.LL_INFO:
+                logging.info(msg.what)
+            case proto.RealTimeControl_pb2.LogLevel.LL_DEBUG:
+                logging.debug(msg.what)
+            case proto.RealTimeControl_pb2.LogLevel.LL_ERROR:
+                logging.error(msg.what)
+            case proto.RealTimeControl_pb2.LogLevel.LL_WARNING:
+                logging.warning(msg.what)
 
     def _on_state_changed(self) -> None:
         """Starts or stops to send messages if the connection state changes."""
@@ -122,9 +149,10 @@ class NetworkManager(QtCore.QObject):
             return "Connected"
         else:
             return "Not Connected"
-        
+
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
-        msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'), goto_default_scene=goto_default_scene)
+        msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'),
+                                                  goto_default_scene=goto_default_scene)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
     def enter_scene(self, scene_id: int) -> None:

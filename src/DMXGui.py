@@ -7,13 +7,14 @@ from typing import Callable
 
 from PySide6 import QtWidgets, QtGui
 
+from DMXModel import BoardConfiguration
 from Network import NetworkManager
+from ShowFile import createXML, writeDocument
 from ofl.patching_dialog import PatchingDialog
 from src.Style import Style
-from widgets.SzeneEditor.szene_editor import SzeneEditor
+from widgets.Logging.logging_widget import LoggingWidget
 from widgets.NodeEditor.NodeEditor import NodeEditorWidget
-from DMXModel import BoardConfiguration
-from ShowFile import createXML, writeDocument
+from widgets.SzeneEditor.szene_editor import SzeneEditor
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -26,23 +27,25 @@ class MainWindow(QtWidgets.QMainWindow):
             parent: Qt parent of the widget.
         """
         super().__init__(parent)
+        # first logging to don't miss logs
+        self._debug_console = LoggingWidget()
 
         self.setWindowTitle("Project-Editor")
-        
+
         self._widgets = QtWidgets.QStackedWidget()
-        self._filter_mode: bool = True
 
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
         self._szene_editor = SzeneEditor(self._fish_connector, self)
-        
+
         self._node_editor = NodeEditorWidget(self, self._board_configuration)
         self._node_editor.move(200, 200)
 
         self._widgets.addWidget(self._szene_editor)
         self._widgets.addWidget(self._node_editor)
+        self._widgets.addWidget(self._debug_console)
 
         self.setCentralWidget(self._widgets)
 
@@ -113,12 +116,11 @@ class MainWindow(QtWidgets.QMainWindow):
                         for (chanel, value) in enumerate(universe.split(",")):
                             self._szene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
                                 = int(value)
-                            
+
     def _edit_config(self) -> None:
         """Edit the board configuration.
         TODO Implement
         """
-        
 
     def _patch(self) -> None:
         """ patch a fixture"""
@@ -135,10 +137,20 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_toolbar(self) -> None:
         """Adds a toolbar with actions."""
         self._toolbar = self.addToolBar("Mode")
-        self.__switch_mode_action = QtGui.QAction(self)
-        self.__switch_mode_action.setText("Direct Mode")
-        self.__switch_mode_action.triggered.connect(self._switch_mode)
-        self._toolbar.addAction(self.__switch_mode_action)
+        self._switch_to_direct_mode_button = QtGui.QAction(self)
+        self._switch_to_direct_mode_button.setText("Direct Mode")
+        self._switch_to_direct_mode_button.triggered.connect(self._switch_to_direct_mode)
+        self._toolbar.addAction(self._switch_to_direct_mode_button)
+
+        self._switch_to_filter_mode_button = QtGui.QAction(self)
+        self._switch_to_filter_mode_button.setText("Filter Mode")
+        self._switch_to_filter_mode_button.triggered.connect(self._switch_to_filter_mode)
+        self._toolbar.addAction(self._switch_to_filter_mode_button)
+
+        self.__debug_console = QtGui.QAction(self)
+        self.__debug_console.setText("Debug")
+        self.__debug_console.triggered.connect(self._switch_to_debug_console)
+        self._toolbar.addAction(self.__debug_console)
 
         self.__send_show_file_action = QtGui.QAction(self)
         self.__send_show_file_action.setText("Send Show File")
@@ -148,21 +160,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.__enter_scene_action.setText("Change Scene")
         self.__enter_scene_action.triggered.connect(self._enter_scene)
 
-    def _switch_mode(self) -> None:
-        """Switches between direct and filter mode."""
-        if self._filter_mode:
-            self.__switch_mode_action.setText("Filter Mode")
-            self._widgets.setCurrentIndex(1)
-            self._toolbar.addAction(self.__send_show_file_action)
-            self._toolbar.addAction(self.__enter_scene_action)
-            
-        else:
-            self.__switch_mode_action.setText("Direct Mode")
-            self._widgets.setCurrentIndex(0)
-            self._toolbar.removeAction(self.__send_show_file_action)
-            self._toolbar.removeAction(self.__enter_scene_action)
-            
-        self._filter_mode = not self._filter_mode
+    def _switch_to_direct_mode(self) -> None:
+        """switch to direct mode"""
+        self._widgets.setCurrentIndex(0)
+        self._toolbar.removeAction(self.__send_show_file_action)
+        self._toolbar.removeAction(self.__enter_scene_action)
+
+    def _switch_to_filter_mode(self) -> None:
+        """switch to filter mode"""
+        self._widgets.setCurrentIndex(1)
+        self._toolbar.addAction(self.__send_show_file_action)
+        self._toolbar.addAction(self.__enter_scene_action)
+
+    def _switch_to_debug_console(self) -> None:
+        """switch to Debug Console"""
+        self._widgets.setCurrentIndex(2)
+        self._toolbar.removeAction(self.__send_show_file_action)
+        self._toolbar.removeAction(self.__enter_scene_action)
 
     def _send_show_file(self) -> None:
         xml = createXML(self._board_configuration)
@@ -172,7 +186,7 @@ class MainWindow(QtWidgets.QMainWindow):
         id, ok = QtWidgets.QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
         if ok:
             print(f"Switching to scene {id}")
-            #self._fish_connector.enter_scene(id)
+            # self._fish_connector.enter_scene(id)
 
     def _setup_statusbar(self) -> None:
         """ build statusbor"""
@@ -211,8 +225,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(encoding='utf-8', level=logging.ERROR)
-    logging.info("start DMXGui")
+    logging.basicConfig(encoding='utf-8', level=logging.INFO)
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
     screen_width = app.primaryScreen().size().width()
