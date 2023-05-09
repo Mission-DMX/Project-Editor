@@ -1,5 +1,7 @@
 # coding=utf-8
 """select Universe"""
+import random
+
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 
@@ -7,6 +9,7 @@ import proto.UniverseControl_pb2
 from DMXModel import Universe
 from Network import NetworkManager
 from Style import Style
+from ofl.fixture import UsedFixture
 from widgets.DirectEditor.DirectEditorWidget import DirectEditorWidget
 from widgets.PatchPlan.patch_plan_widget import PatchPlanWidget
 
@@ -19,13 +22,16 @@ class UniverseSelector(QtWidgets.QTabWidget):
         if universes is None:
             universes = []
         self._universes: list[Universe] = universes
+        self._patch_planes: list[PatchPlanWidget] = []
         self._fish_connector = fish_connector
         self.setStyleSheet(Style.WIDGET)
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
-        for universe in self._universes:
-            self.add_universe(universe)
+
         if len(universes) == 0:
             self.add_universe(None)
+        else:
+            for universe in self._universes:
+                self.add_universe(universe)
 
     @property
     def universes(self) -> list[Universe]:
@@ -52,7 +58,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
                 #    serial="",
                 #    device_name=""
                 # )
-            ))
+            ), None)
         if universe not in self._universes:
             self._universes.append(universe)
 
@@ -63,8 +69,9 @@ class UniverseSelector(QtWidgets.QTabWidget):
         splitter = QtWidgets.QSplitter(self)
         splitter.setOrientation(Qt.Vertical)
 
-        custom_editor: PatchPlanWidget = PatchPlanWidget(universe, parent=splitter)
-        splitter.addWidget(custom_editor)
+        patch_plan = PatchPlanWidget(universe, parent=splitter)
+        splitter.addWidget(patch_plan)
+        self._patch_planes.append(patch_plan)
 
         direct_editor: DirectEditorWidget = DirectEditorWidget(universe, self._fish_connector, parent=splitter)
         splitter.addWidget(direct_editor)
@@ -75,15 +82,57 @@ class UniverseSelector(QtWidgets.QTabWidget):
         """coppy a whole universe by creating a new one"""
         universes_copy: list[Universe] = []
         for universe in self._universes:
-            universe_copy = Universe(universe.universe_proto)
+            universe_copy = Universe(universe.universe_proto, universe.patching)
             universes_copy.append(universe_copy)
         return universes_copy
 
-    def start(self):
+    def start(self) -> None:
+        """start connection with fish"""
         for universe in self._universes:
             if self._fish_connector.is_running:
                 self._fish_connector.generate_universe(universe)
 
-    def send_all_universe(self):
+    def send_all_universe(self) -> None:
+        """send all universes to fish"""
         for universe in self._universes:
             self._fish_connector.send_universe(universe)
+
+    def patch(self, fixture: UsedFixture, patching: str) -> tuple[int, list[int]]:
+        """
+        patch a specific fixture
+        Args:
+            fixture: fixture to patch
+            patching: patching String
+
+        Returns:
+            universe: the index of modified universe
+            updated: list of indices of modified channels
+
+        """
+        spliter = patching.split("@")
+        # TODO Number
+        number = spliter[0]
+        spliter = spliter[1].split("-")
+        universe = int(spliter[0]) - 1
+        channel = int(spliter[1]) - 1
+        updated: list[int] = []
+
+        color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
+        for index in range(len(fixture.mode['channels'])):
+            modified: int = channel + index
+            updated.append(modified)
+            item = self._universes[universe].patching[modified]
+            item.fixture = fixture
+            item.fixture_channel = index
+            item.color = color
+        return universe, updated
+
+    def patch_update(self, universe: int, modified: list[int]) -> None:
+        """
+        update patch items
+        Args:
+            universe: universe to update
+            modified: list of indices of modified channels
+        """
+        for index in modified:
+            self._patch_planes[universe].update_patching(index)
