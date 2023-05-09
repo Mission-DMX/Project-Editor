@@ -42,23 +42,379 @@ BS_BUTTON_PRESSED: ButtonState.ValueType  # 3
 BS_BUTTON_RELEASED: ButtonState.ValueType  # 4
 global___ButtonState = ButtonState
 
+class _ButtonCode:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _ButtonCodeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ButtonCode.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    BTN_CH1_ENCODER_ROTARYMODE: _ButtonCode.ValueType  # 0
+    """Until BTN_TRACK_EDITSHOW (excluding) the following buttons are handled internally by the driver.
+    Switches rotary encoder between Hue; Saturation and (if applicable) UV and (if applicable) Amber; Second row of LCD displays mode and setting
+    """
+    BTN_CH2_ENCODER_ROTARYMODE: _ButtonCode.ValueType  # 1
+    BTN_CH3_ENCODER_ROTARYMODE: _ButtonCode.ValueType  # 2
+    BTN_CH4_ENCODER_ROTARYMODE: _ButtonCode.ValueType  # 3
+    BTN_CH5_ENCODER_ROTARYMODE: _ButtonCode.ValueType  # 4
+    BTN_CH6_ENCODER_ROTARYMODE: _ButtonCode.ValueType  # 5
+    BTN_CH7_ENCODER_ROTARYMODE: _ButtonCode.ValueType  # 6
+    BTN_CH8_ENCODER_ROTARYMODE: _ButtonCode.ValueType  # 7
+    BTN_CH1_REC_READY: _ButtonCode.ValueType  # 8
+    """If ready is enabled (blinking red); the entered changes of the channel are not applied until the COMMITRDY button is pressed."""
+    BTN_CH2_REC_READY: _ButtonCode.ValueType  # 9
+    BTN_CH3_REC_READY: _ButtonCode.ValueType  # 10
+    BTN_CH4_REC_READY: _ButtonCode.ValueType  # 11
+    BTN_CH5_REC_READY: _ButtonCode.ValueType  # 12
+    BTN_CH6_REC_READY: _ButtonCode.ValueType  # 13
+    BTN_CH7_REC_READY: _ButtonCode.ValueType  # 14
+    BTN_CH8_REC_READY: _ButtonCode.ValueType  # 15
+    BTN_CH1_SOLO_FIND: _ButtonCode.ValueType  # 16
+    """When in quick console mode: let the ficture strobe in order to find the linked lamp"""
+    BTN_CH2_SOLO_FIND: _ButtonCode.ValueType  # 17
+    """When in show mode with displayed show UI: open an advanced color picker on the touch screen"""
+    BTN_CH3_SOLO_FIND: _ButtonCode.ValueType  # 18
+    """When show editor is displayed: jump to and highlight input filter"""
+    BTN_CH4_SOLO_FIND: _ButtonCode.ValueType  # 19
+    BTN_CH5_SOLO_FIND: _ButtonCode.ValueType  # 20
+    BTN_CH6_SOLO_FIND: _ButtonCode.ValueType  # 21
+    BTN_CH7_SOLO_FIND: _ButtonCode.ValueType  # 22
+    BTN_CH8_SOLO_FIND: _ButtonCode.ValueType  # 23
+    BTN_CH1_MUTE_BLACK: _ButtonCode.ValueType  # 24
+    """Make the brightness output of this lamp zero; button led should be blinking if enabled"""
+    BTN_CH2_MUTE_BLACK: _ButtonCode.ValueType  # 25
+    BTN_CH3_MUTE_BLACK: _ButtonCode.ValueType  # 26
+    BTN_CH4_MUTE_BLACK: _ButtonCode.ValueType  # 27
+    BTN_CH5_MUTE_BLACK: _ButtonCode.ValueType  # 28
+    BTN_CH6_MUTE_BLACK: _ButtonCode.ValueType  # 29
+    BTN_CH7_MUTE_BLACK: _ButtonCode.ValueType  # 30
+    BTN_CH8_MUTE_BLACK: _ButtonCode.ValueType  # 31
+    BTN_CH1_SELECT_SELECT: _ButtonCode.ValueType  # 32
+    """Select this column for linked linked advanced input; led is activated if selected"""
+    BTN_CH2_SELECT_SELECT: _ButtonCode.ValueType  # 33
+    BTN_CH3_SELECT_SELECT: _ButtonCode.ValueType  # 34
+    BTN_CH4_SELECT_SELECT: _ButtonCode.ValueType  # 35
+    BTN_CH5_SELECT_SELECT: _ButtonCode.ValueType  # 36
+    BTN_CH6_SELECT_SELECT: _ButtonCode.ValueType  # 37
+    BTN_CH7_SELECT_SELECT: _ButtonCode.ValueType  # 38
+    BTN_CH8_SELECT_SELECT: _ButtonCode.ValueType  # 39
+    BTN_TRACK_EDITSHOW: _ButtonCode.ValueType  # 40
+    """End of block of internally handled buttons
+    Open the show file editor
+    """
+    BTN_PAN_COMMITSHOW: _ButtonCode.ValueType  # 41
+    """Apply the changes of the edited show"""
+    BTN_EQ_COMMITRDY: _ButtonCode.ValueType  # 42
+    """Apply the chanes of all columns in READY-Mode; is blinking as long as some colums are in Ready/Wait mode; internally handled"""
+    BTN_SEND_OOPS: _ButtonCode.ValueType  # 43
+    """Undo the commit of show file or column updates (whichever was last); internally handled"""
+    BTN_PLUGIN_PATCH: _ButtonCode.ValueType  # 44
+    """Open the patching menu and review current transmitted values"""
+    BTN_INST_UNIVERSES: _ButtonCode.ValueType  # 45
+    """Edit the connected universes"""
+    BTN_NAMEVALUE: _ButtonCode.ValueType  # 46
+    BTN_BEATS: _ButtonCode.ValueType  # 47
+    BTN_GLOBALVIEW: _ButtonCode.ValueType  # 48
+    BTN_MIDITRACKS: _ButtonCode.ValueType  # 49
+    BTN_INPUTS: _ButtonCode.ValueType  # 50
+    BTN_AUDIOTRACKS: _ButtonCode.ValueType  # 51
+    BTN_AUDIOINST: _ButtonCode.ValueType  # 52
+    BTN_AUX: _ButtonCode.ValueType  # 53
+    BTN_BUSSES: _ButtonCode.ValueType  # 54
+    BTN_OUTPUTS: _ButtonCode.ValueType  # 55
+    BTN_USER: _ButtonCode.ValueType  # 56
+    BTN_FLIP_MAINDARK: _ButtonCode.ValueType  # 57
+    """If enabled: makes the brightness of all attached fixtures 0; button led should be blinking if enabled"""
+    BTN_F1_F1: _ButtonCode.ValueType  # 58
+    """Assignable macro keys"""
+    BTN_F2_F2: _ButtonCode.ValueType  # 59
+    BTN_F3_F3: _ButtonCode.ValueType  # 60
+    BTN_F4_F4: _ButtonCode.ValueType  # 61
+    BTN_F5_F5: _ButtonCode.ValueType  # 62
+    BTN_F6_F6: _ButtonCode.ValueType  # 63
+    BTN_F7_F7: _ButtonCode.ValueType  # 64
+    BTN_F8_F8: _ButtonCode.ValueType  # 65
+    BTN_SHIFT: _ButtonCode.ValueType  # 66
+    BTN_OPTION: _ButtonCode.ValueType  # 67
+    BTN_CONTROL: _ButtonCode.ValueType  # 73
+    BTN_ALT: _ButtonCode.ValueType  # 74
+    BTN_READOFF: _ButtonCode.ValueType  # 68
+    BTN_WRITE: _ButtonCode.ValueType  # 69
+    BTN_TOUCH: _ButtonCode.ValueType  # 75
+    BTN_LATCH: _ButtonCode.ValueType  # 76
+    BTN_TRIM: _ButtonCode.ValueType  # 70
+    BTN_GROUP: _ButtonCode.ValueType  # 77
+    BTN_SAVE_SAVE: _ButtonCode.ValueType  # 71
+    """Save show file; when in editor; save universe values when in quick console mode"""
+    BTN_UNDO_UNDO: _ButtonCode.ValueType  # 72
+    """Undo the changes made in the editor or quick console"""
+    BTN_CANCEL_CANCEL: _ButtonCode.ValueType  # 78
+    """Cancle the setting of a filter configuration"""
+    BTN_ENTER_ENTER: _ButtonCode.ValueType  # 79
+    """Submit the change of a filter configuration"""
+    BTN_MARKER_GOBO: _ButtonCode.ValueType  # 80
+    """When channel selected edit gobo of channel; when no channel selected edit default/global gobo; when continiously pressed: use jogwheel to change gobo"""
+    BTN_NUDGE_STROBO: _ButtonCode.ValueType  # 81
+    """When channel selected edit strobe of connected fixture; when no channel selected edit global strobe frequency; when continiously pressed: use jogwheel to change strobe settings"""
+    BTN_CYCLE_SHUTTER: _ButtonCode.ValueType  # 82
+    """When channel selected edit shutter of connected fixture; when no channel selected edit global shutter value; continiously pressed: use jogwheel"""
+    BTN_DROP_COLOR: _ButtonCode.ValueType  # 83
+    """Use color picker to edit color of fixture (if input selected) or global color. Jogwheel might be used for precise editing if button is continiously pressed"""
+    BTN_REPLACE_TEMPERATURE: _ButtonCode.ValueType  # 84
+    """Edit color temperature of single or global color; jogwheel might be used as well"""
+    BTN_CLICK_IMAGE: _ButtonCode.ValueType  # 85
+    """Select image send to shader or pixel mapper of selected column"""
+    BTN_SOLO_SPEED: _ButtonCode.ValueType  # 86
+    """Select speed pattern of corresponding fixture"""
+    BTN_REV_LASTCUE: _ButtonCode.ValueType  # 87
+    """These buttons are useful for editing / playing Cues ans well as MIDI sequencing; button leds shall be lit; when the functionality is avaiable
+    (⏪) Go to previous Cue
+    """
+    BTN_FF_NEXTCUE: _ButtonCode.ValueType  # 88
+    """(⏩) Go to next Cue"""
+    BTN_STOP_STOPCUE: _ButtonCode.ValueType  # 89
+    """(⏹) Stop (pause and goto start) execution of current Cue"""
+    BTN_PLAY_RUNCUE: _ButtonCode.ValueType  # 90
+    """(⏵) Play/Pause execution of current Cue (blinking if paused)"""
+    BTN_REC_RECFRAME: _ButtonCode.ValueType  # 91
+    """(⏺) Insert keyframe at current cursor position with current scene settings"""
+    BTN_FADERBANKPREV_FADERBANKPREV: _ButtonCode.ValueType  # 92
+    """Go to the previous fader bank (when in quick console mode: touchscreen should also scroll with faders); internally handled"""
+    BTN_FADERBANKNEXT_FADERBANKNEXT: _ButtonCode.ValueType  # 93
+    """Go to the next fader bank; internally handled"""
+    BTN_CHPREV_UNIVERSEPREV: _ButtonCode.ValueType  # 94
+    """When in quick console mode: jump to previous universe; when in Show (edit) mode: jump to previous UI page on primary display"""
+    BTN_CHNEXT_UNIVERSENEXT: _ButtonCode.ValueType  # 95
+    """When in quick console mode: jump to next universe; when in Show (edit) mode: jump to next UI page on primary display"""
+    BTN_SCRUB_JOGWHEELMODESWITCH: _ButtonCode.ValueType  # 101
+    """If this button is pressed, the jog wheel isn't used for navigation but changing the navigation speed (zoom in timelines)"""
+    BTN_CROSSENTER: _ButtonCode.ValueType  # 100
+    BTN_UP_UP: _ButtonCode.ValueType  # 96
+    """Key up; or when MH advanced edit selected: Zoom+"""
+    BTN_DOWN_DOWN: _ButtonCode.ValueType  # 97
+    """Key down; or when MH advanced edit selected: Zoom-"""
+    BTN_RIGHT_RIGHT: _ButtonCode.ValueType  # 99
+    """Key right; or when MH advanced edit selected: Focus+"""
+    BTN_LEFT_LEFT: _ButtonCode.ValueType  # 98
+    """Key left; or when MH advanced edit selected: Focus-"""
+    FADERTOUCH_CH1: _ButtonCode.ValueType  # 110
+    """These cannot be used as led ids but can be used for event decoding"""
+    FADERTOUCH_CH2: _ButtonCode.ValueType  # 111
+    FADERTOUCH_CH3: _ButtonCode.ValueType  # 112
+    FADERTOUCH_CH4: _ButtonCode.ValueType  # 113
+    FADERTOUCH_CH5: _ButtonCode.ValueType  # 114
+    FADERTOUCH_CH6: _ButtonCode.ValueType  # 115
+    FADERTOUCH_CH7: _ButtonCode.ValueType  # 116
+    FADERTOUCH_CH8: _ButtonCode.ValueType  # 117
+    FADERTOUCH_MAIN: _ButtonCode.ValueType  # 118
+
+class ButtonCode(_ButtonCode, metaclass=_ButtonCodeEnumTypeWrapper):
+    """This enum defines all buttons but some are internally handled by the driver and wont be commited"""
+
+BTN_CH1_ENCODER_ROTARYMODE: ButtonCode.ValueType  # 0
+"""Until BTN_TRACK_EDITSHOW (excluding) the following buttons are handled internally by the driver.
+Switches rotary encoder between Hue; Saturation and (if applicable) UV and (if applicable) Amber; Second row of LCD displays mode and setting
+"""
+BTN_CH2_ENCODER_ROTARYMODE: ButtonCode.ValueType  # 1
+BTN_CH3_ENCODER_ROTARYMODE: ButtonCode.ValueType  # 2
+BTN_CH4_ENCODER_ROTARYMODE: ButtonCode.ValueType  # 3
+BTN_CH5_ENCODER_ROTARYMODE: ButtonCode.ValueType  # 4
+BTN_CH6_ENCODER_ROTARYMODE: ButtonCode.ValueType  # 5
+BTN_CH7_ENCODER_ROTARYMODE: ButtonCode.ValueType  # 6
+BTN_CH8_ENCODER_ROTARYMODE: ButtonCode.ValueType  # 7
+BTN_CH1_REC_READY: ButtonCode.ValueType  # 8
+"""If ready is enabled (blinking red); the entered changes of the channel are not applied until the COMMITRDY button is pressed."""
+BTN_CH2_REC_READY: ButtonCode.ValueType  # 9
+BTN_CH3_REC_READY: ButtonCode.ValueType  # 10
+BTN_CH4_REC_READY: ButtonCode.ValueType  # 11
+BTN_CH5_REC_READY: ButtonCode.ValueType  # 12
+BTN_CH6_REC_READY: ButtonCode.ValueType  # 13
+BTN_CH7_REC_READY: ButtonCode.ValueType  # 14
+BTN_CH8_REC_READY: ButtonCode.ValueType  # 15
+BTN_CH1_SOLO_FIND: ButtonCode.ValueType  # 16
+"""When in quick console mode: let the ficture strobe in order to find the linked lamp"""
+BTN_CH2_SOLO_FIND: ButtonCode.ValueType  # 17
+"""When in show mode with displayed show UI: open an advanced color picker on the touch screen"""
+BTN_CH3_SOLO_FIND: ButtonCode.ValueType  # 18
+"""When show editor is displayed: jump to and highlight input filter"""
+BTN_CH4_SOLO_FIND: ButtonCode.ValueType  # 19
+BTN_CH5_SOLO_FIND: ButtonCode.ValueType  # 20
+BTN_CH6_SOLO_FIND: ButtonCode.ValueType  # 21
+BTN_CH7_SOLO_FIND: ButtonCode.ValueType  # 22
+BTN_CH8_SOLO_FIND: ButtonCode.ValueType  # 23
+BTN_CH1_MUTE_BLACK: ButtonCode.ValueType  # 24
+"""Make the brightness output of this lamp zero; button led should be blinking if enabled"""
+BTN_CH2_MUTE_BLACK: ButtonCode.ValueType  # 25
+BTN_CH3_MUTE_BLACK: ButtonCode.ValueType  # 26
+BTN_CH4_MUTE_BLACK: ButtonCode.ValueType  # 27
+BTN_CH5_MUTE_BLACK: ButtonCode.ValueType  # 28
+BTN_CH6_MUTE_BLACK: ButtonCode.ValueType  # 29
+BTN_CH7_MUTE_BLACK: ButtonCode.ValueType  # 30
+BTN_CH8_MUTE_BLACK: ButtonCode.ValueType  # 31
+BTN_CH1_SELECT_SELECT: ButtonCode.ValueType  # 32
+"""Select this column for linked linked advanced input; led is activated if selected"""
+BTN_CH2_SELECT_SELECT: ButtonCode.ValueType  # 33
+BTN_CH3_SELECT_SELECT: ButtonCode.ValueType  # 34
+BTN_CH4_SELECT_SELECT: ButtonCode.ValueType  # 35
+BTN_CH5_SELECT_SELECT: ButtonCode.ValueType  # 36
+BTN_CH6_SELECT_SELECT: ButtonCode.ValueType  # 37
+BTN_CH7_SELECT_SELECT: ButtonCode.ValueType  # 38
+BTN_CH8_SELECT_SELECT: ButtonCode.ValueType  # 39
+BTN_TRACK_EDITSHOW: ButtonCode.ValueType  # 40
+"""End of block of internally handled buttons
+Open the show file editor
+"""
+BTN_PAN_COMMITSHOW: ButtonCode.ValueType  # 41
+"""Apply the changes of the edited show"""
+BTN_EQ_COMMITRDY: ButtonCode.ValueType  # 42
+"""Apply the chanes of all columns in READY-Mode; is blinking as long as some colums are in Ready/Wait mode; internally handled"""
+BTN_SEND_OOPS: ButtonCode.ValueType  # 43
+"""Undo the commit of show file or column updates (whichever was last); internally handled"""
+BTN_PLUGIN_PATCH: ButtonCode.ValueType  # 44
+"""Open the patching menu and review current transmitted values"""
+BTN_INST_UNIVERSES: ButtonCode.ValueType  # 45
+"""Edit the connected universes"""
+BTN_NAMEVALUE: ButtonCode.ValueType  # 46
+BTN_BEATS: ButtonCode.ValueType  # 47
+BTN_GLOBALVIEW: ButtonCode.ValueType  # 48
+BTN_MIDITRACKS: ButtonCode.ValueType  # 49
+BTN_INPUTS: ButtonCode.ValueType  # 50
+BTN_AUDIOTRACKS: ButtonCode.ValueType  # 51
+BTN_AUDIOINST: ButtonCode.ValueType  # 52
+BTN_AUX: ButtonCode.ValueType  # 53
+BTN_BUSSES: ButtonCode.ValueType  # 54
+BTN_OUTPUTS: ButtonCode.ValueType  # 55
+BTN_USER: ButtonCode.ValueType  # 56
+BTN_FLIP_MAINDARK: ButtonCode.ValueType  # 57
+"""If enabled: makes the brightness of all attached fixtures 0; button led should be blinking if enabled"""
+BTN_F1_F1: ButtonCode.ValueType  # 58
+"""Assignable macro keys"""
+BTN_F2_F2: ButtonCode.ValueType  # 59
+BTN_F3_F3: ButtonCode.ValueType  # 60
+BTN_F4_F4: ButtonCode.ValueType  # 61
+BTN_F5_F5: ButtonCode.ValueType  # 62
+BTN_F6_F6: ButtonCode.ValueType  # 63
+BTN_F7_F7: ButtonCode.ValueType  # 64
+BTN_F8_F8: ButtonCode.ValueType  # 65
+BTN_SHIFT: ButtonCode.ValueType  # 66
+BTN_OPTION: ButtonCode.ValueType  # 67
+BTN_CONTROL: ButtonCode.ValueType  # 73
+BTN_ALT: ButtonCode.ValueType  # 74
+BTN_READOFF: ButtonCode.ValueType  # 68
+BTN_WRITE: ButtonCode.ValueType  # 69
+BTN_TOUCH: ButtonCode.ValueType  # 75
+BTN_LATCH: ButtonCode.ValueType  # 76
+BTN_TRIM: ButtonCode.ValueType  # 70
+BTN_GROUP: ButtonCode.ValueType  # 77
+BTN_SAVE_SAVE: ButtonCode.ValueType  # 71
+"""Save show file; when in editor; save universe values when in quick console mode"""
+BTN_UNDO_UNDO: ButtonCode.ValueType  # 72
+"""Undo the changes made in the editor or quick console"""
+BTN_CANCEL_CANCEL: ButtonCode.ValueType  # 78
+"""Cancle the setting of a filter configuration"""
+BTN_ENTER_ENTER: ButtonCode.ValueType  # 79
+"""Submit the change of a filter configuration"""
+BTN_MARKER_GOBO: ButtonCode.ValueType  # 80
+"""When channel selected edit gobo of channel; when no channel selected edit default/global gobo; when continiously pressed: use jogwheel to change gobo"""
+BTN_NUDGE_STROBO: ButtonCode.ValueType  # 81
+"""When channel selected edit strobe of connected fixture; when no channel selected edit global strobe frequency; when continiously pressed: use jogwheel to change strobe settings"""
+BTN_CYCLE_SHUTTER: ButtonCode.ValueType  # 82
+"""When channel selected edit shutter of connected fixture; when no channel selected edit global shutter value; continiously pressed: use jogwheel"""
+BTN_DROP_COLOR: ButtonCode.ValueType  # 83
+"""Use color picker to edit color of fixture (if input selected) or global color. Jogwheel might be used for precise editing if button is continiously pressed"""
+BTN_REPLACE_TEMPERATURE: ButtonCode.ValueType  # 84
+"""Edit color temperature of single or global color; jogwheel might be used as well"""
+BTN_CLICK_IMAGE: ButtonCode.ValueType  # 85
+"""Select image send to shader or pixel mapper of selected column"""
+BTN_SOLO_SPEED: ButtonCode.ValueType  # 86
+"""Select speed pattern of corresponding fixture"""
+BTN_REV_LASTCUE: ButtonCode.ValueType  # 87
+"""These buttons are useful for editing / playing Cues ans well as MIDI sequencing; button leds shall be lit; when the functionality is avaiable
+(⏪) Go to previous Cue
+"""
+BTN_FF_NEXTCUE: ButtonCode.ValueType  # 88
+"""(⏩) Go to next Cue"""
+BTN_STOP_STOPCUE: ButtonCode.ValueType  # 89
+"""(⏹) Stop (pause and goto start) execution of current Cue"""
+BTN_PLAY_RUNCUE: ButtonCode.ValueType  # 90
+"""(⏵) Play/Pause execution of current Cue (blinking if paused)"""
+BTN_REC_RECFRAME: ButtonCode.ValueType  # 91
+"""(⏺) Insert keyframe at current cursor position with current scene settings"""
+BTN_FADERBANKPREV_FADERBANKPREV: ButtonCode.ValueType  # 92
+"""Go to the previous fader bank (when in quick console mode: touchscreen should also scroll with faders); internally handled"""
+BTN_FADERBANKNEXT_FADERBANKNEXT: ButtonCode.ValueType  # 93
+"""Go to the next fader bank; internally handled"""
+BTN_CHPREV_UNIVERSEPREV: ButtonCode.ValueType  # 94
+"""When in quick console mode: jump to previous universe; when in Show (edit) mode: jump to previous UI page on primary display"""
+BTN_CHNEXT_UNIVERSENEXT: ButtonCode.ValueType  # 95
+"""When in quick console mode: jump to next universe; when in Show (edit) mode: jump to next UI page on primary display"""
+BTN_SCRUB_JOGWHEELMODESWITCH: ButtonCode.ValueType  # 101
+"""If this button is pressed, the jog wheel isn't used for navigation but changing the navigation speed (zoom in timelines)"""
+BTN_CROSSENTER: ButtonCode.ValueType  # 100
+BTN_UP_UP: ButtonCode.ValueType  # 96
+"""Key up; or when MH advanced edit selected: Zoom+"""
+BTN_DOWN_DOWN: ButtonCode.ValueType  # 97
+"""Key down; or when MH advanced edit selected: Zoom-"""
+BTN_RIGHT_RIGHT: ButtonCode.ValueType  # 99
+"""Key right; or when MH advanced edit selected: Focus+"""
+BTN_LEFT_LEFT: ButtonCode.ValueType  # 98
+"""Key left; or when MH advanced edit selected: Focus-"""
+FADERTOUCH_CH1: ButtonCode.ValueType  # 110
+"""These cannot be used as led ids but can be used for event decoding"""
+FADERTOUCH_CH2: ButtonCode.ValueType  # 111
+FADERTOUCH_CH3: ButtonCode.ValueType  # 112
+FADERTOUCH_CH4: ButtonCode.ValueType  # 113
+FADERTOUCH_CH5: ButtonCode.ValueType  # 114
+FADERTOUCH_CH6: ButtonCode.ValueType  # 115
+FADERTOUCH_CH7: ButtonCode.ValueType  # 116
+FADERTOUCH_CH8: ButtonCode.ValueType  # 117
+FADERTOUCH_MAIN: ButtonCode.ValueType  # 118
+global___ButtonCode = ButtonCode
+
+class _lcd_color:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _lcd_colorEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_lcd_color.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    black: _lcd_color.ValueType  # 0
+    red: _lcd_color.ValueType  # 1
+    green: _lcd_color.ValueType  # 2
+    yellow: _lcd_color.ValueType  # 3
+    blue: _lcd_color.ValueType  # 4
+    magenta: _lcd_color.ValueType  # 5
+    cyan: _lcd_color.ValueType  # 6
+    white: _lcd_color.ValueType  # 7
+
+class lcd_color(_lcd_color, metaclass=_lcd_colorEnumTypeWrapper): ...
+
+black: lcd_color.ValueType  # 0
+red: lcd_color.ValueType  # 1
+green: lcd_color.ValueType  # 2
+yellow: lcd_color.ValueType  # 3
+blue: lcd_color.ValueType  # 4
+magenta: lcd_color.ValueType  # 5
+cyan: lcd_color.ValueType  # 6
+white: lcd_color.ValueType  # 7
+global___lcd_color = lcd_color
+
 @typing_extensions.final
 class button_state_change(google.protobuf.message.Message):
     """This message can be send both ways:
     Fish -> UI: if a button was pressed
     UI -> Fish: Change the LED of a button
+    The UI won't be informed about button presses that are handled internally by the driver.
     """
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     BUTTON_FIELD_NUMBER: builtins.int
     NEW_STATE_FIELD_NUMBER: builtins.int
-    button: builtins.int
+    button: global___ButtonCode.ValueType
     new_state: global___ButtonState.ValueType
     def __init__(
         self,
         *,
-        button: builtins.int = ...,
+        button: global___ButtonCode.ValueType = ...,
         new_state: global___ButtonState.ValueType = ...,
     ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["button", b"button", "new_state", b"new_state"]) -> None: ...
@@ -121,6 +477,42 @@ class remove_fader_bank_set(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["bank_id", b"bank_id"]) -> None: ...
 
 global___remove_fader_bank_set = remove_fader_bank_set
+
+@typing_extensions.final
+class desk_update(google.protobuf.message.Message):
+    """This message will be send to the UI if the state of the input desk changes
+    If this message will be send to Fish, it will be used to set the state of the desk
+    """
+
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    SELECTED_COLUMN_ID_FIELD_NUMBER: builtins.int
+    FIND_ACTIVE_ON_COLUMN_ID_FIELD_NUMBER: builtins.int
+    JOGWHEEL_CHANGE_SINCE_LAST_UPDATE_FIELD_NUMBER: builtins.int
+    SELECTED_BANK_SET_FIELD_NUMBER: builtins.int
+    SELECTED_BANK_FIELD_NUMBER: builtins.int
+    SEVEN_SEG_DISPLAY_DATA_FIELD_NUMBER: builtins.int
+    selected_column_id: builtins.str
+    find_active_on_column_id: builtins.str
+    jogwheel_change_since_last_update: builtins.int
+    """only Fish -> UI"""
+    selected_bank_set: builtins.str
+    selected_bank: builtins.int
+    seven_seg_display_data: builtins.str
+    """only UI -> Fish"""
+    def __init__(
+        self,
+        *,
+        selected_column_id: builtins.str = ...,
+        find_active_on_column_id: builtins.str = ...,
+        jogwheel_change_since_last_update: builtins.int = ...,
+        selected_bank_set: builtins.str = ...,
+        selected_bank: builtins.int = ...,
+        seven_seg_display_data: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["find_active_on_column_id", b"find_active_on_column_id", "jogwheel_change_since_last_update", b"jogwheel_change_since_last_update", "selected_bank", b"selected_bank", "selected_bank_set", b"selected_bank_set", "selected_column_id", b"selected_column_id", "seven_seg_display_data", b"seven_seg_display_data"]) -> None: ...
+
+global___desk_update = desk_update
 
 @typing_extensions.final
 class fader_column(google.protobuf.message.Message):
@@ -201,29 +593,35 @@ class fader_column(google.protobuf.message.Message):
     PLAIN_COLOR_FIELD_NUMBER: builtins.int
     COLOR_WITH_UV_FIELD_NUMBER: builtins.int
     RAW_DATA_FIELD_NUMBER: builtins.int
+    TOP_LCD_ROW_INVERTED_FIELD_NUMBER: builtins.int
+    BOTTOM_LCD_ROW_INVERTED_FIELD_NUMBER: builtins.int
     column_id: builtins.str
     upper_display_text: builtins.str
     lower_display_text: builtins.str
-    display_color: builtins.int
+    display_color: global___lcd_color.ValueType
     @property
     def plain_color(self) -> global___fader_column.hsi_color: ...
     @property
     def color_with_uv(self) -> global___fader_column.hsi_u_color: ...
     @property
     def raw_data(self) -> global___fader_column.raw_fader_data: ...
+    top_lcd_row_inverted: builtins.bool
+    bottom_lcd_row_inverted: builtins.bool
     def __init__(
         self,
         *,
         column_id: builtins.str = ...,
         upper_display_text: builtins.str = ...,
         lower_display_text: builtins.str = ...,
-        display_color: builtins.int = ...,
+        display_color: global___lcd_color.ValueType = ...,
         plain_color: global___fader_column.hsi_color | None = ...,
         color_with_uv: global___fader_column.hsi_u_color | None = ...,
         raw_data: global___fader_column.raw_fader_data | None = ...,
+        top_lcd_row_inverted: builtins.bool = ...,
+        bottom_lcd_row_inverted: builtins.bool = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["color_with_uv", b"color_with_uv", "plain_color", b"plain_color", "raw_data", b"raw_data", "value", b"value"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["color_with_uv", b"color_with_uv", "column_id", b"column_id", "display_color", b"display_color", "lower_display_text", b"lower_display_text", "plain_color", b"plain_color", "raw_data", b"raw_data", "upper_display_text", b"upper_display_text", "value", b"value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["bottom_lcd_row_inverted", b"bottom_lcd_row_inverted", "color_with_uv", b"color_with_uv", "column_id", b"column_id", "display_color", b"display_color", "lower_display_text", b"lower_display_text", "plain_color", b"plain_color", "raw_data", b"raw_data", "top_lcd_row_inverted", b"top_lcd_row_inverted", "upper_display_text", b"upper_display_text", "value", b"value"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions.Literal["value", b"value"]) -> typing_extensions.Literal["plain_color", "color_with_uv", "raw_data"] | None: ...
 
 global___fader_column = fader_column
