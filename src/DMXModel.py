@@ -1,10 +1,12 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
-
+from dataclasses import dataclass, field
 from PySide6 import QtCore
 
 import proto.UniverseControl_pb2
 from ofl.fixture import UsedFixture, Mode
+
+from pyqtgraph.flowchart.Flowchart import Flowchart
 
 
 class Channel(QtCore.QObject):
@@ -128,11 +130,44 @@ class Universe:
         """List of all 512 patching channels belonging to the Universe"""
         return self._patching
 
+    @property
+    def name(self) -> str:
+        """Human readable name for the universe."""
+        return f"Universe {self.address}"
 
-class Filter:
-    """Filter
-    TODO implement
-    """
+    @property
+    def description(self) -> str:
+        """Human readable description for the universe."""
+        return self.name
 
-    def __init__(self):
+    @property
+    def location(self):
         pass
+
+#@dataclass
+class Filter:
+    def __init__(self, id: str, type: int) -> None:
+        self.id = id
+        self.type = type
+        self.channel_links: dict[str, str] = {}
+        self.initial_parameters: dict[str, str] = {}
+        self.filter_configurations: dict[str, str] = {}
+
+
+@dataclass
+class Scene:
+    id: int
+    filters: list[Filter]
+    human_readable_name: str
+    flowchart: Flowchart = None
+
+
+@dataclass
+class BoardConfiguration:
+    scenes: list[Scene] = field(default_factory=list)
+    devices: list[str] = field(default_factory=list)
+    universes: list[Universe] = field(default_factory=list)
+    ui_hints: list[str] = field(default_factory=list)
+    show_name: str = "Show"
+    default_active_scene: int = 0
+    notes: str = ""

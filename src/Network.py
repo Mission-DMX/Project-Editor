@@ -1,6 +1,7 @@
 # coding=utf-8
 """Module to handle connection with real-time software Fish."""
 import logging
+import xml.etree.ElementTree as ET
 
 from PySide6 import QtCore, QtNetwork
 
@@ -11,7 +12,6 @@ import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
 from DMXModel import Universe
-
 
 class NetworkManager(QtCore.QObject):
     """Handles connection to Fish."""
@@ -122,6 +122,14 @@ class NetworkManager(QtCore.QObject):
             return "Connected"
         else:
             return "Not Connected"
+        
+    def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
+        msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'), goto_default_scene=goto_default_scene)
+        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
+
+    def enter_scene(self, scene_id: int) -> None:
+        msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
+        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
 
 
 def on_error(error) -> None:
