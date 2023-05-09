@@ -39,6 +39,9 @@ class _MsgTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTy
     MSGT_LOG_MESSAGE: _MsgType.ValueType  # 15
     MSGT_REMOVE_FADER_BANK_SET: _MsgType.ValueType  # 16
     MSGT_ADD_FADER_BANK_SET: _MsgType.ValueType  # 17
+    MSGT_DESK_UPDATE: _MsgType.ValueType  # 18
+    MSGT_UPDATE_COLUMN: _MsgType.ValueType  # 19
+    """Console.fader_column"""
 
 class MsgType(_MsgType, metaclass=_MsgTypeEnumTypeWrapper): ...
 
@@ -60,4 +63,7 @@ MSGT_UPDATE_PARAMETER: MsgType.ValueType  # 14
 MSGT_LOG_MESSAGE: MsgType.ValueType  # 15
 MSGT_REMOVE_FADER_BANK_SET: MsgType.ValueType  # 16
 MSGT_ADD_FADER_BANK_SET: MsgType.ValueType  # 17
+MSGT_DESK_UPDATE: MsgType.ValueType  # 18
+MSGT_UPDATE_COLUMN: MsgType.ValueType  # 19
+"""Console.fader_column"""
 global___MsgType = MsgType
