@@ -1,6 +1,7 @@
 # coding=utf-8
 """select Universe"""
 import random
+import re
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
@@ -109,22 +110,30 @@ class UniverseSelector(QtWidgets.QTabWidget):
             updated: list of indices of modified channels
 
         """
-        spliter = patching.split("@")
-        # TODO Number
+        if patching[0] == "@":
+            patching = "1" + patching
+        spliter = re.split('@|-|/', patching)
+        spliter += [0] * (4 - len(spliter))
+        spliter = list(map(int, spliter))
         number = spliter[0]
-        spliter = spliter[1].split("-")
-        universe = int(spliter[0]) - 1
-        channel = int(spliter[1]) - 1
-        updated: list[int] = []
+        universe = spliter[1] - 1
+        channel = spliter[2] - 1
+        offset = spliter[3]
 
-        color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-        for index in range(len(fixture.mode['channels'])):
-            modified: int = channel + index
-            updated.append(modified)
-            item = self._universes[universe].patching[modified]
-            item.fixture = fixture
-            item.fixture_channel = index
-            item.color = color
+        updated: list[int] = []
+        for _ in range(number):
+            color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
+            for index in range(len(fixture.mode['channels'])):
+                modified: int = channel + index
+                updated.append(modified)
+                item = self._universes[universe].patching[modified]
+                item.fixture = fixture
+                item.fixture_channel = index
+                item.color = color
+            if offset == 0:
+                channel += len(fixture.mode['channels'])
+            else:
+                channel += offset
         return universe, updated
 
     def patch_update(self, universe: int, modified: list[int]) -> None:
