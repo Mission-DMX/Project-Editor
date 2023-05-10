@@ -100,7 +100,7 @@ def _create_channel_link_element(channel_link: tuple[str, str], parent: ET.Eleme
     <channellink input_channel_id="id" output_channel_id="id">
     """
     return ET.SubElement(parent, "channellink", attrib={
-        "input_channel_id": channel_link[0],
+        "input_channel_id": "value" if channel_link[0] == "value_in" else channel_link[0],
         "output_channel_id": channel_link[1]
     })
 

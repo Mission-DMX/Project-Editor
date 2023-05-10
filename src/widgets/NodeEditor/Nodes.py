@@ -77,7 +77,7 @@ class Debug8BitNode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=4, name=name, terminals={
-            '8bit': {'io': 'in'}
+            'value': {'io': 'in'}
         })
 
 
@@ -89,7 +89,7 @@ class Debug16BitNode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=5, name=name, terminals={
-            '16bit': {'io': 'in'}
+            'value': {'io': 'in'}
         })
 
 
@@ -101,7 +101,7 @@ class DebugFloatNode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=6, name=name, terminals={
-            'double': {'io': 'in'}
+            'value': {'io': 'in'}
         })
 
 
@@ -113,7 +113,7 @@ class DebugColorNode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=7, name=name, terminals={
-            'color': {'io': 'in'}
+            'value': {'io': 'in'}
         })
 
 
@@ -123,7 +123,7 @@ class Adapters16To8Bit(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=8, name=name, terminals={
-            '16bit': {'io': 'in'},
+            'value': {'io': 'in'},
             'value_lower': {'io': 'out'},
             'value_upper': {'io': 'out'},
         })
@@ -137,7 +137,7 @@ class Adapters16ToBool(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=9, name=name, terminals={
-            '16bit': {'io': 'in'},
+            'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
 
@@ -163,7 +163,7 @@ class UniverseNode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=11, name=name, terminals={
-            f"channel{i}": {'io': 'in'} for i in range(8)
+            str(i): {'io': 'in'} for i in range(8)
         }, allowAddInput=True)
 
     def addInput(self, name="Input", **args):
@@ -171,7 +171,7 @@ class UniverseNode(FilterNode):
         current_inputs = len(self.terminals)
         if current_inputs >= 512:
             return None
-        return super().addInput(f"channel{current_inputs}", **args)
+        return super().addInput(str(current_inputs), **args)
 
 
 class ArithmeticsFloatTo8Bit(FilterNode):
@@ -180,7 +180,7 @@ class ArithmeticsFloatTo8Bit(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=13, name=name, terminals={
-            'double': {'io': 'in'},
+            'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
 
@@ -191,7 +191,7 @@ class ArithmeticsFloatTo16Bit(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=12, name=name, terminals={
-            'double': {'io': 'in'},
+            'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
 
@@ -202,7 +202,7 @@ class ArithmeticsRound(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=14, name=name, terminals={
-            'double': {'io': 'in'},
+            'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
 
@@ -213,7 +213,7 @@ class ColorToRGBNode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=15, name=name, terminals={
-            'color': {'io': 'in'},
+            'value': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
             'b': {'io': 'out'}
@@ -226,7 +226,7 @@ class ColorToRGBWNode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=16, name=name, terminals={
-            'color': {'io': 'in'},
+            'value': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
             'b': {'io': 'out'},
@@ -240,7 +240,7 @@ class ColorToRGBWANode(FilterNode):
 
     def __init__(self, name):
         super().__init__(type=17, name=name, terminals={
-            'color': {'io': 'in'},
+            'value': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
             'b': {'io': 'out'},
