@@ -156,8 +156,13 @@ class NetworkManager(QtCore.QObject):
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
     def enter_scene(self, scene_id: int) -> None:
+        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
+
+    def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode):
+        msg = proto.RealTimeControl_pb2.update_state(new_state=run_mode)
+        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_UPDATE_STATE)
 
 
 def on_error(error) -> None:
