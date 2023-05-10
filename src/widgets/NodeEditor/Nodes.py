@@ -56,6 +56,13 @@ class Constants16BitNode(FilterNode):
             'value': {'io': 'out'}
         })
 
+        self.filter.initial_parameters["value"] = str(0)
+        self.ip = InitialParameterTextItem("0", self.graphicsItem(), self.value_changed, self.filter)
+        self.ip.moveBy(0, 10)
+
+    def value_changed(self):
+        self.filter.initial_parameters["value"] = self.ip.toPlainText()
+
 
 class ConstantsFloatNode(FilterNode):
     """Filter to represent a float/double value."""
@@ -65,6 +72,13 @@ class ConstantsFloatNode(FilterNode):
         super().__init__(type=2, name=name, terminals={
             'value': {'io': 'out'}
         })
+
+        self.filter.initial_parameters["value"] = str(0)
+        self.ip = InitialParameterTextItem("0.0", self.graphicsItem(), self.value_changed, self.filter)
+        self.ip.moveBy(0, 10)
+
+    def value_changed(self):
+        self.filter.initial_parameters["value"] = self.ip.toPlainText()
 
 
 class ConstantsColorNode(FilterNode):
@@ -77,6 +91,12 @@ class ConstantsColorNode(FilterNode):
         super().__init__(type=3, name=name, terminals={
             'value': {'io': 'out'}
         })
+        self.filter.initial_parameters["value"] = str(0)
+        self.ip = InitialParameterTextItem("0.0,0.0,0.0", self.graphicsItem(), self.value_changed, self.filter)
+        self.ip.moveBy(0, 10)
+
+    def value_changed(self):
+        self.filter.initial_parameters["value"] = self.ip.toPlainText()
 
 
 class Debug8BitNode(FilterNode):
