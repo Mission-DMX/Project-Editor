@@ -1,5 +1,7 @@
 from unittest import TestCase
-from src.DMXModel import Channel, Universe
+
+from model.channel import Channel
+from model.universe import Universe
 
 
 class TestChannel(TestCase):

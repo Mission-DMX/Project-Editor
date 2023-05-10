@@ -11,7 +11,7 @@ import proto.MessageTypes_pb2
 import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
-from DMXModel import Universe
+from model.universe import Universe
 
 
 class NetworkManager(QtCore.QObject):
