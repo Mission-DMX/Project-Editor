@@ -162,7 +162,7 @@ class NetworkManager(QtCore.QObject):
 
     def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode):
         msg = proto.RealTimeControl_pb2.update_state(new_state=run_mode)
-        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_UPDATE_STATE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_STATE)
 
 
 def on_error(error) -> None:
