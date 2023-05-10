@@ -121,6 +121,8 @@ class UniverseSelector(QtWidgets.QTabWidget):
         offset = spliter[3]
 
         updated: list[int] = []
+        if channel == -1:
+            channel = 0
         for _ in range(number):
             color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
             for index in range(len(fixture.mode['channels'])):
