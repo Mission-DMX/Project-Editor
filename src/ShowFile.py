@@ -105,7 +105,7 @@ def _create_channel_link_element(channel_link: tuple[str, str], parent: ET.Eleme
     })
 
 
-def _create_filter_configuration_element(self, filter_configuration: tuple[str, str], parent: ET.Element) -> ET.Element:
+def _create_filter_configuration_element(filter_configuration: tuple[str, str], parent: ET.Element) -> ET.Element:
     """Creates an xml element of type filterConfiguration.
     
     <filterConfiguration name="key" value="value">
@@ -116,7 +116,7 @@ def _create_filter_configuration_element(self, filter_configuration: tuple[str, 
     })
 
 
-def _create_inital_parameters_element(self, initial_parameter: tuple[str, str], parent: ET.Element) -> ET.Element:
+def _create_inital_parameters_element(initial_parameter: tuple[str, str], parent: ET.Element) -> ET.Element:
     """Creates an xml element of type initalParameters.
     
     <initalParameters name="key" value="value">
@@ -127,7 +127,7 @@ def _create_inital_parameters_element(self, initial_parameter: tuple[str, str], 
     })
 
 
-def _create_universe_element(self, universe: Universe, parent: ET.Element) -> ET.Element:
+def _create_universe_element(universe: Universe, parent: ET.Element) -> ET.Element:
     """Creates an xml element of type physical_location.
 
     <universe name="name" description="description" id="0">

@@ -1,7 +1,7 @@
-from pyqtgraph.flowchart.Node import Node, Terminal
+from pyqtgraph.flowchart.Node import Node, Terminal, TextItem
 
 from DMXModel import Filter
-from src.DMXModel import Filter
+from .NodeWidgets import InitialParameterTextItem
 
 
 class FilterNode(Node):
@@ -9,11 +9,13 @@ class FilterNode(Node):
 
     def __init__(self, type: int, name: str, terminals: dict[str, dict[str, str]] = None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         super().__init__(name, terminals, allowAddInput, allowAddOutput, allowRemove)
-        self.filter: Filter = Filter(id=name, type=type)
+        self.filter: Filter = Filter(name, type)
 
         for key, terminal in self.terminals.items():
             if terminal.isInput():
                 self.filter.channel_links[key] = ""
+        
+        
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         if localTerm.isInput() and remoteTerm.isOutput():
@@ -36,6 +38,14 @@ class Constants8BitNode(FilterNode):
         super().__init__(type=0, name=name, terminals={
             'value': {'io': 'out'}
         })
+
+        self.filter.initial_parameters["value"] = str(0)
+        self.ip = InitialParameterTextItem("0", self.graphicsItem(), self.value_changed, self.filter)
+        self.ip.moveBy(0, 10)
+
+    def value_changed(self):
+        self.filter.initial_parameters["value"] = self.ip.toPlainText()
+
 
 class Constants16BitNode(FilterNode):
     """Filter to represent a 16 bit value."""

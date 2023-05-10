@@ -5,6 +5,8 @@ import logging
 import sys
 from typing import Callable
 
+import xml.etree.ElementTree as ET
+
 from PySide6 import QtWidgets, QtGui
 
 from DMXModel import BoardConfiguration
@@ -180,7 +182,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _send_show_file(self) -> None:
         xml = createXML(self._board_configuration)
-        self._fish_connector.load_show_file(xml=xml, goto_default_scene=True)
+        print(ET.tostring(xml, encoding='utf8', method='xml'))
+        #self._fish_connector.load_show_file(xml=xml, goto_default_scene=True)
 
     def _enter_scene(self) -> None:
         id, ok = QtWidgets.QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")

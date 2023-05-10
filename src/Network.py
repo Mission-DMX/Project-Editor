@@ -153,7 +153,7 @@ class NetworkManager(QtCore.QObject):
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
         msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'),
                                                   goto_default_scene=goto_default_scene)
-        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
     def enter_scene(self, scene_id: int) -> None:
         self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
