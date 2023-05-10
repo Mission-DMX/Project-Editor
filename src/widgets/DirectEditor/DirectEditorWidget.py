@@ -3,7 +3,7 @@
 from PySide6 import QtWidgets, QtCore
 
 from Network import NetworkManager
-from src.DMXModel import Universe
+from model.universe import Universe
 from src.Style import Style
 from .ChannelWidget import ChannelWidget
 

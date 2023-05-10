@@ -3,7 +3,7 @@
 from PySide6 import QtWidgets, QtCore
 from PySide6.examples.widgets.layouts.flowlayout.flowlayout import FlowLayout
 
-from src.DMXModel import Universe
+from model.universe import Universe
 from widgets.PatchPlan.patch_item import PatchItem
 
 

@@ -1,8 +1,10 @@
 import xml.etree.ElementTree as ET
 
-from DMXModel import BoardConfiguration, Scene, Filter, Universe
-from widgets.NodeEditor.Nodes import FilterNode
 import proto.UniverseControl_pb2 as proto
+from DMXModel import BoardConfiguration, Scene, Filter
+from model.universe import Universe
+from widgets.NodeEditor.Nodes import FilterNode
+
 
 def writeDocument(file_name: str, xml: ET.Element) -> bool:
     tree = ET.ElementTree(xml)
@@ -13,8 +15,8 @@ def writeDocument(file_name: str, xml: ET.Element) -> bool:
         print(f"Could not save {file_name}")
         return False
 
-def createXML(board_configuration: BoardConfiguration) -> ET.Element:
 
+def createXML(board_configuration: BoardConfiguration) -> ET.Element:
     root = _create_board_configuration_element(board_configuration)
 
     for scene in board_configuration.scenes:
@@ -25,13 +27,13 @@ def createXML(board_configuration: BoardConfiguration) -> ET.Element:
                 return False
 
             filter_element = _create_filter_element(filter=node.filter, parent=scene_element)
-            
+
             for channel_link in node.filter.channel_links.items():
                 _create_channel_link_element(channel_link=channel_link, parent=filter_element)
-            
+
             for initial_parameter in node.filter.initial_parameters.items():
                 _create_inital_parameters_element(initial_parameter=initial_parameter, parent=filter_element)
-            
+
             for filter_configuration in node.filter.filter_configurations.items():
                 _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
@@ -56,7 +58,7 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
        ...
     </board_configuration>
     """
-    return ET.Element("board_configuration", attrib={ 
+    return ET.Element("board_configuration", attrib={
         "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -92,7 +94,7 @@ def _create_filter_element(filter: Filter, parent: ET.Element) -> ET.Element:
     })
 
 
-def _create_channel_link_element(channel_link: tuple[str, str] , parent: ET.Element) -> ET.Element:
+def _create_channel_link_element(channel_link: tuple[str, str], parent: ET.Element) -> ET.Element:
     """Creates an xml element of type channellink.
     
     <channellink input_channel_id="id" output_channel_id="id">
@@ -103,7 +105,7 @@ def _create_channel_link_element(channel_link: tuple[str, str] , parent: ET.Elem
     })
 
 
-def _create_filter_configuration_element(self, filter_configuration: tuple[str, str] , parent: ET.Element) -> ET.Element:
+def _create_filter_configuration_element(self, filter_configuration: tuple[str, str], parent: ET.Element) -> ET.Element:
     """Creates an xml element of type filterConfiguration.
     
     <filterConfiguration name="key" value="value">

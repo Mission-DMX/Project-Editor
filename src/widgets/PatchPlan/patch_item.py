@@ -2,8 +2,9 @@
 """ item of the Patching """
 from PySide6 import QtWidgets
 
-from DMXModel import PatchingChannel, Universe
 from Style import Style
+from model.patching_channel import PatchingChannel
+from model.universe import Universe
 
 
 class PatchItem(QtWidgets.QFrame):

@@ -7,9 +7,9 @@ from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 
 import proto.UniverseControl_pb2
-from DMXModel import Universe
 from Network import NetworkManager
 from Style import Style
+from model.universe import Universe
 from ofl.fixture import UsedFixture
 from widgets.DirectEditor.DirectEditorWidget import DirectEditorWidget
 from widgets.PatchPlan.patch_plan_widget import PatchPlanWidget
