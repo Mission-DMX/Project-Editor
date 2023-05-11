@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 
 from PySide6 import QtCore, QtNetwork
 
+import proto.Console_pb2
 import proto.DirectMode_pb2
 import proto.FilterMode_pb2
 import proto.MessageTypes_pb2
@@ -158,6 +159,14 @@ class NetworkManager(QtCore.QObject):
     def enter_scene(self, scene_id: int) -> None:
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
+
+    def send_fader_bank_delete_message(self, fader_bank_id: str):
+        delete_msg = proto.Console_pb2.remove_fader_bank_set(bank_id=fader_bank_id)
+        self._send_with_format(delete_msg, proto.MessageTypes_pb2.MSGT_REMOVE_FADER_BANK_SET)
+
+    def send_fader_bank_delete_message(self):
+        # TODO implement
+        pass
 
 
 def on_error(error) -> None:
