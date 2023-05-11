@@ -1,7 +1,7 @@
-from pyqtgraph.flowchart.Node import Node, Terminal, TextItem
+from pyqtgraph.flowchart.Node import Node, Terminal
 
 from DMXModel import Filter
-from .NodeWidgets import InitialParameterTextItem
+from .NodeGraphicsItems import FilterSettingsItem
 
 
 class FilterNode(Node):
@@ -14,6 +14,9 @@ class FilterNode(Node):
         for key, terminal in self.terminals.items():
             if terminal.isInput():
                 self.filter.channel_links[key] = ""
+                
+        
+        self.ipi = FilterSettingsItem(self.filter, self.graphicsItem())
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.
@@ -61,11 +64,6 @@ class Constants8BitNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = str(0)
-        self.ip = InitialParameterTextItem("0", self.graphicsItem(), self.value_changed, self.filter)
-        self.ip.moveBy(0, 10)
-
-    def value_changed(self):
-        self.filter.initial_parameters["value"] = self.ip.toPlainText()
 
 
 class Constants16BitNode(FilterNode):
@@ -78,11 +76,6 @@ class Constants16BitNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = str(0)
-        self.ip = InitialParameterTextItem("0", self.graphicsItem(), self.value_changed, self.filter)
-        self.ip.moveBy(0, 10)
-
-    def value_changed(self):
-        self.filter.initial_parameters["value"] = self.ip.toPlainText()
 
 
 class ConstantsFloatNode(FilterNode):
@@ -95,11 +88,6 @@ class ConstantsFloatNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = str(0)
-        self.ip = InitialParameterTextItem("0.0", self.graphicsItem(), self.value_changed, self.filter)
-        self.ip.moveBy(0, 10)
-
-    def value_changed(self):
-        self.filter.initial_parameters["value"] = self.ip.toPlainText()
 
 
 class ConstantsColorNode(FilterNode):
@@ -113,11 +101,6 @@ class ConstantsColorNode(FilterNode):
             'value': {'io': 'out'}
         })
         self.filter.initial_parameters["value"] = str(0)
-        self.ip = InitialParameterTextItem("0.0,0.0,0.0", self.graphicsItem(), self.value_changed, self.filter)
-        self.ip.moveBy(0, 10)
-
-    def value_changed(self):
-        self.filter.initial_parameters["value"] = self.ip.toPlainText()
 
 
 class Debug8BitNode(FilterNode):
