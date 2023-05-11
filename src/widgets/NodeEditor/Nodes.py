@@ -14,18 +14,39 @@ class FilterNode(Node):
         for key, terminal in self.terminals.items():
             if terminal.isInput():
                 self.filter.channel_links[key] = ""
-        
-        
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
+        """Handles behaviour if terminal was connected. Adds channel link to filter.
+        Could emit signals. See pyqtgraph.flowchart.Node.connected()
+
+        Args:
+            localTerm: The terminal on the node itself.
+            remoteTerm: The terminal of the other node.
+        """
         if localTerm.isInput() and remoteTerm.isOutput():
             self.filter.channel_links[localTerm.name()] = remoteTerm.node().name() + ":" + remoteTerm.name()
 
     def disconnected(self, localTerm, remoteTerm):
+        """Handles behaviour if terminal was disconnected. Removes channel link from filter.
+        Could emit signals. See pyqtgraph.flowchart.Node.disconnected()
+
+        Args:
+            localTerm: The terminal on the node itself.
+            remoteTerm: The terminal of the other node.
+        """
         if localTerm.isInput() and remoteTerm.isOutput():
             self.filter.channel_links[localTerm.name()] = ""
 
     def rename(self, name):
+        """Handles behaviour if node was renamed. Changes filter.id.
+        Could emit signals. See pyqtgraph.flowchart.Node.rename()
+
+        Args:
+            name: The new name of the filter.
+
+        Returns:
+            The return value of pyqtgraph.flowchart.Node.rename()
+        """
         self.filter.id = name
         return super().rename(name)
 

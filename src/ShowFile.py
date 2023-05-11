@@ -1,3 +1,9 @@
+"""Module to convert a board configuration to an xml element.
+
+Usage:
+    xml = createXML(board_configuration)
+    writeDocument("ShowFiles/show_file.xml", xml)
+"""
 import xml.etree.ElementTree as ET
 
 import proto.UniverseControl_pb2 as proto
@@ -7,6 +13,15 @@ from widgets.NodeEditor.Nodes import FilterNode
 
 
 def writeDocument(file_name: str, xml: ET.Element) -> bool:
+    """Writes the xml element to the specified file.
+    See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information.
+    
+    Args:
+        file_name: The (path and) file to which the xml element should be written.
+        xml: The xml element to write
+        
+    Returns: True, if successfull, otherwise false with error message.
+    """
     tree = ET.ElementTree(xml)
     try:
         tree.write(file_name)
@@ -17,6 +32,15 @@ def writeDocument(file_name: str, xml: ET.Element) -> bool:
 
 
 def createXML(board_configuration: BoardConfiguration) -> ET.Element:
+    """Creates an xml element from the given board configuration.
+    
+    Args:
+        board_configuration: The board configuration to be converted.
+    
+    Returns:
+        The xml element containing the board configuration.
+        See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information.
+    """
     root = _create_board_configuration_element(board_configuration)
 
     for scene in board_configuration.scenes:
@@ -58,7 +82,7 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
        ...
     </board_configuration>
     """
-    return ET.Element("board_configuration", attrib={
+    return ET.Element("bord_configuration", attrib={
         "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -87,9 +111,11 @@ def _create_filter_element(filter: Filter, parent: ET.Element) -> ET.Element:
     <filter type="0" id="id">
       ...
     </filter>
+    
+    TODO Expects Universe filter name to be 'Universe.x' to save filter with id=x. Other names will cause filter name to be wrong.
     """
     return ET.SubElement(parent, "filter", attrib={
-        "id": filter.id,
+        "id": filter.id if not "Universe." in filter.id else filter.id[9:],
         "type": str(filter.type)
     })
 

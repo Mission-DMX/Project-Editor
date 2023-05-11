@@ -1,3 +1,9 @@
+"""Widget to create multiple scenes and manage filters.
+
+Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
+    node_editor = NodeEditor(self, board_configuration)
+    self.addWidget(node_editor)
+"""
 from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog
 
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
@@ -5,6 +11,7 @@ from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 from . import Nodes
 from .SceneTabWidget import SceneTabWidget
 from DMXModel import BoardConfiguration, Scene
+
 
 class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
@@ -75,7 +82,8 @@ class NodeEditorWidget(QTabWidget):
 
     def add_scene_tab(self) -> None:
 
-        text, ok = QInputDialog.getText(self, "Create a new scene", "Scene name")
+        text, ok = QInputDialog.getText(
+            self, "Create a new scene", "Scene name")
         if ok:
             scene = Scene(id=len(self._board_configuration.scenes), human_readable_name=text, filters=[])
             scene_tab = SceneTabWidget(scene, self._library.copy())
