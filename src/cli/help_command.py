@@ -1,5 +1,6 @@
 from cli.command import Command
 
+
 class HelpCommand(Command):
 
     def __init__(self, context):
@@ -17,7 +18,24 @@ class HelpCommand(Command):
                 self.context.print("\tscene -- Select the scene to perform actions on")
                 self.context.print("\tcolumn -- Select the control desk column to perform actions on")
                 self.context.print("\tbankset -- Select the control desk bank set to perform actions on")
+            case "list":
+                self.context.print("This command displays the content of system collections.")
+                self.context.print("The following containers can be queried:")
+                self.context.print("\tscenes -- Display the available scene ids.")
+                self.context.print("\tfilters -- Display the filter ids in the current selected scene.")
+                self.context.print("\tcolumns -- Display the columns in the current selected bank set.")
+                self.context.print("\tbanksets -- Display the available bank sets.")
+            case "patch":
+                self.context.print("Patch a fixture. Usage: patch <fixture name> [number of fixtures]@<universe>"
+                                   "[@<start channel>[@<offset>]]")
+                self.context.print("\tfixture name -- The name of the fixture to patch")
+                self.context.print("\tuniverse -- The index (not the name) of the destination universe")
+                self.context.print("\tstart channel -- The start channel of the first fixture")
+                self.context.print("\toffset -- The number of gap channels between fixtures (excluding the"
+                                   "own length of the fixture)")
             case _:
-                self.context.print("The requested help topic '{}' is unknown.".format(args.topic))
+                self.context.print("ERROR: The requested help topic '{}' is unknown.".format(args.topic))
                 self.context.print("The following topics are known:")
-                self.context.print("\tselect")
+                self.context.print("\tselect\tlist\tpatch")
+                return False
+        return True
