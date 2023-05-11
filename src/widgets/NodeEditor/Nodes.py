@@ -63,7 +63,7 @@ class Constants8BitNode(FilterNode):
             'value': {'io': 'out'}
         })
 
-        self.filter.initial_parameters["value"] = str(0)
+        self.filter.initial_parameters["value"] = "0"
 
 
 class Constants16BitNode(FilterNode):
@@ -75,7 +75,7 @@ class Constants16BitNode(FilterNode):
             'value': {'io': 'out'}
         })
 
-        self.filter.initial_parameters["value"] = str(0)
+        self.filter.initial_parameters["value"] = "0"
 
 
 class ConstantsFloatNode(FilterNode):
@@ -87,7 +87,7 @@ class ConstantsFloatNode(FilterNode):
             'value': {'io': 'out'}
         })
 
-        self.filter.initial_parameters["value"] = str(0)
+        self.filter.initial_parameters["value"] = "0.0"
 
 
 class ConstantsColorNode(FilterNode):
@@ -100,7 +100,7 @@ class ConstantsColorNode(FilterNode):
         super().__init__(type=3, name=name, terminals={
             'value': {'io': 'out'}
         })
-        self.filter.initial_parameters["value"] = str(0)
+        self.filter.initial_parameters["value"] = "0,0,0"
 
 
 class Debug8BitNode(FilterNode):
@@ -506,7 +506,9 @@ class SwitchOnDelay8BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-
+        
+        self.filter.initial_parameters["delay"] = "0.0"
+        
 
 class SwitchOnDelay16BitNode(FilterNode):
     """Filter to represent a 16 bit - time on-switch."""
@@ -518,6 +520,8 @@ class SwitchOnDelay16BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        
+        self.filter.initial_parameters["delay"] = "0.0"
 
 
 class SwitchOnDelayFloatNode(FilterNode):
@@ -530,6 +534,8 @@ class SwitchOnDelayFloatNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        
+        self.filter.initial_parameters["delay"] = "0.0"
 
 
 class SwitchOffDelay8BitNode(FilterNode):
@@ -543,6 +549,8 @@ class SwitchOffDelay8BitNode(FilterNode):
             'value': {'io': 'out'}
         })
 
+        self.filter.initial_parameters["delay"] = "0.0"
+
 
 class SwitchOffDelay16BitNode(FilterNode):
     """Filter to represent a 16 bit - time off-switch."""
@@ -554,6 +562,8 @@ class SwitchOffDelay16BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        
+        self.filter.initial_parameters["delay"] = "0.0"
 
 
 class SwitchOffDelayFloatNode(FilterNode):
@@ -566,3 +576,5 @@ class SwitchOffDelayFloatNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        
+        self.filter.initial_parameters["delay"] = "0.0"
