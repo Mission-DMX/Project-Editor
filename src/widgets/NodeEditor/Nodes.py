@@ -208,14 +208,14 @@ class UniverseNode(FilterNode):
         }, allowAddInput=True)
 
         self.filter.filter_configurations["universe"] = self.name()[9:]
-        self.filter.filter_configurations["input_1"] = "1"
+        self.filter.filter_configurations["input_1"] = "0"
 
     def addInput(self, name="input", **args):
         """Allows to add up to 512 input channels."""
-        next_input = len(self.inputs()) + 1
+        next_input = len(self.inputs())
         if next_input >= 512:
             return None
-        input = f"input_{next_input}"
+        input = f"input_{next_input + 1}"
         self.filter.filter_configurations[input] = str(next_input)
         return super().addInput(input, **args)
     
