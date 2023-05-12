@@ -115,7 +115,7 @@ def _create_filter_element(filter: Filter, parent: ET.Element) -> ET.Element:
     TODO Expects Universe filter name to be 'Universe.x' to save filter with id=x. Other names will cause filter name to be wrong.
     """
     return ET.SubElement(parent, "filter", attrib={
-        "id": filter.id if not "Universe." in filter.id else filter.id[9:],
+        "id": filter.id,
         "type": str(filter.type)
     })
 
@@ -125,6 +125,8 @@ def _create_channel_link_element(channel_link: tuple[str, str], parent: ET.Eleme
     
     <channellink input_channel_id="id" output_channel_id="id">
     """
+
+    # Some nodes have input and output named value. Internally, the input is saved as 'value_in', but must be written as 'value'.
     return ET.SubElement(parent, "channellink", attrib={
         "input_channel_id": "value" if channel_link[0] == "value_in" else channel_link[0],
         "output_channel_id": channel_link[1]
@@ -136,9 +138,12 @@ def _create_filter_configuration_element(filter_configuration: tuple[str, str], 
     
     <filterConfiguration name="key" value="value">
     """
+
+    # if check for Universe node: Filter Configuration is saved backwards to display QLineEdit the right way
+    key, value = filter_configuration
     return ET.SubElement(parent, "filterConfiguration", attrib={
-        "name": filter_configuration[0],
-        "value": filter_configuration[0]
+        "name": key if "input_" not in key else value,
+        "value": value if "input_" not in key else key
     })
 
 

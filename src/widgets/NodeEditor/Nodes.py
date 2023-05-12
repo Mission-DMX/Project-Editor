@@ -1,3 +1,5 @@
+from PySide6.QtGui import QFont
+
 from pyqtgraph.flowchart.Node import Node, Terminal
 
 from DMXModel import Filter
@@ -17,6 +19,9 @@ class FilterNode(Node):
                 
         
         self.ipi = FilterSettingsItem(self.filter, self.graphicsItem())
+        font: QFont = self.graphicsItem().nameItem.font()
+        font.setPixelSize(12)
+        self.graphicsItem().nameItem.setFont(font)
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.
@@ -195,17 +200,30 @@ class UniverseNode(FilterNode):
     """Filter to represent a dmx universe. By default, it has 8 outputs, put more can be added."""
     nodeName = 'Universe'
 
+    universe_ids: list[int] = []
+
     def __init__(self, name):
         super().__init__(type=11, name=name, terminals={
-            str(i): {'io': 'in'} for i in range(8)
+            f"input_1": {'io': 'in'}
         }, allowAddInput=True)
 
-    def addInput(self, name="Input", **args):
+        self.filter.filter_configurations["universe"] = self.name()[9:]
+        self.filter.filter_configurations["input_1"] = "1"
+
+    def addInput(self, name="input", **args):
         """Allows to add up to 512 input channels."""
-        current_inputs = len(self.terminals)
-        if current_inputs >= 512:
+        next_input = len(self.inputs()) + 1
+        if next_input >= 512:
             return None
-        return super().addInput(str(current_inputs), **args)
+        input = f"input_{next_input}"
+        self.filter.filter_configurations[input] = str(next_input)
+        return super().addInput(input, **args)
+    
+    def removeTerminal(self, term):
+        if term.isInput():
+            name = term.name
+            del self.filter.filter_configurations[name[6:]]
+        return super().removeTerminal(term)
 
 
 class ArithmeticsFloatTo8Bit(FilterNode):
