@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 import proto.UniverseControl_pb2 as proto
 from DMXModel import BoardConfiguration, Scene, Filter
 from model.universe import Universe
-from widgets.NodeEditor.Nodes import FilterNode
+from widgets.NodeEditor.Nodes import FilterNode, UniverseNode
 
 
 def writeDocument(file_name: str, xml: ET.Element) -> bool:
@@ -61,8 +61,18 @@ def createXML(board_configuration: BoardConfiguration) -> ET.Element:
             for filter_configuration in node.filter.filter_configurations.items():
                 _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
-    for universe in board_configuration.universes:
-        universe_element = _create_universe_element(universe=universe, parent=root)
+            if isinstance(node, UniverseNode):
+                universe_element = ET.SubElement(root, "universe", attrib={
+                    "id": node.filter.filter_configurations["universe"],
+                    "name": node.name(),
+                    "description": "TODO"
+                })
+
+                usb_config = proto.Universe.USBConfig(vendor_id=0x0403, product_id=0x6001)
+                _create_ftdi_location_element(usb_config, universe_element)
+
+    #for universe in board_configuration.universes:
+    #    universe_element = _create_universe_element(universe=universe, parent=root)
 
         # TODO Universe location
 
@@ -200,10 +210,10 @@ def _create_ftdi_location_element(ftdi_location: proto.Universe.USBConfig, paren
     <ftdi_location vendor_id="0" product_id="0" device_name="name"/>
     """
     return ET.SubElement(parent, "ftdi_location", attrib={
-        "vendor_id": ftdi_location.vendor_id,
+        "vendor_id": str(ftdi_location.vendor_id),
         "product_id": str(ftdi_location.product_id),
-        "device_name": ftdi_location.device_name,
-        "serial_identifier": ftdi_location.serial
+        "device_name": str(ftdi_location.device_name),
+        "serial_identifier": str(ftdi_location.serial)
     })
 
 
