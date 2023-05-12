@@ -1,6 +1,6 @@
 from enum import Enum
 
-from PySide6.QtWidgets import QLineEdit, QLabel, QGraphicsItem, QGraphicsPixmapItem, QDialog, QFormLayout
+from PySide6.QtWidgets import QWidget, QLineEdit, QLabel, QButtonGroup, QPushButton, QGraphicsItem, QGraphicsPixmapItem, QDialog, QFormLayout
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 
@@ -47,6 +47,7 @@ class FilterSettingsDialog(QDialog):
         super().__init__()
         self.item = item
         self.setWindowTitle("Filter Settings")
+        
         layout = QFormLayout()
         
         layout.addRow("Initial Parameters", QLabel(""))
@@ -64,7 +65,12 @@ class FilterSettingsDialog(QDialog):
             le.setText(value)
             le.textChanged.connect(lambda new_value: self._fc_value_changed(key, new_value))
             layout.addRow(key, le)
-        
+
+        self._ok_button = QPushButton("Ok")
+        self._ok_button.pressed.connect(self.close)
+
+        layout.addRow("", self._ok_button)
+
         self.setLayout(layout)
 
     def _ip_value_changed(self, key, value):
