@@ -81,7 +81,7 @@ class NetworkManager(QtCore.QObject):
         """send message in correct format to fish"""
         logging.debug(f"message to send: {msg}")
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            logging.info(f"send Message to server {msg}")
+            logging.debug(f"send Message to server {msg}")
             self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
         else:
             logging.error("not Connected with fish server")

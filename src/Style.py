@@ -37,4 +37,4 @@ class Style(str, Enum):
     LABEL_WARN = "background-color : rgba(255,127,0,1)"
     LABEL_ERROR = "background-color : rgba(255,0,0,1)"
 
-    PATCH = "border:1px solid rgb(255, 255, 255); margin:0px; padding:0px; "
+    PATCH = "margin:0px; padding:1px; color: black; "

@@ -12,7 +12,7 @@ class Universe:
                  patching_channels: list[PatchingChannel] = None):
         self._universe_proto: proto.UniverseControl_pb2 = universe_proto
         if patching_channels is None:
-            patching_channels = [PatchingChannel(channel_address, "#000000") for channel_address in range(512)]
+            patching_channels = [PatchingChannel(channel_address, "#FFFFFF") for channel_address in range(512)]
         self._patching: list[PatchingChannel] = patching_channels
         self._channels: list[Channel] = [Channel(channel_address) for channel_address in range(512)]
 
