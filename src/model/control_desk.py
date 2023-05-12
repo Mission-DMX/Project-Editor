@@ -1,24 +1,126 @@
+from abc import ABC, abstractmethod
 from Network import NetworkManager
+from typing import Tuple
 from uuid import uuid4
+
+import proto.Console_pb2
 
 
 def _generate_unique_id() -> str:
     return str(uuid4())
 
 
-class DeskColumn:
+class DeskColumn(ABC):
     def __init__(self, id: str = None):
         self.id = id if id else _generate_unique_id()
-        self.text = ""
+        self.set_text("")
+        self.display_color = proto.Console_pb2.lcd_color.white
+        self._bottom_display_line_inverted = False
+        self._top_display_line_inverted = False
 
     def update(self):
+        """This method updates the state of this column with fish
+        """
+        # TODO implement
+        # TODO generate update message and push it to network manager
+        pass
+
+    @abstractmethod
+    def _generate_column_message(self) -> proto.Console_pb2.fader_column:
+        """This method will be called internally by update in order to obtain the definiton of the column
+
+        Returns:
+        The corresponding protobuf message
+        """
+        pass
+
+    @property
+    def text(self) -> str:
+        return self._upper_text
+
+    @text.setter
+    def set_text(self, text: str):
+        self._lower_text = ""
+        self._upper_text = text
+        self.update()
+
+    @property
+    def bottom_display_line_inverted(self) -> bool:
+        return self._bottom_display_line_inverted
+
+    @bottom_display_line_inverted.setter
+    def set_bottom_display_line_inverted(self, state: bool):
+        self._bottom_display_line_inverted = state
+        self.update()
+
+    @property
+    def top_display_line_inverted(self) -> bool:
+        return self._top_display_line_inverted
+
+    @top_display_line_inverted.setter
+    def set_top_display_line_inverted(self, state: bool):
+        self._top_display_line_inverted = state
+        self.update()
+
+
+class RawDeskColumn(DeskColumn):
+    def __init__(self, _id: str = None):
+        super().__init__(_id)
+        self._fader_position = 0
+        self._encoder_position = 0
+
+    def _generate_column_message(self) -> proto.Console_pb2.fader_column:
         # TODO implement
         pass
+
+    @property
+    def fader_position(self) -> int:
+        return self._fader_position
+
+    @fader_position.setter
+    def set_fader_position(self, position: int):
+        self._fader_position = position
+        self.update()
+
+    @property
+    def encoder_position(self) -> int:
+        return self._encoder_position
+
+    @encoder_position.setter
+    def set_encoder_position(self, position: int):
+        self._encoder_position = position
+        self.update()
+
+
+class ColorDeskColumn(DeskColumn):
+    def __init__(self, _id: str = None):
+        super().__init__(_id)
+        self._color_h = 0.0
+        self._color_s = 0.0
+        self._color_i = 0.0
+
+    def _generate_column_message(self) -> proto.Console_pb2.fader_column:
+        # TODO implement
+        pass
+
+    @property
+    def color(self) -> Tuple[float, float, float]:
+        return (self._color_h, self._color_s, self._color_i)
+
+    @color.setter
+    def set_color(self, h: float, s: float, i: float):
+        self._color_h = h
+        self._color_s = s
+        self._color_i = i
+        self.update()
 
 
 class FaderBank:
     def __init__(self):
         self.columns = []
+
+    def add_column(self, col: DeskColumn):
+        self.columns.append(col)
 
 
 class BankSet:
@@ -61,6 +163,8 @@ class BankSet:
         return True
 
     def activate(self):
+        """Calling this method makes this bank set the active one.
+        """
         BankSet._active_bank_set = self.id
         # TODO send desk_update message
         pass
@@ -73,3 +177,15 @@ class BankSet:
         """
         self.columns.append(bank)
         self._update()
+
+    def set_active_bank(self, i: int) -> bool:
+        """This method sets the active bank.
+
+        Returns:
+        True if the operation was successful. Otherwise False.
+        """
+        if i < 0 or i >= len(self.banks):
+            return False
+        self.active_bank = i
+        # TODO propagate to fish
+        return True
