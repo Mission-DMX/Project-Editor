@@ -165,12 +165,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def _switch_to_direct_mode(self) -> None:
         """switch to direct mode"""
         self._widgets.setCurrentIndex(0)
+        self._fish_connector.switch_to_direct()
         self._toolbar.removeAction(self.__send_show_file_action)
         self._toolbar.removeAction(self.__enter_scene_action)
 
     def _switch_to_filter_mode(self) -> None:
         """switch to filter mode"""
         self._widgets.setCurrentIndex(1)
+        self._fish_connector.switch_to_filter()
         self._toolbar.addAction(self.__send_show_file_action)
         self._toolbar.addAction(self.__enter_scene_action)
 
