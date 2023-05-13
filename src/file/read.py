@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from pyqtgraph.flowchart import Flowchart
 
 import proto.UniverseControl_pb2 as proto
-from DMXModel import BoardConfiguration, Scene, Filter
+from DMXModel import BoardConfiguration, Scene, Filter, Universe
 
 
 def readDocument(file_name: str) -> BoardConfiguration:
@@ -40,10 +40,9 @@ def readDocument(file_name: str) -> BoardConfiguration:
             case "universe":
                 _parse_universe(child, board_configuration)
             case "uihint":
-                _parse_key_value_pair(child, "name", "value", board_configuration.ui_hints)
+                _parse_uihint(child, board_configuration)
             case _:
                 logging.warn(f"Show {board_configuration.show_name} contains unknown element: {child.tag}")
-
 
     return board_configuration
 
@@ -57,7 +56,6 @@ def _clean_tags(element: ET.Element, prefix: str):
 def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfiguration):
     human_readable_name = ""
     id = 0
-    filters: list[Filter] = []
     for key, value in scene_element.attrib.items():
         match key:
             case "human_readable_name":
@@ -69,7 +67,7 @@ def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfigurat
     
     flowchart = Flowchart(name=human_readable_name)
 
-    scene = Scene(id=id, human_readable_name=human_readable_name, flowchart=flowchart, filters=[])
+    scene = Scene(id=id, human_readable_name=human_readable_name, flowchart=flowchart)
 
     for child in scene_element:
         match child.tag:
@@ -98,15 +96,64 @@ def _parse_filter(filter_element: ET.Element, scene: Scene):
     for child in filter_element:
         match child.tag:
             case "channellink":
-                _parse_key_value_pair(child, "input_channel_id", "output_channel_id", filter.channel_links)
+                _parse_channellink(child, filter)
             case "initialParameters":
-                _parse_key_value_pair(child, "name", "value", filter.initial_parameters)
+                _parse_inital_parameters(child, filter)
             case "filterConfiguration":
-                _parse_key_value_pair(child, "name", "value", filter.filter_configurations)
+                _parse_filter_configuration(child, filter)
             case _:
                 logging.warn(f"Filter {id} contains unknown element: {child.tag}")
 
     scene.filters.append(filter)
+
+
+def _parse_channellink(initial_parameters_element: ET.Element, filter: Filter):
+    cl_key = ""
+    cl_value = ""
+    for key, value in initial_parameters_element.attrib.items():
+        match key:
+            case "input_channel_id": 
+                cl_key = value
+            case "output_channel_id":
+                cl_value = value
+            case _:
+                logging.warn(f"Found attribute {key}={value} while parsing key-value-pair")
+                
+    filter.channel_links[cl_key] = cl_value
+
+
+def _parse_inital_parameters(initial_parameters_element: ET.Element, filter: Filter):
+    ip_key = ""
+    ip_value = ""
+    for key, value in initial_parameters_element.attrib.items():
+        match key:
+            case "name": 
+                ip_key = value
+            case "value":
+                ip_value = value
+            case _:
+                logging.warn(f"Found attribute {key}={value} while parsing initial paramter for filter {filter.id}")
+                
+    filter.initial_parameters[ip_key] = ip_value
+
+
+def _parse_filter_configuration(filter_configuration_element: ET.Element, filter: Filter):
+    fc_key = ""
+    fc_value = ""
+    for key, value in filter_configuration_element.attrib.items():
+        match key:
+            case "name": 
+                fc_key = value
+            case "value":
+                fc_value = value
+            case _:
+                logging.warn(f"Found attribute {key}={value} while parsing filter configuration for filter {filter.id}")
+    
+    if filter.type == 11 and fc_key != "universe":
+        filter.filter_configurations[fc_value] = fc_key
+        
+    else:
+        filter.filter_configurations[fc_key] = fc_value
 
 
 def _parse_device(device_element: ET.Element, board_configuration: BoardConfiguration):
@@ -150,9 +197,13 @@ def _parse_universe(universe_element: ET.Element, board_configuration: BoardConf
     if physical is None and artnet is None and ftdi is None:
         logging.warn(f"Could not parse any location for universe {id}")
 
-    universe = proto.Universe(id=id, physical_location=physical, remote_location=artnet, ftdi_dongle=ftdi)
 
-    board_configuration.universes.append(filter)
+    proto_universe = proto.Universe(id=id, physical_location=physical, remote_location=artnet, ftdi_dongle=ftdi)
+    universe = Universe(universe_proto=proto_universe)
+    universe.name = name
+    universe.description = description
+
+    board_configuration.universes.append(universe)
 
 
 def _parse_physical_location(location_element: ET.Element) -> int:
@@ -181,7 +232,7 @@ def _parse_ftdi_location(location_element: ET.Element) -> proto.Universe.USBConf
     product_id = 0
     vendor_id = 0
     device_name = ""
-    serial = ""
+    serial_identifier = ""
     for key, value in location_element.attrib.items():
         match key:
             case "product_id":
@@ -190,24 +241,24 @@ def _parse_ftdi_location(location_element: ET.Element) -> proto.Universe.USBConf
                 vendor_id = int(value)
             case "device_name":
                 device_name = value
-            case "serial":
-                serial = value
+            case "serial_identifier":
+                serial_identifier = value
             case _:
                 logging.warn(f"Found attribute {key}={value} while parsing ftdi location")
 
-    return proto.Universe.USBConfig(product_id=product_id, vendor_id=vendor_id, device_name=device_name, serial=serial)
+    return proto.Universe.USBConfig(product_id=product_id, vendor_id=vendor_id, device_name=device_name, serial=serial_identifier)
 
 
-def _parse_key_value_pair(key_value_pair_element: ET.Element, key_name: str, value_name: str, map: dict[str, str]):
-    pair_key = ""
-    pair_value = ""
-    for key, value in key_value_pair_element:
+def _parse_uihint(uihint_element: ET.Element, board_configuration: BoardConfiguration):
+    uihint_key = ""
+    uihint_value = ""
+    for key, value in uihint_element.attrib.items():
         match key:
-            case str(key_name):
-                pair_key = value
-            case str(value_name):
-                pair_value = value
+            case "name": 
+                uihint_key = value
+            case "value":
+                uihint_value = value
             case _:
-                logging.warn(f"Found attribute {key}={value} while parsing key-value-pair")
+                logging.warn(f"Found attribute {key}={value} while parsing ui hint")
 
-    map[pair_key] = pair_value
+    board_configuration.ui_hints[uihint_key] = uihint_value

@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scenes],
+        menus: dict[str, list[list[str, Callable]]] = {"File": [["save", lambda: self.select_file(self._save_scenes)],
                                                                 ["load", lambda: self.select_file(self._load_show_file)],
                                                                 ["Config", self._edit_config]],
                                                        "Szene": [["add", self._add_szene]],
@@ -103,10 +103,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                                              "Text Files (*.txt);;All Files (*)", )
         return file_name
 
-    def _save_scenes(self) -> None:
+    def _save_scenes(self, file_name: str) -> None:
         """Safes the current scene to a file."""
         xml = createXML(self._board_configuration)
-        writeDocument("ShowFile.xml", xml)
+        writeDocument(file_name, xml)
 
     def select_file(self, func: Callable) -> None:
         """Opens QFileDialog to select a file.

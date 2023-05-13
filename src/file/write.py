@@ -9,8 +9,7 @@ import logging
 import xml.etree.ElementTree as ET
 
 import proto.UniverseControl_pb2 as proto
-from DMXModel import BoardConfiguration, Scene, Filter
-from model.universe import Universe
+from DMXModel import BoardConfiguration, Scene, Filter, Universe
 
 def writeDocument(file_name: str, xml: ET.Element) -> bool:
     """Writes the xml element to the specified file.
@@ -23,12 +22,16 @@ def writeDocument(file_name: str, xml: ET.Element) -> bool:
     Returns: True, if successfull, otherwise false with error message.
     """
     tree = ET.ElementTree(xml)
-    try:
-        tree.write(file_name)
-        return True
-    except IOError:
-        print(f"Could not save {file_name}")
-        return False
+    
+    with open(file_name, 'w+') as f:
+        f.write(ET.tostring(xml, encoding='unicode', method='xml'))
+    return True
+    #try:
+    #    
+    #    return True
+    #except IOError:
+    #    print(f"Could not save {file_name}")
+    #    return False
 
 
 def createXML(board_configuration: BoardConfiguration) -> ET.Element:
@@ -58,22 +61,19 @@ def createXML(board_configuration: BoardConfiguration) -> ET.Element:
 
             for filter_configuration in filter.filter_configurations.items():
                 _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
+                
 
-            if filter.type == 11:
-                universe_element = ET.SubElement(root, "universe", attrib={
-                    "id": filter.filter_configurations["universe"],
-                    "name": "Universe." + filter.filter_configurations["universe"],
-                    "description": "TODO"
-                })
+    for universe in board_configuration.universes:
+        universe_element = _create_universe_element(universe=universe, parent=root)
 
-                usb_config = proto.Universe.USBConfig(vendor_id=0x0403, product_id=0x6001)
-                _create_ftdi_location_element(usb_config, universe_element)
-
-    #for universe in board_configuration.universes:
-    #    universe_element = _create_universe_element(universe=universe, parent=root)
-
-        # TODO Universe location
-
+        #match type(universe.location):
+        #    case proto.Universe.ArtNet:
+        #        _create_artnet_location_element(artnet_location=universe.location, parent=universe_element)
+        #    case proto.Universe.USBConfig:
+        _create_ftdi_location_element(ftdi_location=universe.location, parent=universe_element)
+        #    case type(1):
+        #        _create_physical_location_element(physical_location=universe.location, parent=universe_element)
+                
     for device in board_configuration.devices:
         _create_device_element(device=device, parent=root)
 
@@ -94,9 +94,9 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
         "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        "show_name": board_configuration.show_name,
+        "show_name": str(board_configuration.show_name),
         "default_active_scene": str(board_configuration.default_active_scene),
-        "notes": board_configuration.notes
+        "notes": str(board_configuration.notes)
     })
 
 
@@ -109,7 +109,7 @@ def _create_scene_element(scene: Scene, parent: ET.Element) -> ET.Element:
     """
     return ET.SubElement(parent, "scene", attrib={
         "id": str(scene.id),
-        "human_readable_name": scene.human_readable_name
+        "human_readable_name": str(scene.human_readable_name)
     })
 
 
@@ -123,7 +123,7 @@ def _create_filter_element(filter: Filter, parent: ET.Element) -> ET.Element:
     TODO Expects Universe filter name to be 'Universe.x' to save filter with id=x. Other names will cause filter name to be wrong.
     """
     return ET.SubElement(parent, "filter", attrib={
-        "id": filter.id,
+        "id": str(filter.id),
         "type": str(filter.type)
     })
 
@@ -136,8 +136,8 @@ def _create_channel_link_element(channel_link: tuple[str, str], parent: ET.Eleme
 
     # Some nodes have input and output named value. Internally, the input is saved as 'value_in', but must be written as 'value'.
     return ET.SubElement(parent, "channellink", attrib={
-        "input_channel_id": "value" if channel_link[0] == "value_in" else channel_link[0],
-        "output_channel_id": channel_link[1]
+        "input_channel_id": "value" if channel_link[0] == "value_in" else str(channel_link[0]),
+        "output_channel_id": str(channel_link[1])
     })
 
 
@@ -150,8 +150,8 @@ def _create_filter_configuration_element(filter_configuration: tuple[str, str], 
     # if check for Universe node: Filter Configuration is saved backwards to display QLineEdit the right way
     key, value = filter_configuration
     return ET.SubElement(parent, "filterConfiguration", attrib={
-        "name": key if "input_" not in key else value,
-        "value": value if "input_" not in key else key
+        "name": str(key) if "input_" not in key else str(value),
+        "value": str(value) if "input_" not in key else str(key)
     })
 
 
@@ -161,8 +161,8 @@ def _create_inital_parameters_element(initial_parameter: tuple[str, str], parent
     <initalParameters name="key" value="value">
     """
     return ET.SubElement(parent, "initialParameters", attrib={
-        "name": initial_parameter[0],
-        "value": initial_parameter[1]
+        "name": str(initial_parameter[0]),
+        "value": str(initial_parameter[1])
     })
 
 
@@ -174,9 +174,9 @@ def _create_universe_element(universe: Universe, parent: ET.Element) -> ET.Eleme
     </universe>
     """
     return ET.SubElement(parent, "universe", attrib={
-        "id": str(universe.address),
-        "name": universe.name,
-        "description": universe.description
+        "id": str(universe.universe_proto.id),
+        "name": str(universe.name),
+        "description": str(universe.description)
     })
 
 
@@ -190,13 +190,13 @@ def _create_physical_location_element(physical_location: int, parent: ET.Element
     return pl
 
 
-def _create_artnet_location_element(self, artnet_location: proto.Universe.ArtNet, parent: ET.Element) -> ET.Element:
+def _create_artnet_location_element(artnet_location: proto.Universe.ArtNet, parent: ET.Element) -> ET.Element:
     """Creates an xml element of type artnet_location.
     
     <artnet_location ip_address="127.0.0.1" udp_port="666" device_universe_id="0" />
     """
     return ET.SubElement(parent, "artnet_location", attrib={
-        "ip_address": artnet_location.ip_address,
+        "ip_address": str(artnet_location.ip_address),
         "udp_port": str(artnet_location.port),
         "device_universe_id": str(artnet_location.universe_on_device)
     })
@@ -207,6 +207,7 @@ def _create_ftdi_location_element(ftdi_location: proto.Universe.USBConfig, paren
     
     <ftdi_location vendor_id="0" product_id="0" device_name="name"/>
     """
+    # vendor_id=0x0403, product_id=0x6001
     return ET.SubElement(parent, "ftdi_location", attrib={
         "vendor_id": str(ftdi_location.vendor_id),
         "product_id": str(ftdi_location.product_id),
@@ -229,6 +230,6 @@ def _create_uihint_element(uihint: tuple[str, str], parent: ET.Element) -> ET.El
     <uihint name="key" value="value"/>
     """
     return ET.SubElement(parent, "uihint", attrib={
-        "name": uihint[0],
-        "value": uihint[1]
+        "name": str(uihint[0]),
+        "value": str(uihint[1])
     })

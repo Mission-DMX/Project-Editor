@@ -34,13 +34,31 @@ class Universe:
     @property
     def name(self) -> str:
         """Human-readable name for the universe."""
-        return f"Universe {self.universe_proto.id}"
+        if self._name is None:
+            self._name = f"Universe {self.universe_proto.id}"
+        return self._name
+    
+    @name.setter
+    def name(self, name: str):
+        self._name = name
 
     @property
     def description(self) -> str:
         """Human-readable description for the universe."""
-        return self.name
+        if self._description is None:
+            self._description = self.name()
+        return self._description
+    
+    @description.setter
+    def description(self, description: str):
+        self._description = description
 
     @property
-    def location(self):
-        pass
+    def location(self) -> int | proto.UniverseControl_pb2.Universe.ArtNet | proto.UniverseControl_pb2.Universe.USBConfig:
+        #if self._universe_proto.physical_location:
+        #    return self._universe_proto.physical_location
+        #if self._universe_proto.remote_location:
+        #    return self._universe_proto.remote_location
+        #if self._universe_proto.ftdi_dongle:
+        return self._universe_proto.ftdi_dongle
+        

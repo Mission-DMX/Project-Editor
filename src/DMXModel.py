@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from pyqtgraph.flowchart.Flowchart import Flowchart
 
-import proto.UniverseControl_pb2 as proto
+from model.universe import Universe
 
 class Device:
     """A DMX device"""
@@ -31,16 +31,16 @@ class Filter:
 @dataclass
 class Scene:
     id: int
-    filters: list[Filter]
     human_readable_name: str
-    flowchart: Flowchart = None
+    flowchart: Flowchart
+    filters: list[Filter] = field(default_factory=list)
 
 
 @dataclass
 class BoardConfiguration:
     scenes: list[Scene] = field(default_factory=list)
     devices: list[str] = field(default_factory=list)
-    universes: list[proto.Universe] = field(default_factory=list)
+    universes: list[Universe] = field(default_factory=list)
     ui_hints: dict[str, str] = field(default_factory=dict)
     show_name: str = "Show"
     default_active_scene: int = 0
