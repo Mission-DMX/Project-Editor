@@ -4,13 +4,13 @@ Usage:
     xml = createXML(board_configuration)
     writeDocument("ShowFiles/show_file.xml", xml)
 """
+import logging
+
 import xml.etree.ElementTree as ET
 
 import proto.UniverseControl_pb2 as proto
 from DMXModel import BoardConfiguration, Scene, Filter
 from model.universe import Universe
-from widgets.NodeEditor.Nodes import FilterNode, UniverseNode
-
 
 def writeDocument(file_name: str, xml: ET.Element) -> bool:
     """Writes the xml element to the specified file.
@@ -46,25 +46,23 @@ def createXML(board_configuration: BoardConfiguration) -> ET.Element:
     for scene in board_configuration.scenes:
         scene_element = _create_scene_element(scene=scene, parent=root)
 
-        for _, node in scene.flowchart.nodes().items():
-            if not isinstance(node, FilterNode):
-                return False
+        for filter in scene.filters:
 
-            filter_element = _create_filter_element(filter=node.filter, parent=scene_element)
+            filter_element = _create_filter_element(filter=filter, parent=scene_element)
 
-            for channel_link in node.filter.channel_links.items():
+            for channel_link in filter.channel_links.items():
                 _create_channel_link_element(channel_link=channel_link, parent=filter_element)
 
-            for initial_parameter in node.filter.initial_parameters.items():
+            for initial_parameter in filter.initial_parameters.items():
                 _create_inital_parameters_element(initial_parameter=initial_parameter, parent=filter_element)
 
-            for filter_configuration in node.filter.filter_configurations.items():
+            for filter_configuration in filter.filter_configurations.items():
                 _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
-            if isinstance(node, UniverseNode):
+            if filter.type == 11:
                 universe_element = ET.SubElement(root, "universe", attrib={
-                    "id": node.filter.filter_configurations["universe"],
-                    "name": node.name(),
+                    "id": filter.filter_configurations["universe"],
+                    "name": "Universe." + filter.filter_configurations["universe"],
                     "description": "TODO"
                 })
 

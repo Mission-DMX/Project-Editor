@@ -9,7 +9,7 @@ setup(name='fish-e',
       author_email='ma.kaussow@uni-luebeck.de',
       url='https://github.com/Mission-DMX/Project-Editor',
       python_requires='>3.10.0',
-      requires=['PySide6==6.4.2', 'protobuf', 'qtpynodeeditor', 'pyqtgraph'],
+      requires=['PySide6', 'protobuf', 'qtpynodeeditor', 'pyqtgraph'],
       packages=find_packages(),
       package_dir={'': './'},
       scripts=['src/DMXGui.py'])

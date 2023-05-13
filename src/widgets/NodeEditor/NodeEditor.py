@@ -7,6 +7,7 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
 from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog
 
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
+from pyqtgraph.flowchart import Flowchart
 
 from . import Nodes
 from .SceneTabWidget import SceneTabWidget
@@ -20,6 +21,8 @@ class NodeEditorWidget(QTabWidget):
         super().__init__(parent)
 
         self._library = NodeLibrary()
+
+        self._tab_widgets: list[SceneTabWidget] = []
 
         self._board_configuration = board_configuration
 
@@ -80,18 +83,22 @@ class NodeEditorWidget(QTabWidget):
         if index == self.tabBar().count() - 1:
             self.remove_scene_tab()
 
-    def add_scene_tab(self) -> None:
+    def add_scene_tab(self, scene: Scene = None) -> SceneTabWidget | None:
 
-        text, ok = QInputDialog.getText(
-            self, "Create a new scene", "Scene name")
-        if ok:
-            scene = Scene(id=len(self._board_configuration.scenes), human_readable_name=text, filters=[])
-            scene_tab = SceneTabWidget(scene, self._library.copy())
-            self.insertTab(self.tabBar().count() - 2, scene_tab, text)
+        if scene is None:
+            text, ok = QInputDialog.getText(self, "Create a new scene", "Scene name")
+            if ok:
+                scene = Scene(id=len(self._board_configuration.scenes), human_readable_name=text, filters=[])
+                self._board_configuration.scenes.append(scene)
 
-            self._board_configuration.scenes.append(scene)
+        scene_tab = SceneTabWidget(scene, self._library.copy())
+        self.insertTab(self.tabBar().count() - 2, scene_tab, scene.human_readable_name)
+        self._tab_widgets.append(scene_tab)
+        return scene_tab
 
     def remove_scene_tab(self):
         index, ok = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
         if ok and 0 <= index < self.tabBar().count() - 2:
+            scene = self._tab_widgets[index]
+            self._board_configuration.scenes.remove[scene]
             self.tabBar().removeTab(index)

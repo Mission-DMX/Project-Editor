@@ -9,13 +9,14 @@ import xml.etree.ElementTree as ET
 
 from PySide6 import QtWidgets, QtGui
 
-from DMXModel import BoardConfiguration
+from DMXModel import BoardConfiguration, Scene, Filter
 from Network import NetworkManager
-from ShowFile import createXML, writeDocument
+from file.write import writeDocument, createXML
+from file.read import readDocument
 from ofl.patching_dialog import PatchingDialog
-from src.Style import Style
+from Style import Style
 from widgets.Logging.logging_widget import LoggingWidget
-from widgets.NodeEditor.NodeEditor import NodeEditorWidget
+from widgets.NodeEditor.NodeEditor import NodeEditorWidget, SceneTabWidget
 from widgets.SzeneEditor.szene_editor import SzeneEditor
 
 
@@ -59,7 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[list[str, Callable]]] = {"File": [["save", self._save_scenes],
-                                                                ["load", self._load_scenes],
+                                                                ["load", lambda: self.select_file(self._load_show_file)],
                                                                 ["Config", self._edit_config]],
                                                        "Szene": [["add", self._add_szene]],
                                                        "Universe": [["add", self._szene_editor.add_universe],
@@ -107,17 +108,23 @@ class MainWindow(QtWidgets.QMainWindow):
         xml = createXML(self._board_configuration)
         writeDocument("ShowFile.xml", xml)
 
-    def _load_scenes(self) -> None:
-        """load szene from file"""
-        file_name = self._get_file_name("load Szene")
-        if file_name:
-            with open(file_name, "r") as f:
-                for (szene_index, line) in enumerate(f):
-                    universes = line.split(";")
-                    for (universe_index, universe) in enumerate(universes):
-                        for (chanel, value) in enumerate(universe.split(",")):
-                            self._szene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
-                                = int(value)
+    def select_file(self, func: Callable) -> None:
+        """Opens QFileDialog to select a file.
+        
+        Args:
+            func: Function to be called after file was selected and confirmed. Function gets the file name as a string.
+        """
+        file_dialog = QtWidgets.QFileDialog(self)
+        file_dialog.fileSelected.connect(func)
+        file_dialog.show()
+
+    def _load_show_file(self, file_name: str):
+        """Loads a show file"""
+        self._board_configuration = readDocument(file_name)
+        
+        for scene in self._board_configuration.scenes:
+            self._node_editor.add_scene_tab(scene)
+
 
     def _edit_config(self) -> None:
         """Edit the board configuration.

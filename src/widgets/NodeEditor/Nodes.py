@@ -1,3 +1,5 @@
+import logging
+
 from PySide6.QtGui import QFont
 
 from pyqtgraph.flowchart.Node import Node, Terminal
@@ -11,17 +13,36 @@ class FilterNode(Node):
 
     def __init__(self, type: int, name: str, terminals: dict[str, dict[str, str]] = None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         super().__init__(name, terminals, allowAddInput, allowAddOutput, allowRemove)
-        self.filter: Filter = Filter(name, type)
+        self._filter = Filter(id=name, type=type)
+
+        self.setup_filter()
+
+
+    def setup_filter(self, filter: Filter = None):
+        """Sets the filter. Overrides existing filters.
+
+        FilterNode.filter will be set to filter.
+        FilterNode.filter.channel_links will be reset.
+        """
+        if filter is not None:
+            if filter.type != self._filter.type:
+                logging.critical(f"Tried to override a filter with a filter of different type")
+                return
+                # raise ValueError("Filter type wrong")
+            self._filter = filter
 
         for key, terminal in self.terminals.items():
             if terminal.isInput():
                 self.filter.channel_links[key] = ""
                 
         
-        self.ipi = FilterSettingsItem(self.filter, self.graphicsItem())
+        self.ipi = FilterSettingsItem(self._filter, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
+
+        logging.debug(f"Added filter<type={self._filter.type}, id={self._filter.id}>")
+
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.
@@ -57,6 +78,11 @@ class FilterNode(Node):
         """
         self.filter.id = name
         return super().rename(name)
+    
+    @property
+    def filter(self) -> Filter:
+        """The corrosponding filter"""
+        return self._filter
 
 
 class Constants8BitNode(FilterNode):
