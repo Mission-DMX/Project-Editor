@@ -13,17 +13,22 @@ def _generate_unique_id() -> str:
 class DeskColumn(ABC):
     def __init__(self, id: str = None):
         self.id = id if id else _generate_unique_id()
-        self.set_text("")
+        self.display_name = ""
         self.display_color = proto.Console_pb2.lcd_color.white
         self._bottom_display_line_inverted = False
         self._top_display_line_inverted = False
+        self._pushed_to_device = False
 
-    def update(self):
+    def update(self) -> bool:
         """This method updates the state of this column with fish
         """
-        # TODO implement
-        # TODO generate update message and push it to network manager
-        pass
+        if not BankSet._fish_connector.is_running:
+            return False
+        if not self_pushed_to_device:
+            return False
+        msg = self._generate_column_message()
+        BankSet._fish_connector.send_update_column_message(msg)
+        return True
 
     @abstractmethod
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
@@ -33,6 +38,14 @@ class DeskColumn(ABC):
         The corresponding protobuf message
         """
         pass
+
+    def _generate_base_column_message(self) -> proto.Console_pb2.fader_column:
+        msg = proto.Console_pb2.fader_column(column_id=self.id, display_color=self.display_color)
+        msg.upper_display_text = self._upper_text
+        msg.lower_display_text = self._lower_text
+        msg.top_lcd_row_inverted = self._top_display_line_inverted
+        msg.bottom_lcd_row_inverted = self._bottom_display_line_inverted
+        return msg
 
     @property
     def display_name(self) -> str:
@@ -68,17 +81,38 @@ class RawDeskColumn(DeskColumn):
         super().__init__(_id)
         self._fader_position = 0
         self._encoder_position = 0
+        self._select_button_led_active = False
+        self._b1_button_led_active = False
+        self._b2_button_led_active = False
+        self._b3_button_led_active = False
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
-        # TODO implement
-        pass
+        msg = self._generate_base_column_message()
+        raw_definition = proto.Console_pb2.fader_column_raw_fader_data(fader=self._fader_position)
+        raw_definition.rotary_position = self._encoder_position
+        raw_definition.meter_leds = 0
+        raw_defintion.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        raw_definition.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        raw_definition.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        raw_definition.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data = raw_definition
+        return msg
 
     @property
     def fader_position(self) -> int:
+        """This method returns the fader position
+
+        Returns:
+        fader position as 16 bit unsigned int (between 0 and 65535)
+        """
         return self._fader_position
 
     @fader_position.setter
     def fader_position(self, position: int):
+        """Set the fader position. Please keep in mind that the fader positions range from 0 to 65535
+
+        position -- The new position to set
+        """
         self._fader_position = position
         self.update()
 
@@ -100,8 +134,7 @@ class ColorDeskColumn(DeskColumn):
         self._color_i = 0.0
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
-        # TODO implement
-        pass
+        return proto.Console_pb2.fader_column_hsi_color(hue=self._color_h, saturation=self._color_s, intensity=self._color_i);
 
     @property
     def color(self) -> Tuple[float, float, float]:
@@ -127,6 +160,8 @@ class BankSet:
 
     _fish_connector: NetworkManager = None
     _active_bank_set: str = None
+    _seven_seg_data: str = "00          "
+    _linked_bank_sets = []
 
     def __init__(self, banks: list[FaderBank]):
         self.id = _generate_unique_id()
@@ -148,9 +183,11 @@ class BankSet:
         if self.active_bank > bank_set_size - 1:
             self.active_bank = bank_set_size - 1
         new_id = _generate_unique_id()
-        BankSet._fish_connector.send_add_fader_bank_message(new_id, self.active_bank, self.banks)
+        BankSet._fish_connector.send_add_fader_bank_set_message(new_id, self.active_bank, self.banks)
         if self.pushed_to_fish:
-            BankSet._fish_connector.send_fader_bank_delete_message(self.id)
+            BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
+        else:
+            BankSet._linked_bank_sets.append(self)
         if BankSet._active_bank_set == self.id:
             self.id = new_id
             self.activate()
@@ -166,8 +203,15 @@ class BankSet:
         """Calling this method makes this bank set the active one.
         """
         BankSet._active_bank_set = self.id
-        # TODO send desk_update message
-        pass
+        self._send_desk_update_message()
+
+    def _send_desk_update_message(self):
+        msg.selected_column_id = "" # Do not update the set of selected columns yet
+        msg.find_active_on_column_id = "" # Do not update the column with active 'find fixtrue' feature yet
+        msg.selected_bank = self.active_bank
+        msg.selected_bank_set = BankSet._active_bank_set
+        msg.seven_seg_display_data = BankSet._seven_seg_data
+        BankSet._fish_connector.send_desk_update_message(msg)
 
     def add_bank(self, bank: FaderBank):
         """Update the fader bank on the control desk
@@ -187,5 +231,30 @@ class BankSet:
         if i < 0 or i >= len(self.banks):
             return False
         self.active_bank = i
-        # TODO propagate to fish
+        self._send_desk_update_message()
         return True
+
+    def unlink(self) -> bool:
+        """This method removes the bank set from the control desk
+
+        Returns: True on success
+        """
+        if not self.pushed_to_fish:
+            return False
+        if not BankSet._fish_connector.is_running:
+            return False
+        i = 0
+        for linked_bank in BankSet._linked_bank_sets:
+            if linked_bank.id == self.id:
+                found_index = i
+                break
+            else:
+                i += 1
+        BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
+        BankSet._linked_bank_sets.pop(found_index)
+        return True
+
+def set_seven_seg_display_content(content: str):
+    BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))
+    # TODO send update message
+

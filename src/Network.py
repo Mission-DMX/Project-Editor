@@ -160,13 +160,28 @@ class NetworkManager(QtCore.QObject):
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
 
-    def send_fader_bank_delete_message(self, fader_bank_id: str):
+    def send_fader_bank_set_delete_message(self, fader_bank_id: str):
         delete_msg = proto.Console_pb2.remove_fader_bank_set(bank_id=fader_bank_id)
         self._send_with_format(delete_msg, proto.MessageTypes_pb2.MSGT_REMOVE_FADER_BANK_SET)
 
-    def send_fader_bank_delete_message(self):
-        # TODO implement
-        pass
+    def send_add_fader_bank_set_message(self, bank_id: str, active_bank_index: int, fader_banks):
+        add_set_msg = proto.Console_pb2.add_fader_bank_set(bank_id=bank_id, default_active_fader_bank=active_bank_index)
+        for bank in fader_banks:
+            bank_definition = bank._generate_column_message()
+            add_set_msg.banks.extend([bank_definition])
+        self._send_with_format(add_set_msg, proto.MessageTypes_pb2.MSGT_REMOVE_FADER_BANK_SET)
+        for bank in fader_banks:
+            bank._pushed_to_device = True
+
+    def send_update_column_message(self, msg: proto.Console_pb2.fader_column):
+        if not self.is_running:
+            return
+        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN)
+
+    def send_desk_update_message(self, msg: proto.Console_pb2.desk_update):
+        if not self.is_running:
+            return
+        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
 
 
 def on_error(error) -> None:
