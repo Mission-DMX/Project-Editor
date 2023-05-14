@@ -4,7 +4,7 @@ from PySide6 import QtWidgets, QtCore
 
 from Network import NetworkManager
 from model.universe import Universe
-from src.Style import Style
+from Style import Style
 from .ChannelWidget import ChannelWidget
 
 

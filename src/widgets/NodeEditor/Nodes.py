@@ -1,7 +1,6 @@
 import logging
 
 from PySide6.QtGui import QFont
-from PySide2.QtWidgets import QGraphicsObject
 
 from pyqtgraph.flowchart.Node import Node, Terminal
 
