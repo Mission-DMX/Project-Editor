@@ -26,6 +26,7 @@ class Filter:
         self.channel_links: dict[str, str] = {}
         self.initial_parameters: dict[str, str] = {}
         self.filter_configurations: dict[str, str] = {}
+        self.pos: tuple[float, float] = (0.0, 0.0)
 
 
 @dataclass

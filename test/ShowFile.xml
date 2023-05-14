@@ -17,7 +17,7 @@
             <filterConfiguration name="3" value="input_4" />
         </filter>
         <filter id="ColorToRGB.0" type="15">
-            <channellink input_channel_id="value" output_channel_id="ConstantsColor.0:value" />
+            <channellink input_channel_id="value" output_channel_id="Color:value" />
         </filter>
         <filter id="Color" type="3">
             <initialParameters name="value" value="0,1,0" />

@@ -35,11 +35,7 @@ class FilterSettingsItem(QGraphicsPixmapItem):
 
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
-            #self.setTextInteractionFlags(Qt.TextInteractionFlag.TextEditorInteraction)
-            #self.setFocus(Qt.FocusReason.MouseFocusReason)  # focus text label
             FilterSettingsDialog(self).exec()
-        elif ev.button() == Qt.MouseButton.RightButton:
-            self.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
 
 
 class FilterSettingsDialog(QDialog):

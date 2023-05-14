@@ -1,6 +1,7 @@
 import logging
 
 from PySide6.QtWidgets import QWidget, QGridLayout
+import PySide6
 
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 from pyqtgraph.flowchart.library import NodeLibrary
@@ -90,11 +91,12 @@ class SceneTabWidget(QWidget):
             if self._loading:
                for filter in self._scene.filters:
                    if filter.id == node.name():
-                       node.filter == filter
-                       node.setup_filter()
+                       node.setup_filter(filter)
+                       node.graphicsItem().setPos(filter.pos)
                        logging.debug(f"Added and set up filter {filter.id}")
 
             elif node.filter not in self._scene.filters:
+                node.update_filter_pos()
                 self._scene.filters.append(node.filter)
 
 

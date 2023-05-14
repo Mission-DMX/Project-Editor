@@ -1,6 +1,7 @@
 import logging
 
 from PySide6.QtGui import QFont
+from PySide2.QtWidgets import QGraphicsObject
 
 from pyqtgraph.flowchart.Node import Node, Terminal
 
@@ -17,7 +18,6 @@ class FilterNode(Node):
 
         self.setup_filter()
 
-
     def setup_filter(self, filter: Filter = None):
         """Sets the filter. Overrides existing filters.
 
@@ -30,19 +30,19 @@ class FilterNode(Node):
                 return
                 # raise ValueError("Filter type wrong")
             self._filter = filter
-
-        for key, terminal in self.terminals.items():
-            if terminal.isInput():
+                
+        else:
+            for key, _ in self.inputs().items():
                 self.filter.channel_links[key] = ""
                 
         
-        self.ipi = FilterSettingsItem(self._filter, self.graphicsItem())
+        self.fsi = FilterSettingsItem(self._filter, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
+        self.graphicsItem().xChanged.connect(self.update_filter_pos)
 
         logging.debug(f"Added filter<type={self._filter.type}, id={self._filter.id}>")
-
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.
@@ -78,6 +78,10 @@ class FilterNode(Node):
         """
         self.filter.id = name
         return super().rename(name)
+    
+    def update_filter_pos(self):
+        pos = self.graphicsItem().pos()
+        self._filter.pos = pos = (pos.x(), pos.y())
     
     @property
     def filter(self) -> Filter:
@@ -250,6 +254,12 @@ class UniverseNode(FilterNode):
             name = term.name
             del self.filter.filter_configurations[name[6:]]
         return super().removeTerminal(term)
+    
+    def setup_filter(self, filter: Filter = None):
+        super().setup_filter(filter)
+        if filter is not None:
+            for _ in range(len(filter.channel_links) - 1):
+                self.addInput()
 
 
 class ArithmeticsFloatTo8Bit(FilterNode):
