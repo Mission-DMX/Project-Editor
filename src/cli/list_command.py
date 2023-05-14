@@ -1,5 +1,5 @@
 from cli.command import Command
-
+from model.control_desk import BankSet
 
 class ListCommand(Command):
 
@@ -22,7 +22,10 @@ class ListCommand(Command):
                 self.context.print("ERROR: Listing the columns within the selected bank set is not yet implemented.")
                 return False
             case "banksets":
-                self.context.print("ERROR: Listing the available bank sets is not yet implemented.")
+                self.context.print("Bank Set ID                      | Description ")
+                self.context.print("===============================================")
+                for bs in BankSet.get_linked_bank_sets():
+                    self.context.print(bs.id + " | " + bs.description)
                 return False
             case _:
                 self.context.print("ERROR: The requested container '{}' was not found.".format(args.section))

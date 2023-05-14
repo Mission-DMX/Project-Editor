@@ -163,11 +163,26 @@ class BankSet:
     _seven_seg_data: str = "00          "
     _linked_bank_sets = []
 
-    def __init__(self, banks: list[FaderBank]):
+    @staticmethod
+    def get_linked_bank_sets():
+        return list(BankSet._linked_bank_sets)
+
+    def __init__(self, banks: list[FaderBank], description=None):
+        """Construct a bank set object.
+        After construction link() needs to be called in order to link the set with the control desk.
+
+        Arguments:
+        banks -- The initial list of fader banks
+        description -- Optional. A human readable description used in the fader bank editor to identify the set to edit
+        """
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
         self.banks = banks
         self.active_bank = 0
+        if description:
+            self.description = str(description)
+        else:
+            self.description = "No description"
 
     def _update(self) -> bool:
         """push the bank set to fish or update it if required
@@ -233,6 +248,9 @@ class BankSet:
         self.active_bank = i
         self._send_desk_update_message()
         return True
+
+    def link(self) -> bool:
+        return self._update()
 
     def unlink(self) -> bool:
         """This method removes the bank set from the control desk
