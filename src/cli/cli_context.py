@@ -1,12 +1,17 @@
 import argparse
 
+from cli.bankset_command import BanksetCommand
 from cli.help_command import HelpCommand
 from cli.list_command import ListCommand
+from cli.select_command import SelectCommand
 
-class CLIContext():
+
+class CLIContext:
     def __init__(self):
         self.commands = [
                 ListCommand(self),
+                SelectCommand(self),
+                BanksetCommand(self),
                 HelpCommand(self)
         ]
         self.selected_bank = None # TODO query avaiable banks

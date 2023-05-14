@@ -184,7 +184,7 @@ class BankSet:
         else:
             self.description = "No description"
 
-    def _update(self) -> bool:
+    def update(self) -> bool:
         """push the bank set to fish or update it if required
 
         Returns:
@@ -235,7 +235,7 @@ class BankSet:
         bank at first. If all you'd like to do is updating a column: call the update function on that column.
         """
         self.columns.append(bank)
-        self._update()
+        self.update()
 
     def set_active_bank(self, i: int) -> bool:
         """This method sets the active bank.
@@ -250,7 +250,7 @@ class BankSet:
         return True
 
     def link(self) -> bool:
-        return self._update()
+        return self.update()
 
     def unlink(self) -> bool:
         """This method removes the bank set from the control desk
@@ -271,6 +271,11 @@ class BankSet:
         BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
         BankSet._linked_bank_sets.pop(found_index)
         return True
+
+    @property
+    def is_linked(self) -> bool:
+        return self.pushed_to_fish
+
 
 def set_seven_seg_display_content(content: str):
     BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))

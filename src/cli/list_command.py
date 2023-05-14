@@ -22,12 +22,22 @@ class ListCommand(Command):
                 self.context.print("ERROR: Listing the columns within the selected bank set is not yet implemented.")
                 return False
             case "banksets":
-                self.context.print("Bank Set ID                      | Description ")
-                self.context.print("===============================================")
+                self.context.print(" Bank Set ID                      | Description ")
+                self.context.print("================================================")
+                selected_bank_set_id = self.context.selected_bank if self.context.selected_bank else ""
                 for bs in BankSet.get_linked_bank_sets():
-                    self.context.print(bs.id + " | " + bs.description)
-                return False
+                    self.print_bank_set_entry(bs, selected_bank_set_id)
+                if self.context.selected_bank and not self.context.selected_bank.is_linked:
+                    self.print_bank_set_entry(self.context.selected_bank, selected_bank_set_id)
+                return True
             case _:
                 self.context.print("ERROR: The requested container '{}' was not found.".format(args.section))
                 return False
         return True
+
+    def print_bank_set_entry(self, bs, selected_bank_set_id):
+        preamble = "*" if bs.id == selected_bank_set_id else " "
+        if bs.is_linked:
+            self.context.print(preamble + bs.id + " | " + bs.description)
+        else:
+            self.context.print(preamble + "Warning: Not yet linked.         | " + bs.description)
