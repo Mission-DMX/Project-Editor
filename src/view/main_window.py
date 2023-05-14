@@ -33,12 +33,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
-        self._szene_editor = SceneEditor(self._fish_connector, self)
+        self._scene_editor = SceneEditor(self._fish_connector, self)
 
         self._node_editor = NodeEditorWidget(self, self._board_configuration)
         self._node_editor.move(200, 200)
 
-        self._widgets.addWidget(self._szene_editor)
+        self._widgets.addWidget(self._scene_editor)
         self._widgets.addWidget(self._node_editor)
         self._widgets.addWidget(self._debug_console)
 
@@ -54,7 +54,7 @@ class MainWindow(QtWidgets.QMainWindow):
         menus: dict[str, list[list[str, callable]]] = {"File": [["save", self._save_scenes],
                                                                 ["load", self._load_scenes],
                                                                 ["Config", self._edit_config]],
-                                                       "Universe": [["add", self._szene_editor.add_universe],
+                                                       "Universe": [["add", self._scene_editor.add_universe],
                                                                     ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
                                                                 ["Disconnect", self._fish_connector.disconnect],
@@ -79,7 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_connection(self) -> None:
         """start connection with fish server"""
         self._fish_connector.start()
-        self._szene_editor.start()
+        self._scene_editor.start()
 
     def _change_server_name(self) -> None:
         """change fish socket name"""
@@ -104,7 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     universes = line.split(";")
                     for (universe_index, universe) in enumerate(universes):
                         for (chanel, value) in enumerate(universe.split(",")):
-                            self._szene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
+                            self._scene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
                                 = int(value)
 
     def _edit_config(self) -> None:
@@ -116,7 +116,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """ patch a fixture"""
         form = PatchingDialog(self)
         if form.exec():
-            self._szene_editor.patch(form.get_used_fixture(), form.patching.text())
+            self._scene_editor.patch(form.get_used_fixture(), form.patching.text())
 
     def _get_name(self, title: str, msg: str) -> str:
         """select a new socket name over an input dialog"""
