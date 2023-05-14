@@ -1,6 +1,6 @@
 # coding=utf-8
 """mange different scenes"""
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtGui
 
 from Network import NetworkManager
 from Style import Style
@@ -8,7 +8,7 @@ from ofl.fixture import UsedFixture
 from widgets.UniverseSelector.universe_selector import UniverseSelector
 
 
-class SzeneEditor(QtWidgets.QTabWidget):
+class SceneEditor(QtWidgets.QTabWidget):
     """Widget to mange different scenes in Tab Widgets"""
 
     def __init__(self, fish_connector: NetworkManager, parent=None) -> None:
@@ -25,15 +25,42 @@ class SzeneEditor(QtWidgets.QTabWidget):
         """current Scenes"""
         return self._scenes
 
-    def add_szene(self, name) -> None:
+    def contextMenuEvent(self, event):
+        """context menu"""
+        for index in range(self.tabBar().count()):
+            if self.tabBar().tabRect(index).contains(event.pos()):
+                menu = QtWidgets.QMenu(self)
+                add_scene = QtGui.QAction('add Scene', self)
+                rename_scene = QtGui.QAction('rename Scene', self)
+                delete_scene = QtGui.QAction('delete Scene', self)
+                add_scene.triggered.connect(lambda: self.add_scene())
+                rename_scene.triggered.connect(
+                    lambda: self._rename_scene(index))
+                delete_scene.triggered.connect(lambda: self._remove_scene(index))
+                menu.addAction(add_scene)
+                menu.addAction(rename_scene)
+                menu.addAction(delete_scene)
+                menu.popup(QtGui.QCursor.pos())
+                break
+
+    def add_scene(self) -> None:
         """
-        add a new szene
-        Args:
-            name: name of the new szene
+        add a new scene
         """
-        self._scenes.append(
-            UniverseSelector(self._fish_connector, self._scenes[0].universe_coppy(), self))
-        self.addTab(self._scenes[-1], name)
+        text,ok=QtWidgets.QInputDialog.getText(self, "Scene Name", "Enter Scene Name:")
+        if ok:
+            self._scenes.append(
+                UniverseSelector(self._fish_connector, self._scenes[0].universe_coppy(), self))
+            self.addTab(self._scenes[-1], text)
+
+    def _rename_scene(self, index: int) -> None:
+        text, ok = QtWidgets.QInputDialog.getText(self, f"Rename {self.tabText(index)} ", "Enter new Scene Name:")
+        if ok:
+            self.setTabText(index, text)
+
+    def _remove_scene(self, index: int) -> None:
+        self.removeTab(index)
+        self._scenes.remove(self._scenes[index])
 
     def add_universe(self) -> None:
         """ add a new universe """

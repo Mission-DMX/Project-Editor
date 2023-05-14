@@ -9,7 +9,7 @@ from ofl.patching_dialog import PatchingDialog
 from src.Style import Style
 from widgets.Logging.logging_widget import LoggingWidget
 from widgets.NodeEditor.NodeEditor import NodeEditorWidget
-from widgets.SzeneEditor.szene_editor import SzeneEditor
+from view.direct_mode.SceneEditor.scene_editor import SceneEditor
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -33,7 +33,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
-        self._szene_editor = SzeneEditor(self._fish_connector, self)
+        self._szene_editor = SceneEditor(self._fish_connector, self)
 
         self._node_editor = NodeEditorWidget(self, self._board_configuration)
         self._node_editor.move(200, 200)
@@ -54,7 +54,6 @@ class MainWindow(QtWidgets.QMainWindow):
         menus: dict[str, list[list[str, callable]]] = {"File": [["save", self._save_scenes],
                                                                 ["load", self._load_scenes],
                                                                 ["Config", self._edit_config]],
-                                                       "Szene": [["add", self._add_szene]],
                                                        "Universe": [["add", self._szene_editor.add_universe],
                                                                     ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
@@ -72,10 +71,6 @@ class MainWindow(QtWidgets.QMainWindow):
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
             menu_entry.triggered.connect(entry[1])
             menu.addAction(menu_entry)
-
-    def _add_szene(self) -> None:
-        """add a new szene"""
-        self._szene_editor.add_szene(self._get_name("Szene Name", "Enter Szene Name:"))
 
     def _remove_universe(self) -> None:
         """TODO"""
