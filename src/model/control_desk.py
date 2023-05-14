@@ -35,11 +35,11 @@ class DeskColumn(ABC):
         pass
 
     @property
-    def text(self) -> str:
+    def display_name(self) -> str:
         return self._upper_text
 
-    @text.setter
-    def set_text(self, text: str):
+    @display_name.setter
+    def display_name(self, text: str):
         self._lower_text = ""
         self._upper_text = text
         self.update()
@@ -49,7 +49,7 @@ class DeskColumn(ABC):
         return self._bottom_display_line_inverted
 
     @bottom_display_line_inverted.setter
-    def set_bottom_display_line_inverted(self, state: bool):
+    def bottom_display_line_inverted(self, state: bool):
         self._bottom_display_line_inverted = state
         self.update()
 
@@ -58,7 +58,7 @@ class DeskColumn(ABC):
         return self._top_display_line_inverted
 
     @top_display_line_inverted.setter
-    def set_top_display_line_inverted(self, state: bool):
+    def top_display_line_inverted(self, state: bool):
         self._top_display_line_inverted = state
         self.update()
 
@@ -78,7 +78,7 @@ class RawDeskColumn(DeskColumn):
         return self._fader_position
 
     @fader_position.setter
-    def set_fader_position(self, position: int):
+    def fader_position(self, position: int):
         self._fader_position = position
         self.update()
 
@@ -87,7 +87,7 @@ class RawDeskColumn(DeskColumn):
         return self._encoder_position
 
     @encoder_position.setter
-    def set_encoder_position(self, position: int):
+    def encoder_position(self, position: int):
         self._encoder_position = position
         self.update()
 
@@ -108,7 +108,7 @@ class ColorDeskColumn(DeskColumn):
         return (self._color_h, self._color_s, self._color_i)
 
     @color.setter
-    def set_color(self, h: float, s: float, i: float):
+    def color(self, h: float, s: float, i: float):
         self._color_h = h
         self._color_s = s
         self._color_i = i
