@@ -34,8 +34,8 @@ class HelpCommand(Command):
                 self.context.print("\toffset -- The number of gap channels between fixtures (excluding the"
                                    "own length of the fixture)")
             case "bankset":
-                self.context.print("Modify the selected bank set. Usage: bankset [commit/create <description>"
-                                   "/add <bank> <type>]")
+                self.context.print("Modify the selected bank set. Usage: bankset commit/create <description>"
+                                   "/add --bank <bank> --col-type <type>/info")
             case _:
                 self.context.print("ERROR: The requested help topic '{}' is unknown.".format(args.topic))
                 self.context.print("The following topics are known:")
