@@ -227,8 +227,9 @@ class BankSet:
         self._send_desk_update_message()
 
     def _send_desk_update_message(self):
-        msg.selected_column_id = "" # Do not update the set of selected columns yet
-        msg.find_active_on_column_id = "" # Do not update the column with active 'find fixtrue' feature yet
+        msg = proto.Console_pb2.desk_update()
+        msg.selected_column_id = ""  # Do not update the set of selected columns yet
+        msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixtrue' feature yet
         msg.selected_bank = self.active_bank
         msg.selected_bank_set = BankSet._active_bank_set
         msg.seven_seg_display_data = BankSet._seven_seg_data
@@ -285,6 +286,7 @@ class BankSet:
 
 def set_network_manager(network_manager: NetworkManager):
     BankSet._fish_connector = network_manager
+
 
 def set_seven_seg_display_content(content: str):
     BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))

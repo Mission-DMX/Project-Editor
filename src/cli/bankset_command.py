@@ -23,6 +23,7 @@ class BanksetCommand(Command):
         add_parser.add_argument("--bank", type=int, default=-1, help="The bank to create the column on", nargs='?')
         add_parser.add_argument("--name", type=str, default="", nargs="?", help="Specify the displayed column name")
         info_parser = subparsers.add_parser("info", exit_on_error=False, help="Display the selected bank set content")
+        activate_parser = subparsers.add_parser("activate", exit_on_error=False, help="Activate the selected bank set")
 
     def execute(self, args) -> bool:
         match args.what:
@@ -77,6 +78,12 @@ class BanksetCommand(Command):
                                            column.display_name)
                         column_index += 1
                     bank_index += 1
+            case "activate":
+                if not self.context.selected_bank:
+                    self.context.print("ERROR: No bank set selected. Create or select one first.")
+                    return False
+                else:
+                    self.context.selected_bank.activate()
             case _:
                 self.context.print("ERROR: The subcommand '{}' is not known. Type 'help bankset' to obtain a list."
                                    .format(args.what))

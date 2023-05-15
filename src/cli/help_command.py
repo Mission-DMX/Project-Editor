@@ -35,7 +35,7 @@ class HelpCommand(Command):
                                    "own length of the fixture)")
             case "bankset":
                 self.context.print("Modify the selected bank set. Usage: bankset commit/create <description>"
-                                   "/add --bank <bank> --col-type <type>/info")
+                                   "/add --bank <bank> --col-type <type>/info/activate")
             case _:
                 self.context.print("ERROR: The requested help topic '{}' is unknown.".format(args.topic))
                 self.context.print("The following topics are known:")
