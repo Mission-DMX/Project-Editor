@@ -22,8 +22,8 @@ class ListCommand(Command):
                 self.context.print("ERROR: Listing the columns within the selected bank set is not yet implemented.")
                 return False
             case "banksets":
-                self.context.print(" Bank Set ID                      | Description ")
-                self.context.print("================================================")
+                self.context.print(" Bank Set ID                         | Description ")
+                self.context.print("===================================================")
                 selected_bank_set_id = self.context.selected_bank if self.context.selected_bank else ""
                 for bs in BankSet.get_linked_bank_sets():
                     self.print_bank_set_entry(bs, selected_bank_set_id)
