@@ -69,16 +69,16 @@ class SceneEditor(QtWidgets.QTabWidget):
 
     def start(self) -> None:
         """start connection to fish"""
-        for szene in self._scenes:
-            szene.start()
+        for scene in self._scenes:
+            scene.start()
 
-    def tab_changed(self, szene_index: int) -> None:
+    def tab_changed(self, scene_index: int) -> None:
         """
         send all universes if tab changed
         Args:
-            szene_index: index of current szene
+            scene_index: index of current scene
         """
-        self._scenes[szene_index].send_all_universe()
+        self._scenes[scene_index].send_all_universe()
 
     def patch(self, fixture: UsedFixture, patching: str) -> None:
         """
@@ -89,5 +89,5 @@ class SceneEditor(QtWidgets.QTabWidget):
         """
 
         universe, updated = self._scenes[0].patch(fixture, patching)
-        for szene in self._scenes:
-            szene.patch_update(universe, updated)
+        for scene in self._scenes:
+            scene.patch_update(universe, updated)
