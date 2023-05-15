@@ -47,7 +47,7 @@ class SceneEditor(QtWidgets.QTabWidget):
         """
         add a new scene
         """
-        text,ok=QtWidgets.QInputDialog.getText(self, "Scene Name", "Enter Scene Name:")
+        text, ok = QtWidgets.QInputDialog.getText(self, "Scene Name", "Enter Scene Name:")
         if ok:
             self._scenes.append(
                 UniverseSelector(self._fish_connector, self._scenes[0].universe_coppy(), self))
