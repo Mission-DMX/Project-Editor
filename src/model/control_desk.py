@@ -87,7 +87,7 @@ class RawDeskColumn(DeskColumn):
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
         msg = self._generate_base_column_message()
-        raw_definition = proto.Console_pb2.fader_column_raw_fader_data(fader=self._fader_position)
+        raw_definition = proto.Console_pb2.fader_column.raw_fader_data(fader=self._fader_position)
         raw_definition.rotary_position = self._encoder_position
         raw_definition.meter_leds = 0
         raw_definition.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
@@ -133,7 +133,7 @@ class ColorDeskColumn(DeskColumn):
         self._color_i = 0.0
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
-        return proto.Console_pb2.fader_column_hsi_color(hue=self._color_h, saturation=self._color_s, intensity=self._color_i);
+        return proto.Console_pb2.fader_column.hsi_color(hue=self._color_h, saturation=self._color_s, intensity=self._color_i);
 
     @property
     def color(self) -> Tuple[float, float, float]:
@@ -154,8 +154,8 @@ class FaderBank:
     def add_column(self, col: DeskColumn):
         self.columns.append(col)
 
-    def _generate_bank_message(self):
-        msg = proto.Console_pb2.add_fader_bank_set_fader_bank()
+    def _generate_bank_message(self) -> proto.Console_pb2.add_fader_bank_set.fader_bank:
+        msg = proto.Console_pb2.add_fader_bank_set.fader_bank()
         for col in self.columns:
             msg.cols.extend([col._generate_column_message()])
         return msg
