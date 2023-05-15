@@ -14,12 +14,14 @@ class BanksetCommand(Command):
                                               help="Commit the changes made to the bank set")
         create_parser = subparsers.add_parser("create", exit_on_error=False,
                                               help="Create a new bank set and make it the selected one")
-        create_parser.add_argument('description', required=False, default="", type=str,
+        create_parser.add_argument('description', default="", type=str, nargs='?',
                                    help="Specify the human readable description of the bank set")
         add_parser = subparsers.add_parser("add", exit_on_error=False,
                                            help="Add a column to the specified bank in the selected bank set")
-        add_parser.add_argument("--col-type", choices=["raw", "color"], help="The type of the column to be created")
-        add_parser.add_argument("--bank", type=int, required=False, default=-1, help="The bank to create the column on")
+        add_parser.add_argument("--col-type", choices=["raw", "color"], default="color", nargs='?',
+                                help="The type of the column to be created")
+        add_parser.add_argument("--bank", type=int, default=-1, help="The bank to create the column on", nargs='?')
+        add_parser.add_argument("--name", type=str, default="", nargs="?", help="Specify the displayed column name")
         info_parser = subparsers.add_parser("info", exit_on_error=False, help="Display the selected bank set content")
 
     def execute(self, args) -> bool:
@@ -50,12 +52,19 @@ class BanksetCommand(Command):
                 if args.bank > len(self.context.selected_bank.banks) or args.bank < -1:
                     self.context.print("ERROR: The selected bank is out of range.")
                     return False
-                self.context.selected_bank.banks[int(args.bank)].add_column(col)
+                selected_bank = self.context.selected_bank.banks[int(args.bank)]
+                if args.name == "":
+                    col.display_name = str(len(selected_bank.columns))
+                else:
+                    col.display_name = args.name
+                selected_bank.add_column(col)
             case "info":
                 if not self.context.selected_bank:
                     self.context.print("ERROR: No bank set selected. Create or select one first.")
                     return False
                 bank_index = 0
+                self.context.print("The selected bankset contains {} banks."
+                                   .format(len(self.context.selected_bank.banks)))
                 for bank in self.context.selected_bank.banks:
                     column_index = 0
                     for column in bank.columns:

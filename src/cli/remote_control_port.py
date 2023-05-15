@@ -1,5 +1,5 @@
 from asyncio import IncompleteReadError
-from socket import socket
+from socket import socket, AF_INET6, SOCK_STREAM
 from socket import error as socket_error
 from threading import Thread
 
@@ -73,17 +73,19 @@ class Connection:
         self._remote_address = address
         self._connection_map = connection_map
         self._client_thread = Thread(target=self.run)
-        self._client_thread.run()
+        self._client_thread.start()
 
     def run(self):
         try:
             reader = SocketStreamReader(self._client)
             while not self.context.exit_called:
-                line = reader.readline().decode("utf-8")
+                self._client.send("> ".encode("utf-8"))
+                line = reader.readline().decode("utf-8").replace("\r", "").replace("\n", "")
                 if line == "@echo off":
                     reader.echo = False
                 else:
                     self.context.exec_command(line)
+                self._client.send(self.context.fetch_print_buffer().encode("utf-8"))
         except socket_error:
             pass
         finally:
@@ -103,10 +105,10 @@ class RemoteCLIServer:
         self._stopped = False
         self._server_socket: socket = None
         self._connected_clients = dict()
-        self._server_thread.run()
+        self._server_thread.start()
 
     def run(self):
-        with socket(socket.AF_INET6, socket.SOCK_STREAM) as s:
+        with socket(AF_INET6, SOCK_STREAM) as s:
             self._server_socket = s
             s.bind((self._bind_interface, self._bind_port))
             s.listen()

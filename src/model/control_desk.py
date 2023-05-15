@@ -24,7 +24,7 @@ class DeskColumn(ABC):
         """
         if not BankSet._fish_connector.is_running:
             return False
-        if not self_pushed_to_device:
+        if not self.pushed_to_device:
             return False
         msg = self._generate_column_message()
         BankSet._fish_connector.send_update_column_message(msg)
@@ -91,7 +91,7 @@ class RawDeskColumn(DeskColumn):
         raw_definition = proto.Console_pb2.fader_column_raw_fader_data(fader=self._fader_position)
         raw_definition.rotary_position = self._encoder_position
         raw_definition.meter_leds = 0
-        raw_defintion.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        raw_definition.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         raw_definition.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         raw_definition.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         raw_definition.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
@@ -276,6 +276,9 @@ class BankSet:
     def is_linked(self) -> bool:
         return self.pushed_to_fish
 
+
+def set_network_manager(network_manager: NetworkManager):
+    BankSet._fish_connector = network_manager
 
 def set_seven_seg_display_content(content: str):
     BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))

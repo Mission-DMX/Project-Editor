@@ -8,7 +8,7 @@ class HelpCommand(Command):
         self.help_text = "This command displays the help about a certain command."
 
     def configure_parser(self, parser):
-        parser.add_argument("topic", help="Specify the topic you like to hear about")
+        parser.add_argument("topic", help="Specify the topic you like to hear about", default="", nargs="?")
 
     def execute(self, args) -> bool:
         match args.topic:
