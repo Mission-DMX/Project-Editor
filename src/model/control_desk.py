@@ -11,20 +11,19 @@ def _generate_unique_id() -> str:
 
 
 class DeskColumn(ABC):
+
     def __init__(self, id: str = None):
         self.id = id if id else _generate_unique_id()
-        self.display_name = ""
-        self.display_color = proto.Console_pb2.lcd_color.white
         self._bottom_display_line_inverted = False
         self._top_display_line_inverted = False
         self._pushed_to_device = False
+        self.display_color = proto.Console_pb2.lcd_color.white
+        self.display_name = ""
 
     def update(self) -> bool:
         """This method updates the state of this column with fish
         """
-        if not BankSet._fish_connector.is_running:
-            return False
-        if not self._pushed_to_device:
+        if not BankSet._fish_connector.is_running or not self._pushed_to_device:
             return False
         msg = self._generate_column_message()
         BankSet._fish_connector.send_update_column_message(msg)
