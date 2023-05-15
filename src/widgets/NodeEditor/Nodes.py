@@ -4,7 +4,7 @@ from PySide6.QtGui import QFont
 
 from pyqtgraph.flowchart.Node import Node, Terminal
 
-from model.board_configuration import Filter
+from model.board_configuration import BoardConfiguration, Filter, UniverseFilter
 from .NodeGraphicsItems import FilterSettingsItem
 
 
@@ -13,8 +13,13 @@ class FilterNode(Node):
 
     def __init__(self, type: int, name: str, terminals: dict[str, dict[str, str]] = None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         super().__init__(name, terminals, allowAddInput, allowAddOutput, allowRemove)
-        self._filter = Filter(id=name, type=type)
-
+        self._filter = None
+        
+        if type == 11:
+            self._filter = UniverseFilter(id=name)
+        else:
+            self._filter = Filter(id=name, type=type)
+        self.update_filter_pos()
         self.setup_filter()
 
     def setup_filter(self, filter: Filter = None):
@@ -29,13 +34,13 @@ class FilterNode(Node):
                 return
                 # raise ValueError("Filter type wrong")
             self._filter = filter
-                
+         
         else:
             for key, _ in self.inputs().items():
                 self.filter.channel_links[key] = ""
-                
         
-        self.fsi = FilterSettingsItem(self._filter, self.graphicsItem())
+        if len(self._filter.filter_configurations) > 0 or len(self._filter.initial_parameters) > 0:
+            self.fsi = FilterSettingsItem(self._filter, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
@@ -254,7 +259,7 @@ class UniverseNode(FilterNode):
             del self.filter.filter_configurations[name[6:]]
         return super().removeTerminal(term)
     
-    def setup_filter(self, filter: Filter = None):
+    def setup_filter(self, filter: Filter = None, board_configuration: BoardConfiguration = None):
         super().setup_filter(filter)
         if filter is not None:
             for _ in range(len(filter.channel_links) - 1):

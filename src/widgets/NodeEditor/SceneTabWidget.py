@@ -6,7 +6,7 @@ import PySide6
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 from pyqtgraph.flowchart.library import NodeLibrary
 
-from model.board_configuration import Scene, Filter
+from model.board_configuration import Scene, Filter, UniverseFilter
 
 from . import Nodes
 
@@ -98,6 +98,8 @@ class SceneTabWidget(QWidget):
             elif node.filter not in self._scene.filters:
                 node.update_filter_pos()
                 self._scene.filters.append(node.filter)
+                if isinstance(node.filter, UniverseFilter):
+                    node.filter.board_configuration = self._scene.board_configuration
 
 
     def addFilter(self, filter: Filter):
@@ -129,7 +131,7 @@ class SceneTabWidget(QWidget):
                     continue
                 self._scene.flowchart.connectTerminals(local_term, remote_term)
                 
-        self._scene.flowchart.arrangeNodes()
+        
 
     @property
     def scene(self) -> Scene:

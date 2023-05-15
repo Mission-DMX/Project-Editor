@@ -88,12 +88,14 @@ class NodeEditorWidget(QTabWidget):
         if scene is None:
             name, ok = QInputDialog.getText(self, "Create a new scene", "Scene name")
             if ok:
-                scene = Scene(id=len(self._board_configuration.scenes), human_readable_name=name, flowchart=Flowchart(name=name))
+                scene = Scene(id=len(self._board_configuration.scenes), human_readable_name=name, flowchart=Flowchart(name=name), board_configuration=self._board_configuration)
                 self._board_configuration.scenes.append(scene)
 
         scene_tab = SceneTabWidget(scene, self._library.copy())
         self.insertTab(self.tabBar().count() - 2, scene_tab, scene.human_readable_name)
         self._tab_widgets.append(scene_tab)
+        if len(self._tab_widgets) == 1:
+            self.setCurrentWidget(scene_tab)
         return scene_tab
 
     def remove_scene_tab(self):

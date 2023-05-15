@@ -9,14 +9,14 @@ import xml.etree.ElementTree as ET
 
 from PySide6 import QtWidgets, QtGui
 
-from model.board_configuration import BoardConfiguration, Scene, Filter
+from model.board_configuration import BoardConfiguration
 from Network import NetworkManager
 from file.write import writeDocument, createXML
 from file.read import readDocument
 from ofl.patching_dialog import PatchingDialog
 from Style import Style
 from widgets.Logging.logging_widget import LoggingWidget
-from widgets.NodeEditor.NodeEditor import NodeEditorWidget, SceneTabWidget
+from widgets.NodeEditor.NodeEditor import NodeEditorWidget
 from widgets.SzeneEditor.szene_editor import SzeneEditor
 
 

@@ -1,7 +1,7 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
 from dataclasses import dataclass, field
-
+from typing import Any
 from pyqtgraph.flowchart.Flowchart import Flowchart
 
 from model.universe import Universe
@@ -29,11 +29,28 @@ class Filter:
         self.pos: tuple[float, float] = pos
 
 
+class UniverseFilter(Filter):
+    def __init__(self, id: str, board_configuration: Any = None, pos: tuple[float, float] = (0, 0)) -> None:
+        super().__init__(id, 11, pos)
+        self._board_configuration: BoardConfiguration = board_configuration
+        
+    @property
+    def board_configuration(self):
+        if self._board_configuration is None:
+            raise AttributeError("You must add the board_configuration to a universe filter.")
+        return self._board_configuration
+    
+    @board_configuration.setter
+    def board_configuration(self, board_configuration):
+        self._board_configuration = board_configuration
+
+
 @dataclass
 class Scene:
     id: int
     human_readable_name: str
     flowchart: Flowchart
+    board_configuration: Any
     filters: list[Filter] = field(default_factory=list)
 
 

@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from pyqtgraph.flowchart import Flowchart
 
 import proto.UniverseControl_pb2 as proto
-from model.board_configuration import BoardConfiguration, Scene, Filter, Universe
+from model.board_configuration import BoardConfiguration, Scene, Filter, Universe, UniverseFilter
 
 
 def readDocument(file_name: str) -> BoardConfiguration:
@@ -67,7 +67,7 @@ def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfigurat
     
     flowchart = Flowchart(name=human_readable_name)
 
-    scene = Scene(id=id, human_readable_name=human_readable_name, flowchart=flowchart)
+    scene = Scene(id=id, human_readable_name=human_readable_name, flowchart=flowchart, board_configuration=board_configuration)
 
     for child in scene_element:
         match child.tag:
@@ -94,7 +94,13 @@ def _parse_filter(filter_element: ET.Element, scene: Scene):
             case _:
                 logging.warn(f"Found attribute {key}={value} while parsing filter for scene {scene.human_readable_name}")
 
-    filter = Filter(id, type, pos=pos)
+    filter = None
+    
+    if type == 11:
+        filter = UniverseFilter(id, scene.board_configuration, pos)
+    
+    else:
+        filter = Filter(id, type, pos=pos)
 
     for child in filter_element:
         match child.tag:
