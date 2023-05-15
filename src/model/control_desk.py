@@ -87,14 +87,13 @@ class RawDeskColumn(DeskColumn):
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
         msg = self._generate_base_column_message()
-        raw_definition = proto.Console_pb2.fader_column.raw_fader_data(fader=self._fader_position)
-        raw_definition.rotary_position = self._encoder_position
-        raw_definition.meter_leds = 0
-        raw_definition.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        raw_definition.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        raw_definition.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        raw_definition.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data = raw_definition
+        msg.raw_data.fader = self._fader_position
+        msg.raw_data.rotary_position = self._encoder_position
+        msg.raw_data.meter_leds = 0
+        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         return msg
 
     @property
@@ -133,7 +132,11 @@ class ColorDeskColumn(DeskColumn):
         self._color_i = 0.0
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
-        return proto.Console_pb2.fader_column.hsi_color(hue=self._color_h, saturation=self._color_s, intensity=self._color_i);
+        base_msg = self._generate_base_column_message()
+        base_msg.plain_color.hue = self._color_h
+        base_msg.plain_color.saturation = self._color_s
+        base_msg.plain_color.intensity = self._color_i
+        return base_msg
 
     @property
     def color(self) -> Tuple[float, float, float]:
