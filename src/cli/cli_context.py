@@ -1,4 +1,5 @@
 import argparse
+import traceback
 
 from cli.bankset_command import BanksetCommand
 from cli.help_command import HelpCommand
@@ -47,6 +48,7 @@ class CLIContext:
             self.print("Failed to parse command: " + str(e))
             self.print(self.parser.format_usage())
         except Exception as e:
+            self.print(traceback.format_exc())
             self.print("Execution of command failed: " + str(e))
         return False
 

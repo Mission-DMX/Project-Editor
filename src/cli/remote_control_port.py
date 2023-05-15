@@ -93,6 +93,7 @@ class Connection:
         self._connection_map.pop(self._remote_address)
 
     def stop(self):
+        self.context.exit_called = True
         self._client.close()
         self._client_thread.join()
 

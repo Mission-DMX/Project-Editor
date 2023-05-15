@@ -24,7 +24,7 @@ class DeskColumn(ABC):
         """
         if not BankSet._fish_connector.is_running:
             return False
-        if not self.pushed_to_device:
+        if not self._pushed_to_device:
             return False
         msg = self._generate_column_message()
         BankSet._fish_connector.send_update_column_message(msg)
@@ -154,6 +154,12 @@ class FaderBank:
 
     def add_column(self, col: DeskColumn):
         self.columns.append(col)
+
+    def _generate_bank_message(self):
+        msg = proto.Console_pb2.add_fader_bank_set_fader_bank()
+        for col in self.columns:
+            msg.cols.extend([col._generate_column_message()])
+        return msg
 
 
 class BankSet:

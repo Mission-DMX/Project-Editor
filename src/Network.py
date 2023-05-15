@@ -167,7 +167,7 @@ class NetworkManager(QtCore.QObject):
     def send_add_fader_bank_set_message(self, bank_id: str, active_bank_index: int, fader_banks):
         add_set_msg = proto.Console_pb2.add_fader_bank_set(bank_id=bank_id, default_active_fader_bank=active_bank_index)
         for bank in fader_banks:
-            bank_definition = bank._generate_column_message()
+            bank_definition = bank._generate_bank_message()
             add_set_msg.banks.extend([bank_definition])
         self._send_with_format(add_set_msg, proto.MessageTypes_pb2.MSGT_REMOVE_FADER_BANK_SET)
         for bank in fader_banks:
