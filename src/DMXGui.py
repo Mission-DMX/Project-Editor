@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 
 from PySide6 import QtWidgets, QtGui
 
-from DMXModel import BoardConfiguration, Scene, Filter
+from model.board_configuration import BoardConfiguration, Scene, Filter
 from Network import NetworkManager
 from file.write import writeDocument, createXML
 from file.read import readDocument

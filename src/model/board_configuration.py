@@ -20,13 +20,13 @@ class Device:
 
 # @dataclass
 class Filter:
-    def __init__(self, id: str, type: int) -> None:
+    def __init__(self, id: str, type: int, pos: tuple[float, float] = (0.0, 0.0)) -> None:
         self.id = id
         self.type = type
         self.channel_links: dict[str, str] = {}
         self.initial_parameters: dict[str, str] = {}
         self.filter_configurations: dict[str, str] = {}
-        self.pos: tuple[float, float] = (0.0, 0.0)
+        self.pos: tuple[float, float] = pos
 
 
 @dataclass

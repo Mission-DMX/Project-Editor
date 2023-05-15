@@ -4,7 +4,7 @@ from PySide6.QtGui import QFont
 
 from pyqtgraph.flowchart.Node import Node, Terminal
 
-from DMXModel import Filter
+from model.board_configuration import Filter
 from .NodeGraphicsItems import FilterSettingsItem
 
 

@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from pyqtgraph.flowchart import Flowchart
 
 import proto.UniverseControl_pb2 as proto
-from DMXModel import BoardConfiguration, Scene, Filter, Universe
+from model.board_configuration import BoardConfiguration, Scene, Filter, Universe
 
 
 def readDocument(file_name: str) -> BoardConfiguration:
@@ -82,16 +82,19 @@ def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfigurat
 def _parse_filter(filter_element: ET.Element, scene: Scene):
     id = ""
     type = 0
+    pos = (0.0, 0.0)
     for key, value in filter_element.attrib.items():
         match key:
             case "id":
                 id = value
             case "type":
                 type = int(value)
+            case "position":
+                pos = tuple((float(s) for s in value.split(",")))
             case _:
                 logging.warn(f"Found attribute {key}={value} while parsing filter for scene {scene.human_readable_name}")
 
-    filter = Filter(id, type)
+    filter = Filter(id, type, pos=pos)
 
     for child in filter_element:
         match child.tag:

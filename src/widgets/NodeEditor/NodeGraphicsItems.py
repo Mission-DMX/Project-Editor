@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 
 
-from DMXModel import Filter
+from model.board_configuration import Filter
 
 class FilterSettingsItem(QGraphicsPixmapItem):
     

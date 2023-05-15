@@ -9,7 +9,7 @@ import logging
 import xml.etree.ElementTree as ET
 
 import proto.UniverseControl_pb2 as proto
-from DMXModel import BoardConfiguration, Scene, Filter, Universe
+from model.board_configuration import BoardConfiguration, Scene, Filter, Universe
 
 def writeDocument(file_name: str, xml: ET.Element) -> bool:
     """Writes the xml element to the specified file.
@@ -124,7 +124,8 @@ def _create_filter_element(filter: Filter, parent: ET.Element) -> ET.Element:
     """
     return ET.SubElement(parent, "filter", attrib={
         "id": str(filter.id),
-        "type": str(filter.type)
+        "type": str(filter.type),
+        "position": f"{filter.pos[0]},{filter.pos[1]}"
     })
 
 

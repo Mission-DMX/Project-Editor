@@ -11,7 +11,7 @@ from pyqtgraph.flowchart import Flowchart
 
 from . import Nodes
 from .SceneTabWidget import SceneTabWidget
-from DMXModel import BoardConfiguration, Scene
+from model.board_configuration import BoardConfiguration, Scene
 
 
 class NodeEditorWidget(QTabWidget):

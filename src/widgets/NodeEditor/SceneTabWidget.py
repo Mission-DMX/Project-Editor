@@ -6,7 +6,7 @@ import PySide6
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 from pyqtgraph.flowchart.library import NodeLibrary
 
-from DMXModel import Scene, Filter
+from model.board_configuration import Scene, Filter
 
 from . import Nodes
 
@@ -92,7 +92,7 @@ class SceneTabWidget(QWidget):
                for filter in self._scene.filters:
                    if filter.id == node.name():
                        node.setup_filter(filter)
-                       node.graphicsItem().setPos(filter.pos)
+                       node.graphicsItem().setPos(filter.pos[0], filter.pos[1])
                        logging.debug(f"Added and set up filter {filter.id}")
 
             elif node.filter not in self._scene.filters:
