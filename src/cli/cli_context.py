@@ -7,7 +7,7 @@ from cli.select_command import SelectCommand
 
 
 class CLIContext:
-    def __init__(self):
+    def __init__(self, exit_available: bool = False):
         self.commands = [
                 ListCommand(self),
                 SelectCommand(self),
@@ -21,7 +21,11 @@ class CLIContext:
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
         for c in self.commands:
             c.configure_parser(subparsers.add_parser(c.get_name(), help=c.get_help(), exit_on_error=False))
+        if exit_available:
+            subparsers.add_parser("exit", exit_on_error=False, help="Close this remote connection")
         self.return_text = ""
+        self.exit_called = False
+        self._exit_available = exit_available
 
     def exec_command(self, line: str) -> bool:
         """Execute a command within the given context
@@ -33,9 +37,12 @@ class CLIContext:
         """
         try:
             global_args = self.parser.parse_args(args=line.split(" "))
-            for c in self.commands:
-                if c.get_name() == global_args.subparser_name:
-                    return c.execute(global_args)
+            if self._exit_available and global_args.subparser_name == "exit":
+                self.exit_called = True
+            else:
+                for c in self.commands:
+                    if c.get_name() == global_args.subparser_name:
+                        return c.execute(global_args)
         except argparse.ArgumentError as e:
             self.print("Failed to parse command: " + str(e))
             self.print(self.parser.format_usage())

@@ -226,6 +226,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     logging.basicConfig(encoding='utf-8', level=logging.INFO)
+    from cli.remote_control_port import RemoteCLIServer
+    cli_server = RemoteCLIServer()
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
     screen_width = app.primaryScreen().size().width()
