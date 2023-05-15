@@ -90,6 +90,8 @@ class NodeEditorWidget(QTabWidget):
             if ok:
                 scene = Scene(id=len(self._board_configuration.scenes), human_readable_name=name, flowchart=Flowchart(name=name), board_configuration=self._board_configuration)
                 self._board_configuration.scenes.append(scene)
+            else:
+                return
 
         scene_tab = SceneTabWidget(scene, self._library.copy())
         self.insertTab(self.tabBar().count() - 2, scene_tab, scene.human_readable_name)
