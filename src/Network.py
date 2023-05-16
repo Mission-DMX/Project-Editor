@@ -169,13 +169,15 @@ class NetworkManager(QtCore.QObject):
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
 
     def send_fader_bank_set_delete_message(self, fader_bank_id: str):
+        """send message to delete a bank set to fish"""
         delete_msg = proto.Console_pb2.remove_fader_bank_set(bank_id=fader_bank_id)
         self._enqueue_message(delete_msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_REMOVE_FADER_BANK_SET)
 
     def send_add_fader_bank_set_message(self, bank_id: str, active_bank_index: int, fader_banks):
+        """TODO typdef fader_banks und docstring"""
         add_set_msg = proto.Console_pb2.add_fader_bank_set(bank_id=bank_id, default_active_fader_bank=active_bank_index)
         for bank in fader_banks:
-            bank_definition = bank._generate_bank_message()
+            bank_definition = bank._generate_bank_message() # TODO protected methode call
             add_set_msg.banks.extend([bank_definition])
         self._enqueue_message(add_set_msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ADD_FADER_BANK_SET)
         for bank in fader_banks:
@@ -184,11 +186,13 @@ class NetworkManager(QtCore.QObject):
                 col._pushed_to_device = True
 
     def send_update_column_message(self, msg: proto.Console_pb2.fader_column):
+        """send message to update a column to fish"""
         if not self.is_running:
             return
         self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN)
 
     def send_desk_update_message(self, msg: proto.Console_pb2.desk_update):
+        """send message to update a desk to fish"""
         if not self.is_running:
             return
         self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
