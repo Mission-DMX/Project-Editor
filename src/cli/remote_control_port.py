@@ -125,6 +125,9 @@ class RemoteCLIServer:
     def stop(self):
         self._stopped = True
         self._server_socket.close()
+        to_be_stopped = []
         for k_addr in self._connected_clients.keys():
-            self._connected_clients[k_addr].stop()
+            to_be_stopped.append(self._connected_clients[k_addr])
+        for c in to_be_stopped:
+            c.stop()
         self._server_thread.join()
