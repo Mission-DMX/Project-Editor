@@ -93,6 +93,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """start connection with fish server"""
         self._fish_connector.start()
         self._szene_editor.start()
+        from model.control_desk import commit_all_banksets
+        commit_all_banksets()
 
     def _change_server_name(self) -> None:
         """change fish socket name"""

@@ -227,6 +227,9 @@ class BankSet:
         """Calling this method makes this bank set the active one.
         """
         BankSet._active_bank_set = self.id
+        text = "Bank: " + self.description
+        BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" +
+                                   str(self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
         self._send_desk_update_message()
 
     def _send_desk_update_message(self):
@@ -256,6 +259,8 @@ class BankSet:
         if i < 0 or i >= len(self.banks):
             return False
         self.active_bank = i
+        text = self.description
+        BankSet._seven_seg_data = (str(i % 100) if i > 9 else "0" + str(i)) + text[-10:] + (" " * (10-len(text)))
         self._send_desk_update_message()
         return True
 
@@ -295,3 +300,12 @@ def set_seven_seg_display_content(content: str):
     BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))
     # TODO send update message
 
+
+def commit_all_banksets():
+    bank_set_for_activation = None
+    for bs in BankSet._linked_bank_sets:
+        bs.update()
+        if bs.id == BankSet._active_bank_set:
+            bank_set_for_activation = bs
+    if bank_set_for_activation:
+        bank_set_for_activation.activate()
