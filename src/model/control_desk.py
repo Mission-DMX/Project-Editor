@@ -1,9 +1,11 @@
+# coding=utf-8
+"""models for X-Touch"""
 from abc import ABC, abstractmethod
-from Network import NetworkManager
-from typing import Tuple
 from uuid import uuid4
 
 import proto.Console_pb2
+from Network import NetworkManager
+from model.color_hsi import ColorHSI
 
 
 def _generate_unique_id() -> str:
@@ -11,9 +13,10 @@ def _generate_unique_id() -> str:
 
 
 class DeskColumn(ABC):
+    """TODO docstring"""
 
-    def __init__(self, id: str = None):
-        self.id = id if id else _generate_unique_id()
+    def __init__(self, uid: str = None):
+        self.id = uid if uid else _generate_unique_id()
         self._bottom_display_line_inverted = False
         self._top_display_line_inverted = False
         self._pushed_to_device = False
@@ -21,17 +24,16 @@ class DeskColumn(ABC):
         self.display_name = ""
 
     def update(self) -> bool:
-        """This method updates the state of this column with fish
-        """
-        if not BankSet._fish_connector.is_running or not self._pushed_to_device:
+        """This method updates the state of this column with fish"""
+        if not BankSet.fish_connector().is_running or not self._pushed_to_device:
             return False
         msg = self._generate_column_message()
-        BankSet._fish_connector.send_update_column_message(msg)
+        BankSet.fish_connector().send_update_column_message(msg)
         return True
 
     @abstractmethod
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
-        """This method will be called internally by update in order to obtain the definiton of the column
+        """This method will be called internally by update in order to obtain the definition of the column
 
         Returns:
         The corresponding protobuf message
@@ -48,6 +50,7 @@ class DeskColumn(ABC):
 
     @property
     def display_name(self) -> str:
+        """Top text of the Display"""
         return self._upper_text
 
     @display_name.setter
@@ -58,6 +61,7 @@ class DeskColumn(ABC):
 
     @property
     def bottom_display_line_inverted(self) -> bool:
+        """TODO Docstring"""
         return self._bottom_display_line_inverted
 
     @bottom_display_line_inverted.setter
@@ -67,6 +71,7 @@ class DeskColumn(ABC):
 
     @property
     def top_display_line_inverted(self) -> bool:
+        """TODO Docstring"""
         return self._top_display_line_inverted
 
     @top_display_line_inverted.setter
@@ -90,10 +95,14 @@ class RawDeskColumn(DeskColumn):
         msg.raw_data.fader = self._fader_position
         msg.raw_data.rotary_position = self._encoder_position
         msg.raw_data.meter_leds = 0
-        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else\
+            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else\
+            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else\
+            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else\
+            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         return msg
 
     @property
@@ -116,6 +125,7 @@ class RawDeskColumn(DeskColumn):
 
     @property
     def encoder_position(self) -> int:
+        """position of the rotary encoder"""
         return self._encoder_position
 
     @encoder_position.setter
@@ -127,53 +137,69 @@ class RawDeskColumn(DeskColumn):
 class ColorDeskColumn(DeskColumn):
     def __init__(self, _id: str = None):
         super().__init__(_id)
-        self._color_h = 0.0
-        self._color_s = 0.0
-        self._color_i = 0.0
+        self.color: ColorHSI = ColorHSI(0, 0, 0)
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
         base_msg = self._generate_base_column_message()
-        base_msg.plain_color.hue = self._color_h
-        base_msg.plain_color.saturation = self._color_s
-        base_msg.plain_color.intensity = self._color_i
+        base_msg.plain_color.hue = self.color.hue
+        base_msg.plain_color.saturation = self.color.saturation
+        base_msg.plain_color.intensity = self.color.intensity
         return base_msg
 
     @property
-    def color(self) -> Tuple[float, float, float]:
-        return (self._color_h, self._color_s, self._color_i)
+    def color(self) -> ColorHSI:
+        """color of the colum"""
+        return self.color
 
     @color.setter
-    def color(self, h: float, s: float, i: float):
-        self._color_h = h
-        self._color_s = s
-        self._color_i = i
+    def color(self, color: ColorHSI):
+        self.color = color
         self.update()
 
 
 class FaderBank:
+    """TODO Docstring"""
+
     def __init__(self):
         self.columns = []
         self._pushed_to_device = False
 
     def add_column(self, col: DeskColumn):
+        """add a new colum"""
         self.columns.append(col)
 
     def _generate_bank_message(self) -> proto.Console_pb2.add_fader_bank_set.fader_bank:
         msg = proto.Console_pb2.add_fader_bank_set.fader_bank()
         for col in self.columns:
-            msg.cols.extend([col._generate_column_message()])
+            msg.cols.extend([col._generate_column_message()])  # TODO private Methode
         return msg
 
 
 class BankSet:
-
+    """TODO docstring"""
     _fish_connector: NetworkManager = None
     _active_bank_set: str = None
     _seven_seg_data: str = "00          "
     _linked_bank_sets = []
 
+    @classmethod
+    def fish_connector(cls) -> NetworkManager:
+        """Connector of the Bank"""
+        return cls._fish_connector
+
+    @classmethod
+    def linked_bank_sets(cls) -> list:
+        """TODO docstring"""
+        return cls._linked_bank_sets
+
+    @classmethod
+    def active_bank_set(cls) -> str:
+        """current bank set"""
+        return cls._active_bank_set
+
     @staticmethod
     def get_linked_bank_sets():
+        """TODO Docstring"""
         return list(BankSet._linked_bank_sets)
 
     def __init__(self, banks: list[FaderBank], description=None):
@@ -182,7 +208,7 @@ class BankSet:
 
         Arguments:
         banks -- The initial list of fader banks
-        description -- Optional. A human readable description used in the fader bank editor to identify the set to edit
+        description -- Optional. A human-readable description used in the fader bank editor to identify the set to edit
         """
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
@@ -235,7 +261,7 @@ class BankSet:
     def _send_desk_update_message(self):
         msg = proto.Console_pb2.desk_update()
         msg.selected_column_id = ""  # Do not update the set of selected columns yet
-        msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixtrue' feature yet
+        msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixture' feature yet
         msg.selected_bank = self.active_bank
         msg.selected_bank_set = BankSet._active_bank_set
         msg.seven_seg_display_data = BankSet._seven_seg_data
@@ -247,24 +273,25 @@ class BankSet:
         Warning: This operation is expensive and might interrupt the interactions of the user. Add all columns to the
         bank at first. If all you'd like to do is updating a column: call the update function on that column.
         """
-        self.columns.append(bank)
+        self.columns.append(bank)  # TODO ein BankSet has no columns attribute
         self.update()
 
     def set_active_bank(self, i: int) -> bool:
         """This method sets the active bank.
 
         Returns:
-        True if the operation was successful. Otherwise False.
+        True if the operation was successful, Otherwise False.
         """
         if i < 0 or i >= len(self.banks):
             return False
         self.active_bank = i
         text = self.description
-        BankSet._seven_seg_data = (str(i % 100) if i > 9 else "0" + str(i)) + text[-10:] + (" " * (10-len(text)))
+        BankSet._seven_seg_data = (str(i % 100) if i > 9 else "0" + str(i)) + text[-10:] + (" " * (10 - len(text)))
         self._send_desk_update_message()
         return True
 
     def link(self) -> bool:
+        """TODO docstring"""
         return self.update()
 
     def unlink(self) -> bool:
@@ -284,28 +311,32 @@ class BankSet:
             else:
                 i += 1
         BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
-        BankSet._linked_bank_sets.pop(found_index)
+        BankSet._linked_bank_sets.pop(found_index)  # TODO found index koente leer sein
         return True
 
     @property
     def is_linked(self) -> bool:
+        """TODO docstring"""
         return self.pushed_to_fish
 
 
 def set_network_manager(network_manager: NetworkManager):
+    """TODO docstring"""
     BankSet._fish_connector = network_manager
 
 
 def set_seven_seg_display_content(content: str):
+    """TODO docstring"""
     BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))
     # TODO send update message
 
 
-def commit_all_banksets():
+def commit_all_bank_sets():
+    """TODO docstring"""
     bank_set_for_activation = None
-    for bs in BankSet._linked_bank_sets:
+    for bs in BankSet.linked_bank_sets():
         bs.update()
-        if bs.id == BankSet._active_bank_set:
+        if bs.id == BankSet.active_bank_set():
             bank_set_for_activation = bs
     if bank_set_for_activation:
         bank_set_for_activation.activate()
