@@ -153,6 +153,7 @@ class ColorDeskColumn(DeskColumn):
 class FaderBank:
     def __init__(self):
         self.columns = []
+        self._pushed_to_device = False
 
     def add_column(self, col: DeskColumn):
         self.columns.append(col)
