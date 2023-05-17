@@ -178,7 +178,12 @@ class FaderBank:
         """add a new colum"""
         self.columns.append(col)
 
-    def _generate_bank_message(self) -> proto.Console_pb2.add_fader_bank_set.fader_bank:
+    def generate_bank_message(self) -> proto.Console_pb2.add_fader_bank_set.fader_bank:
+        """This method computes a proto buf representation of the bank
+
+        Returns:
+            proto buf representation
+        """
         msg = proto.Console_pb2.add_fader_bank_set.fader_bank()
         for col in self.columns:
             msg.cols.extend([col._generate_column_message()])  # TODO private Methode
