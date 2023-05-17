@@ -23,7 +23,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         super().__init__(parent)
         # first logging to don't miss logs
-        self._debug_console = LoggingWidget()
+        debug_console = LoggingWidget()
 
         self.setWindowTitle("Project-Editor")
 
@@ -33,22 +33,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
-        self._patching_widget = PatchingSelector(self)
-        self._node_editor = NodeEditorWidget(self, self._board_configuration)
-        self._node_editor.move(200, 200)
+        views: list[tuple[str, QtWidgets]] = [("Patch", PatchingSelector(self)),
+                                              ("Filter Mode", NodeEditorWidget(self, self._board_configuration)),
+                                              ("Debug", debug_console)]
+        # TODO  append self._toolbar.addAction(self.__send_show_file_action)
+        #  self._toolbar.addAction(self.__enter_scene_action)
 
-        # stack views
+        # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
-
-        self._widgets.addWidget(self._patching_widget)
-        self._widgets.addWidget(self._node_editor)
-        self._widgets.addWidget(self._debug_console)
+        self._toolbar = self.addToolBar("Mode")
+        for index, view in enumerate(views):
+            self._widgets.addWidget(view[1])
+            mode_button = QtGui.QAction(view[0], self)
+            mode_button.triggered.connect(lambda *args, i=index: self._widgets.setCurrentIndex(i))
+            self._toolbar.addAction(mode_button)
 
         self.setCentralWidget(self._widgets)
 
         self._setup_menubar()
-        self._setup_toolbar()
-        self._setup_statusbar()
+        self._setup_status_bar()
 
     @property
     def fish_connector(self) -> NetworkManager:
@@ -86,7 +89,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_connection(self) -> None:
         """start connection with fish server"""
         self._fish_connector.start()
-        self._universe_selector.start()
 
     def _change_server_name(self) -> None:
         """change fish socket name"""
@@ -131,50 +133,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if ok:
             return str(text)
 
-    def _setup_toolbar(self) -> None:
-        """Adds a toolbar with actions."""
-        self._toolbar = self.addToolBar("Mode")
-        self._switch_to_direct_mode_button = QtGui.QAction(self)
-        self._switch_to_direct_mode_button.setText("Direct Mode")
-        self._switch_to_direct_mode_button.triggered.connect(self._switch_to_direct_mode)
-        self._toolbar.addAction(self._switch_to_direct_mode_button)
-
-        self._switch_to_filter_mode_button = QtGui.QAction(self)
-        self._switch_to_filter_mode_button.setText("Filter Mode")
-        self._switch_to_filter_mode_button.triggered.connect(self._switch_to_filter_mode)
-        self._toolbar.addAction(self._switch_to_filter_mode_button)
-
-        self.__debug_console = QtGui.QAction(self)
-        self.__debug_console.setText("Debug")
-        self.__debug_console.triggered.connect(self._switch_to_debug_console)
-        self._toolbar.addAction(self.__debug_console)
-
-        self.__send_show_file_action = QtGui.QAction(self)
-        self.__send_show_file_action.setText("Send Show File")
-        self.__send_show_file_action.triggered.connect(self._send_show_file)
-
-        self.__enter_scene_action = QtGui.QAction(self)
-        self.__enter_scene_action.setText("Change Scene")
-        self.__enter_scene_action.triggered.connect(self._enter_scene)
-
-    def _switch_to_direct_mode(self) -> None:
-        """switch to direct mode"""
-        self._widgets.setCurrentIndex(0)
-        self._toolbar.removeAction(self.__send_show_file_action)
-        self._toolbar.removeAction(self.__enter_scene_action)
-
-    def _switch_to_filter_mode(self) -> None:
-        """switch to filter mode"""
-        self._widgets.setCurrentIndex(1)
-        self._toolbar.addAction(self.__send_show_file_action)
-        self._toolbar.addAction(self.__enter_scene_action)
-
-    def _switch_to_debug_console(self) -> None:
-        """switch to Debug Console"""
-        self._widgets.setCurrentIndex(2)
-        self._toolbar.removeAction(self.__send_show_file_action)
-        self._toolbar.removeAction(self.__enter_scene_action)
-
     def _send_show_file(self) -> None:
         xml = createXML(self._board_configuration)
         self._fish_connector.load_show_file(xml=xml, goto_default_scene=True)
@@ -185,8 +143,8 @@ class MainWindow(QtWidgets.QMainWindow):
             print(f"Switching to scene {id}")
             # self._fish_connector.enter_scene(id)
 
-    def _setup_statusbar(self) -> None:
-        """ build statusbor"""
+    def _setup_status_bar(self) -> None:
+        """ build status bor"""
         status_bar = QtWidgets.QStatusBar()
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
