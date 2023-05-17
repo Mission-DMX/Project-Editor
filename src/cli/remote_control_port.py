@@ -21,7 +21,7 @@ class SocketStreamReader:
         self.echo = True
 
     def read(self, num_bytes: int = -1) -> bytes:
-        """TODO docstring"""
+        """This method is here to comply with the stream interface but never, hence not implemented"""
         raise NotImplementedError
 
     def read_exactly(self, num_bytes: int) -> bytes:

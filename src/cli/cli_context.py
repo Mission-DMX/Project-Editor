@@ -18,10 +18,10 @@ class CLIContext:
                 BankSetCommand(self),
                 HelpCommand(self)
         ]
-        self.selected_bank = None  # TODO query available banks
-        self.selected_column = None  # TODO query available columns
-        self.selected_scene = None  # TODO query available scenes
-        self.parser = argparse.ArgumentParser(exit_on_error=False)  # TODO use with add_help=False and fetch help using self.parser.format_help()
+        self.selected_bank = None
+        self.selected_column = None
+        self.selected_scene = None
+        self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
         for c in self.commands:
             c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
@@ -43,6 +43,8 @@ class CLIContext:
             global_args = self.parser.parse_args(args=line.split(" "))
             if self._exit_available and global_args.subparser_name == "exit":
                 self.exit_called = True
+            elif global_args.subparser_name == "?":
+                self.print(self.parser.format_help())
             else:
                 for c in self.commands:
                     if c.name == global_args.subparser_name:
