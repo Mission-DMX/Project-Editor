@@ -636,3 +636,69 @@ class SwitchOffDelayFloatNode(FilterNode):
         })
         
         self.filter.initial_parameters["delay"] = "0.0"
+        
+
+class FilterFaderColumnRaw(FilterNode):
+    """Filter to represent any filter fader"""
+    nodeName = "FilterFaderColumnRaw"
+    
+    def __init__(self, name):
+        super().__init__(type=39, name=name, terminals={
+            'fader': {'io': 'out'},
+            'encoder': {'io': 'out'}
+        })
+        self.filter.filter_configurations["set_id"] = ""
+        self.filter.filter_configurations["column_id"] = ""
+        
+
+class FilterFaderColumnHSI(FilterNode):
+    """Filter to represent a hsi filter fader"""
+    nodeName = "FilterFaderColumnHSI"
+    
+    def __init__(self, name):
+        super().__init__(type=39, name=name, terminals={
+            'color': {'io': 'out'}
+        })
+        self.filter.filter_configurations["set_id"] = ""
+        self.filter.filter_configurations["column_id"] = ""
+
+
+class FilterFaderColumnHSIA(FilterNode):
+    """Filter to represent a hsia filter fader"""
+    nodeName = "FilterFaderColumnHSIA"
+    
+    def __init__(self, name):
+        super().__init__(type=39, name=name, terminals={
+            'color': {'io': 'out'},
+            'amber': {'io': 'out'}
+        })
+        self.filter.filter_configurations["set_id"] = ""
+        self.filter.filter_configurations["column_id"] = ""
+       
+
+class FilterFaderColumnHSIU(FilterNode):
+    """Filter to represent a hsiu filter fader"""
+    nodeName = "FilterFaderColumnHSIU"
+    
+    def __init__(self, name):
+        super().__init__(type=39, name=name, terminals={
+            'color': {'io': 'out'},
+            'uv': {'io': 'out'}
+        })
+        self.filter.filter_configurations["set_id"] = ""
+        self.filter.filter_configurations["column_id"] = ""
+        
+
+class FilterFaderColumnHSIAU(FilterNode):
+    """Filter to represent a hasiau filter fader"""
+    nodeName = "FilterFaderColumnHSIAU"
+    
+    def __init__(self, name):
+        super().__init__(type=39, name=name, terminals={
+            'color': {'io': 'out'},
+            'amber': {'io': 'out'},
+            'uv': {'io': 'out'}
+        })
+        self.filter.filter_configurations["set_id"] = ""
+        self.filter.filter_configurations["column_id"] = ""
+        

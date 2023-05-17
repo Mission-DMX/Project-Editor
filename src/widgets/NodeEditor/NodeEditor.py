@@ -71,6 +71,12 @@ class NodeEditorWidget(QTabWidget):
         self._library.addNodeType(Nodes.SwitchOffDelay8BitNode, [('Time',)])
         self._library.addNodeType(Nodes.SwitchOffDelay16BitNode, [('Time',)])
         self._library.addNodeType(Nodes.SwitchOffDelayFloatNode, [('Time',)])
+        
+        self._library.addNodeType(Nodes.FilterFaderColumnRaw, [('Filter Fader',)])
+        self._library.addNodeType(Nodes.FilterFaderColumnHSI, [('Filter Fader',)])
+        self._library.addNodeType(Nodes.FilterFaderColumnHSIA, [('Filter Fader',)])
+        self._library.addNodeType(Nodes.FilterFaderColumnHSIU, [('Filter Fader',)])
+        self._library.addNodeType(Nodes.FilterFaderColumnHSIAU, [('Filter Fader',)])
 
         self.addTab(QWidget(), "+")
         self.addTab(QWidget(), "-")
