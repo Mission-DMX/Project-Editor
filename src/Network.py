@@ -2,7 +2,6 @@
 """Module to handle connection with real-time software Fish."""
 import logging
 import queue
-from typing import List
 import xml.etree.ElementTree as ET
 
 from PySide6 import QtCore, QtNetwork
@@ -175,7 +174,7 @@ class NetworkManager(QtCore.QObject):
         delete_msg = proto.Console_pb2.remove_fader_bank_set(bank_id=fader_bank_id)
         self._enqueue_message(delete_msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_REMOVE_FADER_BANK_SET)
 
-    def send_add_fader_bank_set_message(self, bank_id: str, active_bank_index: int, fader_banks: List[FaderBank]):
+    def send_add_fader_bank_set_message(self, bank_id: str, active_bank_index: int, fader_banks: list[FaderBank]):
         """This method accumulates the content of a bank set and schedules the required messages for an update."""
         add_set_msg = proto.Console_pb2.add_fader_bank_set(bank_id=bank_id, default_active_fader_bank=active_bank_index)
         for bank in fader_banks:
