@@ -1,21 +1,20 @@
 # coding=utf-8
-"""patch Plan Widget"""
+"""patch Plan Widget for one Universe"""
 from PySide6 import QtWidgets, QtCore
 from PySide6.examples.widgets.layouts.flowlayout.flowlayout import FlowLayout
 
-from model.universe import Universe
-from widgets.PatchPlan.patch_item import PatchItem
+from model.patching_universe import PatchingUniverse
+from view.patching.patch_item import PatchItem
 
 
 class PatchPlanWidget(QtWidgets.QScrollArea):
-    """Patch Plan Widget"""
+    """Patch Plan Widget for one Universe"""
 
-    def __init__(self, universe: Universe, parent=None):
+    def __init__(self, universe: PatchingUniverse, parent=None):
         super().__init__(parent=parent)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._patch_items: list[PatchItem] = []
-        self._universe: Universe = universe
 
         container = QtWidgets.QWidget()
         container_layout = FlowLayout()

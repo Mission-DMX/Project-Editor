@@ -11,6 +11,7 @@ import proto.MessageTypes_pb2
 import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
+from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
 
@@ -73,7 +74,7 @@ class NetworkManager(QtCore.QObject):
 
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
-    def generate_universe(self, universe: Universe) -> None:
+    def generate_universe(self, universe: PatchingUniverse) -> None:
         """send a new universe to the fish socket"""
         self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 

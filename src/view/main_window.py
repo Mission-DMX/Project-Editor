@@ -7,9 +7,9 @@ from Network import NetworkManager
 from ShowFile import createXML, writeDocument
 from ofl.patching_dialog import PatchingDialog
 from src.Style import Style
+from view.patching.patching_selector import PatchingSelector
 from widgets.Logging.logging_widget import LoggingWidget
 from widgets.NodeEditor.NodeEditor import NodeEditorWidget
-from view.direct_mode.SceneEditor.scene_editor import SceneEditor
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -27,18 +27,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("Project-Editor")
 
-        self._widgets = QtWidgets.QStackedWidget()
-
-        self._board_configuration: BoardConfiguration = BoardConfiguration()
-
+        # model objects
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
-        self._scene_editor = SceneEditor(self._fish_connector, self)
+        self._board_configuration: BoardConfiguration = BoardConfiguration()
 
+        # views
+        self._patching_widget = PatchingSelector(self)
         self._node_editor = NodeEditorWidget(self, self._board_configuration)
         self._node_editor.move(200, 200)
 
-        self._widgets.addWidget(self._scene_editor)
+        # stack views
+        self._widgets = QtWidgets.QStackedWidget(self)
+
+        self._widgets.addWidget(self._patching_widget)
         self._widgets.addWidget(self._node_editor)
         self._widgets.addWidget(self._debug_console)
 
@@ -48,14 +50,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_toolbar()
         self._setup_statusbar()
 
+    @property
+    def fish_connector(self) -> NetworkManager:
+        """fish connection Manager"""
+        return self._fish_connector
+
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[list[str, callable]]] = {"File": [["save", self._save_scenes],
                                                                 ["load", self._load_scenes],
                                                                 ["Config", self._edit_config]],
-                                                       "Universe": [["add", self._scene_editor.add_universe],
-                                                                    ["remove", self._remove_universe]],
+                                                       # "Universe": [["add", self._scene_editor.add_universe],
+                                                       #             ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._start_connection],
                                                                 ["Disconnect", self._fish_connector.disconnect],
                                                                 ["Change", self._change_server_name]],
@@ -79,7 +86,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_connection(self) -> None:
         """start connection with fish server"""
         self._fish_connector.start()
-        self._scene_editor.start()
+        self._universe_selector.start()
 
     def _change_server_name(self) -> None:
         """change fish socket name"""

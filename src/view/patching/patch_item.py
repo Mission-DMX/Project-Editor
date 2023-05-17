@@ -4,13 +4,13 @@ from PySide6 import QtWidgets
 
 from Style import Style
 from model.patching_channel import PatchingChannel
-from model.universe import Universe
+from model.patching_universe import PatchingUniverse
 
 
 class PatchItem(QtWidgets.QFrame):
     """a single item of the PatchPlan"""
 
-    def __init__(self, channel: PatchingChannel, universe: Universe):
+    def __init__(self, channel: PatchingChannel, universe: PatchingUniverse):
         super().__init__()
         self._channel: PatchingChannel = channel
         self._universe = universe
