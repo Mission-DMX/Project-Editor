@@ -1,5 +1,5 @@
 # coding=utf-8
-"""models for X-Touch"""
+"""models for X-Touch and also for other connected devices like extenders or joystick"""
 from abc import ABC, abstractmethod
 from uuid import uuid4
 
@@ -13,7 +13,13 @@ def _generate_unique_id() -> str:
 
 
 class DeskColumn(ABC):
-    """TODO docstring"""
+    """This class represents a single column inside a bank.
+
+    This class should not be instantiated directly.
+    Instead the implementing classes ColorDeskColumn and RawDeskColumn should be used.
+
+    TODO: Also implement U,UA and A types.
+    """
 
     def __init__(self, uid: str = None):
         self.id = uid if uid else _generate_unique_id()
@@ -61,7 +67,7 @@ class DeskColumn(ABC):
 
     @property
     def bottom_display_line_inverted(self) -> bool:
-        """TODO Docstring"""
+        """True if the text foreground and background pixels are inverted."""
         return self._bottom_display_line_inverted
 
     @bottom_display_line_inverted.setter
@@ -71,7 +77,7 @@ class DeskColumn(ABC):
 
     @property
     def top_display_line_inverted(self) -> bool:
-        """TODO Docstring"""
+        """True if the text foreground and background pixels are inverted."""
         return self._top_display_line_inverted
 
     @top_display_line_inverted.setter
@@ -95,13 +101,13 @@ class RawDeskColumn(DeskColumn):
         msg.raw_data.fader = self._fader_position
         msg.raw_data.rotary_position = self._encoder_position
         msg.raw_data.meter_leds = 0
-        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else\
+        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else \
             proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else\
+        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else \
             proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else\
+        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else \
             proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else\
+        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else \
             proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         return msg
 
@@ -158,7 +164,11 @@ class ColorDeskColumn(DeskColumn):
 
 
 class FaderBank:
-    """TODO Docstring"""
+    """Store a bank page of columns the user can switch through.
+
+    Warning: As of the time of this writing, the buttons for scrolling through a bank are not implemented in fish,
+     hence the user can only access up to 8 columns.
+    """
 
     def __init__(self):
         self.columns = []
@@ -176,7 +186,11 @@ class FaderBank:
 
 
 class BankSet:
-    """TODO docstring"""
+    """This class represents a bank set.
+
+    A bank set is a set of banks, the user can switch between at a given time. Multiple bank sets can be linked to fish at the same time but only one may be active at the same time. Only the GUI may specify which bank set is active any given time, except for the event that the active bank set will be unlinked. In this case fish will enable the bank set with the next lower index.
+    """
+
     _fish_connector: NetworkManager = None
     _active_bank_set: str = None
     _seven_seg_data: str = "00          "
@@ -189,7 +203,10 @@ class BankSet:
 
     @classmethod
     def linked_bank_sets(cls) -> list:
-        """TODO docstring"""
+        """This method yields the mutable list of bank sets that are currently loaded in fish.
+
+        This method should only be used by friend classes.
+        """
         return cls._linked_bank_sets
 
     @classmethod
@@ -199,7 +216,7 @@ class BankSet:
 
     @staticmethod
     def get_linked_bank_sets():
-        """TODO Docstring"""
+        """This method returns a copy of the linked bank sets, save to be used by non friend classes."""
         return list(BankSet._linked_bank_sets)
 
     def __init__(self, banks: list[FaderBank], description=None):
@@ -291,7 +308,9 @@ class BankSet:
         return True
 
     def link(self) -> bool:
-        """TODO docstring"""
+        """Load the bank set to fish.
+
+        If there was no bank set linked before this bank set might become the active one immediately."""
         return self.update()
 
     def unlink(self) -> bool:
@@ -316,23 +335,30 @@ class BankSet:
 
     @property
     def is_linked(self) -> bool:
-        """TODO docstring"""
+        """Returns True if the bank set is loaded to fish."""
         return self.pushed_to_fish
 
 
 def set_network_manager(network_manager: NetworkManager):
-    """TODO docstring"""
+    """Set the network manager instance to be used by all bank sets and subsequent banks and columns."""
     BankSet._fish_connector = network_manager
 
 
 def set_seven_seg_display_content(content: str):
-    """TODO docstring"""
+    """Set the content of the 7seg displays of connected X-Touch controllers.
+
+    Fish will truncate any text longer than 12 chars and
+    only guarantees the correct display of hexadecimal characters due to the limitations of seven segment displays.
+    """
     BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))
     # TODO send update message
 
 
 def commit_all_bank_sets():
-    """TODO docstring"""
+    """This method calls update on all linked columns.
+
+    This is useful in the event of a reconnect to fish as the state of fish is unknown at this point in time.
+    """
     bank_set_for_activation = None
     for bs in BankSet.linked_bank_sets():
         bs.update()
