@@ -1,27 +1,30 @@
+# coding=utf-8
+"""Context of the Client"""
 import argparse
 import traceback
 
-from cli.bankset_command import BanksetCommand
+from cli.bankset_command import BankSetCommand
 from cli.help_command import HelpCommand
 from cli.list_command import ListCommand
 from cli.select_command import SelectCommand
 
 
 class CLIContext:
+    """Context of the Client"""
     def __init__(self, exit_available: bool = False):
         self.commands = [
                 ListCommand(self),
                 SelectCommand(self),
-                BanksetCommand(self),
+                BankSetCommand(self),
                 HelpCommand(self)
         ]
-        self.selected_bank = None # TODO query avaiable banks
-        self.selected_column = None # TODO query available columns
-        self.selected_scene = None # TODO query avaiable scenes
-        self.parser = argparse.ArgumentParser(exit_on_error=False) # TODO use with add_help=False and fetch help using self.parser.format_help()
+        self.selected_bank = None  # TODO query available banks
+        self.selected_column = None  # TODO query available columns
+        self.selected_scene = None  # TODO query available scenes
+        self.parser = argparse.ArgumentParser(exit_on_error=False)  # TODO use with add_help=False and fetch help using self.parser.format_help()
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
         for c in self.commands:
-            c.configure_parser(subparsers.add_parser(c.get_name(), help=c.get_help(), exit_on_error=False))
+            c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
         if exit_available:
             subparsers.add_parser("exit", exit_on_error=False, help="Close this remote connection")
         self.return_text = ""
@@ -42,7 +45,7 @@ class CLIContext:
                 self.exit_called = True
             else:
                 for c in self.commands:
-                    if c.get_name() == global_args.subparser_name:
+                    if c.name == global_args.subparser_name:
                         return c.execute(global_args)
         except argparse.ArgumentError as e:
             self.print("Failed to parse command: " + str(e))
@@ -69,4 +72,3 @@ class CLIContext:
         tmp_text = self.return_text
         self.return_text = ""
         return tmp_text
-

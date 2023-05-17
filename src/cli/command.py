@@ -1,10 +1,15 @@
+# coding=utf-8
+"""Client Commands"""
 from abc import ABC, abstractmethod
 
+
 class Command(ABC):
+    """Client Commands"""
+
     def __init__(self, cli_context, name: str):
         self.context = cli_context
-        self.name = name
-        self.help_text = ""
+        self._name = name
+        self._help_text = ""
 
     @abstractmethod
     def configure_parser(self, parser):
@@ -17,13 +22,22 @@ class Command(ABC):
 
     @abstractmethod
     def execute(self, args) -> bool:
+        """execute a Command"""
         pass
 
-    def get_name(self) -> str:
-        if self.name:
-            return self.name
+    @property
+    def name(self) -> str:
+        """
+        name of the command
+        Returns:
+            the name or 'unnamed Command' if none is set
+        """
+        if self._name:
+            return self._name
         else:
             return "Unnamed Command"
 
-    def get_help(self) -> str:
-        return self.help_text
+    @property
+    def help(self) -> str:
+        """ help text"""
+        return self._help_text

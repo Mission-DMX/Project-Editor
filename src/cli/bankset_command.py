@@ -1,11 +1,16 @@
+# coding=utf-8
+"""commands for the Bank Sets"""
 from cli.command import Command
 from model.control_desk import BankSet, RawDeskColumn, ColorDeskColumn, FaderBank
 
 
-class BanksetCommand(Command):
+class BankSetCommand(Command):
+    """
+    commands for the Bank Sets
+    """
 
     def __init__(self, context):
-        super().__init__(context, "bankset")
+        super().__init__(context, "bank_set")
         self.help_text = "This command displays the help about a certain command."
 
     def configure_parser(self, parser):
@@ -26,6 +31,14 @@ class BanksetCommand(Command):
         activate_parser = subparsers.add_parser("activate", exit_on_error=False, help="Activate the selected bank set")
 
     def execute(self, args) -> bool:
+        """
+        execute a Command with Arguments
+        Args:
+            args: the arguments
+
+        Returns:
+            True if executed without errors
+        """
         match args.what:
             case "commit":
                 if not self.context.selected_bank:
@@ -43,7 +56,6 @@ class BanksetCommand(Command):
                 if not self.context.selected_bank:
                     self.context.print("ERROR: No bank set selected. Create or select one first.")
                     return False
-                col = None
                 if args.col_type == "raw":
                     col = RawDeskColumn()
                 else:
@@ -64,8 +76,8 @@ class BanksetCommand(Command):
                     self.context.print("ERROR: No bank set selected. Create or select one first.")
                     return False
                 bank_index = 0
-                self.context.print("The selected bankset contains {} banks."
-                                   .format(len(self.context.selected_bank.banks)))
+                self.context.print(
+                    "The selected bank set contains {} banks.".format(len(self.context.selected_bank.banks)))
                 for bank in self.context.selected_bank.banks:
                     column_index = 0
                     for column in bank.columns:
@@ -74,8 +86,8 @@ class BanksetCommand(Command):
                             col_type_str = "HSI"
                         if type(column) is RawDeskColumn:
                             col_type_str = "RAW"
-                        self.context.print(str(bank_index) + "/" + str(column_index) + " " + col_type_str + " " +
-                                           column.display_name)
+                        self.context.print(
+                            str(bank_index) + "/" + str(column_index) + " " + col_type_str + " " + column.display_name)
                         column_index += 1
                     bank_index += 1
             case "activate":
@@ -85,7 +97,7 @@ class BanksetCommand(Command):
                 else:
                     self.context.selected_bank.activate()
             case _:
-                self.context.print("ERROR: The subcommand '{}' is not known. Type 'help bankset' to obtain a list."
-                                   .format(args.what))
+                self.context.print(
+                    "ERROR: The subcommand '{}' is not known. Type 'help bank_set' to obtain a list.".format(args.what))
                 return False
         return True

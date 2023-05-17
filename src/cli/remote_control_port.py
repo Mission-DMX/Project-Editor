@@ -1,3 +1,5 @@
+# coding=utf-8
+"""Classes for remote connection"""
 from asyncio import IncompleteReadError
 from socket import socket, AF_INET6, SOCK_STREAM
 from socket import error as socket_error
@@ -19,6 +21,7 @@ class SocketStreamReader:
         self.echo = True
 
     def read(self, num_bytes: int = -1) -> bytes:
+        """TODO docstring"""
         raise NotImplementedError
 
     def read_exactly(self, num_bytes: int) -> bytes:
@@ -44,7 +47,7 @@ class SocketStreamReader:
         """Read from the socket until the escape sequence was found
         
         Arguments:
-        separator -- the delimitter to look out for
+        separator -- the delimiter to look out for
         
         Returns:
         bytearray with the found content.
@@ -151,7 +154,7 @@ class RemoteCLIServer:
         self._server_thread.start()
 
     def run(self):
-        """This method will be run by the server thread in order to process incomming clients."""
+        """This method will be run by the server thread in order to process incoming clients."""
         with socket(AF_INET6, SOCK_STREAM) as s:
             self._server_socket = s
             s.bind((self._bind_interface, self._bind_port))

@@ -1,14 +1,24 @@
+# coding=utf-8
+"""commands for selection"""
 from cli.command import Command
 from model.control_desk import BankSet
 
 
-def find_bankset(id: str) -> BankSet:
+def find_bank_set(identifier: str) -> BankSet | None:
+    """
+    find a bank set
+    Args:
+        identifier: the identifier of the bank set
+
+    Returns:
+        bank set or none if the identifier not exists
+    """
     linked_sets = BankSet.get_linked_bank_sets()
     try:
-        return linked_sets[int(id)]
+        return linked_sets[int(identifier)]
     except:
         for bs in linked_sets:
-            if bs.id == id:
+            if bs.id == identifier:
                 return bs
     return None
 
@@ -29,8 +39,8 @@ class SelectCommand(Command):
                 self.context.print("ERROR: Not yet implemented.")
             case "column":
                 self.context.print("ERROR: Not yet implemented.")
-            case "bankset":
-                found_bank_set = find_bankset(args.item)
+            case "bank_set":
+                found_bank_set = find_bank_set(args.item)
                 if found_bank_set:
                     self.context.selected_bank = found_bank_set
                     return True
