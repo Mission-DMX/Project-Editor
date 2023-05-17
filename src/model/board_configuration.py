@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 from pyqtgraph.flowchart.Flowchart import Flowchart
+from enum import IntFlag, auto
 
 from model.universe import Universe
 
@@ -18,8 +19,16 @@ class Device:
         return self._name
 
 
+class DataType(IntFlag):
+    DT_8Bit = auto()
+    DT_16Bit = auto()
+    DT_Double = auto()
+    DT_Color = auto()
+    DT_Bool = auto()
+
 # @dataclass
 class Filter:
+    
     def __init__(self, id: str, type: int, pos: tuple[float, float] = (0.0, 0.0)) -> None:
         self.id = id
         self.type = type

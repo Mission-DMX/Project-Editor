@@ -4,9 +4,8 @@ from PySide6.QtGui import QFont
 
 from pyqtgraph.flowchart.Node import Node, Terminal
 
-from model.board_configuration import BoardConfiguration, Filter, UniverseFilter
+from model.board_configuration import BoardConfiguration, Filter, UniverseFilter, DataType
 from .NodeGraphicsItems import FilterSettingsItem
-
 
 class FilterNode(Node):
     """Basic filter node."""
@@ -14,6 +13,8 @@ class FilterNode(Node):
     def __init__(self, type: int, name: str, terminals: dict[str, dict[str, str]] = None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         super().__init__(name, terminals, allowAddInput, allowAddOutput, allowRemove)
         self._filter = None
+        self._in_value_types: dict[str, DataType] = {}
+        self._out_value_types: dict[str, DataType] = {}
         
         if type == 11:
             self._filter = UniverseFilter(id=name)
@@ -48,6 +49,7 @@ class FilterNode(Node):
 
         logging.debug(f"Added filter<type={self._filter.type}, id={self._filter.id}>")
 
+
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.
         Could emit signals. See pyqtgraph.flowchart.Node.connected()
@@ -56,8 +58,22 @@ class FilterNode(Node):
             localTerm: The terminal on the node itself.
             remoteTerm: The terminal of the other node.
         """
-        if localTerm.isInput() and remoteTerm.isOutput():
-            self.filter.channel_links[localTerm.name()] = remoteTerm.node().name() + ":" + remoteTerm.name()
+        remoteNode = remoteTerm.node()
+        
+        if not localTerm.isInput() or not remoteTerm.isOutput():
+            return
+        
+        if not isinstance(remoteNode, FilterNode):
+            logging.warn("Tried to non-FilterNode nodes. Forced disconnection.")
+            localTerm.disconnectFrom(remoteTerm)
+            return
+        
+        if not self._in_value_types[localTerm.name()] == remoteNode._out_value_types[remoteTerm.name()]:
+            logging.warn("Tried to connect incompatible filter channels. Forced disconnection.")
+            localTerm.disconnectFrom(remoteTerm)
+            return
+        
+        self.filter.channel_links[localTerm.name()] = remoteNode.name() + ":" + remoteTerm.name()
 
     def disconnected(self, localTerm, remoteTerm):
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.
@@ -103,6 +119,7 @@ class Constants8BitNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = "0"
+        self._out_value_types["value"] = DataType.DT_8Bit
 
 
 class Constants16BitNode(FilterNode):
@@ -115,6 +132,7 @@ class Constants16BitNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = "0"
+        self._out_value_types["value"] = DataType.DT_16Bit
 
 
 class ConstantsFloatNode(FilterNode):
@@ -127,6 +145,7 @@ class ConstantsFloatNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = "0.0"
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class ConstantsColorNode(FilterNode):
@@ -140,6 +159,7 @@ class ConstantsColorNode(FilterNode):
             'value': {'io': 'out'}
         })
         self.filter.initial_parameters["value"] = "0,0,0"
+        self._out_value_types["value"] = DataType.DT_HSIColor
 
 
 class Debug8BitNode(FilterNode):
@@ -152,6 +172,7 @@ class Debug8BitNode(FilterNode):
         super().__init__(type=4, name=name, terminals={
             'value': {'io': 'in'}
         })
+        self._in_value_types["value"] = DataType.DT_8Bit
 
 
 class Debug16BitNode(FilterNode):
@@ -164,6 +185,7 @@ class Debug16BitNode(FilterNode):
         super().__init__(type=5, name=name, terminals={
             'value': {'io': 'in'}
         })
+        self._in_value_types["value"] = DataType.DT_16Bit
 
 
 class DebugFloatNode(FilterNode):
@@ -176,6 +198,7 @@ class DebugFloatNode(FilterNode):
         super().__init__(type=6, name=name, terminals={
             'value': {'io': 'in'}
         })
+        self._in_value_types["value"] = DataType.DT_Double
 
 
 class DebugColorNode(FilterNode):
@@ -188,6 +211,7 @@ class DebugColorNode(FilterNode):
         super().__init__(type=7, name=name, terminals={
             'value': {'io': 'in'}
         })
+        self._in_value_types["value"] = DataType.DT_Color
 
 
 class Adapters16To8Bit(FilterNode):
@@ -200,6 +224,9 @@ class Adapters16To8Bit(FilterNode):
             'value_lower': {'io': 'out'},
             'value_upper': {'io': 'out'},
         })
+        self._in_value_types["value"] = DataType.DT_16Bit
+        self._out_value_types["value_lower"] = DataType.DT_8Bit
+        self._out_value_types["value_lower"] = DataType.DT_8Bit
 
 
 class Adapters16ToBool(FilterNode):
@@ -213,6 +240,8 @@ class Adapters16ToBool(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_16Bit
+        self._out_value_types["value"] = DataType.DT_Bool
 
 
 class ArithmeticsMAC(FilterNode):
@@ -228,6 +257,10 @@ class ArithmeticsMAC(FilterNode):
             'summand': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["factor1"] = DataType.DT_Double
+        self._in_value_types["factor2"] = DataType.DT_Double
+        self._in_value_types["summand"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class UniverseNode(FilterNode):
@@ -243,6 +276,7 @@ class UniverseNode(FilterNode):
 
         self.filter.filter_configurations["universe"] = self.name()[9:]
         self.filter.filter_configurations["input_1"] = "0"
+        self._in_value_types = {f"input_{i}": DataType.DT_8Bit for i in range(1, 513)}
 
     def addInput(self, name="input", **args):
         """Allows to add up to 512 input channels."""
@@ -266,17 +300,6 @@ class UniverseNode(FilterNode):
                 self.addInput()
 
 
-class ArithmeticsFloatTo8Bit(FilterNode):
-    """Filter to round a float/double value to an 8 bit value."""
-    nodeName = 'ArithmeticsFloatTo8Bit'
-
-    def __init__(self, name):
-        super().__init__(type=13, name=name, terminals={
-            'value_in': {'io': 'in'},
-            'value': {'io': 'out'}
-        })
-
-
 class ArithmeticsFloatTo16Bit(FilterNode):
     """Filter to round a float/double value to a 16 bit value."""
     nodeName = 'ArithmeticsFloatTo16Bit'
@@ -286,6 +309,21 @@ class ArithmeticsFloatTo16Bit(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_16Bit
+        
+
+class ArithmeticsFloatTo8Bit(FilterNode):
+    """Filter to round a float/double value to an 8 bit value."""
+    nodeName = 'ArithmeticsFloatTo8Bit'
+
+    def __init__(self, name):
+        super().__init__(type=13, name=name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_8Bit
 
 
 class ArithmeticsRound(FilterNode):
@@ -297,6 +335,8 @@ class ArithmeticsRound(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class ColorToRGBNode(FilterNode):
@@ -310,6 +350,10 @@ class ColorToRGBNode(FilterNode):
             'g': {'io': 'out'},
             'b': {'io': 'out'}
         })
+        self._in_value_types["value"] = DataType.DT_Color
+        self._out_value_types["r"] = DataType.DT_8Bit
+        self._out_value_types["g"] = DataType.DT_8Bit
+        self._out_value_types["b"] = DataType.DT_8Bit
 
 
 class ColorToRGBWNode(FilterNode):
@@ -324,6 +368,11 @@ class ColorToRGBWNode(FilterNode):
             'b': {'io': 'out'},
             'w': {'io': 'out'}
         })
+        self._in_value_types["value"] = DataType.DT_Color
+        self._out_value_types["r"] = DataType.DT_8Bit
+        self._out_value_types["g"] = DataType.DT_8Bit
+        self._out_value_types["b"] = DataType.DT_8Bit
+        self._out_value_types["w"] = DataType.DT_8Bit
 
 
 class ColorToRGBWANode(FilterNode):
@@ -339,6 +388,12 @@ class ColorToRGBWANode(FilterNode):
             'w': {'io': 'out'},
             'a': {'io': 'out'}
         })
+        self._in_value_types["value"] = DataType.DT_Color
+        self._out_value_types["r"] = DataType.DT_8Bit
+        self._out_value_types["g"] = DataType.DT_8Bit
+        self._out_value_types["b"] = DataType.DT_8Bit
+        self._out_value_types["w"] = DataType.DT_8Bit
+        self._out_value_types["a"] = DataType.DT_8Bit
 
 
 class FloatToColorNode(FilterNode):
@@ -352,6 +407,10 @@ class FloatToColorNode(FilterNode):
             'i': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["h"] = DataType.DT_Double
+        self._in_value_types["s"] = DataType.DT_Double
+        self._in_value_types["i"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Color
 
 
 class SineNode(FilterNode):
@@ -369,6 +428,12 @@ class SineNode(FilterNode):
             'offset': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._in_value_types["factor_outer"] = DataType.DT_Double
+        self._in_value_types["factor_inner"] = DataType.DT_Double
+        self._in_value_types["phase"] = DataType.DT_Double
+        self._in_value_types["offset"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class CosineNode(FilterNode):
@@ -386,6 +451,12 @@ class CosineNode(FilterNode):
             'offset': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._in_value_types["factor_outer"] = DataType.DT_Double
+        self._in_value_types["factor_inner"] = DataType.DT_Double
+        self._in_value_types["phase"] = DataType.DT_Double
+        self._in_value_types["offset"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class TangentNode(FilterNode):
@@ -403,6 +474,12 @@ class TangentNode(FilterNode):
             'offset': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._in_value_types["factor_outer"] = DataType.DT_Double
+        self._in_value_types["factor_inner"] = DataType.DT_Double
+        self._in_value_types["phase"] = DataType.DT_Double
+        self._in_value_types["offset"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class ArcsineNode(FilterNode):
@@ -416,6 +493,8 @@ class ArcsineNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class ArccosineNode(FilterNode):
@@ -429,6 +508,8 @@ class ArccosineNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class ArctangentNode(FilterNode):
@@ -442,6 +523,8 @@ class ArctangentNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class SquareWaveNode(FilterNode):
@@ -458,6 +541,13 @@ class SquareWaveNode(FilterNode):
             'length': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._in_value_types["factor_outer"] = DataType.DT_Double
+        self._in_value_types["factor_inner"] = DataType.DT_Double
+        self._in_value_types["phase"] = DataType.DT_Double
+        self._in_value_types["offset"] = DataType.DT_Double
+        self._in_value_types["length"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class TriangleWaveNode(FilterNode):
@@ -473,6 +563,13 @@ class TriangleWaveNode(FilterNode):
             'offset': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._in_value_types["factor_outer"] = DataType.DT_Double
+        self._in_value_types["factor_inner"] = DataType.DT_Double
+        self._in_value_types["phase"] = DataType.DT_Double
+        self._in_value_types["offset"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class SawtoothWaveNode(FilterNode):
@@ -488,6 +585,13 @@ class SawtoothWaveNode(FilterNode):
             'offset': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._in_value_types["factor_outer"] = DataType.DT_Double
+        self._in_value_types["factor_inner"] = DataType.DT_Double
+        self._in_value_types["phase"] = DataType.DT_Double
+        self._in_value_types["offset"] = DataType.DT_Double
+        self._in_value_types["length"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class LogarithmNode(FilterNode):
@@ -501,6 +605,8 @@ class LogarithmNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class ExponentialNode(FilterNode):
@@ -514,6 +620,8 @@ class ExponentialNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class MinimumNode(FilterNode):
@@ -528,6 +636,8 @@ class MinimumNode(FilterNode):
             'param2': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class MaximumNode(FilterNode):
@@ -542,6 +652,8 @@ class MaximumNode(FilterNode):
             'param2': {'io': 'in'},
             'value': {'io': 'out'}
         })
+        self._in_value_types["value_in"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class TimeNode(FilterNode):
@@ -552,6 +664,7 @@ class TimeNode(FilterNode):
         super().__init__(type=32, name=name, terminals={
             'value': {'io': 'out'}
         })
+        self._out_value_types["value"] = DataType.DT_Double
 
 
 class SwitchOnDelay8BitNode(FilterNode):
@@ -564,8 +677,11 @@ class SwitchOnDelay8BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        
         self.filter.initial_parameters["delay"] = "0.0"
+        
+        self._in_value_types["value_in"] = DataType.DT_8Bit
+        self._in_value_types["time"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_8Bit
         
 
 class SwitchOnDelay16BitNode(FilterNode):
@@ -578,8 +694,11 @@ class SwitchOnDelay16BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        
         self.filter.initial_parameters["delay"] = "0.0"
+        
+        self._in_value_types["value_in"] = DataType.DT_8Bit
+        self._in_value_types["time"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_8Bit
 
 
 class SwitchOnDelayFloatNode(FilterNode):
@@ -592,8 +711,11 @@ class SwitchOnDelayFloatNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        
         self.filter.initial_parameters["delay"] = "0.0"
+        
+        self._in_value_types["value_in"] = DataType.DT_8Bit
+        self._in_value_types["time"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_8Bit
 
 
 class SwitchOffDelay8BitNode(FilterNode):
@@ -606,8 +728,11 @@ class SwitchOffDelay8BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-
         self.filter.initial_parameters["delay"] = "0.0"
+        
+        self._in_value_types["value_in"] = DataType.DT_8Bit
+        self._in_value_types["time"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_8Bit
 
 
 class SwitchOffDelay16BitNode(FilterNode):
@@ -620,8 +745,11 @@ class SwitchOffDelay16BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        
         self.filter.initial_parameters["delay"] = "0.0"
+        
+        self._in_value_types["value_in"] = DataType.DT_8Bit
+        self._in_value_types["time"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_8Bit
 
 
 class SwitchOffDelayFloatNode(FilterNode):
@@ -634,8 +762,15 @@ class SwitchOffDelayFloatNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        
         self.filter.initial_parameters["delay"] = "0.0"
+        
+        self._in_value_types["value_in"] = DataType.DT_8Bit
+        self._in_value_types["time"] = DataType.DT_Double
+        self._out_value_types["value"] = DataType.DT_8Bit
+
+###################################################################################
+# Filter to handle pult inputs
+###################################################################################
         
 
 class FilterFaderColumnRaw(FilterNode):
@@ -650,17 +785,22 @@ class FilterFaderColumnRaw(FilterNode):
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
         
+        self._out_value_types["fader"] = DataType.DT_16Bit
+        self._out_value_types["encoder"] = DataType.DT_16Bit
+        
 
 class FilterFaderColumnHSI(FilterNode):
     """Filter to represent a hsi filter fader"""
     nodeName = "FilterFaderColumnHSI"
     
     def __init__(self, name):
-        super().__init__(type=39, name=name, terminals={
+        super().__init__(type=40, name=name, terminals={
             'color': {'io': 'out'}
         })
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
+        
+        self._out_value_types["color"] = DataType.DT_Color
 
 
 class FilterFaderColumnHSIA(FilterNode):
@@ -668,12 +808,15 @@ class FilterFaderColumnHSIA(FilterNode):
     nodeName = "FilterFaderColumnHSIA"
     
     def __init__(self, name):
-        super().__init__(type=39, name=name, terminals={
+        super().__init__(type=41, name=name, terminals={
             'color': {'io': 'out'},
             'amber': {'io': 'out'}
         })
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
+        
+        self._out_value_types["color"] = DataType.DT_Color
+        self._out_value_types["amber"] = DataType.DT_8Bit
        
 
 class FilterFaderColumnHSIU(FilterNode):
@@ -681,12 +824,15 @@ class FilterFaderColumnHSIU(FilterNode):
     nodeName = "FilterFaderColumnHSIU"
     
     def __init__(self, name):
-        super().__init__(type=39, name=name, terminals={
+        super().__init__(type=42, name=name, terminals={
             'color': {'io': 'out'},
             'uv': {'io': 'out'}
         })
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
+        
+        self._out_value_types["color"] = DataType.DT_Color
+        self._out_value_types["uv"] = DataType.DT_8Bit
         
 
 class FilterFaderColumnHSIAU(FilterNode):
@@ -694,7 +840,7 @@ class FilterFaderColumnHSIAU(FilterNode):
     nodeName = "FilterFaderColumnHSIAU"
     
     def __init__(self, name):
-        super().__init__(type=39, name=name, terminals={
+        super().__init__(type=43, name=name, terminals={
             'color': {'io': 'out'},
             'amber': {'io': 'out'},
             'uv': {'io': 'out'}
@@ -702,3 +848,6 @@ class FilterFaderColumnHSIAU(FilterNode):
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
         
+        self._out_value_types["color"] = DataType.DT_Color
+        self._out_value_types["amber"] = DataType.DT_8Bit
+        self._out_value_types["uv"] = DataType.DT_8Bit
