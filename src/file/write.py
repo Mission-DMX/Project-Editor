@@ -125,7 +125,7 @@ def _create_filter_element(filter: Filter, parent: ET.Element) -> ET.Element:
     return ET.SubElement(parent, "filter", attrib={
         "id": str(filter.id),
         "type": str(filter.type),
-        "position": f"{filter.pos[0]},{filter.pos[1]}"
+        "pos": f"{filter.pos[0]},{filter.pos[1]}"
     })
 
 
