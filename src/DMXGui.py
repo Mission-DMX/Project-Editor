@@ -38,6 +38,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._fish_connector: NetworkManager = NetworkManager()
         self._fish_connector.start()
+        if self._fish_connector:
+            from model.control_desk import set_network_manager
+            set_network_manager(self._fish_connector)
         self._szene_editor = SzeneEditor(self._fish_connector, self)
 
         self._node_editor = NodeEditorWidget(self, self._board_configuration)
@@ -90,6 +93,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """start connection with fish server"""
         self._fish_connector.start()
         self._szene_editor.start()
+        from model.control_desk import commit_all_bank_sets
+        commit_all_bank_sets()
 
     def _change_server_name(self) -> None:
         """change fish socket name"""
@@ -226,6 +231,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == "__main__":
     logging.basicConfig(encoding='utf-8', level=logging.INFO)
+    from cli.remote_control_port import RemoteCLIServer
+    cli_server = RemoteCLIServer()
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
     screen_width = app.primaryScreen().size().width()
@@ -233,4 +240,6 @@ if __name__ == "__main__":
     widget = MainWindow()
     widget.showMaximized()
 
-    sys.exit(app.exec())
+    return_code = app.exec()
+    cli_server.stop()
+    sys.exit(return_code)
