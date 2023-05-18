@@ -45,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for index, view in enumerate(views):
             self._widgets.addWidget(view[1])
             mode_button = QtGui.QAction(view[0], self._toolbar)
-            mode_button.triggered.connect(lambda *args, i=index: self._widgets.setCurrentIndex(index))
+            mode_button.triggered.connect(lambda *args, i=index: self._widgets.setCurrentIndex(i))
             self._toolbar.addAction(mode_button)
 
         self.setCentralWidget(self._widgets)
