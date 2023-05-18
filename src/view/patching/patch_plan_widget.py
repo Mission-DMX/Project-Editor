@@ -28,11 +28,3 @@ class PatchPlanWidget(QtWidgets.QScrollArea):
 
         self.setWidgetResizable(True)
         self.setWidget(container)
-
-    def update_patching(self, index: int) -> None:
-        """
-        update the Patching for a defined item
-        Args:
-            index: index of updater patch item
-        """
-        self._patch_items[index].update_patching()

@@ -26,12 +26,12 @@ class PatchItem(QtWidgets.QFrame):
         layout.addWidget(self._fixture_name)
         layout.addWidget(self._fixture_channel)
         self.setLayout(layout)
-        self._channel.updated_color.connect(lambda color: self.update_color(color))
-        self._channel.updated_fixture.connect(self.update_fixture)
-        self.update_fixture()
-        self.update_color(self._channel.color)
+        self._channel.updated_color.connect(lambda color: self._update_color(color))
+        self._channel.updated_fixture.connect(self._update_fixture)
+        self._update_fixture()
+        self._update_color(self._channel.color)
 
-    def update_color(self, color: str) -> None:
+    def _update_color(self, color: str) -> None:
         """
         update color of an item
         Args:
@@ -39,7 +39,7 @@ class PatchItem(QtWidgets.QFrame):
         """
         self.setStyleSheet(Style.PATCH + f"background-color: {color};")
 
-    def update_fixture(self) -> None:
+    def _update_fixture(self) -> None:
         """update fixture of a item"""
         self._fixture_name.setText(self._channel.fixture.name)
         self._fixture_channel.setText(self._channel.fixture_channel)

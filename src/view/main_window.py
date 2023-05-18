@@ -5,10 +5,9 @@ from PySide6 import QtWidgets, QtGui
 from DMXModel import BoardConfiguration
 from Network import NetworkManager
 from ShowFile import createXML, writeDocument
-from ofl.patching_dialog import PatchingDialog
 from src.Style import Style
-from view.patching.patching_selector import PatchingSelector
 from view.main_widget import MainWidget
+from view.patching.patching_selector import PatchingSelector
 from widgets.Logging.logging_widget import LoggingWidget
 from widgets.NodeEditor.NodeEditor import NodeEditorWidget
 
@@ -67,10 +66,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                 ["Config", self._edit_config]],
                                                        # "Universe": [["add", self._scene_editor.add_universe],
                                                        #             ["remove", self._remove_universe]],
-                                                       "Fish": [["Connect", self._start_connection],
+                                                       "Fish": [["Connect", self._fish_connector.start],
                                                                 ["Disconnect", self._fish_connector.disconnect],
-                                                                ["Change", self._change_server_name]],
-                                                       "Patch": [["add", self._patch]]}
+                                                                ["Change", self._change_server_name]]
+                                                       }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
@@ -82,14 +81,6 @@ class MainWindow(QtWidgets.QMainWindow):
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
             menu_entry.triggered.connect(entry[1])
             menu.addAction(menu_entry)
-
-    def _remove_universe(self) -> None:
-        """TODO"""
-        pass
-
-    def _start_connection(self) -> None:
-        """start connection with fish server"""
-        self._fish_connector.start()
 
     def _change_server_name(self) -> None:
         """change fish socket name"""
@@ -122,12 +113,6 @@ class MainWindow(QtWidgets.QMainWindow):
         TODO Implement
         """
 
-    def _patch(self) -> None:
-        """ patch a fixture"""
-        form = PatchingDialog(self)
-        if form.exec():
-            self._scene_editor.patch(form.get_used_fixture(), form.patching.text())
-
     def _get_name(self, title: str, msg: str) -> str:
         """select a new socket name over an input dialog"""
         text, ok = QtWidgets.QInputDialog.getText(self, title, msg)
@@ -137,12 +122,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def _send_show_file(self) -> None:
         xml = createXML(self._board_configuration)
         self._fish_connector.load_show_file(xml=xml, goto_default_scene=True)
-
-    def _enter_scene(self) -> None:
-        id, ok = QtWidgets.QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
-        if ok:
-            print(f"Switching to scene {id}")
-            # self._fish_connector.enter_scene(id)
 
     def _setup_status_bar(self) -> None:
         """ build status bor"""
