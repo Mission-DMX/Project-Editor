@@ -26,10 +26,21 @@ class PatchItem(QtWidgets.QFrame):
         layout.addWidget(self._fixture_name)
         layout.addWidget(self._fixture_channel)
         self.setLayout(layout)
-        self.update_patching()
+        self._channel.updated_color.connect(lambda color: self.update_color(color))
+        self._channel.updated_fixture.connect(self.update_fixture)
+        self.update_fixture()
+        self.update_color(self._channel.color)
 
-    def update_patching(self) -> None:
-        """update patch item after patching"""
+    def update_color(self, color: str) -> None:
+        """
+        update color of an item
+        Args:
+            color: new color
+        """
+        self.setStyleSheet(Style.PATCH + f"background-color: {color};")
+
+    def update_fixture(self) -> None:
+        """update fixture of a item"""
         self._fixture_name.setText(self._channel.fixture.name)
         self._fixture_channel.setText(self._channel.fixture_channel)
-        self.setStyleSheet(Style.PATCH + f"background-color: {self._channel.color};")
+        self.setToolTip(f"{self._channel.fixture.name}\n{self._channel.fixture_channel}")

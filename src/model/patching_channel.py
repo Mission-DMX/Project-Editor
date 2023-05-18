@@ -7,6 +7,8 @@ from ofl.fixture import UsedFixture, Mode
 
 class PatchingChannel(QtCore.QObject):
     """Channels for patching to reduce redundancy over scenes"""
+    updated_fixture: QtCore.Signal = QtCore.Signal()
+    updated_color: QtCore.Signal = QtCore.Signal(str)
 
     def __init__(self, channel_address: int, color: str):
         """Constructs a patching channel."""
@@ -31,6 +33,7 @@ class PatchingChannel(QtCore.QObject):
     @fixture.setter
     def fixture(self, fixture: UsedFixture):
         self._fixture = fixture
+        self.updated_fixture.emit()
 
     @property
     def fixture_channel(self) -> str:
@@ -40,6 +43,7 @@ class PatchingChannel(QtCore.QObject):
     @fixture_channel.setter
     def fixture_channel(self, fixture_channel: int):
         self._fixture_channel = fixture_channel
+        self.updated_fixture.emit()
 
     @property
     def color(self) -> str:
@@ -49,3 +53,4 @@ class PatchingChannel(QtCore.QObject):
     @color.setter
     def color(self, color: str):
         self._color = color
+        self.updated_color.emit(self._color)

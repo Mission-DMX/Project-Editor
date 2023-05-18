@@ -8,6 +8,7 @@ from ShowFile import createXML, writeDocument
 from ofl.patching_dialog import PatchingDialog
 from src.Style import Style
 from view.patching.patching_selector import PatchingSelector
+from view.main_widget import MainWidget
 from widgets.Logging.logging_widget import LoggingWidget
 from widgets.NodeEditor.NodeEditor import NodeEditorWidget
 
@@ -33,7 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
-        views: list[tuple[str, QtWidgets]] = [("Patch", PatchingSelector(self)),
+        views: list[tuple[str, QtWidgets]] = [("Patch", MainWidget(PatchingSelector(self), self)),
                                               ("Filter Mode", NodeEditorWidget(self, self._board_configuration)),
                                               ("Debug", debug_console)]
         # TODO  append self._toolbar.addAction(self.__send_show_file_action)
@@ -44,8 +45,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._toolbar = self.addToolBar("Mode")
         for index, view in enumerate(views):
             self._widgets.addWidget(view[1])
-            mode_button = QtGui.QAction(view[0], self)
-            mode_button.triggered.connect(lambda *args, i=index: self._widgets.setCurrentIndex(i))
+            mode_button = QtGui.QAction(view[0], self._toolbar)
+            mode_button.triggered.connect(lambda *args, i=index: self._widgets.setCurrentIndex(index))
             self._toolbar.addAction(mode_button)
 
         self.setCentralWidget(self._widgets)
