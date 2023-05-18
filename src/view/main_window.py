@@ -1,10 +1,11 @@
 # coding=utf-8
 """main Window for the Editor"""
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from DMXModel import BoardConfiguration
 from Network import NetworkManager
 from ShowFile import createXML, writeDocument
+from model.patching_universe import PatchingUniverse
 from src.Style import Style
 from view.main_widget import MainWidget
 from view.patching.patching_selector import PatchingSelector
@@ -14,6 +15,8 @@ from widgets.NodeEditor.NodeEditor import NodeEditorWidget
 
 class MainWindow(QtWidgets.QMainWindow):
     """Main window of the app. All widget are children of its central widget."""
+    connection_state_updated: QtCore.Signal = QtCore.Signal(str)
+    send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
 
     def __init__(self, parent=None) -> None:
         """Inits the MainWindow.
@@ -28,16 +31,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Project-Editor")
 
         # model objects
-        self._fish_connector: NetworkManager = NetworkManager()
+        self._fish_connector: NetworkManager = NetworkManager(self)
         self._fish_connector.start()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
-        views: list[tuple[str, QtWidgets]] = [("Patch", MainWidget(PatchingSelector(self), self)),
+        patching_selector = PatchingSelector(self)
+        views: list[tuple[str, QtWidgets]] = [("Patch", MainWidget(patching_selector, self)),
+                                              # ("Direct Mode", MainWidget(DirectSceneSelector(self), self)),
                                               ("Filter Mode", NodeEditorWidget(self, self._board_configuration)),
                                               ("Debug", debug_console)]
         # TODO  append self._toolbar.addAction(self.__send_show_file_action)
         #  self._toolbar.addAction(self.__enter_scene_action)
+
+        # signal broadcast
+        patching_selector.send_universe.connect(lambda patching_universe: self.send_universe.emit(patching_universe))
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -52,11 +60,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._setup_menubar()
         self._setup_status_bar()
-
-    @property
-    def fish_connector(self) -> NetworkManager:
-        """fish connection Manager"""
-        return self._fish_connector
 
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
@@ -129,9 +132,9 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
 
-        label_state_update = QtWidgets.QLabel(self._fish_connector.connection_state(), status_bar)
-        self._fish_connector.connection_state_updated.connect(lambda txt: label_state_update.setText(txt))
-        status_bar.addWidget(label_state_update)
+        self.__label_state_update = QtWidgets.QLabel("", status_bar) # TODO start Value
+        self._fish_connector.connection_state_updated.connect(lambda txt: self._fish_state_update(txt))
+        status_bar.addWidget(self.__label_state_update)
 
         label_last_error = QtWidgets.QLabel("Error", status_bar)
         self._fish_connector.status_updated.connect(lambda txt: label_last_error.setText(txt))
@@ -142,6 +145,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._fish_connector.last_cycle_time_update.connect(lambda cycle: self._update_last_cycle_time(cycle))
         status_bar.addWidget(self._last_cycle_time_widget)
+
+    def _fish_state_update(self, connected: bool):
+        self.connection_state_updated.emit(connected)
+        if connected:
+            self.__label_state_update.setText("Connected")
+        else:
+            self.__label_state_update.setText("Not Connected")
 
     def _update_last_cycle_time(self, new_value: int):
         """update plot of fish last cycle Time"""

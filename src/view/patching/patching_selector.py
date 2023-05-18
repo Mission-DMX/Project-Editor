@@ -4,7 +4,7 @@ import random
 import re
 from typing import TYPE_CHECKING
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtWidgets, QtGui, QtCore
 
 import proto
 from model.patching_universe import PatchingUniverse
@@ -17,20 +17,19 @@ if TYPE_CHECKING:
 
 class PatchingSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
+    send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
 
     def __init__(self, parent: "MainWindow"):
         super().__init__(parent=parent)
-        self._parent: "MainWindow" = parent
-        self._parent.fish_connector.connection_state_updated.connect(lambda _: self._connection_changed())
+        parent.connection_state_updated.connect(lambda connected: self._connection_changed(connected))
         self._patching_universes: list[PatchingUniverse] = []
         self._patch_planes: list[PatchPlanWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self.addTab(QtWidgets.QWidget(), "+")
         # self.currentChanged.connect(self._tab_changed)
         self.tabBarClicked.connect(self._tab_clicked)
-        self._add_universe()
+        # self._add_universe()
         self.tabBar().setCurrentIndex(0)
-        # self.setCentralWidget(self._tab_widget)
 
         self._toolbar: list[QtGui.QAction] = []
         patch_button = QtGui.QAction("Patch")
@@ -60,17 +59,17 @@ class PatchingSelector(QtWidgets.QTabWidget):
             # )
         ), None)
         self._patching_universes.append(universe)
-        self._connection_changed()
+        self.send_universe.emit(universe)
 
         patch_plan = PatchPlanWidget(universe, parent=self)
         self._patch_planes.append(patch_plan)
         self.insertTab(self.tabBar().count() - 1, patch_plan, str(universe.universe_proto.id))
 
-    def _connection_changed(self):
+    def _connection_changed(self, connected):
         """connection to fish is changed"""
-        if self._parent.fish_connector.is_running:
+        if connected:
             for universe in self._patching_universes:
-                self._parent.fish_connector.generate_universe(universe)
+                self.send_universe.emit(universe)
                 #    self._parent.fish_connector.send_universe(universe) TODO woanders hin
 
     def _tab_clicked(self, scene_index: int) -> None:

@@ -2,6 +2,7 @@
 """Module to handle connection with real-time software Fish."""
 import logging
 import xml.etree.ElementTree as ET
+from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtNetwork
 
@@ -14,14 +15,17 @@ import varint
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
+if TYPE_CHECKING:
+    from view.main_window import MainWindow
+
 
 class NetworkManager(QtCore.QObject):
     """Handles connection to Fish."""
-    connection_state_updated: QtCore.Signal = QtCore.Signal(str)
+    connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: "MainWindow") -> None:
         """Inits the network connection.
         Args:
             parent: parent GUI Object
@@ -35,6 +39,7 @@ class NetworkManager(QtCore.QObject):
         self._socket.stateChanged.connect(self._on_state_changed)
         self._socket.errorOccurred.connect(on_error)
         self._socket.readyRead.connect(self._on_ready_read)
+        parent.send_universe.connect(lambda patching_universe: self.generate_universe(patching_universe))
 
     @property
     def is_running(self) -> bool:
@@ -141,15 +146,12 @@ class NetworkManager(QtCore.QObject):
         """Starts or stops to send messages if the connection state changes."""
         self.connection_state_updated.emit(self.connection_state())
 
-    def connection_state(self) -> str:
+    def connection_state(self) -> bool:
         """current connection state
         Returns:
-            str: Connected or Not Connected
+            bool: Connected or Not Connected
         """
-        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            return "Connected"
-        else:
-            return "Not Connected"
+        return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
 
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
         msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'),
