@@ -40,6 +40,7 @@ class NetworkManager(QtCore.QObject):
         self._socket.errorOccurred.connect(on_error)
         self._socket.readyRead.connect(self._on_ready_read)
         parent.send_universe.connect(lambda patching_universe: self.generate_universe(patching_universe))
+        parent.send_universe_value.connect(lambda send_universe: self.send_universe(send_universe))
 
     @property
     def is_running(self) -> bool:
@@ -74,18 +75,19 @@ class NetworkManager(QtCore.QObject):
         Args:
             universe: universe to send to fish
         """
-        msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.universe_proto.id,
-                                              channel_data=[channel.value for channel in universe.channels])
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.universe_proto.id,
+                                                  channel_data=[channel.value for channel in universe.channels])
 
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
     def generate_universe(self, universe: PatchingUniverse) -> None:
         """send a new universe to the fish socket"""
-        self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """send message in correct format to fish"""
-        logging.debug(f"message to send: {msg}")
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             logging.debug(f"send Message to server {msg}")
             self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)

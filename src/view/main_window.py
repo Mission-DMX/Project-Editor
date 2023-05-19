@@ -1,12 +1,15 @@
 # coding=utf-8
 """main Window for the Editor"""
+
 from PySide6 import QtWidgets, QtGui, QtCore
 
 from DMXModel import BoardConfiguration
 from Network import NetworkManager
 from ShowFile import createXML, writeDocument
+from Style import Style
 from model.patching_universe import PatchingUniverse
-from src.Style import Style
+from model.universe import Universe
+from view.direct_mode.direct_scene_selector import DirectSceneSelector
 from view.main_widget import MainWidget
 from view.patching.patching_selector import PatchingSelector
 from widgets.Logging.logging_widget import LoggingWidget
@@ -15,8 +18,10 @@ from widgets.NodeEditor.NodeEditor import NodeEditorWidget
 
 class MainWindow(QtWidgets.QMainWindow):
     """Main window of the app. All widget are children of its central widget."""
-    connection_state_updated: QtCore.Signal = QtCore.Signal(str)
+    connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
+    send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
+    patching_universes: list[PatchingUniverse] = []
 
     def __init__(self, parent=None) -> None:
         """Inits the MainWindow.
@@ -32,20 +37,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # model objects
         self._fish_connector: NetworkManager = NetworkManager(self)
-        self._fish_connector.start()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
         patching_selector = PatchingSelector(self)
+        direct_editor = DirectSceneSelector(self)
         views: list[tuple[str, QtWidgets]] = [("Patch", MainWidget(patching_selector, self)),
-                                              # ("Direct Mode", MainWidget(DirectSceneSelector(self), self)),
+                                              ("Direct Mode", MainWidget(direct_editor, self)),
                                               ("Filter Mode", NodeEditorWidget(self, self._board_configuration)),
                                               ("Debug", debug_console)]
         # TODO  append self._toolbar.addAction(self.__send_show_file_action)
         #  self._toolbar.addAction(self.__enter_scene_action)
 
         # signal broadcast
-        patching_selector.send_universe.connect(lambda patching_universe: self.send_universe.emit(patching_universe))
+        patching_selector.send_universe.connect(self.send_universe.emit)
+        direct_editor.send_universe_value.connect(self.send_universe_value.emit)
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -58,17 +64,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setCentralWidget(self._widgets)
 
+        self._last_cycle_time = [0] * 45
         self._setup_menubar()
         self._setup_status_bar()
+
+        self._fish_connector.start()
 
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[list[str, callable]]] = {"File": [["save", self._save_scenes],
-                                                                ["load", self._load_scenes],
                                                                 ["Config", self._edit_config]],
-                                                       # "Universe": [["add", self._scene_editor.add_universe],
-                                                       #             ["remove", self._remove_universe]],
                                                        "Fish": [["Connect", self._fish_connector.start],
                                                                 ["Disconnect", self._fish_connector.disconnect],
                                                                 ["Change", self._change_server_name]]
@@ -87,40 +93,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _change_server_name(self) -> None:
         """change fish socket name"""
-        self._fish_connector.change_server_name(self._get_name("Server Name", "Enter Server Name:"))
-
-    def _get_file_name(self, title: str):
-        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, title, "",
-                                                             "Text Files (*.txt);;All Files (*)", )
-        return file_name
+        text, run = QtWidgets.QInputDialog.getText(self, "Server Name", "Enter Server Name:")
+        if run:
+            self._fish_connector.change_server_name(text)
 
     def _save_scenes(self) -> None:
         """Safes the current scene to a file."""
         xml = createXML(self._board_configuration)
         writeDocument("ShowFile.xml", xml)
 
-    def _load_scenes(self) -> None:
-        """load szene from file"""
-        file_name = self._get_file_name("load Szene")
-        if file_name:
-            with open(file_name, "r") as f:
-                for (szene_index, line) in enumerate(f):
-                    universes = line.split(";")
-                    for (universe_index, universe) in enumerate(universes):
-                        for (chanel, value) in enumerate(universe.split(",")):
-                            self._scene_editor.scenes[szene_index].universes[universe_index].channels[chanel].value \
-                                = int(value)
-
     def _edit_config(self) -> None:
         """Edit the board configuration.
         TODO Implement
         """
-
-    def _get_name(self, title: str, msg: str) -> str:
-        """select a new socket name over an input dialog"""
-        text, ok = QtWidgets.QInputDialog.getText(self, title, msg)
-        if ok:
-            return str(text)
 
     def _send_show_file(self) -> None:
         xml = createXML(self._board_configuration)
@@ -132,18 +117,17 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
 
-        self.__label_state_update = QtWidgets.QLabel("", status_bar) # TODO start Value
-        self._fish_connector.connection_state_updated.connect(lambda txt: self._fish_state_update(txt))
+        self.__label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value
+        self._fish_connector.connection_state_updated.connect(self._fish_state_update)
         status_bar.addWidget(self.__label_state_update)
 
         label_last_error = QtWidgets.QLabel("Error", status_bar)
-        self._fish_connector.status_updated.connect(lambda txt: label_last_error.setText(txt))
+        self._fish_connector.status_updated.connect(label_last_error.setText)
         status_bar.addWidget(label_last_error)
 
-        self._last_cycle_time = [0] * 45
         self._last_cycle_time_widget = QtWidgets.QLabel(str(max(self._last_cycle_time)))
 
-        self._fish_connector.last_cycle_time_update.connect(lambda cycle: self._update_last_cycle_time(cycle))
+        self._fish_connector.last_cycle_time_update.connect(self._update_last_cycle_time)
         status_bar.addWidget(self._last_cycle_time_widget)
 
     def _fish_state_update(self, connected: bool):

@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from model.channel import Channel
 from src.Style import Style
-from src.widgets.DirectEditor.ChannelWidget import ChannelWidget
+from view.direct_mode.channel_widget import ChannelWidget
 
 
 class TestChannelWidget(TestCase):
