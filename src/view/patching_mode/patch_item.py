@@ -4,13 +4,13 @@ from PySide6 import QtWidgets
 
 from Style import Style
 from model.patching_channel import PatchingChannel
-from model.universe import Universe
+from model.patching_universe import PatchingUniverse
 
 
 class PatchItem(QtWidgets.QFrame):
     """a single item of the PatchPlan"""
 
-    def __init__(self, channel: PatchingChannel, universe: Universe):
+    def __init__(self, channel: PatchingChannel, universe: PatchingUniverse):
         super().__init__()
         self._channel: PatchingChannel = channel
         self._universe = universe
@@ -26,10 +26,21 @@ class PatchItem(QtWidgets.QFrame):
         layout.addWidget(self._fixture_name)
         layout.addWidget(self._fixture_channel)
         self.setLayout(layout)
-        self.update_patching()
+        self._channel.updated_color.connect(self._update_color)
+        self._channel.updated_fixture.connect(self._update_fixture)
+        self._update_fixture()
+        self._update_color(self._channel.color)
 
-    def update_patching(self) -> None:
-        """update patch item after patching"""
+    def _update_color(self, color: str) -> None:
+        """
+        update color of an item
+        Args:
+            color: new color
+        """
+        self.setStyleSheet(Style.PATCH + f"background-color: {color};")
+
+    def _update_fixture(self) -> None:
+        """update fixture of a item"""
         self._fixture_name.setText(self._channel.fixture.name)
         self._fixture_channel.setText(self._channel.fixture_channel)
-        self.setStyleSheet(Style.PATCH + f"background-color: {self._channel.color};")
+        self.setToolTip(f"{self._channel.fixture.name}\n{self._channel.fixture_channel}")

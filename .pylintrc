@@ -1,0 +1,5 @@
+[MASTER]
+extension-pkg-whitelist=PyQt6, PySide6
+load-plugins=pylint_protobuf
+[FORMAT]
+max-line-length=120

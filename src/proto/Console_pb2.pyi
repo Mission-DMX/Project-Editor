@@ -270,7 +270,7 @@ BTN_EQ_COMMITRDY: ButtonCode.ValueType  # 42
 BTN_SEND_OOPS: ButtonCode.ValueType  # 43
 """Undo the commit of show file or column updates (whichever was last); internally handled"""
 BTN_PLUGIN_PATCH: ButtonCode.ValueType  # 44
-"""Open the patching menu and review current transmitted values"""
+"""Open the patching_mode menu and review current transmitted values"""
 BTN_INST_UNIVERSES: ButtonCode.ValueType  # 45
 """Edit the connected universes"""
 BTN_NAMEVALUE: ButtonCode.ValueType  # 46
