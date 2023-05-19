@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from PySide6.QtWidgets import QWidget
+
 from Network import NetworkManager
 
 
@@ -23,6 +25,15 @@ class UIWidget(ABC):
 
         Returns:
             A list of key-value-tuples where each tuple defines a parameter of the filter to be updated.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_qt_widget(self) -> QWidget:
+        """This method needs to yield a QWidget that can be placed on the player page.
+
+        Returns:
+            A fully set up QWidget instance
         """
         raise NotImplementedError
 
@@ -101,7 +112,8 @@ class ShowUI:
         At any given time there may only be one instance of this class running in the player but one might construct
         arbitrary amounts for editing purposes.
         """
-        self._page_storage: list[list[UIPage]] = []
+        # List of scene tuples. A scene tuple consists out of the scene name and a list of associated UI pages.
+        self._page_storage: list[tuple[str, list[UIPage]]] = []
         self._active_scene: int = 0
 
     @property
@@ -120,6 +132,13 @@ class ShowUI:
         self._active_scene = scene
         # TODO change scene if active show running
         # TODO notify player about UI update, distribute pages to available players.
+
+    @property
+    def scenes(self) -> list[str]:
+        scene_name_list = []
+        for scene_name, _ in self._page_storage:
+            scene_name_list.append(scene_name)
+        return scene_name_list
 
     @staticmethod
     @property
