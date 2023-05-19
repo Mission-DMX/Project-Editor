@@ -1,10 +1,14 @@
+# coding=utf-8
+"""Node Editor to create and manage filters."""
+from PySide6 import QtGui, QtWidgets
 from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog
-
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
+from DMXModel import BoardConfiguration, Scene
+from ShowFile import createXML, writeDocument
 from . import Nodes
 from .SceneTabWidget import SceneTabWidget
-from DMXModel import BoardConfiguration, Scene
+
 
 class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
@@ -66,6 +70,21 @@ class NodeEditorWidget(QTabWidget):
         self.addTab(QWidget(), "-")
 
         self.tabBarClicked.connect(self.tab_bar_clicked)
+        self._toolbar: list[QtGui.QAction] = []
+        save_scene_button = QtGui.QAction("save Scene")
+        enter_scene_button = QtGui.QAction("enter Scene")
+        send_show_button = QtGui.QAction("send Scene")
+        enter_scene_button.triggered.connect(self._enter_scene)
+        send_show_button.triggered.connect(self._send_show_file)
+        save_scene_button.triggered.connect(self._save_scenes)
+        self._toolbar.append(enter_scene_button)
+        self._toolbar.append(send_show_button)
+        self._toolbar.append(save_scene_button)
+
+    @property
+    def toolbar(self) -> list[QtGui.QAction]:
+        """toolbar for patching"""
+        return self._toolbar
 
     def tab_bar_clicked(self, index: int):
         if index == self.tabBar().count() - 2:
@@ -87,3 +106,17 @@ class NodeEditorWidget(QTabWidget):
         index, ok = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
         if ok and 0 <= index < self.tabBar().count() - 2:
             self.tabBar().removeTab(index)
+
+    def _save_scenes(self) -> None:
+        """Safes the current scene to a file."""
+        xml = createXML(self._board_configuration)
+        writeDocument("ShowFile.xml", xml)
+
+    def _enter_scene(self) -> None:
+        id, ok = QtWidgets.QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
+        if ok:
+            print(f"Switching to scene {id}")  # self._fish_connector.enter_scene(id)
+
+    def _send_show_file(self) -> None:
+        xml = createXML(self._board_configuration)
+    #    self._fish_connector.load_show_file(xml=xml, goto_default_scene=True) TODO with signal

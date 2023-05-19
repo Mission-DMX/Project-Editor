@@ -5,14 +5,13 @@ from PySide6 import QtWidgets, QtGui
 
 from DMXModel import BoardConfiguration
 from Network import NetworkManager
-from ShowFile import createXML, writeDocument
 from Style import Style
 from model.broadcaster import Broadcaster
 from view.direct_mode.direct_scene_selector import DirectSceneSelector
 from view.main_widget import MainWidget
 from view.patching.patching_selector import PatchingSelector
 from widgets.Logging.logging_widget import LoggingWidget
-from widgets.NodeEditor.NodeEditor import NodeEditorWidget
+from view.filter_mode.NodeEditor import NodeEditorWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -35,12 +34,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
-        patching_selector = PatchingSelector(self._broadcaster, self)
-        direct_editor = DirectSceneSelector(self._broadcaster, self)
-        views: list[tuple[str, QtWidgets]] = [("Patch", MainWidget(patching_selector, self)),
-                                              ("Direct Mode", MainWidget(direct_editor, self)),
-                                              ("Filter Mode", NodeEditorWidget(self, self._board_configuration)),
-                                              ("Debug", debug_console)]
+        views: list[tuple[str, QtWidgets]] = [
+            ("Direct Mode", MainWidget(DirectSceneSelector(self._broadcaster, self), self)),
+            ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self)),
+            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)),
+            ("Debug", debug_console)]
         # TODO  append self._toolbar.addAction(self.__send_show_file_action)
         #  self._toolbar.addAction(self.__enter_scene_action)
 
@@ -64,9 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, callable]]] = {"File": [["save", self._save_scenes],
-                                                                ["Config", self._edit_config]],
-                                                       "Fish": [["Connect", self._fish_connector.start],
+        menus: dict[str, list[list[str, callable]]] = {"Fish": [["Connect", self._fish_connector.start],
                                                                 ["Disconnect", self._fish_connector.disconnect],
                                                                 ["Change", self._change_server_name]]
                                                        }
@@ -87,20 +83,6 @@ class MainWindow(QtWidgets.QMainWindow):
         text, run = QtWidgets.QInputDialog.getText(self, "Server Name", "Enter Server Name:")
         if run:
             self._fish_connector.change_server_name(text)
-
-    def _save_scenes(self) -> None:
-        """Safes the current scene to a file."""
-        xml = createXML(self._board_configuration)
-        writeDocument("ShowFile.xml", xml)
-
-    def _edit_config(self) -> None:
-        """Edit the board configuration.
-        TODO Implement
-        """
-
-    def _send_show_file(self) -> None:
-        xml = createXML(self._board_configuration)
-        self._fish_connector.load_show_file(xml=xml, goto_default_scene=True)
 
     def _setup_status_bar(self) -> None:
         """ build status bor"""
