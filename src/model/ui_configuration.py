@@ -98,6 +98,11 @@ class UIPage:
         self._player = player
         # TODO push page to player
 
+    @property
+    def widgets(self) -> list[UIWidget]:
+        """Returns a copy of the internal widget list"""
+        return list(self._widgets)
+
 
 class ShowUI:
     """This class contains all pages of the show
@@ -139,6 +144,19 @@ class ShowUI:
         for scene_name, _ in self._page_storage:
             scene_name_list.append(scene_name)
         return scene_name_list
+
+    @property
+    def pages(self) -> list[UIPage]:
+        """This method enumerates all pages.
+
+        Returns:
+            The complete list of pages.
+        """
+        page_list = []
+        for _, pl in self._page_storage:
+            for p in pl:
+                page_list.append(p)
+        return page_list
 
     @staticmethod
     @property

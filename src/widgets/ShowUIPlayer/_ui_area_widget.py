@@ -14,6 +14,17 @@ class UIAreaWidget(QScrollArea):
         """
         super().__init__(parent=parent)
         self._ui = ui
+        self._pages = []
+        for up in ui.pages:
+            container = QWidget()
+            for wc in up.widgets:
+                widget = wc.get_qt_widget()
+                widget.setParent(container)
+                widget.move(wc.position[0], wc.position[1])
+                widget.setFixedSize(wc.size[0], wc.size[1])
+            self._pages.append(container)
+        if len(self._pages) > 0:
+            self.setWidget(self._pages[0])
 
     def open_page(self, index: int):
         """This method loads the referenced ui page.
