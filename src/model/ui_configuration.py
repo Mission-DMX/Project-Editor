@@ -13,6 +13,7 @@ class UIWidget(ABC):
             fid -- The id of the corresponding filter.
         """
         self._position: tuple[int, int] = (0, 0)
+        self._size: tuple[int, int] = (0, 0)
         self._filter_id: str = fid
         self._parent = parent_page
 
@@ -44,6 +45,17 @@ class UIWidget(ABC):
     def position(self, new_position: tuple[int, int]):
         """Update the position of the widget on the UI page"""
         self._position = new_position
+        # TODO notify player about UI update if running
+
+    @property
+    def size(self) -> tuple[int, int]:
+        """Get the size of the widget in the UI page"""
+        return self._size
+
+    @size.setter
+    def size(self, new_size: tuple[int, int]):
+        """Update the size of the widget"""
+        self.size = new_size
         # TODO notify player about UI update if running
 
 
