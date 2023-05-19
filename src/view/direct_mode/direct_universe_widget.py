@@ -5,7 +5,7 @@ from PySide6 import QtWidgets, QtCore
 from Style import Style
 from model.broadcaster import Broadcaster
 from model.universe import Universe
-from view.direct_mode.channel_widget import ChannelWidget
+from view.direct_mode.direct_channel_widget import ChannelWidget
 
 
 class DirectUniverseWidget(QtWidgets.QScrollArea):
