@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import proto.UniverseControl_pb2 as proto
 from DMXModel import BoardConfiguration, Scene, Filter
 from model.universe import Universe
-from widgets.NodeEditor.Nodes import FilterNode
+from view.filter_mode.Nodes import FilterNode
 
 
 def writeDocument(file_name: str, xml: ET.Element) -> bool:

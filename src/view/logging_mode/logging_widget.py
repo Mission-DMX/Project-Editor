@@ -1,5 +1,5 @@
 # coding=utf-8
-"""widget for Logging"""
+"""widget for logging_mode"""
 
 import logging
 
@@ -7,7 +7,7 @@ from PySide6 import QtWidgets
 
 
 class LoggingHandler(logging.Handler):
-    """Logging Handler"""
+    """logging_mode Handler"""
 
     def __init__(self, parent) -> None:
         super().__init__()
@@ -21,7 +21,7 @@ class LoggingHandler(logging.Handler):
 
 
 class LoggingWidget(QtWidgets.QTabWidget):
-    """widget for Logging"""
+    """widget for logging_mode"""
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
