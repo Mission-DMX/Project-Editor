@@ -26,7 +26,7 @@ class PatchItem(QtWidgets.QFrame):
         layout.addWidget(self._fixture_name)
         layout.addWidget(self._fixture_channel)
         self.setLayout(layout)
-        self._channel.updated_color.connect(lambda color: self._update_color(color))
+        self._channel.updated_color.connect(self._update_color)
         self._channel.updated_fixture.connect(self._update_fixture)
         self._update_fixture()
         self._update_color(self._channel.color)

@@ -21,14 +21,13 @@ class PatchingSelector(QtWidgets.QTabWidget):
 
     def __init__(self, parent: "MainWindow"):
         super().__init__(parent=parent)
-        parent.connection_state_updated.connect(lambda connected: self._connection_changed(connected))
-        self._patching_universes: list[PatchingUniverse] = []
+        parent.connection_state_updated.connect(self._connection_changed)
+        self._patching_universes: list[PatchingUniverse] = parent.patching_universes
         self._patch_planes: list[PatchPlanWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self.addTab(QtWidgets.QWidget(), "+")
         # self.currentChanged.connect(self._tab_changed)
         self.tabBarClicked.connect(self._tab_clicked)
-        # self._add_universe()
         self.tabBar().setCurrentIndex(0)
 
         self._toolbar: list[QtGui.QAction] = []
@@ -73,7 +72,6 @@ class PatchingSelector(QtWidgets.QTabWidget):
                 #    self._parent.fish_connector.send_universe(universe) TODO woanders hin
 
     def _tab_clicked(self, scene_index: int) -> None:
-        self._last_tab = self.tabBar().currentIndex()
         if scene_index == self.tabBar().count() - 1:
             self._add_universe()
 

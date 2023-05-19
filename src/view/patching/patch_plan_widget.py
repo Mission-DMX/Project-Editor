@@ -19,7 +19,7 @@ class PatchPlanWidget(QtWidgets.QScrollArea):
         container = QtWidgets.QWidget()
         container_layout = FlowLayout()
 
-        for i, channel in enumerate(universe.patching):
+        for channel in universe.patching:
             item = PatchItem(channel, universe)
             container_layout.addWidget(item)
             self._patch_items.append(item)
