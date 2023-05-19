@@ -7,7 +7,7 @@ from DMXModel import BoardConfiguration
 from Network import NetworkManager
 from Style import Style
 from model.broadcaster import Broadcaster
-from view.direct_mode.direct_scene_selector import DirectSceneSelector
+from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.filter_mode.NodeEditor import NodeEditorWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
@@ -35,7 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # views
         views: list[tuple[str, QtWidgets]] = [
-            ("Direct Mode", MainWidget(DirectSceneSelector(self._broadcaster, self), self)),
+            ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self)),
             ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self)),
             ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)),
             ("Debug", debug_console)]
@@ -63,7 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, callable]]] = {"Fish": [["Connect", self._start_connection()],
+        menus: dict[str, list[list[str, callable]]] = {"Fish": [["Connect", self._start_connection],
                                                                 ["Disconnect", self._fish_connector.disconnect],
                                                                 ["Change", self._change_server_name]]
                                                        }
@@ -96,9 +96,9 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
 
-        self.__label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value
+        self._label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value
         self._broadcaster.connection_state_updated.connect(self._fish_state_update)
-        status_bar.addWidget(self.__label_state_update)
+        status_bar.addWidget(self._label_state_update)
 
         label_last_error = QtWidgets.QLabel("Error", status_bar)
         self._fish_connector.status_updated.connect(label_last_error.setText)
@@ -111,9 +111,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _fish_state_update(self, connected: bool):
         if connected:
-            self.__label_state_update.setText("Connected")
+            self._label_state_update.setText("Connected")
+            self._last_cycle_time_widget.setVisible(True)
         else:
-            self.__label_state_update.setText("Not Connected")
+            self._label_state_update.setText("Not Connected")
+            self._last_cycle_time_widget.setVisible(False)
 
     def _update_last_cycle_time(self, new_value: int):
         """update plot of fish last cycle Time"""

@@ -6,7 +6,7 @@ from PySide6 import QtWidgets
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
-from view.direct_mode.direct_universe_widget import DirectUniverseWidget
+from view.console_mode.console_universe_widget import DirectUniverseWidget
 
 
 class UniverseSelector(QtWidgets.QTabWidget):

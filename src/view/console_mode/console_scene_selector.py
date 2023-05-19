@@ -6,13 +6,13 @@ from PySide6 import QtWidgets, QtGui
 
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
-from view.direct_mode.universe_selector import UniverseSelector
+from view.console_mode.console_universe_selector import UniverseSelector
 
 if TYPE_CHECKING:
     from view.main_window import MainWindow
 
 
-class DirectSceneSelector(QtWidgets.QTabWidget):
+class ConsoleSceneSelector(QtWidgets.QTabWidget):
     """Widget to mange different scenes in Tab Widgets"""
 
     def __init__(self, broadcaster: Broadcaster, parent: "MainWindow") -> None:
