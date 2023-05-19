@@ -6,6 +6,7 @@ from pyqtgraph.flowchart import Flowchart
 
 import proto.UniverseControl_pb2 as proto
 from model.board_configuration import BoardConfiguration, Scene, Filter, Universe, UniverseFilter
+from model.patching_universe import PatchingUniverse
 
 
 def readDocument(file_name: str) -> BoardConfiguration:
@@ -89,7 +90,7 @@ def _parse_filter(filter_element: ET.Element, scene: Scene):
                 id = value
             case "type":
                 type = int(value)
-            case "position":
+            case "pos":
                 pos = tuple((float(s) for s in value.split(",")))
             case _:
                 logging.warn(f"Found attribute {key}={value} while parsing filter for scene {scene.human_readable_name}")
@@ -207,8 +208,9 @@ def _parse_universe(universe_element: ET.Element, board_configuration: BoardConf
         logging.warn(f"Could not parse any location for universe {id}")
 
 
-    proto_universe = proto.Universe(id=id, physical_location=physical, remote_location=artnet, ftdi_dongle=ftdi)
-    universe = Universe(universe_proto=proto_universe)
+    universe_proto = proto.Universe(id=id, physical_location=physical, remote_location=artnet, ftdi_dongle=ftdi)
+    patching_universe = PatchingUniverse(universe_proto)
+    universe = Universe(patching_universe)
     universe.name = name
     universe.description = description
 

@@ -2,20 +2,20 @@
 """directly edit channels of a universe"""
 from PySide6 import QtWidgets, QtCore
 
-from Network import NetworkManager
-from model.universe import Universe
 from Style import Style
-from .ChannelWidget import ChannelWidget
+from model.broadcaster import Broadcaster
+from model.universe import Universe
+from view.console_mode.console_channel_widget import ChannelWidget
 
 
-class DirectEditorWidget(QtWidgets.QScrollArea):
+class DirectUniverseWidget(QtWidgets.QScrollArea):
     """Widget to directly edit channels of one universe.
 
     Allows editing of channels of the specified universes. One universe is shown and editable at a time.
     Buttons allow to change the selected universe.
     """
 
-    def __init__(self, universe: Universe, fisch_connector: NetworkManager, parent=None):
+    def __init__(self, broadcaster: Broadcaster, universe: Universe, parent=None):
         """Inits a ManualUniverseEditorWidget.
 
         Args:
@@ -23,6 +23,7 @@ class DirectEditorWidget(QtWidgets.QScrollArea):
             parent: Qt parent of the widget.
         """
         super().__init__(parent=parent)
+        self._broadcaster = broadcaster
 
         self.setFixedHeight(430)
 
@@ -39,6 +40,9 @@ class DirectEditorWidget(QtWidgets.QScrollArea):
 
         # Add all channels of the universe
         for channel in universe.channels:
-            universe_widget.layout().addWidget(ChannelWidget(channel, universe, fisch_connector))
+            channel_widget = ChannelWidget(channel, universe)
+            universe_widget.layout().addWidget(channel_widget)
+            channel.updated.connect(
+                lambda *args, send_universe=universe: self._broadcaster.send_universe_value.emit(send_universe))
 
         self.setWidget(universe_widget)

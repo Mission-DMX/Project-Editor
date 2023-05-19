@@ -14,25 +14,28 @@ import proto.MessageTypes_pb2
 import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
+from model.broadcaster import Broadcaster
+from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
 if TYPE_CHECKING:
     from model.control_desk import FaderBank
+    from view.main_window import MainWindow
 
 
 class NetworkManager(QtCore.QObject):
     """Handles connection to Fish."""
-    connection_state_updated: QtCore.Signal = QtCore.Signal(str)
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, broadcaster: Broadcaster, parent: "MainWindow") -> None:
         """Inits the network connection.
         Args:
             parent: parent GUI Object
         """
         super().__init__(parent=parent)
         logging.info("generate new Network Manager")
+        self._broadcaster = broadcaster
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._is_running: bool = False
         self._fish_status: str = ""
@@ -40,6 +43,8 @@ class NetworkManager(QtCore.QObject):
         self._socket.stateChanged.connect(self._on_state_changed)
         self._socket.errorOccurred.connect(on_error)
         self._socket.readyRead.connect(self._on_ready_read)
+        self._broadcaster.send_universe.connect(lambda patching_universe: self.generate_universe(patching_universe))
+        self._broadcaster.send_universe_value.connect(lambda send_universe: self.send_universe(send_universe))
         self._message_queue = queue.Queue()
 
     @property
@@ -75,14 +80,16 @@ class NetworkManager(QtCore.QObject):
         Args:
             universe: universe to send to fish
         """
-        msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.universe_proto.id,
-                                              channel_data=[channel.value for channel in universe.channels])
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.universe_proto.id,
+                                                  channel_data=[channel.value for channel in universe.channels])
 
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
-    def generate_universe(self, universe: Universe) -> None:
+    def generate_universe(self, universe: PatchingUniverse) -> None:
         """send a new universe to the fish socket"""
-        self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """send message in correct format to fish"""
@@ -151,17 +158,14 @@ class NetworkManager(QtCore.QObject):
 
     def _on_state_changed(self) -> None:
         """Starts or stops to send messages if the connection state changes."""
-        self.connection_state_updated.emit(self.connection_state())
+        self._broadcaster.connection_state_updated.emit(self.connection_state())
 
-    def connection_state(self) -> str:
+    def connection_state(self) -> bool:
         """current connection state
         Returns:
-            str: Connected or Not Connected
+            bool: Connected or Not Connected
         """
-        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            return "Connected"
-        else:
-            return "Not Connected"
+        return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
 
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
         msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'),

@@ -28,7 +28,6 @@ class DataType(IntFlag):
 
 # @dataclass
 class Filter:
-    
     def __init__(self, id: str, type: int, pos: tuple[float, float] = (0.0, 0.0)) -> None:
         self.id = id
         self.type = type

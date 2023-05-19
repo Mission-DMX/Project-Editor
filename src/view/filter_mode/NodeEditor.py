@@ -4,15 +4,18 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
+# coding=utf-8
+"""Node Editor to create and manage filters."""
+from PySide6 import QtGui, QtWidgets
 from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog
-
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 from pyqtgraph.flowchart import Flowchart
 
 from . import Nodes
 from .SceneTabWidget import SceneTabWidget
 from model.board_configuration import BoardConfiguration, Scene
-
+from file.read import readDocument
+from file.write import createXML, writeDocument
 
 class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
@@ -82,6 +85,24 @@ class NodeEditorWidget(QTabWidget):
         self.addTab(QWidget(), "-")
 
         self.tabBarClicked.connect(self.tab_bar_clicked)
+        self._toolbar: list[QtGui.QAction] = []
+        save_show_file_button = QtGui.QAction("save Scene")
+        load_show_file_button = QtGui.QAction("load Scene")
+        enter_scene_button = QtGui.QAction("enter Scene")
+        send_show_button = QtGui.QAction("send Scene")
+        enter_scene_button.triggered.connect(self._enter_scene)
+        send_show_button.triggered.connect(self._send_show_file)
+        save_show_file_button.triggered.connect(lambda: self._select_file(self._save_show_file))
+        load_show_file_button.triggered.connect(lambda: self._select_file(self._load_show_file))
+        self._toolbar.append(enter_scene_button)
+        self._toolbar.append(send_show_button)
+        self._toolbar.append(save_show_file_button)
+        self._toolbar.append(load_show_file_button)
+
+    @property
+    def toolbar(self) -> list[QtGui.QAction]:
+        """toolbar for patching_mode"""
+        return self._toolbar
 
     def tab_bar_clicked(self, index: int):
         if index == self.tabBar().count() - 2:
@@ -112,3 +133,34 @@ class NodeEditorWidget(QTabWidget):
             scene = self._tab_widgets[index]
             self._board_configuration.scenes.remove(scene)
             self.tabBar().removeTab(index)
+            
+    def _select_file(self, func) -> None:
+        """Opens QFileDialog to select a file.
+        
+        Args:
+            func: Function to be called after file was selected and confirmed. Function gets the file name as a string.
+        """
+        file_dialog = QtWidgets.QFileDialog(self)
+        file_dialog.fileSelected.connect(func)
+        file_dialog.show()
+
+    def _load_show_file(self, file_name: str):
+        """Loads a show file"""
+        self._board_configuration = readDocument(file_name)
+        
+        for scene in self._board_configuration.scenes:
+            self.add_scene_tab(scene)
+
+    def _save_show_file(self, file_name: str) -> None:
+        """Safes the current scene to a file."""
+        xml = createXML(self._board_configuration)
+        writeDocument(file_name, xml)
+
+    def _enter_scene(self) -> None:
+        id, ok = QtWidgets.QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
+        if ok:
+            print(f"Switching to scene {id}")  # self._fish_connector.enter_scene(id)
+
+    def _send_show_file(self) -> None:
+        xml = createXML(self._board_configuration)
+        # self._fish_connector.load_show_file(xml=xml, goto_default_scene=True) TODO with signal

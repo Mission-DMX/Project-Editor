@@ -159,7 +159,7 @@ class ConstantsColorNode(FilterNode):
             'value': {'io': 'out'}
         })
         self.filter.initial_parameters["value"] = "0,0,0"
-        self._out_value_types["value"] = DataType.DT_HSIColor
+        self._out_value_types["value"] = DataType.DT_Color
 
 
 class Debug8BitNode(FilterNode):
@@ -289,8 +289,7 @@ class UniverseNode(FilterNode):
     
     def removeTerminal(self, term):
         if term.isInput():
-            name = term.name
-            del self.filter.filter_configurations[name[6:]]
+            del self.filter.filter_configurations[term.name()]
         return super().removeTerminal(term)
     
     def setup_filter(self, filter: Filter = None, board_configuration: BoardConfiguration = None):

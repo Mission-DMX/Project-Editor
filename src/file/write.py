@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 
 import proto.UniverseControl_pb2 as proto
 from model.board_configuration import BoardConfiguration, Scene, Filter, Universe
+from model.universe import Universe
+
 
 def writeDocument(file_name: str, xml: ET.Element) -> bool:
     """Writes the xml element to the specified file.
