@@ -83,7 +83,7 @@ class NodeEditorWidget(QTabWidget):
 
     @property
     def toolbar(self) -> list[QtGui.QAction]:
-        """toolbar for patching"""
+        """toolbar for patching_mode"""
         return self._toolbar
 
     def tab_bar_clicked(self, index: int):

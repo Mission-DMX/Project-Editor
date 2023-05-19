@@ -25,7 +25,7 @@ class Universe:
 
     @property
     def patching(self) -> list[PatchingChannel]:
-        """List of all 512 patching channels belonging to the Universe"""
+        """List of all 512 patching_mode channels belonging to the Universe"""
         return self._patchingUniverse.patching
 
     @property

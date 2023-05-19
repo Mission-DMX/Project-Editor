@@ -108,7 +108,7 @@ class _ButtonCodeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enu
     BTN_SEND_OOPS: _ButtonCode.ValueType  # 43
     """Undo the commit of show file or column updates (whichever was last); internally handled"""
     BTN_PLUGIN_PATCH: _ButtonCode.ValueType  # 44
-    """Open the patching menu and review current transmitted values"""
+    """Open the patching_mode menu and review current transmitted values"""
     BTN_INST_UNIVERSES: _ButtonCode.ValueType  # 45
     """Edit the connected universes"""
     BTN_NAMEVALUE: _ButtonCode.ValueType  # 46
@@ -270,7 +270,7 @@ BTN_EQ_COMMITRDY: ButtonCode.ValueType  # 42
 BTN_SEND_OOPS: ButtonCode.ValueType  # 43
 """Undo the commit of show file or column updates (whichever was last); internally handled"""
 BTN_PLUGIN_PATCH: ButtonCode.ValueType  # 44
-"""Open the patching menu and review current transmitted values"""
+"""Open the patching_mode menu and review current transmitted values"""
 BTN_INST_UNIVERSES: ButtonCode.ValueType  # 45
 """Edit the connected universes"""
 BTN_NAMEVALUE: ButtonCode.ValueType  # 46

@@ -4,7 +4,7 @@ from PySide6 import QtWidgets, QtCore
 from PySide6.examples.widgets.layouts.flowlayout.flowlayout import FlowLayout
 
 from model.patching_universe import PatchingUniverse
-from view.patching.patch_item import PatchItem
+from view.patching_mode.patch_item import PatchItem
 
 
 class PatchPlanWidget(QtWidgets.QScrollArea):

@@ -36,7 +36,7 @@ class DirectSceneSelector(QtWidgets.QTabWidget):
 
     @property
     def toolbar(self) -> list[QtGui.QAction]:
-        """toolbar for patching"""
+        """toolbar for patching_mode"""
         return self._toolbar
 
     def contextMenuEvent(self, event):

@@ -10,7 +10,7 @@ import proto
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from ofl.patching_dialog import PatchingDialog
-from view.patching.patch_plan_widget import PatchPlanWidget
+from view.patching_mode.patch_plan_widget import PatchPlanWidget
 
 if TYPE_CHECKING:
     from view.main_window import MainWindow
@@ -38,7 +38,7 @@ class PatchingSelector(QtWidgets.QTabWidget):
 
     @property
     def toolbar(self) -> list[QtGui.QAction]:
-        """toolbar for patching"""
+        """toolbar for patching_mode"""
         return self._toolbar
 
     def _generate_universe(self) -> None:

@@ -8,10 +8,10 @@ from Network import NetworkManager
 from Style import Style
 from model.broadcaster import Broadcaster
 from view.direct_mode.direct_scene_selector import DirectSceneSelector
-from view.main_widget import MainWidget
-from view.patching.patching_selector import PatchingSelector
-from widgets.Logging.logging_widget import LoggingWidget
 from view.filter_mode.NodeEditor import NodeEditorWidget
+from view.logging_mode.logging_widget import LoggingWidget
+from view.main_widget import MainWidget
+from view.patching_mode.patching_selector import PatchingSelector
 
 
 class MainWindow(QtWidgets.QMainWindow):
