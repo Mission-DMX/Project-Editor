@@ -4,7 +4,7 @@
 from PySide6 import QtWidgets, QtGui
 
 from DMXModel import BoardConfiguration
-from Network import NetworkManager
+from network import NetworkManager
 from Style import Style
 from model.broadcaster import Broadcaster
 from view.console_mode.console_scene_selector import ConsoleSceneSelector

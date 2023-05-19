@@ -12,4 +12,4 @@ setup(name='fish-e',
       requires=['PySide6==6.4.2', 'protobuf', 'qtpynodeeditor', 'pyqtgraph', 'pydantic'],
       packages=find_packages(),
       package_dir={'': './'},
-      scripts=['src/main.py'])
+      scripts=['src/DMXGui.py'])
