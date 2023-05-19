@@ -3,6 +3,7 @@
 from PySide6 import QtWidgets, QtCore
 
 from Style import Style
+from model.broadcaster import Broadcaster
 from model.universe import Universe
 from view.direct_mode.channel_widget import ChannelWidget
 
@@ -13,9 +14,8 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
     Allows editing of channels of the specified universes. One universe is shown and editable at a time.
     Buttons allow to change the selected universe.
     """
-    send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
 
-    def __init__(self, universe: Universe, parent=None):
+    def __init__(self, broadcaster: Broadcaster, universe: Universe, parent=None):
         """Inits a ManualUniverseEditorWidget.
 
         Args:
@@ -23,6 +23,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             parent: Qt parent of the widget.
         """
         super().__init__(parent=parent)
+        self._broadcaster = broadcaster
 
         self.setFixedHeight(430)
 
@@ -41,6 +42,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         for channel in universe.channels:
             channel_widget = ChannelWidget(channel, universe)
             universe_widget.layout().addWidget(channel_widget)
-            channel.updated.connect(lambda *args, send_universe=universe: self.send_universe_value.emit(send_universe))
+            channel.updated.connect(
+                lambda *args, send_universe=universe: self._broadcaster.send_universe_value.emit(send_universe))
 
         self.setWidget(universe_widget)

@@ -1,8 +1,9 @@
 # coding=utf-8
 """select Universe"""
 
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets
 
+from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 from view.direct_mode.direct_universe_widget import DirectUniverseWidget
@@ -10,15 +11,15 @@ from view.direct_mode.direct_universe_widget import DirectUniverseWidget
 
 class UniverseSelector(QtWidgets.QTabWidget):
     """select Universe from Tab Widget"""
-    send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
 
-    def __init__(self, parent, patching_universes: list[PatchingUniverse] = None) -> None:
+    def __init__(self, broadcaster: Broadcaster, parent) -> None:
         super().__init__(parent=parent)
+        self._broadcaster = broadcaster
         self._universes: list[Universe] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
 
-        if patching_universes is not None:
-            for patching_universe in patching_universes:
+        if self._broadcaster.patching_universes:
+            for patching_universe in self._broadcaster.patching_universes:
                 self.add_universe(patching_universe)
 
     @property
@@ -33,15 +34,14 @@ class UniverseSelector(QtWidgets.QTabWidget):
             patching_universe: the new universe to add
         """
         universe = Universe(patching_universe)
-        self.send_universe_value.emit(universe)
+        self._broadcaster.send_universe_value.emit(universe)
         self._universes.append(universe)
 
-        direct_editor: DirectUniverseWidget = DirectUniverseWidget(universe, parent=self)
-        direct_editor.send_universe_value.connect(self.send_universe_value.emit)
+        direct_editor: DirectUniverseWidget = DirectUniverseWidget(self._broadcaster, universe, parent=self)
 
         self.addTab(direct_editor, str(universe.universe_proto.id))
 
     def send_all_universe(self) -> None:
         """send all universes to fish"""
         for universe in self._universes:
-            self.send_universe_value.emit(universe)
+            self._broadcaster.send_universe_value.emit(universe)

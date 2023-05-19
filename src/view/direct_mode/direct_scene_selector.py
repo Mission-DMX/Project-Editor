@@ -2,10 +2,10 @@
 """mange different scenes"""
 from typing import TYPE_CHECKING
 
-from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui
 
+from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
-from model.universe import Universe
 from view.direct_mode.universe_selector import UniverseSelector
 
 if TYPE_CHECKING:
@@ -14,18 +14,17 @@ if TYPE_CHECKING:
 
 class DirectSceneSelector(QtWidgets.QTabWidget):
     """Widget to mange different scenes in Tab Widgets"""
-    send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
 
-    def __init__(self, parent: "MainWindow") -> None:
+    def __init__(self, broadcaster: Broadcaster, parent: "MainWindow") -> None:
         super().__init__(parent=parent)
+        self._broadcaster = broadcaster
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self._last_tab: int = 0
         self._scenes: list[UniverseSelector] = []
-        self._patching_universes: list[PatchingUniverse] = parent.patching_universes
         self.addTab(QtWidgets.QWidget(), "+")
         self.currentChanged.connect(self._tab_changed)
         self.tabBarClicked.connect(self._tab_clicked)
-        parent.send_universe.connect(lambda universe: self.add_universe())
+        self._broadcaster.add_universe.connect(self.add_universe)
 
         self._toolbar: list[QtGui.QAction] = []
         save_button = QtGui.QAction("Save")
@@ -61,8 +60,7 @@ class DirectSceneSelector(QtWidgets.QTabWidget):
         """
         text, run = QtWidgets.QInputDialog.getText(self, "Scene Name", "Enter Scene Name:")
         if run:
-            universe_selector = UniverseSelector(self, self._patching_universes)
-            universe_selector.send_universe_value.connect(self.send_universe_value.emit)
+            universe_selector = UniverseSelector(self._broadcaster, self)
             self._scenes.append(universe_selector)
             self.insertTab(self.tabBar().count() - 1, self._scenes[-1], text)
 
@@ -77,10 +75,10 @@ class DirectSceneSelector(QtWidgets.QTabWidget):
         if index == len(self._scenes) and index != 0:
             self.tabBar().setCurrentIndex(index - 1)
 
-    def add_universe(self) -> None:
+    def add_universe(self, universe: PatchingUniverse) -> None:
         """ add a new universe """
         for scene in self._scenes:
-            scene.add_universe(self._patching_universes[-1])
+            scene.add_universe(universe)
 
     def _tab_changed(self, scene_index: int) -> None:
         """

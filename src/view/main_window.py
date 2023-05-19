@@ -1,14 +1,13 @@
 # coding=utf-8
 """main Window for the Editor"""
 
-from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui
 
 from DMXModel import BoardConfiguration
 from Network import NetworkManager
 from ShowFile import createXML, writeDocument
 from Style import Style
-from model.patching_universe import PatchingUniverse
-from model.universe import Universe
+from model.broadcaster import Broadcaster
 from view.direct_mode.direct_scene_selector import DirectSceneSelector
 from view.main_widget import MainWidget
 from view.patching.patching_selector import PatchingSelector
@@ -18,10 +17,6 @@ from widgets.NodeEditor.NodeEditor import NodeEditorWidget
 
 class MainWindow(QtWidgets.QMainWindow):
     """Main window of the app. All widget are children of its central widget."""
-    connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
-    send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
-    send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
-    patching_universes: list[PatchingUniverse] = []
 
     def __init__(self, parent=None) -> None:
         """Inits the MainWindow.
@@ -32,26 +27,22 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
         # first logging to don't miss logs
         debug_console = LoggingWidget()
-
+        self._broadcaster = Broadcaster()
         self.setWindowTitle("Project-Editor")
 
         # model objects
-        self._fish_connector: NetworkManager = NetworkManager(self)
+        self._fish_connector: NetworkManager = NetworkManager(self._broadcaster, self)
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
-        patching_selector = PatchingSelector(self)
-        direct_editor = DirectSceneSelector(self)
+        patching_selector = PatchingSelector(self._broadcaster, self)
+        direct_editor = DirectSceneSelector(self._broadcaster, self)
         views: list[tuple[str, QtWidgets]] = [("Patch", MainWidget(patching_selector, self)),
                                               ("Direct Mode", MainWidget(direct_editor, self)),
                                               ("Filter Mode", NodeEditorWidget(self, self._board_configuration)),
                                               ("Debug", debug_console)]
         # TODO  append self._toolbar.addAction(self.__send_show_file_action)
         #  self._toolbar.addAction(self.__enter_scene_action)
-
-        # signal broadcast
-        patching_selector.send_universe.connect(self.send_universe.emit)
-        direct_editor.send_universe_value.connect(self.send_universe_value.emit)
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -118,7 +109,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setStatusBar(status_bar)
 
         self.__label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value
-        self._fish_connector.connection_state_updated.connect(self._fish_state_update)
+        self._broadcaster.connection_state_updated.connect(self._fish_state_update)
         status_bar.addWidget(self.__label_state_update)
 
         label_last_error = QtWidgets.QLabel("Error", status_bar)
@@ -131,7 +122,6 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.addWidget(self._last_cycle_time_widget)
 
     def _fish_state_update(self, connected: bool):
-        self.connection_state_updated.emit(connected)
         if connected:
             self.__label_state_update.setText("Connected")
         else:

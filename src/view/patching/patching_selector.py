@@ -4,9 +4,10 @@ import random
 import re
 from typing import TYPE_CHECKING
 
-from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui
 
 import proto
+from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from ofl.patching_dialog import PatchingDialog
 from view.patching.patch_plan_widget import PatchPlanWidget
@@ -17,12 +18,12 @@ if TYPE_CHECKING:
 
 class PatchingSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
-    send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
 
-    def __init__(self, parent: "MainWindow"):
+    def __init__(self, broadcaster: Broadcaster, parent: "MainWindow"):
         super().__init__(parent=parent)
-        parent.connection_state_updated.connect(self._connection_changed)
-        self._patching_universes: list[PatchingUniverse] = parent.patching_universes
+        self._broadcaster = broadcaster
+        self._broadcaster.connection_state_updated.connect(self._connection_changed)
+        self._broadcaster.add_universe.connect(self._add_universe)
         self._patch_planes: list[PatchPlanWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self.addTab(QtWidgets.QWidget(), "+")
@@ -40,15 +41,15 @@ class PatchingSelector(QtWidgets.QTabWidget):
         """toolbar for patching"""
         return self._toolbar
 
-    def _add_universe(self) -> None:
+    def _generate_universe(self) -> None:
         """add a new Universe to universe Selector"""
         # TODO add universe Dialog
         universe = PatchingUniverse(proto.UniverseControl_pb2.Universe(
-            id=len(self._patching_universes) + 1,
+            id=len(self._broadcaster.patching_universes) + 1,
             remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
                 ip_address="10.0.15.1",
                 port=6454,
-                universe_on_device=len(self._patching_universes) + 1
+                universe_on_device=len(self._broadcaster.patching_universes) + 1
             )
             # ftdi_dongle=proto.UniverseControl_pb2.Universe.USBConfig(
             #    vendor_id=0x0403,
@@ -57,9 +58,9 @@ class PatchingSelector(QtWidgets.QTabWidget):
             #    device_name=""
             # )
         ), None)
-        self._patching_universes.append(universe)
-        self.send_universe.emit(universe)
+        self._broadcaster.add_universe.emit(universe)
 
+    def _add_universe(self, universe: PatchingUniverse):
         patch_plan = PatchPlanWidget(universe, parent=self)
         self._patch_planes.append(patch_plan)
         self.insertTab(self.tabBar().count() - 1, patch_plan, str(universe.universe_proto.id))
@@ -67,13 +68,12 @@ class PatchingSelector(QtWidgets.QTabWidget):
     def _connection_changed(self, connected):
         """connection to fish is changed"""
         if connected:
-            for universe in self._patching_universes:
-                self.send_universe.emit(universe)
-                #    self._parent.fish_connector.send_universe(universe) TODO woanders hin
+            for universe in self._broadcaster.patching_universes:
+                self._broadcaster.send_universe.emit(universe)
 
     def _tab_clicked(self, scene_index: int) -> None:
         if scene_index == self.tabBar().count() - 1:
-            self._add_universe()
+            self._generate_universe()
 
     def patch(self) -> None:
         """
