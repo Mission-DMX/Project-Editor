@@ -8,7 +8,7 @@ from Network import NetworkManager
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
-    def __init__(self, fid: str, parent_page: UIPage):
+    def __init__(self, fid: str, parent_page: "UIPage"):
         """ Set up the basic components of a widget.
 
         Arguments:
@@ -43,7 +43,7 @@ class UIWidget(ABC):
         return self._filter_id
 
     @property
-    def parent(self) -> UIPage:
+    def parent(self) -> "UIPage":
         """Get the parent page of this widget"""
         return self._parent
 
