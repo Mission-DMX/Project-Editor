@@ -39,8 +39,6 @@ class MainWindow(QtWidgets.QMainWindow):
             ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self)),
             ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)),
             ("Debug", debug_console)]
-        # TODO  append self._toolbar.addAction(self.__send_show_file_action)
-        #  self._toolbar.addAction(self.__enter_scene_action)
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -58,11 +56,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_status_bar()
 
         self._fish_connector.start()
+        if self._fish_connector:
+            from model.control_desk import set_network_manager
+            set_network_manager(self._fish_connector)
 
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, callable]]] = {"Fish": [["Connect", self._fish_connector.start],
+        menus: dict[str, list[list[str, callable]]] = {"Fish": [["Connect", self._start_connection()],
                                                                 ["Disconnect", self._fish_connector.disconnect],
                                                                 ["Change", self._change_server_name]]
                                                        }
@@ -70,6 +71,11 @@ class MainWindow(QtWidgets.QMainWindow):
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
+
+    def _start_connection(self):  # TODO rework to signals
+        self._fish_connector.start()
+        from model.control_desk import commit_all_bank_sets
+        commit_all_bank_sets()
 
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
         """ add entries to a menu"""
