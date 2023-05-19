@@ -29,6 +29,11 @@ class Universe:
         return self._patchingUniverse.patching
 
     @property
+    def id(self) -> int:
+        """Id of the universe"""
+        return self._patchingUniverse.universe_proto.id
+
+    @property
     def name(self) -> str:
         """Human-readable name for the universe."""
         if self._name is None:

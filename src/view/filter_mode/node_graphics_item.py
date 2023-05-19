@@ -1,4 +1,4 @@
-from enum import Enum
+"""Module for filter settings editor"""
 import logging
 
 from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QGraphicsPixmapItem, QDialog, QFormLayout
@@ -7,17 +7,14 @@ from PySide6.QtGui import QPixmap
 
 
 from model.board_configuration import Filter, UniverseFilter
-from model.patching_channel import PatchingChannel
 from model.universe import Universe
 
 class FilterSettingsItem(QGraphicsPixmapItem):
+    """GraphicsItem to handle opening filter settings dialog.
     
-    
-    class SettingsType(Enum):
-        INITIAL_PARAMETERS = "IP", "Initial Parameters"
-        FILTER_CONFIGURATION = "FC", "Filter Configuration"
-    
-    
+    Attributes:
+        filter: The filter this item belongs to
+    """
     def __init__(self, filter: Filter, parent: QGraphicsItem):
         super().__init__(QPixmap("resources/settings.svg").scaled(10, 10), parent)
         self.filter = filter
@@ -25,11 +22,13 @@ class FilterSettingsItem(QGraphicsPixmapItem):
         self.moveBy(parent.boundingRect().width()/2, parent.boundingRect().height() - 20)
 
     def focusOutEvent(self, ev):
+        # Override to handle buggy behaviour
         super().focusOutEvent(ev)
         if self.on_update is not None:
             self.on_update()
 
     def keyPressEvent(self, ev):
+        # Override to handle buggy behaviour
         if ev.key() == Qt.Key.Key_Enter or ev.key() == Qt.Key.Key_Return:
             if self.on_update is not None:
                 self.on_update()
@@ -37,72 +36,79 @@ class FilterSettingsItem(QGraphicsPixmapItem):
         super().keyPressEvent(ev)
 
     def mousePressEvent(self, ev):
+        """Handle left mouse button click by opening filter settings dialog"""
         if ev.button() == Qt.MouseButton.LeftButton:
             FilterSettingsDialog(self.filter).exec()
 
 
 class FilterSettingsDialog(QDialog):
+    """
+    
+    Attributes:
+        filter: The filter whose settings this dialog displays
+    """
     def __init__(self, filter: Filter) -> None:
         super().__init__()
         self.filter = filter
         self.setWindowTitle("Filter Settings")
-        
+        # Form layout:
+        # Initial Parameters
+        # ip1_name: ip1_value_editable
+        # ip2_name: ip2_value_editable
+        # Filter Configurations
+        # fc1_name: fc1_value_editable
+        # fc2_name: fc2_value_editable
         layout = QFormLayout()
-        
+        # Function pointer to handle patching inforamation. Only set, when filter is universe filter
         add_patch_info = None if not isinstance(filter, UniverseFilter) else self._add_patch_info
-        
+        # Only add initial parameters section if present
         if len(filter.initial_parameters) > 0:
             layout.addRow("Initial Parameters", QLabel(""))
-            
             for key, value in filter.initial_parameters.items():
-                le = QLineEdit()
-                le.setText(value)
-                le.textChanged.connect(lambda new_value: self._ip_value_changed(key, new_value))
-                layout.addRow(key, le)
-        
+                line_edit = QLineEdit()
+                line_edit.setText(value)
+                line_edit.textChanged.connect(lambda new_value: self._ip_value_changed(key, new_value))
+                layout.addRow(key, line_edit)
+        # Only add filter configuration section if present
         if len(filter.filter_configurations) > 0:
             layout.addRow("Filter Configurations", QLabel(""))
-            
             for key, value in filter.filter_configurations.items():
-                le = QLineEdit()
-                le.setText(value)
-                le.textChanged.connect(lambda new_value: self._fc_value_changed(key, new_value))
+                line_edit = QLineEdit()
+                line_edit.setText(value)
+                line_edit.textChanged.connect(lambda new_value: self._fc_value_changed(key, new_value))
                 key = add_patch_info(key, value)
-                layout.addRow(key, le)
-
+                layout.addRow(key, line_edit)
         self._ok_button = QPushButton("Ok")
         self._ok_button.pressed.connect(self.close)
 
         layout.addRow("", self._ok_button)
 
         self.setLayout(layout)
-    
+
     def _add_patch_info(self, key: str, value: str) -> str:
         if not isinstance(self.filter, UniverseFilter):
             return key
-        
+        # Only channel inputs have patching info
         if key == "universe":
             return key
-        
-        id = int(self.filter.filter_configurations["universe"])
+        # Fetch universe
+        universe_id = int(self.filter.filter_configurations["universe"])
         universe: Universe = None
         for uni in self.filter.board_configuration.universes:
-            if uni.universe_proto.id == id:
+            if uni.universe_proto.id == universe_id:
                 universe = uni
                 break
         else:
-            logging.warn(f"Could not find universe {id}.")
+            logging.warning("Could not find universe %s", universe_id)
             return key
-        
-        patching: PatchingChannel = None
+        # Fetch patching short name
         for channel in universe.patching:
             if channel.address == int(value):
                 key = f"{key} : {channel.fixture.short_name}"
-                
         return key
 
     def _ip_value_changed(self, key, value):
         self.filter.initial_parameters[key] = value
-        
+
     def _fc_value_changed(self, key, value):
         self.filter.filter_configurations[key] = value

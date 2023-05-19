@@ -1,7 +1,7 @@
+"""Widget containing a nodeeditor for one scene."""
 import logging
 
 from PySide6.QtWidgets import QWidget, QGridLayout
-import PySide6
 
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 from pyqtgraph.flowchart.library import NodeLibrary
@@ -11,7 +11,8 @@ from model.board_configuration import Scene, Filter, UniverseFilter
 from . import Nodes
 
 class SceneTabWidget(QWidget):
-
+    """Widget containing a nodeeditor for one scene"""
+    # To handle loading from file.
     _type_to_node: dict[int, type] = {
         0: Nodes.Constants8BitNode.nodeName,
         1: Nodes.Constants16BitNode.nodeName,
@@ -66,34 +67,34 @@ class SceneTabWidget(QWidget):
 
         self._scene.flowchart.removeNode(self._scene.flowchart.outputNode)
         self._scene.flowchart.removeNode(self._scene.flowchart.inputNode)
-        
+
         self._scene.flowchart.sigChartChanged.connect(self._set_filter_on_node)
 
         self.setLayout(QGridLayout())
         self.layout().addWidget(self._scene.flowchart.widget().chartWidget)
 
-        self.addFilters(self._scene.filters)
+        self.add_filter(self._scene.filters)
 
     def _set_filter_on_node(self, flowchart, action, node):
         if not isinstance(node, Nodes.FilterNode):
-                logging.warn(f"Tried to add an unknown node: {node}")
-                return
-                # raise TypeError("Node type not known")
+            logging.warning("Tried to add an unknown node: %s", node)
+            return
+            # raise TypeError("Node type not known")
 
         if action == 'remove':
             try:
                 self._scene.filters.remove(node.filter)
-                logging.debug(f"Removed filter {node.filter.id}.")
+                logging.debug("Removed filter %s", node.filter.id)
             except ValueError:
-                logging.warn("Filter of removed node was not registered.")
+                logging.warning("Filter of removed node was not registered")
 
         elif action == 'add':
             if self._loading:
-               for filter in self._scene.filters:
-                   if filter.id == node.name():
-                       node.setup_filter(filter)
-                       node.graphicsItem().setPos(filter.pos[0], filter.pos[1])
-                       logging.debug(f"Added and set up filter {filter.id}")
+                for filter in self._scene.filters:
+                    if filter.id == node.name():
+                        node.setup_filter(filter)
+                        node.graphicsItem().setPos(filter.pos[0], filter.pos[1])
+                        logging.debug("Added and set up filter %s", filter.id)
 
             elif node.filter not in self._scene.filters:
                 node.update_filter_pos()
@@ -102,20 +103,32 @@ class SceneTabWidget(QWidget):
                     node.filter.board_configuration = self._scene.board_configuration
 
 
-    def addFilter(self, filter: Filter):
+    def add_filter(self, filter: Filter):
+        """Add a single filter from outside the nodeeditor.
+        
+        Args:
+            filter: The filter for which a node should be created.
+        """
         self._scene.flowchart.createNode(self._type_to_node[filter.type], name=filter.id)
 
-    def addFilters(self, filters: list[Filter]):
+    def add_filter(self, filters: list[Filter]):
+        """Handle loading an entire scene.
+        
+        Args:
+            filters: The filters of the scene to be added.
+        """
+        # Set flag for _set_filter_on_node()
         self._loading = True
         for filter in filters:
-            self.addFilter(filter)
+            self.add_filter(filter)
         self._loading = False
-        
+
+        # Create connections inside nodeeditor
         for name, node in self._scene.flowchart.nodes().items():
             if not isinstance(node, Nodes.FilterNode):
-                logging.warn(f"Trying to connect non-FilterNode {name}")
+                logging.warning("Trying to connect non-FilterNode %s", name)
                 continue
-            
+
             for input, output in node.filter.channel_links.items():
                 if output == "":
                     continue
@@ -123,20 +136,20 @@ class SceneTabWidget(QWidget):
                 remote_term = output.split(':')[1]
                 remote_node = self._scene.flowchart.nodes()[remote_name]
                 if not isinstance(remote_node, Nodes.FilterNode):
-                    logging.warn(f"Trying to connect node {name} to non-FilterNode {remote_name}")
+                    logging.warning("Trying to connect node %s to non-FilterNode %s", name, remote_name)
                 remote_term = remote_node.outputs()[remote_term]
                 local_term = node.inputs()[input]
                 if not isinstance(remote_term, Terminal) or not isinstance(local_term, Terminal):
                     logging.critical("Fetched non-terminal object while trying to connect terminals")
                     continue
                 self._scene.flowchart.connectTerminals(local_term, remote_term)
-                
-        
 
     @property
     def scene(self) -> Scene:
+        """The scene of the tab"""
         return self._scene
 
     @property
     def flowchart(self) -> Flowchart:
+        """The flowchart of the scene"""
         return self._scene.flowchart

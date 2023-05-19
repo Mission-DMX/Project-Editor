@@ -177,7 +177,7 @@ def _create_universe_element(universe: Universe, parent: ET.Element) -> ET.Eleme
     </universe>
     """
     return ET.SubElement(parent, "universe", attrib={
-        "id": str(universe.universe_proto.id),
+        "id": str(universe.id),
         "name": str(universe.name),
         "description": str(universe.description)
     })

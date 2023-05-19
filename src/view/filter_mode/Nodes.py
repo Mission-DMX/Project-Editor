@@ -8,18 +8,25 @@ from model.board_configuration import BoardConfiguration, Filter, UniverseFilter
 from .NodeGraphicsItems import FilterSettingsItem
 
 class FilterNode(Node):
-    """Basic filter node."""
+    """Basic filter node.
+    
+    Attributes:
+        filter: The filter the node represents
+    """
 
     def __init__(self, type: int, name: str, terminals: dict[str, dict[str, str]] = None, allowAddInput=False, allowAddOutput=False, allowRemove=True):
         super().__init__(name, terminals, allowAddInput, allowAddOutput, allowRemove)
         self._filter = None
+        # Dict with entries (channel, DataType)
         self._in_value_types: dict[str, DataType] = {}
         self._out_value_types: dict[str, DataType] = {}
         
+        # Handle special case of universe filter
         if type == 11:
             self._filter = UniverseFilter(id=name)
         else:
             self._filter = Filter(id=name, type=type)
+            
         self.update_filter_pos()
         self.setup_filter()
 
@@ -29,13 +36,18 @@ class FilterNode(Node):
         FilterNode.filter will be set to filter.
         FilterNode.filter.channel_links will be reset.
         """
+        # Need to be seperate from __init__ to handle creation during loading from file.
+        # When loading from file, first the node is created. This triggers a signal inside pyqtgraph which is monitored in SceneTabWidget.
+        # When signal is triggered, setup_filter() is called.
+        # setup_filter() only gets passed a filter during loading from file. When created through nodeeditor, no filter is passed.
+        
         if filter is not None:
             if filter.type != self._filter.type:
                 logging.critical(f"Tried to override a filter with a filter of different type")
                 return
                 # raise ValueError("Filter type wrong")
             self._filter = filter
-         
+        
         else:
             for key, _ in self.inputs().items():
                 self.filter.channel_links[key] = ""
