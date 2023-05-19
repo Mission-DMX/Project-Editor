@@ -11,6 +11,8 @@ from view.main_window import MainWindow
 
 if __name__ == "__main__":
     logging.basicConfig(encoding='utf-8', level=logging.INFO)
+    from cli.remote_control_port import RemoteCLIServer
+    cli_server = RemoteCLIServer()
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
     screen_width = app.primaryScreen().size().width()
@@ -18,4 +20,6 @@ if __name__ == "__main__":
     widget = MainWindow()
     widget.showMaximized()
 
-    sys.exit(app.exec())
+    return_code = app.exec()
+    cli_server.stop()
+    sys.exit(return_code)

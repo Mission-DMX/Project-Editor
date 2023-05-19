@@ -1,11 +1,13 @@
 # coding=utf-8
 """Module to handle connection with real-time software Fish."""
 import logging
+import queue
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtNetwork
 
+import proto.Console_pb2
 import proto.DirectMode_pb2
 import proto.FilterMode_pb2
 import proto.MessageTypes_pb2
@@ -17,6 +19,7 @@ from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
 if TYPE_CHECKING:
+    from model.control_desk import FaderBank
     from view.main_window import MainWindow
 
 
@@ -42,6 +45,7 @@ class NetworkManager(QtCore.QObject):
         self._socket.readyRead.connect(self._on_ready_read)
         self._broadcaster.send_universe.connect(lambda patching_universe: self.generate_universe(patching_universe))
         self._broadcaster.send_universe_value.connect(lambda send_universe: self.send_universe(send_universe))
+        self._message_queue = queue.Queue()
 
     @property
     def is_running(self) -> bool:
@@ -89,11 +93,18 @@ class NetworkManager(QtCore.QObject):
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """send message in correct format to fish"""
-        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            logging.debug(f"send Message to server {msg}")
-            self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
-        else:
-            logging.error("not Connected with fish server")
+        self._message_queue.put(tuple([msg, msg_type]))
+        while not self._message_queue.empty():
+            msg, msg_type = self._message_queue.get()
+            logging.debug(f"message to send: {msg}")
+            if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+                logging.debug(f"send Message to server {msg}")
+                self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
+            else:
+                logging.error("not Connected with fish server")
+
+    def _enqueue_message(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
+        self._message_queue.put(tuple([msg, msg_type]))
 
     def _on_ready_read(self) -> None:
         """Processes incoming data."""
@@ -164,6 +175,35 @@ class NetworkManager(QtCore.QObject):
     def enter_scene(self, scene_id: int) -> None:
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
+
+    def send_fader_bank_set_delete_message(self, fader_bank_id: str):
+        """send message to delete a bank set to fish"""
+        delete_msg = proto.Console_pb2.remove_fader_bank_set(bank_id=fader_bank_id)
+        self._enqueue_message(delete_msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_REMOVE_FADER_BANK_SET)
+
+    def send_add_fader_bank_set_message(self, bank_id: str, active_bank_index: int, fader_banks: list["FaderBank"]):
+        """This method accumulates the content of a bank set and schedules the required messages for an update."""
+        add_set_msg = proto.Console_pb2.add_fader_bank_set(bank_id=bank_id, default_active_fader_bank=active_bank_index)
+        for bank in fader_banks:
+            bank_definition = bank.generate_bank_message()
+            add_set_msg.banks.extend([bank_definition])
+        self._enqueue_message(add_set_msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ADD_FADER_BANK_SET)
+        for bank in fader_banks:
+            bank._pushed_to_device = True
+            for col in bank.columns:
+                col._pushed_to_device = True
+
+    def send_update_column_message(self, msg: proto.Console_pb2.fader_column):
+        """send message to update a column to fish"""
+        if not self.is_running:
+            return
+        self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN)
+
+    def send_desk_update_message(self, msg: proto.Console_pb2.desk_update):
+        """send message to update a desk to fish"""
+        if not self.is_running:
+            return
+        self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
 
 
 def on_error(error) -> None:
