@@ -6,7 +6,7 @@ import sys
 
 from PySide6 import QtWidgets
 
-from src.Style import Style
+from Style import Style
 from view.main_window import MainWindow
 
 if __name__ == "__main__":
