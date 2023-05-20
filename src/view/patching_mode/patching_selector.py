@@ -9,7 +9,7 @@ from PySide6 import QtWidgets, QtGui
 import proto
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
-from ofl.patching_dialog import PatchingDialog
+from view.dialogs.patching_dialog import PatchingDialog
 from view.patching_mode.patch_plan_widget import PatchPlanWidget
 
 if TYPE_CHECKING:
