@@ -42,7 +42,7 @@ class Filter:
     """
     def __init__(self, filter_id: str, filter_type: int, pos: tuple[float, float] = (0.0, 0.0)) -> None:
         self.filter_id = filter_id
-        self.filter_type = filter_type
+        self.filter_type = int(filter_type)
         self.pos: tuple[float, float] = pos
         self.channel_links: dict[str, str] = {}
         self.initial_parameters: dict[str, str] = {}

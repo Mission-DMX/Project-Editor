@@ -30,7 +30,7 @@ class NodeEditorWidget(QTabWidget):
 
         self._register_constants_nodes()
         self._register_debug_nodes()
-        self._register_constants_nodes()
+        self._register_adapters_nodes()
         self._register_time_nodes()
         self._register_fader_nodes()
 

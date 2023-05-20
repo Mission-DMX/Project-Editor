@@ -1,3 +1,4 @@
+# coding=utf-8
 """Varint encoder/decoder
 varints are a common encoding for variable length integer data, used in
 libraries such as sqlite, protobuf, v8, and more.
@@ -6,17 +7,16 @@ over and over again.
 from : https://github.com/fmoo/python-varint/blob/master/varint.py
 """
 
+import sys
 # byte-oriented StringIO was moved to io.BytesIO in py3k
 from io import BytesIO
 
-import sys
-
 if sys.version > '3':
-    def _byte(b):
-        return bytes((b,))
+    def _byte(byte):
+        return bytes((byte,))
 else:
-    def _byte(b):
-        return chr(b)
+    def _byte(byte):
+        return chr(byte)
 
 
 def encode(number):
@@ -41,14 +41,14 @@ def decode_stream(stream):
         i = _read_one(stream)
         result |= (i & 0x7f) << shift
         shift += 7
-        if not (i & 0x80):
+        if not i & 0x80:
             break
 
     return result
 
 
 def decode_bytes(buf):
-    """Read a varint from from `buf` bytes"""
+    """Read a varint from `buf` bytes"""
     return decode_stream(BytesIO(buf))
 
 
@@ -56,7 +56,7 @@ def _read_one(stream):
     """Read a byte from the file (as an integer)
     raises EOFError if the stream ends while reading bytes.
     """
-    c = stream.read(1)
-    if c == b'':
+    bytes_ = stream.read(1)
+    if bytes_ == b'':
         raise EOFError("Unexpected EOF while reading bytes")
-    return ord(c)
+    return ord(bytes_)

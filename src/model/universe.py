@@ -10,13 +10,13 @@ class Universe:
     """DMX universe with 512 channels"""
 
     def __init__(self, patching_universe: PatchingUniverse):
-        self._patchingUniverse: PatchingUniverse = patching_universe
+        self._patching_universe: PatchingUniverse = patching_universe
         self._channels: list[Channel] = [Channel(channel_address) for channel_address in range(512)]
 
     @property
     def universe_proto(self) -> proto.UniverseControl_pb2.Universe:
         """property oy universeProto"""
-        return self._patchingUniverse.universe_proto
+        return self._patching_universe.universe_proto
 
     @property
     def channels(self) -> list[Channel]:
@@ -26,12 +26,12 @@ class Universe:
     @property
     def patching(self) -> list[PatchingChannel]:
         """List of all 512 patching_mode channels belonging to the Universe"""
-        return self._patchingUniverse.patching
+        return self._patching_universe.patching
 
     @property
     def id(self) -> int:
         """Id of the universe"""
-        return self._patchingUniverse.universe_proto.id
+        return self._patching_universe.universe_proto.id
 
     @property
     def name(self) -> str:
@@ -62,5 +62,5 @@ class Universe:
         #if self._universe_proto.remote_location:
         #    return self._universe_proto.remote_location
         #if self._universe_proto.ftdi_dongle:
-        return self._universe_proto.ftdi_dongle
+        return self._patching_universe._universe_proto.ftdi_dongle
         

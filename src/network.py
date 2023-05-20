@@ -43,8 +43,8 @@ class NetworkManager(QtCore.QObject):
         self._socket.stateChanged.connect(self._on_state_changed)
         self._socket.errorOccurred.connect(on_error)
         self._socket.readyRead.connect(self._on_ready_read)
-        self._broadcaster.send_universe.connect(lambda patching_universe: self.generate_universe(patching_universe))
-        self._broadcaster.send_universe_value.connect(lambda send_universe: self.send_universe(send_universe))
+        self._broadcaster.send_universe.connect(self.generate_universe)
+        self._broadcaster.send_universe_value.connect(self.send_universe)
         self._message_queue = queue.Queue()
 
     @property
@@ -63,14 +63,14 @@ class NetworkManager(QtCore.QObject):
     def start(self) -> None:
         """establish connection with current fish socket"""
         if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            logging.info(f"connect local socket to Server: {self._server_name}")
+            logging.info("connect local socket to Server: %s", self._server_name)
             self._socket.connectToServer(self._server_name)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
                 self._is_running = True
 
     def disconnect(self) -> None:
         """disconnect from fish socket"""
-        logging.info(f"disconnect local socket from Server")
+        logging.info("disconnect local socket from Server")
         self._socket.disconnectFromServer()
         self._is_running = False
 
@@ -96,9 +96,9 @@ class NetworkManager(QtCore.QObject):
         self._message_queue.put(tuple([msg, msg_type]))
         while not self._message_queue.empty():
             msg, msg_type = self._message_queue.get()
-            logging.debug(f"message to send: {msg}")
+            logging.debug("message to send: %s", msg)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-                logging.debug(f"send Message to server {msg}")
+                logging.debug("send Message to server %s", msg)
                 self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
             else:
                 logging.error("not Connected with fish server")

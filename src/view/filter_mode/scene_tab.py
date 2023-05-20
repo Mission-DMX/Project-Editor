@@ -73,7 +73,7 @@ class SceneTabWidget(QWidget):
         self.setLayout(QGridLayout())
         self.layout().addWidget(self._scene.flowchart.widget().chartWidget)
 
-        self.add_filter(self._scene.filters)
+        self.add_filters(self._scene.filters)
 
     def _set_filter_on_node(self, _, action, node):
         if not isinstance(node, nodes.FilterNode):
