@@ -8,51 +8,51 @@ from pyqtgraph.flowchart.library import NodeLibrary
 
 from model.board_configuration import Scene, Filter, UniverseFilter
 
-from . import Nodes
+from . import nodes
 
 class SceneTabWidget(QWidget):
     """Widget containing a nodeeditor for one scene"""
     # To handle loading from file.
     _type_to_node: dict[int, type] = {
-        0: Nodes.Constants8BitNode.nodeName,
-        1: Nodes.Constants16BitNode.nodeName,
-        2: Nodes.ConstantsFloatNode.nodeName,
-        3: Nodes.ConstantsColorNode.nodeName,
-        4: Nodes.Debug8BitNode.nodeName,
-        5: Nodes.Debug16BitNode.nodeName,
-        6: Nodes.DebugFloatNode.nodeName,
-        7: Nodes.DebugColorNode.nodeName,
-        8: Nodes.Adapters16To8Bit.nodeName,
-        9: Nodes.Adapters16ToBool.nodeName,
-        10: Nodes.ArithmeticsMAC.nodeName,
-        11: Nodes.UniverseNode.nodeName,
-        12: Nodes.ArithmeticsFloatTo16Bit.nodeName,
-        13: Nodes.ArithmeticsFloatTo8Bit.nodeName,
-        14: Nodes.ArithmeticsRound.nodeName,
-        15: Nodes.ColorToRGBNode.nodeName,
-        16: Nodes.ColorToRGBWNode.nodeName,
-        17: Nodes.ColorToRGBWANode.nodeName,
-        18: Nodes.FloatToColorNode.nodeName,
-        19: Nodes.SineNode.nodeName,
-        20: Nodes.CosineNode.nodeName,
-        21: Nodes.TangentNode.nodeName,
-        22: Nodes.ArcsineNode.nodeName,
-        23: Nodes.ArccosineNode.nodeName,
-        24: Nodes.ArctangentNode.nodeName,
-        25: Nodes.SquareWaveNode.nodeName,
-        26: Nodes.TriangleWaveNode.nodeName,
-        27: Nodes.SawtoothWaveNode.nodeName,
-        28: Nodes.LogarithmNode.nodeName,
-        29: Nodes.ExponentialNode.nodeName,
-        30: Nodes.MinimumNode.nodeName,
-        31: Nodes.MaximumNode.nodeName,
-        32: Nodes.TimeNode.nodeName,
-        33: Nodes.SwitchOnDelay8BitNode.nodeName,
-        34: Nodes.SwitchOnDelay16BitNode.nodeName,
-        35: Nodes.SwitchOnDelayFloatNode.nodeName,
-        36: Nodes.SwitchOffDelay8BitNode.nodeName,
-        37: Nodes.SwitchOffDelay16BitNode.nodeName,
-        38: Nodes.SwitchOffDelayFloatNode.nodeName,
+        0: nodes.Constants8BitNode.nodeName,
+        1: nodes.Constants16BitNode.nodeName,
+        2: nodes.ConstantsFloatNode.nodeName,
+        3: nodes.ConstantsColorNode.nodeName,
+        4: nodes.Debug8BitNode.nodeName,
+        5: nodes.Debug16BitNode.nodeName,
+        6: nodes.DebugFloatNode.nodeName,
+        7: nodes.DebugColorNode.nodeName,
+        8: nodes.Adapters16To8Bit.nodeName,
+        9: nodes.Adapters16ToBool.nodeName,
+        10: nodes.ArithmeticsMAC.nodeName,
+        11: nodes.UniverseNode.nodeName,
+        12: nodes.ArithmeticsFloatTo16Bit.nodeName,
+        13: nodes.ArithmeticsFloatTo8Bit.nodeName,
+        14: nodes.ArithmeticsRound.nodeName,
+        15: nodes.ColorToRGBNode.nodeName,
+        16: nodes.ColorToRGBWNode.nodeName,
+        17: nodes.ColorToRGBWANode.nodeName,
+        18: nodes.FloatToColorNode.nodeName,
+        19: nodes.SineNode.nodeName,
+        20: nodes.CosineNode.nodeName,
+        21: nodes.TangentNode.nodeName,
+        22: nodes.ArcsineNode.nodeName,
+        23: nodes.ArccosineNode.nodeName,
+        24: nodes.ArctangentNode.nodeName,
+        25: nodes.SquareWaveNode.nodeName,
+        26: nodes.TriangleWaveNode.nodeName,
+        27: nodes.SawtoothWaveNode.nodeName,
+        28: nodes.LogarithmNode.nodeName,
+        29: nodes.ExponentialNode.nodeName,
+        30: nodes.MinimumNode.nodeName,
+        31: nodes.MaximumNode.nodeName,
+        32: nodes.TimeNode.nodeName,
+        33: nodes.SwitchOnDelay8BitNode.nodeName,
+        34: nodes.SwitchOnDelay16BitNode.nodeName,
+        35: nodes.SwitchOnDelayFloatNode.nodeName,
+        36: nodes.SwitchOffDelay8BitNode.nodeName,
+        37: nodes.SwitchOffDelay16BitNode.nodeName,
+        38: nodes.SwitchOffDelayFloatNode.nodeName,
     }
 
     def __init__(self, scene: Scene, node_library: NodeLibrary) -> None:
@@ -75,8 +75,8 @@ class SceneTabWidget(QWidget):
 
         self.add_filter(self._scene.filters)
 
-    def _set_filter_on_node(self, flowchart, action, node):
-        if not isinstance(node, Nodes.FilterNode):
+    def _set_filter_on_node(self, _, action, node):
+        if not isinstance(node, nodes.FilterNode):
             logging.warning("Tried to add an unknown node: %s", node)
             return
             # raise TypeError("Node type not known")
@@ -84,17 +84,17 @@ class SceneTabWidget(QWidget):
         if action == 'remove':
             try:
                 self._scene.filters.remove(node.filter)
-                logging.debug("Removed filter %s", node.filter.id)
+                logging.debug("Removed filter %s", node.filter.filter_id)
             except ValueError:
                 logging.warning("Filter of removed node was not registered")
 
         elif action == 'add':
             if self._loading:
                 for filter in self._scene.filters:
-                    if filter.id == node.name():
+                    if filter.filter_id == node.name():
                         node.setup_filter(filter)
                         node.graphicsItem().setPos(filter.pos[0], filter.pos[1])
-                        logging.debug("Added and set up filter %s", filter.id)
+                        logging.debug("Added and set up filter %s", filter.filter_id)
 
             elif node.filter not in self._scene.filters:
                 node.update_filter_pos()
@@ -109,9 +109,9 @@ class SceneTabWidget(QWidget):
         Args:
             filter: The filter for which a node should be created.
         """
-        self._scene.flowchart.createNode(self._type_to_node[filter.type], name=filter.id)
+        self._scene.flowchart.createNode(self._type_to_node[filter.filter_type], name=filter.filter_id)
 
-    def add_filter(self, filters: list[Filter]):
+    def add_filters(self, filters: list[Filter]):
         """Handle loading an entire scene.
         
         Args:
@@ -125,20 +125,20 @@ class SceneTabWidget(QWidget):
 
         # Create connections inside nodeeditor
         for name, node in self._scene.flowchart.nodes().items():
-            if not isinstance(node, Nodes.FilterNode):
+            if not isinstance(node, nodes.FilterNode):
                 logging.warning("Trying to connect non-FilterNode %s", name)
                 continue
 
-            for input, output in node.filter.channel_links.items():
-                if output == "":
+            for input_channel, output_channel in node.filter.channel_links.items():
+                if output_channel == "":
                     continue
-                remote_name = output.split(':')[0]
-                remote_term = output.split(':')[1]
+                remote_name = output_channel.split(':')[0]
+                remote_term = output_channel.split(':')[1]
                 remote_node = self._scene.flowchart.nodes()[remote_name]
-                if not isinstance(remote_node, Nodes.FilterNode):
+                if not isinstance(remote_node, nodes.FilterNode):
                     logging.warning("Trying to connect node %s to non-FilterNode %s", name, remote_name)
                 remote_term = remote_node.outputs()[remote_term]
-                local_term = node.inputs()[input]
+                local_term = node.inputs()[input_channel]
                 if not isinstance(remote_term, Terminal) or not isinstance(local_term, Terminal):
                     logging.critical("Fetched non-terminal object while trying to connect terminals")
                     continue

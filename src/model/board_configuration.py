@@ -2,8 +2,9 @@
 """Provides data structures with accessors and modifiers for DMX"""
 from dataclasses import dataclass, field
 from typing import Any
-from pyqtgraph.flowchart.Flowchart import Flowchart
 from enum import IntFlag, auto
+
+from pyqtgraph.flowchart.Flowchart import Flowchart
 
 from model.universe import Universe
 
@@ -21,11 +22,11 @@ class Device:
 
 class DataType(IntFlag):
     """Data types used by filter channels"""
-    DT_8Bit = auto()
-    DT_16Bit = auto()
-    DT_Double = auto()
-    DT_Color = auto()
-    DT_Bool = auto()
+    DT_8_BIT = auto()
+    DT_16_BIT = auto()
+    DT_DOUBLE = auto()
+    DT_COLOR = auto()
+    DT_BOOL = auto()
 
 # @dataclass
 class Filter:
@@ -39,9 +40,9 @@ class Filter:
         initial_parameters: Dict containing entries of format (parameter_name, parameter_value)
         filter_configuration: Dict containing entries of format (config_name, config_value)
     """
-    def __init__(self, id: str, type: int, pos: tuple[float, float] = (0.0, 0.0)) -> None:
-        self.id = id
-        self.type = type
+    def __init__(self, filter_id: str, filter_type: int, pos: tuple[float, float] = (0.0, 0.0)) -> None:
+        self.filter_id = filter_id
+        self.filter_type = filter_type
         self.pos: tuple[float, float] = pos
         self.channel_links: dict[str, str] = {}
         self.initial_parameters: dict[str, str] = {}
@@ -56,12 +57,12 @@ class UniverseFilter(Filter):
         board_configuration: Instance of the currently loaded board configuratuon.
         pos: Tuple of its position inside the editor of format (x, y)
     """
-    def __init__(self, id: str, board_configuration: Any = None, pos: tuple[float, float] = (0, 0)) -> None:
-        super().__init__(id, 11, pos)
-        
+    def __init__(self, filter_id: str, board_configuration: Any = None, pos: tuple[float, float] = (0, 0)) -> None:
+        super().__init__(filter_id, 11, pos)
+
         # Needed to show and configure universe properties
         self._board_configuration: BoardConfiguration = board_configuration
-        
+
     @property
     def board_configuration(self):
         """
@@ -71,7 +72,7 @@ class UniverseFilter(Filter):
         if self._board_configuration is None:
             raise AttributeError("You must add the board_configuration to a universe filter.")
         return self._board_configuration
-    
+
     @board_configuration.setter
     def board_configuration(self, board_configuration):
         """Sets the current board configuration this filter is part of"""
@@ -91,7 +92,7 @@ class Scene:
     """
     id: int
     human_readable_name: str
-    
+
     # Needed to add nodes when loading show files
     flowchart: Flowchart
     board_configuration: Any
