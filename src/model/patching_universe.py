@@ -7,11 +7,9 @@ from model.patching_channel import PatchingChannel
 class PatchingUniverse:
     """Universe for Patching"""
 
-    def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe,
-                 patching_channels: list[PatchingChannel] = None) -> None:
+    def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe) -> None:
         self._universe_proto: proto.UniverseControl_pb2 = universe_proto
-        if patching_channels is None:
-            patching_channels = [PatchingChannel(channel_address, "#FFFFFF") for channel_address in range(512)]
+        patching_channels = [PatchingChannel(channel_address, "#FFFFFF") for channel_address in range(512)]
         self._patching: list[PatchingChannel] = patching_channels
 
     @property
