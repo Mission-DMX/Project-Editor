@@ -54,7 +54,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_menubar()
         self._setup_status_bar()
 
-        self._broadcaster.view_to_patch_menu.connect(self._to_widget(2))
+        self._broadcaster.view_to_patch_menu.connect(lambda *args: self._to_widget(2))
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -66,7 +66,6 @@ class MainWindow(QtWidgets.QMainWindow):
             case 2:
                 if self._widgets.currentIndex() != 2:
                     self._widgets.setCurrentIndex(2)
-                    self._broadcaster.view_to_patch_menu.emit()
                 else:
                     self._broadcaster.patch()
             case _:

@@ -186,7 +186,8 @@ class NetworkManager(QtCore.QObject):
     def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
         match msg.button:
             case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
-                self._broadcaster.view_to_patch_menu.emit()
+                if msg.new_state== proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.view_to_patch_menu.emit()
             case _:
                 pass
 
