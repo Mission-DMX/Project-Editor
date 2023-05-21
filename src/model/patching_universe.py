@@ -19,6 +19,10 @@ class PatchingUniverse:
         """property oy universeProto"""
         return self._universe_proto
 
+    @universe_proto.setter
+    def universe_proto(self, proto_: proto.UniverseControl_pb2.Universe) -> None:
+        self._universe_proto = proto_
+
     @property
     def patching(self) -> list[PatchingChannel]:
         """List of all 512 patching_mode channels belonging to the Universe"""

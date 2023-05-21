@@ -18,6 +18,14 @@ class Broadcaster(QtCore.QObject):
     def __init__(self):
         super().__init__()
         self.add_universe.connect(self._add_universe)
+        self.connection_state_updated.connect(self._connection_changed)
 
     def _add_universe(self, universe: PatchingUniverse):
         self.patching_universes.append(universe)
+        self.send_universe.emit(universe)
+
+    def _connection_changed(self, connected):
+        """connection to fish is changed"""
+        if connected:
+            for universe in self.patching_universes:
+                self.send_universe.emit(universe)
