@@ -3,12 +3,12 @@
 
 from PySide6 import QtWidgets, QtGui
 
-from DMXModel import BoardConfiguration
 from network import NetworkManager
 from Style import Style
 from model.broadcaster import Broadcaster
+from model.board_configuration import BoardConfiguration
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
-from view.filter_mode.NodeEditor import NodeEditorWidget
+from view.filter_mode.node_editor import NodeEditorWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patching_mode.patching_selector import PatchingSelector
@@ -34,7 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
-        views: list[tuple[str, QtWidgets]] = [
+        views: list[tuple[str, QtWidgets.QWidget]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self)),
             ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self)),
             ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)),

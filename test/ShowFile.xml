@@ -1,0 +1,29 @@
+<bord_configuration xmlns="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" xsi:schemaLocation="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" show_name="Show" default_active_scene="0"
+    notes="">
+    <scene id="0" human_readable_name="s1">
+        <filter id="Dimmer" type="0" pos="-27.664353312302836,-41.019558359621456">
+            <initialParameters name="value" value="128" />
+        </filter>
+        <filter id="Universe.0" type="11" pos="138.08328075709778,-10.25488958990536">
+            <channellink input_channel_id="input_1" output_channel_id="Dimmer:value" />
+            <channellink input_channel_id="input_2" output_channel_id="ColorToRGB.0:r" />
+            <channellink input_channel_id="input_3" output_channel_id="ColorToRGB.0:g" />
+            <channellink input_channel_id="input_4" output_channel_id="ColorToRGB.0:b" />
+            <filterConfiguration name="universe" value="0" />
+            <filterConfiguration name="0" value="input_1" />
+            <filterConfiguration name="1" value="input_2" />
+            <filterConfiguration name="2" value="input_3" />
+            <filterConfiguration name="3" value="input_4" />
+        </filter>
+        <filter id="ColorToRGB.0" type="15" pos="-5.246687697160866,24.56403785488955">
+            <channellink input_channel_id="value" output_channel_id="Color:value" />
+        </filter>
+        <filter id="Color" type="3" pos="-132.83659305993692,30.764668769716074">
+            <initialParameters name="value" value="0,1,0" />
+        </filter>
+    </scene>
+    <universe id="0" name="Universe.0" description="TODO">
+        <ftdi_location vendor_id="1027" product_id="24577" device_name="" serial_identifier="" />
+    </universe>
+</bord_configuration>

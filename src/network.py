@@ -168,14 +168,46 @@ class NetworkManager(QtCore.QObject):
         return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
 
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
+        """
+        Sends show file as xml data to fish
+        Args:
+            xml: xml data to be sent
+            goto_default_scene: scene to be loaded
+        """
         msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'),
                                                   goto_default_scene=goto_default_scene)
-        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
     def enter_scene(self, scene_id: int) -> None:
+        """
+        Tells fish to load a specific scene
+        Args:
+            scene_id: The scene to be loaded
+        """
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
 
+    def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode):
+        """Changes fish's run mode
+
+        Args:
+            run_mode: The new mode
+        """
+        msg = proto.RealTimeControl_pb2.update_state(new_state=run_mode)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_STATE)
+
+    def switch_to_direct(self):
+        """Tells fish to go into direct mode"""
+        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT)
+
+    def switch_to_filter(self):
+        """Tells fish to go into show mode"""
+        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
+
+    def switch_to_stop(self):
+        """Tells fish to stop"""
+        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_STOP)
+        
     def send_fader_bank_set_delete_message(self, fader_bank_id: str):
         """send message to delete a bank set to fish"""
         delete_msg = proto.Console_pb2.remove_fader_bank_set(bank_id=fader_bank_id)
