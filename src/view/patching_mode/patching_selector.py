@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtWidgets, QtGui
 
-import proto
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from view.dialogs.patching_dialog import PatchingDialog
+from view.dialogs.universe_dialog import UniverseDialog
 from view.patching_mode.patch_plan_widget import PatchPlanWidget
 
 if TYPE_CHECKING:
@@ -22,7 +22,6 @@ class PatchingSelector(QtWidgets.QTabWidget):
     def __init__(self, broadcaster: Broadcaster, parent: "MainWindow"):
         super().__init__(parent=parent)
         self._broadcaster = broadcaster
-        self._broadcaster.connection_state_updated.connect(self._connection_changed)
         self._broadcaster.add_universe.connect(self._add_universe)
         self._patch_planes: list[PatchPlanWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
@@ -43,33 +42,36 @@ class PatchingSelector(QtWidgets.QTabWidget):
 
     def _generate_universe(self) -> None:
         """add a new Universe to universe Selector"""
-        # TODO add universe Dialog
-        universe = PatchingUniverse(proto.UniverseControl_pb2.Universe(
-            id=len(self._broadcaster.patching_universes) + 1,
-            remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
-                ip_address="10.0.15.1",
-                port=6454,
-                universe_on_device=len(self._broadcaster.patching_universes) + 1
-            )
-            # ftdi_dongle=proto.UniverseControl_pb2.Universe.USBConfig(
-            #    vendor_id=0x0403,
-            #    product_id=0x6001,
-            #    serial="",
-            #    device_name=""
-            # )
-        ), None)
-        self._broadcaster.add_universe.emit(universe)
+        dialog = UniverseDialog(len(self._broadcaster.patching_universes) + 1)
+        if dialog.exec():
+            universe = PatchingUniverse(dialog.output)
+            self._broadcaster.add_universe.emit(universe)
+
+    def contextMenuEvent(self, event):
+        """context menu"""
+        for index in range(self.tabBar().count() - 1):
+            if self.tabBar().tabRect(index).contains(event.pos()):
+                menu = QtWidgets.QMenu(self)
+
+                rename_universe = QtGui.QAction('rename Universe', self)
+                # delete_scene = QtGui.QAction('delete Scene', self)
+                rename_universe.triggered.connect(lambda: self._rename_universe(index))
+                # delete_scene.triggered.connect(lambda: self._remove_scene(index))
+                menu.addAction(rename_universe)
+                # menu.addAction(delete_scene)
+                menu.popup(QtGui.QCursor.pos())
+                break
+
+    def _rename_universe(self, index: int) -> None:
+        dialog = UniverseDialog(self._broadcaster.patching_universes[index].universe_proto)
+        if dialog.exec():
+            self._broadcaster.patching_universes[index].universe_proto = dialog.output
+            self._broadcaster.send_universe.emit(self._broadcaster.patching_universes[index])
 
     def _add_universe(self, universe: PatchingUniverse):
         patch_plan = PatchPlanWidget(universe, parent=self)
         self._patch_planes.append(patch_plan)
         self.insertTab(self.tabBar().count() - 1, patch_plan, str(universe.universe_proto.id))
-
-    def _connection_changed(self, connected):
-        """connection to fish is changed"""
-        if connected:
-            for universe in self._broadcaster.patching_universes:
-                self._broadcaster.send_universe.emit(universe)
 
     def _tab_clicked(self, scene_index: int) -> None:
         if scene_index == self.tabBar().count() - 1:
@@ -103,7 +105,7 @@ class PatchingSelector(QtWidgets.QTabWidget):
             for _ in range(number):
                 color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
                 for index in range(len(fixture.mode['channels'])):
-                    item = self._patching_universes[universe].patching[channel + index]
+                    item = self._broadcaster.patching_universes[universe].patching[channel + index]
                     item.fixture = fixture
                     item.fixture_channel = index
                     item.color = color
