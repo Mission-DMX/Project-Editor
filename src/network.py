@@ -109,7 +109,7 @@ class NetworkManager(QtCore.QObject):
                                                         new_state=proto.Console_pb2.ButtonState.BS_SET_LED_BLINKING)
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
-    def _send_view_patching(self):
+    def _send_view_not_patch_menu(self):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
                                                         new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
