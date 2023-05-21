@@ -52,8 +52,8 @@ class FilterNode(Node):
             for key, _ in self.inputs().items():
                 self.filter.channel_links[key] = ""
 
-        if len(self._filter.filter_configurations) > 0 or len(self._filter.initial_parameters) > 0:
-            self.fsi = FilterSettingsItem(self._filter, self.graphicsItem())
+        #if len(self._filter.filter_configurations) > 0 or len(self._filter.initial_parameters) > 0:
+        self.fsi = FilterSettingsItem(self._filter, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
