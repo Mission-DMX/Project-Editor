@@ -1,14 +1,14 @@
+# coding=utf-8
 """Widget containing a nodeeditor for one scene."""
 import logging
 
 from PySide6.QtWidgets import QWidget, QGridLayout
-
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 from pyqtgraph.flowchart.library import NodeLibrary
 
 from model.board_configuration import Scene, Filter, UniverseFilter
-
 from . import nodes
+
 
 class SceneTabWidget(QWidget):
     """Widget containing a nodeeditor for one scene"""
@@ -36,9 +36,9 @@ class SceneTabWidget(QWidget):
         19: nodes.SineNode.nodeName,
         20: nodes.CosineNode.nodeName,
         21: nodes.TangentNode.nodeName,
-        22: nodes.ArcsineNode.nodeName,
-        23: nodes.ArccosineNode.nodeName,
-        24: nodes.ArctangentNode.nodeName,
+        22: nodes.ArcSinNode.nodeName,
+        23: nodes.ArcCosNode.nodeName,
+        24: nodes.ArcTanNode.nodeName,
         25: nodes.SquareWaveNode.nodeName,
         26: nodes.TriangleWaveNode.nodeName,
         27: nodes.SawtoothWaveNode.nodeName,
@@ -90,11 +90,11 @@ class SceneTabWidget(QWidget):
 
         elif action == 'add':
             if self._loading:
-                for filter in self._scene.filters:
-                    if filter.filter_id == node.name():
-                        node.setup_filter(filter)
-                        node.graphicsItem().setPos(filter.pos[0], filter.pos[1])
-                        logging.debug("Added and set up filter %s", filter.filter_id)
+                for filter_ in self._scene.filters:
+                    if filter_.filter_id == node.name():
+                        node.setup_filter(filter_)
+                        node.graphicsItem().setPos(filter_.pos[0], filter_.pos[1])
+                        logging.debug("Added and set up filter %s", filter_.filter_id)
 
             elif node.filter not in self._scene.filters:
                 node.update_filter_pos()
@@ -102,14 +102,13 @@ class SceneTabWidget(QWidget):
                 if isinstance(node.filter, UniverseFilter):
                     node.filter.board_configuration = self._scene.board_configuration
 
-
-    def add_filter(self, filter: Filter):
+    def add_filter(self, filter_: Filter):
         """Add a single filter from outside the nodeeditor.
         
         Args:
-            filter: The filter for which a node should be created.
+            filter_: The filter for which a node should be created.
         """
-        self._scene.flowchart.createNode(self._type_to_node[filter.filter_type], name=filter.filter_id)
+        self._scene.flowchart.createNode(self._type_to_node[filter_.filter_type], name=filter_.filter_id)
 
     def add_filters(self, filters: list[Filter]):
         """Handle loading an entire scene.
@@ -119,8 +118,8 @@ class SceneTabWidget(QWidget):
         """
         # Set flag for _set_filter_on_node()
         self._loading = True
-        for filter in filters:
-            self.add_filter(filter)
+        for filter_ in filters:
+            self.add_filter(filter_)
         self._loading = False
 
         # Create connections inside nodeeditor

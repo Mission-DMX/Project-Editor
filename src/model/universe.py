@@ -12,6 +12,8 @@ class Universe:
     def __init__(self, patching_universe: PatchingUniverse):
         self._patching_universe: PatchingUniverse = patching_universe
         self._channels: list[Channel] = [Channel(channel_address) for channel_address in range(512)]
+        self._name = f"Universe {self.universe_proto.id}"
+        self._description = self.name
 
     @property
     def universe_proto(self) -> proto.UniverseControl_pb2.Universe:
@@ -30,16 +32,14 @@ class Universe:
 
     @property
     def id(self) -> int:
-        """Id of the universe"""
+        """id of the universe"""
         return self._patching_universe.universe_proto.id
 
     @property
     def name(self) -> str:
         """Human-readable name for the universe."""
-        if self._name is None:
-            self._name = f"Universe {self.universe_proto.id}"
         return self._name
-    
+
     @name.setter
     def name(self, name: str):
         self._name = name
@@ -47,20 +47,19 @@ class Universe:
     @property
     def description(self) -> str:
         """Human-readable description for the universe."""
-        if self._description is None:
-            self._description = self.name()
         return self._description
-    
+
     @description.setter
     def description(self, description: str):
         self._description = description
 
     @property
-    def location(self) -> int | proto.UniverseControl_pb2.Universe.ArtNet | proto.UniverseControl_pb2.Universe.USBConfig:
-        #if self._universe_proto.physical_location:
-        #    return self._universe_proto.physical_location
-        #if self._universe_proto.remote_location:
-        #    return self._universe_proto.remote_location
-        #if self._universe_proto.ftdi_dongle:
-        return self._patching_universe._universe_proto.ftdi_dongle
-        
+    def location(
+            self) -> int | proto.UniverseControl_pb2.Universe.ArtNet | proto.UniverseControl_pb2.Universe.USBConfig:
+        """network location"""
+        if self._patching_universe.universe_proto.remote_location.ip_address != "":
+            return self._patching_universe.universe_proto.remote_location
+        if self._patching_universe.universe_proto.ftdi_dongle.vendor_id != "":
+            return self._patching_universe.universe_proto.ftdi_dongle
+
+        return self._patching_universe.universe_proto.physical_location

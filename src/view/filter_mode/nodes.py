@@ -1,22 +1,19 @@
+# coding=utf-8
 """Contains all possible filter node types"""
 import logging
 
 from PySide6.QtGui import QFont
-
 from pyqtgraph.flowchart.Node import Node, Terminal
 
 from model.board_configuration import Filter, UniverseFilter, DataType
 from .node_graphics_item import FilterSettingsItem
 
-class FilterNode(Node):
-    """Basic filter node.
-    
-    Attributes:
-        filter: The filter the node represents
-    """
 
-    def __init__(self, filter_type: int, name: str, terminals: dict[str, dict[str, str]] = None, allowAddInput=False):
-        super().__init__(name, terminals, allowAddInput)
+class FilterNode(Node):
+    """Basic filter node."""
+
+    def __init__(self, filter_type: int, name: str, terminals: dict[str, dict[str, str]] = None, allow_add_input=False):
+        super().__init__(name, terminals, allow_add_input)
         self._filter = None
         # Dict with entries (channel, DataType)
         self._in_value_types: dict[str, DataType] = {}
@@ -31,26 +28,26 @@ class FilterNode(Node):
         self.update_filter_pos()
         self.setup_filter()
 
-    def setup_filter(self, filter: Filter = None):
+    def setup_filter(self, filter_: Filter = None):
         """Sets the filter. Overrides existing filters.
 
         FilterNode.filter will be set to filter.
         FilterNode.filter.channel_links will be reset.
         """
-        # Need to be seperate from __init__ to handle creation during loading from file.
+        # Need to be separate from __init__ to handle creation during loading from file.
         # When loading from file, first the node is created.
         # This triggers a signal inside pyqtgraph which is monitored in SceneTabWidget.
         # When signal is triggered, setup_filter() is called.
         # setup_filter() only gets passed a filter during loading from file.
         # When created through nodeeditor, no filter is passed.
-        if filter is not None:
-            if filter.filter_type != self._filter.filter_type:
+        if filter_ is not None:
+            if filter_.filter_type != self._filter.filter_type:
                 logging.critical(
                     "Tried to override a filter with a filter of different type (%s vs %s)",
-                    filter.filter_type, self._filter.filter_type)
+                    filter_.filter_type, self._filter.filter_type)
                 return
                 # raise ValueError("Filter type wrong")
-            self._filter = filter
+            self._filter = filter_
         else:
             for key, _ in self.inputs().items():
                 self.filter.channel_links[key] = ""
@@ -117,11 +114,11 @@ class FilterNode(Node):
     def update_filter_pos(self):
         """Saves nodes position inside the ui to registered filter."""
         pos = self.graphicsItem().pos()
-        self._filter.pos = pos = (pos.x(), pos.y())
+        self._filter.pos = (pos.x(), pos.y())
 
     @property
     def filter(self) -> Filter:
-        """The corrosponding filter"""
+        """The corresponding filter"""
         return self._filter
 
     @property
@@ -298,7 +295,7 @@ class UniverseNode(FilterNode):
     def __init__(self, name):
         super().__init__(filter_type=11, name=name, terminals={
             "input_1": {'io': 'in'}
-        }, allowAddInput=True)
+        }, allow_add_input=True)
 
         self.filter.filter_configurations["universe"] = self.name()[9:]
         self.filter.filter_configurations["input_1"] = "0"
@@ -318,10 +315,10 @@ class UniverseNode(FilterNode):
             del self.filter.filter_configurations[term.name()]
         return super().removeTerminal(term)
 
-    def setup_filter(self, filter: Filter = None):
-        super().setup_filter(filter)
-        if filter is not None:
-            for _ in range(len(filter.channel_links) - 1):
+    def setup_filter(self, filter_: Filter = None):
+        super().setup_filter(filter_)
+        if filter_ is not None:
+            for _ in range(len(filter_.channel_links) - 1):
                 self.addInput()
 
 
@@ -401,7 +398,7 @@ class ColorToRGBWNode(FilterNode):
 
 
 class ColorToRGBWANode(FilterNode):
-    """Filter to convert a color value to a rgbwa value."""
+    """Filter to convert a color value to a RGBWA value."""
     nodeName = 'ColorToRGBWA'
 
     def __init__(self, name):
@@ -507,11 +504,11 @@ class TangentNode(FilterNode):
         self._out_value_types["value"] = DataType.DT_DOUBLE
 
 
-class ArcsineNode(FilterNode):
-    """Filter to calculate arcsine value.
-    value = arcsin(value_in)
+class ArcSinNode(FilterNode):
+    """Filter to calculate arcSine value.
+    value = arcSin(value_in)
     """
-    nodeName = 'Arcsine'
+    nodeName = 'ArcSin'
 
     def __init__(self, name):
         super().__init__(filter_type=22, name=name, terminals={
@@ -522,11 +519,11 @@ class ArcsineNode(FilterNode):
         self._out_value_types["value"] = DataType.DT_DOUBLE
 
 
-class ArccosineNode(FilterNode):
-    """Filter to calculate arccosine value.
-    value = arccos(value_in)
+class ArcCosNode(FilterNode):
+    """Filter to calculate arcCosine value.
+    value = arcCos(value_in)
     """
-    nodeName = 'Arccosine'
+    nodeName = 'ArcCos'
 
     def __init__(self, name):
         super().__init__(filter_type=23, name=name, terminals={
@@ -537,11 +534,11 @@ class ArccosineNode(FilterNode):
         self._out_value_types["value"] = DataType.DT_DOUBLE
 
 
-class ArctangentNode(FilterNode):
-    """Filter to calculate arctangent value.
-    value = arctan(value_in)
+class ArcTanNode(FilterNode):
+    """Filter to calculate arcTangent value.
+    value = arcTan(value_in)
     """
-    nodeName = 'Arctangent'
+    nodeName = 'ArcTangent'
 
     def __init__(self, name):
         super().__init__(filter_type=24, name=name, terminals={
@@ -576,8 +573,8 @@ class SquareWaveNode(FilterNode):
 
 
 class TriangleWaveNode(FilterNode):
-    """Filter to generate a trinagle wave."""
-    nodeName = 'TriangelWave'
+    """Filter to generate a triangle wave."""
+    nodeName = 'TriangleWave'
 
     def __init__(self, name):
         super().__init__(filter_type=26, name=name, terminals={
@@ -635,7 +632,7 @@ class LogarithmNode(FilterNode):
 
 
 class ExponentialNode(FilterNode):
-    """Filter to calculate an exponantial value.
+    """Filter to calculate an exponential value.
     value = exp(value_in)
     """
     nodeName = 'Exponential'
@@ -793,8 +790,9 @@ class SwitchOffDelayFloatNode(FilterNode):
         self._in_value_types["time"] = DataType.DT_DOUBLE
         self._out_value_types["value"] = DataType.DT_8_BIT
 
+
 ###################################################################################
-# Filter to handle pult inputs
+# Filter to handle hardware inputs
 ###################################################################################
 
 

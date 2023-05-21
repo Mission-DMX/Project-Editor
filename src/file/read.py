@@ -1,11 +1,11 @@
+# coding=utf-8
 """Handles reading a xml document"""
 import logging
-
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree
 
 from pyqtgraph.flowchart import Flowchart
 
-import proto.UniverseControl_pb2 as proto
+import proto.UniverseControl_pb2 as Proto
 from model.board_configuration import BoardConfiguration, Scene, Filter, Universe, UniverseFilter
 from model.patching_universe import PatchingUniverse
 
@@ -21,7 +21,7 @@ def read_document(file_name: str) -> BoardConfiguration:
     """
     board_configuration = BoardConfiguration()
 
-    tree = ET.parse(file_name)
+    tree = ElementTree.parse(file_name)
     root = tree.getroot()
 
     prefix = ""
@@ -30,7 +30,7 @@ def read_document(file_name: str) -> BoardConfiguration:
         match key:
             case "show_name":
                 board_configuration.show_name = value
-            case  "default_active_scene":
+            case "default_active_scene":
                 board_configuration.default_active_scene = value
             case "notes":
                 board_configuration.notes = value
@@ -50,7 +50,7 @@ def read_document(file_name: str) -> BoardConfiguration:
             case "universe":
                 _parse_universe(child, board_configuration)
             case "uihint":
-                _parse_uihint(child, board_configuration)
+                _parse_ui_hint(child, board_configuration)
             case _:
                 logging.warning("Show %s contains unknown element: %s",
                                 board_configuration.show_name, child.tag)
@@ -58,13 +58,13 @@ def read_document(file_name: str) -> BoardConfiguration:
     return board_configuration
 
 
-def _clean_tags(element: ET.Element, prefix: str):
+def _clean_tags(element: ElementTree.Element, prefix: str):
     for child in element:
         child.tag = child.tag.replace(prefix, '')
         _clean_tags(child, prefix)
 
 
-def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfiguration):
+def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardConfiguration):
     human_readable_name = ""
     scene_id = 0
     for key, value in scene_element.attrib.items():
@@ -96,7 +96,7 @@ def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfigurat
     board_configuration.scenes.append(scene)
 
 
-def _parse_filter(filter_element: ET.Element, scene: Scene):
+def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
     filter_id = ""
     filter_type = 0
     pos = (0.0, 0.0)
@@ -113,28 +113,26 @@ def _parse_filter(filter_element: ET.Element, scene: Scene):
                     "Found attribute %s=%s while parsing filter for scene %s",
                     key, value, scene.human_readable_name)
 
-    filter = None
-
     if filter_type == 11:
-        filter = UniverseFilter(filter_id, scene.board_configuration, pos)
+        filter_ = UniverseFilter(filter_id, scene.board_configuration, pos)
     else:
-        filter = Filter(filter_id, filter_type, pos=pos)
+        filter_ = Filter(filter_id, filter_type, pos=pos)
 
     for child in filter_element:
         match child.tag:
             case "channellink":
-                _parse_channellink(child, filter)
+                _parse_channel_link(child, filter_)
             case "initialParameters":
-                _parse_inital_parameters(child, filter)
+                _parse_initial_parameters(child, filter_)
             case "filterConfiguration":
-                _parse_filter_configuration(child, filter)
+                _parse_filter_configuration(child, filter_)
             case _:
                 logging.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
-    scene.filters.append(filter)
+    scene.filters.append(filter_)
 
 
-def _parse_channellink(initial_parameters_element: ET.Element, filter: Filter):
+def _parse_channel_link(initial_parameters_element: ElementTree.Element, filter_: Filter):
     cl_key = ""
     cl_value = ""
     for key, value in initial_parameters_element.attrib.items():
@@ -146,10 +144,10 @@ def _parse_channellink(initial_parameters_element: ET.Element, filter: Filter):
             case _:
                 logging.warning("Found attribute %s=%s while parsing key-value-pair", key, value)
 
-    filter.channel_links[cl_key] = cl_value
+    filter_.channel_links[cl_key] = cl_value
 
 
-def _parse_inital_parameters(initial_parameters_element: ET.Element, filter: Filter):
+def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, filter_: Filter):
     ip_key = ""
     ip_value = ""
     for key, value in initial_parameters_element.attrib.items():
@@ -159,13 +157,13 @@ def _parse_inital_parameters(initial_parameters_element: ET.Element, filter: Fil
             case "value":
                 ip_value = value
             case _:
-                logging.warning("Found attribute %s=%s while parsing initial paramter for filter %s",
-                                key, value, filter.filter_id)
+                logging.warning("Found attribute %s=%s while parsing initial parameter for filter %s",
+                                key, value, filter_.filter_id)
 
-    filter.initial_parameters[ip_key] = ip_value
+    filter_.initial_parameters[ip_key] = ip_value
 
 
-def _parse_filter_configuration(filter_configuration_element: ET.Element, filter: Filter):
+def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter):
     fc_key = ""
     fc_value = ""
     for key, value in filter_configuration_element.attrib.items():
@@ -176,19 +174,19 @@ def _parse_filter_configuration(filter_configuration_element: ET.Element, filter
                 fc_value = value
             case _:
                 logging.warning("Found attribute %s=%s while parsing filter configuration for filter %s",
-                                key, value, filter.filter_id)
+                                key, value, filter_.filter_id)
 
-    if filter.filter_type == 11 and fc_key != "universe":
-        filter.filter_configurations[fc_value] = fc_key
+    if filter_.filter_type == 11 and fc_key != "universe":
+        filter_.filter_configurations[fc_value] = fc_key
     else:
-        filter.filter_configurations[fc_key] = fc_value
+        filter_.filter_configurations[fc_key] = fc_value
 
 
-def _parse_device(device_element: ET.Element, board_configuration: BoardConfiguration):
+def _parse_device(device_element: ElementTree.Element, board_configuration: BoardConfiguration):
     """TODO Implement"""
 
 
-def _parse_universe(universe_element: ET.Element, board_configuration: BoardConfiguration):
+def _parse_universe(universe_element: ElementTree.Element, board_configuration: BoardConfiguration):
     universe_id = None
     name = ""
     description = ""
@@ -207,9 +205,9 @@ def _parse_universe(universe_element: ET.Element, board_configuration: BoardConf
     if universe_id is None:
         logging.error("Could not parse universe element, id attribute is missing")
 
-    physical: int = None
-    artnet: proto.Universe.ArtNet = None
-    ftdi: proto.Universe.ArtNet = None
+    physical: int | None = None
+    artnet: Proto.Universe.ArtNet | None = None
+    ftdi: Proto.Universe.ArtNet | None = None
 
     for child in universe_element:
         match child.tag:
@@ -226,8 +224,7 @@ def _parse_universe(universe_element: ET.Element, board_configuration: BoardConf
     if physical is None and artnet is None and ftdi is None:
         logging.warning("Could not parse any location for universe %s", universe_id)
 
-
-    universe_proto = proto.Universe(id=universe_id,
+    universe_proto = Proto.Universe(id=universe_id,
                                     physical_location=physical,
                                     remote_location=artnet,
                                     ftdi_dongle=ftdi)
@@ -239,11 +236,11 @@ def _parse_universe(universe_element: ET.Element, board_configuration: BoardConf
     board_configuration.universes.append(universe)
 
 
-def _parse_physical_location(location_element: ET.Element) -> int:
+def _parse_physical_location(location_element: ElementTree.Element) -> int:
     return int(location_element.text)
 
 
-def _parse_artnet_location(location_element: ET.Element) -> proto.Universe.ArtNet:
+def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Universe.ArtNet:
     device_universe_id = 0
     ip_address = ""
     udp_port = 0
@@ -258,10 +255,10 @@ def _parse_artnet_location(location_element: ET.Element) -> proto.Universe.ArtNe
             case _:
                 logging.warning("Found attribute %s=%s while parsing artnet location", key, value)
 
-    return proto.Universe.ArtNet(ip_address=ip_address, port=udp_port, universe_on_device=device_universe_id)
+    return Proto.Universe.ArtNet(ip_address=ip_address, port=udp_port, universe_on_device=device_universe_id)
 
 
-def _parse_ftdi_location(location_element: ET.Element) -> proto.Universe.USBConfig:
+def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Universe.USBConfig:
     product_id = 0
     vendor_id = 0
     device_name = ""
@@ -279,22 +276,22 @@ def _parse_ftdi_location(location_element: ET.Element) -> proto.Universe.USBConf
             case _:
                 logging.warning("Found attribute %s=%s while parsing ftdi location", key, value)
 
-    return proto.Universe.USBConfig(product_id=product_id,
+    return Proto.Universe.USBConfig(product_id=product_id,
                                     vendor_id=vendor_id,
                                     device_name=device_name,
                                     serial=serial_identifier)
 
 
-def _parse_uihint(uihint_element: ET.Element, board_configuration: BoardConfiguration):
-    uihint_key = ""
-    uihint_value = ""
-    for key, value in uihint_element.attrib.items():
+def _parse_ui_hint(ui_hint_element: ElementTree.Element, board_configuration: BoardConfiguration):
+    ui_hint_key = ""
+    ui_hint_value = ""
+    for key, value in ui_hint_element.attrib.items():
         match key:
             case "name":
-                uihint_key = value
+                ui_hint_key = value
             case "value":
-                uihint_value = value
+                ui_hint_value = value
             case _:
                 logging.warning("Found attribute %s=%s while parsing ui hint", key, value)
 
-    board_configuration.ui_hints[uihint_key] = uihint_value
+    board_configuration.ui_hints[ui_hint_key] = ui_hint_value

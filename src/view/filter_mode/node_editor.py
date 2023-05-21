@@ -1,3 +1,4 @@
+# coding=utf-8
 """Widget to create multiple scenes and manage filters.
 
 Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
@@ -7,14 +8,15 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
 # coding=utf-8
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog
-from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 from pyqtgraph.flowchart import Flowchart
+from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
-from model.board_configuration import BoardConfiguration, Scene
 from file.read import read_document
 from file.write import create_xml, write_document
+from model.board_configuration import BoardConfiguration, Scene
 from . import nodes
 from .scene_tab import SceneTabWidget
+
 
 class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
@@ -86,7 +88,7 @@ class NodeEditorWidget(QTabWidget):
 
     def _register_arithmetics_nodes(self):
         """Registers all the arithmetics nodes."""
-        # Add Node -> Arithmatics sub menu
+        # Add Node -> Arithmetic sub menu
         self._library.addNodeType(nodes.ArithmeticsMAC, [('Arithmetics',)])
         self._library.addNodeType(nodes.ArithmeticsFloatTo8Bit, [('Arithmetics',)])
         self._library.addNodeType(nodes.ArithmeticsFloatTo16Bit, [('Arithmetics',)])
@@ -94,9 +96,9 @@ class NodeEditorWidget(QTabWidget):
         self._library.addNodeType(nodes.SineNode, [('Arithmetics',)])
         self._library.addNodeType(nodes.CosineNode, [('Arithmetics',)])
         self._library.addNodeType(nodes.TangentNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArcsineNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArccosineNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArctangentNode, [('Arithmetics',)])
+        self._library.addNodeType(nodes.ArcSinNode, [('Arithmetics',)])
+        self._library.addNodeType(nodes.ArcCosNode, [('Arithmetics',)])
+        self._library.addNodeType(nodes.ArcTanNode, [('Arithmetics',)])
         self._library.addNodeType(nodes.SquareWaveNode, [('Arithmetics',)])
         self._library.addNodeType(nodes.TriangleWaveNode, [('Arithmetics',)])
         self._library.addNodeType(nodes.SawtoothWaveNode, [('Arithmetics',)])
@@ -143,7 +145,7 @@ class NodeEditorWidget(QTabWidget):
             self.remove_scene_tab()
 
     def add_scene_tab(self, scene: Scene = None) -> SceneTabWidget | None:
-        """Creates and adds an nodeeditor. If scene is None, creates a scene, else uses passed scene
+        """Creates and adds a nodeeditor. If scene is None, creates a scene, else uses passed scene
         
         Args:
             scene: The scene to be added. If None, create new scene and adds it to self._board_configuration
@@ -171,12 +173,12 @@ class NodeEditorWidget(QTabWidget):
         return scene_tab
 
     def remove_scene_tab(self):
-        """Creates an dialog, askes for scene id
+        """Creates a dialog, asks for scene id
         and removes it from board configuration and nodeeditor if dialog was confirmed"""
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
         if ok_button_pressed and 0 <= scene_index < self.tabBar().count() - 2:
-            scene = self._tab_widgets[scene_index]
-            self._board_configuration.scenes.remove(scene)
+            scene_widget = self._tab_widgets[scene_index]
+            self._board_configuration.scenes.remove(scene_widget.scene)
             self.tabBar().removeTab(scene_index)
 
     def _select_file(self, func) -> None:
@@ -217,6 +219,6 @@ class NodeEditorWidget(QTabWidget):
             print(f"Switching to scene {scene_id}")  # self._fish_connector.enter_scene(id)
 
     def _send_show_file(self) -> None:
-        """Send the current board configuration as an xml file to fish"""
+        """Send the current board configuration as a xml file to fish"""
         xml = create_xml(self._board_configuration)
         # self._fish_connector.load_show_file(xml=xml, goto_default_scene=True) TODO with signal

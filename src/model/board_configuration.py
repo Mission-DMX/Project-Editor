@@ -1,12 +1,13 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
 from dataclasses import dataclass, field
-from typing import Any
 from enum import IntFlag, auto
+from typing import Any
 
 from pyqtgraph.flowchart.Flowchart import Flowchart
 
 from model.universe import Universe
+
 
 class Device:
     """A DMX device"""
@@ -28,18 +29,20 @@ class DataType(IntFlag):
     DT_COLOR = auto()
     DT_BOOL = auto()
 
+
 # @dataclass
 class Filter:
     """Filter for show file
     
     Attributes:
-        id: Unique id of the filter, used as its name
-        type: Specifies filter
+        filter_id: Unique id of the filter, used as its name
+        filter_type: Specifies filter
         pos: Tuple of its position inside the editor of format (x, y)
         channel_links: Dict containing entries of format (local_input, remote_name:remote_output)
         initial_parameters: Dict containing entries of format (parameter_name, parameter_value)
-        filter_configuration: Dict containing entries of format (config_name, config_value)
+        filter_configurations: Dict containing entries of format (config_name, config_value)
     """
+
     def __init__(self, filter_id: str, filter_type: int, pos: tuple[float, float] = (0.0, 0.0)) -> None:
         self.filter_id = filter_id
         self.filter_type = int(filter_type)
@@ -53,10 +56,10 @@ class UniverseFilter(Filter):
     """Special class for universe filters.
     
     Attributes:
-        id: Unique id of the filter, used as its name
-        board_configuration: Instance of the currently loaded board configuratuon.
+        _board_configuration: Instance of the currently loaded board configuration.
         pos: Tuple of its position inside the editor of format (x, y)
     """
+
     def __init__(self, filter_id: str, board_configuration: Any = None, pos: tuple[float, float] = (0, 0)) -> None:
         super().__init__(filter_id, 11, pos)
 
@@ -85,7 +88,7 @@ class Scene:
     
     Attributes:
         id: Unique id of the scene
-        human_readable_name: The name that is displayed inside a ui
+        human_readable_name: The name that is displayed inside the ui
         flowchart: The flowchart that represents the scenes filters
         board_configuration: The board configuration the scene is part of
         filters: List of all the filters that are part of the scene
@@ -104,7 +107,7 @@ class BoardConfiguration:
     """Board configuration of a show file.
     
     Attributes:
-        show_name: The human readabel name of the show
+        show_name: The human-readable name of the show
         default_active_scene: ID of the scene to be loaded in the beginning
         notes: Optional notes
         scenes: List of all the scenes that are part of the board configuration
@@ -118,4 +121,4 @@ class BoardConfiguration:
     scenes: list[Scene] = field(default_factory=list)
     devices: list[str] = field(default_factory=list)
     universes: list[Universe] = field(default_factory=list)
-    ui_hints: dict[str, str] = field(default_factory=dict)
+    ui_hints: [str, str] = field(default_factory=dict)
