@@ -46,7 +46,10 @@ class NetworkManager(QtCore.QObject):
 
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
-        self._broadcaster.switch_view_to_patch.connect(self._send_view_patch)
+
+        self._broadcaster.view_is_patch_menu.connect(self._send_view_patch_menu)
+        self._broadcaster.view_is_patching.connect(self._send_view_patching)
+        self._broadcaster.view_is_not_patch_menu(self._send_view_not_patch_menu)
         self._message_queue = queue.Queue()
 
     @property
@@ -93,13 +96,23 @@ class NetworkManager(QtCore.QObject):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
-    def _send_view_patch(self):
+    def _send_view_patch_menu(self):
         """send button patch lighting"""
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.Console_pb2.button_state_change(
-                button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
-                new_state=proto.Console_pb2.ButtonState.BS_ACTIVE
-            )
+            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
+                                                        new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
+
+    def _send_view_patching(self):
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
+                                                        new_state=proto.Console_pb2.ButtonState.BS_SET_LED_BLINKING)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
+
+    def _send_view_patching(self):
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
+                                                        new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
@@ -173,7 +186,7 @@ class NetworkManager(QtCore.QObject):
     def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
         match msg.button:
             case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
-                self._broadcaster.switch_view_to_patch.emit()
+                self._broadcaster.view_to_patch_menu.emit()
             case _:
                 pass
 
