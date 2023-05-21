@@ -15,6 +15,8 @@ class Broadcaster(QtCore.QObject):
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
     patching_universes: list[PatchingUniverse] = []
 
+    switch_view_to_patch: QtCore.Signal = QtCore.Signal()
+
     def __init__(self):
         super().__init__()
         self.add_universe.connect(self._add_universe)

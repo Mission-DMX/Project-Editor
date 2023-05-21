@@ -37,8 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
         views: list[tuple[str, QtWidgets.QWidget]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self)),
             ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self)),
-            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)),
-            ("Debug", debug_console)]
+            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)), ("Debug", debug_console)]
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -55,6 +54,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_menubar()
         self._setup_status_bar()
 
+        self._broadcaster.switch_view_to_patch.connect(lambda: self._widgets.setCurrentIndex(2))
+
         self._fish_connector.start()
         if self._fish_connector:
             from model.control_desk import set_network_manager
@@ -63,10 +64,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, callable]]] = {"Fish": [["Connect", self._start_connection],
-                                                                ["Disconnect", self._fish_connector.disconnect],
-                                                                ["Change", self._change_server_name]]
-                                                       }
+        menus: dict[str, list[list[str, callable]]] = {
+            "Fish": [["Connect", self._start_connection], ["Disconnect", self._fish_connector.disconnect],
+                     ["Change", self._change_server_name]]}
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
