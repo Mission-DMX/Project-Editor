@@ -171,7 +171,7 @@ class FaderBank:
     """
 
     def __init__(self):
-        self.columns = []
+        self.columns: list[DeskColumn] = []
         self._pushed_to_device = False
 
     def add_column(self, col: DeskColumn):
@@ -220,7 +220,7 @@ class BankSet:
         return cls._active_bank_set
 
     @staticmethod
-    def get_linked_bank_sets():
+    def get_linked_bank_sets() -> list["BankSet"]:
         """This method returns a copy of the linked bank sets, save to be used by non friend classes."""
         return list(BankSet._linked_bank_sets)
 
