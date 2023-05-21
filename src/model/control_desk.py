@@ -143,7 +143,7 @@ class RawDeskColumn(DeskColumn):
 class ColorDeskColumn(DeskColumn):
     def __init__(self, _id: str = None):
         super().__init__(_id)
-        self.color: ColorHSI = ColorHSI(0, 0, 0)
+        self._color: ColorHSI = ColorHSI(0, 0, 0)
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
         base_msg = self._generate_base_column_message()
@@ -155,11 +155,11 @@ class ColorDeskColumn(DeskColumn):
     @property
     def color(self) -> ColorHSI:
         """color of the colum"""
-        return self.color
+        return self._color
 
     @color.setter
     def color(self, color: ColorHSI):
-        self.color = color
+        self._color = color
         self.update()
 
 
