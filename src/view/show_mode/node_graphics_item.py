@@ -7,6 +7,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QGraphicsPixmapItem, QDialog, QFormLayout
 
 from model import Filter
+from view.show_mode.node_editor_widgets.column_select import ColumnSelect
 
 
 class FilterSettingsItem(QGraphicsPixmapItem):
@@ -50,6 +51,12 @@ class FilterSettingsItem(QGraphicsPixmapItem):
             FilterSettingsDialog(self.filter).exec()
 
 
+def check_if_filter_has_special_widget(filter_):
+    if 39 <= filter_.filter_type <= 43:
+        return ColumnSelect()
+    return None
+
+
 class FilterSettingsDialog(QDialog):
     """
     
@@ -71,27 +78,33 @@ class FilterSettingsDialog(QDialog):
         layout = QFormLayout()
         # Function pointer to handle patching information. Only set, when filter is universe filter
 
-        add_patch_info: bool = filter_.filter_type == 11
-        # Only add initial parameters section if present
-        if len(filter_.initial_parameters) > 0:
-            layout.addRow("Initial Parameters", QLabel(""))
-            for key, value in filter_.initial_parameters.items():
-                line_edit = QLineEdit()
-                line_edit.setText(value)
-                line_edit.textChanged.connect(lambda new_value: self._ip_value_changed(key, new_value))
-                layout.addRow(key, line_edit)
-        # Only add filter configuration section if present
-        if len(filter_.filter_configurations) > 0:
-            layout.addRow("Filter Configurations", QLabel(""))
-            for key, value in filter_.filter_configurations.items():
-                line_edit = QLineEdit()
-                line_edit.setText(value)
-                line_edit.textChanged.connect(lambda new_value: self._fc_value_changed(key, new_value))
-                if add_patch_info:
-                    key = self._add_patch_info(key, value)
-                layout.addRow(key, line_edit)
+        self._special_widget = check_if_filter_has_special_widget(filter_)
+        if self._special_widget:
+            self._special_widget.configuration = filter_.filter_configurations
+            self._special_widget.parameters = filter_.initial_parameters
+            layout.addRow("", self._special_widget.get_widget())
+        else:
+            add_patch_info: bool = filter_.filter_type == 11
+            # Only add initial parameters section if present
+            if len(filter_.initial_parameters) > 0:
+                layout.addRow("Initial Parameters", QLabel(""))
+                for key, value in filter_.initial_parameters.items():
+                    line_edit = QLineEdit()
+                    line_edit.setText(value)
+                    line_edit.textChanged.connect(lambda new_value: self._ip_value_changed(key, new_value))
+                    layout.addRow(key, line_edit)
+            # Only add filter configuration section if present
+            if len(filter_.filter_configurations) > 0:
+                layout.addRow("Filter Configurations", QLabel(""))
+                for key, value in filter_.filter_configurations.items():
+                    line_edit = QLineEdit()
+                    line_edit.setText(value)
+                    line_edit.textChanged.connect(lambda new_value: self._fc_value_changed(key, new_value))
+                    if add_patch_info:
+                        key = self._add_patch_info(key, value)
+                    layout.addRow(key, line_edit)
         self._ok_button = QPushButton("Ok")
-        self._ok_button.pressed.connect(self.close)
+        self._ok_button.pressed.connect(self.ok_button_pressed)
 
         layout.addRow("", self._ok_button)
 
@@ -123,3 +136,8 @@ class FilterSettingsDialog(QDialog):
 
     def _fc_value_changed(self, key, value):
         self.filter.filter_configurations[key] = value
+
+    def ok_button_pressed(self):
+        if self._special_widget:
+            pass # TODO implement
+        self.close()

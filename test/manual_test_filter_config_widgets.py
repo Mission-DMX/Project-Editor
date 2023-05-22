@@ -1,11 +1,11 @@
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QMainWindow, QBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout
 
 from Style import Style
 from model.broadcaster import Broadcaster
 from model.control_desk import *
 from network import NetworkManager
-from view.filter_mode.node_editor_widgets.column_select import ColumnSelect
+from view.show_mode.node_editor_widgets import ColumnSelect
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])

@@ -26,3 +26,23 @@ class NodeEditorFilterConfigWidget(ABC):
     def get_widget(self) -> QWidget:
         """Returns the widget that should be displayed"""
         raise NotImplementedError()
+
+    @abstractmethod
+    def _load_parameters(self, parameters: dict[str, str]):
+        """Parse the current filter parameters."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _get_parameters(self) -> dict[str, str]:
+        """Return the (initial) filter parameters deduced by the widget"""
+        raise NotImplementedError
+
+    @property
+    def parameters(self) -> dict[str, str]:
+        """Returns the current filter parameters"""
+        return self._get_parameters()
+
+    @parameters.setter
+    def parameters(self, parameters: dict[str, str]):
+        """Sets the filter parameters on the widget"""
+        self._load_parameters(parameters)

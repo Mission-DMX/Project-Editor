@@ -1,10 +1,16 @@
 from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem
 
 from model.control_desk import BankSet, RawDeskColumn, ColorDeskColumn
-from view.filter_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
+from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class ColumnSelect(NodeEditorFilterConfigWidget):
+    def _load_parameters(self, parameters: dict[str, str]):
+        return dict()
+
+    def _get_parameters(self) -> dict[str, str]:
+        return dict()
+
     def get_widget(self) -> QWidget:
         return self._widget
 
