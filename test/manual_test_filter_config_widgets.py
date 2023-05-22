@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QMainWindow, QBoxLayout
+from PySide6.QtWidgets import QMainWindow, QBoxLayout, QVBoxLayout
 
 from Style import Style
 from model.broadcaster import Broadcaster
@@ -25,10 +25,11 @@ if __name__ == "__main__":
                 bank.add_column(column)
             bs.add_bank(bank)
         bs.link()
-    layout = QBoxLayout()
-    select_widget = ColumnSelect()
-    layout.addWidget(select_widget)
-    window.layout(layout)
+    layout = QVBoxLayout()
+    select_widget = ColumnSelect(parent=window)
+    select_widget.configuration = {}
+    layout.addWidget(select_widget.get_widget())
+    window.setLayout(layout)
     window.showMaximized()
     app.exec()
     print(select_widget.configuration)

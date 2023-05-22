@@ -9,21 +9,30 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
         return self._widget
 
     def __init__(self, parent: QWidget = None):
-        super().__init__(parent=parent)
-        self._widget = QTreeWidget()
+        super().__init__()
+        self._widget = QTreeWidget(parent=parent)
         self._widget.setColumnCount(2)
+        self._widget.setHeaderLabels(["ID", "Description"])
+        self._widget.itemSelectionChanged.connect(self._selection_changed_handler)
+        self._selected_item = None
+
+    def _load_configuration(self, conf):
+        set_id = conf.get("set_id") if "set_id" in conf.keys() else ""
+        column_id = conf.get("column_id") if "column_id" in conf.keys() else ""
         self._widget.clear()
         for bank_set in BankSet.get_linked_bank_sets():
             set_item = QTreeWidgetItem()
-            set_item.setText(0, bank_set.description if bank_set.description else bank_set.id)
+            set_item.setText(0, bank_set.id)
             set_item.setText(1, str(bank_set.description))
             set_item.setData(0, 0, bank_set)
+            correct_set: bool = bank_set.id == set_id
             i: int = 0
             for bank in bank_set.banks:
                 bank_item = QTreeWidgetItem()
                 bank_item.setText(0, str(i))
                 bank_item.setText(1, "")
                 for column in bank.columns:
+                    correct_column = column.id == column_id
                     column_item = QTreeWidgetItem()
                     column_item.setText(0, str(column.id))
                     if isinstance(column, RawDeskColumn):
@@ -33,15 +42,19 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
                     else:
                         column_type_str = "?"
                     column_item.setText(1, column_type_str)
+                    print("Add column {}/{}: {}".format(bank_set.id, i, column_type_str))
                     column_item.setData(0, 0, column)
                     bank_item.addChild(column_item)
-                    self._selected_item = column_item
+                    if correct_column and correct_set:
+                        self._selected_item = column_item
+                        column_item.setSelected(True)
                 set_item.addChild(set_item)
                 i += 1
             self._widget.insertTopLevelItem(0, set_item)
-        self._widget.itemSelectionChanged.connect()
 
     def _get_configuration(self) -> dict[str, str]:
+        if not self._selected_item:
+            return dict()
         data = {
             "column_id": self._selected_item.data(0, 0).id,
             "set_id": self._selected_item.parent().parent().data(0, 0).id
