@@ -4,14 +4,15 @@ from model.control_desk import BankSet, RawDeskColumn, ColorDeskColumn
 from view.filter_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 
-class ColumnSelect(QTreeWidget, NodeEditorFilterConfigWidget):
+class ColumnSelect(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
-        return self
+        return self._widget
 
     def __init__(self, parent: QWidget = None):
         super().__init__(parent=parent)
-        self.setColumnCount(2)
-        self.clear()
+        self._widget = QTreeWidget()
+        self._widget.setColumnCount(2)
+        self._widget.clear()
         for bank_set in BankSet.get_linked_bank_sets():
             set_item = QTreeWidgetItem()
             set_item.setText(0, bank_set.description if bank_set.description else bank_set.id)
@@ -37,8 +38,8 @@ class ColumnSelect(QTreeWidget, NodeEditorFilterConfigWidget):
                     self._selected_item = column_item
                 set_item.addChild(set_item)
                 i += 1
-            self.insertTopLevelItem(0, set_item)
-        self.itemSelectionChanged.connect()
+            self._widget.insertTopLevelItem(0, set_item)
+        self._widget.itemSelectionChanged.connect()
 
     def _get_configuration(self) -> dict[str, str]:
         data = {
@@ -48,6 +49,6 @@ class ColumnSelect(QTreeWidget, NodeEditorFilterConfigWidget):
         return data
 
     def _selection_changed_handler(self, *args):
-        item = self.selectedItems()[0]
+        item = self._widget.selectedItems()[0]
         if item.text(1):
             self._selected_item = item

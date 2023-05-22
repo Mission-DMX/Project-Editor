@@ -10,8 +10,10 @@ class NodeEditorFilterConfigWidget(ABC):
 
     @property
     def configuration(self) -> dict[str, str]:
+        """Returns the configuration of the filter"""
         return self._get_configuration()
 
     @abstractmethod
     def get_widget(self) -> QWidget:
+        """Returns the widget that should be displayed"""
         raise NotImplementedError()
