@@ -9,6 +9,7 @@ from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from model import Filter, DataType
 from ..node_graphics_item import FilterSettingsItem
 
+
 class FilterNode(Node):
     """Basic filter node."""
 

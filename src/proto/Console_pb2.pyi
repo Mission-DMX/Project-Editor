@@ -68,17 +68,15 @@ class _ButtonCodeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enu
     BTN_CH6_REC_READY: _ButtonCode.ValueType  # 13
     BTN_CH7_REC_READY: _ButtonCode.ValueType  # 14
     BTN_CH8_REC_READY: _ButtonCode.ValueType  # 15
-    BTN_CH1_SOLO_FIND: _ButtonCode.ValueType  # 16
-    """When in quick console mode: let the ficture strobe in order to find the linked lamp"""
-    BTN_CH2_SOLO_FIND: _ButtonCode.ValueType  # 17
-    """When in show mode with displayed show UI: open an advanced color picker on the touch screen"""
-    BTN_CH3_SOLO_FIND: _ButtonCode.ValueType  # 18
-    """When show editor is displayed: jump to and highlight input filter"""
-    BTN_CH4_SOLO_FIND: _ButtonCode.ValueType  # 19
-    BTN_CH5_SOLO_FIND: _ButtonCode.ValueType  # 20
-    BTN_CH6_SOLO_FIND: _ButtonCode.ValueType  # 21
-    BTN_CH7_SOLO_FIND: _ButtonCode.ValueType  # 22
-    BTN_CH8_SOLO_FIND: _ButtonCode.ValueType  # 23
+    BTN_CH1_SOLO_FLASH: _ButtonCode.ValueType  # 16
+    """Documented in x-touch driver"""
+    BTN_CH2_SOLO_FLASH: _ButtonCode.ValueType  # 17
+    BTN_CH3_SOLO_FLASH: _ButtonCode.ValueType  # 18
+    BTN_CH4_SOLO_FLASH: _ButtonCode.ValueType  # 19
+    BTN_CH5_SOLO_FLASH: _ButtonCode.ValueType  # 20
+    BTN_CH6_SOLO_FLASH: _ButtonCode.ValueType  # 21
+    BTN_CH7_SOLO_FLASH: _ButtonCode.ValueType  # 22
+    BTN_CH8_SOLO_FLASH: _ButtonCode.ValueType  # 23
     BTN_CH1_MUTE_BLACK: _ButtonCode.ValueType  # 24
     """Make the brightness output of this lamp zero; button led should be blinking if enabled"""
     BTN_CH2_MUTE_BLACK: _ButtonCode.ValueType  # 25
@@ -111,7 +109,8 @@ class _ButtonCodeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enu
     """Open the patching menu and review current transmitted values"""
     BTN_INST_UNIVERSES: _ButtonCode.ValueType  # 45
     """Edit the connected universes"""
-    BTN_NAMEVALUE: _ButtonCode.ValueType  # 46
+    BTN_NAMEVALUE_FIND: _ButtonCode.ValueType  # 46
+    """Find fixture button, further documentation in x-touch driver"""
     BTN_BEATS: _ButtonCode.ValueType  # 47
     BTN_GLOBALVIEW: _ButtonCode.ValueType  # 48
     BTN_MIDITRACKS: _ButtonCode.ValueType  # 49
@@ -230,17 +229,15 @@ BTN_CH5_REC_READY: ButtonCode.ValueType  # 12
 BTN_CH6_REC_READY: ButtonCode.ValueType  # 13
 BTN_CH7_REC_READY: ButtonCode.ValueType  # 14
 BTN_CH8_REC_READY: ButtonCode.ValueType  # 15
-BTN_CH1_SOLO_FIND: ButtonCode.ValueType  # 16
-"""When in quick console mode: let the ficture strobe in order to find the linked lamp"""
-BTN_CH2_SOLO_FIND: ButtonCode.ValueType  # 17
-"""When in show mode with displayed show UI: open an advanced color picker on the touch screen"""
-BTN_CH3_SOLO_FIND: ButtonCode.ValueType  # 18
-"""When show editor is displayed: jump to and highlight input filter"""
-BTN_CH4_SOLO_FIND: ButtonCode.ValueType  # 19
-BTN_CH5_SOLO_FIND: ButtonCode.ValueType  # 20
-BTN_CH6_SOLO_FIND: ButtonCode.ValueType  # 21
-BTN_CH7_SOLO_FIND: ButtonCode.ValueType  # 22
-BTN_CH8_SOLO_FIND: ButtonCode.ValueType  # 23
+BTN_CH1_SOLO_FLASH: ButtonCode.ValueType  # 16
+"""Documented in x-touch driver"""
+BTN_CH2_SOLO_FLASH: ButtonCode.ValueType  # 17
+BTN_CH3_SOLO_FLASH: ButtonCode.ValueType  # 18
+BTN_CH4_SOLO_FLASH: ButtonCode.ValueType  # 19
+BTN_CH5_SOLO_FLASH: ButtonCode.ValueType  # 20
+BTN_CH6_SOLO_FLASH: ButtonCode.ValueType  # 21
+BTN_CH7_SOLO_FLASH: ButtonCode.ValueType  # 22
+BTN_CH8_SOLO_FLASH: ButtonCode.ValueType  # 23
 BTN_CH1_MUTE_BLACK: ButtonCode.ValueType  # 24
 """Make the brightness output of this lamp zero; button led should be blinking if enabled"""
 BTN_CH2_MUTE_BLACK: ButtonCode.ValueType  # 25
@@ -270,10 +267,11 @@ BTN_EQ_COMMITRDY: ButtonCode.ValueType  # 42
 BTN_SEND_OOPS: ButtonCode.ValueType  # 43
 """Undo the commit of show file or column updates (whichever was last); internally handled"""
 BTN_PLUGIN_PATCH: ButtonCode.ValueType  # 44
-"""Open the patching_mode menu and review current transmitted values"""
+"""Open the patching menu and review current transmitted values"""
 BTN_INST_UNIVERSES: ButtonCode.ValueType  # 45
 """Edit the connected universes"""
-BTN_NAMEVALUE: ButtonCode.ValueType  # 46
+BTN_NAMEVALUE_FIND: ButtonCode.ValueType  # 46
+"""Find fixture button, further documentation in x-touch driver"""
 BTN_BEATS: ButtonCode.ValueType  # 47
 BTN_GLOBALVIEW: ButtonCode.ValueType  # 48
 BTN_MIDITRACKS: ButtonCode.ValueType  # 49
