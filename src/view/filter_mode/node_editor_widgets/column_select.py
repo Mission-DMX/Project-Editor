@@ -1,9 +1,13 @@
 from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem
 
 from model.control_desk import BankSet, RawDeskColumn, ColorDeskColumn
+from view.filter_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 
-class ColumnSelect(QTreeWidget):
+class ColumnSelect(QTreeWidget, NodeEditorFilterConfigWidget):
+    def get_widget(self) -> QWidget:
+        return self
+
     def __init__(self, parent: QWidget = None):
         super().__init__(parent=parent)
         self.setColumnCount(2)
