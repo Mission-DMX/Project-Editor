@@ -2,6 +2,7 @@
 """Filter module"""
 from enum import IntFlag, auto
 
+
 class DataType(IntFlag):
     """Data types used by filter channels"""
     DT_8_BIT = auto()

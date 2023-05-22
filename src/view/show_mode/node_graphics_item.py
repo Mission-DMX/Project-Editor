@@ -9,6 +9,7 @@ from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Filter
 from view.show_mode.node_editor_widgets.column_select import ColumnSelect
+from view.show_mode.node_editor_widgets.cue_editor import CueEditor
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -56,7 +57,10 @@ class FilterSettingsItem(QGraphicsSvgItem):
 def check_if_filter_has_special_widget(filter_):
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect()
-    return None
+    elif filter_.filter_type == 44:
+        return CueEditor()
+    else:
+        return None
 
 
 class FilterSettingsDialog(QDialog):
