@@ -120,7 +120,7 @@ class FilterSettingsDialog(QDialog):
             return key
         # Fetch universe
         universe_id = int(self.filter.filter_configurations["universe"])
-        for uni in self.filter.board_configuration.universes:
+        for uni in self.filter.scene.board_configuration.universes:
             if uni.universe_proto.id == universe_id:
                 universe = uni
                 break
