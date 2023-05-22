@@ -17,9 +17,9 @@ def find_bank_set(identifier: str) -> BankSet | None:
     try:
         return linked_sets[int(identifier)]
     except:
-        for bs in linked_sets:
-            if bs.id == identifier:
-                return bs
+        for bank_set in linked_sets:
+            if bank_set.id == identifier:
+                return bank_set
     return None
 
 
@@ -45,9 +45,9 @@ class SelectCommand(Command):
                     self.context.selected_bank = found_bank_set
                     return True
                 else:
-                    self.context.print("ERROR: the requested bank set '{}' was not found".format(args.item))
+                    self.context.print(f"ERROR: the requested bank set '{args.item}' was not found")
             case _:
-                self.context.print("ERROR: The resource '{}' cannot be selected. Type 'help select' to obtain a list."
-                                   .format(args.what))
+                self.context.print(
+                    f"ERROR: The resource '{args.what}' cannot be selected. Type 'help select' to obtain a list.")
                 return False
         return True

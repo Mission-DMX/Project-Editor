@@ -4,3 +4,5 @@ pyqtgraph
 protobuf
 xmlschema
 pydantic
+pylint
+pylint_protobuf

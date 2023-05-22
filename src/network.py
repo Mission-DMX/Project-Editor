@@ -43,8 +43,13 @@ class NetworkManager(QtCore.QObject):
         self._socket.stateChanged.connect(self._on_state_changed)
         self._socket.errorOccurred.connect(on_error)
         self._socket.readyRead.connect(self._on_ready_read)
-        self._broadcaster.send_universe.connect(lambda patching_universe: self.generate_universe(patching_universe))
-        self._broadcaster.send_universe_value.connect(lambda send_universe: self.send_universe(send_universe))
+
+        self._broadcaster.send_universe.connect(self._generate_universe)
+        self._broadcaster.send_universe_value.connect(self._send_universe)
+
+        self._broadcaster.view_is_patch_menu.connect(self._send_view_patch_menu)
+        self._broadcaster.view_is_patching.connect(self._send_view_patching)
+        self._broadcaster.view_is_not_patch_menu.connect(self._send_view_not_patch_menu)
         self._message_queue = queue.Queue()
 
     @property
@@ -63,18 +68,18 @@ class NetworkManager(QtCore.QObject):
     def start(self) -> None:
         """establish connection with current fish socket"""
         if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            logging.info(f"connect local socket to Server: {self._server_name}")
+            logging.info("connect local socket to Server: %s", self._server_name)
             self._socket.connectToServer(self._server_name)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
                 self._is_running = True
 
     def disconnect(self) -> None:
         """disconnect from fish socket"""
-        logging.info(f"disconnect local socket from Server")
+        logging.info("disconnect local socket from Server")
         self._socket.disconnectFromServer()
         self._is_running = False
 
-    def send_universe(self, universe: Universe) -> None:
+    def _send_universe(self, universe: Universe) -> None:
         """sends the current dmx data of an universes.
 
         Args:
@@ -86,19 +91,38 @@ class NetworkManager(QtCore.QObject):
 
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
-    def generate_universe(self, universe: PatchingUniverse) -> None:
+    def _generate_universe(self, universe: PatchingUniverse) -> None:
         """send a new universe to the fish socket"""
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
+
+    def _send_view_patch_menu(self):
+        """send button patch lighting"""
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
+                                                        new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
+
+    def _send_view_patching(self):
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
+                                                        new_state=proto.Console_pb2.ButtonState.BS_SET_LED_BLINKING)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
+
+    def _send_view_not_patch_menu(self):
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
+                                                        new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """send message in correct format to fish"""
         self._message_queue.put(tuple([msg, msg_type]))
         while not self._message_queue.empty():
             msg, msg_type = self._message_queue.get()
-            logging.debug(f"message to send: {msg}")
+            logging.debug("message to send: %s", msg)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-                logging.debug(f"send Message to server {msg}")
+                logging.debug("send Message to server %s", msg)
                 self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
             else:
                 logging.error("not Connected with fish server")
@@ -124,7 +148,10 @@ class NetworkManager(QtCore.QObject):
                     message: proto.RealTimeControl_pb2.long_log_update = proto.RealTimeControl_pb2.long_log_update()
                     message.ParseFromString(bytes(msg))
                     self._log_fish(message)
-
+                case proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE:
+                    message: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change()
+                    message.ParseFromString(bytes(msg))
+                    self._button_clicked(message)
                 case _:
                     pass
 
@@ -156,6 +183,14 @@ class NetworkManager(QtCore.QObject):
             case proto.RealTimeControl_pb2.LogLevel.LL_WARNING:
                 logging.warning(msg.what)
 
+    def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
+        match msg.button:
+            case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
+                if msg.new_state== proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.view_to_patch_menu.emit()
+            case _:
+                pass
+
     def _on_state_changed(self) -> None:
         """Starts or stops to send messages if the connection state changes."""
         self._broadcaster.connection_state_updated.emit(self.connection_state())
@@ -168,13 +203,45 @@ class NetworkManager(QtCore.QObject):
         return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
 
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
+        """
+        Sends show file as xml data to fish
+        Args:
+            xml: xml data to be sent
+            goto_default_scene: scene to be loaded
+        """
         msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'),
                                                   goto_default_scene=goto_default_scene)
-        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
     def enter_scene(self, scene_id: int) -> None:
+        """
+        Tells fish to load a specific scene
+        Args:
+            scene_id: The scene to be loaded
+        """
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
+
+    def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode):
+        """Changes fish's run mode
+
+        Args:
+            run_mode: The new mode
+        """
+        msg = proto.RealTimeControl_pb2.update_state(new_state=run_mode)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_STATE)
+
+    def switch_to_direct(self):
+        """Tells fish to go into direct mode"""
+        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT)
+
+    def switch_to_filter(self):
+        """Tells fish to go into show mode"""
+        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
+
+    def switch_to_stop(self):
+        """Tells fish to stop"""
+        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_STOP)
 
     def send_fader_bank_set_delete_message(self, fader_bank_id: str):
         """send message to delete a bank set to fish"""
