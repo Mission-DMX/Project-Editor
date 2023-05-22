@@ -139,5 +139,8 @@ class FilterSettingsDialog(QDialog):
 
     def ok_button_pressed(self):
         if self._special_widget:
-            pass # TODO implement
+            for k in self._special_widget.configuration.keys():
+                self.filter.filter_configurations[k] = self._special_widget.configuration[k]
+            for k in self._special_widget.parameters.keys():
+                self.filter.initial_parameters[k] = self._special_widget.parameters[k]
         self.close()

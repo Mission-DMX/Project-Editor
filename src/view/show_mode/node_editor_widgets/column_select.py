@@ -40,7 +40,7 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
                 for column in bank.columns:
                     correct_column = column.id == column_id
                     column_item = QTreeWidgetItem()
-                    column_item.setText(0, str(column.id))
+                    column_item.setText(0, column.display_name)
                     if isinstance(column, RawDeskColumn):
                         column_type_str = "RAW"
                     elif isinstance(column, ColorDeskColumn):
@@ -48,15 +48,19 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
                     else:
                         column_type_str = "?"
                     column_item.setText(1, column_type_str)
-                    print("Add column {}/{}: {}".format(bank_set.id, i, column_type_str))
                     column_item.setData(0, 0, column)
                     bank_item.addChild(column_item)
                     if correct_column and correct_set:
                         self._selected_item = column_item
-                        column_item.setSelected(True)
-                set_item.addChild(set_item)
+                set_item.addChild(bank_item)
                 i += 1
             self._widget.insertTopLevelItem(0, set_item)
+        if self._selected_item:
+            self._selected_item.setSelected(True)
+            current_item_to_expand = self._selected_item
+            while current_item_to_expand:
+                current_item_to_expand.setExpanded(True)
+                current_item_to_expand = current_item_to_expand.parent()
 
     def _get_configuration(self) -> dict[str, str]:
         if not self._selected_item:
