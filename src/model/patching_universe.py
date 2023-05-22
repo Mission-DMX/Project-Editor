@@ -1,6 +1,6 @@
 # coding=utf-8
 """universe for Patching"""
-import proto
+import proto.UniverseControl_pb2
 from model.patching_channel import PatchingChannel
 
 

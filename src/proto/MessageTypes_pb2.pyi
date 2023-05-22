@@ -29,6 +29,7 @@ class _MsgTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTy
     MSGT_REQUEST_UNIVERSE_LIST: _MsgType.ValueType  # 5
     MSGT_DELETE_UNIVERSE: _MsgType.ValueType  # 6
     MSGT_BUTTON_STATE_CHANGE: _MsgType.ValueType  # 7
+    """Console.button_state_change"""
     MSGT_FADER_POSITION: _MsgType.ValueType  # 8
     MSGT_ROTARY_ENCODER_CHANGE: _MsgType.ValueType  # 9
     MSGT_DMX_OUTPUT: _MsgType.ValueType  # 10
@@ -53,6 +54,7 @@ MSGT_UNIVERSE_LIST: MsgType.ValueType  # 4
 MSGT_REQUEST_UNIVERSE_LIST: MsgType.ValueType  # 5
 MSGT_DELETE_UNIVERSE: MsgType.ValueType  # 6
 MSGT_BUTTON_STATE_CHANGE: MsgType.ValueType  # 7
+"""Console.button_state_change"""
 MSGT_FADER_POSITION: MsgType.ValueType  # 8
 MSGT_ROTARY_ENCODER_CHANGE: MsgType.ValueType  # 9
 MSGT_DMX_OUTPUT: MsgType.ValueType  # 10

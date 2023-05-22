@@ -3,12 +3,12 @@
 
 from PySide6 import QtWidgets, QtGui
 
-from network import NetworkManager
 from Style import Style
-from model.broadcaster import Broadcaster
 from model.board_configuration import BoardConfiguration
+from model.broadcaster import Broadcaster
+from network import NetworkManager
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
-from view.filter_mode.node_editor import NodeEditorWidget
+from view.show_mode.node_editor import NodeEditorWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patching_mode.patching_selector import PatchingSelector
@@ -31,14 +31,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # model objects
         self._fish_connector: NetworkManager = NetworkManager(self._broadcaster, self)
-        self._board_configuration: BoardConfiguration = BoardConfiguration()
+        self._board_configuration: BoardConfiguration = BoardConfiguration(self._broadcaster)
 
         # views
         views: list[tuple[str, QtWidgets.QWidget]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self)),
             ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self)),
-            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)),
-            ("Debug", debug_console)]
+            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)), ("Debug", debug_console)]
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -46,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for index, view in enumerate(views):
             self._widgets.addWidget(view[1])
             mode_button = QtGui.QAction(view[0], self._toolbar)
-            mode_button.triggered.connect(lambda *args, i=index: self._widgets.setCurrentIndex(i))
+            mode_button.triggered.connect(lambda *args, i=index: self._to_widget(i))
             self._toolbar.addAction(mode_button)
 
         self.setCentralWidget(self._widgets)
@@ -55,18 +54,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_menubar()
         self._setup_status_bar()
 
+        self._broadcaster.view_to_patch_menu.connect(lambda *args: self._to_widget(2))
+
         self._fish_connector.start()
         if self._fish_connector:
             from model.control_desk import set_network_manager
             set_network_manager(self._fish_connector)
 
+    def _to_widget(self, index: int) -> None:
+        match index:
+            case 2:
+                if self._widgets.currentIndex() != 2:
+                    self._widgets.setCurrentIndex(2)
+                else:
+                    self._broadcaster.patch()
+            case _:
+                self._widgets.setCurrentIndex(index)
+                self._broadcaster.view_is_not_patch_menu.emit()
+
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, callable]]] = {"Fish": [["Connect", self._start_connection],
-                                                                ["Disconnect", self._fish_connector.disconnect],
-                                                                ["Change", self._change_server_name]]
-                                                       }
+        menus: dict[str, list[list[str, callable]]] = {
+            "Fish": [["Connect", self._start_connection], ["Disconnect", self._fish_connector.disconnect],
+                     ["Change", self._change_server_name]]}
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
