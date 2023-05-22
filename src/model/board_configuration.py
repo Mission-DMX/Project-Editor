@@ -18,40 +18,74 @@ class BoardConfiguration:
         self._universes: list[Universe] = []
         self._ui_hints: dict[str, str] = {}
 
-        self._broadcaster:  Broadcaster = broadcaster
+        self._broadcaster: Broadcaster = broadcaster
 
         self._broadcaster.add_universe.connect(self._add_universe)
         self._broadcaster.scene_created.connect(self._add_scene)
         self._broadcaster.clear_board_configuration.connect(self._clear)
         self._broadcaster.delete_scene.connect(self._delete_scene)
         self._broadcaster.delete_universe.connect(self._delete_universe)
+        self._broadcaster.device_created.connect(self._add_device)
+        self._broadcaster.delete_device.connect(self._delete_device)
+
+    def _clear(self):
+        for scene in self._scenes:
+            self._broadcaster.delete_scene.emit(scene)
+        for universe in self._universes:
+            self._broadcaster.delete_universe.emit(universe)
+        for device in self._devices:
+            self._broadcaster.delete_device.emit(device)
+        self._show_name = ""
+        self._default_active_scene = 0
+        self._notes = 0
+
+    def _add_scene(self, scene: Scene):
+        """Adds a scene to the list of scenes.
+        
+        Args:
+            scene: The scene to be added.
+        """
+        self._scenes.append(scene)
+
+    def _delete_scene(self, scene: Scene):
+        """Removes the passed scene from the list of scenes.
+        
+        Args:
+            scene: The scene to be removed.
+        """
+        self._scenes.remove(scene)
 
     def _add_universe(self, patching_universe: PatchingUniverse):
-        """Creates and adds a universe from passed patching universe"""
+        """Creates and adds a universe from passed patching universe.
+        
+        Args:
+            patching_universe: The patching universe from which a universe is to be created and added.
+        """
         universe = Universe(patching_universe)
         self._universes.append(universe)
 
-    def _add_scene(self, scene: Scene):
-        """Adds a scene to the list of scenes"""
-        self._scenes.append(scene)
-
-    def _clear(self):
-        """Clears all properties/sets them to default values"""
-        self._show_name = ""
-        self._default_active_scene = 0
-        self._notes = ""
-        self._scenes = []
-        self._devices = []
-        self._universes = []
-        self._ui_hints = {}
-
-    def _delete_scene(self, scene: Scene):
-        """Removes the passed scene from the list of scenes"""
-        self._scenes.remove(scene)
-
     def _delete_universe(self, universe: Universe):
-        """Removes the passed universe from the list of universes"""
+        """Removes the passed universe from the list of universes.
+        
+        Args:
+            universe: The universe to be removed.
+        """
         self._universes.remove(universe)
+
+    def _add_device(self, device: Device):
+        """Adds the device to the board configuration.
+        
+        Args:
+            device: The device to be added.
+        """
+        self._devices.append(device)
+
+    def _delete_device(self, device: Device):
+        """Removes the passed device from the list of devices.
+        
+        Args:
+            device: The device to be removed.
+        """
 
     @property
     def show_name(self) -> str:

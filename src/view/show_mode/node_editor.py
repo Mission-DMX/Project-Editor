@@ -50,12 +50,8 @@ class NodeEditorWidget(QTabWidget):
         self._toolbar.append(save_show_file_button)
         self._toolbar.append(load_show_file_button)
 
-        board_configuration.broadcaster.board_configuration_loaded.connect(self._reset)
-
-    def _reset(self):
-        """Resets the node editor after a new board configuration was loaded"""
-        for tab_widget in self._tab_widgets:
-            pass
+        board_configuration.broadcaster.scene_created.connect(self._add_tab)
+        board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
 
     def _select_scene_to_be_removed(self):
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
@@ -75,28 +71,35 @@ class NodeEditorWidget(QTabWidget):
         """
         # Left to right, first "+" button, second "-" button
         if index == self.tabBar().count() - 2:
-            self.add_scene_tab()
+            self._add_button_clicked()
         if index == self.tabBar().count() - 1:
-            self.remove_scene_tab()
+            self._delete_button_clicked()
 
-    def add_scene_tab(self, scene: Scene = None) -> SceneTabWidget | None:
-        """Creates and adds a nodeeditor. If scene is None, creates a scene, else uses passed scene
+    def _add_button_clicked(self):
+        scene_name, ok_button_pressed = QInputDialog.getText(self, "Create a new scene", "Scene name")
+        if ok_button_pressed:
+            flowchart = Flowchart(name=scene_name, library=FilterNodeLibrary())
+            scene = Scene(scene_id=len(self._board_configuration.scenes),
+                          human_readable_name=scene_name,
+                          flowchart=flowchart,
+                          board_configuration=self._board_configuration)
+            self._board_configuration.broadcaster.scene_created.emit(scene)
+
+    def _delete_button_clicked(self):
+        scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
+        if ok_button_pressed and 0 <= scene_index < self.tabBar().count() - 2:
+            tab_widget = self.widget(scene_index)
+            if not isinstance(tab_widget, SceneTabWidget):
+                # TODO logging.warning()
+                return
+            self._board_configuration.broadcaster.delete_scene.emit(tab_widget.scene)
+
+    def _add_tab(self, scene: Scene) -> SceneTabWidget | None:
+        """Creates a tab for a scene
         
         Args:
-            scene: The scene to be added. If None, create new scene and adds it to self._board_configuration
+            scene: The scene to be added
         """
-        # Open dialog to get scene name from user. Aborts if dialog was canceled.
-        if scene is None:
-            scene_name, ok_button_pressed = QInputDialog.getText(self, "Create a new scene", "Scene name")
-            if ok_button_pressed:
-                flowchart = Flowchart(name=scene_name, library=FilterNodeLibrary())
-                scene = Scene(scene_id=len(self._board_configuration.scenes),
-                              human_readable_name=scene_name,
-                              flowchart=flowchart,
-                              board_configuration=self._board_configuration)
-                self._board_configuration.scenes.append(scene)
-            else:
-                return None
 
         # Each scene is represented by its own editor
         scene_tab = SceneTabWidget(scene)
@@ -108,14 +111,16 @@ class NodeEditorWidget(QTabWidget):
             self.setCurrentWidget(scene_tab)
         return scene_tab
 
-    def remove_scene_tab(self):
+    def _remove_tab(self, scene: Scene):
         """Creates a dialog, asks for scene id
         and removes it from board configuration and nodeeditor if dialog was confirmed"""
-        scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
-        if ok_button_pressed and 0 <= scene_index < self.tabBar().count() - 2:
-            scene_widget = self._tab_widgets[scene_index]
-            self._board_configuration.scenes.remove(scene_widget.scene)
-            self.tabBar().removeTab(scene_index)
+        for tab_widget in self._tab_widgets:
+            if not isinstance(tab_widget, SceneTabWidget):
+                # TODO logging.warning()
+                continue
+            if tab_widget.scene == scene:
+                self.removeTab(self.indexOf(tab_widget))
+                self._tab_widgets.remove(tab_widget)
 
     def _select_file(self, func) -> None:
         """Opens QFileDialog to select a file.
@@ -134,9 +139,6 @@ class NodeEditorWidget(QTabWidget):
             file_name: Path to the file to be loaded
         """
         read_document(file_name, self._board_configuration)
-
-        for scene in self._board_configuration.scenes:
-            self.add_scene_tab(scene)
 
     def _save_show_file(self, file_name: str):
         """Safes the current scene to a file.

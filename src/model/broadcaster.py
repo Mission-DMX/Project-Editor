@@ -5,8 +5,9 @@ from xml.etree.ElementTree import Element
 from PySide6 import QtCore
 
 from model.patching_universe import PatchingUniverse
-from model.universe import Universe
-from model.board_configuration import Scene
+from .device import Device
+from .universe import Universe
+from .scene import Scene
 
 
 class Broadcaster(QtCore.QObject):
@@ -17,11 +18,15 @@ class Broadcaster(QtCore.QObject):
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
+    ################################################################
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
     board_configuration_loaded: QtCore.Signal = QtCore.Signal()
     scene_created: QtCore.Signal = QtCore.Signal(Scene)
     delete_scene: QtCore.Signal = QtCore.Signal(Scene)
     delete_universe: QtCore.Signal = QtCore.Signal(Universe)
+    device_created: QtCore.Signal = QtCore.Signal(Device)
+    delete_device: QtCore.Signal = QtCore.Signal(Device)
+    ################################################################
     patching_universes: list[PatchingUniverse] = []
 
     def __init__(self):
