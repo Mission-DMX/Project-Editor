@@ -8,7 +8,7 @@ from Style import Style
 from model.broadcaster import Broadcaster
 from model.board_configuration import BoardConfiguration
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
-from view.filter_mode.node_editor import NodeEditorWidget
+from view.show_mode.node_editor import NodeEditorWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patching_mode.patching_selector import PatchingSelector
@@ -31,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # model objects
         self._fish_connector: NetworkManager = NetworkManager(self._broadcaster, self)
-        self._board_configuration: BoardConfiguration = BoardConfiguration()
+        self._board_configuration: BoardConfiguration = BoardConfiguration(self._broadcaster)
 
         # views
         views: list[tuple[str, QtWidgets.QWidget]] = [

@@ -5,36 +5,27 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-# coding=utf-8
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog
 from pyqtgraph.flowchart import Flowchart
-from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
 from file.read import read_document
 from file.write import create_xml, write_document
 from model.board_configuration import BoardConfiguration, Scene
-from . import nodes
 from .scene_tab import SceneTabWidget
+from .library import FilterNodeLibrary
 
 
 class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
-
     def __init__(self, parent: QWidget, board_configuration: BoardConfiguration) -> None:
         super().__init__(parent)
 
-        self._library = NodeLibrary()
+        self._library = FilterNodeLibrary()
 
         self._tab_widgets: list[SceneTabWidget] = []
 
         self._board_configuration = board_configuration
-
-        self._register_constants_nodes()
-        self._register_debug_nodes()
-        self._register_adapters_nodes()
-        self._register_time_nodes()
-        self._register_fader_nodes()
 
         # Buttons to add or remove scenes from show
         self.addTab(QWidget(), "+")
@@ -59,73 +50,17 @@ class NodeEditorWidget(QTabWidget):
         self._toolbar.append(save_show_file_button)
         self._toolbar.append(load_show_file_button)
 
-    def _register_constants_nodes(self):
-        """Registers all the constants nodes."""
-        # Add Node -> Constants sub menu
-        self._library.addNodeType(nodes.Constants8BitNode, [('Constants',)])
-        self._library.addNodeType(nodes.Constants16BitNode, [('Constants',)])
-        self._library.addNodeType(nodes.ConstantsFloatNode, [('Constants',)])
-        self._library.addNodeType(nodes.ConstantsColorNode, [('Constants',)])
+        board_configuration.broadcaster.board_configuration_loaded.connect(self._reset)
 
-    def _register_debug_nodes(self):
-        """Registers all the debugs nodes."""
-        # Add Node -> Debug sub menu
-        self._library.addNodeType(nodes.Debug8BitNode, [('Debug',)])
-        self._library.addNodeType(nodes.Debug16BitNode, [('Debug',)])
-        self._library.addNodeType(nodes.DebugFloatNode, [('Debug',)])
-        self._library.addNodeType(nodes.DebugColorNode, [('Debug',)])
+    def _reset(self):
+        """Resets the node editor after a new board configuration was loaded"""
+        for tab_widget in self._tab_widgets:
+            pass
 
-    def _register_adapters_nodes(self):
-        """Registers all the constants nodes."""
-        # Add Node -> Adapters sub menu
-        self._library.addNodeType(nodes.Adapters16To8Bit, [('Adapters',)])
-        self._library.addNodeType(nodes.Adapters16ToBool, [('Adapters',)])
-        self._library.addNodeType(nodes.UniverseNode, [('Adapters',)])
-        self._library.addNodeType(nodes.ColorToRGBNode, [('Adapters',)])
-        self._library.addNodeType(nodes.ColorToRGBWNode, [('Adapters',)])
-        self._library.addNodeType(nodes.ColorToRGBWANode, [('Adapters',)])
-        self._library.addNodeType(nodes.FloatToColorNode, [('Adapters',)])
-
-    def _register_arithmetics_nodes(self):
-        """Registers all the arithmetics nodes."""
-        # Add Node -> Arithmetic sub menu
-        self._library.addNodeType(nodes.ArithmeticsMAC, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArithmeticsFloatTo8Bit, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArithmeticsFloatTo16Bit, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArithmeticsRound, [('Arithmetics',)])
-        self._library.addNodeType(nodes.SineNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.CosineNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.TangentNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArcSinNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArcCosNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ArcTanNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.SquareWaveNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.TriangleWaveNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.SawtoothWaveNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.LogarithmNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.ExponentialNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.MinimumNode, [('Arithmetics',)])
-        self._library.addNodeType(nodes.MaximumNode, [('Arithmetics',)])
-
-    def _register_time_nodes(self):
-        """Registers all the time nodes."""
-        # Add Node -> Time sub menu
-        self._library.addNodeType(nodes.TimeNode, [('Time',)])
-        self._library.addNodeType(nodes.SwitchOnDelay8BitNode, [('Time',)])
-        self._library.addNodeType(nodes.SwitchOnDelay16BitNode, [('Time',)])
-        self._library.addNodeType(nodes.SwitchOnDelayFloatNode, [('Time',)])
-        self._library.addNodeType(nodes.SwitchOffDelay8BitNode, [('Time',)])
-        self._library.addNodeType(nodes.SwitchOffDelay16BitNode, [('Time',)])
-        self._library.addNodeType(nodes.SwitchOffDelayFloatNode, [('Time',)])
-
-    def _register_fader_nodes(self):
-        """Registers all the fader nodes."""
-        # Add Node -> Filter Fader sub menu
-        self._library.addNodeType(nodes.FilterFaderColumnRaw, [('Filter Fader',)])
-        self._library.addNodeType(nodes.FilterFaderColumnHSI, [('Filter Fader',)])
-        self._library.addNodeType(nodes.FilterFaderColumnHSIA, [('Filter Fader',)])
-        self._library.addNodeType(nodes.FilterFaderColumnHSIU, [('Filter Fader',)])
-        self._library.addNodeType(nodes.FilterFaderColumnHSIAU, [('Filter Fader',)])
+    def _select_scene_to_be_removed(self):
+        scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
+        if ok_button_pressed and 0 <= scene_index < self.tabBar().count() - 2:
+            self._board_configuration.broadcaster.delete_scene()
 
     @property
     def toolbar(self) -> list[QtGui.QAction]:
@@ -154,21 +89,22 @@ class NodeEditorWidget(QTabWidget):
         if scene is None:
             scene_name, ok_button_pressed = QInputDialog.getText(self, "Create a new scene", "Scene name")
             if ok_button_pressed:
-                scene = Scene(id=len(self._board_configuration.scenes),
-                              human_readable_name=scene_name, flowchart=Flowchart(name=scene_name),
+                flowchart = Flowchart(name=scene_name, library=FilterNodeLibrary())
+                scene = Scene(scene_id=len(self._board_configuration.scenes),
+                              human_readable_name=scene_name,
+                              flowchart=flowchart,
                               board_configuration=self._board_configuration)
                 self._board_configuration.scenes.append(scene)
             else:
                 return None
 
         # Each scene is represented by its own editor
-        scene_tab = SceneTabWidget(scene, self._library.copy())
+        scene_tab = SceneTabWidget(scene)
         # Move +/- buttons one to the right and insert new tab for the scene
         self.insertTab(self.tabBar().count() - 2, scene_tab, scene.human_readable_name)
         self._tab_widgets.append(scene_tab)
         # When loading scene from a file, set displayed tab to first loaded scene
-        # TODO Possibly set to self._board_configuration.default_active_scene
-        if len(self._tab_widgets) == 1:
+        if len(self._tab_widgets) == 1 or self._board_configuration.default_active_scene == scene.scene_id:
             self.setCurrentWidget(scene_tab)
         return scene_tab
 
@@ -197,7 +133,7 @@ class NodeEditorWidget(QTabWidget):
         Args:
             file_name: Path to the file to be loaded
         """
-        self._board_configuration = read_document(file_name)
+        read_document(file_name, self._board_configuration)
 
         for scene in self._board_configuration.scenes:
             self.add_scene_tab(scene)
@@ -213,12 +149,14 @@ class NodeEditorWidget(QTabWidget):
 
     def _enter_scene(self) -> None:
         """Asks for scene id and tells fish to load the scene"""
-        # TODO Tell fish to load scene using signals
+        # TODO Let network manager listen to broadcaster
         scene_id, ok_button_pressed = QtWidgets.QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
         if ok_button_pressed:
-            print(f"Switching to scene {scene_id}")  # self._fish_connector.enter_scene(id)
+            print(f"Switching to scene {scene_id}")
+            self._board_configuration.broadcaster.change_active_scene.emit(scene_id)
 
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""
+        # TODO Let network manager listen to broadcaster
         xml = create_xml(self._board_configuration)
-        # self._fish_connector.load_show_file(xml=xml, goto_default_scene=True) TODO with signal
+        self._board_configuration.broadcaster.load_show_file(xml)

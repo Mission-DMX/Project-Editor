@@ -1,18 +1,27 @@
 # coding=utf-8
 """connector for Signals"""
+from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
 
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
+from model.board_configuration import Scene
 
 
 class Broadcaster(QtCore.QObject):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
+    change_active_scene: QtCore.Signal = QtCore.Signal(int)
+    load_show_file: QtCore.Signal = QtCore.Signal(Element)
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
+    clear_board_configuration: QtCore.Signal = QtCore.Signal()
+    board_configuration_loaded: QtCore.Signal = QtCore.Signal()
+    scene_created: QtCore.Signal = QtCore.Signal(Scene)
+    delete_scene: QtCore.Signal = QtCore.Signal(Scene)
+    delete_universe: QtCore.Signal = QtCore.Signal(Universe)
     patching_universes: list[PatchingUniverse] = []
 
     def __init__(self):
