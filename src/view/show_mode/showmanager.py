@@ -12,11 +12,11 @@ from pyqtgraph.flowchart import Flowchart
 from file.read import read_document
 from file.write import create_xml, write_document
 from model.board_configuration import BoardConfiguration, Scene
-from .scene_tab import SceneTabWidget
+from .scenetab import SceneTabWidget
 from .library import FilterNodeLibrary
 
 
-class NodeEditorWidget(QTabWidget):
+class ShowManagerWidget(QTabWidget):
     """Node Editor to create and manage filters."""
     def __init__(self, parent: QWidget, board_configuration: BoardConfiguration) -> None:
         super().__init__(parent)
