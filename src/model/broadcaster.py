@@ -19,16 +19,18 @@ class Broadcaster(QtCore.QObject):
     patching_universes: list[PatchingUniverse] = []
 
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()
-    view_patch: QtCore.Signal = QtCore.Signal()
+    view_patching: QtCore.Signal = QtCore.Signal()
+    view_leave_patching: QtCore.Signal = QtCore.Signal()
+    view_leave_patch_menu: QtCore.Signal = QtCore.Signal()
 
-    view_is_patch_menu: QtCore.Signal = QtCore.Signal()
-    view_is_not_patch_menu: QtCore.Signal = QtCore.Signal()
-    view_is_patching: QtCore.Signal = QtCore.Signal()
+    view_to_file_editor: QtCore.Signal = QtCore.Signal()
+    view_leave_file_editor: QtCore.Signal = QtCore.Signal()
 
     def __init__(self):
         super().__init__()
         self.add_universe.connect(self._add_universe)
         self.connection_state_updated.connect(self._connection_changed)
+        self.view_patching.connect(self.patch)
 
     def _add_universe(self, universe: PatchingUniverse):
         self.patching_universes.append(universe)
@@ -49,7 +51,6 @@ class Broadcaster(QtCore.QObject):
             updated: list of indices of modified channels
 
         """
-        self.view_is_patching.emit()
         form = PatchingDialog()
         if form.exec():
             fixture = form.get_used_fixture()
@@ -77,4 +78,4 @@ class Broadcaster(QtCore.QObject):
                     channel += len(fixture.mode['channels'])
                 else:
                     channel += offset
-        self.view_is_patch_menu.emit()
+        self.view_leave_patching.emit()
