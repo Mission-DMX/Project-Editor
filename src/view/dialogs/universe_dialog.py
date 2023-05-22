@@ -2,7 +2,7 @@
 """dialog for editing patching universe"""
 from PySide6 import QtWidgets
 
-import proto
+import proto.UniverseControl_pb2
 
 
 class UniverseDialog(QtWidgets.QDialog):
