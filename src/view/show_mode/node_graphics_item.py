@@ -4,12 +4,13 @@ import logging
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QGraphicsPixmapItem, QDialog, QFormLayout
+from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDialog, QFormLayout
+from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Filter
 
 
-class FilterSettingsItem(QGraphicsPixmapItem):
+class FilterSettingsItem(QGraphicsSvgItem):
     """GraphicsItem to handle opening filter settings dialog.
     
     Attributes:
@@ -17,9 +18,10 @@ class FilterSettingsItem(QGraphicsPixmapItem):
     """
 
     def __init__(self, filter_: Filter, parent: QGraphicsItem):
-        super().__init__(QPixmap("resources/settings.svg").scaled(10, 10), parent)
+        super().__init__("src/resources/settings.svg", parent)
         self.filter = filter_
         self.on_update = lambda: None
+        self.setScale(0.2)
         self.moveBy(parent.boundingRect().width() / 2, parent.boundingRect().height() - 20)
 
     def focusOutEvent(self, ev):
