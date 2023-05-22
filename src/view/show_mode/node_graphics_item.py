@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QGraphicsPixmapItem, QDialog, QFormLayout
 
-from model.board_configuration import Filter, UniverseFilter
+from model import Filter
 
 
 class FilterSettingsItem(QGraphicsPixmapItem):
@@ -71,7 +71,7 @@ class FilterSettingsDialog(QDialog):
         layout = QFormLayout()
         # Function pointer to handle patching information. Only set, when filter is universe filter
 
-        add_patch_info: bool = isinstance(filter_, UniverseFilter)
+        add_patch_info: bool = filter_.filter_type == 11
         # Only add initial parameters section if present
         if len(filter_.initial_parameters) > 0:
             layout.addRow("Initial Parameters", QLabel(""))
@@ -98,7 +98,7 @@ class FilterSettingsDialog(QDialog):
         self.setLayout(layout)
 
     def _add_patch_info(self, key: str, value: str) -> str:
-        if not isinstance(self.filter, UniverseFilter):
+        if self.filter._filter_type != 11:
             return key
         # Only channel inputs have patching info
         if key == "universe":

@@ -7,7 +7,7 @@ Usage:
 """
 from xml.etree import ElementTree
 
-from model.board_configuration import BoardConfiguration, Scene, Filter
+from model import BoardConfiguration, Scene, Filter
 from model.universe import Universe
 from proto import UniverseControl_pb2 as Proto
 
@@ -108,7 +108,7 @@ def _create_scene_element(scene: Scene, parent: ElementTree.Element) -> ElementT
     </scene>
     """
     return ElementTree.SubElement(parent, "scene", attrib={
-        "id": str(scene.id),
+        "id": str(scene.scene_id),
         "human_readable_name": str(scene.human_readable_name)
     })
 
