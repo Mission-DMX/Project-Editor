@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 from PySide6.QtWidgets import QWidget
 
-from Network import NetworkManager
-
+from network import NetworkManager
+from .scene import Scene
 
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
@@ -73,20 +73,20 @@ class UIWidget(ABC):
 class UIPage:
     """This class represents a page containing widgets that can be used to control the show."""
 
-    def __init__(self, sid: int):
+    def __init__(self, scene: Scene):
         """Construct a UI Page
 
         Arguments:
             sid -- The id of the scene where the corresponding filter is located.
         """
         self._widgets: list[UIWidget] = []
-        self._scene_id: int = sid
+        self._scene: int = scene
         self._player = None
 
     @property
-    def scene_id(self) -> int:
+    def scene(self) -> Scene:
         """Get the scene this page is bound to"""
-        return self._scene_id
+        return self._scene
 
     @property
     def page_active_on_player(self) -> bool:
@@ -158,14 +158,14 @@ class ShowUI:
                 page_list.append(p)
         return page_list
 
-    @staticmethod
-    @property
-    def network_connection() -> NetworkManager:
+    #@staticmethod
+    #@property
+    #def network_connection() -> NetworkManager:
         """Get the linked network manager"""
-        return ShowUI._fish_connector
+    #    return ShowUI._fish_connector
 
-    @staticmethod
-    @network_connection.setter
-    def network_connection(self, fish_connector: NetworkManager):
-        """Set the linked network manager"""
-        ShowUI._fish_connector = fish_connector
+    #@staticmethod
+    #@network_connection.setter
+    #def network_connection(self, fish_connector: NetworkManager):
+    #    """Set the linked network manager"""
+    #    ShowUI._fish_connector = fish_connector
