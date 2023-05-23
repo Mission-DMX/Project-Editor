@@ -1,6 +1,10 @@
 # coding=utf-8
 """Filter module"""
+from typing import TYPE_CHECKING
 from enum import IntFlag, auto
+
+if TYPE_CHECKING:
+    from . import Scene
 
 class DataType(IntFlag):
     """Data types used by filter channels"""
