@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 
+from model import DataType
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 
 
@@ -21,7 +22,7 @@ class EndAction(Enum):
 
     @property
     def formatted_value_list(self) -> list[str]:
-        return [str(a) for a in [EndAction.HOLD, EndAction.NEXT, EndAction.START_AGAIN]]
+        return [str(a) for a in [EndAction.HOLD, EndAction.START_AGAIN, EndAction.NEXT]]
 
 
 class State(ABC):
@@ -35,10 +36,21 @@ class State(ABC):
         """This method decodes the state configuration from a filter config string."""
         raise NotImplementedError
 
+    @abstractmethod
+    def get_data_type(self) -> DataType:
+        """This method needs to return the filter data type."""
+        raise NotImplementedError
+
 
 class KeyFrame:
     def __init__(self):
         self._states: list[State] = []
+
+    def get_data_types(self) -> list[DataType]:
+        l = []
+        for s in self._states:
+            l.append(s.get_data_type())
+        return l
 
 
 class Cue:
@@ -56,4 +68,12 @@ class Cue:
     def duration_formatted(self) -> str:
         """Returns the duration of the cue as a formatted string."""
         return format_seconds(self.duration)
+
+    @property
+    def channel_types(self) -> list[DataType]:
+        """Returns the keyframe data types"""
+        if len(self._frames) == 0:
+            return []
+        else:
+            return self._frames[0].get_data_types()
 

@@ -6,6 +6,7 @@ from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QScrollArea, QGraphicsWidget
 
 from model import DataType
+from view.show_mode.node_editor_widgets.cue_editor.cue import Cue
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 
 CHANNEL_DISPLAY_HEIGHT = 64
@@ -83,8 +84,27 @@ class TimelineContainer(QWidget):
         # TODO link jogwheel events to scrolling of cursor (and thus timeline_scroll_area)
         layout.addWidget(timeline_scroll_area)
         self.setLayout(layout)
+        self.cue = Cue()
 
     def add_channel(self, channel_type: DataType):
         # TODO add TimelineChannelLabel to self._channel_labels_panel_layout
         # TODO add channel to self._keyframes_panel
         pass
+
+    def clear_channels(self):
+        """Removes all channels from the widget"""
+        # TODO clear all labels from self._channel_labels_panel_layout
+        # TODO reset self._keyframes_panel
+        pass
+
+    @property
+    def cue(self) -> Cue:
+        """Returns the edited cue."""
+        return self._cue
+
+    @cue.setter
+    def cue(self, c: Cue):
+        self._cue = c
+        for channel in c.channel_types:
+            self.add_channel(channel)
+
