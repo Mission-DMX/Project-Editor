@@ -18,6 +18,28 @@ class ColorHSI:
         self._saturation: confloat(ge=0, le=1) = saturation
         self._intensity: confloat(ge=0, le=1) = intensity
 
+    def __init__(self, filter_format: str):
+        """ HSI Color
+
+        This constructor parses the supplied color string and constructs the color object from it.
+
+        Arguments:
+            filter_format -- The color provided as a filter configuration string
+        """
+        parts = filter_format.split(",")
+        h = float(parts[0]) % 360.0
+        s = float(parts[1])
+        if s < 0:
+            s = 0.0
+        elif s > 1:
+            s = 1.0
+        i = float(parts[2])
+        if i < 0:
+            i = 0.0
+        elif i > 1:
+            i = 1.0
+        self.__init__(h, s, i)
+
     @property
     def hue(self) -> confloat(ge=0, le=360):
         """color itself in the form of an angle between [0,360] degrees"""
@@ -37,3 +59,8 @@ class ColorHSI:
         where 0 is black and 1 is white
         """
         return self._intensity
+
+    def format_for_filter(self) -> str:
+        """This method formats the color to be parsable by fish filters."""
+        return "{},{},{}".format(float(self._hue), float(self._saturation), float(self._intensity))
+

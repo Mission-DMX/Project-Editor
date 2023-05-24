@@ -5,3 +5,4 @@ from .scene import Scene
 from .filter import Filter, DataType
 from .device import Device
 from .universe import Universe
+from .color_hsi import ColorHSI

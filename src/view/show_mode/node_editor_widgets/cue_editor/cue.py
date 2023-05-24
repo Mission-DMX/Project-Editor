@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from model import DataType
+from model import DataType, ColorHSI
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 
 
@@ -26,6 +26,10 @@ class EndAction(Enum):
 
 
 class State(ABC):
+
+    def __init__(self, channel_name: str):
+        self._channel_name = channel_name
+
     @abstractmethod
     def encode(self) -> str:
         """This method returns the state encodes in the filter format"""
@@ -40,6 +44,91 @@ class State(ABC):
     def get_data_type(self) -> DataType:
         """This method needs to return the filter data type."""
         raise NotImplementedError
+
+
+class StateEightBit(State):
+
+    def __init__(self, channel_name: str):
+        super().__init__(channel_name)
+        self._value = 0
+
+    def encode(self) -> str:
+        if self._value < 0:
+            self._value = 0
+        elif self._value > 255:
+            self._value = 255
+        return "{}@{}".format(int(self._value), self._channel_name)
+
+    def decode(self, content: str):
+        c_arr = content.split("@")
+        self._value = int(c_arr[0])
+        if self._value < 0:
+            self._value = 0
+        elif self._value > 255:
+            self._value = 255
+        self._channel_name = c_arr[1]
+
+    def get_data_type(self) -> DataType:
+        return DataType.DT_8_BIT
+
+
+class StateSixteenBit(State):
+    def __init__(self, channel_name: str):
+        super.__init__(channel_name)
+        self._value = 0
+
+    def encode(self) -> str:
+        if self._value < 0:
+            self._value = 0
+        elif self._value > 65535:
+            self._value = 65535
+        return "{}@{}".format(int(self._value), self._channel_name)
+
+    def decode(self, content: str):
+        c_arr = content.split("@")
+        self._value = int(c_arr[0])
+        if self._value < 0:
+            self._value = 0
+        elif self._value > 65535:
+            self._value = 65535
+        self._channel_name = c_arr[1]
+
+    def get_data_type(self) -> DataType:
+        return DataType.DT_16_BIT
+
+
+class StateDouble(State):
+    def __init__(self, channel_name: str):
+        super.__init__(channel_name)
+        self._value = 0.0
+
+    def encode(self) -> str:
+        return "{}@{}".format(float(self._value), self._channel_name)
+
+    def decode(self, content: str):
+        c_arr = content.split("@")
+        self._value = float(c_arr[0])
+        self._channel_name = c_arr[1]
+
+    def get_data_type(self) -> DataType:
+        return DataType.DT_DOUBLE
+
+
+class StateColor(State):
+    def __init__(self, channel_name: str):
+        super.__init__(channel_name)
+        self._value = ColorHSI(180.0, 0.0, 0.0)
+
+    def encode(self) -> str:
+        return "{}@{}".format(self._value.format_for_filter(), self._channel_name)
+
+    def decode(self, content: str):
+        c_arr = content.split("@")
+        self._value = ColorHSI(c_arr[0])
+        self._channel_name = c_arr[1]
+
+    def get_data_type(self) -> DataType:
+        return DataType.DT_COLOR
 
 
 class KeyFrame:
