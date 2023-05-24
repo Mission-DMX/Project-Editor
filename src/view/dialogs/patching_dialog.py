@@ -8,22 +8,27 @@ from ofl.fixture import Fixture, load_fixture, make_used_fixture, UsedFixture
 class PatchingDialog(QtWidgets.QDialog):
     """ Dialog for Patching Fixture """
 
-    def __init__(self, parent: object = None) -> None:
+    def __init__(self, fixture: tuple[Fixture, int] = None, parent: object = None) -> None:
         super().__init__(parent)
         # Create widgets
-        # TODO select from fixture Lib
         layout_fixture = QtWidgets.QHBoxLayout()
-        self._fixture_name = QtWidgets.QLabel("no fixture")
-        self._select_fixture_button = QtWidgets.QPushButton(self)
-        self._select_fixture_button.setText("select Fixture")
-        self._select_fixture_button.clicked.connect(self.select_fixture)
+        self._fixture_name = QtWidgets.QLabel("no fixture" if fixture is None else fixture[0]['name'])
         self._select_mode = QtWidgets.QComboBox()
         layout_fixture.addWidget(self._fixture_name)
-        layout_fixture.addWidget(self._select_fixture_button)
         layout_fixture.addWidget(self._select_mode)
-
+        if fixture is None:
+            self._select_fixture_button = QtWidgets.QPushButton(self)
+            self._select_fixture_button.setText("select Fixture")
+            self._select_fixture_button.clicked.connect(self.select_fixture)
+            self._fixture: Fixture | None = None
+            layout_fixture.addWidget(self._select_fixture_button)
+        else:
+            self._fixture: Fixture | None = fixture[0]
+            for mode in self._fixture['modes']:
+                self._select_mode.addItem(mode['name'])
+            self._select_mode.setCurrentIndex(fixture[1])
         patching_layout = QtWidgets.QHBoxLayout()
-        self._patching_node = QtWidgets.QLabel("Enter number of heads@uni-chan")
+        self._patching_node = QtWidgets.QLabel("Enter number of heads@uni-chanel/offset")
         self.patching = QtWidgets.QLineEdit("")
         patching_layout.addWidget(self._patching_node)
         patching_layout.addWidget(self.patching)
@@ -45,7 +50,6 @@ class PatchingDialog(QtWidgets.QDialog):
         self.setLayout(layout)
         self._ok.clicked.connect(self.ok)
         self._cancel.clicked.connect(self.cancel)
-        self._fixture: Fixture | None = None
 
     def get_used_fixture(self) -> UsedFixture:
         """property of the used Fixture"""

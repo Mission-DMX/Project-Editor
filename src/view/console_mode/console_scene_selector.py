@@ -36,7 +36,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
 
     @property
     def toolbar(self) -> list[QtGui.QAction]:
-        """toolbar for patching_mode"""
+        """toolbar for Console mode"""
         return self._toolbar
 
     def contextMenuEvent(self, event):

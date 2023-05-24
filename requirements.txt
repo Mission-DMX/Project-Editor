@@ -6,3 +6,4 @@ xmlschema
 pydantic
 pylint
 pylint_protobuf
+requests
