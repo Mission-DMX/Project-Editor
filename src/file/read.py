@@ -8,7 +8,7 @@ from pyqtgraph.flowchart import Flowchart
 import proto.UniverseControl_pb2 as Proto
 from model import BoardConfiguration, Scene, Universe, Filter
 from model.patching_universe import PatchingUniverse
-from view.show_mode.libraries import FilterNodeLibrary
+from view.show_mode.editor import FilterNodeLibrary
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration):

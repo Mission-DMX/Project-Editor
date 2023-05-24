@@ -3,12 +3,11 @@
 import logging
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDialog, QFormLayout
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Filter
-from view.show_mode.node_editor_widgets.column_select import ColumnSelect
+from view.show_mode.editor import ColumnSelect
 
 
 class FilterSettingsItem(QGraphicsSvgItem):

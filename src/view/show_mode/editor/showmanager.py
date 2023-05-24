@@ -13,7 +13,7 @@ from file.read import read_document
 from file.write import create_xml, write_document
 from model.board_configuration import BoardConfiguration, Scene
 from .scenetab import SceneTabWidget
-from .libraries import FilterNodeLibrary
+from .filter_node_library import FilterNodeLibrary
 
 
 class ShowManagerWidget(QTabWidget):

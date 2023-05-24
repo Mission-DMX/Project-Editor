@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem
 
 from model.control_desk import BankSet, RawDeskColumn, ColorDeskColumn
-from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
+from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class ColumnSelect(NodeEditorFilterConfigWidget):

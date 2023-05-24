@@ -1,11 +1,11 @@
 # coding=utf-8
 """A scene can have multiple pages"""
 import PySide6.QtGui
-from PySide6.QtWidgets import QWidget, QMenu, QWidgetItem
+from PySide6.QtWidgets import QWidget, QMenu
 from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QMouseEvent, QAction
 
-from src.model import Scene, UIWidget
+from model import Scene, UIWidget
 
 
 class ScenePageWidget(QWidget):

@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QPushButton, QGridLa
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QCloseEvent
 
-from src.model import Scene
+from model import Scene
 from .nodeeditor import NodeEditorDialog
 from .scenepage import ScenePageWidget
 
