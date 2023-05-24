@@ -1,15 +1,28 @@
 # coding=utf-8
 """Filter module"""
-from enum import IntFlag, auto
+from enum import IntFlag, auto, Enum
 
 
-class DataType(IntFlag):
+class DataType(Enum):
     """Data types used by filter channels"""
     DT_8_BIT = auto()
     DT_16_BIT = auto()
     DT_DOUBLE = auto()
     DT_COLOR = auto()
     DT_BOOL = auto()
+
+    def format_for_filters(self):
+        """This method returns the data type representation commonly used by the fish filters for configuration."""
+        if self.value == DataType.DT_8_BIT.value:
+            return "8bit"
+        elif self.value == DataType.DT_16_BIT.value:
+            return "16bit"
+        elif self.value == DataType.DT_DOUBLE.value:
+            return "float"
+        elif self.value == DataType.DT_COLOR.value:
+            return "color"
+        else:
+            return "8bit"  # bools are 8 bit
 
 
 class Filter:

@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget,\
-    QTableWidgetItem, QFormLayout, QComboBox
+    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox
 
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
@@ -26,8 +26,18 @@ class CueEditor(NodeEditorFilterConfigWidget):
         pass
 
     def _get_parameters(self) -> dict[str, str]:
-        # TODO implement
-        return dict()
+        # TODO improve channel naming by introducing channel name list
+        from ctypes import c_int64
+        i = c_int64(0)
+        def increment(num: c_int64) -> int:
+            num.value += 1
+            return num.value
+        d = {
+                "end_handling": "start_again" if self._global_restart_on_end else "hold",
+                "mapping": ";".join(["channel_{}:{}".format(increment(i), t.format_for_filters()) for t in self._cues[0].channel_types ]) if len(self._cues) > 0 else "",
+                "cuelist": "$".join([c.format_cue() for c in self._cues])
+            }
+        return d
 
     def __init__(self, parent: QWidget = None):
         super().__init__()
@@ -44,6 +54,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._current_cue_end_action_select_widget = QComboBox()
         self._current_cue_end_action_select_widget.insertItems(0, EndAction.formatted_value_list)
         cue_settings_container_layout.addRow("End Action", self._current_cue_end_action_select_widget)
+        self._current_cue_another_play_pressed_checkbox = QCheckBox("Restart cue on Play pressed", self.parent_widget)
+        cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
         top_layout.addWidget(cue_list_and_current_settings_container)
@@ -71,6 +83,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
+        self._global_restart_on_end: bool = False
         self._cues: list[Cue] = []
         self.add_cue(Cue())  # FIXME
 
@@ -88,6 +101,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         c = self._cues[cue_index]
         self._timeline_container.cue = c
         self._current_cue_end_action_select_widget.setCurrentIndex(c.end_action.value)
+        self._current_cue_another_play_pressed_checkbox.setChecked(c.restart_on_another_play_press)
         self._cue_list_widget.selectRow(cue_index)
 
     def _add_button_clicked(self):
@@ -99,6 +113,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         The default for all cues is a 0 keyframe at the start.
         """
         # TODO implement
+        # TODO also think about channel type and name
         pass
 
     def _remove_channel_button_pressed(self):
