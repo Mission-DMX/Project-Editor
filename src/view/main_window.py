@@ -8,7 +8,7 @@ from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from network import NetworkManager
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
-from view.show_mode import ShowManagerWidget
+from view.show_mode import ShowManagerWidget, ShowPlayerWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patching_mode.patching_selector import PatchingSelector
@@ -36,7 +36,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # views
         views: list[tuple[str, QtWidgets.QWidget]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self)),
-            ("Editor Mode", MainWidget(ShowManagerWidget(self, self._board_configuration), self)),
+            ("Editor Mode", MainWidget(ShowManagerWidget(self._board_configuration, self), self)),
+            ("Show Mode", MainWidget(ShowPlayerWidget(self._board_configuration, self), self)),
             ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)), ("Debug", debug_console)]
 
         # select Views

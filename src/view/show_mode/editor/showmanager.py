@@ -5,8 +5,9 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-from PySide6 import QtGui, QtWidgets
 from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog
+from PySide6.QtGui import QAction
+from PySide6.QtCore import Qt
 from pyqtgraph.flowchart import Flowchart
 
 from file.read import read_document
@@ -18,7 +19,7 @@ from .filter_node_library import FilterNodeLibrary
 
 class ShowManagerWidget(QTabWidget):
     """Node Editor to create and manage filters."""
-    def __init__(self, parent: QWidget, board_configuration: BoardConfiguration) -> None:
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
         super().__init__(parent)
 
         self._library = FilterNodeLibrary()
@@ -34,11 +35,11 @@ class ShowManagerWidget(QTabWidget):
         self.tabCloseRequested.connect(self._delete_scene)
 
         # Toolbar for io/network actions
-        self._toolbar: list[QtGui.QAction] = []
-        save_show_file_button = QtGui.QAction("save Scene")
-        load_show_file_button = QtGui.QAction("load Scene")
-        enter_scene_button = QtGui.QAction("enter Scene")
-        send_show_button = QtGui.QAction("send Scene")
+        self._toolbar: list[QAction] = []
+        save_show_file_button = QAction("Save Show")
+        load_show_file_button = QAction("Load Show")
+        enter_scene_button = QAction("Load Scene")
+        send_show_button = QAction("Send Show")
 
         enter_scene_button.triggered.connect(self._enter_scene)
         send_show_button.triggered.connect(self._send_show_file)
@@ -59,7 +60,7 @@ class ShowManagerWidget(QTabWidget):
             self._board_configuration.broadcaster.delete_scene()
 
     @property
-    def toolbar(self) -> list[QtGui.QAction]:
+    def toolbar(self) -> list[QAction]:
         """toolbar for patching_mode"""
         return self._toolbar
 
