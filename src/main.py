@@ -9,7 +9,9 @@ from PySide6 import QtWidgets
 from Style import Style
 from view.main_window import MainWindow
 
-if __name__ == "__main__":
+
+def main():
+    """Startup"""
     logging.basicConfig(encoding='utf-8', level=logging.INFO)
     from cli.remote_control_port import RemoteCLIServer
 
@@ -24,3 +26,8 @@ if __name__ == "__main__":
     return_code = app.exec()
     cli_server.stop()
     sys.exit(return_code)
+
+
+if __name__ == "__main__":
+    """Only start if __main__"""
+    main()
