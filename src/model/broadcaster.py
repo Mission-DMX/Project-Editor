@@ -2,20 +2,34 @@
 """connector for Signals"""
 import random
 import re
+from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
 
 from model.patching_universe import PatchingUniverse
-from model.universe import Universe
+from .device import Device
+from .universe import Universe
+from .scene import Scene
 from view.dialogs.patching_dialog import PatchingDialog
 
 
 class Broadcaster(QtCore.QObject):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
+    change_active_scene: QtCore.Signal = QtCore.Signal(int)
+    load_show_file: QtCore.Signal = QtCore.Signal(Element)
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
+    ################################################################
+    clear_board_configuration: QtCore.Signal = QtCore.Signal()
+    board_configuration_loaded: QtCore.Signal = QtCore.Signal()
+    scene_created: QtCore.Signal = QtCore.Signal(Scene)
+    delete_scene: QtCore.Signal = QtCore.Signal(Scene)
+    delete_universe: QtCore.Signal = QtCore.Signal(Universe)
+    device_created: QtCore.Signal = QtCore.Signal(Device)
+    delete_device: QtCore.Signal = QtCore.Signal(Device)
+    ################################################################
     patching_universes: list[PatchingUniverse] = []
 
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()

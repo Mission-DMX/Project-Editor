@@ -6,11 +6,12 @@ from xml.etree import ElementTree
 from pyqtgraph.flowchart import Flowchart
 
 import proto.UniverseControl_pb2 as Proto
-from model.board_configuration import BoardConfiguration, Scene, Filter, Universe, UniverseFilter
+from model import BoardConfiguration, Scene, Universe, Filter
 from model.patching_universe import PatchingUniverse
+from view.show_mode.library import FilterNodeLibrary
 
 
-def read_document(file_name: str) -> BoardConfiguration:
+def read_document(file_name: str, board_configuration: BoardConfiguration):
     """Parses the specified file to a board configuration data model.
     
     Args:
@@ -19,8 +20,7 @@ def read_document(file_name: str) -> BoardConfiguration:
     Returns:
         A BoardConfiguration instance parsed from the provided file.
     """
-    board_configuration = BoardConfiguration()
-
+    board_configuration.broadcaster.clear_board_configuration.emit()
     tree = ElementTree.parse(file_name)
     root = tree.getroot()
 
@@ -55,7 +55,7 @@ def read_document(file_name: str) -> BoardConfiguration:
                 logging.warning("Show %s contains unknown element: %s",
                                 board_configuration.show_name, child.tag)
 
-    return board_configuration
+    board_configuration.broadcaster.board_configuration_loaded.emit()
 
 
 def _clean_tags(element: ElementTree.Element, prefix: str):
@@ -78,9 +78,9 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                     "Found attribute %s=%s while parsing scene for show %s",
                     key, value, board_configuration.show_name)
 
-    flowchart = Flowchart(name=human_readable_name)
+    flowchart = Flowchart(name=human_readable_name, library=FilterNodeLibrary())
 
-    scene = Scene(id=scene_id,
+    scene = Scene(scene_id=scene_id,
                   human_readable_name=human_readable_name,
                   flowchart=flowchart,
                   board_configuration=board_configuration)
@@ -93,7 +93,7 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                 logging.warning("Scene %s contains unknown element: %s",
                                 human_readable_name, child.tag)
 
-    board_configuration.scenes.append(scene)
+    board_configuration.broadcaster.scene_created.emit(scene)
 
 
 def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
@@ -113,10 +113,7 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
                     "Found attribute %s=%s while parsing filter for scene %s",
                     key, value, scene.human_readable_name)
 
-    if filter_type == 11:
-        filter_ = UniverseFilter(filter_id, scene.board_configuration, pos)
-    else:
-        filter_ = Filter(filter_id, filter_type, pos=pos)
+    filter_ = Filter(scene=scene, filter_id=filter_id, filter_type=filter_type, pos=pos)
 
     for child in filter_element:
         match child.tag:
@@ -233,7 +230,7 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     universe.name = name
     universe.description = description
 
-    board_configuration.universes.append(universe)
+    board_configuration.broadcaster.add_universe.emit(patching_universe)
 
 
 def _parse_physical_location(location_element: ElementTree.Element) -> int:

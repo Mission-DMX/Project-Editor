@@ -171,7 +171,7 @@ class FaderBank:
     """
 
     def __init__(self):
-        self.columns = []
+        self.columns: list[DeskColumn] = []
         self._pushed_to_device = False
 
     def add_column(self, col: DeskColumn):
@@ -220,11 +220,11 @@ class BankSet:
         return cls._active_bank_set
 
     @staticmethod
-    def get_linked_bank_sets():
+    def get_linked_bank_sets() -> list["BankSet"]:
         """This method returns a copy of the linked bank sets, save to be used by non friend classes."""
         return list(BankSet._linked_bank_sets)
 
-    def __init__(self, banks: list[FaderBank], description=None):
+    def __init__(self, banks: list[FaderBank] = None, description: str = None):
         """Construct a bank set object.
         After construction link() needs to be called in order to link the set with the control desk.
 
@@ -234,7 +234,10 @@ class BankSet:
         """
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
-        self.banks = banks
+        if banks:
+            self.banks = banks
+        else:
+            self.banks = []
         self.active_bank = 0
         if description:
             self.description = str(description)
@@ -295,7 +298,7 @@ class BankSet:
         Warning: This operation is expensive and might interrupt the interactions of the user. Add all columns to the
         bank at first. If all you'd like to do is updating a column: call the update function on that column.
         """
-        self.columns.append(bank)  # TODO ein BankSet has no columns attribute
+        self.banks.append(bank)  # TODO ein BankSet has no columns attribute
         self.update()
 
     def set_active_bank(self, i: int) -> bool:
