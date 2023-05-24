@@ -5,7 +5,7 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog
+from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QFileDialog
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
 from pyqtgraph.flowchart import Flowchart
@@ -135,7 +135,7 @@ class ShowManagerWidget(QTabWidget):
         Args:
             func: Function to be called after file was selected and confirmed. Function gets the file name as a string.
         """
-        file_dialog = QtWidgets.QFileDialog(self)
+        file_dialog = QFileDialog(self)
         file_dialog.fileSelected.connect(func)
         file_dialog.show()
 

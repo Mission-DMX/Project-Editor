@@ -14,7 +14,7 @@ class BoardConfiguration:
         self._default_active_scene: int = default_active_scene
         self._notes: str = notes
         self._scenes: list[Scene] = []
-        self._devices: list[str] = []
+        self._devices: list[Device] = []
         self._universes: list[Universe] = []
         self._ui_hints: dict[str, str] = {}
 
@@ -86,6 +86,21 @@ class BoardConfiguration:
         Args:
             device: The device to be removed.
         """
+        pass
+
+    def universe(self, universe_id: int) -> Universe | None:
+        """Tries to find universe by id.
+
+        Arg:
+            universe_id: The id of the universe requested.
+
+        Returns:
+            The universe if found, else None.
+        """
+        for universe in self._universes:
+            if universe.id == universe_id:
+                return universe
+        return None
 
     @property
     def show_name(self) -> str:

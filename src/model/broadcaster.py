@@ -65,7 +65,7 @@ class Broadcaster(QtCore.QObject):
         """
         self.view_is_patching.emit()
         form = PatchingDialog()
-        if form.exec():
+        if form.open():
             fixture = form.get_used_fixture()
             patching = form.patching.text()
             if patching[0] == "@":

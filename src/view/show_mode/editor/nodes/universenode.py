@@ -26,7 +26,12 @@ class UniverseNode(FilterNode):
             return None
         input_channel = f"input_{next_input + 1}"
         self.filter.filter_configurations[input_channel] = str(next_input)
-        return super().addInput(input_channel, **args)
+        term = super().addInput(input_channel, **args)
+        universe_id = int(self._filter.filter_configurations["universe"])
+        universe = self._filter.scene.board_configuration.universe(universe_id)
+        for channel in universe.patching:
+            if next_input == channel.address:
+                term.rename(f"{term.name} : {channel.fixture.short_name}")
 
     def removeTerminal(self, term):
         if term.isInput():

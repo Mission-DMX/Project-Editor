@@ -18,7 +18,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
     """
 
     def __init__(self, filter_: Filter, parent: QGraphicsItem):
-        super().__init__("src/resources/settings.svg", parent)
+        super().__init__("resources/settings.svg", parent)
         self.filter = filter_
         self.on_update = lambda: None
         self.setScale(0.2)
