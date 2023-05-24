@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget,\
-    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox
+    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton
 
 from model import DataType
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
@@ -46,17 +46,20 @@ class CueEditor(NodeEditorFilterConfigWidget):
         top_layout = QVBoxLayout()
         cue_list_and_current_settings_container = QWidget()
         cue_list_and_current_settings_container_layout = QHBoxLayout()
-        self._cue_list_widget = QTableWidget()
+        self._cue_list_widget = QTableWidget(cue_list_and_current_settings_container)
         self._cue_list_widget.setColumnCount(3)
         self._cue_list_widget.setHorizontalHeaderLabels(["Cue Number", "Duration", "End Action"])
         cue_list_and_current_settings_container_layout.addWidget(self._cue_list_widget)
-        cue_settings_container = QWidget()
+        cue_settings_container = QWidget(parent=self._parent_widget)
         cue_settings_container_layout = QFormLayout()
-        self._current_cue_end_action_select_widget = QComboBox()
+        self._current_cue_end_action_select_widget = QComboBox(cue_settings_container)
         self._current_cue_end_action_select_widget.addItems(EndAction.formatted_value_list())
         cue_settings_container_layout.addRow("End Action", self._current_cue_end_action_select_widget)
         self._current_cue_another_play_pressed_checkbox = QCheckBox("Restart cue on Play pressed", self._parent_widget)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
+        increase_zoom_button = QPushButton("+", cue_settings_container)
+        increase_zoom_button.pressed.connect(self.increase_zoom)
+        cue_settings_container_layout.addRow("Zoom", increase_zoom_button)
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
         top_layout.addWidget(cue_list_and_current_settings_container)
@@ -103,6 +106,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._current_cue_end_action_select_widget.setCurrentIndex(c.end_action.value)
         self._current_cue_another_play_pressed_checkbox.setChecked(c.restart_on_another_play_press)
         self._cue_list_widget.selectRow(cue_index)
+
+    def increase_zoom(self):
+        self._timeline_container.increase_zoom()
 
     def _add_button_clicked(self):
         self.select_cue(self.add_cue(Cue()))

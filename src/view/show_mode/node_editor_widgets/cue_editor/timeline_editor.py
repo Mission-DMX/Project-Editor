@@ -166,6 +166,18 @@ class TimelineContainer(QWidget):
     @cue.setter
     def cue(self, c: Cue):
         self._cue = c
+        # TODO clear keyframes_panel
         for channel in c.channel_types:
             self.add_channel(channel)
+        # TODO introduce property
+        self._keyframes_panel.frames = c._frames
+        self._keyframes_panel.repaint()
+
+    def increase_zoom(self):
+        self._keyframes_panel._time_zoom /= 2
+        self._keyframes_panel.repaint()
+
+    def decrease_zoom(self):
+        self._keyframes_panel._time_zoom *= 2
+        self._keyframes_panel.repaint()
 
