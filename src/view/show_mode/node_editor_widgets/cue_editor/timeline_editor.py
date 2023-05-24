@@ -25,14 +25,6 @@ class TimelineContentWidget(QLabel):
         self.compute_resize()
         # TODO implement
 
-    # def boundingRect(self) -> PySide6.QtCore.QRectF:
-    #    """This method returns the required dimensions of the widget"""
-    #    # width = 10 + self._last_keyframe_end_point / self._time_zoom
-    #    # channel label with + a bit of extra space for a timescale below and the cursor triangle above
-    #    # height = len(self._channels) * CHANNEL_DISPLAY_HEIGHT + 20
-    #    dimensions = self.geometry()
-    #    return QRectF(0, 0, dimensions.width, dimensions.height)
-
     def repaint(self) -> None:
         canvas = self.pixmap()
         w = canvas.width()
@@ -46,17 +38,34 @@ class TimelineContentWidget(QLabel):
         # Render background
         painter.fillRect(0, 0, w, h, QColor.fromRgb(0x3A, 0x3A, 0x3A))
 
-        # TODO render transitions
+        # render transitions
         i = 0
         channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
         for c in self._channels:
-            if i % 2 == 0:
+            if (i % 2) == 0:
                 painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, 20 + (i + 1) * CHANNEL_DISPLAY_HEIGHT,
                                  channel_background_color)
             i += 1
 
-        # render cursor and bars
+        marker_brush = QBrush(QColor.fromRgb(0xFF, 0xFF, 0x00))
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
+        painter.setBrush(light_gray_brush)
+        for kf in self.frames:
+            i = 0
+            x = kf.timestamp / self._time_zoom
+            for s in kf._states:
+                y = 40 + i * CHANNEL_DISPLAY_HEIGHT
+                marker_path = QPainterPath(QPoint(x, y))
+                marker_path.lineTo(x + 10, y + 10)
+                marker_path.lineTo(x, y + 20)
+                marker_path.lineTo(x - 10, y + 10)
+                marker_path.lineTo(x, y)
+                painter.fillPath(marker_path, marker_brush)
+                # TODO show color circle if color instead of text
+                painter.drawText(x + 15, y + 10, s.encode())
+                i += 1
+
+        # render cursor and bars
         painter.setBrush(light_gray_brush)
         painter.drawLine(0, 20, w, 20)
         painter.drawLine(0, h - 20, w, h - 20)
@@ -69,7 +78,7 @@ class TimelineContentWidget(QLabel):
         cursor_path.lineTo(-1 + abs_cursor_pos, h - 20)
         cursor_path.lineTo(-1 + abs_cursor_pos, 20)
         cursor_path.lineTo(-16 + abs_cursor_pos, 0)
-        painter.fillPath(cursor_path, QBrush(QColor(0xFF, 0x2F, 0x2F)))
+        painter.fillPath(cursor_path, QBrush(QColor.fromRgb(0xFF, 0x2F, 0x2F)))
 
         # render timescale
         x = 0
