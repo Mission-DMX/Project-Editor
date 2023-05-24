@@ -20,8 +20,8 @@ class EndAction(Enum):
         else:
             return "Unknown action"
 
-    @property
-    def formatted_value_list(self) -> list[str]:
+    @staticmethod
+    def formatted_value_list() -> list[str]:
         return [str(a) for a in [EndAction.HOLD, EndAction.START_AGAIN, EndAction.NEXT]]
 
     def get_filter_format_str(self) -> str:

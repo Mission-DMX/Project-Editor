@@ -3,6 +3,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget,\
     QTableWidgetItem, QFormLayout, QComboBox, QCheckBox
 
+from model import DataType
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
@@ -52,9 +53,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         cue_settings_container = QWidget()
         cue_settings_container_layout = QFormLayout()
         self._current_cue_end_action_select_widget = QComboBox()
-        self._current_cue_end_action_select_widget.insertItems(0, EndAction.formatted_value_list)
+        self._current_cue_end_action_select_widget.addItems(EndAction.formatted_value_list())
         cue_settings_container_layout.addRow("End Action", self._current_cue_end_action_select_widget)
-        self._current_cue_another_play_pressed_checkbox = QCheckBox("Restart cue on Play pressed", self.parent_widget)
+        self._current_cue_another_play_pressed_checkbox = QCheckBox("Restart cue on Play pressed", self._parent_widget)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
@@ -66,7 +67,6 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar.addAction(toolbar_add_cue_action)
         toolbar_add_channel_action = QAction("Add Channel", self._parent_widget)
         toolbar_add_channel_action.setStatusTip("Add a new channel to the filter")
-        toolbar_add_channel_action.setEnabled(False)
         toolbar_add_channel_action.triggered.connect(self._add_channel_button_pressed)
         toolbar.addAction(toolbar_add_channel_action)
         toolbar_remove_channel_action = QAction("Remove Channel", self._parent_widget)
@@ -79,7 +79,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         v_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         v_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # TODO link up/down button events to scrolling of v_scroll_area
-        self._timeline_container = TimelineContainer()
+        self._timeline_container = TimelineContainer(self._parent_widget)
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
@@ -114,6 +114,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         """
         # TODO implement
         # TODO also think about channel type and name
+        self._timeline_container.add_channel(DataType.DT_8_BIT, "Some Name")
         pass
 
     def _remove_channel_button_pressed(self):
