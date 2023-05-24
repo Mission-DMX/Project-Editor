@@ -7,10 +7,10 @@ from xml.etree.ElementTree import Element
 from PySide6 import QtCore
 
 from model.patching_universe import PatchingUniverse
-from .device import Device
-from .universe import Universe
-from .scene import Scene
 from view.dialogs.patching_dialog import PatchingDialog
+from .device import Device
+from .scene import Scene
+from .universe import Universe
 
 
 class Broadcaster(QtCore.QObject):
@@ -44,7 +44,7 @@ class Broadcaster(QtCore.QObject):
         super().__init__()
         self.add_universe.connect(self._add_universe)
         self.connection_state_updated.connect(self._connection_changed)
-        self.view_patching.connect(self.patch)
+        self.view_patching.connect(self._run_patch)
 
     def _add_universe(self, universe: PatchingUniverse):
         self.patching_universes.append(universe)
@@ -56,17 +56,23 @@ class Broadcaster(QtCore.QObject):
             for universe in self.patching_universes:
                 self.send_universe.emit(universe)
 
-    def patch(self) -> None:
+    def _run_patch(self) -> None:
+        """run the patching dialog"""
+        dialog = PatchingDialog()
+        dialog.finished.connect(lambda: self._patch(dialog))
+        dialog.open()
+
+    def _patch(self, form: PatchingDialog) -> None:
         """
         patch a specific fixture
 
         Returns:
             universe: the index of modified universe
             updated: list of indices of modified channels
-
         """
-        form = PatchingDialog()
-        if form.exec():
+
+        # form = PatchingDialog()
+        if form.result():
             fixture = form.get_used_fixture()
             patching = form.patching.text()
             if patching[0] == "@":
@@ -92,4 +98,5 @@ class Broadcaster(QtCore.QObject):
                     channel += len(fixture.mode['channels'])
                 else:
                     channel += offset
+
         self.view_leave_patching.emit()
