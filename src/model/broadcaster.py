@@ -39,6 +39,16 @@ class Broadcaster(QtCore.QObject):
 
     view_to_file_editor: QtCore.Signal = QtCore.Signal()
     view_leave_file_editor: QtCore.Signal = QtCore.Signal()
+    ################################################################
+    jogwheel_rotated_left: QtCore.Signal = QtCore.Signal()
+    jogwheel_rotated_right: QtCore.Signal = QtCore.Signal()
+    desk_media_rev_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_forward_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_stop_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_play_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_rec_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
 
     def __init__(self):
         super().__init__()

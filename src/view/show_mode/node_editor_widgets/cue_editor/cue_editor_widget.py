@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBox
     QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel
 
 from model import DataType
+from model.broadcaster import Broadcaster
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
@@ -78,6 +79,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
+        self._jw_zoom_mode = False
+        Broadcaster.desk_media_rec_pressed.connect(self.rec_pressed)
+        Broadcaster.jogwheel_rotated_right.connect(self.jg_right)
+        Broadcaster.jogwheel_rotated_left.connect(self.jg_left)
+        Broadcaster.desk_media_scrub_pressed.connect(self.scrub_pressed)
+        Broadcaster.desk_media_scrub_released.connect(self.scrub_released)
 
         self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
@@ -162,3 +169,31 @@ class CueEditor(NodeEditorFilterConfigWidget):
         """
         # TODO implement
         pass
+
+    def rec_pressed(self):
+        self._timeline_container.record_pressed()
+
+    def jg_right(self):
+        if self._jw_zoom_mode:
+            self._timeline_container.increase_zoom()
+        else:
+            self._timeline_container.move_cursor_right()
+
+    def jg_left(self):
+        if self._jw_zoom_mode:
+            self._timeline_container.decrease_zoom()
+        else:
+            self._timeline_container.move_cursor_left()
+
+    def scrub_pressed(self):
+        self._jw_zoom_mode = True
+
+    def scrub_released(self):
+        self._jw_zoom_mode = False
+
+    def parent_closed(self):
+        Broadcaster.desk_media_rec_pressed.disconnect(self.rec_pressed)
+        Broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
+        Broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
+        Broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
+        Broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)

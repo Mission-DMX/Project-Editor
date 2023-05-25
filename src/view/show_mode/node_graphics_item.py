@@ -2,6 +2,7 @@
 """Module for filter settings editor"""
 import logging
 
+import PySide6
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDialog, QFormLayout
@@ -150,3 +151,8 @@ class FilterSettingsDialog(QDialog):
             for k in self._special_widget.parameters.keys():
                 self.filter.initial_parameters[k] = self._special_widget.parameters[k]
         self.close()
+
+    def closeEvent(self, arg__1: PySide6.QtGui.QCloseEvent) -> None:
+        if self._special_widget:
+            self._special_widget.parent_closed()
+        super().closeEvent(arg__1)

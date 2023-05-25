@@ -135,6 +135,10 @@ class NetworkManager(QtCore.QObject):
                     message: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change()
                     message.ParseFromString(bytes(msg))
                     self._button_clicked(message)
+                case proto.MessageTypes_pb2.MSGT_DESK_UPDATE:
+                    message: proto.Console_pb2.desk_update = proto.Console_pb2.desk_update()
+                    message.ParseFromString(bytes(msg))
+                    self._handle_desk_update(message)
                 case _:
                     pass
 
@@ -174,8 +178,38 @@ class NetworkManager(QtCore.QObject):
             case proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW:
                 if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
                     self._broadcaster.view_to_file_editor.emit()
+            case proto.Console_pb2.ButtonCode.BTN_REV_LASTCUE:
+                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.desk_media_rev_pressed.emit()
+            case proto.Console_pb2.ButtonCode.BTN_FF_NEXTCUE:
+                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.desk_media_forward_pressed.emit()
+            case proto.Console_pb2.ButtonCode.BTN_STOP_STOPCUE:
+                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.desk_media_stop_pressed.emit()
+            case proto.Console_pb2.ButtonCode.BTN_PLAY_RUNCUE:
+                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.desk_media_play_pressed.emit()
+            case proto.Console_pb2.ButtonCode.BTN_REC_RECFRAME:
+                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.desk_media_rec_pressed.emit()
+            case proto.Console_pb2.ButtonCode.BTN_SCRUB_JOGWHEELMODESWITCH:
+                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.desk_media_scrub_pressed.emit()
+                else:
+                    self._broadcaster.desk_media_scrub_released.emit()
             case _:
                 pass
+
+    def _handle_desk_update(self, msg: proto.Console_pb2.desk_update):
+        # TODO handle update of selected column
+        if msg.jogwheel_change_since_last_update < 0:
+            for i in range(msg.jogwheel_change_since_last_update * -1):
+                Broadcaster.jogwheel_rotated_left.emit()
+        else:
+            for i in range(msg.jogwheel_change_since_last_update):
+                Broadcaster.jogwheel_rotated_right.emit()
+        pass
 
     def _on_state_changed(self) -> None:
         """Starts or stops to send messages if the connection state changes."""

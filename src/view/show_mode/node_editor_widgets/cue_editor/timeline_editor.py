@@ -113,13 +113,33 @@ class TimelineContentWidget(QLabel):
         self.setMinimumWidth(max(parent_width, int(self._last_keyframe_end_point / self._time_zoom),
                                  int(self.cursor_position / self._time_zoom)))
         self.setMinimumHeight(max(parent_height, int(len(self._channels) * CHANNEL_DISPLAY_HEIGHT) + 2 * 20))
-        print("New Size {}x{} from min {}x{}".format(self.width(), self.height(),
-                                                     self.minimumWidth(), self.minimumHeight()))
+        self.repaint()
 
     def add_channels(self, channels: list[DataType]):
         for c in channels:
             self._channels.append(c)
         self.compute_resize()
+
+    def zoom_out(self):
+        self._time_zoom *= 2
+        self.compute_resize()
+
+    def zoom_in(self):
+        self._time_zoom /= 2
+        self.compute_resize()
+
+    def move_cursor_right(self):
+        self.cursor_position += self._time_zoom * 10
+        self.compute_resize()
+
+    def move_cursor_left(self):
+        self.cursor_position += self._time_zoom * 10
+        self.compute_resize()
+
+    def mouseReleaseEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
+        super().mouseReleaseEvent(ev)
+        if ev.y() <= 20:
+            self.cursor_position = ev.x() * self._time_zoom
         self.repaint()
 
 
@@ -175,12 +195,20 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.repaint()
 
     def increase_zoom(self):
-        self._keyframes_panel._time_zoom /= 2
-        self._keyframes_panel.repaint()
+        self._keyframes_panel.zoom_in()
 
     def decrease_zoom(self):
-        self._keyframes_panel._time_zoom *= 2
-        self._keyframes_panel.repaint()
+        self._keyframes_panel.zoom_out()
+
+    def move_cursor_left(self):
+        self._keyframes_panel.move_cursor_left()
+
+    def move_cursor_right(self):
+        self._keyframes_panel.move_cursor_right()
+
+    def record_pressed(self):
+        # TODO implement
+        pass
 
     def format_zoom(self) -> str:
         return "{} Sec/Pixel".format(self._keyframes_panel._time_zoom)
