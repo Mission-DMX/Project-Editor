@@ -29,6 +29,20 @@ class DataType(IntFlag):
         else:
             return "8bit"  # bools are 8 bit
 
+    @staticmethod
+    def from_filter_str(type_definition_string: str):
+        match type_definition_string:
+            case "8bit":
+                return DataType.DT_8_BIT
+            case "16bit":
+                return DataType.DT_16_BIT
+            case "float":
+                return DataType.DT_DOUBLE
+            case "color":
+                return DataType.DT_COLOR
+            case _:
+                return DataType.DT_8_BIT
+
 
 class Filter:
     """Filter for show file"""

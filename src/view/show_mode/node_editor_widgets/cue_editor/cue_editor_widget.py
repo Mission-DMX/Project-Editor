@@ -24,20 +24,32 @@ class CueEditor(NodeEditorFilterConfigWidget):
         return self._parent_widget
 
     def _load_parameters(self, parameters: dict[str, str]):
-        # TODO implement
-        pass
+        self._global_restart_on_end = parameters.get("end_handling") == "start_again"
+        mapping_str = parameters.get("mapping")
+        cuelist_definition_str = parameters.get("cuelist")
+        if cuelist_definition_str:
+            cue_definitions = cuelist_definition_str.split("$")
+        else:
+            return
+        for i in range(len(cue_definitions)):
+            self.add_cue(Cue())
+        if mapping_str:
+            for channel_dev in mapping_str.split(';'):
+                splitted_channel_dev = channel_dev.split(':')
+                for cue in self._cues:
+                    cue.add_channel(splitted_channel_dev[0], splitted_channel_dev[1])
+        for cue_def in cue_definitions:
+            # TODO parse keyframes and add them
+            pass
 
     def _get_parameters(self) -> dict[str, str]:
-        # TODO improve channel naming by introducing channel name list
-        from ctypes import c_int64
-        i = c_int64(0)
-
-        def increment(num: c_int64) -> int:
-            num.value += 1
-            return num.value
+        if len(self._cues) > 0:
+            mapping_str = ";".join(["{}:{}".format(t[0], t[1].format_for_filters()) for t in self._cues[0].channels])
+        else:
+            mapping_str = ""
         d = {
                 "end_handling": "start_again" if self._global_restart_on_end else "hold",
-                "mapping": ";".join(["channel_{}:{}".format(increment(i), t.format_for_filters()) for t in self._cues[0].channel_types ]) if len(self._cues) > 0 else "",
+                "mapping": mapping_str,
                 "cuelist": "$".join([c.format_cue() for c in self._cues])
             }
         return d

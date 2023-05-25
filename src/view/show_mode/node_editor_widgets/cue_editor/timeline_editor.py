@@ -44,11 +44,9 @@ class TimelineContainer(QWidget):
     @cue.setter
     def cue(self, c: Cue):
         self._cue = c
-        i = 0
         # TODO clear keyframes_panel
-        for channel in c.channel_types:
-            i += 1
-            self.add_channel(channel, str(i))
+        for channel in c.channels:
+            self.add_channel(channel[1], channel[0])
         # TODO introduce property
         self._keyframes_panel.frames = c._frames
         self._keyframes_panel.repaint()

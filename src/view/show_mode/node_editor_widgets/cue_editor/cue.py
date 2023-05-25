@@ -158,6 +158,7 @@ class Cue:
     def __init__(self):
         self.end_action = EndAction.HOLD
         self._frames: list[KeyFrame] = []
+        self._channel_definitions: list[tuple[str, DataType]] = []
         self.restart_on_another_play_press: bool = False
 
     @property
@@ -179,10 +180,19 @@ class Cue:
         else:
             return self._frames[0].get_data_types()
 
+    @property
+    def channels(self) -> list[tuple[str, DataType]]:
+        """Returns the nominal channel definitions"""
+        return list(self._channel_definitions)
+
     def format_cue(self) -> str:
         """This method returns the cue formatted in the filter config format."""
         end_handling_str = self.end_action.get_filter_format_str()
         restart_beh_str = "restart" if self.restart_on_another_play_press else "do_nothing"
         frames_str_list = [f.format_filter_str() for f in self._frames]
         "{}#{}#{}".format("|".join(frames_str_list), end_handling_str, restart_beh_str)
+
+    def add_channel(self, name: str, type_str: str):
+        """Add a channel name to list of names"""
+        self._channel_definitions.append((name, DataType.from_filter_str(type_str)))
 
