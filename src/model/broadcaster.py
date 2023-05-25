@@ -1,16 +1,13 @@
 # coding=utf-8
 """connector for Signals"""
-import random
-import re
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
 
 from model.patching_universe import PatchingUniverse
 from .device import Device
-from .universe import Universe
 from .scene import Scene
-from view.dialogs.patching_dialog import PatchingDialog
+from .universe import Universe
 
 
 class Broadcaster(QtCore.QObject):
@@ -54,7 +51,6 @@ class Broadcaster(QtCore.QObject):
         super().__init__()
         self.add_universe.connect(self._add_universe)
         self.connection_state_updated.connect(self._connection_changed)
-        self.view_patching.connect(self.patch)
 
     def _add_universe(self, universe: PatchingUniverse):
         self.patching_universes.append(universe)
@@ -65,41 +61,3 @@ class Broadcaster(QtCore.QObject):
         if connected:
             for universe in self.patching_universes:
                 self.send_universe.emit(universe)
-
-    def patch(self) -> None:
-        """
-        patch a specific fixture
-
-        Returns:
-            universe: the index of modified universe
-            updated: list of indices of modified channels
-
-        """
-        form = PatchingDialog()
-        if form.exec():
-            fixture = form.get_used_fixture()
-            patching = form.patching.text()
-            if patching[0] == "@":
-                patching = "1" + patching
-            spliter = re.split('@|-|/', patching)
-            spliter += [0] * (4 - len(spliter))
-            spliter = list(map(int, spliter))
-            number = spliter[0]
-            universe = spliter[1] - 1
-            channel = spliter[2] - 1
-            offset = spliter[3]
-
-            if channel == -1:
-                channel = 0
-            for _ in range(number):
-                color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-                for index in range(len(fixture.mode['channels'])):
-                    item = self.patching_universes[universe].patching[channel + index]
-                    item.fixture = fixture
-                    item.fixture_channel = index
-                    item.color = color
-                if offset == 0:
-                    channel += len(fixture.mode['channels'])
-                else:
-                    channel += offset
-        self.view_leave_patching.emit()

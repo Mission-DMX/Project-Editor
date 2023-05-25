@@ -8,10 +8,10 @@ from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from network import NetworkManager
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
-from view.show_mode.node_editor import NodeEditorWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
-from view.patching_mode.patching_selector import PatchingSelector
+from view.patch_mode.patch_mode import PatchMode
+from view.show_mode.node_editor import NodeEditorWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -39,7 +39,7 @@ class MainWindow(QtWidgets.QMainWindow):
              lambda: self._to_widget(0)),
             ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self),
              lambda: self._broadcaster.view_to_file_editor.emit()),
-            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self),
+            ("Patch", MainWidget(PatchMode(self._broadcaster, self), self),
              lambda: self._broadcaster.view_to_patch_menu.emit()),
             ("Debug", debug_console, lambda: self._to_widget(3))]
 

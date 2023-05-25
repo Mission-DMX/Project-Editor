@@ -7,16 +7,16 @@ from PySide6 import QtWidgets, QtGui
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from view.dialogs.universe_dialog import UniverseDialog
-from view.patching_mode.patch_plan_widget import PatchPlanWidget
+from view.patch_mode.patch_plan.patch_plan_widget import PatchPlanWidget
 
 if TYPE_CHECKING:
-    from view.main_window import MainWindow
+    from view.patch_mode.patch_mode import PatchMode
 
 
-class PatchingSelector(QtWidgets.QTabWidget):
+class PatchPlanSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
 
-    def __init__(self, broadcaster: Broadcaster, parent: "MainWindow"):
+    def __init__(self, broadcaster: Broadcaster, parent: "PatchMode"):
         super().__init__(parent=parent)
         self._broadcaster = broadcaster
         self._broadcaster.add_universe.connect(self._add_universe)
@@ -26,11 +26,6 @@ class PatchingSelector(QtWidgets.QTabWidget):
         # self.currentChanged.connect(self._tab_changed)
         self.tabBarClicked.connect(self._tab_clicked)
         self.tabBar().setCurrentIndex(0)
-
-    @property
-    def toolbar(self) -> list[QtGui.QAction]:
-        """toolbar for patching_mode"""
-        return self._toolbar
 
     def _generate_universe(self) -> None:
         """add a new Universe to universe Selector"""
