@@ -182,3 +182,6 @@ class TimelineContainer(QWidget):
         self._keyframes_panel._time_zoom *= 2
         self._keyframes_panel.repaint()
 
+    def format_zoom(self) -> str:
+        return "{} Sec/Pixel".format(self._keyframes_panel._time_zoom)
+

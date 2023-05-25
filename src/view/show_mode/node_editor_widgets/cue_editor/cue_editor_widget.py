@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget,\
-    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
+    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel
 
 from model import DataType
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
@@ -47,7 +47,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         top_layout = QVBoxLayout()
 
         # configure top widgets
-        cue_list_and_current_settings_container = QWidget()
+        cue_list_and_current_settings_container = QWidget(self._parent_widget)
         cue_list_and_current_settings_container_layout = QHBoxLayout()
         self._cue_list_widget = QTableWidget(cue_list_and_current_settings_container)
         self._cue_list_widget.setColumnCount(3)
@@ -60,11 +60,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         cue_settings_container_layout.addRow("End Action", self._current_cue_end_action_select_widget)
         self._current_cue_another_play_pressed_checkbox = QCheckBox("Restart cue on Play pressed", self._parent_widget)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
-        increase_zoom_button = QPushButton("+", cue_settings_container)
-        increase_zoom_button.pressed.connect(self.increase_zoom)
-        cue_settings_container_layout.addRow("Zoom", increase_zoom_button)
+
+        self._zoom_label: QLabel = None
+        self.setup_zoom_panel(cue_settings_container, cue_settings_container_layout)
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
+        cue_list_and_current_settings_container.setLayout(cue_list_and_current_settings_container_layout)
         top_layout.addWidget(cue_list_and_current_settings_container)
 
         self.configure_toolbar(top_layout)
@@ -77,9 +78,25 @@ class CueEditor(NodeEditorFilterConfigWidget):
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
+
+        self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
         self._cues: list[Cue] = []
         self.add_cue(Cue())  # FIXME
+
+    def setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
+        zoom_panel = QWidget(cue_settings_container)
+        zoom_panel_layout = QHBoxLayout()
+        zoom_panel.setLayout(zoom_panel_layout)
+        self._zoom_label = QLabel(zoom_panel)
+        zoom_panel_layout.addWidget(self._zoom_label)
+        increase_zoom_button = QPushButton("+", zoom_panel)
+        increase_zoom_button.pressed.connect(self.increase_zoom)
+        zoom_panel_layout.addWidget(increase_zoom_button)
+        decrease_zoom_button = QPushButton("-", zoom_panel)
+        decrease_zoom_button.pressed.connect(self.decrease_zoom)
+        zoom_panel_layout.addWidget(decrease_zoom_button)
+        cue_settings_container_layout.addRow("Zoom", zoom_panel)
 
     def configure_toolbar(self, top_layout):
         toolbar = QToolBar(parent=self._parent_widget)
@@ -97,6 +114,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar_remove_channel_action.triggered.connect(self._remove_channel_button_pressed)
         toolbar.addAction(toolbar_remove_channel_action)
         top_layout.addWidget(toolbar)
+
+    def _set_zoom_label_text(self):
+        self._zoom_label.setText(self._timeline_container.format_zoom())
 
     def add_cue(self, cue: Cue) -> int:
         target_row = self._cue_list_widget.rowCount() + 1
@@ -117,9 +137,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def increase_zoom(self):
         self._timeline_container.increase_zoom()
+        self._set_zoom_label_text()
 
     def decrease_zoom(self):
         self._timeline_container.decrease_zoom()
+        self._set_zoom_label_text()
 
     def _add_button_clicked(self):
         self.select_cue(self.add_cue(Cue()))
