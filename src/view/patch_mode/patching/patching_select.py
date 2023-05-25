@@ -31,7 +31,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         if not os.path.exists(fixtures_path):
             url = 'https://open-fixture-library.org/download.ofl'
             r = requests.get(url, allow_redirects=True)
-            open(os.path.join(zip_path, 'fixtures.zip'), 'wb').write(r.content)
+            open(os.path.join(cache_path, 'fixtures.zip'), 'wb').write(r.content)
             with zipfile.ZipFile(zip_path) as zip_ref:
                 zip_ref.extractall(fixtures_path)
         manufacturers: list[tuple[Manufacture, list[Fixture]]] = generate_manufacturers(fixtures_path)

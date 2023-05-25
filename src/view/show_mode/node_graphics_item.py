@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDi
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Filter
+from model.broadcaster import Broadcaster
 from view.show_mode.node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.node_editor_widgets.cue_editor import CueEditor
 

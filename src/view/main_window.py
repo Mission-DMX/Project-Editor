@@ -27,6 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # first logging to don't miss logs
         debug_console = LoggingWidget()
         self._broadcaster = Broadcaster()
+        Broadcaster.last_instance = self._broadcaster
         self.setWindowTitle("Project-Editor")
 
         # model objects
@@ -37,7 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self),
              lambda: self._to_widget(0)),
-            ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self),
+            ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration, self._broadcaster), self),
              lambda: self._broadcaster.view_to_file_editor.emit()),
             ("Patch", MainWidget(PatchMode(self._broadcaster, self), self),
              lambda: self._broadcaster.view_to_patch_menu.emit()),

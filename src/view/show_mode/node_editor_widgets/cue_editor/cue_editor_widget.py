@@ -80,11 +80,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
         self._jw_zoom_mode = False
-        Broadcaster.desk_media_rec_pressed.connect(self.rec_pressed)
-        Broadcaster.jogwheel_rotated_right.connect(self.jg_right)
-        Broadcaster.jogwheel_rotated_left.connect(self.jg_left)
-        Broadcaster.desk_media_scrub_pressed.connect(self.scrub_pressed)
-        Broadcaster.desk_media_scrub_released.connect(self.scrub_released)
+        Broadcaster.last_instance.desk_media_rec_pressed.connect(self.rec_pressed)
+        Broadcaster.last_instance.jogwheel_rotated_right.connect(self.jg_right)
+        Broadcaster.last_instance.jogwheel_rotated_left.connect(self.jg_left)
+        Broadcaster.last_instance.desk_media_scrub_pressed.connect(self.scrub_pressed)
+        Broadcaster.last_instance.desk_media_scrub_released.connect(self.scrub_released)
 
         self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
@@ -175,13 +175,15 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def jg_right(self):
         if self._jw_zoom_mode:
-            self._timeline_container.increase_zoom()
+            self._timeline_container.increase_zoom(1.25)
+            self._set_zoom_label_text()
         else:
             self._timeline_container.move_cursor_right()
 
     def jg_left(self):
         if self._jw_zoom_mode:
-            self._timeline_container.decrease_zoom()
+            self._timeline_container.decrease_zoom(1.25)
+            self._set_zoom_label_text()
         else:
             self._timeline_container.move_cursor_left()
 
@@ -192,8 +194,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._jw_zoom_mode = False
 
     def parent_closed(self):
-        Broadcaster.desk_media_rec_pressed.disconnect(self.rec_pressed)
-        Broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
-        Broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
-        Broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
-        Broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
+        Broadcaster.last_instance.desk_media_rec_pressed.disconnect(self.rec_pressed)
+        Broadcaster.last_instance.jogwheel_rotated_right.disconnect(self.jg_right)
+        Broadcaster.last_instance.jogwheel_rotated_left.disconnect(self.jg_left)
+        Broadcaster.last_instance.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
+        Broadcaster.last_instance.desk_media_scrub_released.disconnect(self.scrub_released)

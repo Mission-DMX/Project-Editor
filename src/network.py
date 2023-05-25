@@ -205,10 +205,10 @@ class NetworkManager(QtCore.QObject):
         # TODO handle update of selected column
         if msg.jogwheel_change_since_last_update < 0:
             for i in range(msg.jogwheel_change_since_last_update * -1):
-                Broadcaster.jogwheel_rotated_left.emit()
+                self._broadcaster.jogwheel_rotated_left.emit()
         else:
             for i in range(msg.jogwheel_change_since_last_update):
-                Broadcaster.jogwheel_rotated_right.emit()
+                self._broadcaster.jogwheel_rotated_right.emit()
         pass
 
     def _on_state_changed(self) -> None:

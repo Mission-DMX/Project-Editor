@@ -47,6 +47,8 @@ class Broadcaster(QtCore.QObject):
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
 
+    last_instance: "Broadcaster" = None
+
     def __init__(self):
         super().__init__()
         self.add_universe.connect(self._add_universe)

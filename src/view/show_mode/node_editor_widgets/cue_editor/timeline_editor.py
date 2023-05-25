@@ -120,12 +120,12 @@ class TimelineContentWidget(QLabel):
             self._channels.append(c)
         self.compute_resize()
 
-    def zoom_out(self):
-        self._time_zoom *= 2
+    def zoom_out(self, factor: float = 2.0):
+        self._time_zoom *= factor
         self.compute_resize()
 
-    def zoom_in(self):
-        self._time_zoom /= 2
+    def zoom_in(self, factor: float = 2.0):
+        self._time_zoom /= factor
         self.compute_resize()
 
     def move_cursor_right(self):
@@ -133,7 +133,9 @@ class TimelineContentWidget(QLabel):
         self.compute_resize()
 
     def move_cursor_left(self):
-        self.cursor_position += self._time_zoom * 10
+        self.cursor_position -= self._time_zoom * 10
+        if self.cursor_position < 0:
+            self.cursor_position = 0.0
         self.compute_resize()
 
     def mouseReleaseEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
@@ -187,18 +189,20 @@ class TimelineContainer(QWidget):
     @cue.setter
     def cue(self, c: Cue):
         self._cue = c
+        i = 0
         # TODO clear keyframes_panel
         for channel in c.channel_types:
-            self.add_channel(channel)
+            i += 1
+            self.add_channel(channel, str(i))
         # TODO introduce property
         self._keyframes_panel.frames = c._frames
         self._keyframes_panel.repaint()
 
-    def increase_zoom(self):
-        self._keyframes_panel.zoom_in()
+    def increase_zoom(self, factor: float = 2.0):
+        self._keyframes_panel.zoom_in(factor)
 
-    def decrease_zoom(self):
-        self._keyframes_panel.zoom_out()
+    def decrease_zoom(self, factor: float = 2.0):
+        self._keyframes_panel.zoom_out(factor)
 
     def move_cursor_left(self):
         self._keyframes_panel.move_cursor_left()
@@ -211,5 +215,5 @@ class TimelineContainer(QWidget):
         pass
 
     def format_zoom(self) -> str:
-        return "{} Sec/Pixel".format(self._keyframes_panel._time_zoom)
+        return "{0:0>3} Sec/Pixel".format(self._keyframes_panel._time_zoom)
 
