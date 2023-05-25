@@ -31,7 +31,6 @@ class TimelineContentWidget(QLabel):
         h = canvas.height()
         if w == 0 or h == 0:
             return
-        print("Drawing w:{} h:{}".format(w, h))
         painter = QtGui.QPainter(canvas)
         painter.setRenderHint(QPainter.Antialiasing)
 
@@ -43,7 +42,7 @@ class TimelineContentWidget(QLabel):
         channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
         for c in self._channels:
             if (i % 2) == 0:
-                painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, 20 + (i + 1) * CHANNEL_DISPLAY_HEIGHT,
+                painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
                                  channel_background_color)
             i += 1
 
@@ -85,8 +84,7 @@ class TimelineContentWidget(QLabel):
         painter.setBrush(light_gray_brush)
         while x < w:
             time_str = format_seconds(x * self._time_zoom)
-            print("Draw text '{}' at {}x{}".format(time_str, x, w - 20))
-            painter.drawText(x, w - 20, time_str)
+            painter.drawText(x, h - 2, time_str)
             x += 10 * len(time_str)
 
         painter.end()
@@ -112,8 +110,11 @@ class TimelineContentWidget(QLabel):
         else:
             parent_height = 150
             parent_width = 150
-        self.setMinimumWidth(max(parent_width, int(self._last_keyframe_end_point / self._time_zoom)))
-        self.setMinimumHeight(max(parent_height, int(len(self._channels) * CHANNEL_DISPLAY_HEIGHT)))
+        self.setMinimumWidth(max(parent_width, int(self._last_keyframe_end_point / self._time_zoom),
+                                 int(self.cursor_position / self._time_zoom)))
+        self.setMinimumHeight(max(parent_height, int(len(self._channels) * CHANNEL_DISPLAY_HEIGHT) + 2 * 20))
+        print("New Size {}x{} from min {}x{}".format(self.width(), self.height(),
+                                                     self.minimumWidth(), self.minimumHeight()))
 
     def add_channels(self, channels: list[DataType]):
         for c in channels:

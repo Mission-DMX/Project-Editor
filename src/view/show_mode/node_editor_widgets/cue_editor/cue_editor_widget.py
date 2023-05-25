@@ -30,6 +30,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         # TODO improve channel naming by introducing channel name list
         from ctypes import c_int64
         i = c_int64(0)
+
         def increment(num: c_int64) -> int:
             num.value += 1
             return num.value
@@ -67,12 +68,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         top_layout.addWidget(cue_list_and_current_settings_container)
 
         self.configure_toolbar(top_layout)
-        
+
         v_scroll_area = QScrollArea()
         v_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         v_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # TODO link up/down button events to scrolling of v_scroll_area
-        self._timeline_container = TimelineContainer(self._parent_widget)
+        self._timeline_container = TimelineContainer(v_scroll_area)
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
