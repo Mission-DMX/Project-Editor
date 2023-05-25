@@ -14,13 +14,13 @@ import proto.MessageTypes_pb2
 import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
+import x_touch
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
 if TYPE_CHECKING:
-    from model.control_desk import FaderBank
-    from view.main_window import MainWindow
+    pass
 
 
 class NetworkManager(QtCore.QObject):
@@ -37,6 +37,8 @@ class NetworkManager(QtCore.QObject):
         logging.info("generate new Network Manager")
         self._broadcaster = broadcaster
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
+        self._message_queue = queue.Queue()
+
         self._is_running: bool = False
         self._fish_status: str = ""
         self._server_name = "/tmp/fish.sock"
@@ -47,10 +49,7 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
 
-        self._broadcaster.view_is_patch_menu.connect(self._send_view_patch_menu)
-        self._broadcaster.view_is_patching.connect(self._send_view_patching)
-        self._broadcaster.view_is_not_patch_menu.connect(self._send_view_not_patch_menu)
-        self._message_queue = queue.Queue()
+        x_touch.XTochMessages(broadcaster, self._msg_to_x_touch)
 
     @property
     def is_running(self) -> bool:
@@ -96,23 +95,8 @@ class NetworkManager(QtCore.QObject):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
-    def _send_view_patch_menu(self):
-        """send button patch lighting"""
+    def _msg_to_x_touch(self, msg: proto.MessageTypes_pb2):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
-                                                        new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
-            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
-
-    def _send_view_patching(self):
-        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
-                                                        new_state=proto.Console_pb2.ButtonState.BS_SET_LED_BLINKING)
-            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
-
-    def _send_view_not_patch_menu(self):
-        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
-                                                        new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
@@ -120,9 +104,8 @@ class NetworkManager(QtCore.QObject):
         self._message_queue.put(tuple([msg, msg_type]))
         while not self._message_queue.empty():
             msg, msg_type = self._message_queue.get()
-            logging.debug("message to send: %s", msg)
+            logging.debug("message to send: %s with type: %s", msg, msg_type)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-                logging.debug("send Message to server %s", msg)
                 self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
             else:
                 logging.error("not Connected with fish server")
@@ -186,8 +169,11 @@ class NetworkManager(QtCore.QObject):
     def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
         match msg.button:
             case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
-                if msg.new_state== proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
                     self._broadcaster.view_to_patch_menu.emit()
+            case proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW:
+                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                    self._broadcaster.view_to_file_editor.emit()
             case _:
                 pass
 

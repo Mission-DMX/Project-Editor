@@ -34,10 +34,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self._board_configuration: BoardConfiguration = BoardConfiguration(self._broadcaster)
 
         # views
-        views: list[tuple[str, QtWidgets.QWidget]] = [
-            ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self)),
-            ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self)),
-            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)), ("Debug", debug_console)]
+        views: list[tuple[str, QtWidgets.QWidget, callable]] = [
+            ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self),
+             lambda: self._to_widget(0)),
+            ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self),
+             lambda: self._broadcaster.view_to_file_editor.emit()),
+            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self),
+             lambda: self._broadcaster.view_to_patch_menu.emit()),
+            ("Debug", debug_console, lambda: self._to_widget(3))]
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -45,7 +49,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for index, view in enumerate(views):
             self._widgets.addWidget(view[1])
             mode_button = QtGui.QAction(view[0], self._toolbar)
-            mode_button.triggered.connect(lambda *args, i=index: self._to_widget(i))
+            mode_button.triggered.connect(view[2])
             self._toolbar.addAction(mode_button)
 
         self.setCentralWidget(self._widgets)
@@ -54,7 +58,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_menubar()
         self._setup_status_bar()
 
-        self._broadcaster.view_to_patch_menu.connect(lambda *args: self._to_widget(2))
+        self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(2))
+        self._broadcaster.view_to_file_editor.connect(lambda: self._to_widget(1))
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -62,15 +67,15 @@ class MainWindow(QtWidgets.QMainWindow):
             set_network_manager(self._fish_connector)
 
     def _to_widget(self, index: int) -> None:
-        match index:
-            case 2:
-                if self._widgets.currentIndex() != 2:
-                    self._widgets.setCurrentIndex(2)
-                else:
-                    self._broadcaster.patch()
-            case _:
-                self._widgets.setCurrentIndex(index)
-                self._broadcaster.view_is_not_patch_menu.emit()
+        if self._widgets.currentIndex() == index:
+            if self._widgets.currentIndex() == 2:
+                self._broadcaster.view_patching.emit()
+        else:
+            if self._widgets.currentIndex() == 1:
+                self._broadcaster.view_leave_file_editor.emit()
+            if self._widgets.currentIndex() == 2:
+                self._broadcaster.view_leave_patch_menu.emit()
+            self._widgets.setCurrentIndex(index)
 
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
