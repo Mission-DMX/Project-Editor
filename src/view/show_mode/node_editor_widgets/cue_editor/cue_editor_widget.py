@@ -44,6 +44,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         super().__init__()
         self._parent_widget = QWidget(parent=parent)
         top_layout = QVBoxLayout()
+
+        # configure top widgets
         cue_list_and_current_settings_container = QWidget()
         cue_list_and_current_settings_container_layout = QHBoxLayout()
         self._cue_list_widget = QTableWidget(cue_list_and_current_settings_container)
@@ -63,6 +65,22 @@ class CueEditor(NodeEditorFilterConfigWidget):
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
         top_layout.addWidget(cue_list_and_current_settings_container)
+
+        self.configure_toolbar(top_layout)
+        
+        v_scroll_area = QScrollArea()
+        v_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        v_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # TODO link up/down button events to scrolling of v_scroll_area
+        self._timeline_container = TimelineContainer(self._parent_widget)
+        v_scroll_area.setWidget(self._timeline_container)
+        top_layout.addWidget(v_scroll_area)
+        self._parent_widget.setLayout(top_layout)
+        self._global_restart_on_end: bool = False
+        self._cues: list[Cue] = []
+        self.add_cue(Cue())  # FIXME
+
+    def configure_toolbar(self, top_layout):
         toolbar = QToolBar(parent=self._parent_widget)
         toolbar_add_cue_action = QAction("Add Cue", self._parent_widget)
         toolbar_add_cue_action.setStatusTip("Add a new cue to the stack")
@@ -78,17 +96,6 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar_remove_channel_action.triggered.connect(self._remove_channel_button_pressed)
         toolbar.addAction(toolbar_remove_channel_action)
         top_layout.addWidget(toolbar)
-        v_scroll_area = QScrollArea()
-        v_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        v_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # TODO link up/down button events to scrolling of v_scroll_area
-        self._timeline_container = TimelineContainer(self._parent_widget)
-        v_scroll_area.setWidget(self._timeline_container)
-        top_layout.addWidget(v_scroll_area)
-        self._parent_widget.setLayout(top_layout)
-        self._global_restart_on_end: bool = False
-        self._cues: list[Cue] = []
-        self.add_cue(Cue())  # FIXME
 
     def add_cue(self, cue: Cue) -> int:
         target_row = self._cue_list_widget.rowCount() + 1
@@ -109,6 +116,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def increase_zoom(self):
         self._timeline_container.increase_zoom()
+
+    def decrease_zoom(self):
+        self._timeline_container.decrease_zoom()
 
     def _add_button_clicked(self):
         self.select_cue(self.add_cue(Cue()))
