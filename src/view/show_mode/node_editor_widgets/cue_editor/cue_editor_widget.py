@@ -194,6 +194,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._jw_zoom_mode = False
 
     def parent_closed(self):
+        self._timeline_container.clear_display()
         Broadcaster.last_instance.desk_media_rec_pressed.disconnect(self.rec_pressed)
         Broadcaster.last_instance.jogwheel_rotated_right.disconnect(self.jg_right)
         Broadcaster.last_instance.jogwheel_rotated_left.disconnect(self.jg_left)
