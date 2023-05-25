@@ -39,8 +39,10 @@ class CueEditor(NodeEditorFilterConfigWidget):
                 for cue in self._cues:
                     cue.add_channel(splitted_channel_dev[0], splitted_channel_dev[1])
         for cue_def in cue_definitions:
-            # TODO parse keyframes and add them
-            pass
+            for cue in self._cues:
+                cue.from_string_definition(cue_def)
+        if len(self._cues) > 0:
+            self.select_cue(0)
 
     def _get_parameters(self) -> dict[str, str]:
         if len(self._cues) > 0:
@@ -101,7 +103,6 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
         self._cues: list[Cue] = []
-        self.add_cue(Cue())  # FIXME
 
     def setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
         zoom_panel = QWidget(cue_settings_container)
@@ -143,6 +144,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._cue_list_widget.setItem(target_row, 0, QTableWidgetItem(str(target_row)))
         self._cue_list_widget.setItem(target_row, 1, QTableWidgetItem(cue.duration_formatted))
         self._cue_list_widget.setItem(target_row, 2, QTableWidgetItem(str(cue)))
+        self._cues.append(cue)
         return target_row
 
     def select_cue(self, cue_index: int):
@@ -172,6 +174,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         """
         # TODO implement
         # TODO also think about channel type and name
+        # TODO add corresponding fader to bank set and update it
         self._timeline_container.add_channel(DataType.DT_8_BIT, "Some Name")
         pass
 
@@ -207,6 +210,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def parent_closed(self):
         self._timeline_container.clear_display()
+        # TODO unlink bankset
         Broadcaster.last_instance.desk_media_rec_pressed.disconnect(self.rec_pressed)
         Broadcaster.last_instance.jogwheel_rotated_right.disconnect(self.jg_right)
         Broadcaster.last_instance.jogwheel_rotated_left.disconnect(self.jg_left)
