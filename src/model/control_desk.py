@@ -207,7 +207,7 @@ class BankSet:
         return cls._fish_connector
 
     @classmethod
-    def linked_bank_sets(cls) -> list:
+    def linked_bank_sets(cls) -> list["BankSet"]:
         """This method yields the mutable list of bank sets that are currently loaded in fish.
 
         This method should only be used by friend classes.
@@ -352,14 +352,31 @@ def set_network_manager(network_manager: NetworkManager):
     BankSet._fish_connector = network_manager
 
 
-def set_seven_seg_display_content(content: str):
+def set_seven_seg_display_content(content: str, update_from_gui: bool = False):
     """Set the content of the 7seg displays of connected X-Touch controllers.
 
     Fish will truncate any text longer than 12 chars and
     only guarantees the correct display of hexadecimal characters due to the limitations of seven segment displays.
     """
     BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))
-    # TODO send update message
+    send_independent_update_msg(update_from_gui)
+
+
+def send_independent_update_msg(update_from_gui: bool):
+    abs_id = BankSet.active_bank_set()
+    if abs_id:
+        for bs in BankSet.linked_bank_sets():
+            if bs.id == abs_id:
+                bs._send_desk_update_message()
+                return
+    msg = proto.Console_pb2.desk_update()
+    msg.selected_column_id = ""  # Do not update the set of selected columns yet
+    msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixture' feature yet
+    msg.selected_bank = 0
+    msg.selected_bank_set = ""
+    msg.seven_seg_display_data = BankSet._seven_seg_data
+    BankSet._fish_connector.send_desk_update_message(msg, update_from_gui)
+
 
 
 def commit_all_bank_sets():

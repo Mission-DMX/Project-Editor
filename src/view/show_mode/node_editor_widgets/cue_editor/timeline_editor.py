@@ -7,6 +7,7 @@ from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QScrollArea, QGraphicsWidget, QLabel
 
 from model import DataType
+from model.control_desk import set_seven_seg_display_content
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, KeyFrame
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 
@@ -23,6 +24,7 @@ class TimelineContentWidget(QLabel):
         self.cursor_position = 3.0
         self._drag_begin: tuple[int, int] = None
         self.compute_resize()
+        self.cue_index: int = 0
         # TODO implement
 
     def repaint(self) -> None:
@@ -83,6 +85,7 @@ class TimelineContentWidget(QLabel):
         x = 0
         painter.setBrush(light_gray_brush)
         while x < w:
+            painter.drawLine(x, h - 20, x, h)
             time_str = format_seconds(x * self._time_zoom)
             painter.drawText(x, h - 2, time_str)
             x += 10 * len(time_str)
@@ -130,13 +133,25 @@ class TimelineContentWidget(QLabel):
 
     def move_cursor_right(self):
         self.cursor_position += self._time_zoom * 10
+        self._update_7seg_text()
         self.compute_resize()
 
     def move_cursor_left(self):
         self.cursor_position -= self._time_zoom * 10
         if self.cursor_position < 0:
             self.cursor_position = 0.0
+        self._update_7seg_text()
         self.compute_resize()
+
+    def _update_7seg_text(self):
+        txt = format_seconds(self.cursor_position).replace(':', '').replace('.', '')
+        while len(txt) < 10:
+            txt = "0" + txt
+        txt = str(self.cue_index % 100) + txt
+        while len(txt) < 12:
+            txt = " " + txt
+        print(txt)
+        set_seven_seg_display_content(txt, update_from_gui=True)
 
     def mouseReleaseEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         super().mouseReleaseEvent(ev)
@@ -215,5 +230,5 @@ class TimelineContainer(QWidget):
         pass
 
     def format_zoom(self) -> str:
-        return "{0:0>3} Sec/Pixel".format(self._keyframes_panel._time_zoom)
+        return "{0:0>3} Sec/Pixel".format(int(self._keyframes_panel._time_zoom * 10000) / 10000)
 

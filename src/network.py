@@ -286,11 +286,14 @@ class NetworkManager(QtCore.QObject):
             return
         self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN)
 
-    def send_desk_update_message(self, msg: proto.Console_pb2.desk_update):
+    def send_desk_update_message(self, msg: proto.Console_pb2.desk_update, update_from_gui: bool):
         """send message to update a desk to fish"""
         if not self.is_running:
             return
-        self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
+        if update_from_gui:
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
+        else:
+            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
 
 
 def on_error(error) -> None:
