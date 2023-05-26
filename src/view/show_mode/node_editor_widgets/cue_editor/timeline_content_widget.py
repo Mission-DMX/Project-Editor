@@ -21,8 +21,17 @@ class TimelineContentWidget(QLabel):
         self.cursor_position = 3.0
         self._drag_begin: tuple[int, int] = None
         self.compute_resize()
-        self.cue_index: int = 0
-        # TODO implement
+        self._cue_index: int = 0
+
+    @property
+    def cue_index(self) -> int:
+        return self._cue_index
+
+    @cue_index.setter
+    def cue_index(self, arg: int):
+        if arg > 0:
+            self._cue_index = arg
+            self._update_7seg_text()
 
     def repaint(self) -> None:
         canvas = self.pixmap()
@@ -156,7 +165,7 @@ class TimelineContentWidget(QLabel):
         txt = format_seconds(self.cursor_position).replace(':', '').replace('.', '')
         while len(txt) < 10:
             txt = "0" + txt
-        txt = str(self.cue_index % 100) + txt
+        txt = str(self._cue_index % 100) + txt
         while len(txt) < 12:
             txt = " " + txt
         set_seven_seg_display_content(txt, update_from_gui=True)

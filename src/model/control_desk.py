@@ -143,7 +143,7 @@ class RawDeskColumn(DeskColumn):
 class ColorDeskColumn(DeskColumn):
     def __init__(self, _id: str = None):
         super().__init__(_id)
-        self._color: ColorHSI = ColorHSI(0, 0, 0)
+        self._color: ColorHSI = ColorHSI(0.0, 0.0, 0.0)
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
         base_msg = self._generate_base_column_message()
@@ -224,7 +224,7 @@ class BankSet:
         """This method returns a copy of the linked bank sets, save to be used by non friend classes."""
         return list(BankSet._linked_bank_sets)
 
-    def __init__(self, banks: list[FaderBank] = None, description: str = None):
+    def __init__(self, banks: list[FaderBank] = None, description: str = None, gui_controlled: bool = False):
         """Construct a bank set object.
         After construction link() needs to be called in order to link the set with the control desk.
 
@@ -235,14 +235,15 @@ class BankSet:
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
         if banks:
-            self.banks = banks
+            self.banks: list[FaderBank] = banks
         else:
-            self.banks = []
+            self.banks: list[FaderBank] = []
         self.active_bank = 0
         if description:
             self.description = str(description)
         else:
             self.description = "No description"
+        self._gui_controlled = gui_controlled
 
     def update(self) -> bool:
         """push the bank set to fish or update it if required
@@ -290,7 +291,7 @@ class BankSet:
         msg.selected_bank = self.active_bank
         msg.selected_bank_set = BankSet._active_bank_set
         msg.seven_seg_display_data = BankSet._seven_seg_data
-        BankSet._fish_connector.send_desk_update_message(msg)
+        BankSet._fish_connector.send_desk_update_message(msg, update_from_gui=self._gui_controlled)
 
     def add_bank(self, bank: FaderBank):
         """Update the fader bank on the control desk
@@ -300,6 +301,14 @@ class BankSet:
         """
         self.banks.append(bank)  # TODO ein BankSet has no columns attribute
         self.update()
+
+    def add_column_to_next_bank(self, f: DeskColumn):
+        """This method adds the provided column f to the last not full bank set."""
+        if len(self.banks) == 0:
+            self.add_bank(FaderBank())
+        if len(self.banks[-1].columns) >= 8:  # TODO query actual bank width
+            self.add_bank(FaderBank())
+        self.banks[-1].add_column(f)
 
     def set_active_bank(self, i: int) -> bool:
         """This method sets the active bank.

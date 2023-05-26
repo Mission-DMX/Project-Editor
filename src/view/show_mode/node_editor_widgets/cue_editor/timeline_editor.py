@@ -48,6 +48,7 @@ class TimelineContainer(QWidget):
         self._channel_label.clear_labels()
         for channel in c.channels:
             self.add_channel(channel[1], channel[0])
+        self._keyframes_panel.cue_index = c.index_in_editor
         # TODO introduce property
         self._keyframes_panel.frames = c._frames
         self._keyframes_panel.repaint()

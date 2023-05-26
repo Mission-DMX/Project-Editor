@@ -95,7 +95,7 @@ class StateEightBit(State):
 
 class StateSixteenBit(State):
     def __init__(self, transition_type: str):
-        super.__init__(transition_type)
+        super().__init__(transition_type)
         self._value = 0
 
     def encode(self) -> str:
@@ -120,7 +120,7 @@ class StateSixteenBit(State):
 
 class StateDouble(State):
     def __init__(self, transition_type: str):
-        super.__init__(transition_type)
+        super().__init__(transition_type)
         self._value = 0.0
 
     def encode(self) -> str:
@@ -137,7 +137,7 @@ class StateDouble(State):
 
 class StateColor(State):
     def __init__(self, transition_type: str):
-        super.__init__(transition_type)
+        super().__init__(transition_type)
         self._value = ColorHSI(180.0, 0.0, 0.0)
 
     def encode(self) -> str:
@@ -145,7 +145,7 @@ class StateColor(State):
 
     def decode(self, content: str):
         c_arr = content.split("@")
-        self._value = ColorHSI(c_arr[0])
+        self._value = ColorHSI.from_filter_str(c_arr[0])
         self._transition_type = c_arr[1]
 
     def get_data_type(self) -> DataType:
@@ -200,6 +200,7 @@ class Cue:
         self._frames: list[KeyFrame] = []
         self._channel_definitions: list[tuple[str, DataType]] = []
         self.restart_on_another_play_press: bool = False
+        self.index_in_editor = 0
 
     @property
     def duration(self) -> float:
@@ -243,7 +244,11 @@ class Cue:
         if len(primary_tokens) > 2:
             self.restart_on_another_play_press = primary_tokens[2] == "restart"
 
-    def add_channel(self, name: str, type_str: str):
+    def add_channel(self, name: str, t: str | DataType):
         """Add a channel name to list of names"""
-        self._channel_definitions.append((name, DataType.from_filter_str(type_str)))
+        if isinstance(t, str):
+            dt = DataType.from_filter_str(t)
+        else:
+            dt = t
+        self._channel_definitions.append((name, dt))
 

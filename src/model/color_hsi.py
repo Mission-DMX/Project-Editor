@@ -18,7 +18,8 @@ class ColorHSI:
         self._saturation: confloat(ge=0, le=1) = saturation
         self._intensity: confloat(ge=0, le=1) = intensity
 
-    def __init__(self, filter_format: str):
+    @classmethod
+    def from_filter_str(cls, filter_format: str):
         """ HSI Color
 
         This constructor parses the supplied color string and constructs the color object from it.
@@ -38,7 +39,7 @@ class ColorHSI:
             i = 0.0
         elif i > 1:
             i = 1.0
-        self.__init__(h, s, i)
+        ColorHSI(h, s, i)
 
     @property
     def hue(self) -> confloat(ge=0, le=360):

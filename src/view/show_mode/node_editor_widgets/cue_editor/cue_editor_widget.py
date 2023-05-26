@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBox
 
 from model import DataType
 from model.broadcaster import Broadcaster
+from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from view.show_mode.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
@@ -38,11 +39,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if mapping_str:
             for channel_dev in mapping_str.split(';'):
                 splitted_channel_dev = channel_dev.split(':')
-                for cue in self._cues:
-                    cue.add_channel(splitted_channel_dev[0], splitted_channel_dev[1])
-        for cue_def in cue_definitions:
-            for cue in self._cues:
-                cue.from_string_definition(cue_def)
+                self._add_channel(splitted_channel_dev[0], DataType.from_filter_str(splitted_channel_dev[1]))
+        for i in range(len(cue_definitions)):
+            self._cues[i].from_string_definition(cue_definitions[i])
+            self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 1).setText(self._cues[i].duration_formatted)
+            self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 2).setText(str(self._cues[i].end_action))
         if len(self._cues) > 0:
             self.select_cue(0)
 
@@ -110,6 +111,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
         Broadcaster.last_instance.desk_media_scrub_pressed.connect(self.scrub_pressed)
         Broadcaster.last_instance.desk_media_scrub_released.connect(self.scrub_released)
 
+        self._bankset = BankSet(gui_controlled=True)
+        self._bankset.description = "Cue Editor BS"
+        self._bankset.link()
+        self._bankset.activate()
+
         self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
         self._cues: list[Cue] = []
@@ -162,6 +168,10 @@ class CueEditor(NodeEditorFilterConfigWidget):
         end_action_item = QTableWidgetItem(1)
         end_action_item.setText(str(cue.end_action))
         self._cue_list_widget.setItem(target_row, 2, end_action_item)
+        if len(self._cues) > 0:
+            for c in self._cues[0].channels:
+                cue.add_channel(c[0], c[1])
+        cue.index_in_editor = target_row + 1
         self._cues.append(cue)
         return target_row
 
@@ -205,16 +215,23 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
         The default for all cues is a 0 keyframe at the start.
         """
-        self._input_dialog = ChannelInputDialog(self._parent_widget, self._channel_submit)
+        self._input_dialog = ChannelInputDialog(self._parent_widget, self._add_channel)
         self._input_dialog.show()
 
-    def _channel_submit(self, channel_name, channel_type):
+    def _add_channel(self, channel_name: str, channel_type: DataType):
         for c_name in self._cues[0].channels:
             if c_name[0] == channel_name:
                 QMessageBox.critical(self._parent_widget, "Failed to add channel",
                                      "Unable to add the requested channel {}. Channel names must be unique within "
                                      "this filter.".format(channel_name))
                 return
+        if channel_type == DataType.DT_COLOR:
+            c = ColorDeskColumn()
+        else:
+            c = RawDeskColumn()
+        c.display_name = channel_name
+        self._bankset.add_column_to_next_bank(c)
+        self._bankset.update()
         for c in self._cues:
             c.add_channel(channel_name, channel_type)
         self._timeline_container.add_channel(channel_type, channel_name)
@@ -227,7 +244,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         pass
 
     def _cue_end_action_changed(self):
-        self._timeline_container.cue.end_action = EndAction(self._current_cue_end_action_select_widget.currentIndex())
+        action = EndAction(self._current_cue_end_action_select_widget.currentIndex())
+        self._timeline_container.cue.end_action = action
+        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 2).setText(str(action))
 
     def _cue_play_pressed_restart_changed(self):
         self._timeline_container.cue.restart_on_another_play_press = \
@@ -258,6 +277,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def parent_closed(self):
         self._timeline_container.clear_display()
+        self._bankset.unlink()
         # TODO unlink bankset
         Broadcaster.last_instance.desk_media_rec_pressed.disconnect(self.rec_pressed)
         Broadcaster.last_instance.jogwheel_rotated_right.disconnect(self.jg_right)

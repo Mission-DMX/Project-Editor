@@ -12,6 +12,7 @@ class ChannelInputDialog(QDialog):
         self._layout.addRow("Channel name:", self._channel_name)
         self._type_box = QComboBox()
         self._type_box.addItems(DataType.names())
+        self._type_box.setCurrentIndex(3)  # Should be color
         self._layout.addRow("Channel Type:", self._type_box)
         self._ok_button = QPushButton("Add Channel")
         self._ok_button.pressed.connect(self._ok_pressed)
