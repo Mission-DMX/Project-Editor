@@ -1,23 +1,19 @@
 # coding=utf-8
 """Scene module"""
 from typing import TYPE_CHECKING
-
-from pyqtgraph.flowchart import Flowchart
-
 from .filter import Filter
 
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
 
+
 class Scene:
     """Scene for show file."""
     def __init__(self, scene_id: int,
                  human_readable_name: str,
-                 flowchart: Flowchart,
                  board_configuration: "BoardConfiguration"):
         self._scene_id: int = scene_id
         self._human_readable_name: str = human_readable_name
-        self._flowchart: Flowchart = flowchart
         self._board_configuration: "BoardConfiguration" = board_configuration
         self._filters: list[Filter] = []
 
@@ -35,11 +31,6 @@ class Scene:
     def human_readable_name(self, human_readable_name: str):
         """Sets the human readable name of the scene displayed by the ui"""
         self._human_readable_name = human_readable_name
-
-    @property
-    def flowchart(self) -> Flowchart:
-        """The flowchart representing the filter structure of the scene"""
-        return self._flowchart
 
     @property
     def board_configuration(self) -> "BoardConfiguration":

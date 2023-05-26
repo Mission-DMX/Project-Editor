@@ -1,6 +1,5 @@
 # coding=utf-8
 """A scene can have multiple pages"""
-import PySide6.QtGui
 from PySide6.QtWidgets import QWidget, QMenu
 from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QMouseEvent, QAction
@@ -31,7 +30,7 @@ class ScenePageWidget(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() is Qt.MouseButton.LeftButton:
-            """TODO Implement behaviour when selecting a filter"""
+            # TODO Implement behaviour when selecting a filter
             return
 
         if event.button() is Qt.MouseButton.RightButton:

@@ -18,11 +18,13 @@ class DataType(IntFlag):
 class Filter:
     """Filter for show file"""
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[float, float] = (0.0, 0.0)):
+    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos=None):
+        if pos is None:
+            pos = [0.0, 0.0]
         self._scene: "Scene" = scene
         self._filter_id = filter_id
         self._filter_type = int(filter_type)
-        self._pos: tuple[float, float] = pos
+        self._pos: list[float] = pos
         self._channel_links: dict[str, str] = {}
         self._initial_parameters: dict[str, str] = {}
         self._filter_configurations: dict[str, str] = {}
@@ -37,18 +39,22 @@ class Filter:
         """The unique id/name of the filter."""
         return self._filter_id
 
+    @filter_id.setter
+    def filter_id(self, id_):
+        self._filter_id = id_
+
     @property
     def filter_type(self) -> int:
         """The type of the filter"""
         return self._filter_type
 
     @property
-    def pos(self) -> tuple[float, float]:
+    def pos(self) -> list[float]:
         """The postition of the filter node inside the ui"""
         return self._pos
 
     @pos.setter
-    def pos(self, pos: tuple[float, float]):
+    def pos(self, pos: list[float, float]):
         self._pos = pos
 
     @property

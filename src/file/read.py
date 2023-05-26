@@ -3,12 +3,8 @@
 import logging
 from xml.etree import ElementTree
 
-from pyqtgraph.flowchart import Flowchart
-
 import proto.UniverseControl_pb2 as Proto
-from model import BoardConfiguration, Scene, Universe, Filter
-from model.patching_universe import PatchingUniverse
-from view.show_mode.editor import FilterNodeLibrary
+from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration):
@@ -78,11 +74,8 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                     "Found attribute %s=%s while parsing scene for show %s",
                     key, value, board_configuration.show_name)
 
-    flowchart = Flowchart(name=human_readable_name, library=FilterNodeLibrary())
-
     scene = Scene(scene_id=scene_id,
                   human_readable_name=human_readable_name,
-                  flowchart=flowchart,
                   board_configuration=board_configuration)
 
     for child in scene_element:
@@ -107,7 +100,7 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case "type":
                 filter_type = int(value)
             case "pos":
-                pos = tuple((float(s) for s in value.split(",")))
+                pos = list((float(s) for s in value.split(",")))
             case _:
                 logging.warning(
                     "Found attribute %s=%s while parsing filter for scene %s",

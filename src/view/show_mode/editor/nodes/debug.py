@@ -1,7 +1,16 @@
 # coding=utf-8
 """Debug filter nodes"""
 from model import DataType
-from . import FilterNode
+
+from .filternode import FilterNode
+
+
+class DebugNode(FilterNode):
+    """Basic debug node"""
+    def __init__(self, model, name, filter_type):
+        super().__init__(model, filter_type, name, terminals={
+            'value': {'io': 'in'}
+        })
 
 
 class Debug8BitNode(FilterNode):
@@ -10,10 +19,8 @@ class Debug8BitNode(FilterNode):
     """
     nodeName = '8 Bit Filter (Debug)'
 
-    def __init__(self, name):
-        super().__init__(filter_type=4, name=name, terminals={
-            'value': {'io': 'in'}
-        })
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=4, name=name)
         self._in_value_types["value"] = DataType.DT_8_BIT
 
 
@@ -23,10 +30,8 @@ class Debug16BitNode(FilterNode):
     """
     nodeName = '16 Bit Filter (Debug)'
 
-    def __init__(self, name):
-        super().__init__(filter_type=5, name=name, terminals={
-            'value': {'io': 'in'}
-        })
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=5, name=name)
         self._in_value_types["value"] = DataType.DT_16_BIT
 
 
@@ -36,10 +41,8 @@ class DebugFloatNode(FilterNode):
     """
     nodeName = 'Float Filter (Debug)'
 
-    def __init__(self, name):
-        super().__init__(filter_type=6, name=name, terminals={
-            'value': {'io': 'in'}
-        })
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=6, name=name)
         self._in_value_types["value"] = DataType.DT_DOUBLE
 
 
@@ -49,8 +52,6 @@ class DebugColorNode(FilterNode):
     """
     nodeName = 'Color Filter (Debug)'
 
-    def __init__(self, name):
-        super().__init__(filter_type=7, name=name, terminals={
-            'value': {'io': 'in'}
-        })
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=7, name=name)
         self._in_value_types["value"] = DataType.DT_COLOR

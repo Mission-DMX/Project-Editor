@@ -1,10 +1,6 @@
 # coding=utf-8
 """Widget containing a nodeeditor for one scene."""
-import logging
-
-from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QPushButton, QGridLayout, QMainWindow
-from PySide6.QtCore import Signal, Qt
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QPushButton, QGridLayout, QDialog
 
 from model import Scene
 from .nodeeditor import NodeEditorDialog
@@ -22,7 +18,7 @@ class SceneTabWidget(QWidget):
         self._nodeeditor = NodeEditorDialog(scene)
 
         self._open_nodeeditor_btn = QPushButton("Node Editor", self)
-        self._open_nodeeditor_btn.clicked.connect(self._nodeeditor.exec)
+        self._open_nodeeditor_btn.clicked.connect(self._nodeeditor.open)
 
         layout = QGridLayout(self)
         layout.addWidget(self._scenemanager, 0, 0)
@@ -31,6 +27,7 @@ class SceneTabWidget(QWidget):
 
     @property
     def scene(self) -> Scene:
+        """The scene the tab represents"""
         return self._scene
 
 
@@ -45,7 +42,8 @@ class SceneManagerWidget(QTabWidget):
         self.addTab(QWidget(), "+")
         self.tabBar().tabButton(self.count() - 1, QTabBar.ButtonPosition.RightSide).hide()
 
-        self._poped_pages: list[QMainWindow] = []
+        self._poped_pages: list[QDialog] = []
+        self._nodeeditor_dialog = None
 
         self._add_page()
 
@@ -64,7 +62,7 @@ class SceneManagerWidget(QTabWidget):
         self.insertTab(self.count() - 1, page_widget, f"Page {self.count()}")
         self.setCurrentWidget(page_widget)
 
-    def _pop_page(self, index: int):
+    def _pop_page(self, index: int) -> QDialog:
         """Displays the given page in a new window.
 
         Args:
@@ -73,13 +71,13 @@ class SceneManagerWidget(QTabWidget):
         if index == self.count() - 1:
             return
         page = self.widget(index)
-        window = PageWindow()
+        dialog = QDialog()
         layout = QGridLayout()
         layout.addWidget(page)
-        window.setLayout(layout)
-        window.closing.connect(lambda: self._unpop_page(page, index))
-        self._poped_pages.append(window)
-        window.show()
+        dialog.setLayout(layout)
+        dialog.finished.connect(lambda: self._unpop_page(page, index))
+        self._poped_pages.append(dialog)
+        dialog.show()
 
     def _unpop_page(self, page: QWidget, index: int):
         """Reinserts page.
@@ -94,15 +92,3 @@ class SceneManagerWidget(QTabWidget):
     def scene(self):
         """The scene managed by the scene manager"""
         return self._scene
-
-
-class PageWindow(QMainWindow):
-    """Extends QMainWindow by adding closing signal"""
-
-    closing = Signal()
-
-    def __init__(self, parent: QWidget = None):
-        super().__init__(parent)
-
-    def closeEvent(self, event: QCloseEvent) -> None:
-        self.closing.emit()

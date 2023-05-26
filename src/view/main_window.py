@@ -4,8 +4,7 @@
 from PySide6 import QtWidgets, QtGui
 
 from Style import Style
-from model.board_configuration import BoardConfiguration
-from model.broadcaster import Broadcaster
+from model import BoardConfiguration, Broadcaster
 from network import NetworkManager
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.show_mode import ShowManagerWidget, ShowPlayerWidget
@@ -64,9 +63,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _to_widget(self, index: int) -> None:
         match index:
-            case 2:
-                if self._widgets.currentIndex() != 2:
-                    self._widgets.setCurrentIndex(2)
+            case 3:
+                if self._widgets.currentIndex() != 3:
+                    self._widgets.setCurrentIndex(3)
                 else:
                     self._broadcaster.patch()
             case _:

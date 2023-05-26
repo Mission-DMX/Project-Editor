@@ -1,13 +1,14 @@
 # coding=utf-8
-"""Trigonometrics filter nodes"""
+"""Trigonometric filter nodes"""
 from model import DataType
+
 from . import FilterNode
 
 
-class TrigonometicNode(FilterNode):
+class TrigonometricNode(FilterNode):
     """Basic node class for sin, cos and tan"""
-    def __init__(self, filter_type: int, name: str):
-        super().__init__(filter_type, name, terminals={
+    def __init__(self, model, filter_type: int, name: str):
+        super().__init__(model, filter_type, name, terminals={
             'value_in': {'io': 'in'},
             'factor_outer': {'io': 'in'},
             'factor_inner': {'io': 'in'},
@@ -23,78 +24,61 @@ class TrigonometicNode(FilterNode):
         self._out_value_types["value"] = DataType.DT_DOUBLE
 
 
-class InvertedTrigonometicNode(FilterNode):
-    """Basic node class for arcsin, arccos and arctan"""
-    def __init__(self, filter_type: int, name: str):
-        super().__init__(filter_type, name, terminals={
-            'value_in': {'io': 'in'},
-            'value': {'io': 'out'}
-        })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
-        self._in_value_types["factor_outer"] = DataType.DT_DOUBLE
-        self._in_value_types["factor_inner"] = DataType.DT_DOUBLE
-        self._in_value_types["phase"] = DataType.DT_DOUBLE
-        self._in_value_types["offset"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
-
-
-class TrigonometricSineNode(TrigonometicNode):
+class TrigonometricSineNode(TrigonometricNode):
     """Filter to calculate sine value.
     value = factor_outer*sin((value_in+phase)*factor_inner) + offset
     """
     nodeName = 'sin'
 
-    def __init__(self, name):
-        super().__init__(filter_type=19, name=name)
+    def __init__(self, model, name):
+        super().__init__(model, filter_type=19, name=name)
 
 
-class TrigonometricCosineNode(TrigonometicNode):
+class TrigonometricCosineNode(TrigonometricNode):
     """Filter to calculate cosine value.
     value = factor_outer*cos((value_in+phase)*factor_inner) + offset
     """
     nodeName = 'cos'
 
-    def __init__(self, name):
-        super().__init__(filter_type=20, name=name)
+    def __init__(self, model, name):
+        super().__init__(model, filter_type=20, name=name)
 
 
-class TrigonometricTangentNode(TrigonometicNode):
+class TrigonometricTangentNode(TrigonometricNode):
     """Filter to calculate tangent value.
     value = factor_outer*tan((value_in+phase)*factor_inner) + offset
     """
     nodeName = 'tan'
 
-    def __init__(self, name):
-        super().__init__(filter_type=21, name=name)
+    def __init__(self, model, name):
+        super().__init__(model, filter_type=21, name=name)
 
 
-class TrigonometricArcSinNode(InvertedTrigonometicNode):
+class TrigonometricArcSinNode(TrigonometricNode):
     """Filter to calculate arcSine value.
     value = arcSin(value_in)
     """
     nodeName = 'arcsin'
 
-    def __init__(self, name):
-        super().__init__(filter_type=22, name=name)
+    def __init__(self, model, name):
+        super().__init__(model, filter_type=22, name=name)
 
 
-class TrigonometricArcCosNode(InvertedTrigonometicNode):
+class TrigonometricArcCosNode(TrigonometricNode):
     """Filter to calculate arcCosine value.
     value = arcCos(value_in)
     """
     nodeName = 'arccos'
 
-    def __init__(self, name):
-        super().__init__(filter_type=23, name=name)
+    def __init__(self, model, name):
+        super().__init__(model, filter_type=23, name=name)
 
 
-class TrigonometricArcTanNode(InvertedTrigonometicNode):
+class TrigonometricArcTanNode(TrigonometricNode):
     """Filter to calculate arcTangent value.
     value = arcTan(value_in)
     """
     nodeName = 'arctan'
 
-    def __init__(self, name):
-        super().__init__(filter_type=24, name=name)
+    def __init__(self, model, name):
+        super().__init__(model, filter_type=24, name=name)

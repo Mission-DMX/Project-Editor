@@ -1,5 +1,7 @@
 # coding=utf-8
 """DMX device"""
+
+
 class Device:
     """A DMX device"""
 

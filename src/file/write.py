@@ -7,8 +7,8 @@ Usage:
 """
 from xml.etree import ElementTree
 
-from model import BoardConfiguration, Scene, Filter
-from model.universe import Universe
+
+from model import Filter, Scene, Universe, BoardConfiguration
 from proto import UniverseControl_pb2 as Proto
 
 

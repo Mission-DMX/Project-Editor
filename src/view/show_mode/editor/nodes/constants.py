@@ -9,8 +9,8 @@ class Constants8BitNode(FilterNode):
     """Filter to represent an 8 bit value."""
     nodeName = '8_bit_filter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=0, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=0, name=name, terminals={
             'value': {'io': 'out'}
         })
 
@@ -22,8 +22,8 @@ class Constants16BitNode(FilterNode):
     """Filter to represent a 16 bit value."""
     nodeName = '16_bit_filter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=1, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=1, name=name, terminals={
             'value': {'io': 'out'}
         })
 
@@ -35,8 +35,8 @@ class ConstantsFloatNode(FilterNode):
     """Filter to represent a float/double value."""
     nodeName = 'Float_filter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=2, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=2, name=name, terminals={
             'value': {'io': 'out'}
         })
 
@@ -50,8 +50,8 @@ class ConstantsColorNode(FilterNode):
     """
     nodeName = 'Color_filter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=3, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=3, name=name, terminals={
             'value': {'io': 'out'}
         })
         self.filter.initial_parameters["value"] = "0,0,0"

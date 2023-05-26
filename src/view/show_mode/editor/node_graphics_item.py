@@ -112,7 +112,7 @@ class FilterSettingsDialog(QDialog):
         self.setLayout(layout)
 
     def _add_patch_info(self, key: str, value: str) -> str:
-        if self.filter._filter_type != 11:
+        if self.filter.filter_type != 11:
             return key
         # Only channel inputs have patching info
         if key == "universe":

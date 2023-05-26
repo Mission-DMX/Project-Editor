@@ -1,6 +1,7 @@
 # coding=utf-8
 """Adapters and converters filter nodes"""
 from model import DataType
+
 from . import FilterNode
 
 
@@ -8,8 +9,8 @@ class Adapter16BitTo8BitNode(FilterNode):
     """Filter to convert a 16 bit value to two 8 bit values."""
     nodeName = '16 bit to 8 bit converter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=8, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=8, name=name, terminals={
             'value': {'io': 'in'},
             'value_lower': {'io': 'out'},
             'value_upper': {'io': 'out'},
@@ -25,8 +26,8 @@ class Adapter16BitToBoolNode(FilterNode):
     """
     nodeName = '16 bit to bool converter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=9, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=9, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -38,8 +39,8 @@ class AdapterColorToRGBNode(FilterNode):
     """Filter to convert a color value to a rgb value."""
     nodeName = 'Color to rgb converter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=15, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=15, name=name, terminals={
             'value': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
@@ -55,8 +56,8 @@ class AdapterColorToRGBWNode(FilterNode):
     """Filter to convert a color value to a rgbw value."""
     nodeName = 'Color to rgb-w converter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=16, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=16, name=name, terminals={
             'value': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
@@ -74,8 +75,8 @@ class AdapterColorToRGBWANode(FilterNode):
     """Filter to convert a color value to a RGBWA value."""
     nodeName = 'Color to rgb-wa converter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=17, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=17, name=name, terminals={
             'value': {'io': 'in'},
             'r': {'io': 'out'},
             'g': {'io': 'out'},
@@ -95,8 +96,8 @@ class AdapterFloatToColorNode(FilterNode):
     """Filter to convert a float/double value to a color value."""
     nodeName = 'Float to color converter'
 
-    def __init__(self, name):
-        super().__init__(filter_type=18, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=18, name=name, terminals={
             'h': {'io': 'in'},
             's': {'io': 'in'},
             'i': {'io': 'in'},

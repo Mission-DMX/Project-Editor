@@ -7,12 +7,10 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
 """
 from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QFileDialog
 from PySide6.QtGui import QAction
-from PySide6.QtCore import Qt
-from pyqtgraph.flowchart import Flowchart
 
 from file.read import read_document
 from file.write import create_xml, write_document
-from model.board_configuration import BoardConfiguration, Scene
+from model import BoardConfiguration, Scene
 from .scenetab import SceneTabWidget
 from .filter_node_library import FilterNodeLibrary
 
@@ -77,10 +75,8 @@ class ShowManagerWidget(QTabWidget):
     def _add_button_clicked(self):
         scene_name, ok_button_pressed = QInputDialog.getText(self, "Create a new scene", "Scene name")
         if ok_button_pressed:
-            flowchart = Flowchart(name=scene_name, library=FilterNodeLibrary())
             scene = Scene(scene_id=len(self._board_configuration.scenes),
                           human_readable_name=scene_name,
-                          flowchart=flowchart,
                           board_configuration=self._board_configuration)
             self._board_configuration.broadcaster.scene_created.emit(scene)
 
@@ -109,7 +105,6 @@ class ShowManagerWidget(QTabWidget):
         for index in range(self.count() - 1):
             tab_widget = self.widget(index)
             if not isinstance(tab_widget, SceneTabWidget):
-                # TODO logging.warning()
                 continue
             if tab_widget.scene == scene:
                 widget_index = self.indexOf(tab_widget)
@@ -159,7 +154,7 @@ class ShowManagerWidget(QTabWidget):
     def _enter_scene(self) -> None:
         """Asks for scene id and tells fish to load the scene"""
         # TODO Let network manager listen to broadcaster
-        scene_id, ok_button_pressed = QtWidgets.QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
+        scene_id, ok_button_pressed = QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
         if ok_button_pressed:
             print(f"Switching to scene {scene_id}")
             self._board_configuration.broadcaster.change_active_scene.emit(scene_id)

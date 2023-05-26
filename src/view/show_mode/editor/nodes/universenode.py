@@ -1,6 +1,6 @@
 # coding=utf-8
 """Universe filter node"""
-from model import Filter, DataType
+from model import DataType, Filter
 from . import FilterNode
 
 
@@ -10,10 +10,16 @@ class UniverseNode(FilterNode):
 
     universe_ids: list[int] = []
 
-    def __init__(self, name):
-        super().__init__(filter_type=11, name=name, terminals={
-            "input_1": {'io': 'in'}
-        }, allow_add_input=True)
+    def __init__(self, model, name):
+        if isinstance(model, Filter):
+            super().__init__(model=model, filter_type=11, name=name, terminals={
+                input_link: {'io': 'in'} for input_link, _ in model.channel_links.items()
+            })
+        else:
+            super().__init__(model=model, filter_type=11, name=name, terminals={
+                "input_1": {'io': 'in'}
+            })
+        self._allowAddInput = True
 
         self.filter.filter_configurations["universe"] = self.name()[9:]
         self.filter.filter_configurations["input_1"] = "0"
@@ -23,7 +29,7 @@ class UniverseNode(FilterNode):
         """Allows to add up to 512 input channels."""
         next_input = len(self.inputs())
         if next_input >= 512:
-            return None
+            return
         input_channel = f"input_{next_input + 1}"
         self.filter.filter_configurations[input_channel] = str(next_input)
         term = super().addInput(input_channel, **args)
@@ -37,9 +43,3 @@ class UniverseNode(FilterNode):
         if term.isInput():
             del self.filter.filter_configurations[term.name()]
         return super().removeTerminal(term)
-
-    def setup_filter(self, filter_: Filter = None):
-        super().setup_filter(filter_)
-        if filter_ is not None:
-            for _ in range(len(filter_.channel_links) - 1):
-                self.addInput()

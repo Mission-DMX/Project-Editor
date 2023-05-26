@@ -6,58 +6,34 @@ from PySide6.QtGui import QFont
 
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 
-from model import Filter, DataType
+from model import Scene, Filter, DataType
+
 from ..node_graphics_item import FilterSettingsItem
 
 
 class FilterNode(Node):
     """Basic filter node."""
 
-    def __init__(self, filter_type: int, name: str, terminals: dict[str, dict[str, str]] = None, allow_add_input=False):
-        super().__init__(name, terminals, allow_add_input)
-        self._filter = Filter(scene=None, filter_id=name, filter_type=filter_type)
+    def __init__(self, model: Filter | Scene,
+                 filter_type: int,
+                 name: str,
+                 terminals: dict[str, dict[str, str]] = None):
+        super().__init__(name, terminals)
+        if isinstance(model, Scene):
+            self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
+        elif isinstance(model, Filter):
+            self._filter = model
+        else:
+            logging.warning("Tried creating filter node with unknown model %s", str(type(model)))
         # Dict with entries (channel, DataType)
         self._in_value_types: dict[str, DataType] = {}
         self._out_value_types: dict[str, DataType] = {}
 
-        # Handle special case of universe filter
-
-        self.update_filter_pos()
-        self.setup_filter()
-
-    def setup_filter(self, filter_: Filter = None):
-        """Sets the filter. Overrides existing filters.
-
-        FilterNode.filter will be set to filter.
-        FilterNode.filter.channel_links will be reset.
-        """
-        # Need to be separate from __init__ to handle creation during loading from file.
-        # When loading from file, first the node is created.
-        # This triggers a signal inside pyqtgraph which is monitored in SceneTabWidget.
-        # When signal is triggered, setup_filter() is called.
-        # setup_filter() only gets passed a filter during loading from file.
-        # When created through nodeeditor, no filter is passed.
-        if filter_ is not None:
-            if filter_.filter_type != self._filter.filter_type:
-                logging.critical(
-                    "Tried to override a filter with a filter of different type (%s vs %s)",
-                    filter_.filter_type, self._filter.filter_type)
-                return
-                # raise ValueError("Filter type wrong")
-            self._filter = filter_
-        else:
-            for key, _ in self.inputs().items():
-                self.filter.channel_links[key] = ""
-
-        #if len(self._filter.filter_configurations) > 0 or len(self._filter.initial_parameters) > 0:
         self.fsi = FilterSettingsItem(self._filter, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
         self.graphicsItem().xChanged.connect(self.update_filter_pos)
-
-        logging.debug("Added filter<type=%s}, id=%s>",
-                      self._filter.filter_type, self._filter.filter_id)
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.

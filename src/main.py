@@ -8,18 +8,16 @@ from PySide6 import QtWidgets
 
 from Style import Style
 from view.main_window import MainWindow
+from cli.remote_control_port import RemoteCLIServer
 
 
 def main():
     """Startup"""
     logging.basicConfig(encoding='utf-8', level=logging.INFO)
-    from cli.remote_control_port import RemoteCLIServer
 
     cli_server = RemoteCLIServer()
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
-    screen_width = app.primaryScreen().size().width()
-    screen_height = app.primaryScreen().size().height()
     widget = MainWindow()
     widget.showMaximized()
 
@@ -29,5 +27,5 @@ def main():
 
 
 if __name__ == "__main__":
-    """Only start if __main__"""
+    # Only start if __main__
     main()
