@@ -10,7 +10,20 @@ from .scene import Scene
 from .universe import Universe
 
 
-class Broadcaster(QtCore.QObject):
+class QObjectSingletonMeta(type(QtCore.QObject)):
+    """metaclass for a QObject Singleton"""
+
+    def __init__(cls, name, bases, dict):
+        super().__init__(name, bases, dict)
+        cls.instance = None
+
+    def __call__(cls, *args, **kw):
+        if cls.instance is None:
+            cls.instance = super().__call__(*args, **kw)
+        return cls.instance
+
+
+class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_active_scene: QtCore.Signal = QtCore.Signal(int)
@@ -46,20 +59,10 @@ class Broadcaster(QtCore.QObject):
     desk_media_rec_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
-
     last_instance: "Broadcaster" = None
 
-    def __init__(self):
-        super().__init__()
-        self.add_universe.connect(self._add_universe)
-        self.connection_state_updated.connect(self._connection_changed)
-
-    def _add_universe(self, universe: PatchingUniverse):
-        self.patching_universes.append(universe)
-        self.send_universe.emit(universe)
-
-    def _connection_changed(self, connected):
-        """connection to fish is changed"""
-        if connected:
-            for universe in self.patching_universes:
-                self.send_universe.emit(universe)
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, "instance") or cls.instance is None:
+            print("hier")
+            cls.instance = super(Broadcaster, cls).__new__(cls)
+        return cls.instance
