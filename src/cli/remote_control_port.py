@@ -1,8 +1,9 @@
 # coding=utf-8
 """Classes for remote connection"""
 from asyncio import IncompleteReadError
-from socket import socket, AF_INET6, SOCK_STREAM
+from socket import AF_INET6, SOCK_STREAM
 from socket import error as socket_error
+from socket import socket
 from threading import Thread
 
 from cli.cli_context import CLIContext

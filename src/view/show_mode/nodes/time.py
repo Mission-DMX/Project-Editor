@@ -1,6 +1,7 @@
 # coding=utf-8
 """Filter nodes related to time"""
 from model import DataType
+
 from . import FilterNode
 
 
