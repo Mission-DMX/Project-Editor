@@ -1,14 +1,15 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
-from .universe import Universe
-from .scene import Scene
 from .broadcaster import Broadcaster
-from .patching_universe import PatchingUniverse
 from .device import Device
+from .patching_universe import PatchingUniverse
+from .scene import Scene
+from .universe import Universe
 
 
 class BoardConfiguration:
     """Board configuration of a show file."""
+
     def __init__(self, broadcaster: Broadcaster, show_name: str = "", default_active_scene: int = 0, notes: str = ""):
         self._show_name: str = show_name
         self._default_active_scene: int = default_active_scene
@@ -135,7 +136,7 @@ class BoardConfiguration:
     @property
     def ui_hints(self) -> dict[str, str]:
         """UI hints for the show"""
-        return  self._ui_hints
+        return self._ui_hints
 
     @property
     def broadcaster(self) -> Broadcaster:

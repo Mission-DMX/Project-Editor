@@ -2,7 +2,7 @@
 """Channels for patching_mode"""
 from PySide6 import QtCore
 
-from ofl.fixture import UsedFixture, Mode
+from ofl.fixture import Mode, UsedFixture
 
 
 class PatchingChannel(QtCore.QObject):

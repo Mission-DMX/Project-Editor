@@ -9,8 +9,10 @@ from .filter import Filter
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
 
+
 class Scene:
     """Scene for show file."""
+
     def __init__(self, scene_id: int,
                  human_readable_name: str,
                  flowchart: Flowchart,
