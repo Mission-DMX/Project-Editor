@@ -1,2 +1,3 @@
 [tool.isort]
-skip = [".gitignore", "src/proto/"]
+skip = ["src/proto/"]
+line_length = 120
