@@ -284,10 +284,8 @@ class BankSet:
         """
         BankSet._active_bank_set = self.id
         text = "Bank: " + self.description
-        BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" +
-                                                                                            str(self.active_bank)) + text[
-                                                                                                                     -10:] + (
-                                              " " * (10 - len(text)))
+        BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" + str(
+            self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
         self._send_desk_update_message()
 
     def _send_desk_update_message(self):

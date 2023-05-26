@@ -63,4 +63,4 @@ class ColorHSI:
 
     def format_for_filter(self) -> str:
         """This method formats the color to be parsable by fish filters."""
-        return "{},{},{}".format(float(self._hue), float(self._saturation), float(self._intensity))
+        return f"{float(self._hue)},{float(self._saturation)},{float(self._intensity)}"
