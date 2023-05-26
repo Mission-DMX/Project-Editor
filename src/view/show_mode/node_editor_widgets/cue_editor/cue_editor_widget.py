@@ -1,12 +1,11 @@
-from PySide6.QtCore import Qt, QItemSelectionModel
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
-    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QInputDialog, QAbstractItemView, \
-    QMessageBox
+    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QAbstractItemView, QMessageBox
 
 from model import DataType
 from model.broadcaster import Broadcaster
-from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
+from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn
 from view.show_mode.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
@@ -53,10 +52,10 @@ class CueEditor(NodeEditorFilterConfigWidget):
         else:
             mapping_str = ""
         d = {
-                "end_handling": "start_again" if self._global_restart_on_end else "hold",
-                "mapping": mapping_str,
-                "cuelist": "$".join([c.format_cue() for c in self._cues])
-            }
+            "end_handling": "start_again" if self._global_restart_on_end else "hold",
+            "mapping": mapping_str,
+            "cuelist": "$".join([c.format_cue() for c in self._cues])
+        }
         return d
 
     def __init__(self, parent: QWidget = None):
@@ -86,7 +85,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._current_cue_another_play_pressed_checkbox.setEnabled(False)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
 
-        self._zoom_label: QLabel = None
+        self._zoom_label: QLabel | None = None
         self.setup_zoom_panel(cue_settings_container, cue_settings_container_layout)
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
@@ -105,7 +104,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
         self._jw_zoom_mode = False
-        self._broadcaster=Broadcaster()
+        self._broadcaster = Broadcaster()
         self._broadcaster.desk_media_rec_pressed.connect(self.rec_pressed)
         self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
         self._broadcaster.jogwheel_rotated_left.connect(self.jg_left)

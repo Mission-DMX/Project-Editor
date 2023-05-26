@@ -16,9 +16,9 @@ if TYPE_CHECKING:
 class PatchPlanSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
 
-    def __init__(self, broadcaster: Broadcaster, parent: "PatchMode"):
+    def __init__(self, parent: "PatchMode"):
         super().__init__(parent=parent)
-        self._broadcaster = broadcaster
+        self._broadcaster = Broadcaster()
         self._broadcaster.add_universe.connect(self._add_universe)
         self._patch_planes: list[PatchPlanWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)

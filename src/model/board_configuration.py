@@ -9,7 +9,7 @@ from .device import Device
 
 class BoardConfiguration:
     """Board configuration of a show file."""
-    def __init__(self, broadcaster: Broadcaster, show_name: str = "", default_active_scene: int = 0, notes: str = ""):
+    def __init__(self, show_name: str = "", default_active_scene: int = 0, notes: str = ""):
         self._show_name: str = show_name
         self._default_active_scene: int = default_active_scene
         self._notes: str = notes
@@ -18,7 +18,7 @@ class BoardConfiguration:
         self._universes: list[Universe] = []
         self._ui_hints: dict[str, str] = {}
 
-        self._broadcaster: Broadcaster = broadcaster
+        self._broadcaster: Broadcaster = Broadcaster()
 
         self._broadcaster.add_universe.connect(self._add_universe)
         self._broadcaster.scene_created.connect(self._add_scene)

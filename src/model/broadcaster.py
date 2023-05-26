@@ -13,8 +13,8 @@ from .universe import Universe
 class QObjectSingletonMeta(type(QtCore.QObject)):
     """metaclass for a QObject Singleton"""
 
-    def __init__(cls, name, bases, dict):
-        super().__init__(name, bases, dict)
+    def __init__(cls, name, bases, _dict):
+        super().__init__(name, bases, _dict)
         cls.instance = None
 
     def __call__(cls, *args, **kw):
@@ -40,8 +40,6 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     device_created: QtCore.Signal = QtCore.Signal(Device)
     delete_device: QtCore.Signal = QtCore.Signal(Device)
     ################################################################
-    patching_universes: list[PatchingUniverse] = []
-
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()
     view_patching: QtCore.Signal = QtCore.Signal()
     view_leave_patching: QtCore.Signal = QtCore.Signal()
@@ -59,9 +57,10 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_rec_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
+    #################################################################
+    patching_universes: list[PatchingUniverse] = []
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:
-            print("hier")
             cls.instance = super(Broadcaster, cls).__new__(cls)
         return cls.instance

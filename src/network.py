@@ -20,7 +20,8 @@ from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
 if TYPE_CHECKING:
-    pass
+    from view.main_window import MainWindow
+    from cli.bankset_command import FaderBank
 
 
 class NetworkManager(QtCore.QObject):
@@ -28,14 +29,14 @@ class NetworkManager(QtCore.QObject):
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, broadcaster: Broadcaster, parent: "MainWindow") -> None:
+    def __init__(self, parent: "MainWindow") -> None:
         """Inits the network connection.
         Args:
             parent: parent GUI Object
         """
         super().__init__(parent=parent)
         logging.info("generate new Network Manager")
-        self._broadcaster = broadcaster
+        self._broadcaster = Broadcaster()
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._message_queue = queue.Queue()
 
@@ -49,7 +50,7 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
 
-        x_touch.XTochMessages(broadcaster, self._msg_to_x_touch)
+        x_touch.XTochMessages(self._broadcaster, self._msg_to_x_touch)
 
     @property
     def is_running(self) -> bool:

@@ -22,9 +22,9 @@ from view.patch_mode.patching.mode_item import ModeItem
 class PatchingSelect(QtWidgets.QScrollArea):
     """select Manufacturer"""
 
-    def __init__(self, broadcaster: Broadcaster, parent):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.broadcaster = broadcaster
+        self._broadcaster = Broadcaster()
         cache_path = '/var/cache/missionDMX'
         fixtures_path = os.path.join(cache_path, 'fixtures/')
         zip_path = os.path.join(cache_path, 'fixtures.zip')
@@ -93,6 +93,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         self.container.setCurrentIndex(index)
 
     def reset(self):
+        """reset to start"""
         self.container.setCurrentIndex(self.container.count() - 1)
 
     def _run_patch(self, fixture: Fixture, index: int) -> None:
@@ -129,7 +130,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
             for _ in range(number):
                 color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
                 for index in range(len(fixture.mode['channels'])):
-                    item = self.broadcaster.patching_universes[universe].patching[channel + index]
+                    item = self._broadcaster.patching_universes[universe].patching[channel + index]
                     item.fixture = fixture
                     item.fixture_channel = index
                     item.color = color
@@ -138,4 +139,4 @@ class PatchingSelect(QtWidgets.QScrollArea):
                 else:
                     channel += offset
 
-        self.broadcaster.view_leave_patching.emit()
+        self._broadcaster.view_leave_patching.emit()

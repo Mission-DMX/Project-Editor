@@ -30,16 +30,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Project-Editor")
 
         # model objects
-        self._fish_connector: NetworkManager = NetworkManager(self._broadcaster, self)
-        self._board_configuration: BoardConfiguration = BoardConfiguration(self._broadcaster)
+        self._fish_connector: NetworkManager = NetworkManager(self)
+        self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
-            ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self),
+            ("Console Mode", MainWidget(ConsoleSceneSelector(self), self),
              lambda: self._to_widget(0)),
             ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration, self._broadcaster), self),
              lambda: self._broadcaster.view_to_file_editor.emit()),
-            ("Patch", MainWidget(PatchMode(self._broadcaster, self), self),
+            ("Patch", MainWidget(PatchMode(self), self),
              lambda: self._broadcaster.view_to_patch_menu.emit()),
             ("Debug", debug_console, lambda: self._to_widget(3))]
 

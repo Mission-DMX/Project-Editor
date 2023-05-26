@@ -15,7 +15,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
     Buttons allow to change the selected universe.
     """
 
-    def __init__(self, broadcaster: Broadcaster, universe: Universe, parent=None):
+    def __init__(self, universe: Universe, parent=None):
         """Inits a ManualUniverseEditorWidget.
 
         Args:
@@ -23,7 +23,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             parent: Qt parent of the widget.
         """
         super().__init__(parent=parent)
-        self._broadcaster = broadcaster
+        broadcaster = Broadcaster()
 
         self.setFixedHeight(430)
 
@@ -43,6 +43,6 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             channel_widget = ChannelWidget(channel, universe)
             universe_widget.layout().addWidget(channel_widget)
             channel.updated.connect(
-                lambda *args, send_universe=universe: self._broadcaster.send_universe_value.emit(send_universe))
+                lambda *args, send_universe=universe: broadcaster.send_universe_value.emit(send_universe))
 
         self.setWidget(universe_widget)

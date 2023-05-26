@@ -11,19 +11,18 @@ from view.patch_mode.patching.patching_select import PatchingSelect
 class PatchMode(QtWidgets.QStackedWidget):
     """Patching Mode"""
 
-    def __init__(self, broadcaster: Broadcaster, parent):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.addWidget(PatchPlanSelector(broadcaster, self))
-        self.addWidget(PatchingSelect(broadcaster, self))
+        self.addWidget(PatchPlanSelector(self))
+        self.addWidget(PatchingSelect(self))
         self._broadcaster = Broadcaster()
         self._broadcaster.add_universe.connect(self._add_universe)
         self._broadcaster.connection_state_updated.connect(self._connection_changed)
-        broadcaster.view_to_patch_menu.connect(lambda: self.setCurrentIndex(0))
-        broadcaster.view_patching.connect(lambda: self.setCurrentIndex(1))
-        broadcaster.view_leave_patching.connect(lambda: self.setCurrentIndex(0))
+        self._broadcaster.view_to_patch_menu.connect(lambda: self.setCurrentIndex(0))
+        self._broadcaster.view_patching.connect(lambda: self.setCurrentIndex(1))
+        self._broadcaster.view_leave_patching.connect(lambda: self.setCurrentIndex(0))
 
     def _add_universe(self, universe: PatchingUniverse):
-        print("hier")
         self._broadcaster.patching_universes.append(universe)
         self._broadcaster.send_universe.emit(universe)
 
