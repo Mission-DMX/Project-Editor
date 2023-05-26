@@ -1,17 +1,17 @@
 # coding=utf-8
 """main Window for the Editor"""
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtGui, QtWidgets
 
-from Style import Style
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from network import NetworkManager
+from Style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
-from view.show_mode.node_editor import NodeEditorWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patching_mode.patching_selector import PatchingSelector
+from view.show_mode.node_editor import NodeEditorWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):

@@ -2,10 +2,11 @@
 """Widget containing a nodeeditor for one scene."""
 import logging
 
-from PySide6.QtWidgets import QWidget, QGridLayout
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
+from PySide6.QtWidgets import QGridLayout, QWidget
 
-from model import Scene, Filter
+from model import Filter, Scene
+
 from . import nodes
 from .nodes import FilterNode
 

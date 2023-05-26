@@ -6,7 +6,7 @@ from xml.etree import ElementTree
 from pyqtgraph.flowchart import Flowchart
 
 import proto.UniverseControl_pb2 as Proto
-from model import BoardConfiguration, Scene, Universe, Filter
+from model import BoardConfiguration, Filter, Scene, Universe
 from model.patching_universe import PatchingUniverse
 from view.show_mode.library import FilterNodeLibrary
 

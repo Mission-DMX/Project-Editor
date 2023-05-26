@@ -1,6 +1,7 @@
 # coding=utf-8
 """Basic arithmetic filter nodes"""
 from model import DataType
+
 from . import FilterNode
 
 

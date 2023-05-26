@@ -1,6 +1,7 @@
 # coding=utf-8
 """Universe filter node"""
-from model import Filter, DataType
+from model import DataType, Filter
+
 from . import FilterNode
 
 
