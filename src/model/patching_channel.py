@@ -7,6 +7,7 @@ from ofl.fixture import Mode, UsedFixture
 
 class PatchingChannel(QtCore.QObject):
     """Channels for patching_mode to reduce redundancy over scenes"""
+
     updated_fixture: QtCore.Signal = QtCore.Signal()
     updated_color: QtCore.Signal = QtCore.Signal(str)
 
