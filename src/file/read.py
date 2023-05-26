@@ -3,8 +3,13 @@
 import logging
 from xml.etree import ElementTree
 
+from PySide6.QtWidgets import QDialog, QGridLayout
+
+import xmlschema
+
 import proto.UniverseControl_pb2 as Proto
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse
+from view.dialogs import ExceptionsDialog
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration):
@@ -16,6 +21,16 @@ def read_document(file_name: str, board_configuration: BoardConfiguration):
     Returns:
         A BoardConfiguration instance parsed from the provided file.
     """
+
+    try:
+        schema_file = open("resources/ShowFileSchema.xsd", 'r')
+
+        schema = xmlschema.XMLSchema(schema_file)
+        schema.validate(file_name)
+    except Exception as error:
+        ExceptionsDialog(error).exec()
+        return
+
     board_configuration.broadcaster.clear_board_configuration.emit()
     tree = ElementTree.parse(file_name)
     root = tree.getroot()
