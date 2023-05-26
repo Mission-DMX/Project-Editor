@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from uuid import uuid4
 
 import proto.Console_pb2
-from network import NetworkManager
 from model.color_hsi import ColorHSI
+from network import NetworkManager
 
 
 def _generate_unique_id() -> str:
@@ -193,7 +193,11 @@ class FaderBank:
 class BankSet:
     """This class represents a bank set.
 
-    A bank set is a set of banks, the user can switch between at a given time. Multiple bank sets can be linked to fish at the same time but only one may be active at the same time. Only the GUI may specify which bank set is active any given time, except for the event that the active bank set will be unlinked. In this case fish will enable the bank set with the next lower index.
+    A bank set is a set of banks, the user can switch between at a given time.
+    Multiple bank sets can be linked to fish at the same time but only one may be active at the same time.
+    Only the GUI may specify which bank set is active any given time,
+     except for the event that the active bank set will be unlinked.
+    In this case fish will enable the bank set with the next lower index.
     """
 
     _fish_connector: NetworkManager = None
@@ -281,7 +285,9 @@ class BankSet:
         BankSet._active_bank_set = self.id
         text = "Bank: " + self.description
         BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" +
-                                   str(self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
+                                                                                            str(self.active_bank)) + text[
+                                                                                                                     -10:] + (
+                                              " " * (10 - len(text)))
         self._send_desk_update_message()
 
     def _send_desk_update_message(self):
@@ -385,7 +391,6 @@ def send_independent_update_msg(update_from_gui: bool):
     msg.selected_bank_set = ""
     msg.seven_seg_display_data = BankSet._seven_seg_data
     BankSet._fish_connector.send_desk_update_message(msg, update_from_gui)
-
 
 
 def commit_all_bank_sets():

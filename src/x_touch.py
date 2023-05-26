@@ -22,7 +22,9 @@ VIEW_NOT_FILTER_MENU_MSG: proto.MessageTypes_pb2 = proto.Console_pb2.button_stat
     new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
 
 
-class XTochMessages():
+class XTouchMessages:
+    """messages to the XTouch"""
+
     def __init__(self, broadcaster: Broadcaster, send: callable) -> None:
         self._broadcaster = broadcaster
 

@@ -28,18 +28,18 @@ class ColorHSI:
             filter_format -- The color provided as a filter configuration string
         """
         parts = filter_format.split(",")
-        h = float(parts[0]) % 360.0
-        s = float(parts[1])
-        if s < 0:
-            s = 0.0
-        elif s > 1:
-            s = 1.0
-        i = float(parts[2])
-        if i < 0:
-            i = 0.0
-        elif i > 1:
-            i = 1.0
-        ColorHSI(h, s, i)
+        hue = float(parts[0]) % 360.0
+        saturation = float(parts[1])
+        if saturation < 0:
+            saturation = 0.0
+        elif saturation > 1:
+            saturation = 1.0
+        intensity = float(parts[2])
+        if intensity < 0:
+            intensity = 0.0
+        elif intensity > 1:
+            intensity = 1.0
+        ColorHSI(hue, saturation, intensity)
 
     @property
     def hue(self) -> confloat(ge=0, le=360):
@@ -64,4 +64,3 @@ class ColorHSI:
     def format_for_filter(self) -> str:
         """This method formats the color to be parsable by fish filters."""
         return "{},{},{}".format(float(self._hue), float(self._saturation), float(self._intensity))
-

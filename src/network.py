@@ -50,7 +50,7 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
 
-        x_touch.XTochMessages(self._broadcaster, self._msg_to_x_touch)
+        x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)
 
     @property
     def is_running(self) -> bool:

@@ -48,8 +48,8 @@ class PatchingDialog(QtWidgets.QDialog):
 
         # TODO Hier sollte noch ein nummernblock hin
         self.setLayout(layout)
-        self._ok.clicked.connect(self.ok)
-        self._cancel.clicked.connect(self.cancel)
+        self._ok.clicked.connect(self._accept)
+        self._cancel.clicked.connect(self._reject)
 
     def get_used_fixture(self) -> UsedFixture:
         """property of the used Fixture"""
@@ -66,10 +66,10 @@ class PatchingDialog(QtWidgets.QDialog):
             for mode in self._fixture['modes']:
                 self._select_mode.addItem(mode['name'])
 
-    def ok(self) -> None:
+    def _accept(self) -> None:
         """accept the Fixture"""
         self.accept()
 
-    def cancel(self) -> None:
+    def _reject(self) -> None:
         """cancel Patching"""
         self.reject()
