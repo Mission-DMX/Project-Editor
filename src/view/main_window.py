@@ -27,7 +27,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # first logging to don't miss logs
         debug_console = LoggingWidget()
         self._broadcaster = Broadcaster()
-        Broadcaster.last_instance = self._broadcaster
         self.setWindowTitle("Project-Editor")
 
         # model objects

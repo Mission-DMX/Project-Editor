@@ -105,11 +105,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
         self._jw_zoom_mode = False
-        Broadcaster.last_instance.desk_media_rec_pressed.connect(self.rec_pressed)
-        Broadcaster.last_instance.jogwheel_rotated_right.connect(self.jg_right)
-        Broadcaster.last_instance.jogwheel_rotated_left.connect(self.jg_left)
-        Broadcaster.last_instance.desk_media_scrub_pressed.connect(self.scrub_pressed)
-        Broadcaster.last_instance.desk_media_scrub_released.connect(self.scrub_released)
+        self._broadcaster=Broadcaster()
+        self._broadcaster.desk_media_rec_pressed.connect(self.rec_pressed)
+        self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
+        self._broadcaster.jogwheel_rotated_left.connect(self.jg_left)
+        self._broadcaster.desk_media_scrub_pressed.connect(self.scrub_pressed)
+        self._broadcaster.desk_media_scrub_released.connect(self.scrub_released)
 
         self._bankset = BankSet(gui_controlled=True)
         self._bankset.description = "Cue Editor BS"
@@ -288,8 +289,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._timeline_container.clear_display()
         self._bankset.unlink()
         # TODO unlink bankset
-        Broadcaster.last_instance.desk_media_rec_pressed.disconnect(self.rec_pressed)
-        Broadcaster.last_instance.jogwheel_rotated_right.disconnect(self.jg_right)
-        Broadcaster.last_instance.jogwheel_rotated_left.disconnect(self.jg_left)
-        Broadcaster.last_instance.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
-        Broadcaster.last_instance.desk_media_scrub_released.disconnect(self.scrub_released)
+        self._broadcaster.desk_media_rec_pressed.disconnect(self.rec_pressed)
+        self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
+        self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
+        self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
+        self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)

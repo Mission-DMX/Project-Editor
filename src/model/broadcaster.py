@@ -59,7 +59,6 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_rec_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
-    last_instance: "Broadcaster" = None
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:
