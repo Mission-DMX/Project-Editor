@@ -1,10 +1,12 @@
 from PySide6.QtCore import Qt, QItemSelectionModel
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
-    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QInputDialog, QAbstractItemView
+    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QInputDialog, QAbstractItemView, \
+    QMessageBox
 
 from model import DataType
 from model.broadcaster import Broadcaster
+from view.show_mode.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
@@ -178,11 +180,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._timeline_container.setEnabled(True)
         self._current_cue_end_action_select_widget.setEnabled(True)
         self._current_cue_another_play_pressed_checkbox.setEnabled(True)
-        print("Selected cue: " + str(cue_index))
 
     def _cue_list_selection_changed(self):
         items_list = self._cue_list_widget.selectedIndexes()
-        print(items_list)
         if len(items_list) > 0:
             self.select_cue(items_list[0].row(), from_manual_input=False)
         else:
@@ -205,14 +205,19 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
         The default for all cues is a 0 keyframe at the start.
         """
-        # TODO implement
-        # TODO also think about channel type and name
-        channel_name, channel_type, ok_button_pressed = QInputDialog(self._parent_widget,
-                                                                     "Add a Channel to the filter.", "Channel Name",
-                                                                     "Channel Type")
-        if ok_button_pressed:
-            # TODO add corresponding fader to bank set and update it
-            self._timeline_container.add_channel(DataType.format_for_filters(channel_type), channel_name)
+        self._input_dialog = ChannelInputDialog(self._parent_widget, self._channel_submit)
+        self._input_dialog.show()
+
+    def _channel_submit(self, channel_name, channel_type):
+        for c_name in self._cues[0].channels:
+            if c_name[0] == channel_name:
+                QMessageBox.critical(self._parent_widget, "Failed to add channel",
+                                     "Unable to add the requested channel {}. Channel names must be unique within "
+                                     "this filter.".format(channel_name))
+                return
+        for c in self._cues:
+            c.add_channel(channel_name, channel_type)
+        self._timeline_container.add_channel(channel_type, channel_name)
 
     def _remove_channel_button_pressed(self):
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
@@ -222,7 +227,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         pass
 
     def _cue_end_action_changed(self):
-        self._timeline_container.cue.end_action = self._current_cue_end_action_select_widget.currentIndex()
+        self._timeline_container.cue.end_action = EndAction(self._current_cue_end_action_select_widget.currentIndex())
 
     def _cue_play_pressed_restart_changed(self):
         self._timeline_container.cue.restart_on_another_play_press = \

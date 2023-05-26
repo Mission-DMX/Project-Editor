@@ -30,6 +30,11 @@ class DataType(IntFlag):
             return "8bit"  # bools are 8 bit
 
     @staticmethod
+    def names() -> list[str]:
+        return [f.format_for_filters() for f in [DataType.DT_8_BIT, DataType.DT_16_BIT, DataType.DT_DOUBLE,
+                                                 DataType.DT_COLOR]]
+
+    @staticmethod
     def from_filter_str(type_definition_string: str):
         match type_definition_string:
             case "8bit":

@@ -167,26 +167,31 @@ class KeyFrame:
         return "{}:{}".format(self.timestamp, "&".join([s.encode() for s in self._states]))
 
     @staticmethod
-    def from_format_str(f_str: str):
+    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]]):
         parts = f_str.split(':')
         if len(parts) != 2:
             raise ArgumentError("A keyframe definition should contain exactly two elements")
         f = KeyFrame()
         f.timestamp = float(parts[0])
+        i = 0
         for state_dev in parts[1].split('&'):
             state_dev_parts = state_dev.split('@')
-            match state_dev_parts[1]:
-                case "color":
-                    s_entry = StateColor()
-                case "8bit":
-                    s_entry = StateEightBit()
-                case "16bit":
-                    s_entry = StateSixteenBit()
-                case "float":
-                    s_entry = StateDouble()
+            if i >= len(channel_data_types):
+                raise ArgumentError("There are more elements in the key frame than channel data types")
+            dt = channel_data_types[i][1]
+            match dt:
+                case DataType.DT_COLOR:
+                    s_entry = StateColor(state_dev_parts[1])
+                case DataType.DT_8_BIT:
+                    s_entry = StateEightBit(state_dev_parts[1])
+                case DataType.DT_16_BIT:
+                    s_entry = StateSixteenBit(state_dev_parts[1])
+                case DataType.DT_DOUBLE:
+                    s_entry = StateDouble(state_dev_parts[1])
                 case _:
                     raise ArgumentError("Unsupported filter data type: {}".format(state_dev_parts[1]))
             f._states.append(s_entry.decode(state_dev))
+            i += 1
 
 
 class Cue:
@@ -225,13 +230,14 @@ class Cue:
         end_handling_str = self.end_action.get_filter_format_str()
         restart_beh_str = "restart" if self.restart_on_another_play_press else "do_nothing"
         frames_str_list = [f.format_filter_str() for f in self._frames]
-        "{}#{}#{}".format("|".join(frames_str_list), end_handling_str, restart_beh_str)
+        return "{}#{}#{}".format("|".join(frames_str_list), end_handling_str, restart_beh_str)
 
     def from_string_definition(self, definition: str):
         primary_tokens = definition.split("#")
         frame_definitions = primary_tokens[0].split("|")
         for frame_dev in frame_definitions:
-            self._frames.append(KeyFrame.from_format_str(frame_dev))
+            if frame_dev:
+                self._frames.append(KeyFrame.from_format_str(frame_dev, self._channel_definitions))
         if len(primary_tokens) > 1:
             self.end_action = EndAction.from_format_str(primary_tokens[1])
         if len(primary_tokens) > 2:

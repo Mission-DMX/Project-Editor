@@ -27,7 +27,6 @@ class TimelineContainer(QWidget):
     def add_channel(self, channel_type: DataType, name: str):
         self._channel_label.add_label(name, channel_type.format_for_filters())
         self._keyframes_panel.add_channels([channel_type])
-        print("Added channel '{}' of type {}.".format(name, channel_type.format_for_filters()))
         pass
 
     def clear_channels(self):
@@ -46,6 +45,7 @@ class TimelineContainer(QWidget):
         self._cue = c
         # TODO clear keyframes_panel
         self._keyframes_panel.clear_cue()
+        self._channel_label.clear_labels()
         for channel in c.channels:
             self.add_channel(channel[1], channel[0])
         # TODO introduce property

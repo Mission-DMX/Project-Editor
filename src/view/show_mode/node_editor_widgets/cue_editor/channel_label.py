@@ -21,6 +21,11 @@ class TimelineChannelLabel(QLabel):
         self._types.append(channel_type)
         self._update()
 
+    def clear_labels(self):
+        self._names.clear()
+        self._types.clear()
+        self._update()
+
     def resizeEvent(self, event: PySide6.QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
         canvas = QtGui.QPixmap(event.size().width(), event.size().height())
