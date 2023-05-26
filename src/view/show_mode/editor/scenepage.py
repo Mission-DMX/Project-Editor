@@ -1,7 +1,9 @@
 # coding=utf-8
 """A scene can have multiple pages"""
-from PySide6.QtWidgets import QWidget, QMenu
-from PySide6.QtCore import Qt, QPointF
+import logging
+
+from PySide6.QtWidgets import QWidget, QMenu, QGridLayout
+from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QMouseEvent, QAction
 
 from model import Scene, UIWidget
@@ -13,9 +15,10 @@ class ScenePageWidget(QWidget):
     def __init__(self, scene: Scene, parent: QWidget) -> None:
         super().__init__(parent)
         self._scene = scene
+        self.setLayout(QGridLayout(self))
         self._ui_widgets: list[UIWidget] = []
 
-    def _add_filter_widget(self, ui_widget: UIWidget, pos: QPointF):
+    def _add_filter_widget(self, ui_widget: UIWidget, pos: QPoint):
         """Adds the filter widget to the page at the specified position.
         
         Args:
@@ -34,16 +37,14 @@ class ScenePageWidget(QWidget):
             return
 
         if event.button() is Qt.MouseButton.RightButton:
-            self._widget_selection_menu(event.position())
+            self._widget_selection_menu(event.position().toPoint())
 
-    def _widget_selection_menu(self, position: QPointF):
+    def _widget_selection_menu(self, pos: QPoint):
         menu = QMenu(self)
-        test_action = QAction(text="Test")
-        menu.addAction(test_action)
-        menu.addAction()
         for filter_ in self._scene.filters:
-            pass
-        menu.popup(position)
+            action = QAction(filter_.filter_id, self)
+            menu.addAction(action)
+        menu.popup(pos)
 
     @property
     def scene(self) -> Scene:

@@ -16,7 +16,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
     Attributes:
         filter: The filter this item belongs to
     """
-
+    _open_dialogs: list[QDialog] = []
     def __init__(self, filter_: Filter, parent: QGraphicsItem):
         super().__init__("resources/settings.svg", parent)
         self.filter = filter_
@@ -49,7 +49,10 @@ class FilterSettingsItem(QGraphicsSvgItem):
     def mousePressEvent(self, ev):
         """Handle left mouse button click by opening filter settings dialog"""
         if ev.button() == Qt.MouseButton.LeftButton:
-            FilterSettingsDialog(self.filter).exec()
+            dialog = FilterSettingsDialog(self.filter)
+            self._open_dialogs.append(dialog)
+            dialog.finished.connect(lambda: self._open_dialogs.remove(dialog))
+            dialog.open()
 
 
 def check_if_filter_has_special_widget(filter_):
