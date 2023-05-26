@@ -193,6 +193,9 @@ class KeyFrame:
             f._states.append(s_entry.decode(state_dev))
             i += 1
 
+    def append_state(self, s: State):
+        self._states.append(s)
+
 
 class Cue:
     def __init__(self):
@@ -205,8 +208,11 @@ class Cue:
     @property
     def duration(self) -> float:
         """Computes the length of the cue"""
-        # TODO implement
-        return 0.0
+        latest_timestamp = 0.0
+        for f in self._frames:
+            if f.timestamp > latest_timestamp:
+                latest_timestamp = f.timestamp
+        return latest_timestamp
 
     @property
     def duration_formatted(self) -> str:
@@ -251,4 +257,8 @@ class Cue:
         else:
             dt = t
         self._channel_definitions.append((name, dt))
+
+    def insert_frame(self, f: KeyFrame):
+        """Add a frame to the cue"""
+        self._frames.append(f)
 

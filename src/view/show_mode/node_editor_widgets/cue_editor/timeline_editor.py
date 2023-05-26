@@ -4,7 +4,8 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QScrollArea
 from model import DataType
 from model.control_desk import set_seven_seg_display_content
 from view.show_mode.node_editor_widgets.cue_editor.channel_label import TimelineChannelLabel
-from view.show_mode.node_editor_widgets.cue_editor.cue import Cue
+from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, KeyFrame, StateEightBit, StateSixteenBit, \
+    StateDouble, StateColor
 from view.show_mode.node_editor_widgets.cue_editor.timeline_content_widget import TimelineContentWidget
 
 
@@ -13,6 +14,7 @@ class TimelineContainer(QWidget):
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self._channel_label = TimelineChannelLabel()
+        self._channel_label.sb_offset = 10
         layout.addWidget(self._channel_label)
         timeline_scroll_area = QScrollArea()
         timeline_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
@@ -23,6 +25,15 @@ class TimelineContainer(QWidget):
         layout.addWidget(timeline_scroll_area)
         self.setLayout(layout)
         self.cue = Cue()
+        self._current_transition_type = "edg"
+
+    @property
+    def transition_type(self) -> str:
+        return self._current_transition_type
+
+    @transition_type.setter
+    def transition_type(self, new_value: str):
+        self._current_transition_type = new_value
 
     def add_channel(self, channel_type: DataType, name: str):
         self._channel_label.add_label(name, channel_type.format_for_filters())
@@ -66,8 +77,26 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.move_cursor_right()
 
     def record_pressed(self):
-        # TODO implement
-        pass
+        p = self._keyframes_panel.cursor_position
+        f = KeyFrame()
+        f.timestamp = p
+        i = 0
+        for c in self._cue.channel_types:
+            match c:
+                case DataType.DT_8_BIT:
+                    s = StateEightBit(self._current_transition_type)
+                case DataType.DT_16_BIT:
+                    s = StateSixteenBit(self._current_transition_type)
+                case DataType.DT_DOUBLE:
+                    s = StateDouble(self._current_transition_type)
+                case DataType.DT_COLOR:
+                    s = StateColor(self._current_transition_type)
+                case _:
+                    s = StateEightBit(self._current_transition_type)
+            # TODO query values from desk columns
+            f.append_state(s)
+        self._cue.insert_frame(f)
+        self._keyframes_panel.insert_frame(f)
 
     def format_zoom(self) -> str:
         return "{0:0>3} Sec/Pixel".format(int(self._keyframes_panel._time_zoom * 10000) / 10000)

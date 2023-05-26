@@ -14,6 +14,7 @@ class TimelineChannelLabel(QLabel):
         self._types: list[str] = []
         self.setMinimumWidth(2 * CHANNEL_DISPLAY_HEIGHT)
         self.setMinimumHeight(20)
+        self.sb_offset = 0
         self._update()
 
     def add_label(self, name: str, channel_type: str):
@@ -34,7 +35,7 @@ class TimelineChannelLabel(QLabel):
         self._repaint()
 
     def _update(self):
-        required_height = 2*20 + CHANNEL_DISPLAY_HEIGHT * len(self._names)
+        required_height = 2*20 + CHANNEL_DISPLAY_HEIGHT * len(self._names) + self.sb_offset
         self.setMinimumHeight(required_height)
         self._repaint()
 

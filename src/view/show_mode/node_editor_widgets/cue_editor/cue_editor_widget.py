@@ -151,6 +151,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar_remove_channel_action.setEnabled(False)
         toolbar_remove_channel_action.triggered.connect(self._remove_channel_button_pressed)
         toolbar.addAction(toolbar_remove_channel_action)
+        toolbar.addSeparator()
+        transition_type_select_widget = QComboBox(self._parent_widget)
+        transition_type_select_widget.addItems(["edg", "lin", "sig", "e_i", "e_o"])
+        transition_type_select_widget.currentTextChanged.connect(self._transition_type_changed)
+        toolbar.addWidget(transition_type_select_widget)
         top_layout.addWidget(toolbar)
 
     def _set_zoom_label_text(self):
@@ -252,8 +257,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._timeline_container.cue.restart_on_another_play_press = \
             self._current_cue_another_play_pressed_checkbox.checkState()
 
+    def _transition_type_changed(self, text):
+        self._timeline_container.transition_type = text
+
     def rec_pressed(self):
         self._timeline_container.record_pressed()
+        # TODO update duration display
 
     def jg_right(self):
         if self._jw_zoom_mode:

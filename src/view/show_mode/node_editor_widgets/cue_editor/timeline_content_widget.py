@@ -133,6 +133,10 @@ class TimelineContentWidget(QLabel):
             self._channels.append(c)
         self.compute_resize()
 
+    def insert_frame(self, f: KeyFrame):
+        self.frames.append(f)
+        self.repaint()
+
     def zoom_out(self, factor: float = 2.0):
         if not self.isEnabled():
             return
