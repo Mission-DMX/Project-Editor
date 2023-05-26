@@ -1,3 +1,6 @@
 [tool.isort]
 skip = ["src/proto/"]
 line_length = 120
+
+[tool.black]
+line_length = 120
