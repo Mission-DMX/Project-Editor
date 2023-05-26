@@ -29,7 +29,7 @@ class TimelineChannelLabel(QLabel):
         self._repaint()
 
     def _update(self):
-        required_height = 20 + CHANNEL_DISPLAY_HEIGHT * len(self._names)
+        required_height = 2*20 + CHANNEL_DISPLAY_HEIGHT * len(self._names)
         self.setMinimumHeight(required_height)
         self._repaint()
 

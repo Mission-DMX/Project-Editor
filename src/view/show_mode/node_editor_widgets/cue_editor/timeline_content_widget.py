@@ -45,7 +45,11 @@ class TimelineContentWidget(QLabel):
                                  channel_background_color)
             i += 1
 
-        marker_brush = QBrush(QColor.fromRgb(0xFF, 0xFF, 0x00))
+        if self.isEnabled():
+            marker_color = QColor.fromRgb(0xFF, 0xFF, 0x00)
+        else:
+            marker_color = QColor.fromRgb(0x80, 0x80, 0x00)
+        marker_brush = QBrush(marker_color)
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         painter.setBrush(light_gray_brush)
         for kf in self.frames:
@@ -121,19 +125,27 @@ class TimelineContentWidget(QLabel):
         self.compute_resize()
 
     def zoom_out(self, factor: float = 2.0):
+        if not self.isEnabled():
+            return
         self._time_zoom *= factor
         self.compute_resize()
 
     def zoom_in(self, factor: float = 2.0):
+        if not self.isEnabled():
+            return
         self._time_zoom /= factor
         self.compute_resize()
 
     def move_cursor_right(self):
+        if not self.isEnabled():
+            return
         self.cursor_position += self._time_zoom * 10
         self._update_7seg_text()
         self.compute_resize()
 
     def move_cursor_left(self):
+        if not self.isEnabled():
+            return
         self.cursor_position -= self._time_zoom * 10
         if self.cursor_position < 0:
             self.cursor_position = 0.0
@@ -147,11 +159,20 @@ class TimelineContentWidget(QLabel):
         txt = str(self.cue_index % 100) + txt
         while len(txt) < 12:
             txt = " " + txt
-        print(txt)
         set_seven_seg_display_content(txt, update_from_gui=True)
 
     def mouseReleaseEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         super().mouseReleaseEvent(ev)
+        if not self.isEnabled():
+            return
         if ev.y() <= 20:
             self.cursor_position = ev.x() * self._time_zoom
         self.repaint()
+
+    def clear_cue(self):
+        self._channels.clear()
+        self.cursor_position = 0.0
+        self.frames.clear()
+        self._last_keyframe_end_point = 0
+        self._update_7seg_text()
+        self.compute_resize()

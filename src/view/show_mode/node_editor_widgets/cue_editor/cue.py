@@ -12,11 +12,11 @@ class EndAction(Enum):
     NEXT = 2
 
     def __str__(self):
-        if self.value == EndAction.HOLD:
+        if self.value == EndAction.HOLD.value:
             return "Hold current values"
-        elif self.value == EndAction.NEXT:
+        elif self.value == EndAction.NEXT.value:
             return "Jump to next cue"
-        elif self.value == EndAction.START_AGAIN:
+        elif self.value == EndAction.START_AGAIN.value:
             return "Restart cue"
         else:
             return "Unknown action"

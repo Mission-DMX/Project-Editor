@@ -1,7 +1,7 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QItemSelectionModel
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
-    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel
+    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QInputDialog, QAbstractItemView
 
 from model import DataType
 from model.broadcaster import Broadcaster
@@ -67,13 +67,20 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._cue_list_widget = QTableWidget(cue_list_and_current_settings_container)
         self._cue_list_widget.setColumnCount(3)
         self._cue_list_widget.setHorizontalHeaderLabels(["Cue Number", "Duration", "End Action"])
+        self._cue_list_widget.verticalHeader().hide()
+        self._cue_list_widget.itemSelectionChanged.connect(self._cue_list_selection_changed)
+        self._cue_list_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         cue_list_and_current_settings_container_layout.addWidget(self._cue_list_widget)
         cue_settings_container = QWidget(parent=self._parent_widget)
         cue_settings_container_layout = QFormLayout()
         self._current_cue_end_action_select_widget = QComboBox(cue_settings_container)
         self._current_cue_end_action_select_widget.addItems(EndAction.formatted_value_list())
+        self._current_cue_end_action_select_widget.setEnabled(False)
+        self._current_cue_end_action_select_widget.currentIndexChanged.connect(self._cue_end_action_changed)
         cue_settings_container_layout.addRow("End Action", self._current_cue_end_action_select_widget)
         self._current_cue_another_play_pressed_checkbox = QCheckBox("Restart cue on Play pressed", self._parent_widget)
+        self._current_cue_another_play_pressed_checkbox.clicked.connect(self._cue_play_pressed_restart_changed)
+        self._current_cue_another_play_pressed_checkbox.setEnabled(False)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
 
         self._zoom_label: QLabel = None
@@ -90,6 +97,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         v_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # TODO link up/down button events to scrolling of v_scroll_area
         self._timeline_container = TimelineContainer(v_scroll_area)
+        self._timeline_container.setEnabled(False)
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
@@ -103,6 +111,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
         self._cues: list[Cue] = []
+        self._last_selected_cue = -1
 
     def setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
         zoom_panel = QWidget(cue_settings_container)
@@ -122,12 +131,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar = QToolBar(parent=self._parent_widget)
         toolbar_add_cue_action = QAction("Add Cue", self._parent_widget)
         toolbar_add_cue_action.setStatusTip("Add a new cue to the stack")
-        toolbar_add_cue_action.triggered.connect(self._add_button_clicked)
+        toolbar_add_cue_action.triggered.connect(self._add_cue_button_clicked)
         toolbar.addAction(toolbar_add_cue_action)
-        toolbar_add_channel_action = QAction("Add Channel", self._parent_widget)
-        toolbar_add_channel_action.setStatusTip("Add a new channel to the filter")
-        toolbar_add_channel_action.triggered.connect(self._add_channel_button_pressed)
-        toolbar.addAction(toolbar_add_channel_action)
+        self._toolbar_add_channel_action = QAction("Add Channel", self._parent_widget)
+        self._toolbar_add_channel_action.setEnabled(False)
+        self._toolbar_add_channel_action.setStatusTip("Add a new channel to the filter")
+        self._toolbar_add_channel_action.triggered.connect(self._add_channel_button_pressed)
+        toolbar.addAction(self._toolbar_add_channel_action)
         toolbar_remove_channel_action = QAction("Remove Channel", self._parent_widget)
         toolbar_remove_channel_action.setStatusTip("Removes a channel from the filter")
         toolbar_remove_channel_action.setEnabled(False)
@@ -139,22 +149,44 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._zoom_label.setText(self._timeline_container.format_zoom())
 
     def add_cue(self, cue: Cue) -> int:
-        target_row = self._cue_list_widget.rowCount() + 1
-        self._cue_list_widget.setRowCount(target_row)
-        self._cue_list_widget.setItem(target_row, 0, QTableWidgetItem(str(target_row)))
-        self._cue_list_widget.setItem(target_row, 1, QTableWidgetItem(cue.duration_formatted))
-        self._cue_list_widget.setItem(target_row, 2, QTableWidgetItem(str(cue)))
+        target_row = self._cue_list_widget.rowCount()
+        self._cue_list_widget.setRowCount(target_row + 1)
+        num_item = QTableWidgetItem(1)
+        num_item.setText(str(target_row + 1))
+        self._cue_list_widget.setItem(target_row, 0, num_item)
+        duration_item = QTableWidgetItem(1)
+        duration_item.setText(cue.duration_formatted)
+        self._cue_list_widget.setItem(target_row, 1, duration_item)
+        end_action_item = QTableWidgetItem(1)
+        end_action_item.setText(str(cue.end_action))
+        self._cue_list_widget.setItem(target_row, 2, end_action_item)
         self._cues.append(cue)
         return target_row
 
-    def select_cue(self, cue_index: int):
+    def select_cue(self, cue_index: int, from_manual_input: bool = False):
         if cue_index < 0 or cue_index >= len(self._cues):
             return
+        if 0 <= self._last_selected_cue < len(self._cues):
+            self._cues[self._last_selected_cue] = self._timeline_container.cue
         c = self._cues[cue_index]
         self._timeline_container.cue = c
         self._current_cue_end_action_select_widget.setCurrentIndex(c.end_action.value)
         self._current_cue_another_play_pressed_checkbox.setChecked(c.restart_on_another_play_press)
-        self._cue_list_widget.selectRow(cue_index)
+        if from_manual_input:
+            self._cue_list_widget.selectRow(cue_index)
+        self._toolbar_add_channel_action.setEnabled(True)
+        self._timeline_container.setEnabled(True)
+        self._current_cue_end_action_select_widget.setEnabled(True)
+        self._current_cue_another_play_pressed_checkbox.setEnabled(True)
+        print("Selected cue: " + str(cue_index))
+
+    def _cue_list_selection_changed(self):
+        items_list = self._cue_list_widget.selectedIndexes()
+        print(items_list)
+        if len(items_list) > 0:
+            self.select_cue(items_list[0].row(), from_manual_input=False)
+        else:
+            self._cue_list_widget.selectRow(self._last_selected_cue)
 
     def increase_zoom(self):
         self._timeline_container.increase_zoom()
@@ -164,8 +196,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._timeline_container.decrease_zoom()
         self._set_zoom_label_text()
 
-    def _add_button_clicked(self):
-        self.select_cue(self.add_cue(Cue()))
+    def _add_cue_button_clicked(self):
+        new_index = self.add_cue(Cue())
+        self.select_cue(new_index)
 
     def _add_channel_button_pressed(self):
         """This button queries the user for a channel type and adds it to the filter and all cues.
@@ -174,9 +207,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         """
         # TODO implement
         # TODO also think about channel type and name
-        # TODO add corresponding fader to bank set and update it
-        self._timeline_container.add_channel(DataType.DT_8_BIT, "Some Name")
-        pass
+        channel_name, channel_type, ok_button_pressed = QInputDialog(self._parent_widget,
+                                                                     "Add a Channel to the filter.", "Channel Name",
+                                                                     "Channel Type")
+        if ok_button_pressed:
+            # TODO add corresponding fader to bank set and update it
+            self._timeline_container.add_channel(DataType.format_for_filters(channel_type), channel_name)
 
     def _remove_channel_button_pressed(self):
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
@@ -184,6 +220,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
         """
         # TODO implement
         pass
+
+    def _cue_end_action_changed(self):
+        self._timeline_container.cue.end_action = self._current_cue_end_action_select_widget.currentIndex()
+
+    def _cue_play_pressed_restart_changed(self):
+        self._timeline_container.cue.restart_on_another_play_press = \
+            self._current_cue_another_play_pressed_checkbox.checkState()
 
     def rec_pressed(self):
         self._timeline_container.record_pressed()
