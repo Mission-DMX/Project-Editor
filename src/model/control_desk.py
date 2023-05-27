@@ -27,7 +27,8 @@ class DeskColumn(ABC):
         self._top_display_line_inverted = False
         self._pushed_to_device = False
         self.display_color = proto.Console_pb2.lcd_color.white
-        self.display_name = ""
+        self._lower_text = ""
+        self._upper_text = ""
 
     def update(self) -> bool:
         """This method updates the state of this column with fish"""
