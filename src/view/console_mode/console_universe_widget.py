@@ -25,7 +25,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         super().__init__(parent=parent)
         broadcaster = Broadcaster()
 
-        self.setFixedHeight(430)
+        self.setFixedHeight(500)
 
         # Specifying style options. See Style.WIDGET
         self.setObjectName("ManualEditor")
@@ -39,8 +39,8 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         universe_widget.setLayout(QtWidgets.QHBoxLayout(universe_widget))
 
         # Add all channels of the universe
-        for channel in universe.channels:
-            channel_widget = ChannelWidget(channel, universe)
+        for channel, patching_chanel in zip(universe.channels, universe.patching):
+            channel_widget = ChannelWidget(channel, patching_chanel)
             universe_widget.layout().addWidget(channel_widget)
             channel.updated.connect(
                 lambda *args, send_universe=universe: broadcaster.send_universe_value.emit(send_universe))
