@@ -268,7 +268,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def rec_pressed(self):
         self._timeline_container.record_pressed()
-        # TODO update duration display
+        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
+            .setText(self._timeline_container.cue.duration_formatted)
 
     def jg_right(self):
         if self._jw_zoom_mode:

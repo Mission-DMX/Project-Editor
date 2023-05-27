@@ -202,11 +202,14 @@ class KeyFrame:
                     s_entry = StateDouble(state_dev_parts[1])
                 case _:
                     raise ArgumentError("Unsupported filter data type: {}".format(state_dev_parts[1]))
-            f._states.append(s_entry.decode(state_dev))
+            s_entry.decode(state_dev)
+            f._states.append(s_entry)
             i += 1
+        return f
 
     def append_state(self, s: State):
-        self._states.append(s)
+        if s is not None:
+            self._states.append(s)
 
 
 class Cue:

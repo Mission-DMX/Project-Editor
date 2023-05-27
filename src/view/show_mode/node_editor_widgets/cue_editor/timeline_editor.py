@@ -81,7 +81,6 @@ class TimelineContainer(QWidget):
         f = KeyFrame()
         f.timestamp = p
         i = 0
-        # TODO channel types is empty
         for c in self._cue.channels:
             match c[1]:
                 case DataType.DT_8_BIT:

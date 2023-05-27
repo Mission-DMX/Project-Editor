@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QLabel, QWidget
 
 from model import DataType
 from model.control_desk import set_seven_seg_display_content
-from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor
+from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 from view.show_mode.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
@@ -63,29 +63,30 @@ class TimelineContentWidget(QLabel):
         kf_line_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         kf_line_brush.setStyle(Qt.HorPattern)
         for kf in self.frames:
-            i = 0
-            x = int(kf.timestamp / self._time_zoom)
-            painter.setBrush(kf_line_brush)
-            kf_states = kf._states
-            painter.drawLine(x, 20, x, len(kf_states) * CHANNEL_DISPLAY_HEIGHT + 20)
-            painter.setBrush(light_gray_brush)
-            for s in kf_states:
-                y = 40 + i * CHANNEL_DISPLAY_HEIGHT
-                marker_path = QPainterPath(QPoint(x, y))
-                marker_path.lineTo(x + 10, y + 10)
-                marker_path.lineTo(x, y + 20)
-                marker_path.lineTo(x - 10, y + 10)
-                marker_path.lineTo(x, y)
-                if isinstance(s, StateColor):
-                    c = s.color
-                    selected_brush = QBrush(QColor.fromHsl(int(c.hue * 360) % 360, int(c.saturation * 255), 255))
-                    painter.drawText(x + 15, y + 21, str(int(c.intensity * 100)) + "%")
-                else:
-                    selected_brush = marker_brush
-                painter.fillPath(marker_path, selected_brush)
-                # TODO show color circle if color instead of text
-                painter.drawText(x + 15, y + 9, s.transition)
-                i += 1
+            if kf:
+                i = 0
+                x = int(kf.timestamp / self._time_zoom)
+                painter.setBrush(kf_line_brush)
+                kf_states = kf._states
+                painter.drawLine(x, 20, x, len(kf_states) * CHANNEL_DISPLAY_HEIGHT + 20)
+                painter.setBrush(light_gray_brush)
+                for s in kf_states:
+                    y = 40 + i * CHANNEL_DISPLAY_HEIGHT
+                    marker_path = QPainterPath(QPoint(x, y))
+                    marker_path.lineTo(x + 10, y + 10)
+                    marker_path.lineTo(x, y + 20)
+                    marker_path.lineTo(x - 10, y + 10)
+                    marker_path.lineTo(x, y)
+                    if isinstance(s, StateColor):
+                        r, g, b = s.color.to_rgb()
+                        selected_brush = QBrush(QColor.fromRgb(r, g, b))
+                        painter.drawText(x + 15, y + 21, str(int(s.color.intensity * 100)) + "%")
+                    else:
+                        selected_brush = marker_brush
+                        painter.drawText(x + 15, y + 21, str(s._value))
+                    painter.fillPath(marker_path, selected_brush)
+                    painter.drawText(x + 15, y + 9, s.transition)
+                    i += 1
 
         # render cursor, timescale and bars
         painter.setBrush(light_gray_brush)

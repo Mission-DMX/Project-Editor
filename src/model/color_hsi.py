@@ -1,5 +1,7 @@
 # coding=utf-8
 """Color in HSI Form"""
+import colorsys
+
 from pydantic import confloat
 
 
@@ -39,7 +41,7 @@ class ColorHSI:
             intensity = 0.0
         elif intensity > 1:
             intensity = 1.0
-        ColorHSI(hue, saturation, intensity)
+        return ColorHSI(hue, saturation, intensity)
 
     @property
     def hue(self) -> confloat(ge=0, le=360):
@@ -64,3 +66,8 @@ class ColorHSI:
     def format_for_filter(self) -> str:
         """This method formats the color to be parsable by fish filters."""
         return f"{float(self._hue)},{float(self._saturation)},{float(self._intensity)}"
+
+    def to_rgb(self) -> tuple[int, int, int]:
+        """This method returns the RGB representations as int between 0 and 255"""
+        rr, rg, rb = colorsys.hls_to_rgb((self._hue % 360) / 360.0, self._intensity, self._saturation)
+        return int(rr * 255), int(rg * 255), int(rb * 255)
