@@ -18,7 +18,7 @@ class Broadcaster(QtCore.QObject):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_active_scene: QtCore.Signal = QtCore.Signal(int)
-    load_show_file: QtCore.Signal = QtCore.Signal(Element)
+    load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)

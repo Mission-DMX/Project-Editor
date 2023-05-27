@@ -50,6 +50,10 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.view_is_patch_menu.connect(self._send_view_patch_menu)
         self._broadcaster.view_is_patching.connect(self._send_view_patching)
         self._broadcaster.view_is_not_patch_menu.connect(self._send_view_not_patch_menu)
+
+        self._broadcaster.load_show_file.connect(self.load_show_file)
+        self._broadcaster.change_active_scene.connect(self.enter_scene)
+
         self._message_queue = queue.Queue()
 
     @property

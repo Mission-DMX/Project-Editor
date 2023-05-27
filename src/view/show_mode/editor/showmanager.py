@@ -36,16 +36,10 @@ class ShowManagerWidget(QTabWidget):
         self._toolbar: list[QAction] = []
         save_show_file_button = QAction("Save Show")
         load_show_file_button = QAction("Load Show")
-        enter_scene_button = QAction("Load Scene")
-        send_show_button = QAction("Send Show")
 
-        enter_scene_button.triggered.connect(self._enter_scene)
-        send_show_button.triggered.connect(self._send_show_file)
         save_show_file_button.triggered.connect(lambda: self._select_file(self._save_show_file))
         load_show_file_button.triggered.connect(lambda: self._select_file(self._load_show_file))
 
-        self._toolbar.append(enter_scene_button)
-        self._toolbar.append(send_show_button)
         self._toolbar.append(save_show_file_button)
         self._toolbar.append(load_show_file_button)
 
@@ -141,23 +135,6 @@ class ShowManagerWidget(QTabWidget):
             file_name: Path to the file to be loaded
         """
         read_document(file_name, self._board_configuration)
-
-    def _save_show_file(self, file_name: str):
-        """Safes the current scene to a file.
-        
-        Args:
-            file_name: Path to the file in which self._board_configuration should be saved.
-        """
-        xml = create_xml(self._board_configuration)
-        write_document(file_name, xml)
-
-    def _enter_scene(self) -> None:
-        """Asks for scene id and tells fish to load the scene"""
-        # TODO Let network manager listen to broadcaster
-        scene_id, ok_button_pressed = QInputDialog.getInt(self, "Fish: Change scene", "Scene id (0-index)")
-        if ok_button_pressed:
-            print(f"Switching to scene {scene_id}")
-            self._board_configuration.broadcaster.change_active_scene.emit(scene_id)
 
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""
