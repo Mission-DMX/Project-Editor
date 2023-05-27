@@ -143,6 +143,11 @@ class NetworkManager(QtCore.QObject):
                     message: proto.Console_pb2.desk_update = proto.Console_pb2.desk_update()
                     message.ParseFromString(bytes(msg))
                     self._handle_desk_update(message)
+                case proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN:
+                    message: proto.Console_pb2.fader_column = proto.Console_pb2.fader_column()
+                    message.ParseFromString(bytes(msg))
+                    from model.control_desk import BankSet
+                    BankSet.handle_column_update_message(msg)
                 case _:
                     pass
 
