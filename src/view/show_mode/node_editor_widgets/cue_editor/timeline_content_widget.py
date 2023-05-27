@@ -180,6 +180,7 @@ class TimelineContentWidget(QLabel):
             return
         if ev.y() <= 20:
             self.cursor_position = ev.x() * self._time_zoom
+            self._update_7seg_text()
         self.repaint()
 
     def clear_cue(self):

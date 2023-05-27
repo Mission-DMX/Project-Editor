@@ -101,7 +101,11 @@ class NetworkManager(QtCore.QObject):
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """send message in correct format to fish"""
-        self._message_queue.put(tuple([msg, msg_type]))
+        self._enqueue_message(msg, msg_type)
+        self.push_messages()
+
+    def push_messages(self):
+        """This method pushes the queued messages to fish. This method needs to be called from the GUI thread."""
         while not self._message_queue.empty():
             msg, msg_type = self._message_queue.get()
             logging.debug("message to send: %s with type: %s", msg, msg_type)

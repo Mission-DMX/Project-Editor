@@ -355,6 +355,10 @@ class BankSet:
         """Returns True if the bank set is loaded to fish."""
         return self.pushed_to_fish
 
+    @staticmethod
+    def push_messages_now():
+        BankSet._fish_connector.push_messages()
+
 
 def set_network_manager(network_manager: NetworkManager):
     """Set the network manager instance to be used by all bank sets and subsequent banks and columns."""

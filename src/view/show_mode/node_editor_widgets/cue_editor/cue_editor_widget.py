@@ -39,13 +39,16 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if mapping_str:
             for channel_dev in mapping_str.split(';'):
                 splitted_channel_dev = channel_dev.split(':')
-                self._add_channel(splitted_channel_dev[0], DataType.from_filter_str(splitted_channel_dev[1]))
+                self._add_channel(splitted_channel_dev[0], DataType.from_filter_str(splitted_channel_dev[1]),
+                                  is_part_of_mass_update=True)
         for i in range(len(cue_definitions)):
             self._cues[i].from_string_definition(cue_definitions[i])
             self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 1).setText(self._cues[i].duration_formatted)
             self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 2).setText(str(self._cues[i].end_action))
         if len(self._cues) > 0:
             self.select_cue(0)
+        self._bankset.update()
+        BankSet.push_messages_now()
 
     def _get_parameters(self) -> dict[str, str]:
         if len(self._cues) > 0:
@@ -223,7 +226,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog = ChannelInputDialog(self._parent_widget, self._add_channel)
         self._input_dialog.show()
 
-    def _add_channel(self, channel_name: str, channel_type: DataType):
+    def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False):
         for c_name in self._cues[0].channels:
             if c_name[0] == channel_name:
                 QMessageBox.critical(self._parent_widget, "Failed to add channel",
@@ -236,10 +239,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
             c = RawDeskColumn()
         c.display_name = channel_name
         self._bankset.add_column_to_next_bank(c)
-        self._bankset.update()
+        if not is_part_of_mass_update:
+            self._bankset.update()
         for c in self._cues:
             c.add_channel(channel_name, channel_type)
         self._timeline_container.add_channel(channel_type, channel_name)
+        BankSet.push_messages_now()
 
     def _remove_channel_button_pressed(self):
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
@@ -287,7 +292,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def parent_closed(self):
         self._timeline_container.clear_display()
         self._bankset.unlink()
-        # TODO unlink bankset
+        BankSet.push_messages_now()
         Broadcaster.last_instance.desk_media_rec_pressed.disconnect(self.rec_pressed)
         Broadcaster.last_instance.jogwheel_rotated_right.disconnect(self.jg_right)
         Broadcaster.last_instance.jogwheel_rotated_left.disconnect(self.jg_left)
