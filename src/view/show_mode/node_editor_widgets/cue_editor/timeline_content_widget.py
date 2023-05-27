@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QLabel, QWidget
 
 from model import DataType
 from model.control_desk import set_seven_seg_display_content
-from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame
+from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 from view.show_mode.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
@@ -60,26 +60,46 @@ class TimelineContentWidget(QLabel):
             marker_color = QColor.fromRgb(0x80, 0x80, 0x00)
         marker_brush = QBrush(marker_color)
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
-        painter.setBrush(light_gray_brush)
+        kf_line_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
+        kf_line_brush.setStyle(Qt.HorPattern)
         for kf in self.frames:
             i = 0
-            x = kf.timestamp / self._time_zoom
-            for s in kf._states:
+            x = int(kf.timestamp / self._time_zoom)
+            painter.setBrush(kf_line_brush)
+            kf_states = kf._states
+            painter.drawLine(x, 20, x, len(kf_states) * CHANNEL_DISPLAY_HEIGHT + 20)
+            painter.setBrush(light_gray_brush)
+            for s in kf_states:
                 y = 40 + i * CHANNEL_DISPLAY_HEIGHT
                 marker_path = QPainterPath(QPoint(x, y))
                 marker_path.lineTo(x + 10, y + 10)
                 marker_path.lineTo(x, y + 20)
                 marker_path.lineTo(x - 10, y + 10)
                 marker_path.lineTo(x, y)
-                painter.fillPath(marker_path, marker_brush)
+                if isinstance(s, StateColor):
+                    c = s.color
+                    selected_brush = QBrush(QColor.fromHsl(int(c.hue * 360) % 360, int(c.saturation * 255), 255))
+                    painter.drawText(x + 15, y + 21, str(int(c.intensity * 100)) + "%")
+                else:
+                    selected_brush = marker_brush
+                painter.fillPath(marker_path, selected_brush)
                 # TODO show color circle if color instead of text
-                painter.drawText(x + 15, y + 10, s.encode())
+                painter.drawText(x + 15, y + 9, s.transition)
                 i += 1
 
-        # render cursor and bars
+        # render cursor, timescale and bars
         painter.setBrush(light_gray_brush)
         painter.drawLine(0, 20, w, 20)
         painter.drawLine(0, h - 20, w, h - 20)
+        # render timescale
+        for y in [20, h]:
+            x = 0
+            painter.setBrush(light_gray_brush)
+            while x < w:
+                painter.drawLine(x, y - 20, x, y)
+                time_str = format_seconds(x * self._time_zoom)
+                painter.drawText(x, y - 2, time_str)
+                x += 10 * len(time_str)
         abs_cursor_pos = int(self.cursor_position / self._time_zoom)
         cursor_path = QPainterPath(QPoint(abs_cursor_pos, 0))
         cursor_path.moveTo(-16 + abs_cursor_pos, 0)
@@ -90,15 +110,6 @@ class TimelineContentWidget(QLabel):
         cursor_path.lineTo(-1 + abs_cursor_pos, 20)
         cursor_path.lineTo(-16 + abs_cursor_pos, 0)
         painter.fillPath(cursor_path, QBrush(QColor.fromRgb(0xFF, 0x2F, 0x2F)))
-
-        # render timescale
-        x = 0
-        painter.setBrush(light_gray_brush)
-        while x < w:
-            painter.drawLine(x, h - 20, x, h)
-            time_str = format_seconds(x * self._time_zoom)
-            painter.drawText(x, h - 2, time_str)
-            x += 10 * len(time_str)
 
         painter.end()
         self.setPixmap(canvas)
