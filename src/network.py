@@ -102,7 +102,11 @@ class NetworkManager(QtCore.QObject):
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """send message in correct format to fish"""
-        self._message_queue.put(tuple([msg, msg_type]))
+        self._enqueue_message(msg, msg_type)
+        self.push_messages()
+
+    def push_messages(self):
+        """This method pushes the queued messages to fish. This method needs to be called from the GUI thread."""
         while not self._message_queue.empty():
             msg, msg_type = self._message_queue.get()
             logging.debug("message to send: %s with type: %s", msg, msg_type)
@@ -140,6 +144,11 @@ class NetworkManager(QtCore.QObject):
                     message: proto.Console_pb2.desk_update = proto.Console_pb2.desk_update()
                     message.ParseFromString(bytes(msg))
                     self._handle_desk_update(message)
+                case proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN:
+                    message: proto.Console_pb2.fader_column = proto.Console_pb2.fader_column()
+                    message.ParseFromString(bytes(msg))
+                    from model.control_desk import BankSet
+                    BankSet.handle_column_update_message(msg)
                 case _:
                     pass
 

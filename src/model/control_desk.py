@@ -46,6 +46,10 @@ class DeskColumn(ABC):
         """
         pass
 
+    @abstractmethod
+    def update_from_message(self, message: proto.Console_pb2.fader_column):
+        pass
+
     def _generate_base_column_message(self) -> proto.Console_pb2.fader_column:
         msg = proto.Console_pb2.fader_column(column_id=self.id, display_color=self.display_color)
         msg.upper_display_text = self._upper_text
@@ -111,6 +115,13 @@ class RawDeskColumn(DeskColumn):
             proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         return msg
 
+    def update_from_message(self, message: proto.Console_pb2.fader_column):
+        if not message.raw_data:
+            return
+        self._fader_position = message.raw_data.fader
+        self._encoder_position = message.raw_data.rotary_position
+        # TODO implement buttons once implemented in fish
+
     @property
     def fader_position(self) -> int:
         """This method returns the fader position
@@ -151,6 +162,11 @@ class ColorDeskColumn(DeskColumn):
         base_msg.plain_color.saturation = self.color.saturation
         base_msg.plain_color.intensity = self.color.intensity
         return base_msg
+
+    def update_from_message(self, message: proto.Console_pb2.fader_column):
+        if not message.plain_color:
+            return
+        self._color = ColorHSI(message.plain_color.hue, message.plain_color.saturation, message.plain_color.intensity)
 
     @property
     def color(self) -> ColorHSI:
@@ -201,7 +217,8 @@ class BankSet:
     """
 
     _fish_connector: NetworkManager = None
-    _active_bank_set: str = None
+    _active_bank_set_id: str = None
+    _active_bank_set: "BankSet" = None
     _seven_seg_data: str = "00          "
     _linked_bank_sets = []
 
@@ -221,7 +238,7 @@ class BankSet:
     @classmethod
     def active_bank_set(cls) -> str:
         """current bank set"""
-        return cls._active_bank_set
+        return cls._active_bank_set_id
 
     @staticmethod
     def get_linked_bank_sets() -> list["BankSet"]:
@@ -268,10 +285,10 @@ class BankSet:
             BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
         else:
             BankSet._linked_bank_sets.append(self)
-        if BankSet._active_bank_set == self.id:
+        if BankSet._active_bank_set_id == self.id:
             self.id = new_id
             self.activate()
-        elif not BankSet._active_bank_set:
+        elif not BankSet._active_bank_set_id:
             self.id = new_id
             self.activate()
         else:
@@ -282,7 +299,8 @@ class BankSet:
     def activate(self):
         """Calling this method makes this bank set the active one.
         """
-        BankSet._active_bank_set = self.id
+        BankSet._active_bank_set_id = self.id
+        BankSet._active_bank_set = self
         text = "Bank: " + self.description
         BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" + str(
             self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
@@ -293,7 +311,7 @@ class BankSet:
         msg.selected_column_id = ""  # Do not update the set of selected columns yet
         msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixture' feature yet
         msg.selected_bank = self.active_bank
-        msg.selected_bank_set = BankSet._active_bank_set
+        msg.selected_bank_set = BankSet._active_bank_set_id
         msg.seven_seg_display_data = BankSet._seven_seg_data
         BankSet._fish_connector.send_desk_update_message(msg, update_from_gui=self._gui_controlled)
 
@@ -344,20 +362,36 @@ class BankSet:
         if not BankSet._fish_connector.is_running:
             return False
         i = 0
+        found_index = -1
         for linked_bank in BankSet._linked_bank_sets:
             if linked_bank.id == self.id:
                 found_index = i
                 break
             else:
                 i += 1
-        BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
-        BankSet._linked_bank_sets.pop(found_index)  # TODO found index koente leer sein
+        if found_index != -1:
+            BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
+            BankSet._linked_bank_sets.pop(found_index)
         return True
 
     @property
     def is_linked(self) -> bool:
         """Returns True if the bank set is loaded to fish."""
         return self.pushed_to_fish
+
+    @staticmethod
+    def push_messages_now():
+        BankSet._fish_connector.push_messages()
+
+    def get_column(self, column_id: str) -> DeskColumn:
+        for b in self.banks:
+            for c in b.columns:
+                if c.id == column_id:
+                    return c
+
+    @staticmethod
+    def handle_column_update_message(message: proto.Console_pb2.fader_column):
+        BankSet._active_bank_set.get_column(message.column_id).update_from_message(message)
 
 
 def set_network_manager(network_manager: NetworkManager):
