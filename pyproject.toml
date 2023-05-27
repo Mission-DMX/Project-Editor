@@ -33,3 +33,16 @@ include = ["*"]
 exclude = []
 namespaces = false
 
+[tool.isort]
+skip = ["src/proto/"]
+line_length = 120
+
+[tool.black]
+line_length = 120
+
+[tool.pylint.MASTER]
+extension-pkg-whitelist = "PyQt6, PySide6, pydantic"
+load-plugins = "pylint_protobuf"
+
+[tool.pylint.FORMAT]
+max-line-length = 120

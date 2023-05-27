@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 class Scene:
     """Scene for show file."""
+
     def __init__(self, scene_id: int,
                  human_readable_name: str,
                  board_configuration: "BoardConfiguration"):

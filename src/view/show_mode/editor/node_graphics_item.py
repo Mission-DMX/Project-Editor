@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDi
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Filter
-from view.show_mode.editor import ColumnSelect
+from ..node_editor_widgets.column_select import ColumnSelect
 
 
 class FilterSettingsItem(QGraphicsSvgItem):

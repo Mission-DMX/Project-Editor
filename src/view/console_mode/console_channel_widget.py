@@ -1,10 +1,10 @@
 # coding=utf-8
 """Widget to edit a channel."""
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtCore, QtWidgets
 
-from Style import Style
 from model.channel import Channel
 from model.universe import Universe
+from Style import Style
 
 
 class ChannelWidget(QtWidgets.QWidget):

@@ -1,10 +1,10 @@
 # coding=utf-8
 """directly edit channels of a universe"""
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtCore, QtWidgets
 
-from Style import Style
 from model.broadcaster import Broadcaster
 from model.universe import Universe
+from Style import Style
 from view.console_mode.console_channel_widget import ChannelWidget
 
 

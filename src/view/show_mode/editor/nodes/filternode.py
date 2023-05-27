@@ -2,9 +2,8 @@
 """Basic filter node"""
 import logging
 
-from PySide6.QtGui import QFont
-
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
+from PySide6.QtGui import QFont
 
 from model import Scene, Filter, DataType
 

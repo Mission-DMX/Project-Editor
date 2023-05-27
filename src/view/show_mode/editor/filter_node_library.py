@@ -2,12 +2,11 @@
 """Custom Node Library"""
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
-from view.show_mode.editor import nodes
+from . import nodes
 
 
 class FilterNodeLibrary(NodeLibrary):
     """Custom Node Library"""
-
     def __init__(self):
         super().__init__()
         self.reload()
