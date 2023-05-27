@@ -219,6 +219,8 @@ class NetworkManager(QtCore.QObject):
         else:
             for i in range(msg.jogwheel_change_since_last_update):
                 self._broadcaster.jogwheel_rotated_right.emit()
+        if msg.selected_column_id:
+            self._broadcaster.select_column_id.emit(msg.selected_column_id)
         pass
 
     def _on_state_changed(self) -> None:
