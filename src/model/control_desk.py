@@ -236,9 +236,9 @@ class BankSet:
         return cls._linked_bank_sets
 
     @classmethod
-    def active_bank_set(cls) -> str:
+    def active_bank_set(cls) -> "BankSet":
         """current bank set"""
-        return cls._active_bank_set_id
+        return cls._active_bank_set
 
     @staticmethod
     def get_linked_bank_sets() -> list["BankSet"]:
@@ -389,6 +389,17 @@ class BankSet:
                 if c.id == column_id:
                     return c
 
+    def get_column_by_number(self, index: int) -> DeskColumn:
+        """This method iterates through the banks and returns column i"""
+        i = 0
+        # Unfortunately we cannot return the index directly, as the number of columns in a bank is not constant.
+        for b in self.banks:
+            for c in b.columns:
+                if i == index:
+                    return c
+                else:
+                    i += 1
+
     @staticmethod
     def handle_column_update_message(message: proto.Console_pb2.fader_column):
         BankSet._active_bank_set.get_column(message.column_id).update_from_message(message)
@@ -410,7 +421,10 @@ def set_seven_seg_display_content(content: str, update_from_gui: bool = False):
 
 
 def send_independent_update_msg(update_from_gui: bool):
-    abs_id = BankSet.active_bank_set()
+    bs = BankSet.active_bank_set()
+    if not bs:
+        return
+    abs_id = bs.id
     if abs_id:
         for bs in BankSet.linked_bank_sets():
             if bs.id == abs_id:
@@ -433,7 +447,7 @@ def commit_all_bank_sets():
     bank_set_for_activation = None
     for bs in BankSet.linked_bank_sets():
         bs.update()
-        if bs.id == BankSet.active_bank_set():
+        if bs.id == BankSet.active_bank_set().id:
             bank_set_for_activation = bs
     if bank_set_for_activation:
         bank_set_for_activation.activate()

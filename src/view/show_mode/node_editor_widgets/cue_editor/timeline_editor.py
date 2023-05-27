@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QScrollArea
 
 from model import DataType
-from model.control_desk import set_seven_seg_display_content
+from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn
 from view.show_mode.node_editor_widgets.cue_editor.channel_label import TimelineChannelLabel
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, KeyFrame, StateEightBit, StateSixteenBit, \
     StateDouble, StateColor
@@ -81,8 +81,9 @@ class TimelineContainer(QWidget):
         f = KeyFrame()
         f.timestamp = p
         i = 0
-        for c in self._cue.channel_types:
-            match c:
+        # TODO channel types is empty
+        for c in self._cue.channels:
+            match c[1]:
                 case DataType.DT_8_BIT:
                     s = StateEightBit(self._current_transition_type)
                 case DataType.DT_16_BIT:
@@ -91,10 +92,13 @@ class TimelineContainer(QWidget):
                     s = StateDouble(self._current_transition_type)
                 case DataType.DT_COLOR:
                     s = StateColor(self._current_transition_type)
+                    c = BankSet.active_bank_set().get_column_by_number(i)
+                    if isinstance(c, ColorDeskColumn):
+                        s.color = c.color
                 case _:
                     s = StateEightBit(self._current_transition_type)
-            # TODO query values from desk columns
             f.append_state(s)
+            i += 1
         self._cue.insert_frame(f)
         self._keyframes_panel.insert_frame(f)
 

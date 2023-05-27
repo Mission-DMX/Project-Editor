@@ -51,6 +51,10 @@ class State(ABC):
     def __init__(self, transition_type: str):
         self._transition_type = transition_type
 
+    @property
+    def transition(self):
+        return self._transition_type
+
     @abstractmethod
     def encode(self) -> str:
         """This method returns the state encodes in the filter format"""
@@ -150,6 +154,14 @@ class StateColor(State):
 
     def get_data_type(self) -> DataType:
         return DataType.DT_COLOR
+
+    @property
+    def color(self) -> ColorHSI:
+        return self._value
+
+    @color.setter
+    def color(self, value: ColorHSI):
+        self._value = value
 
 
 class KeyFrame:
