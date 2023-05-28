@@ -217,6 +217,8 @@ class NetworkManager(QtCore.QObject):
                 self._broadcaster.jogwheel_rotated_right.emit()
         if msg.selected_column_id:
             self._broadcaster.select_column_id.emit(msg.selected_column_id)
+        else:
+            self._broadcaster.view_leave_colum_select.emit()
         pass
 
     def _on_state_changed(self) -> None:
