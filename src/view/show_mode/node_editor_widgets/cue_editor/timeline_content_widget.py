@@ -5,8 +5,9 @@ from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath
 from PySide6.QtWidgets import QLabel, QWidget
 
 from model import DataType
-from model.control_desk import set_seven_seg_display_content
-from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit
+from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
+from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit, StateSixteenBit, \
+    StateDouble
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 from view.show_mode.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
@@ -22,6 +23,7 @@ class TimelineContentWidget(QLabel):
         self._drag_begin: tuple[int, int] = None
         self.compute_resize()
         self._cue_index: int = 0
+        self.used_bankset: BankSet = None
 
     @property
     def cue_index(self) -> int:
@@ -191,9 +193,45 @@ class TimelineContentWidget(QLabel):
         if not self.isEnabled():
             return
         if ev.y() <= 20:
-            self.cursor_position = ev.x() * self._time_zoom
+            clicked_timeslot = ev.x() * self._time_zoom
+            self.cursor_position = clicked_timeslot
             self._update_7seg_text()
+        else:
+            if 20 <= ((ev.y() - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40:
+                state_width = 10
+            else:
+                state_width = 1
+            clicked_timeslot_lower = (ev.x() - state_width) * self._time_zoom
+            clicked_timeslot_upper = (ev.x() + state_width) * self._time_zoom
+            for kf in self.frames:
+                if clicked_timeslot_lower <= kf.timestamp <= clicked_timeslot_upper:
+                    self._clicked_on_keyframe(kf)
+                    break
         self.repaint()
+
+    def _clicked_on_keyframe(self, kf: KeyFrame):
+        if self.used_bankset:
+            kf_states = kf._states
+            i = 0
+            for b in self.used_bankset.banks:
+                for c in b.columns:
+                    if i < len(kf_states):
+                        s = kf_states[i]
+                        if isinstance(c, ColorDeskColumn) and isinstance(s, StateColor):
+                            c.color = s.color
+                        elif isinstance(c, RawDeskColumn):
+                            if isinstance(s, StateEightBit):
+                                c.fader_position = int((s._value / 256) * 65536)
+                            elif isinstance(s, StateSixteenBit):
+                                c.fader_position = int(s._value)
+                            elif isinstance(s, StateDouble):
+                                c.fader_position = int(s._value * 65536)
+                        i += 1
+                    else:
+                        break
+            self.used_bankset.push_messages_now()
+        # TODO open dialog for kf delete and state settings
+        pass
 
     def clear_cue(self):
         self._channels.clear()

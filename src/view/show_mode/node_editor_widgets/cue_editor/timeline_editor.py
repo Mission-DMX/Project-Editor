@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QScrollArea
 
 from model import DataType
-from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn
+from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
 from view.show_mode.node_editor_widgets.cue_editor.channel_label import TimelineChannelLabel
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, KeyFrame, StateEightBit, StateSixteenBit, \
     StateDouble, StateColor
@@ -34,6 +34,14 @@ class TimelineContainer(QWidget):
     @transition_type.setter
     def transition_type(self, new_value: str):
         self._current_transition_type = new_value
+
+    @property
+    def bankset(self) -> BankSet:
+        return self._keyframes_panel.used_bankset
+
+    @bankset.setter
+    def bankset(self, bs: BankSet):
+        self._keyframes_panel.used_bankset = bs
 
     def add_channel(self, channel_type: DataType, name: str):
         self._channel_label.add_label(name, channel_type.format_for_filters())
@@ -85,15 +93,28 @@ class TimelineContainer(QWidget):
             match c[1]:
                 case DataType.DT_8_BIT:
                     s = StateEightBit(self._current_transition_type)
+                    if self.bankset:
+                        c = self.bankset.get_column_by_number(i)
+                        if isinstance(c, RawDeskColumn):
+                            s._value = int((c.fader_position * 256) / 65536)
                 case DataType.DT_16_BIT:
                     s = StateSixteenBit(self._current_transition_type)
+                    if self.bankset:
+                        c = self.bankset.get_column_by_number(i)
+                        if isinstance(c, RawDeskColumn):
+                            s._value = c.fader_position
                 case DataType.DT_DOUBLE:
                     s = StateDouble(self._current_transition_type)
+                    if self.bankset:
+                        c = self.bankset.get_column_by_number(i)
+                        if isinstance(c, RawDeskColumn):
+                            s._value = c.fader_position / 65536
                 case DataType.DT_COLOR:
                     s = StateColor(self._current_transition_type)
-                    c = BankSet.active_bank_set().get_column_by_number(i)
-                    if isinstance(c, ColorDeskColumn):
-                        s.color = c.color
+                    if self.bankset:
+                        c = self.bankset.get_column_by_number(i)
+                        if isinstance(c, ColorDeskColumn):
+                            s.color = c.color
                 case _:
                     s = StateEightBit(self._current_transition_type)
             f.append_state(s)

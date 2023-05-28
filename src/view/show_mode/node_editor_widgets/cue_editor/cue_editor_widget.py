@@ -119,6 +119,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._bankset.description = "Cue Editor BS"
         self._bankset.link()
         self._bankset.activate()
+        self._timeline_container.bankset = self._bankset
 
         self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
