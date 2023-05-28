@@ -65,6 +65,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._fish_connector:
             from model.control_desk import set_network_manager
             set_network_manager(self._fish_connector)
+            self._broadcaster.view_leave_patch_menu.emit()
+            self._broadcaster.view_leave_file_editor.emit()
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
