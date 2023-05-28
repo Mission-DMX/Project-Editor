@@ -53,7 +53,8 @@ class FilterSettingsItem(QGraphicsSvgItem):
     def mousePressEvent(self, ev):
         """Handle left mouse button click by opening filter settings dialog"""
         if ev.button() == Qt.MouseButton.LeftButton:
-            FilterSettingsDialog(self.filter).exec()
+            self.dialog = FilterSettingsDialog(self.filter)
+            self.dialog.show()
 
 
 def check_if_filter_has_special_widget(filter_):

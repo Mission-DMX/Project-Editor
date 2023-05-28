@@ -6,8 +6,10 @@ from PySide6 import QtWidgets, QtGui
 from Style import Style
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
+from model.control_desk import BankSet, ColorDeskColumn
 from network import NetworkManager
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
+from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patch_mode.patch_mode import PatchMode
@@ -35,12 +37,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
-            ("Console Mode", MainWidget(ConsoleSceneSelector(self), self),
-             lambda: self._to_widget(0)),
-            ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration, self._broadcaster), self),
-             lambda: self._broadcaster.view_to_file_editor.emit()),
-            ("Patch", MainWidget(PatchMode(self), self),
-             lambda: self._broadcaster.view_to_patch_menu.emit()),
+            ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)), (
+                "Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration, self._broadcaster), self),
+                lambda: self._broadcaster.view_to_file_editor.emit()),
+            ("Patch", MainWidget(PatchMode(self), self), lambda: self._broadcaster.view_to_patch_menu.emit()),
             ("Debug", debug_console, lambda: self._to_widget(3))]
 
         # select Views
@@ -60,11 +60,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(2))
         self._broadcaster.view_to_file_editor.connect(lambda: self._to_widget(1))
+        self._broadcaster.select_column_id.connect(_column_dialog)
 
         self._fish_connector.start()
         if self._fish_connector:
             from model.control_desk import set_network_manager
             set_network_manager(self._fish_connector)
+            self._broadcaster.view_leave_patch_menu.emit()
+            self._broadcaster.view_leave_file_editor.emit()
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -147,3 +150,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._last_cycle_time_widget.setStyleSheet(Style.LABEL_WARN)
             case _:
                 self._last_cycle_time_widget.setStyleSheet(Style.LABEL_ERROR)
+
+
+def _column_dialog(index: str):
+    """Dialog modify tho selected Column"""
+    column = BankSet._active_bank_set.get_column(index)
+
+    if isinstance(column, ColorDeskColumn):
+        dialog = ColumnDialog(column)
+        dialog.finished.connect(lambda: BankSet.push_messages_now())
+        dialog.show()

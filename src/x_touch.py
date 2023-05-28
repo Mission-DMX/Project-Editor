@@ -5,22 +5,21 @@ import proto.Console_pb2
 import proto.MessageTypes_pb2
 from model.broadcaster import Broadcaster
 
-VIEW_PATCH_MENU_MSG: proto.MessageTypes_pb2 = proto.Console_pb2.button_state_change(
+VIEW_PATCH_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
 
-VIEW_NOT_PATCH_MENU_MSG: proto.MessageTypes_pb2 = proto.Console_pb2.button_state_change(
+VIEW_NOT_PATCH_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH, new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
 
-VIEW_PATCHING_MSG: proto.MessageTypes_pb2 = proto.Console_pb2.button_state_change(
+VIEW_PATCHING_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH, new_state=proto.Console_pb2.ButtonState.BS_SET_LED_BLINKING)
 
-VIEW_FILTER_MENU_MSG: proto.MessageTypes_pb2 = proto.Console_pb2.button_state_change(
+VIEW_FILTER_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
 
-VIEW_NOT_FILTER_MENU_MSG: proto.MessageTypes_pb2 = proto.Console_pb2.button_state_change(
+VIEW_NOT_FILTER_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW,
     new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
-
 
 class XTouchMessages:
     """messages to the XTouch"""

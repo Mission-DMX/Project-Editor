@@ -47,6 +47,8 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     view_to_file_editor: QtCore.Signal = QtCore.Signal()
     view_leave_file_editor: QtCore.Signal = QtCore.Signal()
+
+    view_leave_colum_select: QtCore.Signal = QtCore.Signal()
     ################################################################
     jogwheel_rotated_left: QtCore.Signal = QtCore.Signal()
     jogwheel_rotated_right: QtCore.Signal = QtCore.Signal()
@@ -58,6 +60,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
     #################################################################
+    select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []
 
     def __new__(cls, *args, **kwargs):
