@@ -8,7 +8,8 @@ from model import DataType
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from view.show_mode.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
-from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
+from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, StateDouble, \
+    StateSixteenBit
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
@@ -245,6 +246,19 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._bankset.update()
         for c in self._cues:
             c.add_channel(channel_name, channel_type)
+            for kf in c._frames:
+                match channel_type:
+                    case DataType.DT_COLOR:
+                        kf_s = StateColor("edg")
+                    case DataType.DT_8_BIT:
+                        kf_s = StateEightBit("edg")
+                    case DataType.DT_DOUBLE:
+                        kf_s = StateDouble("edg")
+                    case DataType.DT_16_BIT:
+                        kf_s = StateSixteenBit("edg")
+                    case _:
+                        kf_s = StateEightBit("edg")
+                kf._states.append(kf_s)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
 
