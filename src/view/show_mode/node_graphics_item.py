@@ -158,3 +158,8 @@ class FilterSettingsDialog(QDialog):
         if self._special_widget:
             self._special_widget.parent_closed()
         super().closeEvent(arg__1)
+
+    def show(self) -> None:
+        super().show()
+        if self._special_widget:
+            self._special_widget.parent_opened()
