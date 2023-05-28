@@ -49,6 +49,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     view_leave_file_editor: QtCore.Signal = QtCore.Signal()
 
     view_leave_colum_select: QtCore.Signal = QtCore.Signal()
+    view_change_colum_select: QtCore.Signal = QtCore.Signal()
     ################################################################
     jogwheel_rotated_left: QtCore.Signal = QtCore.Signal()
     jogwheel_rotated_right: QtCore.Signal = QtCore.Signal()
