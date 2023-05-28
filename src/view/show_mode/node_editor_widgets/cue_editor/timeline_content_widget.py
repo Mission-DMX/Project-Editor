@@ -264,7 +264,7 @@ class TimelineContentWidget(QLabel):
     def clear_cue(self):
         self._channels.clear()
         self.cursor_position = 0.0
-        self.frames.clear()
+        self.frames = []
         self._last_keyframe_end_point = 0
         self._update_7seg_text()
         self.compute_resize()
