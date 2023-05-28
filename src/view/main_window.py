@@ -61,6 +61,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(2))
         self._broadcaster.view_to_file_editor.connect(lambda: self._to_widget(1))
         self._broadcaster.select_column_id.connect(self._show_column_dialog)
+        self._broadcaster.view_to_color.connect(self._is_column_dialog)
+        self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -68,6 +70,8 @@ class MainWindow(QtWidgets.QMainWindow):
             set_network_manager(self._fish_connector)
             self._broadcaster.view_leave_patch_menu.emit()
             self._broadcaster.view_leave_file_editor.emit()
+            self._broadcaster.view_leave_color.emit()
+            self._broadcaster.view_leave_temperature.emit()
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -163,3 +167,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 column_dialog = ColumnDialog(column)
                 column_dialog.finished.connect(lambda: BankSet.push_messages_now())
                 column_dialog.show()
+
+    def _is_column_dialog(self):
+        if not BankSet.active_bank_set():
+            self._broadcaster.view_leave_color.emit()
+            self._broadcaster.view_leave_temperature.emit()
+            return
+        if not BankSet.active_bank_set().activ_column:
+            self._broadcaster.view_leave_color.emit()
+            self._broadcaster.view_leave_temperature.emit()
