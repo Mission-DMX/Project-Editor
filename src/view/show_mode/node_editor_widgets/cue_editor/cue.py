@@ -165,9 +165,10 @@ class StateColor(State):
 
 
 class KeyFrame:
-    def __init__(self):
+    def __init__(self, parent_cue: "Cue"):
         self._states: list[State] = []
         self.timestamp: float = 0.0
+        self._parent = parent_cue
 
     def get_data_types(self) -> list[DataType]:
         l = []
@@ -179,11 +180,11 @@ class KeyFrame:
         return "{}:{}".format(self.timestamp, "&".join([s.encode() for s in self._states]))
 
     @staticmethod
-    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]]):
+    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: "Cue"):
         parts = f_str.split(':')
         if len(parts) != 2:
             raise ArgumentError("A keyframe definition should contain exactly two elements")
-        f = KeyFrame()
+        f = KeyFrame(parent_cue)
         f.timestamp = float(parts[0])
         i = 0
         for state_dev in parts[1].split('&'):
@@ -210,6 +211,10 @@ class KeyFrame:
     def append_state(self, s: State):
         if s is not None:
             self._states.append(s)
+
+    def delete_from_parent_cue(self):
+        """This method deletes the frame from the parent."""
+        self._parent._frames.remove(self)
 
 
 class Cue:
@@ -259,7 +264,7 @@ class Cue:
         frame_definitions = primary_tokens[0].split("|")
         for frame_dev in frame_definitions:
             if frame_dev:
-                self._frames.append(KeyFrame.from_format_str(frame_dev, self._channel_definitions))
+                self._frames.append(KeyFrame.from_format_str(frame_dev, self._channel_definitions, self))
         if len(primary_tokens) > 1:
             self.end_action = EndAction.from_format_str(primary_tokens[1])
         if len(primary_tokens) > 2:

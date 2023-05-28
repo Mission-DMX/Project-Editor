@@ -18,7 +18,6 @@ class ChannelInputDialog(QDialog):
         self._ok_button.pressed.connect(self._ok_pressed)
         self._layout.addRow("", self._ok_button)
         self.setLayout(self._layout)
-        self.setLayout(self._layout)
 
     def _ok_pressed(self):
         self._ok_function(self._channel_name.text(), DataType.from_filter_str(self._type_box.currentText()))

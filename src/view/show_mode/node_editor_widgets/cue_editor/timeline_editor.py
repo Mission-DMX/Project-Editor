@@ -86,7 +86,7 @@ class TimelineContainer(QWidget):
 
     def record_pressed(self):
         p = self._keyframes_panel.cursor_position
-        f = KeyFrame()
+        f = KeyFrame(self._cue)
         f.timestamp = p
         i = 0
         for c in self._cue.channels:

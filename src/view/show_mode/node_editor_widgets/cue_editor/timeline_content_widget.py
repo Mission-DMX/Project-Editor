@@ -7,7 +7,8 @@ from PySide6.QtWidgets import QLabel, QWidget
 from model import DataType
 from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
 from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit, StateSixteenBit, \
-    StateDouble
+    StateDouble, State
+from view.show_mode.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 from view.show_mode.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
@@ -24,6 +25,7 @@ class TimelineContentWidget(QLabel):
         self.compute_resize()
         self._cue_index: int = 0
         self.used_bankset: BankSet = None
+        self._last_clicked_kf_state: State = None
 
     @property
     def cue_index(self) -> int:
@@ -74,6 +76,13 @@ class TimelineContentWidget(QLabel):
                 painter.setBrush(light_gray_brush)
                 for s in kf_states:
                     y = 40 + i * CHANNEL_DISPLAY_HEIGHT
+                    if s == self._last_clicked_kf_state:
+                        marker_path = QPainterPath(QPoint(x, y - 2))
+                        marker_path.lineTo(x + 12, y + 10)
+                        marker_path.lineTo(x, y + 22)
+                        marker_path.lineTo(x - 12, y + 10)
+                        marker_path.lineTo(x, y - 2)
+                        painter.fillPath(marker_path, QBrush(QColor.fromRgb(0, 50, 255)))
                     marker_path = QPainterPath(QPoint(x, y))
                     marker_path.lineTo(x + 10, y + 10)
                     marker_path.lineTo(x, y + 20)
@@ -149,17 +158,20 @@ class TimelineContentWidget(QLabel):
 
     def insert_frame(self, f: KeyFrame):
         self.frames.append(f)
+        self._last_clicked_kf_state = None
         self.repaint()
 
     def zoom_out(self, factor: float = 2.0):
         if not self.isEnabled():
             return
+        self._last_clicked_kf_state = None
         self._time_zoom *= factor
         self.compute_resize()
 
     def zoom_in(self, factor: float = 2.0):
         if not self.isEnabled():
             return
+        self._last_clicked_kf_state = None
         self._time_zoom /= factor
         self.compute_resize()
 
@@ -167,6 +179,7 @@ class TimelineContentWidget(QLabel):
         if not self.isEnabled():
             return
         self.cursor_position += self._time_zoom * 10
+        self._last_clicked_kf_state = None
         self._update_7seg_text()
         self.compute_resize()
 
@@ -176,6 +189,7 @@ class TimelineContentWidget(QLabel):
         self.cursor_position -= self._time_zoom * 10
         if self.cursor_position < 0:
             self.cursor_position = 0.0
+        self._last_clicked_kf_state = None
         self._update_7seg_text()
         self.compute_resize()
 
@@ -205,13 +219,24 @@ class TimelineContentWidget(QLabel):
             clicked_timeslot_upper = (ev.x() + state_width) * self._time_zoom
             for kf in self.frames:
                 if clicked_timeslot_lower <= kf.timestamp <= clicked_timeslot_upper:
-                    self._clicked_on_keyframe(kf)
+                    self._clicked_on_keyframe(kf, ev.y())
                     break
         self.repaint()
 
-    def _clicked_on_keyframe(self, kf: KeyFrame):
+    def _clicked_on_keyframe(self, kf: KeyFrame, y: int):
+        state_index = int((y - 20) / CHANNEL_DISPLAY_HEIGHT)
+        states = kf._states
+        double_click_issued = False
+        if state_index < len(states):
+            new_state = states[state_index]
+            if new_state == self._last_clicked_kf_state:
+                double_click_issued = True
+            self._last_clicked_kf_state = new_state
+        else:
+            self._last_clicked_kf_state = None
+            new_state = None
         if self.used_bankset:
-            kf_states = kf._states
+            kf_states = states
             i = 0
             for b in self.used_bankset.banks:
                 for c in b.columns:
@@ -231,7 +256,10 @@ class TimelineContentWidget(QLabel):
                         break
             self.used_bankset.push_messages_now()
         # TODO open dialog for kf delete and state settings
-        pass
+        if double_click_issued:
+            self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state,
+                                                   self.compute_resize)
+            self._dialog.open()
 
     def clear_cue(self):
         self._channels.clear()
