@@ -30,8 +30,8 @@ class ColumnDialog(QtWidgets.QDialog):
         color_widget.setLayout(color_layout)
         tab_widget.addTab(color_widget, "color")
 
-        button = QtWidgets.QPushButton("ok")
-        button.clicked.connect(self._accept)
+        button = QtWidgets.QPushButton("close")
+        button.clicked.connect(lambda: self._broadcaster.view_leave_colum_select.emit())
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(tab_widget)
         layout.addWidget(button)
@@ -43,10 +43,6 @@ class ColumnDialog(QtWidgets.QDialog):
         color = self.colorD.currentColor()
         self._column.color = ColorHSI(color.hue(), color.hslSaturationF(), color.toHsl().lightnessF())
         BankSet.push_messages_now()
-
-    def _accept(self) -> None:
-        self._broadcaster.view_leave_colum_select.emit()
-        self.accept()
 
     def _reject(self) -> None:
         self.colorD.close()
