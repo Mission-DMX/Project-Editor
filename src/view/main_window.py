@@ -60,7 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(2))
         self._broadcaster.view_to_file_editor.connect(lambda: self._to_widget(1))
-        self._broadcaster.select_column_id.connect(_column_dialog)
+        self._broadcaster.select_column_id.connect(self._show_column_dialog)
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -151,12 +151,15 @@ class MainWindow(QtWidgets.QMainWindow):
             case _:
                 self._last_cycle_time_widget.setStyleSheet(Style.LABEL_ERROR)
 
-
-def _column_dialog(index: str):
-    """Dialog modify tho selected Column"""
-    column = BankSet._active_bank_set.get_column(index)
-
-    if isinstance(column, ColorDeskColumn):
-        dialog = ColumnDialog(column)
-        dialog.finished.connect(lambda: BankSet.push_messages_now())
-        dialog.show()
+    def _show_column_dialog(self, index: str):
+        """Dialog modify tho selected Column"""
+        active_bank_set = BankSet.active_bank_set()
+        column = active_bank_set.get_column(index)
+        if not active_bank_set.activ_column == column:
+            if active_bank_set.activ_column:
+                self._broadcaster.view_change_colum_select.emit()
+            active_bank_set.set_active_column(column)
+            if isinstance(column, ColorDeskColumn):
+                column_dialog = ColumnDialog(column)
+                column_dialog.finished.connect(lambda: BankSet.push_messages_now())
+                column_dialog.show()

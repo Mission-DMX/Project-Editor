@@ -252,6 +252,7 @@ class BankSet:
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
         self._broadcaster: Broadcaster = Broadcaster()
+        self.activ_column: DeskColumn | None = None
         if banks:
             self.banks: list[FaderBank] = banks
         else:
@@ -262,7 +263,7 @@ class BankSet:
         else:
             self.description = "No description"
         self._gui_controlled = gui_controlled
-        self._broadcaster.view_leave_colum_select.connect(self._send_desk_update_message)
+        self._broadcaster.view_leave_colum_select.connect(self._leaf_selected)
 
     def update(self) -> bool:
         """push the bank set to fish or update it if required
@@ -297,6 +298,8 @@ class BankSet:
     def activate(self):
         """Calling this method makes this bank set the active one.
         """
+        if BankSet._active_bank_set_id == self.id:
+            return
         BankSet._active_bank_set_id = self.id
         BankSet._active_bank_set = self
         text = "Bank: " + self.description
@@ -304,9 +307,18 @@ class BankSet:
             self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
         self._send_desk_update_message()
 
+    def _leaf_selected(self):
+        if not self.activ_column:
+            return
+        self.activ_column = None
+        self._send_desk_update_message()
+
     def _send_desk_update_message(self):
         msg = proto.Console_pb2.desk_update()
-        msg.selected_column_id = ""  # Do not update the set of selected columns yet
+        if self.activ_column:
+            msg.selected_column_id = self.activ_column.id
+        else:
+            msg.selected_column_id = ""  # Do not update the set of selected columns yet
         msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixture' feature yet
         msg.selected_bank = self.active_bank
         msg.selected_bank_set = BankSet._active_bank_set_id
@@ -386,6 +398,9 @@ class BankSet:
             for c in b.columns:
                 if c.id == column_id:
                     return c
+
+    def set_active_column(self, column: DeskColumn):
+        self.activ_column = column
 
     def get_column_by_number(self, index: int) -> DeskColumn:
         """This method iterates through the banks and returns column i"""
