@@ -36,6 +36,7 @@ class ColumnDialog(QtWidgets.QDialog):
         layout.addWidget(tab_widget)
         layout.addWidget(button)
         self.setLayout(layout)
+        self._broadcaster.view_leave_colum_select.connect(lambda: self.reject())
 
     def _select_color(self):
         color = self.colorD.currentColor()
