@@ -92,6 +92,9 @@ class TimelineContentWidget(QLabel):
                         r, g, b = s.color.to_rgb()
                         selected_brush = QBrush(QColor.fromRgb(r, g, b))
                         painter.drawText(x + 15, y + 21, str(int(s.color.intensity * 100)) + "%")
+                    elif isinstance(s, StateDouble):
+                        selected_brush = marker_brush
+                        painter.drawText(x + 15, y + 21, "{:10.4f}".format(s._value))
                     else:
                         selected_brush = marker_brush
                         painter.drawText(x + 15, y + 21, str(s._value))
@@ -255,7 +258,6 @@ class TimelineContentWidget(QLabel):
                     else:
                         break
             self.used_bankset.push_messages_now()
-        # TODO open dialog for kf delete and state settings
         if double_click_issued:
             self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state,
                                                    self.compute_resize)
