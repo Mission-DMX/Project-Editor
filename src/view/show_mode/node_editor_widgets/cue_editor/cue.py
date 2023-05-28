@@ -55,6 +55,12 @@ class State(ABC):
     def transition(self):
         return self._transition_type
 
+    @transition.setter
+    def transition(self, new_value: str):
+        if new_value not in ["edg", "lin", "sig", "e_i", "e_o"]:
+            raise ArgumentError("Unsupported transition type: {}".format(new_value))
+        self._transition_type = new_value
+
     @abstractmethod
     def encode(self) -> str:
         """This method returns the state encodes in the filter format"""
@@ -165,9 +171,10 @@ class StateColor(State):
 
 
 class KeyFrame:
-    def __init__(self):
+    def __init__(self, parent_cue: "Cue"):
         self._states: list[State] = []
         self.timestamp: float = 0.0
+        self._parent = parent_cue
 
     def get_data_types(self) -> list[DataType]:
         l = []
@@ -179,11 +186,11 @@ class KeyFrame:
         return "{}:{}".format(self.timestamp, "&".join([s.encode() for s in self._states]))
 
     @staticmethod
-    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]]):
+    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: "Cue"):
         parts = f_str.split(':')
         if len(parts) != 2:
             raise ArgumentError("A keyframe definition should contain exactly two elements")
-        f = KeyFrame()
+        f = KeyFrame(parent_cue)
         f.timestamp = float(parts[0])
         i = 0
         for state_dev in parts[1].split('&'):
@@ -202,11 +209,18 @@ class KeyFrame:
                     s_entry = StateDouble(state_dev_parts[1])
                 case _:
                     raise ArgumentError("Unsupported filter data type: {}".format(state_dev_parts[1]))
-            f._states.append(s_entry.decode(state_dev))
+            s_entry.decode(state_dev)
+            f._states.append(s_entry)
             i += 1
+        return f
 
     def append_state(self, s: State):
-        self._states.append(s)
+        if s is not None:
+            self._states.append(s)
+
+    def delete_from_parent_cue(self):
+        """This method deletes the frame from the parent."""
+        self._parent._frames.remove(self)
 
 
 class Cue:
@@ -256,7 +270,7 @@ class Cue:
         frame_definitions = primary_tokens[0].split("|")
         for frame_dev in frame_definitions:
             if frame_dev:
-                self._frames.append(KeyFrame.from_format_str(frame_dev, self._channel_definitions))
+                self._frames.append(KeyFrame.from_format_str(frame_dev, self._channel_definitions, self))
         if len(primary_tokens) > 1:
             self.end_action = EndAction.from_format_str(primary_tokens[1])
         if len(primary_tokens) > 2:

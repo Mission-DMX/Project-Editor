@@ -5,8 +5,10 @@ from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath
 from PySide6.QtWidgets import QLabel, QWidget
 
 from model import DataType
-from model.control_desk import set_seven_seg_display_content
-from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor
+from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
+from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit, StateSixteenBit, \
+    StateDouble, State
+from view.show_mode.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
 from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
 from view.show_mode.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
@@ -22,6 +24,8 @@ class TimelineContentWidget(QLabel):
         self._drag_begin: tuple[int, int] = None
         self.compute_resize()
         self._cue_index: int = 0
+        self.used_bankset: BankSet = None
+        self._last_clicked_kf_state: State = None
 
     @property
     def cue_index(self) -> int:
@@ -63,29 +67,40 @@ class TimelineContentWidget(QLabel):
         kf_line_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         kf_line_brush.setStyle(Qt.HorPattern)
         for kf in self.frames:
-            i = 0
-            x = int(kf.timestamp / self._time_zoom)
-            painter.setBrush(kf_line_brush)
-            kf_states = kf._states
-            painter.drawLine(x, 20, x, len(kf_states) * CHANNEL_DISPLAY_HEIGHT + 20)
-            painter.setBrush(light_gray_brush)
-            for s in kf_states:
-                y = 40 + i * CHANNEL_DISPLAY_HEIGHT
-                marker_path = QPainterPath(QPoint(x, y))
-                marker_path.lineTo(x + 10, y + 10)
-                marker_path.lineTo(x, y + 20)
-                marker_path.lineTo(x - 10, y + 10)
-                marker_path.lineTo(x, y)
-                if isinstance(s, StateColor):
-                    c = s.color
-                    selected_brush = QBrush(QColor.fromHsl(int(c.hue * 360) % 360, int(c.saturation * 255), 255))
-                    painter.drawText(x + 15, y + 21, str(int(c.intensity * 100)) + "%")
-                else:
-                    selected_brush = marker_brush
-                painter.fillPath(marker_path, selected_brush)
-                # TODO show color circle if color instead of text
-                painter.drawText(x + 15, y + 9, s.transition)
-                i += 1
+            if kf:
+                i = 0
+                x = int(kf.timestamp / self._time_zoom)
+                painter.setBrush(kf_line_brush)
+                kf_states = kf._states
+                painter.drawLine(x, 20, x, len(kf_states) * CHANNEL_DISPLAY_HEIGHT + 20)
+                painter.setBrush(light_gray_brush)
+                for s in kf_states:
+                    y = 40 + i * CHANNEL_DISPLAY_HEIGHT
+                    if s == self._last_clicked_kf_state:
+                        marker_path = QPainterPath(QPoint(x, y - 2))
+                        marker_path.lineTo(x + 12, y + 10)
+                        marker_path.lineTo(x, y + 22)
+                        marker_path.lineTo(x - 12, y + 10)
+                        marker_path.lineTo(x, y - 2)
+                        painter.fillPath(marker_path, QBrush(QColor.fromRgb(0, 50, 255)))
+                    marker_path = QPainterPath(QPoint(x, y))
+                    marker_path.lineTo(x + 10, y + 10)
+                    marker_path.lineTo(x, y + 20)
+                    marker_path.lineTo(x - 10, y + 10)
+                    marker_path.lineTo(x, y)
+                    if isinstance(s, StateColor):
+                        r, g, b = s.color.to_rgb()
+                        selected_brush = QBrush(QColor.fromRgb(r, g, b))
+                        painter.drawText(x + 15, y + 21, str(int(s.color.intensity * 100)) + "%")
+                    elif isinstance(s, StateDouble):
+                        selected_brush = marker_brush
+                        painter.drawText(x + 15, y + 21, "{:10.4f}".format(s._value))
+                    else:
+                        selected_brush = marker_brush
+                        painter.drawText(x + 15, y + 21, str(s._value))
+                    painter.fillPath(marker_path, selected_brush)
+                    painter.drawText(x + 15, y + 9, s.transition)
+                    i += 1
 
         # render cursor, timescale and bars
         painter.setBrush(light_gray_brush)
@@ -146,17 +161,20 @@ class TimelineContentWidget(QLabel):
 
     def insert_frame(self, f: KeyFrame):
         self.frames.append(f)
+        self._last_clicked_kf_state = None
         self.repaint()
 
     def zoom_out(self, factor: float = 2.0):
         if not self.isEnabled():
             return
+        self._last_clicked_kf_state = None
         self._time_zoom *= factor
         self.compute_resize()
 
     def zoom_in(self, factor: float = 2.0):
         if not self.isEnabled():
             return
+        self._last_clicked_kf_state = None
         self._time_zoom /= factor
         self.compute_resize()
 
@@ -164,6 +182,7 @@ class TimelineContentWidget(QLabel):
         if not self.isEnabled():
             return
         self.cursor_position += self._time_zoom * 10
+        self._last_clicked_kf_state = None
         self._update_7seg_text()
         self.compute_resize()
 
@@ -173,6 +192,7 @@ class TimelineContentWidget(QLabel):
         self.cursor_position -= self._time_zoom * 10
         if self.cursor_position < 0:
             self.cursor_position = 0.0
+        self._last_clicked_kf_state = None
         self._update_7seg_text()
         self.compute_resize()
 
@@ -190,14 +210,63 @@ class TimelineContentWidget(QLabel):
         if not self.isEnabled():
             return
         if ev.y() <= 20:
-            self.cursor_position = ev.x() * self._time_zoom
+            clicked_timeslot = ev.x() * self._time_zoom
+            self.cursor_position = clicked_timeslot
             self._update_7seg_text()
+        else:
+            if 20 <= ((ev.y() - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40:
+                state_width = 10
+            else:
+                state_width = 1
+            clicked_timeslot_lower = (ev.x() - state_width) * self._time_zoom
+            clicked_timeslot_upper = (ev.x() + state_width) * self._time_zoom
+            for kf in self.frames:
+                if clicked_timeslot_lower <= kf.timestamp <= clicked_timeslot_upper:
+                    self._clicked_on_keyframe(kf, ev.y())
+                    break
         self.repaint()
+
+    def _clicked_on_keyframe(self, kf: KeyFrame, y: int):
+        state_index = int((y - 20) / CHANNEL_DISPLAY_HEIGHT)
+        states = kf._states
+        double_click_issued = False
+        if state_index < len(states):
+            new_state = states[state_index]
+            if new_state == self._last_clicked_kf_state:
+                double_click_issued = True
+            self._last_clicked_kf_state = new_state
+        else:
+            self._last_clicked_kf_state = None
+            new_state = None
+        if self.used_bankset:
+            kf_states = states
+            i = 0
+            for b in self.used_bankset.banks:
+                for c in b.columns:
+                    if i < len(kf_states):
+                        s = kf_states[i]
+                        if isinstance(c, ColorDeskColumn) and isinstance(s, StateColor):
+                            c.color = s.color
+                        elif isinstance(c, RawDeskColumn):
+                            if isinstance(s, StateEightBit):
+                                c.fader_position = int((s._value / 256) * 65536)
+                            elif isinstance(s, StateSixteenBit):
+                                c.fader_position = int(s._value)
+                            elif isinstance(s, StateDouble):
+                                c.fader_position = int(s._value * 65536)
+                        i += 1
+                    else:
+                        break
+            self.used_bankset.push_messages_now()
+        if double_click_issued:
+            self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state,
+                                                   self.compute_resize)
+            self._dialog.open()
 
     def clear_cue(self):
         self._channels.clear()
         self.cursor_position = 0.0
-        self.frames.clear()
+        self.frames = []
         self._last_keyframe_end_point = 0
         self._update_7seg_text()
         self.compute_resize()

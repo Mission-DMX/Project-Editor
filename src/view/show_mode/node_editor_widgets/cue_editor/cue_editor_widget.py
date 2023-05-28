@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, QItemSelectionModel
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
     QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QInputDialog, QAbstractItemView, \
     QMessageBox
@@ -8,7 +8,8 @@ from model import DataType
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from view.show_mode.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
-from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction
+from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, StateDouble, \
+    StateSixteenBit
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
@@ -109,7 +110,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._parent_widget.setLayout(top_layout)
         self._jw_zoom_mode = False
         self._broadcaster = Broadcaster()
-        self._broadcaster.desk_media_rec_pressed.connect(self.rec_pressed)
+        self._broadcaster.desk_media_rec_pressed.connect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
         self._broadcaster.jogwheel_rotated_left.connect(self.jg_left)
         self._broadcaster.desk_media_scrub_pressed.connect(self.scrub_pressed)
@@ -119,6 +120,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._bankset.description = "Cue Editor BS"
         self._bankset.link()
         self._bankset.activate()
+        self._timeline_container.bankset = self._bankset
 
         self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
@@ -160,6 +162,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         transition_type_select_widget.addItems(["edg", "lin", "sig", "e_i", "e_o"])
         transition_type_select_widget.currentTextChanged.connect(self._transition_type_changed)
         toolbar.addWidget(transition_type_select_widget)
+        self._gui_rec_action = QAction("Record keyframe", self._parent_widget)
+        self._gui_rec_action.setStatusTip("Insert a Keyframe at the current cursor position")
+        self._gui_rec_action.setIcon(QIcon.fromTheme("media-record"))
+        self._gui_rec_action.setEnabled(False)
+        self._gui_rec_action.triggered.connect(self._rec_pressed)
+        toolbar.addAction(self._gui_rec_action)
         top_layout.addWidget(toolbar)
 
     def _set_zoom_label_text(self):
@@ -198,6 +206,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._toolbar_add_channel_action.setEnabled(True)
         self._timeline_container.setEnabled(True)
         self._current_cue_end_action_select_widget.setEnabled(True)
+        self._gui_rec_action.setEnabled(True)
         self._current_cue_another_play_pressed_checkbox.setEnabled(True)
 
     def _cue_list_selection_changed(self):
@@ -244,6 +253,19 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._bankset.update()
         for c in self._cues:
             c.add_channel(channel_name, channel_type)
+            for kf in c._frames:
+                match channel_type:
+                    case DataType.DT_COLOR:
+                        kf_s = StateColor("edg")
+                    case DataType.DT_8_BIT:
+                        kf_s = StateEightBit("edg")
+                    case DataType.DT_DOUBLE:
+                        kf_s = StateDouble("edg")
+                    case DataType.DT_16_BIT:
+                        kf_s = StateSixteenBit("edg")
+                    case _:
+                        kf_s = StateEightBit("edg")
+                kf._states.append(kf_s)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
 
@@ -266,9 +288,10 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def _transition_type_changed(self, text):
         self._timeline_container.transition_type = text
 
-    def rec_pressed(self):
+    def _rec_pressed(self):
         self._timeline_container.record_pressed()
-        # TODO update duration display
+        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
+            .setText(self._timeline_container.cue.duration_formatted)
 
     def jg_right(self):
         if self._jw_zoom_mode:
@@ -294,7 +317,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._timeline_container.clear_display()
         self._bankset.unlink()
         BankSet.push_messages_now()
-        self._broadcaster.desk_media_rec_pressed.disconnect(self.rec_pressed)
+        self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
         self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
         self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
