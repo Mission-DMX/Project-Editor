@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import proto.Console_pb2
 from model.color_hsi import ColorHSI
+from model.broadcaster import Broadcaster
 from network import NetworkManager
 
 
@@ -106,22 +107,17 @@ class RawDeskColumn(DeskColumn):
         msg.raw_data.fader = self._fader_position
         msg.raw_data.rotary_position = self._encoder_position
         msg.raw_data.meter_leds = 0
-        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else \
-            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else \
-            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else \
-            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else \
-            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         return msg
 
     def update_from_message(self, message: proto.Console_pb2.fader_column):
         if not message.raw_data:
             return
         self._fader_position = message.raw_data.fader
-        self._encoder_position = message.raw_data.rotary_position
-        # TODO implement buttons once implemented in fish
+        self._encoder_position = message.raw_data.rotary_position  # TODO implement buttons once implemented in fish
 
     @property
     def fader_position(self) -> int:
@@ -216,7 +212,6 @@ class BankSet:
      except for the event that the active bank set will be unlinked.
     In this case fish will enable the bank set with the next lower index.
     """
-
     _fish_connector: NetworkManager = None
     _active_bank_set_id: str = None
     _active_bank_set: "BankSet" = None
@@ -256,6 +251,7 @@ class BankSet:
         """
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
+        self._broadcaster: Broadcaster = Broadcaster()
         if banks:
             self.banks: list[FaderBank] = banks
         else:
@@ -266,6 +262,7 @@ class BankSet:
         else:
             self.description = "No description"
         self._gui_controlled = gui_controlled
+        self._broadcaster.view_leave_colum_select.connect(self._send_desk_update_message)
 
     def update(self) -> bool:
         """push the bank set to fish or update it if required
