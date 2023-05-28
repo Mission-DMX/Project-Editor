@@ -36,7 +36,8 @@ class ColumnDialog(QtWidgets.QDialog):
         layout.addWidget(tab_widget)
         layout.addWidget(button)
         self.setLayout(layout)
-        self._broadcaster.view_leave_colum_select.connect(lambda: self.reject())
+        self._broadcaster.view_leave_colum_select.connect(self._reject)
+        self._broadcaster.view_change_colum_select.connect(self._reject)
 
     def _select_color(self):
         color = self.colorD.currentColor()
@@ -46,3 +47,7 @@ class ColumnDialog(QtWidgets.QDialog):
     def _accept(self) -> None:
         self._broadcaster.view_leave_colum_select.emit()
         self.accept()
+
+    def _reject(self) -> None:
+        self.colorD.close()
+        self.reject()
