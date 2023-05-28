@@ -128,8 +128,7 @@ class NetworkManager(QtCore.QObject):
             msg_bytes = msg_bytes[msg_len + 2:]
             match msg_type:
                 case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
-                    message: proto.RealTimeControl_pb2.current_state_update = \
-                        proto.RealTimeControl_pb2.current_state_update()
+                    message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
                     message.ParseFromString(bytes(msg))
                     self._fish_update(message)
                 case proto.MessageTypes_pb2.MSGT_LOG_MESSAGE:
@@ -181,35 +180,32 @@ class NetworkManager(QtCore.QObject):
                 logging.warning(msg.what)
 
     def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
-        match msg.button:
-            case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
-                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+        if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+            match msg.button:
+                case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
                     self._broadcaster.view_to_patch_menu.emit()
-            case proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW:
-                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                case proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW:
                     self._broadcaster.view_to_file_editor.emit()
-            case proto.Console_pb2.ButtonCode.BTN_REV_LASTCUE:
-                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                case proto.Console_pb2.ButtonCode.BTN_REV_LASTCUE:
                     self._broadcaster.desk_media_rev_pressed.emit()
-            case proto.Console_pb2.ButtonCode.BTN_FF_NEXTCUE:
-                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                case proto.Console_pb2.ButtonCode.BTN_FF_NEXTCUE:
                     self._broadcaster.desk_media_forward_pressed.emit()
-            case proto.Console_pb2.ButtonCode.BTN_STOP_STOPCUE:
-                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                case proto.Console_pb2.ButtonCode.BTN_STOP_STOPCUE:
                     self._broadcaster.desk_media_stop_pressed.emit()
-            case proto.Console_pb2.ButtonCode.BTN_PLAY_RUNCUE:
-                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                case proto.Console_pb2.ButtonCode.BTN_PLAY_RUNCUE:
                     self._broadcaster.desk_media_play_pressed.emit()
-            case proto.Console_pb2.ButtonCode.BTN_REC_RECFRAME:
-                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                case proto.Console_pb2.ButtonCode.BTN_REC_RECFRAME:
                     self._broadcaster.desk_media_rec_pressed.emit()
-            case proto.Console_pb2.ButtonCode.BTN_SCRUB_JOGWHEELMODESWITCH:
-                if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+                case proto.Console_pb2.ButtonCode.BTN_SCRUB_JOGWHEELMODESWITCH:
                     self._broadcaster.desk_media_scrub_pressed.emit()
-                else:
+                case _:
+                    pass
+        else:
+            match msg.button:
+                case proto.Console_pb2.ButtonCode.BTN_SCRUB_JOGWHEELMODESWITCH:
                     self._broadcaster.desk_media_scrub_released.emit()
-            case _:
-                pass
+                case _:
+                    pass
 
     def _handle_desk_update(self, msg: proto.Console_pb2.desk_update):
         # TODO handle update of selected column
