@@ -1,5 +1,6 @@
 from PySide6.QtGui import QIcon, QColor
-from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QPushButton, QSpinBox, QDoubleSpinBox, QColorDialog
+from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QPushButton, QSpinBox, QDoubleSpinBox, QColorDialog, \
+    QComboBox
 
 from model import ColorHSI
 from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, State, StateEightBit, StateSixteenBit, \
@@ -39,6 +40,12 @@ class KeyFrameStateEditDialog(QDialog):
             dialog_open_push_button.clicked.connect(self.choose_color_clicked)
             self._layout.addRow("", dialog_open_push_button)
 
+        self._transition_select = QComboBox()
+        self._transition_select.addItems(["edg", "lin", "sig", "e_i", "e_o"])
+        self._transition_select.setCurrentText(s.transition)
+        self._transition_select.setEditable(False)
+        self._layout.addRow("", self._transition_select)
+
         self._ok_button = QPushButton("Update")
         self._ok_button.pressed.connect(self._ok_pressed)
         self._layout.addRow("", self._ok_button)
@@ -61,6 +68,7 @@ class KeyFrameStateEditDialog(QDialog):
             s = c.saturationF()
             i = c.lightnessF()
             self._state.color = ColorHSI(h, s, i)
+        self._state.transition = self._transition_select.currentText()
         self._repaint_function()
         self.close()
 

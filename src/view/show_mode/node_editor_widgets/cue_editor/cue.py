@@ -55,6 +55,12 @@ class State(ABC):
     def transition(self):
         return self._transition_type
 
+    @transition.setter
+    def transition(self, new_value: str):
+        if new_value not in ["edg", "lin", "sig", "e_i", "e_o"]:
+            raise ArgumentError("Unsupported transition type: {}".format(new_value))
+        self._transition_type = new_value
+
     @abstractmethod
     def encode(self) -> str:
         """This method returns the state encodes in the filter format"""
