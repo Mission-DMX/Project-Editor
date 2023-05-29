@@ -50,3 +50,7 @@ class NodeEditorFilterConfigWidget(ABC):
     def parent_closed(self):
         """This method might be overridden to listen for parent close events."""
         pass
+
+    def parent_opened(self):
+        """This method might be overridden to listen for parent open events."""
+        pass

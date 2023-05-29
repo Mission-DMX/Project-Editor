@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt, QItemSelectionModel
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
     QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QInputDialog, QAbstractItemView, \
-    QMessageBox
+    QMessageBox, QDialog
 
 from model import DataType
 from model.broadcaster import Broadcaster
@@ -11,6 +11,7 @@ from view.show_mode.node_editor_widgets.cue_editor.channel_input_dialog import C
 from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, StateDouble, \
     StateSixteenBit
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
+from view.show_mode.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 
@@ -48,8 +49,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 2).setText(str(self._cues[i].end_action))
         if len(self._cues) > 0:
             self.select_cue(0)
-        self._bankset.update()
-        BankSet.push_messages_now()
+        if self._bankset:
+            self._bankset.update()
+            BankSet.push_messages_now()
 
     def _get_parameters(self) -> dict[str, str]:
         if len(self._cues) > 0:
@@ -109,23 +111,32 @@ class CueEditor(NodeEditorFilterConfigWidget):
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
         self._jw_zoom_mode = False
+
+        self._broadcaster: Broadcaster = None
+        self._bankset: BankSet = None
+        self._input_dialog: QDialog = None
+
+        self._set_zoom_label_text()
+        self._global_restart_on_end: bool = False
+        self._cues: list[Cue] = []
+        self._last_selected_cue = -1
+
+    def _link_bankset(self):
         self._broadcaster = Broadcaster()
         self._broadcaster.desk_media_rec_pressed.connect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
         self._broadcaster.jogwheel_rotated_left.connect(self.jg_left)
         self._broadcaster.desk_media_scrub_pressed.connect(self.scrub_pressed)
         self._broadcaster.desk_media_scrub_released.connect(self.scrub_released)
-
         self._bankset = BankSet(gui_controlled=True)
         self._bankset.description = "Cue Editor BS"
         self._bankset.link()
         self._bankset.activate()
         self._timeline_container.bankset = self._bankset
-
-        self._set_zoom_label_text()
-        self._global_restart_on_end: bool = False
-        self._cues: list[Cue] = []
-        self._last_selected_cue = -1
+        for c in self._timeline_container.cue.channels:
+            self._link_column_to_channel(c[0], c[1], True)
+        self._bankset.update()
+        BankSet.push_messages_now()
 
     def setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
         zoom_panel = QWidget(cue_settings_container)
@@ -243,14 +254,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
                                      "Unable to add the requested channel {}. Channel names must be unique within "
                                      "this filter.".format(channel_name))
                 return
-        if channel_type == DataType.DT_COLOR:
-            c = ColorDeskColumn()
-        else:
-            c = RawDeskColumn()
-        c.display_name = channel_name
-        self._bankset.add_column_to_next_bank(c)
-        if not is_part_of_mass_update:
-            self._bankset.update()
+        self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
         for c in self._cues:
             c.add_channel(channel_name, channel_type)
             for kf in c._frames:
@@ -268,6 +272,18 @@ class CueEditor(NodeEditorFilterConfigWidget):
                 kf._states.append(kf_s)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
+
+    def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
+        if not self._bankset:
+            return
+        if channel_type == DataType.DT_COLOR:
+            c = ColorDeskColumn()
+        else:
+            c = RawDeskColumn()
+        c.display_name = channel_name
+        self._bankset.add_column_to_next_bank(c)
+        if not is_part_of_mass_update:
+            self._bankset.update()
 
     def _remove_channel_button_pressed(self):
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
@@ -315,10 +331,15 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def parent_closed(self):
         self._timeline_container.clear_display()
-        self._bankset.unlink()
-        BankSet.push_messages_now()
-        self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
-        self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
-        self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
-        self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
-        self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
+        if self._bankset:
+            self._bankset.unlink()
+            BankSet.push_messages_now()
+        if self._broadcaster:
+            self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
+            self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
+            self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
+            self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
+            self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
+
+    def parent_opened(self):
+        self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
