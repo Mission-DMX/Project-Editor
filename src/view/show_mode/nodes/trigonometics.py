@@ -1,6 +1,7 @@
 # coding=utf-8
 """Trigonometrics filter nodes"""
 from model import DataType
+
 from . import FilterNode
 
 

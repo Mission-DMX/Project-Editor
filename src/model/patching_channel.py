@@ -2,11 +2,12 @@
 """Channels for patching"""
 from PySide6 import QtCore
 
-from ofl.fixture import UsedFixture, Mode
+from ofl.fixture import Mode, UsedFixture
 
 
 class PatchingChannel(QtCore.QObject):
     """Channels for patching to reduce redundancy over scenes"""
+
     updated_fixture: QtCore.Signal = QtCore.Signal()
     updated_color: QtCore.Signal = QtCore.Signal(str)
 

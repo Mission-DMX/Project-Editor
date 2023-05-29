@@ -1,6 +1,7 @@
 # coding=utf-8
 """Debug filter nodes"""
 from model import DataType
+
 from . import FilterNode
 
 

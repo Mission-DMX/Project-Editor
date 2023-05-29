@@ -5,6 +5,8 @@ from xml.etree.ElementTree import Element
 from PySide6 import QtCore
 
 from model.patching_universe import PatchingUniverse
+from view.dialogs.patching_dialog import PatchingDialog
+
 from .device import Device
 from .scene import Scene
 from .universe import Universe

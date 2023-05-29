@@ -2,7 +2,7 @@
 """selector for Patching witch holds all Patching Universes"""
 from typing import TYPE_CHECKING
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtGui, QtWidgets
 
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse

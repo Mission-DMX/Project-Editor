@@ -2,7 +2,7 @@
 """ Dialog for Patching Fixture"""
 from PySide6 import QtWidgets
 
-from ofl.fixture import Fixture, load_fixture, make_used_fixture, UsedFixture
+from ofl.fixture import Fixture, UsedFixture, load_fixture, make_used_fixture
 
 
 class PatchingDialog(QtWidgets.QDialog):

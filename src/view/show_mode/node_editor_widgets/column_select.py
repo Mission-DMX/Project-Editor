@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem, QWidget
 
-from model.control_desk import BankSet, RawDeskColumn, ColorDeskColumn
+from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 

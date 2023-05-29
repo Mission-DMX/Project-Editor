@@ -29,11 +29,11 @@ class Channel(QtCore.QObject):
     @value.setter
     def value(self, value: int):
         """Updates the value of the channel.
-                        Must be between 0 and 255.
+        Must be between 0 and 255.
 
-                        Raises:
-                            ValueError: The value is below 0 or above 255.
-                        """
+        Raises:
+            ValueError: The value is below 0 or above 255.
+        """
         if 0 > value or value > 255:
             raise ValueError(f"Tried to set channel {self._address} to {value}.")
         self._value = value

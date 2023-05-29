@@ -5,9 +5,9 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-from PySide6 import QtGui, QtWidgets
-from PySide6.QtWidgets import QWidget, QTabWidget, QInputDialog
 from pyqtgraph.flowchart import Flowchart
+from PySide6 import QtGui, QtWidgets
+from PySide6.QtWidgets import QInputDialog, QTabWidget, QWidget
 
 from file.read import read_document
 from file.write import create_xml, write_document
