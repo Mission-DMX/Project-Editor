@@ -14,13 +14,14 @@ import proto.MessageTypes_pb2
 import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
+import x_touch
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
 if TYPE_CHECKING:
-    from model.control_desk import FaderBank
     from view.main_window import MainWindow
+    from cli.bankset_command import FaderBank
 
 
 class NetworkManager(QtCore.QObject):
@@ -28,15 +29,17 @@ class NetworkManager(QtCore.QObject):
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, broadcaster: Broadcaster, parent: "MainWindow") -> None:
+    def __init__(self, parent: "MainWindow") -> None:
         """Inits the network connection.
         Args:
             parent: parent GUI Object
         """
         super().__init__(parent=parent)
         logging.info("generate new Network Manager")
-        self._broadcaster = broadcaster
+        self._broadcaster = Broadcaster()
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
+        self._message_queue = queue.Queue()
+
         self._is_running: bool = False
         self._fish_status: str = ""
         self._server_name = "/tmp/fish.sock"
@@ -47,10 +50,7 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
 
-        self._broadcaster.view_is_patch_menu.connect(self._send_view_patch_menu)
-        self._broadcaster.view_is_patching.connect(self._send_view_patching)
-        self._broadcaster.view_is_not_patch_menu.connect(self._send_view_not_patch_menu)
-        self._message_queue = queue.Queue()
+        x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)
 
     @property
     def is_running(self) -> bool:
@@ -96,33 +96,21 @@ class NetworkManager(QtCore.QObject):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
-    def _send_view_patch_menu(self):
-        """send button patch lighting"""
+    def _msg_to_x_touch(self, msg: proto.Console_pb2.button_state_change):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
-                                                        new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
-            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
-
-    def _send_view_patching(self):
-        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
-                                                        new_state=proto.Console_pb2.ButtonState.BS_SET_LED_BLINKING)
-            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
-
-    def _send_view_not_patch_menu(self):
-        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.Console_pb2.button_state_change(button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH,
-                                                        new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
     def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """send message in correct format to fish"""
-        self._message_queue.put(tuple([msg, msg_type]))
+        self._enqueue_message(msg, msg_type)
+        self.push_messages()
+
+    def push_messages(self):
+        """This method pushes the queued messages to fish. This method needs to be called from the GUI thread."""
         while not self._message_queue.empty():
             msg, msg_type = self._message_queue.get()
-            logging.debug("message to send: %s", msg)
+            logging.debug("message to send: %s with type: %s", msg, msg_type)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-                logging.debug("send Message to server %s", msg)
                 self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
             else:
                 logging.error("not Connected with fish server")
@@ -140,8 +128,7 @@ class NetworkManager(QtCore.QObject):
             msg_bytes = msg_bytes[msg_len + 2:]
             match msg_type:
                 case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
-                    message: proto.RealTimeControl_pb2.current_state_update = \
-                        proto.RealTimeControl_pb2.current_state_update()
+                    message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
                     message.ParseFromString(bytes(msg))
                     self._fish_update(message)
                 case proto.MessageTypes_pb2.MSGT_LOG_MESSAGE:
@@ -152,6 +139,15 @@ class NetworkManager(QtCore.QObject):
                     message: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change()
                     message.ParseFromString(bytes(msg))
                     self._button_clicked(message)
+                case proto.MessageTypes_pb2.MSGT_DESK_UPDATE:
+                    message: proto.Console_pb2.desk_update = proto.Console_pb2.desk_update()
+                    message.ParseFromString(bytes(msg))
+                    self._handle_desk_update(message)
+                case proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN:
+                    message: proto.Console_pb2.fader_column = proto.Console_pb2.fader_column()
+                    message.ParseFromString(bytes(msg))
+                    from model.control_desk import BankSet
+                    BankSet.handle_column_update_message(message)
                 case _:
                     pass
 
@@ -184,12 +180,50 @@ class NetworkManager(QtCore.QObject):
                 logging.warning(msg.what)
 
     def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
-        match msg.button:
-            case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
-                if msg.new_state== proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+        if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
+            match msg.button:
+                case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
                     self._broadcaster.view_to_patch_menu.emit()
-            case _:
-                pass
+                case proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW:
+                    self._broadcaster.view_to_file_editor.emit()
+                case proto.Console_pb2.ButtonCode.BTN_REV_LASTCUE:
+                    self._broadcaster.desk_media_rev_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_FF_NEXTCUE:
+                    self._broadcaster.desk_media_forward_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_STOP_STOPCUE:
+                    self._broadcaster.desk_media_stop_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_PLAY_RUNCUE:
+                    self._broadcaster.desk_media_play_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_REC_RECFRAME:
+                    self._broadcaster.desk_media_rec_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_SCRUB_JOGWHEELMODESWITCH:
+                    self._broadcaster.desk_media_scrub_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_REPLACE_TEMPERATURE:
+                    self._broadcaster.view_to_temperature.emit()
+                case proto.Console_pb2.ButtonCode.BTN_DROP_COLOR:
+                    self._broadcaster.view_to_color.emit()
+                case _:
+                    pass
+        else:
+            match msg.button:
+                case proto.Console_pb2.ButtonCode.BTN_SCRUB_JOGWHEELMODESWITCH:
+                    self._broadcaster.desk_media_scrub_released.emit()
+                case _:
+                    pass
+
+    def _handle_desk_update(self, msg: proto.Console_pb2.desk_update):
+        # TODO handle update of selected column
+        if msg.jogwheel_change_since_last_update < 0:
+            for i in range(msg.jogwheel_change_since_last_update * -1):
+                self._broadcaster.jogwheel_rotated_left.emit()
+        else:
+            for i in range(msg.jogwheel_change_since_last_update):
+                self._broadcaster.jogwheel_rotated_right.emit()
+        if msg.selected_column_id:
+            self._broadcaster.select_column_id.emit(msg.selected_column_id)
+        else:
+            self._broadcaster.view_leave_colum_select.emit()
+        pass
 
     def _on_state_changed(self) -> None:
         """Starts or stops to send messages if the connection state changes."""
@@ -266,11 +300,14 @@ class NetworkManager(QtCore.QObject):
             return
         self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN)
 
-    def send_desk_update_message(self, msg: proto.Console_pb2.desk_update):
+    def send_desk_update_message(self, msg: proto.Console_pb2.desk_update, update_from_gui: bool):
         """send message to update a desk to fish"""
         if not self.is_running:
             return
-        self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
+        if update_from_gui:
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
+        else:
+            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
 
 
 def on_error(error) -> None:

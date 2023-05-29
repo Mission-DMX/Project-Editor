@@ -7,6 +7,7 @@ from . import nodes
 
 class FilterNodeLibrary(NodeLibrary):
     """Custom Node Library"""
+
     def __init__(self):
         super().__init__()
         self.reload()
@@ -20,6 +21,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_wave_nodes()
         self._register_time_nodes()
         self._register_fader_nodes()
+        self._register_effect_nodes()
 
     def _register_constants_nodes(self):
         """Registers all the constants nodes."""
@@ -93,3 +95,6 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(nodes.FaderHSIANode, [('Filter Fader',)])
         self.addNodeType(nodes.FaderHSIUNode, [('Filter Fader',)])
         self.addNodeType(nodes.FaderHSIAUNode, [('Filter Fader',)])
+
+    def _register_effect_nodes(self):
+        self.addNodeType(nodes.CueListNode, [('Effects',)])

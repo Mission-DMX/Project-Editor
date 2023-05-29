@@ -1,16 +1,18 @@
 # coding=utf-8
 """main Window for the Editor"""
 
-from PySide6 import QtGui, QtWidgets
+from PySide6 import QtWidgets, QtGui
 
+from Style import Style
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
+from model.control_desk import BankSet, ColorDeskColumn
 from network import NetworkManager
-from Style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
+from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
-from view.patching_mode.patching_selector import PatchingSelector
+from view.patch_mode.patch_mode import PatchMode
 from view.show_mode.node_editor import NodeEditorWidget
 
 
@@ -30,14 +32,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Project-Editor")
 
         # model objects
-        self._fish_connector: NetworkManager = NetworkManager(self._broadcaster, self)
-        self._board_configuration: BoardConfiguration = BoardConfiguration(self._broadcaster)
+        self._fish_connector: NetworkManager = NetworkManager(self)
+        self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         # views
-        views: list[tuple[str, QtWidgets.QWidget]] = [
-            ("Console Mode", MainWidget(ConsoleSceneSelector(self._broadcaster, self), self)),
-            ("Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration), self)),
-            ("Patch", MainWidget(PatchingSelector(self._broadcaster, self), self)), ("Debug", debug_console)]
+        views: list[tuple[str, QtWidgets.QWidget, callable]] = [
+            ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)), (
+                "Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration, self._broadcaster), self),
+                lambda: self._broadcaster.view_to_file_editor.emit()),
+            ("Patch", MainWidget(PatchMode(self), self), lambda: self._broadcaster.view_to_patch_menu.emit()),
+            ("Debug", debug_console, lambda: self._to_widget(3))]
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -45,7 +49,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for index, view in enumerate(views):
             self._widgets.addWidget(view[1])
             mode_button = QtGui.QAction(view[0], self._toolbar)
-            mode_button.triggered.connect(lambda *args, i=index: self._to_widget(i))
+            mode_button.triggered.connect(view[2])
             self._toolbar.addAction(mode_button)
 
         self.setCentralWidget(self._widgets)
@@ -54,23 +58,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_menubar()
         self._setup_status_bar()
 
-        self._broadcaster.view_to_patch_menu.connect(lambda *args: self._to_widget(2))
+        self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(2))
+        self._broadcaster.view_to_file_editor.connect(lambda: self._to_widget(1))
+        self._broadcaster.select_column_id.connect(self._show_column_dialog)
+        self._broadcaster.view_to_color.connect(self._is_column_dialog)
+        self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
 
         self._fish_connector.start()
         if self._fish_connector:
             from model.control_desk import set_network_manager
             set_network_manager(self._fish_connector)
+            self._broadcaster.view_leave_patch_menu.emit()
+            self._broadcaster.view_leave_file_editor.emit()
+            self._broadcaster.view_leave_color.emit()
+            self._broadcaster.view_leave_temperature.emit()
 
     def _to_widget(self, index: int) -> None:
-        match index:
-            case 2:
-                if self._widgets.currentIndex() != 2:
-                    self._widgets.setCurrentIndex(2)
-                else:
-                    self._broadcaster.patch()
-            case _:
-                self._widgets.setCurrentIndex(index)
-                self._broadcaster.view_is_not_patch_menu.emit()
+        if self._widgets.currentIndex() == index:
+            if self._widgets.currentIndex() == 2:
+                self._broadcaster.view_patching.emit()
+        else:
+            if self._widgets.currentIndex() == 1:
+                self._broadcaster.view_leave_file_editor.emit()
+            if self._widgets.currentIndex() == 2:
+                self._broadcaster.view_leave_patch_menu.emit()
+            self._widgets.setCurrentIndex(index)
 
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
@@ -142,3 +154,25 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._last_cycle_time_widget.setStyleSheet(Style.LABEL_WARN)
             case _:
                 self._last_cycle_time_widget.setStyleSheet(Style.LABEL_ERROR)
+
+    def _show_column_dialog(self, index: str):
+        """Dialog modify tho selected Column"""
+        active_bank_set = BankSet.active_bank_set()
+        column = active_bank_set.get_column(index)
+        if not active_bank_set.activ_column == column:
+            if active_bank_set.activ_column:
+                self._broadcaster.view_change_colum_select.emit()
+            active_bank_set.set_active_column(column)
+            if isinstance(column, ColorDeskColumn):
+                column_dialog = ColumnDialog(column)
+                column_dialog.finished.connect(lambda: BankSet.push_messages_now())
+                column_dialog.show()
+
+    def _is_column_dialog(self):
+        if not BankSet.active_bank_set():
+            self._broadcaster.view_leave_color.emit()
+            self._broadcaster.view_leave_temperature.emit()
+            return
+        if not BankSet.active_bank_set().activ_column:
+            self._broadcaster.view_leave_color.emit()
+            self._broadcaster.view_leave_temperature.emit()

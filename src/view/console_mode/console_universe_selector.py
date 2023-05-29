@@ -12,9 +12,9 @@ from view.console_mode.console_universe_widget import DirectUniverseWidget
 class UniverseSelector(QtWidgets.QTabWidget):
     """select Universe from Tab Widget"""
 
-    def __init__(self, broadcaster: Broadcaster, parent) -> None:
+    def __init__(self, parent) -> None:
         super().__init__(parent=parent)
-        self._broadcaster = broadcaster
+        self._broadcaster = Broadcaster()
         self._universes: list[Universe] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
 
@@ -37,7 +37,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self._broadcaster.send_universe_value.emit(universe)
         self._universes.append(universe)
 
-        direct_editor: DirectUniverseWidget = DirectUniverseWidget(self._broadcaster, universe, parent=self)
+        direct_editor: DirectUniverseWidget = DirectUniverseWidget(universe, parent=self)
 
         self.addTab(direct_editor, str(universe.universe_proto.id))
 

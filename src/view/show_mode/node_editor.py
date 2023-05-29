@@ -12,15 +12,16 @@ from PySide6.QtWidgets import QInputDialog, QTabWidget, QWidget
 from file.read import read_document
 from file.write import create_xml, write_document
 from model.board_configuration import BoardConfiguration, Scene
-
-from .library import FilterNodeLibrary
+from model.broadcaster import Broadcaster
 from .scene_tab import SceneTabWidget
+from .library import FilterNodeLibrary
 
 
 class NodeEditorWidget(QTabWidget):
     """Node Editor to create and manage filters."""
-    def __init__(self, parent: QWidget, board_configuration: BoardConfiguration) -> None:
+    def __init__(self, parent: QWidget, board_configuration: BoardConfiguration, bcaster: Broadcaster) -> None:
         super().__init__(parent)
+        self._broadcaster = bcaster
 
         self._library = FilterNodeLibrary()
 
@@ -61,7 +62,7 @@ class NodeEditorWidget(QTabWidget):
 
     @property
     def toolbar(self) -> list[QtGui.QAction]:
-        """toolbar for patching_mode"""
+        """toolbar for node_mode"""
         return self._toolbar
 
     def _tab_bar_clicked(self, index: int):

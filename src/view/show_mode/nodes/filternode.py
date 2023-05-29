@@ -5,8 +5,8 @@ import logging
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
 
-from model import DataType, Filter
-
+from model import Filter, DataType
+from model.broadcaster import Broadcaster
 from ..node_graphics_item import FilterSettingsItem
 
 

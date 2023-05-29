@@ -1,7 +1,5 @@
 # coding=utf-8
 """connector for Signals"""
-import random
-import re
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
@@ -14,7 +12,20 @@ from .scene import Scene
 from .universe import Universe
 
 
-class Broadcaster(QtCore.QObject):
+class QObjectSingletonMeta(type(QtCore.QObject)):
+    """metaclass for a QObject Singleton"""
+
+    def __init__(cls, name, bases, _dict):
+        super().__init__(name, bases, _dict)
+        cls.instance = None
+
+    def __call__(cls, *args, **kw):
+        if cls.instance is None:
+            cls.instance = super().__call__(*args, **kw)
+        return cls.instance
+
+
+class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_active_scene: QtCore.Signal = QtCore.Signal(int)
@@ -31,65 +42,37 @@ class Broadcaster(QtCore.QObject):
     device_created: QtCore.Signal = QtCore.Signal(Device)
     delete_device: QtCore.Signal = QtCore.Signal(Device)
     ################################################################
+    view_to_patch_menu: QtCore.Signal = QtCore.Signal()
+    view_patching: QtCore.Signal = QtCore.Signal()
+    view_leave_patching: QtCore.Signal = QtCore.Signal()
+    view_leave_patch_menu: QtCore.Signal = QtCore.Signal()
+
+    view_to_file_editor: QtCore.Signal = QtCore.Signal()
+    view_leave_file_editor: QtCore.Signal = QtCore.Signal()
+
+    view_leave_colum_select: QtCore.Signal = QtCore.Signal()
+    view_change_colum_select: QtCore.Signal = QtCore.Signal()
+
+    view_to_color: QtCore.Signal = QtCore.Signal()
+    view_leave_color: QtCore.Signal = QtCore.Signal()
+
+    view_to_temperature: QtCore.Signal = QtCore.Signal()
+    view_leave_temperature: QtCore.Signal = QtCore.Signal()
+    ################################################################
+    jogwheel_rotated_left: QtCore.Signal = QtCore.Signal()
+    jogwheel_rotated_right: QtCore.Signal = QtCore.Signal()
+    desk_media_rev_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_forward_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_stop_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_play_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_rec_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
+    desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
+    #################################################################
+    select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []
 
-    view_to_patch_menu: QtCore.Signal = QtCore.Signal()
-    view_patch: QtCore.Signal = QtCore.Signal()
-
-    view_is_patch_menu: QtCore.Signal = QtCore.Signal()
-    view_is_not_patch_menu: QtCore.Signal = QtCore.Signal()
-    view_is_patching: QtCore.Signal = QtCore.Signal()
-
-    def __init__(self):
-        super().__init__()
-        self.add_universe.connect(self._add_universe)
-        self.connection_state_updated.connect(self._connection_changed)
-
-    def _add_universe(self, universe: PatchingUniverse):
-        self.patching_universes.append(universe)
-        self.send_universe.emit(universe)
-
-    def _connection_changed(self, connected):
-        """connection to fish is changed"""
-        if connected:
-            for universe in self.patching_universes:
-                self.send_universe.emit(universe)
-
-    def patch(self) -> None:
-        """
-        patch a specific fixture
-
-        Returns:
-            universe: the index of modified universe
-            updated: list of indices of modified channels
-
-        """
-        self.view_is_patching.emit()
-        form = PatchingDialog()
-        if form.exec():
-            fixture = form.get_used_fixture()
-            patching = form.patching.text()
-            if patching[0] == "@":
-                patching = "1" + patching
-            spliter = re.split('@|-|/', patching)
-            spliter += [0] * (4 - len(spliter))
-            spliter = list(map(int, spliter))
-            number = spliter[0]
-            universe = spliter[1] - 1
-            channel = spliter[2] - 1
-            offset = spliter[3]
-
-            if channel == -1:
-                channel = 0
-            for _ in range(number):
-                color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-                for index in range(len(fixture.mode['channels'])):
-                    item = self.patching_universes[universe].patching[channel + index]
-                    item.fixture = fixture
-                    item.fixture_channel = index
-                    item.color = color
-                if offset == 0:
-                    channel += len(fixture.mode['channels'])
-                else:
-                    channel += offset
-        self.view_is_patch_menu.emit()
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, "instance") or cls.instance is None:
+            cls.instance = super(Broadcaster, cls).__new__(cls)
+        return cls.instance

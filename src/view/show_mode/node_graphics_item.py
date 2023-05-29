@@ -2,13 +2,16 @@
 """Module for filter settings editor"""
 import logging
 
+import PySide6
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLineEdit, QPushButton
 
 from model import Filter
+from model.broadcaster import Broadcaster
 from view.show_mode.node_editor_widgets.column_select import ColumnSelect
+from view.show_mode.node_editor_widgets.cue_editor import CueEditor
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -19,7 +22,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
     """
 
     def __init__(self, filter_: Filter, parent: QGraphicsItem):
-        super().__init__("src/resources/settings.svg", parent)
+        super().__init__("resources/settings.svg", parent)
         self.filter = filter_
         self.on_update = lambda: None
         self.setScale(0.2)
@@ -50,13 +53,17 @@ class FilterSettingsItem(QGraphicsSvgItem):
     def mousePressEvent(self, ev):
         """Handle left mouse button click by opening filter settings dialog"""
         if ev.button() == Qt.MouseButton.LeftButton:
-            FilterSettingsDialog(self.filter).exec()
+            self.dialog = FilterSettingsDialog(self.filter)
+            self.dialog.show()
 
 
 def check_if_filter_has_special_widget(filter_):
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect()
-    return None
+    elif filter_.filter_type == 44:
+        return CueEditor()
+    else:
+        return None
 
 
 class FilterSettingsDialog(QDialog):
@@ -146,3 +153,13 @@ class FilterSettingsDialog(QDialog):
             for k in self._special_widget.parameters.keys():
                 self.filter.initial_parameters[k] = self._special_widget.parameters[k]
         self.close()
+
+    def closeEvent(self, arg__1: PySide6.QtGui.QCloseEvent) -> None:
+        if self._special_widget:
+            self._special_widget.parent_closed()
+        super().closeEvent(arg__1)
+
+    def show(self) -> None:
+        super().show()
+        if self._special_widget:
+            self._special_widget.parent_opened()
