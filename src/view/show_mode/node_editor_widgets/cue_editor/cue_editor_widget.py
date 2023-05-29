@@ -121,6 +121,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._global_restart_on_end: bool = False
         self._cues: list[Cue] = []
         self._last_selected_cue = -1
+        self._channels_changed_after_load = False
 
     def _link_bankset(self):
         self._broadcaster = Broadcaster()
@@ -277,6 +278,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
                 kf._states.append(kf_s)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
+        if not is_part_of_mass_update:
+            self._channels_changed_after_load = True
 
     def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
         if not self._bankset:
@@ -295,6 +298,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         all cues.
         """
         # TODO implement
+        self._channels_changed_after_load = True
         pass
 
     def _cue_end_action_changed(self):
@@ -336,11 +340,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def parent_closed(self, filter_node: FilterNode):
         self._timeline_container.clear_display()
-        filter_node.clearTerminals()
-        filter_node.addTerminal('time', io='in')
-        if len(self._cues) > 0:
-            for channel_name, channel_type in self._cues[0].channels:
-                filter_node.addTerminal(channel_name, io='out')
+        if self._channels_changed_after_load:
+            filter_node.clearTerminals()
+            filter_node.addTerminal('time', io='in')
+            if len(self._cues) > 0:
+                for channel_name, channel_type in self._cues[0].channels:
+                    filter_node.addTerminal(channel_name, io='out')
         if self._bankset:
             self._bankset.unlink()
             BankSet.push_messages_now()
