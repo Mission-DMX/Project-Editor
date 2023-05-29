@@ -12,7 +12,6 @@ from model import Filter
 from model.broadcaster import Broadcaster
 from view.show_mode.node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.node_editor_widgets.cue_editor import CueEditor
-from view.show_mode.nodes import FilterNode
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -22,7 +21,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
         filter: The filter this item belongs to
     """
 
-    def __init__(self, filter_: FilterNode, parent: QGraphicsItem):
+    def __init__(self, filter_: "FilterNode", parent: QGraphicsItem):
         super().__init__("resources/settings.svg", parent)
         self.filter = filter_
         self.on_update = lambda: None
@@ -74,7 +73,7 @@ class FilterSettingsDialog(QDialog):
         filter: The filter whose settings this dialog displays
     """
 
-    def __init__(self, filter_node: FilterNode) -> None:
+    def __init__(self, filter_node: "FilterNode") -> None:
         super().__init__()
         self._filter_node = filter_node
         self.filter = filter_node.filter

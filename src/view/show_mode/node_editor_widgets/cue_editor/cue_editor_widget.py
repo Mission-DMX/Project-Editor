@@ -13,7 +13,6 @@ from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction, St
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
-from view.show_mode.nodes import FilterNode
 
 
 class CueEditor(NodeEditorFilterConfigWidget):
@@ -338,7 +337,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def scrub_released(self):
         self._jw_zoom_mode = False
 
-    def parent_closed(self, filter_node: FilterNode):
+    def parent_closed(self, filter_node: "FilterNode"):
         self._timeline_container.clear_display()
         if self._channels_changed_after_load:
             filter_node.clearTerminals()
