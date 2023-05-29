@@ -13,6 +13,7 @@ from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction, St
 from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
+from view.show_mode.nodes import FilterNode
 
 
 class CueEditor(NodeEditorFilterConfigWidget):
@@ -248,6 +249,10 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog.show()
 
     def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False):
+        if channel_name == "time":
+            QMessageBox.critical(self._parent_widget, "Failed to add channel",
+                                 "Unfortunately, 'time' is a reserved keyword for this filter.")
+            return
         for c_name in self._cues[0].channels:
             if c_name[0] == channel_name:
                 QMessageBox.critical(self._parent_widget, "Failed to add channel",
@@ -329,8 +334,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def scrub_released(self):
         self._jw_zoom_mode = False
 
-    def parent_closed(self):
+    def parent_closed(self, filter_node: FilterNode):
         self._timeline_container.clear_display()
+        filter_node.clearTerminals()
+        filter_node.addTerminal('time', io='in')
+        if len(self._cues) > 0:
+            for channel_name, channel_type in self._cues[0].channels:
+                filter_node.addTerminal(channel_name, io='out')
         if self._bankset:
             self._bankset.unlink()
             BankSet.push_messages_now()

@@ -10,10 +10,10 @@ class CueListNode(FilterNode):
     def __init__(self, name):
         super().__init__(filter_type=44, name=name, terminals={
             'time': {'io': 'in'},
-            'wash_x_pos': {'io': 'out'},
-            'wash_y_pos': {'io': 'out'},
-            'wash_dimmer': {'io': 'out'},
-            'wash_color': {'io': 'out'}
+            # 'wash_x_pos': {'io': 'out'},
+            # 'wash_y_pos': {'io': 'out'},
+            # 'wash_dimmer': {'io': 'out'},
+            # 'wash_color': {'io': 'out'}
         })
         self.filter.filter_configurations["mapping"] = ""
         self.filter.filter_configurations["end_handling"] = ""
