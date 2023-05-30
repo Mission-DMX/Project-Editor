@@ -52,6 +52,10 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
         self._broadcaster.change_run_mode.connect(self.update_state)
+        self._broadcaster.view_to_file_editor.connect(
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
+        self._broadcaster.view_to_console_mode.connect(
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
         self._broadcaster.load_show_file.connect(lambda xml: self.load_show_file(xml, True))
 
         x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)

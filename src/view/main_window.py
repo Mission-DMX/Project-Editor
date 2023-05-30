@@ -38,7 +38,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
-            ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)), (
+            ("Console Mode", MainWidget(ConsoleSceneSelector(self), self),
+             lambda: self._broadcaster.view_to_console_mode.emit()), (
                 "Filter Mode", MainWidget(NodeEditorWidget(self, self._board_configuration, self._broadcaster), self),
                 lambda: self._broadcaster.view_to_file_editor.emit()),
             ("Patch", MainWidget(PatchMode(self), self), lambda: self._broadcaster.view_to_patch_menu.emit()),
@@ -61,6 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(2))
         self._broadcaster.view_to_file_editor.connect(lambda: self._to_widget(1))
+        self._broadcaster.view_to_console_mode.connect(lambda: self._to_widget(0))
         self._broadcaster.select_column_id.connect(self._show_column_dialog)
         self._broadcaster.view_to_color.connect(self._is_column_dialog)
         self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
@@ -75,8 +77,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_temperature.emit()
 
     def _to_widget(self, index: int) -> None:
-        if index == 1:
-            self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)
         if self._widgets.currentIndex() == index:
             if self._widgets.currentIndex() == 2:
                 self._broadcaster.view_patching.emit()

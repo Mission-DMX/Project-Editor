@@ -30,7 +30,7 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
-    change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType)
+    change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType) # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(int)
     load_show_file: QtCore.Signal = QtCore.Signal(Element)
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
@@ -61,6 +61,8 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     view_to_temperature: QtCore.Signal = QtCore.Signal()
     view_leave_temperature: QtCore.Signal = QtCore.Signal()
+
+    view_to_console_mode: QtCore.Signal = QtCore.Signal()
     ################################################################
     jogwheel_rotated_left: QtCore.Signal = QtCore.Signal()
     jogwheel_rotated_right: QtCore.Signal = QtCore.Signal()
