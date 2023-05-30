@@ -4,6 +4,7 @@
 from PySide6 import QtWidgets, QtGui
 
 from Style import Style
+from proto.RealTimeControl_pb2 import RunMode
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
@@ -74,6 +75,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_temperature.emit()
 
     def _to_widget(self, index: int) -> None:
+        if index == 1:
+            self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)
         if self._widgets.currentIndex() == index:
             if self._widgets.currentIndex() == 2:
                 self._broadcaster.view_patching.emit()
@@ -89,7 +92,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[list[str, callable]]] = {
             "Fish": [["Connect", self._start_connection], ["Disconnect", self._fish_connector.disconnect],
-                     ["Change", self._change_server_name]]}
+                     ["Change", self._change_server_name],
+                     ["Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)],
+                     ["Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)],
+                     ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]]}
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)

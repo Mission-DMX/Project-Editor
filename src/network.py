@@ -49,6 +49,7 @@ class NetworkManager(QtCore.QObject):
 
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
+        self._broadcaster.change_run_mode.connect(self.update_state)
 
         x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)
 
@@ -256,7 +257,7 @@ class NetworkManager(QtCore.QObject):
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
 
-    def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode):
+    def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode.ValueType):
         """Changes fish's run mode
 
         Args:
@@ -264,18 +265,6 @@ class NetworkManager(QtCore.QObject):
         """
         msg = proto.RealTimeControl_pb2.update_state(new_state=run_mode)
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_STATE)
-
-    def switch_to_direct(self):
-        """Tells fish to go into direct mode"""
-        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT)
-
-    def switch_to_filter(self):
-        """Tells fish to go into show mode"""
-        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
-
-    def switch_to_stop(self):
-        """Tells fish to stop"""
-        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_STOP)
 
     def send_fader_bank_set_delete_message(self, fader_bank_id: str):
         """send message to delete a bank set to fish"""

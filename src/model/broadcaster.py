@@ -4,6 +4,8 @@ from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
 
+from proto.RealTimeControl_pb2 import RunMode
+
 from model.patching_universe import PatchingUniverse
 from view.dialogs.patching_dialog import PatchingDialog
 
@@ -28,6 +30,7 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
+    change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType)
     change_active_scene: QtCore.Signal = QtCore.Signal(int)
     load_show_file: QtCore.Signal = QtCore.Signal(Element)
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
