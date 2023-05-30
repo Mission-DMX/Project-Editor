@@ -47,6 +47,9 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     view_leave_patching: QtCore.Signal = QtCore.Signal()
     view_leave_patch_menu: QtCore.Signal = QtCore.Signal()
 
+    view_to_show_player: QtCore.Signal = QtCore.Signal()
+    view_leave_show_player: QtCore.Signal = QtCore.Signal()
+
     view_to_file_editor: QtCore.Signal = QtCore.Signal()
     view_leave_file_editor: QtCore.Signal = QtCore.Signal()
 

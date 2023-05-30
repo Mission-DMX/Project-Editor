@@ -1,6 +1,6 @@
 from model import DataType
 from model.broadcaster import Broadcaster
-from view.show_mode.nodes import FilterNode
+from .filternode import FilterNode
 
 
 class CueListNode(FilterNode):

@@ -1,18 +1,19 @@
-from PySide6.QtCore import Qt, QItemSelectionModel
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
-    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QInputDialog, QAbstractItemView, \
+    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QAbstractItemView, \
     QMessageBox, QDialog
 
 from model import DataType
 from model.broadcaster import Broadcaster
-from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
-from view.show_mode.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
-from view.show_mode.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, StateDouble, \
+from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn
+from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
+from view.show_mode.editor.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, \
+    StateDouble, \
     StateSixteenBit
-from view.show_mode.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
-from view.show_mode.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
-from view.show_mode.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
+from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
+from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class CueEditor(NodeEditorFilterConfigWidget):

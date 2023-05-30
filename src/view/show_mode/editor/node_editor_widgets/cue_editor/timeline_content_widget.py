@@ -6,11 +6,12 @@ from PySide6.QtWidgets import QLabel, QWidget
 
 from model import DataType
 from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
-from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit, StateSixteenBit, \
+from view.show_mode.editor.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit, \
+    StateSixteenBit, \
     StateDouble, State
-from view.show_mode.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
-from view.show_mode.node_editor_widgets.cue_editor.utility import format_seconds
-from view.show_mode.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
+from view.show_mode.editor.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
+from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
+from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
 
 class TimelineContentWidget(QLabel):

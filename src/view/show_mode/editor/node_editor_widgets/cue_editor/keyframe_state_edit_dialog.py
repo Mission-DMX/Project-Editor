@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QPushButton, QSpinB
     QComboBox
 
 from model import ColorHSI
-from view.show_mode.node_editor_widgets.cue_editor.cue import KeyFrame, State, StateEightBit, StateSixteenBit, \
+from view.show_mode.editor.node_editor_widgets.cue_editor.cue import KeyFrame, State, StateEightBit, StateSixteenBit, \
     StateDouble, StateColor
 
 

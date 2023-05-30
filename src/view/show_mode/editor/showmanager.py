@@ -12,13 +12,14 @@ from file.read import read_document
 from file.write import create_xml, write_document
 from model.board_configuration import BoardConfiguration, Scene, Broadcaster
 
-from .scene_tab import SceneTabWidget
+from .scenetab import SceneTabWidget
 from .filter_node_library import FilterNodeLibrary
 
 
-class NodeEditorWidget(QTabWidget):
+class ShowManagerWidget(QTabWidget):
     """Node Editor to create and manage filters."""
-    def __init__(self, parent: QWidget, board_configuration: BoardConfiguration, bcaster: Broadcaster) -> None:
+
+    def __init__(self, board_configuration: BoardConfiguration, bcaster: Broadcaster, parent: QWidget) -> None:
         super().__init__(parent)
         self._broadcaster = bcaster
 
@@ -55,8 +56,6 @@ class NodeEditorWidget(QTabWidget):
 
     @property
     def toolbar(self) -> list[QAction]:
-        """toolbar for patching_mode"""
-    def toolbar(self) -> list[QtGui.QAction]:
         """toolbar for node_mode"""
         return self._toolbar
 

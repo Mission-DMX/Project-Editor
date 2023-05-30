@@ -37,9 +37,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)),
-            ("Editor Mode", MainWidget(ShowManagerWidget(self._board_configuration, self), self),
-                lambda: self._broadcaster.view_to_file_editor.emit()),
-            ("Show Mode", MainWidget(ShowPlayerWidget(self._board_configuration, self), self), lambda: pass),
+            ("Editor Mode", MainWidget(ShowManagerWidget(self._board_configuration, self._broadcaster, self), self),
+             lambda: self._broadcaster.view_to_file_editor.emit()),
+            ("Show Mode", MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
+             lambda: self._broadcaster.view_to_show_player.emit()),
             ("Patch", MainWidget(PatchMode(self), self), lambda: self._broadcaster.view_to_patch_menu.emit()),
             ("Debug", debug_console, lambda: self._to_widget(3))]
 
@@ -78,6 +79,15 @@ class MainWindow(QtWidgets.QMainWindow):
             if self._widgets.currentIndex() == 2:
                 self._broadcaster.view_patching.emit()
         else:
+            match self._widgets.currentIndex():
+                case 0:
+                    pass
+                case 1:
+                    pass
+                case 2:
+                    pass
+                case 3:
+                    pass
             if self._widgets.currentIndex() == 1:
                 self._broadcaster.view_leave_file_editor.emit()
             if self._widgets.currentIndex() == 2:
