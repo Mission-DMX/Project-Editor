@@ -1,10 +1,12 @@
 # coding=utf-8
 """Module to handle connection with real-time software Fish."""
 import logging
+import math
 import queue
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
+import numpy as np
 from PySide6 import QtCore, QtNetwork
 
 import proto.Console_pb2
@@ -50,6 +52,7 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
         self._broadcaster.change_run_mode.connect(self.update_state)
+        self._broadcaster.load_show_file.connect(lambda xml: self.load_show_file(xml, True))
 
         x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)
 
@@ -124,9 +127,10 @@ class NetworkManager(QtCore.QObject):
         msg_bytes = self._socket.readAll()
         while len(msg_bytes) > 0:
             msg_type = varint.decode_bytes(msg_bytes[0])
-            msg_len = varint.decode_bytes(msg_bytes[1])
-            msg = msg_bytes[2:msg_len + 2]
-            msg_bytes = msg_bytes[msg_len + 2:]
+            msg_len = varint.decode_bytes(msg_bytes[1:])
+            start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
+            msg = msg_bytes[start:start + msg_len]
+            msg_bytes = msg_bytes[start + msg_len:]
             match msg_type:
                 case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
                     message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
