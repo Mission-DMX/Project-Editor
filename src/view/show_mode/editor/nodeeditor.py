@@ -2,7 +2,7 @@
 """Module containing node editor"""
 import logging
 
-from PySide6.QtWidgets import QDialog, QGridLayout
+from PySide6.QtWidgets import QWidget, QGridLayout
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 
 # from model import Scene, Filter
@@ -13,11 +13,11 @@ from .nodes import FilterNode
 from .filter_node_library import FilterNodeLibrary
 
 
-class NodeEditorDialog(QDialog):
+class NodeEditorWidget(QWidget):
     """Nodeeditor to edit scenes and their filter nodes"""
 
-    def __init__(self, scene: Scene) -> None:
-        super().__init__()
+    def __init__(self, scene: Scene, parent: QWidget) -> None:
+        super().__init__(parent)
         self._scene = scene
 
         # Flag to differentiate between loading filters from file and creating filters.

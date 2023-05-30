@@ -42,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ("Show Mode", MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
              lambda: self._broadcaster.view_to_show_player.emit()),
             ("Patch", MainWidget(PatchMode(self), self), lambda: self._broadcaster.view_to_patch_menu.emit()),
-            ("Debug", debug_console, lambda: self._to_widget(3))]
+            ("Debug", debug_console, lambda: self._to_widget(4))]
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -59,8 +59,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_menubar()
         self._setup_status_bar()
 
-        self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(2))
         self._broadcaster.view_to_file_editor.connect(lambda: self._to_widget(1))
+        self._broadcaster.view_to_show_player.connect(lambda: self._to_widget(2))
+        self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(3))
         self._broadcaster.select_column_id.connect(self._show_column_dialog)
         self._broadcaster.view_to_color.connect(self._is_column_dialog)
         self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
@@ -71,6 +72,7 @@ class MainWindow(QtWidgets.QMainWindow):
             set_network_manager(self._fish_connector)
             self._broadcaster.view_leave_patch_menu.emit()
             self._broadcaster.view_leave_file_editor.emit()
+            self._broadcaster.view_leave_show_player.emit()
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
 
@@ -83,15 +85,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 case 0:
                     pass
                 case 1:
-                    pass
+                    self._broadcaster.view_leave_file_editor.emit()
                 case 2:
-                    pass
+                    self._broadcaster.view_leave_show_player.emit()
                 case 3:
-                    pass
-            if self._widgets.currentIndex() == 1:
-                self._broadcaster.view_leave_file_editor.emit()
-            if self._widgets.currentIndex() == 2:
-                self._broadcaster.view_leave_patch_menu.emit()
+                    self._broadcaster.view_leave_patch_menu.emit()
             self._widgets.setCurrentIndex(index)
 
     def _setup_menubar(self) -> None:
