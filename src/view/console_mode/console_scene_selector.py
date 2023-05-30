@@ -111,7 +111,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
                 data += ";"
             data = data[:-1]
             data += "\n"
-        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "save Scene", "",
+        file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, "save Scene", "",
                                                              "Text Files (*.txt);;All Files (*)", )
         if file_name:
             with open(file_name, "w", encoding='UTF-8') as file:

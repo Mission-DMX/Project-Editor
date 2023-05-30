@@ -9,7 +9,7 @@ from xml.etree import ElementTree
 
 from model import BoardConfiguration, Filter, Scene
 from model.universe import Universe
-from proto import UniverseControl_pb2 as Proto
+from proto import UniverseControl_pb2
 
 
 def write_document(file_name: str, xml: ElementTree.Element) -> bool:
@@ -63,14 +63,14 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
 
     for universe in board_configuration.universes:
         universe_element = _create_universe_element(universe=universe, parent=root)
-
-        # match type(universe.location):
-        #    case proto.Universe.ArtNet:
-        #        _create_artnet_location_element(artnet_location=universe.location, parent=universe_element)
-        #    case proto.Universe.USBConfig:
-        _create_ftdi_location_element(ftdi_location=universe.location, parent=universe_element)
-        #    case type(1):
-        #        _create_physical_location_element(physical_location=universe.location, parent=universe_element)
+        match type(universe.location):
+            case UniverseControl_pb2.Universe.ArtNet:
+                _create_artnet_location_element(artnet_location=universe.location, parent=universe_element)
+            case UniverseControl_pb2.Universe.USBConfig:
+                _create_ftdi_location_element(ftdi_location=universe.location, parent=universe_element)
+            case _:
+                pass
+                # _create_physical_location_element(physical_location=universe.location, parent=universe_element)
 
     for device in board_configuration.devices:
         _create_device_element(device=device, parent=root)
@@ -192,7 +192,7 @@ def _create_physical_location_element(physical: int, parent: ElementTree.Element
     return physical_location
 
 
-def _create_artnet_location_element(artnet_location: Proto.Universe.ArtNet,
+def _create_artnet_location_element(artnet_location: UniverseControl_pb2.Universe.ArtNet,
                                     parent: ElementTree.Element) -> ElementTree.Element:
     """Creates an xml element of type artnet_location.
     
@@ -205,7 +205,7 @@ def _create_artnet_location_element(artnet_location: Proto.Universe.ArtNet,
     })
 
 
-def _create_ftdi_location_element(ftdi_location: Proto.Universe.USBConfig,
+def _create_ftdi_location_element(ftdi_location: UniverseControl_pb2.Universe.USBConfig,
                                   parent: ElementTree.Element) -> ElementTree.Element:
     """Creates a xml element of type ftdi_location.
     
