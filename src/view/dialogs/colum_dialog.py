@@ -1,6 +1,7 @@
 # coding=utf-8
 """modify a colum of XTouch"""
 from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 
 from model import ColorHSI
 from model.broadcaster import Broadcaster
@@ -15,6 +16,7 @@ class ColumnDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self._broadcaster = Broadcaster()
         self.setWindowTitle(f"Change Column {column.id}")
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self._column = column
         self.colorD = QtWidgets.QColorDialog()
         self.colorD.currentColorChanged.connect(self._select_color)
@@ -45,15 +47,31 @@ class ColumnDialog(QtWidgets.QDialog):
         self.setLayout(layout)
         self._broadcaster.view_leave_colum_select.connect(self._reject)
         self._broadcaster.view_change_colum_select.connect(self._reject)
-        self._broadcaster.view_to_color.connect(lambda: self.colorD.show())
-        self._broadcaster.view_to_temperature.connect(lambda: self.temperaturD.show())
+        self._broadcaster.view_to_color.connect(self._to_color)
+        self._broadcaster.view_to_temperature.connect(self._to_temperature)
 
     def _select_color(self):
         color = self.colorD.currentColor()
         self._column.color = ColorHSI(color.hue(), color.hslSaturationF(), color.toHsl().lightnessF())
         BankSet.push_messages_now()
 
+    def _to_color(self):
+        self.temperaturD.close()
+        if not self.colorD.isVisible():
+            self.colorD.show()
+        else:
+            self.colorD.close()
+
+    def _to_temperature(self):
+        self.colorD.close()
+        if not self.temperaturD.isVisible():
+            self.temperaturD.show()
+        else:
+            self.temperaturD.close()
+
     def _reject(self) -> None:
         self.colorD.close()
         self.temperaturD.close()
+        del self.colorD
+        del self.temperaturD
         self.reject()
