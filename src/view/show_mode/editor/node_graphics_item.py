@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDi
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Filter
-from ..node_editor_widgets.column_select import ColumnSelect
+from .node_editor_widgets.column_select import ColumnSelect
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -17,6 +17,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
         filter: The filter this item belongs to
     """
     _open_dialogs: list[QDialog] = []
+
     def __init__(self, filter_: Filter, parent: QGraphicsItem):
         super().__init__("resources/settings.svg", parent)
         self.filter = filter_
