@@ -15,16 +15,16 @@ if TYPE_CHECKING:
 class ConsoleSceneSelector(QtWidgets.QTabWidget):
     """Widget to mange different scenes in Tab Widgets"""
 
-    def __init__(self, broadcaster: Broadcaster, parent: "MainWindow") -> None:
+    def __init__(self,  parent: "MainWindow") -> None:
         super().__init__(parent=parent)
-        self._broadcaster = broadcaster
+        broadcaster = Broadcaster()
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self._last_tab: int = 0
         self._scenes: list[UniverseSelector] = []
         self.addTab(QtWidgets.QWidget(), "+")
         self.currentChanged.connect(self._tab_changed)
         self.tabBarClicked.connect(self._tab_clicked)
-        self._broadcaster.add_universe.connect(self.add_universe)
+        broadcaster.add_universe.connect(self.add_universe)
 
         self._toolbar: list[QtGui.QAction] = []
         save_button = QtGui.QAction("Save")
@@ -36,7 +36,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
 
     @property
     def toolbar(self) -> list[QtGui.QAction]:
-        """toolbar for patching_mode"""
+        """toolbar for Console mode"""
         return self._toolbar
 
     def contextMenuEvent(self, event):
@@ -60,7 +60,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
         """
         text, run = QtWidgets.QInputDialog.getText(self, "Scene Name", "Enter Scene Name:")
         if run:
-            universe_selector = UniverseSelector(self._broadcaster, self)
+            universe_selector = UniverseSelector(self)
             self._scenes.append(universe_selector)
             self.insertTab(self.tabBar().count() - 1, self._scenes[-1], text)
 

@@ -46,3 +46,13 @@ class NodeEditorFilterConfigWidget(ABC):
     def parameters(self, parameters: dict[str, str]):
         """Sets the filter parameters on the widget"""
         self._load_parameters(parameters)
+
+    def parent_closed(self, filter_node: "FilterNode"):
+        """This method might be overridden to listen for parent close events.
+        Arguments:
+            filter_node -- might be used to alter the filter being presented."""
+        pass
+
+    def parent_opened(self):
+        """This method might be overridden to listen for parent open events."""
+        pass

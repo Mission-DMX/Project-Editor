@@ -5,6 +5,7 @@ from uuid import uuid4
 
 import proto.Console_pb2
 from model.color_hsi import ColorHSI
+from model.broadcaster import Broadcaster
 from network import NetworkManager
 
 
@@ -27,7 +28,8 @@ class DeskColumn(ABC):
         self._top_display_line_inverted = False
         self._pushed_to_device = False
         self.display_color = proto.Console_pb2.lcd_color.white
-        self.display_name = ""
+        self._lower_text = ""
+        self._upper_text = ""
 
     def update(self) -> bool:
         """This method updates the state of this column with fish"""
@@ -44,6 +46,10 @@ class DeskColumn(ABC):
         Returns:
         The corresponding protobuf message
         """
+        pass
+
+    @abstractmethod
+    def update_from_message(self, message: proto.Console_pb2.fader_column):
         pass
 
     def _generate_base_column_message(self) -> proto.Console_pb2.fader_column:
@@ -101,15 +107,17 @@ class RawDeskColumn(DeskColumn):
         msg.raw_data.fader = self._fader_position
         msg.raw_data.rotary_position = self._encoder_position
         msg.raw_data.meter_leds = 0
-        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else \
-            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else \
-            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else \
-            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else \
-            proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         return msg
+
+    def update_from_message(self, message: proto.Console_pb2.fader_column):
+        if not message.raw_data:
+            return
+        self._fader_position = message.raw_data.fader
+        self._encoder_position = message.raw_data.rotary_position  # TODO implement buttons once implemented in fish
 
     @property
     def fader_position(self) -> int:
@@ -143,7 +151,7 @@ class RawDeskColumn(DeskColumn):
 class ColorDeskColumn(DeskColumn):
     def __init__(self, _id: str = None):
         super().__init__(_id)
-        self._color: ColorHSI = ColorHSI(0, 0, 0)
+        self._color: ColorHSI = ColorHSI(0.0, 0.0, 0.0)
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
         base_msg = self._generate_base_column_message()
@@ -151,6 +159,11 @@ class ColorDeskColumn(DeskColumn):
         base_msg.plain_color.saturation = self.color.saturation
         base_msg.plain_color.intensity = self.color.intensity
         return base_msg
+
+    def update_from_message(self, message: proto.Console_pb2.fader_column):
+        if not message.plain_color:
+            return
+        self._color = ColorHSI(message.plain_color.hue, message.plain_color.saturation, message.plain_color.intensity)
 
     @property
     def color(self) -> ColorHSI:
@@ -193,11 +206,15 @@ class FaderBank:
 class BankSet:
     """This class represents a bank set.
 
-    A bank set is a set of banks, the user can switch between at a given time. Multiple bank sets can be linked to fish at the same time but only one may be active at the same time. Only the GUI may specify which bank set is active any given time, except for the event that the active bank set will be unlinked. In this case fish will enable the bank set with the next lower index.
+    A bank set is a set of banks, the user can switch between at a given time.
+    Multiple bank sets can be linked to fish at the same time but only one may be active at the same time.
+    Only the GUI may specify which bank set is active any given time,
+     except for the event that the active bank set will be unlinked.
+    In this case fish will enable the bank set with the next lower index.
     """
-
     _fish_connector: NetworkManager = None
-    _active_bank_set: str = None
+    _active_bank_set_id: str = None
+    _active_bank_set: "BankSet" = None
     _seven_seg_data: str = "00          "
     _linked_bank_sets = []
 
@@ -207,7 +224,7 @@ class BankSet:
         return cls._fish_connector
 
     @classmethod
-    def linked_bank_sets(cls) -> list:
+    def linked_bank_sets(cls) -> list["BankSet"]:
         """This method yields the mutable list of bank sets that are currently loaded in fish.
 
         This method should only be used by friend classes.
@@ -215,7 +232,7 @@ class BankSet:
         return cls._linked_bank_sets
 
     @classmethod
-    def active_bank_set(cls) -> str:
+    def active_bank_set(cls) -> "BankSet":
         """current bank set"""
         return cls._active_bank_set
 
@@ -224,7 +241,7 @@ class BankSet:
         """This method returns a copy of the linked bank sets, save to be used by non friend classes."""
         return list(BankSet._linked_bank_sets)
 
-    def __init__(self, banks: list[FaderBank] = None, description: str = None):
+    def __init__(self, banks: list[FaderBank] = None, description: str = None, gui_controlled: bool = False):
         """Construct a bank set object.
         After construction link() needs to be called in order to link the set with the control desk.
 
@@ -234,15 +251,19 @@ class BankSet:
         """
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
+        self._broadcaster: Broadcaster = Broadcaster()
+        self.activ_column: DeskColumn | None = None
         if banks:
-            self.banks = banks
+            self.banks: list[FaderBank] = banks
         else:
-            self.banks = []
+            self.banks: list[FaderBank] = []
         self.active_bank = 0
         if description:
             self.description = str(description)
         else:
             self.description = "No description"
+        self._gui_controlled = gui_controlled
+        self._broadcaster.view_leave_colum_select.connect(self._leaf_selected)
 
     def update(self) -> bool:
         """push the bank set to fish or update it if required
@@ -263,10 +284,10 @@ class BankSet:
             BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
         else:
             BankSet._linked_bank_sets.append(self)
-        if BankSet._active_bank_set == self.id:
+        if BankSet._active_bank_set_id == self.id:
             self.id = new_id
             self.activate()
-        elif not BankSet._active_bank_set:
+        elif not BankSet._active_bank_set_id:
             self.id = new_id
             self.activate()
         else:
@@ -277,20 +298,32 @@ class BankSet:
     def activate(self):
         """Calling this method makes this bank set the active one.
         """
-        BankSet._active_bank_set = self.id
+        if BankSet._active_bank_set_id == self.id:
+            return
+        BankSet._active_bank_set_id = self.id
+        BankSet._active_bank_set = self
         text = "Bank: " + self.description
-        BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" +
-                                   str(self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
+        BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" + str(
+            self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
+        self._send_desk_update_message()
+
+    def _leaf_selected(self):
+        if not self.activ_column:
+            return
+        self.activ_column = None
         self._send_desk_update_message()
 
     def _send_desk_update_message(self):
         msg = proto.Console_pb2.desk_update()
-        msg.selected_column_id = ""  # Do not update the set of selected columns yet
+        if self.activ_column:
+            msg.selected_column_id = self.activ_column.id
+        else:
+            msg.selected_column_id = ""  # Do not update the set of selected columns yet
         msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixture' feature yet
         msg.selected_bank = self.active_bank
-        msg.selected_bank_set = BankSet._active_bank_set
+        msg.selected_bank_set = BankSet._active_bank_set_id
         msg.seven_seg_display_data = BankSet._seven_seg_data
-        BankSet._fish_connector.send_desk_update_message(msg)
+        BankSet._fish_connector.send_desk_update_message(msg, update_from_gui=self._gui_controlled)
 
     def add_bank(self, bank: FaderBank):
         """Update the fader bank on the control desk
@@ -300,6 +333,14 @@ class BankSet:
         """
         self.banks.append(bank)  # TODO ein BankSet has no columns attribute
         self.update()
+
+    def add_column_to_next_bank(self, f: DeskColumn):
+        """This method adds the provided column f to the last not full bank set."""
+        if len(self.banks) == 0:
+            self.add_bank(FaderBank())
+        if len(self.banks[-1].columns) >= 8:  # TODO query actual bank width
+            self.add_bank(FaderBank())
+        self.banks[-1].add_column(f)
 
     def set_active_bank(self, i: int) -> bool:
         """This method sets the active bank.
@@ -331,14 +372,16 @@ class BankSet:
         if not BankSet._fish_connector.is_running:
             return False
         i = 0
+        found_index = -1
         for linked_bank in BankSet._linked_bank_sets:
             if linked_bank.id == self.id:
                 found_index = i
                 break
             else:
                 i += 1
-        BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
-        BankSet._linked_bank_sets.pop(found_index)  # TODO found index koente leer sein
+        if found_index != -1:
+            BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
+            BankSet._linked_bank_sets.pop(found_index)
         return True
 
     @property
@@ -346,20 +389,67 @@ class BankSet:
         """Returns True if the bank set is loaded to fish."""
         return self.pushed_to_fish
 
+    @staticmethod
+    def push_messages_now():
+        BankSet._fish_connector.push_messages()
+
+    def get_column(self, column_id: str) -> DeskColumn:
+        for b in self.banks:
+            for c in b.columns:
+                if c.id == column_id:
+                    return c
+
+    def set_active_column(self, column: DeskColumn):
+        self.activ_column = column
+
+    def get_column_by_number(self, index: int) -> DeskColumn:
+        """This method iterates through the banks and returns column i"""
+        i = 0
+        # Unfortunately we cannot return the index directly, as the number of columns in a bank is not constant.
+        for b in self.banks:
+            for c in b.columns:
+                if i == index:
+                    return c
+                else:
+                    i += 1
+
+    @staticmethod
+    def handle_column_update_message(message: proto.Console_pb2.fader_column):
+        BankSet._active_bank_set.get_column(message.column_id).update_from_message(message)
+
 
 def set_network_manager(network_manager: NetworkManager):
     """Set the network manager instance to be used by all bank sets and subsequent banks and columns."""
     BankSet._fish_connector = network_manager
 
 
-def set_seven_seg_display_content(content: str):
+def set_seven_seg_display_content(content: str, update_from_gui: bool = False):
     """Set the content of the 7seg displays of connected X-Touch controllers.
 
     Fish will truncate any text longer than 12 chars and
     only guarantees the correct display of hexadecimal characters due to the limitations of seven segment displays.
     """
     BankSet._seven_seg_data = content[0:12] + " " * (12 - len(content))
-    # TODO send update message
+    send_independent_update_msg(update_from_gui)
+
+
+def send_independent_update_msg(update_from_gui: bool):
+    bs = BankSet.active_bank_set()
+    if not bs:
+        return
+    abs_id = bs.id
+    if abs_id:
+        for bs in BankSet.linked_bank_sets():
+            if bs.id == abs_id:
+                bs._send_desk_update_message()
+                return
+    msg = proto.Console_pb2.desk_update()
+    msg.selected_column_id = ""  # Do not update the set of selected columns yet
+    msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixture' feature yet
+    msg.selected_bank = 0
+    msg.selected_bank_set = ""
+    msg.seven_seg_display_data = BankSet._seven_seg_data
+    BankSet._fish_connector.send_desk_update_message(msg, update_from_gui)
 
 
 def commit_all_bank_sets():
@@ -370,7 +460,7 @@ def commit_all_bank_sets():
     bank_set_for_activation = None
     for bs in BankSet.linked_bank_sets():
         bs.update()
-        if bs.id == BankSet.active_bank_set():
+        if bs.id == BankSet.active_bank_set().id:
             bank_set_for_activation = bs
     if bank_set_for_activation:
         bank_set_for_activation.activate()

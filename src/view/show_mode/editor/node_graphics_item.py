@@ -2,12 +2,14 @@
 """Module for filter settings editor"""
 import logging
 
+import PySide6
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDialog, QFormLayout
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
-from model import Filter
+from model import Filter, Broadcaster
 from .node_editor_widgets.column_select import ColumnSelect
+from view.show_mode.node_editor_widgets.cue_editor import CueEditor
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -19,6 +21,8 @@ class FilterSettingsItem(QGraphicsSvgItem):
     _open_dialogs: list[QDialog] = []
 
     def __init__(self, filter_: Filter, parent: QGraphicsItem):
+        super().__init__("resources/settings.svg", parent)
+    def __init__(self, filter_: "FilterNode", parent: QGraphicsItem):
         super().__init__("resources/settings.svg", parent)
         self.filter = filter_
         self.on_update = lambda: None
@@ -50,16 +54,17 @@ class FilterSettingsItem(QGraphicsSvgItem):
     def mousePressEvent(self, ev):
         """Handle left mouse button click by opening filter settings dialog"""
         if ev.button() == Qt.MouseButton.LeftButton:
-            dialog = FilterSettingsDialog(self.filter)
-            self._open_dialogs.append(dialog)
-            dialog.finished.connect(lambda: self._open_dialogs.remove(dialog))
-            dialog.open()
+            self.dialog = FilterSettingsDialog(self.filter)
+            self.dialog.show()
 
 
 def check_if_filter_has_special_widget(filter_):
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect()
-    return None
+    elif filter_.filter_type == 44:
+        return CueEditor()
+    else:
+        return None
 
 
 class FilterSettingsDialog(QDialog):
@@ -69,9 +74,11 @@ class FilterSettingsDialog(QDialog):
         filter: The filter whose settings this dialog displays
     """
 
-    def __init__(self, filter_: Filter) -> None:
+    def __init__(self, filter_node: "FilterNode") -> None:
         super().__init__()
-        self.filter = filter_
+        self._filter_node = filter_node
+        self.filter = filter_node.filter
+
         self.setWindowTitle("Filter Settings")
         # Form layout:
         # Initial Parameters
@@ -83,25 +90,25 @@ class FilterSettingsDialog(QDialog):
         layout = QFormLayout()
         # Function pointer to handle patching information. Only set, when filter is universe filter
 
-        self._special_widget = check_if_filter_has_special_widget(filter_)
+        self._special_widget = check_if_filter_has_special_widget(self.filter)
         if self._special_widget:
-            self._special_widget.configuration = filter_.filter_configurations
-            self._special_widget.parameters = filter_.initial_parameters
+            self._special_widget.configuration = self.filter.filter_configurations
+            self._special_widget.parameters = self.filter.initial_parameters
             layout.addRow("", self._special_widget.get_widget())
         else:
-            add_patch_info: bool = filter_.filter_type == 11
+            add_patch_info: bool = self.filter.filter_type == 11
             # Only add initial parameters section if present
-            if len(filter_.initial_parameters) > 0:
+            if len(self.filter.initial_parameters) > 0:
                 layout.addRow("Initial Parameters", QLabel(""))
-                for key, value in filter_.initial_parameters.items():
+                for key, value in self.filter.initial_parameters.items():
                     line_edit = QLineEdit()
                     line_edit.setText(value)
                     line_edit.textChanged.connect(lambda new_value: self._ip_value_changed(key, new_value))
                     layout.addRow(key, line_edit)
             # Only add filter configuration section if present
-            if len(filter_.filter_configurations) > 0:
+            if len(self.filter.filter_configurations) > 0:
                 layout.addRow("Filter Configurations", QLabel(""))
-                for key, value in filter_.filter_configurations.items():
+                for key, value in self.filter.filter_configurations.items():
                     line_edit = QLineEdit()
                     line_edit.setText(value)
                     line_edit.textChanged.connect(lambda new_value: self._fc_value_changed(key, new_value))
@@ -149,3 +156,13 @@ class FilterSettingsDialog(QDialog):
             for k in self._special_widget.parameters.keys():
                 self.filter.initial_parameters[k] = self._special_widget.parameters[k]
         self.close()
+
+    def closeEvent(self, arg__1: PySide6.QtGui.QCloseEvent) -> None:
+        if self._special_widget:
+            self._special_widget.parent_closed(self._filter_node)
+        super().closeEvent(arg__1)
+
+    def show(self) -> None:
+        super().show()
+        if self._special_widget:
+            self._special_widget.parent_opened()

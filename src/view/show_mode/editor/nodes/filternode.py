@@ -5,7 +5,7 @@ import logging
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
 
-from model import Scene, Filter, DataType
+from model import Scene, Filter, DataType, Broadcaster
 
 from ..node_graphics_item import FilterSettingsItem
 
@@ -28,6 +28,7 @@ class FilterNode(Node):
         self._in_value_types: dict[str, DataType] = {}
         self._out_value_types: dict[str, DataType] = {}
 
+        # self.fsi = FilterSettingsItem(self, self.graphicsItem())
         self.fsi = FilterSettingsItem(self._filter, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)

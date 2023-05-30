@@ -2,7 +2,7 @@
 """Fixture Definitions from OFL """
 import json
 from enum import Enum
-from typing import TypedDict
+from typing import TypedDict, NotRequired
 
 
 class Category(Enum):
@@ -48,10 +48,10 @@ class Mode(TypedDict):
 class Fixture(TypedDict):
     """a Fixture from OFL"""
     name: str
-    shortName: str
+    shortName: NotRequired[str]
     categories: set[Category]
     #    meta: MetaData
-    comment: str
+    comment: NotRequired[str]
     #    links: Links
     #    helpWanted
     #    rdm
@@ -67,11 +67,8 @@ def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
     f = open(file)
     ob: json = json.load(f)
-    return Fixture(name=ob["name"],
-                   comment=try_load(ob, "comment"),
-                   shortName=try_load(ob, "shortName"),
-                   categories=ob["categories"],
-                   modes=ob["modes"])
+    return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
+                   categories=ob["categories"], modes=ob["modes"])
 
 
 def try_load(ob: json, name: object) -> str:
@@ -95,8 +92,5 @@ class UsedFixture:
 
 def make_used_fixture(fixture: Fixture, mode_index: int) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
-    return UsedFixture(fixture['name'],
-                       fixture['shortName'],
-                       fixture['categories'],
-                       fixture['comment'],
+    return UsedFixture(fixture['name'], fixture['shortName'], fixture['categories'], fixture['comment'],
                        fixture['modes'][mode_index])

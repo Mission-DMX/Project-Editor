@@ -8,6 +8,7 @@ from .trigonometics import *
 from .waves import *
 from .time import *
 from .faders import *
+from .effects import *
 from .universenode import UniverseNode
 
 type_to_node: dict[int, str] = {
@@ -55,4 +56,5 @@ type_to_node: dict[int, str] = {
         41: FaderHSIANode.nodeName,
         42: FaderHSIUNode.nodeName,
         43: FaderHSIAUNode.nodeName,
+        44: CueListNode.nodeName,
     }

@@ -1,7 +1,8 @@
 # coding=utf-8
 """Filter module"""
-from enum import IntFlag, auto
+
 from typing import TYPE_CHECKING
+from enum import IntFlag, auto, Enum
 
 if TYPE_CHECKING:
     from . import Scene
@@ -14,6 +15,38 @@ class DataType(IntFlag):
     DT_DOUBLE = auto()
     DT_COLOR = auto()
     DT_BOOL = auto()
+
+    def format_for_filters(self):
+        """This method returns the data type representation commonly used by the fish filters for configuration."""
+        if self.value == DataType.DT_8_BIT.value:
+            return "8bit"
+        elif self.value == DataType.DT_16_BIT.value:
+            return "16bit"
+        elif self.value == DataType.DT_DOUBLE.value:
+            return "float"
+        elif self.value == DataType.DT_COLOR.value:
+            return "color"
+        else:
+            return "8bit"  # bools are 8 bit
+
+    @staticmethod
+    def names() -> list[str]:
+        return [f.format_for_filters() for f in [DataType.DT_8_BIT, DataType.DT_16_BIT, DataType.DT_DOUBLE,
+                                                 DataType.DT_COLOR]]
+
+    @staticmethod
+    def from_filter_str(type_definition_string: str):
+        match type_definition_string:
+            case "8bit":
+                return DataType.DT_8_BIT
+            case "16bit":
+                return DataType.DT_16_BIT
+            case "float":
+                return DataType.DT_DOUBLE
+            case "color":
+                return DataType.DT_COLOR
+            case _:
+                return DataType.DT_8_BIT
 
 
 class Filter:
