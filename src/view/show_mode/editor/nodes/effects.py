@@ -7,8 +7,8 @@ class CueListNode(FilterNode):
     """Filter to represent any filter fader"""
     nodeName = "Cues"
 
-    def __init__(self, name):
-        super().__init__(filter_type=44, name=name, terminals={
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=44, name=name, terminals={
             'time': {'io': 'in'},
             # 'wash_x_pos': {'io': 'out'},
             # 'wash_y_pos': {'io': 'out'},

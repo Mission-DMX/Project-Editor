@@ -20,6 +20,7 @@ class FilterNode(Node):
         super().__init__(name, terminals)
         if isinstance(model, Scene):
             self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
+            model.filters.append(self._filter)
         elif isinstance(model, Filter):
             self._filter = model
         else:
