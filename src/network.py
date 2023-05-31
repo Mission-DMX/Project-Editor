@@ -57,6 +57,7 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.view_to_console_mode.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
         self._broadcaster.load_show_file.connect(lambda xml: self.load_show_file(xml, True))
+        self._broadcaster.change_active_scene.connect(self.enter_scene)
 
         self._broadcaster.load_show_file.connect(self.load_show_file)
         self._broadcaster.change_active_scene.connect(self.enter_scene)
@@ -266,7 +267,7 @@ class NetworkManager(QtCore.QObject):
             scene_id: The scene to be loaded
         """
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
-        self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
 
     def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode.ValueType):
         """Changes fish's run mode
