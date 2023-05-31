@@ -9,7 +9,7 @@ from .column_select import ColumnSelect
 
 
 def filter_to_widget(filter_: Filter) -> NodeEditorFilterConfigWidget:
-    match filter_.filter_id:
+    match filter_.filter_type:
         case 39 | 40 | 41 | 42 | 43:
             return ColumnSelect()
         case 44:

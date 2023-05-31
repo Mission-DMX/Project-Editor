@@ -13,7 +13,7 @@ class StandardWidget(NodeEditorFilterConfigWidget):
     def __init__(self, filter_: Filter, parent: QWidget = None):
         self._filter = filter_
         self._widget = QWidget(parent)
-        self._widget.setMaximumSize(250, 250)
+        self._widget.setFixedSize(250, 250)
         self._layout = QFormLayout(self._widget)
         self._widget.setLayout(self._layout)
 

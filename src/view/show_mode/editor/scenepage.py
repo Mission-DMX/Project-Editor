@@ -4,10 +4,35 @@ import logging
 
 from PySide6.QtWidgets import QWidget, QMenu, QGridLayout
 from PySide6.QtCore import Qt, QPoint
-from PySide6.QtGui import QMouseEvent, QAction
+from PySide6.QtGui import QMouseEvent, QDragMoveEvent, QAction
 
 from model import Scene, Filter
 from .node_editor_widgets import NodeEditorFilterConfigWidget, filter_to_widget
+
+
+class _WidgetHolder(QWidget):
+    """Widget to hold node editor widgets and move them around"""
+
+    def __init__(self, child: NodeEditorFilterConfigWidget, parent: QWidget):
+        super().__init__(parent)
+        self._child = child
+        self.setFixedSize(self._child.get_widget().frameSize())
+        self._child.get_widget().setParent(self)
+        self._old_pos = QPoint()
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() is Qt.MouseButton.LeftButton:
+            self._old_pos = event.globalPos()
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        offset = QPoint(event.globalPos() - self._old_pos)
+        self.move(self.x() + offset.x(), self.y() + offset.y())
+        self._old_pos = event.globalPos()
+
+    @property
+    def holding(self) -> QWidget:
+        """The widget the holder is holding"""
+        return self._child.get_widget()
 
 
 class ScenePageWidget(QWidget):
@@ -17,15 +42,11 @@ class ScenePageWidget(QWidget):
         super().__init__(parent)
         self._scene = scene
         self.setLayout(QGridLayout(self))
-        self._widgets: list[NodeEditorFilterConfigWidget] = []
+        self._widgets: list[_WidgetHolder] = []
 
     def mousePressEvent(self, event: QMouseEvent):
-        if event.button() is Qt.MouseButton.LeftButton:
-            # TODO Implement behaviour when selecting a filter
-            return
-
         if event.button() is Qt.MouseButton.RightButton:
-            self._widget_selection_menu(event.position().toPoint())
+            self._widget_selection_menu(event.pos())
 
     def _widget_selection_menu(self, pos: QPoint):
         menu = QMenu(self)
@@ -43,10 +64,9 @@ class ScenePageWidget(QWidget):
             pos: The position at which the widget should be placed
         """
         config_widget = filter_to_widget(filter_)
-        self._widgets.append(config_widget)
-        widget = config_widget.get_widget()
+        widget = _WidgetHolder(config_widget, self)
+        self._widgets.append(widget)
         widget.setStyleSheet("border: 1px solid black")
-        widget.setParent(self)
         widget.move(pos)
         widget.setVisible(True)
 
