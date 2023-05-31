@@ -105,7 +105,8 @@ class ArithmeticMinimumNode(FilterNode):
             'param2': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
+        self._in_value_types["param1"] = DataType.DT_DOUBLE
+        self._in_value_types["param2"] = DataType.DT_DOUBLE
         self._out_value_types["value"] = DataType.DT_DOUBLE
 
 
@@ -121,5 +122,6 @@ class ArithmeticMaximumNode(FilterNode):
             'param2': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
+        self._in_value_types["param1"] = DataType.DT_DOUBLE
+        self._in_value_types["param2"] = DataType.DT_DOUBLE
         self._out_value_types["value"] = DataType.DT_DOUBLE

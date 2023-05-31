@@ -30,5 +30,3 @@ class SawtoothWaveNode(_WaveNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=27, name=name)
-        self.addInput("length")
-        self._in_value_types["length"] = DataType.DT_DOUBLE
