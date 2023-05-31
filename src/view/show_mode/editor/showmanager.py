@@ -141,6 +141,5 @@ class ShowManagerWidget(QTabWidget):
 
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""
-        # TODO Let network manager listen to broadcaster
         xml = create_xml(self._board_configuration)
-        self._board_configuration.broadcaster.load_show_file(xml)
+        self._board_configuration.broadcaster.load_show_file.emit(xml)

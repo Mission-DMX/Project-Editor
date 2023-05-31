@@ -1,10 +1,12 @@
 # coding=utf-8
 """Module to handle connection with real-time software Fish."""
 import logging
+import math
 import queue
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
+import numpy as np
 from PySide6 import QtCore, QtNetwork
 
 import proto.Console_pb2
@@ -49,6 +51,12 @@ class NetworkManager(QtCore.QObject):
 
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
+        self._broadcaster.change_run_mode.connect(self.update_state)
+        self._broadcaster.view_to_file_editor.connect(
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
+        self._broadcaster.view_to_console_mode.connect(
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
+        self._broadcaster.load_show_file.connect(lambda xml: self.load_show_file(xml, True))
 
         self._broadcaster.load_show_file.connect(self.load_show_file)
         self._broadcaster.change_active_scene.connect(self.enter_scene)
@@ -126,9 +134,10 @@ class NetworkManager(QtCore.QObject):
         msg_bytes = self._socket.readAll()
         while len(msg_bytes) > 0:
             msg_type = varint.decode_bytes(msg_bytes[0])
-            msg_len = varint.decode_bytes(msg_bytes[1])
-            msg = msg_bytes[2:msg_len + 2]
-            msg_bytes = msg_bytes[msg_len + 2:]
+            msg_len = varint.decode_bytes(msg_bytes[1:])
+            start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
+            msg = msg_bytes[start:start + msg_len]
+            msg_bytes = msg_bytes[start + msg_len:]
             match msg_type:
                 case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
                     message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
@@ -259,7 +268,7 @@ class NetworkManager(QtCore.QObject):
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
         self._send_with_format(msg, proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
 
-    def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode):
+    def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode.ValueType):
         """Changes fish's run mode
 
         Args:
@@ -267,18 +276,6 @@ class NetworkManager(QtCore.QObject):
         """
         msg = proto.RealTimeControl_pb2.update_state(new_state=run_mode)
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_STATE)
-
-    def switch_to_direct(self):
-        """Tells fish to go into direct mode"""
-        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT)
-
-    def switch_to_filter(self):
-        """Tells fish to go into show mode"""
-        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
-
-    def switch_to_stop(self):
-        """Tells fish to stop"""
-        self.update_state(proto.RealTimeControl_pb2.RunMode.RM_STOP)
 
     def send_fader_bank_set_delete_message(self, fader_bank_id: str):
         """send message to delete a bank set to fish"""

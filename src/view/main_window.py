@@ -4,7 +4,9 @@
 from PySide6 import QtWidgets, QtGui
 
 from Style import Style
-from model import BoardConfiguration, Broadcaster
+from proto.RealTimeControl_pb2 import RunMode
+from model.board_configuration import BoardConfiguration
+from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
 from network import NetworkManager
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
@@ -59,6 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._setup_menubar()
         self._setup_status_bar()
 
+        self._broadcaster.view_to_console_mode.connect(lambda: self._to_widget(0))
         self._broadcaster.view_to_file_editor.connect(lambda: self._to_widget(1))
         self._broadcaster.view_to_show_player.connect(lambda: self._to_widget(2))
         self._broadcaster.view_to_patch_menu.connect(lambda: self._to_widget(3))
@@ -97,7 +100,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[list[str, callable]]] = {
             "Fish": [["Connect", self._start_connection], ["Disconnect", self._fish_connector.disconnect],
-                     ["Change", self._change_server_name]]}
+                     ["Change", self._change_server_name],
+                     ["Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)],
+                     ["Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)],
+                     ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]]}
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)

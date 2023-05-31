@@ -7,9 +7,8 @@ Usage:
 """
 from xml.etree import ElementTree
 
-
 from model import Filter, Scene, Universe, BoardConfiguration
-from proto import UniverseControl_pb2 as Proto
+from proto import UniverseControl_pb2
 
 
 def write_document(file_name: str, xml: ElementTree.Element) -> bool:
@@ -192,7 +191,7 @@ def _create_physical_location_element(physical: int, parent: ElementTree.Element
     return physical_location
 
 
-def _create_artnet_location_element(artnet_location: Proto.Universe.ArtNet,
+def _create_artnet_location_element(artnet_location: UniverseControl_pb2.Universe.ArtNet,
                                     parent: ElementTree.Element) -> ElementTree.Element:
     """Creates an xml element of type artnet_location.
     
@@ -205,7 +204,7 @@ def _create_artnet_location_element(artnet_location: Proto.Universe.ArtNet,
     })
 
 
-def _create_ftdi_location_element(ftdi_location: Proto.Universe.USBConfig,
+def _create_ftdi_location_element(ftdi_location: UniverseControl_pb2.Universe.USBConfig,
                                   parent: ElementTree.Element) -> ElementTree.Element:
     """Creates a xml element of type ftdi_location.
     
