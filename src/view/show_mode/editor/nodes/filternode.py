@@ -16,8 +16,9 @@ class FilterNode(Node):
     def __init__(self, model: Filter | Scene,
                  filter_type: int,
                  name: str,
-                 terminals: dict[str, dict[str, str]] = None):
-        super().__init__(name, terminals)
+                 terminals: dict[str, dict[str, str]] = None,
+                 allowAddInput: bool = False):
+        super().__init__(name, terminals, allowAddInput=allowAddInput)
         if isinstance(model, Scene):
             self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
             model.filters.append(self._filter)
@@ -25,12 +26,8 @@ class FilterNode(Node):
             self._filter = model
         else:
             logging.warning("Tried creating filter node with unknown model %s", str(type(model)))
-        # Dict with entries (channel, DataType)
-        self._in_value_types: dict[str, DataType] = {}
-        self._out_value_types: dict[str, DataType] = {}
 
         self.fsi = FilterSettingsItem(self, self.graphicsItem())
-        # self.fsi = FilterSettingsItem(self._filter, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
@@ -54,7 +51,7 @@ class FilterNode(Node):
             localTerm.disconnectFrom(remoteTerm)
             return
 
-        if not self._in_value_types[localTerm.name()] == remote_node.out_value_types[remoteTerm.name()]:
+        if not self.filter.in_data_types[localTerm.name()] == remote_node.filter.out_data_types[remoteTerm.name()]:
             logging.warning("Tried to connect incompatible filter channels. Forced disconnection.")
             localTerm.disconnectFrom(remoteTerm)
             return
@@ -94,13 +91,3 @@ class FilterNode(Node):
     def filter(self) -> Filter:
         """The corresponding filter"""
         return self._filter
-
-    @property
-    def in_value_types(self) -> dict[str, DataType]:
-        """Dict mapping the names to the data types of the input channels."""
-        return self._in_value_types
-
-    @property
-    def out_value_types(self) -> dict[str, DataType]:
-        """Dict mapping the names to the data types of the output channels."""
-        return self._out_value_types

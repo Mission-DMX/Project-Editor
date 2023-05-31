@@ -16,12 +16,12 @@ class TrigonometricNode(FilterNode):
             'offset': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
-        self._in_value_types["factor_outer"] = DataType.DT_DOUBLE
-        self._in_value_types["factor_inner"] = DataType.DT_DOUBLE
-        self._in_value_types["phase"] = DataType.DT_DOUBLE
-        self._in_value_types["offset"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["factor_outer"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["factor_inner"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["phase"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["offset"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
 class TrigonometricSineNode(TrigonometricNode):

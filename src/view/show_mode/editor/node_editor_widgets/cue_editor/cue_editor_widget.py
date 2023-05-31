@@ -343,9 +343,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if self._channels_changed_after_load:
             filter_node.clearTerminals()
             filter_node.addTerminal('time', io='in')
+            filter_node.filter.in_data_types["time"] = DataType.DT_8_BIT
             if len(self._cues) > 0:
                 for channel_name, channel_type in self._cues[0].channels:
                     filter_node.addTerminal(channel_name, io='out')
+                    filter_node.filter.out_data_types[channel_name] = channel_type
         if self._bankset:
             self._bankset.unlink()
             BankSet.push_messages_now()

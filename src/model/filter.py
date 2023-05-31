@@ -62,6 +62,8 @@ class Filter:
         self._channel_links: dict[str, str] = {}
         self._initial_parameters: dict[str, str] = {}
         self._filter_configurations: dict[str, str] = {}
+        self._in_data_types: dict[str, DataType] = {}
+        self._out_data_types: dict[str, DataType] = {}
 
     @property
     def scene(self) -> "Scene":
@@ -105,3 +107,13 @@ class Filter:
     def filter_configurations(self) -> dict[str, str]:
         """The filter configurations"""
         return self._filter_configurations
+
+    @property
+    def in_data_types(self) -> dict[str, DataType]:
+        """Dict mapping input channel names to their data types."""
+        return self._in_data_types
+
+    @property
+    def out_data_types(self) -> dict[str, DataType]:
+        """Dict mapping output channel names to their data types"""
+        return self._out_data_types

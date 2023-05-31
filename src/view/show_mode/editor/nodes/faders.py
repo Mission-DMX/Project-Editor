@@ -17,8 +17,8 @@ class FaderRawNode(FilterNode):
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
 
-        self._out_value_types["fader"] = DataType.DT_16_BIT
-        self._out_value_types["encoder"] = DataType.DT_16_BIT
+        self.filter.out_data_types["fader"] = DataType.DT_16_BIT
+        self.filter.out_data_types["encoder"] = DataType.DT_16_BIT
 
 
 class FaderHSINode(FilterNode):
@@ -32,7 +32,7 @@ class FaderHSINode(FilterNode):
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
 
-        self._out_value_types["color"] = DataType.DT_COLOR
+        self.filter.out_data_types["color"] = DataType.DT_COLOR
 
 
 class FaderHSIANode(FilterNode):
@@ -47,8 +47,8 @@ class FaderHSIANode(FilterNode):
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
 
-        self._out_value_types["color"] = DataType.DT_COLOR
-        self._out_value_types["amber"] = DataType.DT_8_BIT
+        self.filter.out_data_types["color"] = DataType.DT_COLOR
+        self.filter.out_data_types["amber"] = DataType.DT_8_BIT
 
 
 class FaderHSIUNode(FilterNode):
@@ -63,8 +63,8 @@ class FaderHSIUNode(FilterNode):
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
 
-        self._out_value_types["color"] = DataType.DT_COLOR
-        self._out_value_types["uv"] = DataType.DT_8_BIT
+        self.filter.out_data_types["color"] = DataType.DT_COLOR
+        self.filter.out_data_types["uv"] = DataType.DT_8_BIT
 
 
 class FaderHSIAUNode(FilterNode):
@@ -80,6 +80,6 @@ class FaderHSIAUNode(FilterNode):
         self.filter.filter_configurations["set_id"] = ""
         self.filter.filter_configurations["column_id"] = ""
 
-        self._out_value_types["color"] = DataType.DT_COLOR
-        self._out_value_types["amber"] = DataType.DT_8_BIT
-        self._out_value_types["uv"] = DataType.DT_8_BIT
+        self.filter.out_data_types["color"] = DataType.DT_COLOR
+        self.filter.out_data_types["amber"] = DataType.DT_8_BIT
+        self.filter.out_data_types["uv"] = DataType.DT_8_BIT

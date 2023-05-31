@@ -18,10 +18,10 @@ class ArithmeticMACNode(FilterNode):
             'summand': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["factor1"] = DataType.DT_DOUBLE
-        self._in_value_types["factor2"] = DataType.DT_DOUBLE
-        self._in_value_types["summand"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["factor1"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["factor2"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["summand"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
 class ArithmeticFloatTo16BitNode(FilterNode):
@@ -33,8 +33,8 @@ class ArithmeticFloatTo16BitNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_16_BIT
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_16_BIT
 
 
 class ArithmeticFloatTo8BitNode(FilterNode):
@@ -46,8 +46,8 @@ class ArithmeticFloatTo8BitNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
 
 
 class ArithmeticRoundNode(FilterNode):
@@ -59,8 +59,8 @@ class ArithmeticRoundNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
 class ArithmeticLogarithmNode(FilterNode):
@@ -74,8 +74,8 @@ class ArithmeticLogarithmNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
 class ArithmeticExponentialNode(FilterNode):
@@ -89,8 +89,8 @@ class ArithmeticExponentialNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
 class ArithmeticMinimumNode(FilterNode):
@@ -105,9 +105,8 @@ class ArithmeticMinimumNode(FilterNode):
             'param2': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["param1"] = DataType.DT_DOUBLE
-        self._in_value_types["param2"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
 class ArithmeticMaximumNode(FilterNode):
@@ -122,6 +121,5 @@ class ArithmeticMaximumNode(FilterNode):
             'param2': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["param1"] = DataType.DT_DOUBLE
-        self._in_value_types["param2"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE

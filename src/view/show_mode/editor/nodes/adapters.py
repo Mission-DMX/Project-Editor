@@ -15,9 +15,9 @@ class Adapter16BitTo8BitNode(FilterNode):
             'value_lower': {'io': 'out'},
             'value_upper': {'io': 'out'},
         })
-        self._in_value_types["value"] = DataType.DT_16_BIT
-        self._out_value_types["value_lower"] = DataType.DT_8_BIT
-        self._out_value_types["value_upper"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value"] = DataType.DT_16_BIT
+        self.filter.out_data_types["value_lower"] = DataType.DT_8_BIT
+        self.filter.out_data_types["value_lower"] = DataType.DT_8_BIT
 
 
 class Adapter16BitToBoolNode(FilterNode):
@@ -31,8 +31,8 @@ class Adapter16BitToBoolNode(FilterNode):
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["value_in"] = DataType.DT_16_BIT
-        self._out_value_types["value"] = DataType.DT_BOOL
+        self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
+        self.filter.out_data_types["value"] = DataType.DT_BOOL
 
 
 class AdapterColorToRGBNode(FilterNode):
@@ -46,10 +46,10 @@ class AdapterColorToRGBNode(FilterNode):
             'g': {'io': 'out'},
             'b': {'io': 'out'}
         })
-        self._in_value_types["value"] = DataType.DT_COLOR
-        self._out_value_types["r"] = DataType.DT_8_BIT
-        self._out_value_types["g"] = DataType.DT_8_BIT
-        self._out_value_types["b"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value"] = DataType.DT_COLOR
+        self.filter.out_data_types["r"] = DataType.DT_8_BIT
+        self.filter.out_data_types["g"] = DataType.DT_8_BIT
+        self.filter.out_data_types["b"] = DataType.DT_8_BIT
 
 
 class AdapterColorToRGBWNode(FilterNode):
@@ -64,11 +64,11 @@ class AdapterColorToRGBWNode(FilterNode):
             'b': {'io': 'out'},
             'w': {'io': 'out'}
         })
-        self._in_value_types["value"] = DataType.DT_COLOR
-        self._out_value_types["r"] = DataType.DT_8_BIT
-        self._out_value_types["g"] = DataType.DT_8_BIT
-        self._out_value_types["b"] = DataType.DT_8_BIT
-        self._out_value_types["w"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value"] = DataType.DT_COLOR
+        self.filter.out_data_types["r"] = DataType.DT_8_BIT
+        self.filter.out_data_types["g"] = DataType.DT_8_BIT
+        self.filter.out_data_types["b"] = DataType.DT_8_BIT
+        self.filter.out_data_types["w"] = DataType.DT_8_BIT
 
 
 class AdapterColorToRGBWANode(FilterNode):
@@ -84,12 +84,12 @@ class AdapterColorToRGBWANode(FilterNode):
             'w': {'io': 'out'},
             'a': {'io': 'out'}
         })
-        self._in_value_types["value"] = DataType.DT_COLOR
-        self._out_value_types["r"] = DataType.DT_8_BIT
-        self._out_value_types["g"] = DataType.DT_8_BIT
-        self._out_value_types["b"] = DataType.DT_8_BIT
-        self._out_value_types["w"] = DataType.DT_8_BIT
-        self._out_value_types["a"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value"] = DataType.DT_COLOR
+        self.filter.out_data_types["r"] = DataType.DT_8_BIT
+        self.filter.out_data_types["g"] = DataType.DT_8_BIT
+        self.filter.out_data_types["b"] = DataType.DT_8_BIT
+        self.filter.out_data_types["w"] = DataType.DT_8_BIT
+        self.filter.out_data_types["a"] = DataType.DT_8_BIT
 
 
 class AdapterFloatToColorNode(FilterNode):
@@ -103,7 +103,7 @@ class AdapterFloatToColorNode(FilterNode):
             'i': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self._in_value_types["h"] = DataType.DT_DOUBLE
-        self._in_value_types["s"] = DataType.DT_DOUBLE
-        self._in_value_types["i"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_COLOR
+        self.filter.in_data_types["h"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["s"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["i"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_COLOR

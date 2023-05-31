@@ -13,17 +13,17 @@ class UniverseNode(FilterNode):
     def __init__(self, model, name):
         if isinstance(model, Filter):
             super().__init__(model=model, filter_type=11, name=name, terminals={
-                input_link: {'io': 'in'} for input_link, _ in model.channel_links.items()
-            })
+                input_link: {'io': 'in'} for input_link, _ in model.channel_links.items()},
+                             allowAddInput=True)
         else:
             super().__init__(model=model, filter_type=11, name=name, terminals={
-                "input_1": {'io': 'in'}
-            })
-        self._allowAddInput = True
+                "input_1": {'io': 'in'}},
+                             allowAddInput=True)
 
         self.filter.filter_configurations["universe"] = self.name()[9:]
         self.filter.filter_configurations["input_1"] = "0"
-        self._in_value_types = {f"input_{i}": DataType.DT_8_BIT for i in range(1, 513)}
+        for index in range(1, 513):
+            self.filter.in_data_types[f"input_{index}"] = DataType.DT_8_BIT
 
     def addInput(self, name="input", **args):
         """Allows to add up to 512 input channels."""

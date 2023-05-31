@@ -15,7 +15,7 @@ class Constants8BitNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = "0"
-        self._out_value_types["value"] = DataType.DT_8_BIT
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
 
 
 class Constants16BitNode(FilterNode):
@@ -28,7 +28,7 @@ class Constants16BitNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = "0"
-        self._out_value_types["value"] = DataType.DT_16_BIT
+        self.filter.out_data_types["value"] = DataType.DT_16_BIT
 
 
 class ConstantsFloatNode(FilterNode):
@@ -41,7 +41,7 @@ class ConstantsFloatNode(FilterNode):
         })
 
         self.filter.initial_parameters["value"] = "0.0"
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
 class ConstantsColorNode(FilterNode):
@@ -55,4 +55,4 @@ class ConstantsColorNode(FilterNode):
             'value': {'io': 'out'}
         })
         self.filter.initial_parameters["value"] = "0,0,0"
-        self._out_value_types["value"] = DataType.DT_COLOR
+        self.filter.out_data_types["value"] = DataType.DT_COLOR

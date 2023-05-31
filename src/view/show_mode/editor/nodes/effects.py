@@ -9,14 +9,11 @@ class CueListNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=44, name=name, terminals={
-            'time': {'io': 'in'},
-            # 'wash_x_pos': {'io': 'out'},
-            # 'wash_y_pos': {'io': 'out'},
-            # 'wash_dimmer': {'io': 'out'},
-            # 'wash_color': {'io': 'out'}
+            'time': {'io': 'in'}
         })
         self.filter.filter_configurations["mapping"] = ""
         self.filter.filter_configurations["end_handling"] = ""
         self.filter.filter_configurations["cuelist"] = ""
 
-        self._in_value_types["time"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+

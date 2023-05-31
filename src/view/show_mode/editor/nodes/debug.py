@@ -21,7 +21,7 @@ class Debug8BitNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=4, name=name)
-        self._in_value_types["value"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value"] = DataType.DT_8_BIT
 
 
 class Debug16BitNode(FilterNode):
@@ -32,7 +32,7 @@ class Debug16BitNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=5, name=name)
-        self._in_value_types["value"] = DataType.DT_16_BIT
+        self.filter.in_data_types["value"] = DataType.DT_16_BIT
 
 
 class DebugFloatNode(FilterNode):
@@ -43,7 +43,7 @@ class DebugFloatNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=6, name=name)
-        self._in_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["value"] = DataType.DT_DOUBLE
 
 
 class DebugColorNode(FilterNode):
@@ -54,4 +54,4 @@ class DebugColorNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=7, name=name)
-        self._in_value_types["value"] = DataType.DT_COLOR
+        self.filter.in_data_types["value"] = DataType.DT_COLOR

@@ -26,6 +26,7 @@ class FilterFlowchart(Flowchart):
             pos: The position of the node
         """
         if name is None:
+            name = nodeType
             index = 0
             while True:
                 name = f"{name}.{index}"

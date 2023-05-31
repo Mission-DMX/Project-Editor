@@ -13,7 +13,7 @@ class TimeNode(FilterNode):
         super().__init__(model=model, filter_type=32, name=name, terminals={
             'value': {'io': 'out'}
         })
-        self._out_value_types["value"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
 class TimeSwitchOnDelay8BitNode(FilterNode):
@@ -28,9 +28,9 @@ class TimeSwitchOnDelay8BitNode(FilterNode):
         })
         self.filter.initial_parameters["delay"] = "0.0"
 
-        self._in_value_types["value_in"] = DataType.DT_8_BIT
-        self._in_value_types["time"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
 
 
 class TimeSwitchOnDelay16BitNode(FilterNode):
@@ -45,9 +45,9 @@ class TimeSwitchOnDelay16BitNode(FilterNode):
         })
         self.filter.initial_parameters["delay"] = "0.0"
 
-        self._in_value_types["value_in"] = DataType.DT_8_BIT
-        self._in_value_types["time"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
 
 
 class TimeSwitchOnDelayFloatNode(FilterNode):
@@ -62,9 +62,9 @@ class TimeSwitchOnDelayFloatNode(FilterNode):
         })
         self.filter.initial_parameters["delay"] = "0.0"
 
-        self._in_value_types["value_in"] = DataType.DT_8_BIT
-        self._in_value_types["time"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
 
 
 class TimeSwitchOffDelay8BitNode(FilterNode):
@@ -79,9 +79,9 @@ class TimeSwitchOffDelay8BitNode(FilterNode):
         })
         self.filter.initial_parameters["delay"] = "0.0"
 
-        self._in_value_types["value_in"] = DataType.DT_8_BIT
-        self._in_value_types["time"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
 
 
 class TimeSwitchOffDelay16BitNode(FilterNode):
@@ -96,9 +96,9 @@ class TimeSwitchOffDelay16BitNode(FilterNode):
         })
         self.filter.initial_parameters["delay"] = "0.0"
 
-        self._in_value_types["value_in"] = DataType.DT_8_BIT
-        self._in_value_types["time"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
 
 
 class TimeSwitchOffDelayFloatNode(FilterNode):
@@ -113,6 +113,6 @@ class TimeSwitchOffDelayFloatNode(FilterNode):
         })
         self.filter.initial_parameters["delay"] = "0.0"
 
-        self._in_value_types["value_in"] = DataType.DT_8_BIT
-        self._in_value_types["time"] = DataType.DT_DOUBLE
-        self._out_value_types["value"] = DataType.DT_8_BIT
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
