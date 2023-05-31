@@ -16,15 +16,14 @@ class FilterSettingsItem(QGraphicsSvgItem):
     """GraphicsItem to handle opening filter settings dialog.
     
     Attributes:
-        filter: The filter this item belongs to
+        filter_node: The filter this item belongs to
     """
     _open_dialogs: list[QDialog] = []
 
-    def __init__(self, filter_: Filter, parent: QGraphicsItem):
+    def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem):
         super().__init__("resources/settings.svg", parent)
-    def __init__(self, filter_: "FilterNode", parent: QGraphicsItem):
-        super().__init__("resources/settings.svg", parent)
-        self.filter = filter_
+        self.dialog = None
+        self.filter_node = filter_node
         self.on_update = lambda: None
         self.setScale(0.2)
         self.moveBy(parent.boundingRect().width() / 2, parent.boundingRect().height() - 20)
@@ -54,7 +53,8 @@ class FilterSettingsItem(QGraphicsSvgItem):
     def mousePressEvent(self, ev):
         """Handle left mouse button click by opening filter settings dialog"""
         if ev.button() == Qt.MouseButton.LeftButton:
-            self.dialog = FilterSettingsDialog(self.filter)
+            if self.dialog is None:
+                self.dialog = FilterSettingsDialog(self.filter_node)
             self.dialog.show()
 
 

@@ -17,8 +17,9 @@ class FilterNode(Node):
                  filter_type: int,
                  name: str,
                  terminals: dict[str, dict[str, str]] = None,
-                 allowAddInput: bool = False):
-        super().__init__(name, terminals, allowAddInput=allowAddInput)
+                 allowAddInput: bool = False,
+                 allowAddOutput: bool = False):
+        super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
         if isinstance(model, Scene):
             self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
             model.filters.append(self._filter)
