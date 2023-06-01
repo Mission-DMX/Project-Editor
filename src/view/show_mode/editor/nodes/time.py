@@ -26,7 +26,7 @@ class TimeSwitchOnDelay8BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self.filter.initial_parameters["delay"] = "0.0"
+        self.filter.filter_configurations["delay"] = "0.0"
 
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
@@ -43,7 +43,7 @@ class TimeSwitchOnDelay16BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self.filter.initial_parameters["delay"] = "0.0"
+        self.filter.filter_configurations["delay"] = "0.0"
 
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
@@ -60,7 +60,7 @@ class TimeSwitchOnDelayFloatNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self.filter.initial_parameters["delay"] = "0.0"
+        self.filter.filter_configurations["delay"] = "0.0"
 
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
@@ -77,7 +77,7 @@ class TimeSwitchOffDelay8BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self.filter.initial_parameters["delay"] = "0.0"
+        self.filter.filter_configurations["delay"] = "0.0"
 
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
@@ -94,7 +94,7 @@ class TimeSwitchOffDelay16BitNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self.filter.initial_parameters["delay"] = "0.0"
+        self.filter.filter_configurations["delay"] = "0.0"
 
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
@@ -111,7 +111,7 @@ class TimeSwitchOffDelayFloatNode(FilterNode):
             'time': {'io': 'in'},
             'value': {'io': 'out'}
         })
-        self.filter.initial_parameters["delay"] = "0.0"
+        self.filter.filter_configurations["delay"] = "0.0"
 
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
