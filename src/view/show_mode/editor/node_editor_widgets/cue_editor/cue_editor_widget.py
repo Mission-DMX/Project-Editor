@@ -343,7 +343,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if self._channels_changed_after_load:
             filter_node.clearTerminals()
             filter_node.addTerminal('time', io='in')
-            filter_node.filter.in_data_types["time"] = DataType.DT_8_BIT
+            filter_node.filter.in_data_types["time"] = DataType.DT_DOUBLE
             if len(self._cues) > 0:
                 for channel_name, channel_type in self._cues[0].channels:
                     filter_node.addTerminal(channel_name, io='out')
