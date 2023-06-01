@@ -36,6 +36,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector: NetworkManager = NetworkManager(self)
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
+        #from file.read import read_document #todo remove me xxx
+        #read_document("/home/fish/Desktop/debug/workinprogress.xml",self._board_configuration)
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)),

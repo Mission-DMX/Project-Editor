@@ -14,8 +14,14 @@ class FaderRawNode(FilterNode):
             'fader': {'io': 'out'},
             'encoder': {'io': 'out'}
         })
-        self.filter.filter_configurations["set_id"] = ""
-        self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
+        except:
+            self.filter.filter_configurations["set_id"] = ""
+        try:
+            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
+        except:
+            self.filter.filter_configurations["column_id"] = ""
 
         self.filter.out_data_types["fader"] = DataType.DT_16_BIT
         self.filter.out_data_types["encoder"] = DataType.DT_16_BIT
@@ -29,8 +35,14 @@ class FaderHSINode(FilterNode):
         super().__init__(model=model, filter_type=40, name=name, terminals={
             'color': {'io': 'out'}
         })
-        self.filter.filter_configurations["set_id"] = ""
-        self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
+        except:
+            self.filter.filter_configurations["set_id"] = ""
+        try:
+            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
+        except:
+            self.filter.filter_configurations["column_id"] = ""
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
 
@@ -44,8 +56,14 @@ class FaderHSIANode(FilterNode):
             'color': {'io': 'out'},
             'amber': {'io': 'out'}
         })
-        self.filter.filter_configurations["set_id"] = ""
-        self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
+        except:
+            self.filter.filter_configurations["set_id"] = ""
+        try:
+            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
+        except:
+            self.filter.filter_configurations["column_id"] = ""
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["amber"] = DataType.DT_8_BIT
@@ -60,8 +78,14 @@ class FaderHSIUNode(FilterNode):
             'color': {'io': 'out'},
             'uv': {'io': 'out'}
         })
-        self.filter.filter_configurations["set_id"] = ""
-        self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
+        except:
+            self.filter.filter_configurations["set_id"] = ""
+        try:
+            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
+        except:
+            self.filter.filter_configurations["column_id"] = ""
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["uv"] = DataType.DT_8_BIT
@@ -77,8 +101,14 @@ class FaderHSIAUNode(FilterNode):
             'amber': {'io': 'out'},
             'uv': {'io': 'out'}
         })
-        self.filter.filter_configurations["set_id"] = ""
-        self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
+        except:
+            self.filter.filter_configurations["set_id"] = ""
+        try:
+            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
+        except:
+            self.filter.filter_configurations["column_id"] = ""
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["amber"] = DataType.DT_8_BIT

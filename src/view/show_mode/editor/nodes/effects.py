@@ -11,9 +11,20 @@ class CueListNode(FilterNode):
         super().__init__(model=model, filter_type=44, name=name, terminals={
             'time': {'io': 'in'}},
                          allowAddOutput=True)
-        self.filter.filter_configurations["mapping"] = ""
-        self.filter.filter_configurations["end_handling"] = ""
-        self.filter.filter_configurations["cuelist"] = ""
+        try:
+            self.filter.filter_configurations["mapping"] = model.filter_configurations["mapping"]
+        except:
+            self.filter.filter_configurations["mapping"] = ""
+
+        try:
+            self.filter.filter_configurations["end_handling"] = model.filter_configurations["end_handling"]
+        except:
+            self.filter.filter_configurations["end_handling"] = ""
+
+        try:
+            self.filter.filter_configurations["cuelist"] = model.filter_configurations["cuelist"]
+        except:
+            self.filter.filter_configurations["cuelist"] = ""
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
 
