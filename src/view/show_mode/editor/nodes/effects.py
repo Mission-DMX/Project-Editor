@@ -12,19 +12,19 @@ class CueListNode(FilterNode):
             'time': {'io': 'in'}},
                          allowAddOutput=True)
         try:
-            self.filter.filter_configurations["mapping"] = model.filter_configurations["mapping"]
+            self.filter.initial_parameters["mapping"] = model.initial_parameters["mapping"]
         except:
-            self.filter.filter_configurations["mapping"] = ""
+            self.filter.initial_parameters["mapping"] = ""
 
         try:
-            self.filter.filter_configurations["end_handling"] = model.filter_configurations["end_handling"]
+            self.filter.initial_parameters["end_handling"] = model.initial_parameters["end_handling"]
         except:
-            self.filter.filter_configurations["end_handling"] = ""
+            self.filter.initial_parameters["end_handling"] = ""
 
         try:
-            self.filter.filter_configurations["cuelist"] = model.filter_configurations["cuelist"]
+            self.filter.initial_parameters["cuelist"] = model.initial_parameters["cuelist"]
         except:
-            self.filter.filter_configurations["cuelist"] = ""
+            self.filter.initial_parameters["cuelist"] = ""
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
 
