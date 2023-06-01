@@ -17,7 +17,7 @@ class Adapter16BitTo8BitNode(FilterNode):
         })
         self.filter.in_data_types["value"] = DataType.DT_16_BIT
         self.filter.out_data_types["value_lower"] = DataType.DT_8_BIT
-        self.filter.out_data_types["value_lower"] = DataType.DT_8_BIT
+        self.filter.out_data_types["value_upper"] = DataType.DT_8_BIT
 
 
 class Adapter16BitToBoolNode(FilterNode):
