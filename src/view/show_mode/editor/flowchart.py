@@ -8,6 +8,7 @@ from .nodes import FilterNode
 
 class FilterFlowchart(Flowchart):
     """Flowchart that can handle creating nodes from file"""
+
     def __init__(self, scene: Scene, terminals=None, filePath=None, library=None):
         super().__init__(terminals, scene.human_readable_name, filePath, library)
         self._scene = scene
@@ -29,11 +30,11 @@ class FilterFlowchart(Flowchart):
             name = nodeType
             index = 0
             while True:
-                name = f"{name}.{index}"
-                if name not in self._nodes:
+                tmp = f"{name}.{index}"
+                if tmp not in self._nodes:
+                    name = tmp
                     break
                 index += 1
-
         node = self.library.getNodeType(nodeType)(self._scene, name)
         self.addNode(node, name, pos)
         return node
