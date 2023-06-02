@@ -83,7 +83,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
-            if self._widgets.currentIndex() == 2:
+            if self._widgets.currentIndex() == 3:
                 self._broadcaster.view_patching.emit()
         else:
             match self._widgets.currentIndex():
