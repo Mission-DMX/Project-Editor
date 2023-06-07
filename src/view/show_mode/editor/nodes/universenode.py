@@ -25,9 +25,10 @@ class UniverseNode(FilterNode):
                 self.filter.filter_configurations[key] = model.filter_configurations[key]
             if len(model.filter_configurations) == 0:
                 self.filter.filter_configurations["input_1"] = "0"
+                self.filter.filter_configurations["universe"] = self.name()[9:]
         except:
             self.filter.filter_configurations["input_1"] = "0"
-        self.filter.filter_configurations["universe"] = self.name()[9:]
+            self.filter.filter_configurations["universe"] = self.name()[9:]
         for index in range(1, 513):
             self.filter.in_data_types[f"input_{index}"] = DataType.DT_8_BIT
 
