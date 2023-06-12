@@ -8,6 +8,7 @@ description = "Editor for realtime dmx control software FISH https://github.com/
 authors = [
     { name = "Max Kassow", email = "ma.kaussow@uni-luebeck.de" },
     { name = "Niklas Naumann", email = "niklas.naumann@student.uni-luebeck.de" },
+    { name = "Doralitze", email = "doralitze@chaotikum.org" },
 ]
 readme = "README.md"
 requires-python = ">=3.10"
