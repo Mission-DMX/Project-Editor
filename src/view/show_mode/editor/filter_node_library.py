@@ -90,6 +90,7 @@ class FilterNodeLibrary(NodeLibrary):
     def _register_fader_nodes(self):
         """Registers all the fader nodes."""
         # Add Node -> Filter Fader sub menu
+        self.addNodeType(nodes.FaderMainBrightness, [('Filter Fader',)])
         self.addNodeType(nodes.FaderRawNode, [('Filter Fader',)])
         self.addNodeType(nodes.FaderHSINode, [('Filter Fader',)])
         self.addNodeType(nodes.FaderHSIANode, [('Filter Fader',)])
@@ -97,4 +98,5 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(nodes.FaderHSIAUNode, [('Filter Fader',)])
 
     def _register_effect_nodes(self):
+        # TODO register shift filters
         self.addNodeType(nodes.CueListNode, [('Effects',)])
