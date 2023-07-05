@@ -129,3 +129,14 @@ class FaderHSIAUNode(FilterNode):
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["amber"] = DataType.DT_8_BIT
         self.filter.out_data_types["uv"] = DataType.DT_8_BIT
+
+class FaderMainBrightness(FilterNode):
+    """Filter to the main brightness fader"""
+    nodeName = "global-ilumination"
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=49, name=name, terminals={
+            'brightness': {'io': 'out'}
+        })
+
+        self.filter.out_data_types["brightness"] = DataType.DT_16_BIT
