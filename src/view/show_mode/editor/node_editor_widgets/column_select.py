@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QCheckBox
 
 from model.control_desk import BankSet, RawDeskColumn, ColorDeskColumn
 from .node_editor_widget import NodeEditorFilterConfigWidget
@@ -16,16 +16,28 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
 
     def __init__(self, parent: QWidget = None):
         super().__init__()
-        self._widget = QTreeWidget(parent=parent)
-        self._widget.setColumnCount(2)
-        self._widget.setHeaderLabels(["ID", "Description"])
-        self._widget.itemSelectionChanged.connect(self._selection_changed_handler)
+        self._widget = QWidget()
+        layout = QVBoxLayout()
+
+        self._tree = QTreeWidget(parent=parent)
+        self._tree.setColumnCount(2)
+        self._tree.setHeaderLabels(["ID", "Description"])
+        self._tree.itemSelectionChanged.connect(self._selection_changed_handler)
+        layout.addWidget(self._tree)
+
+        self._ignore_main_brightness_checkbox = QCheckBox("Ignore Main Brightness")
+        self._ignore_main_brightness_checkbox.setEnabled(False)
+        layout.addWidget(self._ignore_main_brightness_checkbox)
+        self._widget.setLayout(layout)
         self._selected_item = None
 
     def _load_configuration(self, conf):
+        if "ignore_main_brightness_control" in conf.keys():
+            self._ignore_main_brightness_checkbox.setEnabled(True)
+            self._ignore_main_brightness_checkbox.setChecked(conf.get("ignore_main_brightness_control") == "true")
         set_id = conf.get("set_id") if "set_id" in conf.keys() else ""
         column_id = conf.get("column_id") if "column_id" in conf.keys() else ""
-        self._widget.clear()
+        self._tree.clear()
         for bank_set in BankSet.get_linked_bank_sets():
             set_item = QTreeWidgetItem()
             set_item.setText(0, bank_set.id)
@@ -54,7 +66,7 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
                         self._selected_item = column_item
                 set_item.addChild(bank_item)
                 i += 1
-            self._widget.insertTopLevelItem(0, set_item)
+            self._tree.insertTopLevelItem(0, set_item)
         if self._selected_item:
             self._selected_item.setSelected(True)
             current_item_to_expand = self._selected_item
@@ -67,7 +79,8 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
             return dict()
         data = {
             "column_id": self._selected_item.data(0, 0).id,
-            "set_id": self._selected_item.parent().parent().data(0, 0).id
+            "set_id": self._selected_item.parent().parent().data(0, 0).id,
+            "ignore_main_brightness_control": "true" if self._ignore_main_brightness_checkbox.isChecked() else "false"
         }
         return data
 

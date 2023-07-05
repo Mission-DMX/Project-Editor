@@ -40,3 +40,5 @@ class CueListNode(FilterNode):
                     channel_type = DataType.from_filter_str(splitted_channel_dev[1])
                     self.addOutput(channel_name)
                     self.filter.out_data_types[channel_name] = channel_type
+
+    # TODO implement shift effect nodes
