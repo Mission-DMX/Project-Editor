@@ -43,6 +43,10 @@ class FaderHSINode(FilterNode):
             self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
         except:
             self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configuration["ignore_main_brightness_control"] = model.filter_configurations["ignore_main_brightness_control"]
+        except:
+            self.filter.filter_configuration["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
 
@@ -64,6 +68,10 @@ class FaderHSIANode(FilterNode):
             self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
         except:
             self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configuration["ignore_main_brightness_control"] = model.filter_configurations["ignore_main_brightness_control"]
+        except:
+            self.filter.filter_configuration["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["amber"] = DataType.DT_8_BIT
@@ -86,6 +94,10 @@ class FaderHSIUNode(FilterNode):
             self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
         except:
             self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configuration["ignore_main_brightness_control"] = model.filter_configurations["ignore_main_brightness_control"]
+        except:
+            self.filter.filter_configuration["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["uv"] = DataType.DT_8_BIT
@@ -109,6 +121,10 @@ class FaderHSIAUNode(FilterNode):
             self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
         except:
             self.filter.filter_configurations["column_id"] = ""
+        try:
+            self.filter.filter_configuration["ignore_main_brightness_control"] = model.filter_configurations["ignore_main_brightness_control"]
+        except:
+            self.filter.filter_configuration["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["amber"] = DataType.DT_8_BIT
