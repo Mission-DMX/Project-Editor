@@ -53,7 +53,8 @@ class ChannelWidget(QtWidgets.QWidget):
         self._value_editor.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self._fixture = QtWidgets.QLabel(self._patching_channel.fixture_channel)
-        self._fixture.setFixedSize(element_size, element_size)
+        self._fixture.setWordWrap(True)
+        self._fixture.setFixedSize(element_size, element_size*2)
         self._fixture.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self._patching_channel.updated_fixture.connect(self._update_fixture)
 
