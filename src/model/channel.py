@@ -15,6 +15,8 @@ class Channel(QtCore.QObject):
             raise ValueError(f"Tried to create a channel with address {channel_address}")
         self._address: int = channel_address
         self._value: int = 0
+        self._save_value: int = 0
+        self._ignore_black: bool = True
 
     @property
     def address(self) -> int:
@@ -38,3 +40,20 @@ class Channel(QtCore.QObject):
             raise ValueError(f"Tried to set channel {self._address} to {value}.")
         self._value = value
         self.updated.emit(value)
+
+    @property
+    def ignore_black(self) -> bool:
+        """The current value of the channel"""
+        return self._ignore_black
+
+    @ignore_black.setter
+    def ignore_black(self, value: bool):
+        self._ignore_black = value
+
+    def black(self, blackout: bool):
+        if not self._ignore_black:
+            if blackout:
+                self._save_value = self._value
+                self.value = 0
+            else:
+                self.value = self._save_value

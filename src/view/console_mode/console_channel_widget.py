@@ -54,7 +54,7 @@ class ChannelWidget(QtWidgets.QWidget):
 
         self._fixture = QtWidgets.QLabel(self._patching_channel.fixture_channel)
         self._fixture.setWordWrap(True)
-        self._fixture.setFixedSize(element_size, element_size*2)
+        self._fixture.setFixedSize(element_size, element_size * 2)
         self._fixture.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self._patching_channel.updated_fixture.connect(self._update_fixture)
         if self._patching_channel.fixture_channel == "none":
@@ -83,6 +83,10 @@ class ChannelWidget(QtWidgets.QWidget):
         self._min_button.setStyleSheet(Style.ACTIVE_BUTTON)
         self._min_button.clicked.connect(lambda: self.update_value(0))
 
+        self._use_black = QtWidgets.QCheckBox()
+        self._use_black.stateChanged.connect(self._change_black)
+        self._use_black.setChecked(not self._patching_channel.ignore_black)
+
         self._channel.updated.connect(self._update)
 
         layout = QtWidgets.QVBoxLayout()
@@ -93,6 +97,7 @@ class ChannelWidget(QtWidgets.QWidget):
         layout.addWidget(self._max_button)
         layout.addWidget(self._slider)
         layout.addWidget(self._min_button)
+        layout.addWidget(self._use_black)
 
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
@@ -113,6 +118,9 @@ class ChannelWidget(QtWidgets.QWidget):
 
     def _update_fixture(self):
         self._fixture.setText(self._patching_channel.fixture_channel)
+
+    def _change_black(self):
+        self._channel.ignore_black = not self._use_black.isChecked()
 
     def update_value(self, value: int | str):
         """update of a value in """

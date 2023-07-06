@@ -124,6 +124,8 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
         if file_name:
             with open(file_name, "r", encoding='UTF-8') as file:
                 for (scene_index, line) in enumerate(file):
+                    if scene_index == len(self._scenes):
+                        self._add_scene()
                     universes = line.split(";")
                     for (universe_index, universe) in enumerate(universes):
                         for (chanel, value) in enumerate(universe.split(",")):
