@@ -42,6 +42,11 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         for channel, patching_chanel in zip(universe.channels, universe.patching):
             channel_widget = ChannelWidget(channel, patching_chanel)
             universe_widget.layout().addWidget(channel_widget)
+            # if last != "Empty" and patching_chanel.fixture_channel == "none":
+            if patching_chanel.fixture.name != "Empty" and patching_chanel.fixture_channel_id() == len(
+                    patching_chanel.fixture.mode['channels']) - 1:
+                universe_widget.layout().addWidget(QtWidgets.QLabel(patching_chanel.fixture.name))
+            last = patching_chanel.fixture.name
             channel.updated.connect(
                 lambda *args, send_universe=universe: broadcaster.send_universe_value.emit(send_universe))
 

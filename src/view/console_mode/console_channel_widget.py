@@ -57,6 +57,8 @@ class ChannelWidget(QtWidgets.QWidget):
         self._fixture.setFixedSize(element_size, element_size*2)
         self._fixture.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self._patching_channel.updated_fixture.connect(self._update_fixture)
+        if self._patching_channel.fixture_channel == "none":
+            self.setVisible(False)
 
         # Button to set the channel to the max value 255
         self._max_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Max", self)
