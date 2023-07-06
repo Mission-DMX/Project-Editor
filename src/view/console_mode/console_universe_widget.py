@@ -25,7 +25,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         super().__init__(parent=parent)
         broadcaster = Broadcaster()
 
-        self.setFixedHeight(500)
+        self.setFixedHeight(600)
 
         # Specifying style options. See Style.WIDGET
         self.setObjectName("ManualEditor")

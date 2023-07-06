@@ -32,7 +32,7 @@ class ChannelWidget(QtWidgets.QWidget):
         self._patching_channel = patching_channel
 
         # general width and height for all components
-        element_size = 35
+        element_size = 40
 
         # specific length of the slider
         slider_len = 256
