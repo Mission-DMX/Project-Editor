@@ -117,13 +117,13 @@ class PatchMode(QtWidgets.QStackedWidget):
                                              "Linse", "auto Farb", "auto Zoom", "auto beweg"])
                          )
              ),
-             ([80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92],
+            ([80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92],
              UsedFixture(name="MH4", short_name="", categories=set(), comment="",
                          mode=Mode(name="", shortName="",
                                    channels=["Pan", "Tilt", "Dimm", "Strob", "Rot", "Grün", "Blau", "Weiß", "Zoom",
                                              "Linse", "auto Farb", "auto Zoom", "auto beweg"])
                          )
-            ),
+             ),
             ([125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141],
              UsedFixture(name="Spot", short_name="", categories=set(), comment="",
                          mode=Mode(name="", shortName="",
@@ -175,7 +175,7 @@ class PatchMode(QtWidgets.QStackedWidget):
             color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
             for count, index in enumerate(channel):
                 # for index in range(len(fixture.mode['channels'])):
-                item = self._broadcaster.patching_universes[0].patching[index-1]
+                item = self._broadcaster.patching_universes[0].patching[index - 1]
                 item.fixture = fixture
                 item.fixture_channel = count
                 item.color = color
