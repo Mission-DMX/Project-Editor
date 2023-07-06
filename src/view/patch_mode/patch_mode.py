@@ -117,13 +117,13 @@ class PatchMode(QtWidgets.QStackedWidget):
                                              "Linse", "auto Farb", "auto Zoom", "auto beweg"])
                          )
              ),
-            # ([80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92],
-            # UsedFixture(name="MH4", short_name="", categories=set(), comment="",
-            #             mode=Mode(name="", shortName="",
-            #                       channels=["Pan", "Tilt", "Dimm", "Strob", "Rot", "Grün", "Blau", "Weiß", "Zoom",
-            #                                 "Linse", "auto Farb", "auto Zoom", "auto beweg"])
-            #             )
-            # ),
+             ([80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92],
+             UsedFixture(name="MH4", short_name="", categories=set(), comment="",
+                         mode=Mode(name="", shortName="",
+                                   channels=["Pan", "Tilt", "Dimm", "Strob", "Rot", "Grün", "Blau", "Weiß", "Zoom",
+                                             "Linse", "auto Farb", "auto Zoom", "auto beweg"])
+                         )
+            ),
             ([125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141],
              UsedFixture(name="Spot", short_name="", categories=set(), comment="",
                          mode=Mode(name="", shortName="",
@@ -132,15 +132,36 @@ class PatchMode(QtWidgets.QStackedWidget):
                                              "Prisma", "Prisma Rotation", "auto Show 255-Musik", "auto move 255-Musik"])
                          )
              ),
-            ([150, 151, 152, 153, 154, 155, 156, 157, 158, 159],
+            ([150, 151, 152, 153, 154, 155, 156, 157],
+             UsedFixture(name="LED Gang", short_name="", categories=set(), comment="",
+                         mode=Mode(name="", shortName="",
+                                   channels=["Dim", "Rot", "Grün", "Blau", "Strob", "255-Musik", "",
+                                             "einschalt verzögerung"])
+                         )
+             ),
+            ([160, 161, 162, 163, 164, 165, 166, 167, 168, 169],
              UsedFixture(name="LED Front", short_name="", categories=set(), comment="",
                          mode=Mode(name="", shortName="",
                                    channels=["Rot", "Grün", "Blau", "Weiß", "Amber", "UV", "Farb Macro", "Strobe",
                                              "Betriebsart 255-Musik", "Dim"])
                          )
              ),
-            ([160, 161, 162, 163, 164, 165, 166, 167],
-             UsedFixture(name="LED Back", short_name="", categories=set(), comment="",
+            ([170, 171, 172, 173, 174, 175, 176, 177],
+             UsedFixture(name="LED Stage1", short_name="", categories=set(), comment="",
+                         mode=Mode(name="", shortName="",
+                                   channels=["Dim", "Rot", "Grün", "Blau", "Strob", "255-Musik", "",
+                                             "einschalt verzögerung"])
+                         )
+             ),
+            ([180, 181, 182, 183, 184, 185, 186, 187],
+             UsedFixture(name="LED Stage2", short_name="", categories=set(), comment="",
+                         mode=Mode(name="", shortName="",
+                                   channels=["Dim", "Rot", "Grün", "Blau", "Strob", "255-Musik", "",
+                                             "einschalt verzögerung"])
+                         )
+             ),
+            ([190, 191, 192, 193, 194, 195, 196, 197],
+             UsedFixture(name="LED Stage3", short_name="", categories=set(), comment="",
                          mode=Mode(name="", shortName="",
                                    channels=["Dim", "Rot", "Grün", "Blau", "Strob", "255-Musik", "",
                                              "einschalt verzögerung"])
