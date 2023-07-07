@@ -65,14 +65,29 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._universe_widget = universe_widget
         self._broadcaster.jogwheel_rotated_left.connect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.connect(self._increase_scroll)
+        self._scroll_position = 0
 
     def __del__(self):
         self._bank_set.unlink()
         self._broadcaster.jogwheel_rotated_left.disconnect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.disconnect(self._increase_scroll)
 
-    def _decrease_scroll(self):
-        self._universe_widget.scroll(-25, 0)
+    def _translate_scroll_position(self, absolute_position):
+        # FIXME scrollbars are always strange and clearly more rules apply here
+        max = self.horizontalScrollBar().maximum()
+        widget_width = self._universe_widget.width()
+        return (absolute_position / widget_width) * max
 
     def _increase_scroll(self):
+        if self._translate_scroll_position(self._scroll_position - 25) < self.horizontalScrollBar().minimum():
+            return
+        self._scroll_position -= 25
         self._universe_widget.scroll(25, 0)
+        self.horizontalScrollBar().setValue(self._translate_scroll_position(self._scroll_position))
+
+    def _decrease_scroll(self):
+        if self._translate_scroll_position(self._scroll_position + 25) > self.horizontalScrollBar().maximum():
+            return
+        self._scroll_position += 25
+        self._universe_widget.scroll(-25, 0)
+        self.horizontalScrollBar().setValue(self._translate_scroll_position(self._scroll_position))
