@@ -3,6 +3,8 @@
 from abc import ABC, abstractmethod
 from uuid import uuid4
 
+from PySide6.QtCore import Signal
+
 import proto.Console_pb2
 from model.color_hsi import ColorHSI
 from model.broadcaster import Broadcaster
@@ -30,6 +32,7 @@ class DeskColumn(ABC):
         self.display_color = proto.Console_pb2.lcd_color.white
         self._lower_text = ""
         self._upper_text = ""
+        self.data_changed = Signal()
 
     def update(self) -> bool:
         """This method updates the state of this column with fish"""
@@ -118,6 +121,7 @@ class RawDeskColumn(DeskColumn):
             return
         self._fader_position = message.raw_data.fader
         self._encoder_position = message.raw_data.rotary_position  # TODO implement buttons once implemented in fish
+        self.data_changed.emit()
 
     @property
     def fader_position(self) -> int:
@@ -134,7 +138,13 @@ class RawDeskColumn(DeskColumn):
 
         position -- The new position to set
         """
+        if self._fader_position == position:
+            return
         self._fader_position = position
+        if self._fader_position < 0:
+            self._fader_position = 0
+        if self._fader_position > 65535:
+            self._fader_position = 65535
         self.update()
 
     @property
@@ -164,6 +174,7 @@ class ColorDeskColumn(DeskColumn):
         if not message.plain_color:
             return
         self._color = ColorHSI(message.plain_color.hue, message.plain_color.saturation, message.plain_color.intensity)
+        self.data_changed.emit()
 
     @property
     def color(self) -> ColorHSI:
@@ -190,6 +201,10 @@ class FaderBank:
     def add_column(self, col: DeskColumn):
         """add a new colum"""
         self.columns.append(col)
+
+    def remove_column(self, col: DeskColumn):
+        """removes the specified column from the bank set"""
+        self.columns.remove(col)
 
     def generate_bank_message(self) -> proto.Console_pb2.add_fader_bank_set.fader_bank:
         """This method computes a proto buf representation of the bank
@@ -248,6 +263,7 @@ class BankSet:
         Arguments:
         banks -- The initial list of fader banks
         description -- Optional. A human-readable description used in the fader bank editor to identify the set to edit
+        gui_controlled -- Indicates that the set is managed by the gui thread.
         """
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
@@ -264,6 +280,11 @@ class BankSet:
             self.description = "No description"
         self._gui_controlled = gui_controlled
         self._broadcaster.view_leave_colum_select.connect(self._leaf_selected)
+
+    def __del__(self):
+        if self.pushed_to_fish:
+            self.unlink()
+        super().__del__()
 
     def update(self) -> bool:
         """push the bank set to fish or update it if required
@@ -293,6 +314,8 @@ class BankSet:
         else:
             self.id = new_id
         self.pushed_to_fish = True
+        if self._gui_controlled:
+            self.push_messages_now()
         return True
 
     def activate(self):

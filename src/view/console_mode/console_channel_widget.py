@@ -3,8 +3,10 @@
 from PySide6 import QtCore, QtWidgets
 
 from model.channel import Channel
+from model.control_desk import BankSet
 from model.patching_channel import PatchingChannel
 from Style import Style
+from view.console_mode.console_fader_bank_selector import ConsoleFaderBankSelectorWidget
 
 
 class ChannelWidget(QtWidgets.QWidget):
@@ -20,7 +22,7 @@ class ChannelWidget(QtWidgets.QWidget):
     The min button is on the left side, the max button on the right side of the slider.
     """
 
-    def __init__(self, channel: Channel, patching_channel: PatchingChannel, parent=None):
+    def __init__(self, channel: Channel, patching_channel: PatchingChannel, parent=None, bank_set: BankSet = None):
         """Inits the ChannelWidget.
 
         Args:
@@ -60,6 +62,9 @@ class ChannelWidget(QtWidgets.QWidget):
         if self._patching_channel.fixture_channel == "none":
             self.setVisible(False)
 
+        self._bank_selector = ConsoleFaderBankSelectorWidget(bank_set, self._patching_channel.fixture_channel)
+        self._bank_selector.fader_value_changed.connect(self.update_value)
+
         # Button to set the channel to the max value 255
         self._max_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Max", self)
         self._max_button.setFixedSize(element_size, element_size)
@@ -93,6 +98,7 @@ class ChannelWidget(QtWidgets.QWidget):
 
         layout.addWidget(address_label)
         layout.addWidget(self._fixture)
+        layout.addWidget(self._bank_selector)
         layout.addWidget(self._value_editor)
         layout.addWidget(self._max_button)
         layout.addWidget(self._slider)
@@ -127,3 +133,4 @@ class ChannelWidget(QtWidgets.QWidget):
         value = int(value)
         if self._channel.value != value:
             self._channel.value = value
+            self._bank_selector.fader_value_changed.emit(value)
