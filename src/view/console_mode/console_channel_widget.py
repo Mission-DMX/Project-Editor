@@ -22,7 +22,8 @@ class ChannelWidget(QtWidgets.QWidget):
     The min button is on the left side, the max button on the right side of the slider.
     """
 
-    def __init__(self, channel: Channel, patching_channel: PatchingChannel, parent=None, bank_set: BankSet = None):
+    def __init__(self, channel: Channel, patching_channel: PatchingChannel, parent=None, bank_set: BankSet = None,
+                 bank_set_control_list=[]):
         """Inits the ChannelWidget.
 
         Args:
@@ -62,7 +63,8 @@ class ChannelWidget(QtWidgets.QWidget):
         if self._patching_channel.fixture_channel == "none":
             self.setVisible(False)
 
-        self._bank_selector = ConsoleFaderBankSelectorWidget(bank_set, self._patching_channel.fixture_channel)
+        self._bank_selector = ConsoleFaderBankSelectorWidget(bank_set, self._patching_channel.fixture_channel,
+                                                             bank_set_control_list=bank_set_control_list)
         self._bank_selector.fader_value_changed.connect(self.update_value)
 
         # Button to set the channel to the max value 255
@@ -132,5 +134,6 @@ class ChannelWidget(QtWidgets.QWidget):
         """update of a value in """
         value = int(value)
         if self._channel.value != value:
+            value = min(max(value, 0), 255)
             self._channel.value = value
             self._bank_selector.fader_value_changed.emit(value)

@@ -32,7 +32,7 @@ class DeskColumn(ABC):
         self.display_color = proto.Console_pb2.lcd_color.white
         self._lower_text = ""
         self._upper_text = ""
-        self.data_changed = Signal()
+        self.data_changed_callback = None
 
     def update(self) -> bool:
         """This method updates the state of this column with fish"""
@@ -121,7 +121,8 @@ class RawDeskColumn(DeskColumn):
             return
         self._fader_position = message.raw_data.fader
         self._encoder_position = message.raw_data.rotary_position  # TODO implement buttons once implemented in fish
-        self.data_changed.emit()
+        if self.data_changed_callback:
+            self.data_changed_callback()
 
     @property
     def fader_position(self) -> int:
@@ -174,7 +175,8 @@ class ColorDeskColumn(DeskColumn):
         if not message.plain_color:
             return
         self._color = ColorHSI(message.plain_color.hue, message.plain_color.saturation, message.plain_color.intensity)
-        self.data_changed.emit()
+        if self.data_changed_callback:
+            self.data_changed_callback()
 
     @property
     def color(self) -> ColorHSI:

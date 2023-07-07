@@ -24,7 +24,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             parent: Qt parent of the widget.
         """
         super().__init__(parent=parent)
-        broadcaster = Broadcaster()
+        self._broadcaster = Broadcaster()
 
         self.setFixedHeight(600)
 
@@ -46,10 +46,12 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._bank_set = BankSet(gui_controlled=True, description="Console mode Bankset for universe {}."
                                  .format(universe.description))
         self._bank_set.activate()
+        self._bank_set_control_elements = []
 
         # Add all channels of the universe
         for channel, patching_chanel in zip(universe.channels, universe.patching):
-            channel_widget = ChannelWidget(channel, patching_chanel, bank_set=self._bank_set)
+            channel_widget = ChannelWidget(channel, patching_chanel, bank_set=self._bank_set,
+                                           bank_set_control_list=self._bank_set_control_elements)
             universe_widget.layout().addWidget(channel_widget)
             # if last != "Empty" and patching_chanel.fixture_channel == "none":
             if patching_chanel.fixture.name != "Empty" and patching_chanel.fixture_channel_id() == len(
@@ -57,10 +59,20 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
                 universe_widget.layout().addWidget(QtWidgets.QLabel(patching_chanel.fixture.name))
             last = patching_chanel.fixture.name
             channel.updated.connect(
-                lambda *args, send_universe=universe: broadcaster.send_universe_value.emit(send_universe))
+                lambda *args, send_universe=universe: self._broadcaster.send_universe_value.emit(send_universe))
 
         self.setWidget(universe_widget)
+        self._universe_widget = universe_widget
+        self._broadcaster.jogwheel_rotated_left.connect(self._decrease_scroll)
+        self._broadcaster.jogwheel_rotated_right.connect(self._increase_scroll)
 
     def __del__(self):
         self._bank_set.unlink()
-        super().__del__()
+        self._broadcaster.jogwheel_rotated_left.disconnect(self._decrease_scroll)
+        self._broadcaster.jogwheel_rotated_right.disconnect(self._increase_scroll)
+
+    def _decrease_scroll(self):
+        self._universe_widget.scroll(-25, 0)
+
+    def _increase_scroll(self):
+        self._universe_widget.scroll(25, 0)
