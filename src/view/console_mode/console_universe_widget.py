@@ -78,16 +78,22 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         widget_width = self._universe_widget.width()
         return (absolute_position / widget_width) * max
 
-    def _increase_scroll(self):
+    def _decrease_scroll(self):
         if self._translate_scroll_position(self._scroll_position - 25) < self.horizontalScrollBar().minimum():
             return
         self._scroll_position -= 25
         self._universe_widget.scroll(25, 0)
         self.horizontalScrollBar().setValue(self._translate_scroll_position(self._scroll_position))
 
-    def _decrease_scroll(self):
+    def _increase_scroll(self):
         if self._translate_scroll_position(self._scroll_position + 25) > self.horizontalScrollBar().maximum():
             return
         self._scroll_position += 25
         self._universe_widget.scroll(-25, 0)
         self.horizontalScrollBar().setValue(self._translate_scroll_position(self._scroll_position))
+
+    def notify_activate(self):
+        if self._bank_set:
+            self._bank_set.activate()
+            self._bank_set.update()
+            self._bank_set.push_messages_now()

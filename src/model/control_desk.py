@@ -331,6 +331,8 @@ class BankSet:
         BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" + str(
             self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
         self._send_desk_update_message()
+        if self._gui_controlled:
+            self.push_messages_now()
 
     def _leaf_selected(self):
         if not self.activ_column:

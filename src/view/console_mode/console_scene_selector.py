@@ -94,6 +94,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
             self.tabBar().setCurrentIndex(self._last_tab)
         else:
             self._scenes[scene_index].send_all_universe()
+            self._scenes[scene_index].notify_activate()
 
     def _tab_clicked(self, scene_index: int) -> None:
         self._last_tab = self.tabBar().currentIndex()

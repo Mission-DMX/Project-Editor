@@ -16,6 +16,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
         self._universes: list[Universe] = []
+        self._universe_widgets: list[DirectUniverseWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
         self._blacked = False
 
@@ -43,6 +44,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
 
         direct_editor: DirectUniverseWidget = DirectUniverseWidget(universe, parent=self)
         layout.addWidget(direct_editor)
+        self._universe_widgets.append(direct_editor)
 
         black_button = QtWidgets.QPushButton("Black")
         black_button.clicked.connect(self._black)
@@ -63,3 +65,8 @@ class UniverseSelector(QtWidgets.QTabWidget):
                 chanel.black(not self._blacked)
 
         self._blacked = not self._blacked
+
+    def notify_activate(self):
+        # TODO this obviously breaks given multiple universes but it'll work for now
+        for universe_widget in self._universe_widgets:
+            universe_widget.notify_activate()
