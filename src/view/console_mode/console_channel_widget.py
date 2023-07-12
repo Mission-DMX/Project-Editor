@@ -66,6 +66,7 @@ class ChannelWidget(QtWidgets.QWidget):
         self._bank_selector = ConsoleFaderBankSelectorWidget(bank_set, self._patching_channel.fixture_channel,
                                                              bank_set_control_list=bank_set_control_list)
         self._bank_selector.fader_value_changed.connect(self.update_value)
+        self._bank_selector.setFixedWidth(element_size)
 
         # Button to set the channel to the max value 255
         self._max_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Max", self)
@@ -133,6 +134,7 @@ class ChannelWidget(QtWidgets.QWidget):
     def update_value(self, value: int | str):
         """update of a value in """
         value = int(value)
+        self._bank_selector._latest_ui_position_update = value
         if self._channel.value != value:
             value = min(max(value, 0), 255)
             self._channel.value = value

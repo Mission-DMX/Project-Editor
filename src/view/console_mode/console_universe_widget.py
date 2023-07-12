@@ -95,5 +95,5 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
     def notify_activate(self):
         if self._bank_set:
             self._bank_set.activate()
-            self._bank_set.update()
+            self._bank_set.update()  # FIXME activate should suffice
             self._bank_set.push_messages_now()

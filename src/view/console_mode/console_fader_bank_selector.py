@@ -24,8 +24,10 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
         self._display_text = display_text
         self._bank_set_control_list = bank_set_control_list
         self._bank_set_control_list.append(self)
+        self._skip_next_update = False
 
     def _insert_fader_column(self):
+        self._skip_next_update = True
         if self._fader:
             self._unlink_fader()
         self._fader = RawDeskColumn()
@@ -42,7 +44,7 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
         if new_index == 0 and self._fader:
             self._unlink_fader()
         elif new_index == 1:
-            name = "Bank " + str(self.count() - 3)
+            name = str(self.count() - 3) + " Bank"
             for combo_box in self._bank_set_control_list:
                 combo_box.insertItem(self.count(), name)
             if self._bank_index > -1:
@@ -64,7 +66,10 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
             self.fader_value_changed.emit(new_value)
 
     def _update_fader_position(self, new_value):
-        self._latest_ui_position_update = new_value
+        if self._skip_next_update:
+            new_value = self._latest_ui_position_update
+            self._skip_next_update = False
         if self._fader and new_value != self._latest_hardware_position_update:
+            self._latest_ui_position_update = new_value
             self._fader.fader_position = round((new_value * 65536) / 256)
             self._bank_set.push_messages_now()
