@@ -104,6 +104,7 @@ class RawDeskColumn(DeskColumn):
         self._b1_button_led_active = False
         self._b2_button_led_active = False
         self._b3_button_led_active = False
+        self._secondary_text_line: str = ""
 
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
         msg = self._generate_base_column_message()
@@ -114,6 +115,7 @@ class RawDeskColumn(DeskColumn):
         msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.lower_display_text = self._secondary_text_line
         return msg
 
     def update_from_message(self, message: proto.Console_pb2.fader_column):
@@ -123,6 +125,27 @@ class RawDeskColumn(DeskColumn):
         self._encoder_position = message.raw_data.rotary_position  # TODO implement buttons once implemented in fish
         if self.data_changed_callback:
             self.data_changed_callback()
+
+    @property
+    def secondary_text_line(self) -> str:
+        """This method returns the currently used second text line
+
+        Returns:
+            The text as a string
+        """
+        return self._secondary_text_line
+
+    @secondary_text_line.setter
+    def secondary_text_line(self, new_value: str | None):
+        """This method sets the secondary text line.
+
+        new_value -- The text to set
+        """
+        if new_value:
+            self._secondary_text_line = str(new_value)
+        else:
+            self._secondary_text_line = ""
+        self.update()
 
     @property
     def fader_position(self) -> int:
