@@ -62,7 +62,15 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
 
     for universe in board_configuration.universes:
         universe_element = _create_universe_element(universe=universe, parent=root)
-        _create_ftdi_location_element(ftdi_location=universe.location, parent=universe_element)
+
+        proto = universe.universe_proto
+
+        if proto.remote_location.ip_address != "":
+            _create_artnet_location_element(artnet_location=proto.remote_location, parent=universe_element)
+        elif proto.ftdi_dongle.vendor_id != "":
+            _create_ftdi_location_element(ftdi_location=proto.ftdi_dongle, parent=universe_element)
+        else:
+            _create_physical_location_element(physical=proto.physical_location, parent=universe_element)
 
     for device in board_configuration.devices:
         _create_device_element(device=device, parent=root)
