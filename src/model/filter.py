@@ -58,7 +58,7 @@ class Filter:
         self._scene: "Scene" = scene
         self._filter_id = filter_id
         self._filter_type = int(filter_type)
-        self._pos: list[float] = pos
+        self._pos: tuple[float, float] | None = pos
         self._channel_links: dict[str, str] = {}
         self._initial_parameters: dict[str, str] = {}
         self._filter_configurations: dict[str, str] = {}
@@ -85,8 +85,8 @@ class Filter:
         return self._filter_type
 
     @property
-    def pos(self) -> list[float]:
-        """The postition of the filter node inside the ui"""
+    def pos(self) -> list[float] | None:
+        """The position of the filter node inside the ui"""
         return self._pos
 
     @pos.setter

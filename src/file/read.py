@@ -115,7 +115,7 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case "type":
                 filter_type = int(value)
             case "pos":
-                pos = list((float(s) for s in value.split(",")))
+                pos = (float(value.split(",")[0]), float(value.split(",")[1]))
             case _:
                 logging.warning(
                     "Found attribute %s=%s while parsing filter for scene %s",

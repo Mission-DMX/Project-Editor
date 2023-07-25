@@ -139,6 +139,15 @@ class ShowManagerWidget(QTabWidget):
         """
         read_document(file_name, self._board_configuration)
 
+    def _save_show_file(self, file_name: str):
+        """Saves the board configuration to specified file.
+
+        Args:
+            file_name: File in which the config is saved.
+        """
+        xml = create_xml(self._board_configuration)
+        write_document(file_name, xml)
+
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""
         xml = create_xml(self._board_configuration)

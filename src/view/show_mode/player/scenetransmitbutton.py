@@ -6,8 +6,10 @@ from model import Scene
 from file.write import create_xml
 
 
-class SceneWidget(QPushButton):
-    """Widget to be displayed for a scene in the show player"""
+class SceneTransmitButton(QPushButton):
+    """Widget to be displayed for a scene in the show player.
+    Clicking the button will transmit the board config to fish and change the active scene.
+    """
     width = 100
     height = 75
 

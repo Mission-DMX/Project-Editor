@@ -8,7 +8,7 @@ from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 # from model import Scene, Filter
 from model import Scene
 from . import nodes
-from .flowchart import FilterFlowchart
+from .filter_flowchart import FilterFlowchart
 from .nodes import FilterNode
 from .filter_node_library import FilterNodeLibrary
 

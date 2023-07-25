@@ -7,7 +7,7 @@ from PySide6.QtGui import QFont
 
 from model import Scene, Filter, DataType, Broadcaster
 
-from ..node_graphics_item import FilterSettingsItem
+from ..filter_settings_item import FilterSettingsItem
 
 
 class FilterNode(Node):

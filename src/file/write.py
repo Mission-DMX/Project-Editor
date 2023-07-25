@@ -62,14 +62,7 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
 
     for universe in board_configuration.universes:
         universe_element = _create_universe_element(universe=universe, parent=root)
-
-        # match type(universe.location):
-        #    case proto.Universe.ArtNet:
-        #        _create_artnet_location_element(artnet_location=universe.location, parent=universe_element)
-        #    case proto.Universe.USBConfig:
         _create_ftdi_location_element(ftdi_location=universe.location, parent=universe_element)
-        #    case type(1):
-        #        _create_physical_location_element(physical_location=universe.location, parent=universe_element)
 
     for device in board_configuration.devices:
         _create_device_element(device=device, parent=root)
