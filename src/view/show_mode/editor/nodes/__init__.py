@@ -57,4 +57,6 @@ type_to_node: dict[int, str] = {
         42: FaderHSIUNode.nodeName,
         43: FaderHSIAUNode.nodeName,
         44: CueListNode.nodeName,
+        # TODO add shift filters
+        49: FaderMainBrightness.nodeName,
     }

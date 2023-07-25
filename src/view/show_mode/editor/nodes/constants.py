@@ -14,7 +14,10 @@ class Constants8BitNode(FilterNode):
             'value': {'io': 'out'}
         })
 
-        self.filter.initial_parameters["value"] = "0"
+        try:
+            self.filter.initial_parameters["value"] = model.initial_parameters["value"]
+        except:
+            self.filter.initial_parameters["value"] = "0"
         self.filter.out_data_types["value"] = DataType.DT_8_BIT
 
 
@@ -27,7 +30,10 @@ class Constants16BitNode(FilterNode):
             'value': {'io': 'out'}
         })
 
-        self.filter.initial_parameters["value"] = "0"
+        try:
+            self.filter.initial_parameters["value"] = model.initial_parameters["value"]
+        except:
+            self.filter.initial_parameters["value"] = "0"
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
 
 
@@ -39,8 +45,10 @@ class ConstantsFloatNode(FilterNode):
         super().__init__(model=model, filter_type=2, name=name, terminals={
             'value': {'io': 'out'}
         })
-
-        self.filter.initial_parameters["value"] = "0.0"
+        try:
+            self.filter.initial_parameters["value"] = model.initial_parameters["value"]
+        except:
+            self.filter.initial_parameters["value"] = "0.0"
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
 
 
@@ -54,5 +62,8 @@ class ConstantsColorNode(FilterNode):
         super().__init__(model=model, filter_type=3, name=name, terminals={
             'value': {'io': 'out'}
         })
-        self.filter.initial_parameters["value"] = "0,0,0"
+        try:
+            self.filter.initial_parameters["value"] = model.initial_parameters["value"]
+        except:
+            self.filter.initial_parameters["value"] = "0,0,0"
         self.filter.out_data_types["value"] = DataType.DT_COLOR
