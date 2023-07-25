@@ -13,7 +13,7 @@ class DebugNode(FilterNode):
         })
 
 
-class Debug8BitNode(FilterNode):
+class Debug8BitNode(DebugNode):
     """Filter to debug an 8 bit value.
     TODO implement visualization
     """
@@ -24,7 +24,7 @@ class Debug8BitNode(FilterNode):
         self.filter.in_data_types["value"] = DataType.DT_8_BIT
 
 
-class Debug16BitNode(FilterNode):
+class Debug16BitNode(DebugNode):
     """Filter to debug a 16 bit value.
     TODO implement visualization
     """
@@ -35,7 +35,7 @@ class Debug16BitNode(FilterNode):
         self.filter.in_data_types["value"] = DataType.DT_16_BIT
 
 
-class DebugFloatNode(FilterNode):
+class DebugFloatNode(DebugNode):
     """Filter to debug a float/double value.
     TODO implement visualization
     """
@@ -46,7 +46,7 @@ class DebugFloatNode(FilterNode):
         self.filter.in_data_types["value"] = DataType.DT_DOUBLE
 
 
-class DebugColorNode(FilterNode):
+class DebugColorNode(DebugNode):
     """Filter to debug a color value.
     TODO implement visualization
     """
