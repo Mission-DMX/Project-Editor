@@ -3,12 +3,13 @@
 import logging
 from xml.etree import ElementTree
 
-from pyqtgraph.flowchart import Flowchart
+from PySide6.QtWidgets import QDialog, QGridLayout
+
+import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
-from model import BoardConfiguration, Filter, Scene, Universe
-from model.patching_universe import PatchingUniverse
-from view.show_mode.library import FilterNodeLibrary
+from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse
+from view.dialogs import ExceptionsDialog
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration):
@@ -20,6 +21,16 @@ def read_document(file_name: str, board_configuration: BoardConfiguration):
     Returns:
         A BoardConfiguration instance parsed from the provided file.
     """
+
+    try:
+        schema_file = open("resources/ShowFileSchema.xsd", 'r')
+
+        schema = xmlschema.XMLSchema(schema_file)
+        schema.validate(file_name)
+    except Exception as error:
+        ExceptionsDialog(error).exec()
+        return
+
     board_configuration.broadcaster.clear_board_configuration.emit()
     tree = ElementTree.parse(file_name)
     root = tree.getroot()
@@ -78,11 +89,8 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                     "Found attribute %s=%s while parsing scene for show %s",
                     key, value, board_configuration.show_name)
 
-    flowchart = Flowchart(name=human_readable_name, library=FilterNodeLibrary())
-
     scene = Scene(scene_id=scene_id,
                   human_readable_name=human_readable_name,
-                  flowchart=flowchart,
                   board_configuration=board_configuration)
 
     for child in scene_element:
@@ -107,7 +115,7 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case "type":
                 filter_type = int(value)
             case "pos":
-                pos = tuple((float(s) for s in value.split(",")))
+                pos = (float(value.split(",")[0]), float(value.split(",")[1]))
             case _:
                 logging.warning(
                     "Found attribute %s=%s while parsing filter for scene %s",

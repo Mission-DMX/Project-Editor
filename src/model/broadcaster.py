@@ -32,7 +32,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType) # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(int)
-    load_show_file: QtCore.Signal = QtCore.Signal(Element)
+    load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
@@ -49,6 +49,9 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     view_patching: QtCore.Signal = QtCore.Signal()
     view_leave_patching: QtCore.Signal = QtCore.Signal()
     view_leave_patch_menu: QtCore.Signal = QtCore.Signal()
+
+    view_to_show_player: QtCore.Signal = QtCore.Signal()
+    view_leave_show_player: QtCore.Signal = QtCore.Signal()
 
     view_to_file_editor: QtCore.Signal = QtCore.Signal()
     view_leave_file_editor: QtCore.Signal = QtCore.Signal()

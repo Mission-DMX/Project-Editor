@@ -52,14 +52,18 @@ class DataType(IntFlag):
 class Filter:
     """Filter for show file"""
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[float, float] = (0.0, 0.0)):
+    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos=None):
+        if pos is None:
+            pos = [0.0, 0.0]
         self._scene: "Scene" = scene
         self._filter_id = filter_id
         self._filter_type = int(filter_type)
-        self._pos: tuple[float, float] = pos
+        self._pos: tuple[float, float] | None = pos
         self._channel_links: dict[str, str] = {}
         self._initial_parameters: dict[str, str] = {}
         self._filter_configurations: dict[str, str] = {}
+        self._in_data_types: dict[str, DataType] = {}
+        self._out_data_types: dict[str, DataType] = {}
 
     @property
     def scene(self) -> "Scene":
@@ -71,18 +75,22 @@ class Filter:
         """The unique id/name of the filter."""
         return self._filter_id
 
+    @filter_id.setter
+    def filter_id(self, id_):
+        self._filter_id = id_
+
     @property
     def filter_type(self) -> int:
         """The type of the filter"""
         return self._filter_type
 
     @property
-    def pos(self) -> tuple[float, float]:
-        """The postition of the filter node inside the ui"""
+    def pos(self) -> list[float] | None:
+        """The position of the filter node inside the ui"""
         return self._pos
 
     @pos.setter
-    def pos(self, pos: tuple[float, float]):
+    def pos(self, pos: list[float, float]):
         self._pos = pos
 
     @property
@@ -99,3 +107,13 @@ class Filter:
     def filter_configurations(self) -> dict[str, str]:
         """The filter configurations"""
         return self._filter_configurations
+
+    @property
+    def in_data_types(self) -> dict[str, DataType]:
+        """Dict mapping input channel names to their data types."""
+        return self._in_data_types
+
+    @property
+    def out_data_types(self) -> dict[str, DataType]:
+        """Dict mapping output channel names to their data types"""
+        return self._out_data_types

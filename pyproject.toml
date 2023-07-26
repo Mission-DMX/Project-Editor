@@ -1,3 +1,43 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fish-e"
+description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
+authors = [
+    { name = "Max Kassow", email = "ma.kaussow@uni-luebeck.de" },
+    { name = "Niklas Naumann", email = "niklas.naumann@student.uni-luebeck.de" },
+    { name = "Doralitze", email = "doralitze@chaotikum.org" },
+]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GLP-3" }
+dependencies = [
+    "PySide6",
+    "PySide6-QtAds==4.0.1.2",
+    "pyqtgraph",
+    "protobuf",
+    "xmlschema",
+    "pydantic",
+    "pylint",
+    "pylint_protobuf",
+]
+version = "1.0"
+
+[project.optional-dependencies]
+pdf = ["ReportLab>=1.2", "RXP"]
+rest = ["docutils>=0.3", "pack ==1.1, ==1.3"]
+
+[project.scripts]
+my-script = "src.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+exclude = []
+namespaces = false
+
 [tool.isort]
 skip = ["src/proto/"]
 line_length = 120

@@ -59,6 +59,9 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.load_show_file.connect(lambda xml: self.load_show_file(xml, True))
         self._broadcaster.change_active_scene.connect(self.enter_scene)
 
+        self._broadcaster.load_show_file.connect(self.load_show_file)
+        self._broadcaster.change_active_scene.connect(self.enter_scene)
+
         x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)
 
     @property
