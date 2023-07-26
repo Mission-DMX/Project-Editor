@@ -9,8 +9,8 @@ class CueListNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=44, name=name, terminals={
-            'time': {'io': 'in'}},
-                         allowAddOutput=True)
+            'time': {'io': 'in'}
+        }, allowAddOutput=True)
 
         try:
             mapping_from_file = model.initial_parameters["mapping"]
@@ -41,4 +41,54 @@ class CueListNode(FilterNode):
                     self.addOutput(channel_name)
                     self.filter.out_data_types[channel_name] = channel_type
 
-    # TODO implement shift effect nodes
+
+class ShiftFilterNode(FilterNode):
+    def __init__(self, model, name, id: int, data_type: DataType):
+        super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True) #, terminals={
+            #'input': {'io': 'in'},
+            #'switch_time': {'io', 'in'},
+            #'time': {'io': 'in'},
+        #}, )
+
+        self.filter.in_data_types["input"] = data_type
+        self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+
+        try:
+            print(dir(model))
+            self.filter.filter_configurations["nr_outputs"] = str(int(model.filter_configurations.get("nr_outputs")))
+        except ValueError:
+            self.filter.filter_configurations["nr_outputs"] = "0"
+
+        for i in range(int(self.filter.filter_configurations["nr_outputs"])):
+            channel_name = "output_" + str(i + 1)
+            self.addOutput(channel_name)
+            self.filter.out_data_types[channel_name] = data_type
+
+
+class Shift8BitNode(ShiftFilterNode):
+    nodeName = "filter_shift_8bit"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, 45, DataType.DT_8_BIT)
+
+
+class Shift16BitNode(ShiftFilterNode):
+    nodeName = "filter_shift_16bit"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, 46, DataType.DT_16_BIT)
+
+
+class ShiftFloatNode(ShiftFilterNode):
+    nodeName = "filter_shift_float"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, 47, DataType.DT_DOUBLE)
+
+
+class ShiftColorNode(ShiftFilterNode):
+    nodeName = "filter_shift_color"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, 48, DataType.DT_COLOR)
