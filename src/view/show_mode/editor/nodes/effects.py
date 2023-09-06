@@ -46,8 +46,8 @@ class ShiftFilterNode(FilterNode):
     def __init__(self, model, name, id: int, data_type: DataType):
         super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True, terminals={
             'input': {'io': 'in'},
-            'switch_time': {'io', 'in'},
-            'time': {'io': 'in'},
+            'switch_time': {'io': 'in'},
+            'time': {'io': 'in'}
         }, )
 
         self.filter.in_data_types["input"] = data_type
