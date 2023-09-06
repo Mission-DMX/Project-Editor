@@ -5,11 +5,12 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QFileDialog
+from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog
 from PySide6.QtGui import QAction
 
-from file.read import read_document
-from file.write import create_xml, write_document
+from file.write import create_xml
+from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog
+
 from model.board_configuration import BoardConfiguration, Scene, Broadcaster
 
 from .scenetab import SceneTabWidget
@@ -37,14 +38,16 @@ class ShowManagerWidget(QTabWidget):
 
         # Toolbar for io/network actions
         self._toolbar: list[QAction] = []
-        save_show_file_button = QAction("Save Show")
-        load_show_file_button = QAction("Load Show")
+        #save_show_file_button = QAction("Save Show")
+        #load_show_file_button = QAction("Load Show")
 
-        save_show_file_button.triggered.connect(self.show_save_showfile_dialog)
-        load_show_file_button.triggered.connect(self.show_load_showfile_dialog)
+        #save_show_file_button.triggered.connect(lambda: show_save_showfile_dialog(self.parent(),
+        #                                                                          self._board_configuration))
+        #load_show_file_button.triggered.connect(lambda: show_load_showfile_dialog(self.parent(),
+        #                                                                          self._board_configuration))
 
-        self._toolbar.append(save_show_file_button)
-        self._toolbar.append(load_show_file_button)
+        #self._toolbar.append(save_show_file_button)
+        #self._toolbar.append(load_show_file_button)
 
         board_configuration.broadcaster.scene_created.connect(self._add_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
@@ -120,43 +123,6 @@ class ShowManagerWidget(QTabWidget):
         if not isinstance(widget, SceneTabWidget):
             return
         self._board_configuration.broadcaster.delete_scene.emit(widget.scene)
-
-    def _select_file(self, func, show_save_dialog: bool) -> None:
-        """Opens QFileDialog to select a file.
-        
-        Args:
-            func: Function to be called after file was selected and confirmed. Function gets the file name as a string.
-        """
-        file_dialog = QFileDialog(self.parent(), "Save Show File" if show_save_dialog else "Load Show File")
-        file_dialog.setNameFilter("Mission DMX Show Files (*.show)")
-        if show_save_dialog:
-            file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
-        file_dialog.setDefaultSuffix(".show")
-        file_dialog.fileSelected.connect(func)
-        file_dialog.show()
-
-    def _load_show_file(self, file_name: str):
-        """Loads a show file.
-        
-        Args:
-            file_name: Path to the file to be loaded
-        """
-        read_document(file_name, self._board_configuration)
-
-    def _save_show_file(self, file_name: str):
-        """Saves the board configuration to specified file.
-
-        Args:
-            file_name: File in which the config is saved.
-        """
-        xml = create_xml(self._board_configuration)
-        write_document(file_name, xml)
-
-    def show_save_showfile_dialog(self):
-        self._select_file(self._save_show_file, True)
-
-    def show_load_showfile_dialog(self):
-        self._select_file(self._load_show_file, False)
 
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""

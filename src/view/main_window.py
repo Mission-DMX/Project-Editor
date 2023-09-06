@@ -4,6 +4,7 @@
 from PySide6 import QtWidgets, QtGui
 
 from Style import Style
+from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog
 from proto.RealTimeControl_pb2 import RunMode
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
@@ -105,7 +106,10 @@ class MainWindow(QtWidgets.QMainWindow):
                      ["Change", self._change_server_name],
                      ["Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)],
                      ["Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)],
-                     ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]]}
+                     ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]],
+            "Show": [["Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)],
+                     ["Save Showfile", lambda: show_save_showfile_dialog(self, self._board_configuration)]]
+        }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
