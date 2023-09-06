@@ -159,6 +159,8 @@ class FilterSettingsDialog(QDialog):
     def closeEvent(self, arg__1: PySide6.QtGui.QCloseEvent) -> None:
         if self._special_widget:
             self._special_widget.parent_closed(self._filter_node)
+        else:
+            self._filter_node.update_node_after_settings_changed()
         super().closeEvent(arg__1)
 
     def show(self) -> None:

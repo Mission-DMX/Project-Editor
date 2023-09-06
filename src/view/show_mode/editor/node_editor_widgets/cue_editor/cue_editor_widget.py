@@ -357,6 +357,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
             self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
             self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
+        super().parent_closed(filter_node)
 
     def parent_opened(self):
         self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)

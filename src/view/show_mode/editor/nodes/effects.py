@@ -70,10 +70,26 @@ class ShiftFilterNode(FilterNode):
         except ValueError:
             self.filter.filter_configurations["nr_outputs"] = "0"
 
-        for i in range(int(self.filter.filter_configurations["nr_outputs"])):
-            channel_name = "output_" + str(i + 1)
-            self.addOutput(channel_name)
-            self.filter.out_data_types[channel_name] = data_type
+        self._data_type = data_type
+        self.setup_output_terminals()
+
+    def setup_output_terminals(self):
+        existing_output_keys = [k for k in self.outputs().keys()]
+        previous_output_count = len(existing_output_keys)
+        new_output_count = int(self.filter.filter_configurations["nr_outputs"])
+        if previous_output_count > new_output_count:
+            for i in range(previous_output_count - new_output_count):
+                key_to_drop = existing_output_keys[len(existing_output_keys) - i - 1]
+                self.removeTerminal(key_to_drop)
+        else:
+            for i in range(new_output_count):
+                if i >= previous_output_count:
+                    channel_name = "output_" + str(i + 1)
+                    self.addOutput(channel_name)
+                    self.filter.out_data_types[channel_name] = self._data_type
+
+    def update_node_after_settings_changed(self):
+        self.setup_output_terminals()
 
 
 class Shift8BitNode(ShiftFilterNode):
