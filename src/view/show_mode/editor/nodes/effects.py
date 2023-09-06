@@ -1,4 +1,4 @@
-from model import DataType
+from model import DataType, Scene
 from model.broadcaster import Broadcaster
 from .filternode import FilterNode
 
@@ -55,8 +55,18 @@ class ShiftFilterNode(FilterNode):
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
 
         try:
-            print(dir(model))
-            self.filter.filter_configurations["nr_outputs"] = str(int(model.filter_configurations.get("nr_outputs")))
+            if isinstance(model, Scene):
+                found = False
+                for f in model.filters:
+                    if id == f.filter_id:
+                        self.filter.filter_configurations["nr_outputs"] = str(
+                            int(f.filter_configurations.get("nr_outputs")))
+                        found = True
+                        break
+                if not found:
+                    self.filter.filter_configurations["nr_outputs"] = "0"
+            else:
+                self.filter.filter_configurations["nr_outputs"] = str(int(model.filter_configurations.get("nr_outputs")))
         except ValueError:
             self.filter.filter_configurations["nr_outputs"] = "0"
 
