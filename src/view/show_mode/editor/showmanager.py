@@ -40,8 +40,8 @@ class ShowManagerWidget(QTabWidget):
         save_show_file_button = QAction("Save Show")
         load_show_file_button = QAction("Load Show")
 
-        save_show_file_button.triggered.connect(lambda: self._select_file(self._save_show_file))
-        load_show_file_button.triggered.connect(lambda: self._select_file(self._load_show_file))
+        save_show_file_button.triggered.connect(self.show_save_showfile_dialog)
+        load_show_file_button.triggered.connect(self.show_load_showfile_dialog)
 
         self._toolbar.append(save_show_file_button)
         self._toolbar.append(load_show_file_button)
@@ -121,13 +121,17 @@ class ShowManagerWidget(QTabWidget):
             return
         self._board_configuration.broadcaster.delete_scene.emit(widget.scene)
 
-    def _select_file(self, func) -> None:
+    def _select_file(self, func, show_save_dialog: bool) -> None:
         """Opens QFileDialog to select a file.
         
         Args:
             func: Function to be called after file was selected and confirmed. Function gets the file name as a string.
         """
-        file_dialog = QFileDialog(self)
+        file_dialog = QFileDialog(self.parent(), "Save Show File" if show_save_dialog else "Load Show File")
+        file_dialog.setNameFilter("Mission DMX Show Files (*.show)")
+        if show_save_dialog:
+            file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        file_dialog.setDefaultSuffix(".show")
         file_dialog.fileSelected.connect(func)
         file_dialog.show()
 
@@ -147,6 +151,12 @@ class ShowManagerWidget(QTabWidget):
         """
         xml = create_xml(self._board_configuration)
         write_document(file_name, xml)
+
+    def show_save_showfile_dialog(self):
+        self._select_file(self._save_show_file, True)
+
+    def show_load_showfile_dialog(self):
+        self._select_file(self._load_show_file, False)
 
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""
