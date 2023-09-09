@@ -18,7 +18,6 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self._universes: list[Universe] = []
         self._universe_widgets: list[DirectUniverseWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
-        self._blacked = False
 
         if self._broadcaster.patching_universes:
             for patching_universe in self._broadcaster.patching_universes:
@@ -46,11 +45,6 @@ class UniverseSelector(QtWidgets.QTabWidget):
         layout.addWidget(direct_editor)
         self._universe_widgets.append(direct_editor)
 
-        black_button = QtWidgets.QPushButton("Black")
-        black_button.clicked.connect(self._black)
-
-        layout.addWidget(black_button)
-
         widget.setLayout(layout)
         self.addTab(widget, str(universe.universe_proto.id))
 
@@ -58,13 +52,6 @@ class UniverseSelector(QtWidgets.QTabWidget):
         """send all universes to fish"""
         for universe in self._universes:
             self._broadcaster.send_universe_value.emit(universe)
-
-    def _black(self):
-        for universe in self._universes:
-            for chanel in universe.channels:
-                chanel.black(not self._blacked)
-
-        self._blacked = not self._blacked
 
     def notify_activate(self):
         # TODO this obviously breaks given multiple universes but it'll work for now
