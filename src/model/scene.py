@@ -17,6 +17,7 @@ class Scene:
         self._human_readable_name: str = human_readable_name
         self._board_configuration: "BoardConfiguration" = board_configuration
         self._filters: list[Filter] = []
+        self._filter_pages = []
 
     @property
     def scene_id(self) -> int:
