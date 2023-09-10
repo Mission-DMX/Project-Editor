@@ -2,17 +2,24 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem
 
 from model import Scene, BoardConfiguration
+from model.scene import FilterPage
 
 
 class ShowBrowser:
+
+    _filter_icon = QIcon("resources/filter.svg")
+    _scene_browser_tab_icon = QIcon("resources/showbrowser-show.svg")
+    _universe_browser_tab_icon = QIcon("resources/showbrowser-universe.svg")
+    _filter_browser_tab_icon = QIcon("resources/showbrowser-filterpages.svg")
+
     def __init__(self):
         self._widget = QTabWidget()
         self._scene_browsing_tree = QTreeWidget()
         self._universe_browsing_tree = QTreeWidget()
         self._filter_browsing_tree = QTreeWidget()
-        self._widget.addTab(self._scene_browsing_tree, QIcon("resources/showbrowser-show.svg"), "Show")
-        self._widget.addTab(self._universe_browsing_tree, QIcon("resources/showbrowser-universe.svg"), "Universes")
-        self._widget.addTab(self._filter_browsing_tree, QIcon("resources/showbrowser-filterpages.svg"), "Current Scene")
+        self._widget.addTab(self._scene_browsing_tree, ShowBrowser._scene_browser_tab_icon, "Show")
+        self._widget.addTab(self._universe_browsing_tree, ShowBrowser._universe_browser_tab_icon, "Universes")
+        self._widget.addTab(self._filter_browsing_tree, ShowBrowser._filter_browser_tab_icon, "Current Scene")
 
         self._scene_browsing_tree.setColumnCount(1)
         self._universe_browsing_tree.setColumnCount(4)
@@ -56,6 +63,7 @@ class ShowBrowser:
             item.setText(1, str(universe.name))
             item.setText(2, str(universe.location))
             item.setText(3, str(universe.description))
+            # TODO introduce object that inherits from QTreeWidgetItem but also stores the associated object
             self._universe_browsing_tree.insertTopLevelItem(i, item)
             for pf in universe.patching:
                 fixture_item = QTreeWidgetItem(item)
@@ -67,4 +75,23 @@ class ShowBrowser:
         # TODO link with patching update signals
 
     def _refresh_scene_browser(self):
-        pass
+        self._filter_browsing_tree.clear()
+
+        def generate_tree_item(fp: FilterPage, parent) -> QTreeWidgetItem:
+            item = QTreeWidgetItem(parent)
+            item.setText(0, fp.name)
+            # TODO set icon for page
+            for f in fp.filters:
+                filter_item = QTreeWidgetItem(item)
+                filter_item.setText(0, f.filter_id)
+                filter_item.setIcon(0, ShowBrowser._filter_icon)
+            for child_page in fp.child_pages:
+                generate_tree_item(child_page, item)
+            return item
+
+        i = 0
+        if self._selected_scene:
+            for page in self._selected_scene.pages:
+                tlli = generate_tree_item(page, self._filter_browsing_tree)
+                self._filter_browsing_tree.insertTopLevelItem(i, tlli)
+                i += 1
