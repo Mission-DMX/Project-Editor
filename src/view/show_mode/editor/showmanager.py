@@ -11,6 +11,7 @@ from PySide6.QtGui import QAction
 from file.read import read_document
 from file.write import create_xml, write_document
 from model.board_configuration import BoardConfiguration, Scene, Broadcaster
+from .editing_utils import add_scene_to_show
 
 from .scenetab import SceneTabWidget
 from .filter_node_library import FilterNodeLibrary
@@ -70,12 +71,7 @@ class ShowManagerWidget(QTabWidget):
             self._add_button_clicked()
 
     def _add_button_clicked(self):
-        scene_name, ok_button_pressed = QInputDialog.getText(self, "Create a new scene", "Scene name")
-        if ok_button_pressed:
-            scene = Scene(scene_id=len(self._board_configuration.scenes),
-                          human_readable_name=scene_name,
-                          board_configuration=self._board_configuration)
-            self._board_configuration.broadcaster.scene_created.emit(scene)
+        add_scene_to_show(self, self._board_configuration)
 
     def _add_tab(self, scene: Scene) -> SceneTabWidget | None:
         """Creates a tab for a scene

@@ -1,10 +1,12 @@
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem
+from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar
 
-from model import Scene, BoardConfiguration
+from model import Scene, BoardConfiguration, Universe
 from model.scene import FilterPage
 
 from .annotated_item import AnnotatedTreeWidgetItem
+from ..editing_utils import add_scene_to_show
+
 
 class ShowBrowser:
 
@@ -14,23 +16,34 @@ class ShowBrowser:
     _filter_browser_tab_icon = QIcon("resources/showbrowser-filterpages.svg")
 
     def __init__(self):
-        self._widget = QTabWidget()
+        self._widget = QWidget()
+        self._tab_widget = QTabWidget()
         self._scene_browsing_tree = QTreeWidget()
         self._universe_browsing_tree = QTreeWidget()
         self._filter_browsing_tree = QTreeWidget()
-        self._widget.addTab(self._scene_browsing_tree, ShowBrowser._scene_browser_tab_icon, "Show")
-        self._widget.addTab(self._universe_browsing_tree, ShowBrowser._universe_browser_tab_icon, "Universes")
-        self._widget.addTab(self._filter_browsing_tree, ShowBrowser._filter_browser_tab_icon, "Current Scene")
+        self._tab_widget.addTab(self._scene_browsing_tree, ShowBrowser._scene_browser_tab_icon, "Show")
+        self._tab_widget.addTab(self._universe_browsing_tree, ShowBrowser._universe_browser_tab_icon, "Universes")
+        self._tab_widget.addTab(self._filter_browsing_tree, ShowBrowser._filter_browser_tab_icon, "Current Scene")
 
-        self._scene_browsing_tree.setColumnCount(1)
+        self._scene_browsing_tree.setColumnCount(2)
         self._universe_browsing_tree.setColumnCount(4)
         self._filter_browsing_tree.setColumnCount(1)
+
+        self._tool_bar = QToolBar()
+        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Element", lambda: self._add_element_pressed())
+        self._tool_bar.addAction(QIcon.fromTheme("document-properties"), "Edit", lambda: self._edit_element_pressed())
+
+        layout = QVBoxLayout()
+        layout.addWidget(self._tool_bar)
+        layout.addWidget(self._tab_widget)
+        self._widget.setLayout(layout)
 
         self._show: BoardConfiguration | None = None
         self._selected_scene: Scene | None = None
 
-        self._refresh_universe_browser()
         self._refresh_scene_browser()
+        self._refresh_universe_browser()
+        self._refresh_filter_browser()
 
     @property
     def widget(self):
@@ -43,6 +56,7 @@ class ShowBrowser:
     @board_configuration.setter
     def board_configuration(self, b: BoardConfiguration | None):
         self._show = b
+        self._refresh_scene_browser()
         self._refresh_universe_browser()
         self.selected_scene = None
 
@@ -53,7 +67,7 @@ class ShowBrowser:
     @selected_scene.setter
     def selected_scene(self, s: Scene | None):
         self._selected_scene = s
-        self._refresh_scene_browser()
+        self._refresh_filter_browser()
 
     def _refresh_universe_browser(self):
         self._universe_browsing_tree.clear()
@@ -65,7 +79,6 @@ class ShowBrowser:
             item.setText(2, str(universe.location))
             item.setText(3, str(universe.description))
             item.annotated_data = universe
-            # TODO introduce object that inherits from QTreeWidgetItem but also stores the associated object
             self._universe_browsing_tree.insertTopLevelItem(i, item)
             for pf in universe.patching:
                 fixture_item = AnnotatedTreeWidgetItem(item)
@@ -77,7 +90,7 @@ class ShowBrowser:
             i += 1
         # TODO link with patching update signals
 
-    def _refresh_scene_browser(self):
+    def _refresh_filter_browser(self):
         self._filter_browsing_tree.clear()
 
         def generate_tree_item(fp: FilterPage, parent) -> QTreeWidgetItem:
@@ -100,3 +113,31 @@ class ShowBrowser:
                 tlli = generate_tree_item(page, self._filter_browsing_tree)
                 self._filter_browsing_tree.insertTopLevelItem(i, tlli)
                 i += 1
+
+    def _add_scene_to_scene_browser(self, s: Scene):
+        item = AnnotatedTreeWidgetItem(self._scene_browsing_tree)
+        item.setText(0, s.scene_id)
+        item.setText(1, s.human_readable_name)
+        item.annotated_data = s
+        self._scene_browsing_tree.insertTopLevelItem(self._scene_browsing_tree.topLevelItemCount(), item)
+
+    def _refresh_scene_browser(self):
+        self._scene_browsing_tree.clear()
+        for scene in self._show.scenes:
+            self._add_scene_to_scene_browser(scene)
+
+    def _add_element_pressed(self):
+        selected_tab_widget = self._tab_widget.currentWidget()
+        if selected_tab_widget == self._scene_browsing_tree:
+            new_scene = add_scene_to_show(self._widget, self._show)
+            if new_scene:
+                self._add_scene_to_scene_browser(new_scene)
+        elif selected_tab_widget == self._universe_browsing_tree:
+            # TODO add universe
+            pass
+        else:
+            # TODO add filter page
+            pass
+
+    def _edit_element_pressed(self):
+        pass
