@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem
 from model import Scene, BoardConfiguration
 from model.scene import FilterPage
 
+from .annotated_item import AnnotatedTreeWidgetItem
 
 class ShowBrowser:
 
@@ -58,19 +59,21 @@ class ShowBrowser:
         self._universe_browsing_tree.clear()
         i = 0
         for universe in self._show.universes:
-            item = QTreeWidgetItem(self._universe_browsing_tree)
+            item = AnnotatedTreeWidgetItem(self._universe_browsing_tree)
             item.setText(0, str(universe.id))
             item.setText(1, str(universe.name))
             item.setText(2, str(universe.location))
             item.setText(3, str(universe.description))
+            item.annotated_data = universe
             # TODO introduce object that inherits from QTreeWidgetItem but also stores the associated object
             self._universe_browsing_tree.insertTopLevelItem(i, item)
             for pf in universe.patching:
-                fixture_item = QTreeWidgetItem(item)
+                fixture_item = AnnotatedTreeWidgetItem(item)
                 fixture_item.setText(0, str(pf.address))
                 fixture_item.setText(1, pf.fixture_channel)
                 fixture_item.setText(2, pf.fixture.mode)
                 fixture_item.setText(3, pf.fixture.name)
+                fixture_item.annotated_data = pf
             i += 1
         # TODO link with patching update signals
 
@@ -78,13 +81,15 @@ class ShowBrowser:
         self._filter_browsing_tree.clear()
 
         def generate_tree_item(fp: FilterPage, parent) -> QTreeWidgetItem:
-            item = QTreeWidgetItem(parent)
+            item = AnnotatedTreeWidgetItem(parent)
             item.setText(0, fp.name)
+            item.annotated_data = fp
             # TODO set icon for page
             for f in fp.filters:
-                filter_item = QTreeWidgetItem(item)
+                filter_item = AnnotatedTreeWidgetItem(item)
                 filter_item.setText(0, f.filter_id)
                 filter_item.setIcon(0, ShowBrowser._filter_icon)
+                filter_item.annotated_data = f
             for child_page in fp.child_pages:
                 generate_tree_item(child_page, item)
             return item
