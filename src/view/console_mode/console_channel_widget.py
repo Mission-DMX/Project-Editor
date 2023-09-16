@@ -3,8 +3,10 @@
 from PySide6 import QtCore, QtWidgets
 
 from model.channel import Channel
+from model.control_desk import BankSet
 from model.patching_channel import PatchingChannel
 from Style import Style
+from view.console_mode.console_fader_bank_selector import ConsoleFaderBankSelectorWidget
 
 
 class ChannelWidget(QtWidgets.QWidget):
@@ -20,7 +22,8 @@ class ChannelWidget(QtWidgets.QWidget):
     The min button is on the left side, the max button on the right side of the slider.
     """
 
-    def __init__(self, channel: Channel, patching_channel: PatchingChannel, parent=None):
+    def __init__(self, channel: Channel, patching_channel: PatchingChannel, parent=None, bank_set: BankSet = None,
+                 bank_set_control_list=[]):
         """Inits the ChannelWidget.
 
         Args:
@@ -32,7 +35,7 @@ class ChannelWidget(QtWidgets.QWidget):
         self._patching_channel = patching_channel
 
         # general width and height for all components
-        element_size = 35
+        element_size = 40
 
         # specific length of the slider
         slider_len = 256
@@ -53,9 +56,17 @@ class ChannelWidget(QtWidgets.QWidget):
         self._value_editor.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self._fixture = QtWidgets.QLabel(self._patching_channel.fixture_channel)
-        self._fixture.setFixedSize(element_size, element_size)
+        self._fixture.setWordWrap(True)
+        self._fixture.setFixedSize(element_size, element_size * 2)
         self._fixture.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self._patching_channel.updated_fixture.connect(self._update_fixture)
+        if self._patching_channel.fixture_channel == "none":
+            self.setVisible(False)
+
+        self._bank_selector = ConsoleFaderBankSelectorWidget(bank_set, self._patching_channel.fixture_channel,
+                                                             bank_set_control_list=bank_set_control_list)
+        self._bank_selector.fader_value_changed.connect(self.update_value)
+        self._bank_selector.setFixedWidth(element_size)
 
         # Button to set the channel to the max value 255
         self._max_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Max", self)
@@ -86,6 +97,7 @@ class ChannelWidget(QtWidgets.QWidget):
 
         layout.addWidget(address_label)
         layout.addWidget(self._fixture)
+        layout.addWidget(self._bank_selector)
         layout.addWidget(self._value_editor)
         layout.addWidget(self._max_button)
         layout.addWidget(self._slider)
@@ -114,5 +126,8 @@ class ChannelWidget(QtWidgets.QWidget):
     def update_value(self, value: int | str):
         """update of a value in """
         value = int(value)
+        self._bank_selector._latest_ui_position_update = value
         if self._channel.value != value:
+            value = min(max(value, 0), 255)
             self._channel.value = value
+            self._bank_selector.fader_value_changed.emit(value)

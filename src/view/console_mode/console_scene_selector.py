@@ -1,5 +1,6 @@
 # coding=utf-8
 """mange different scenes"""
+import logging
 from typing import TYPE_CHECKING
 
 from PySide6 import QtGui, QtWidgets
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 class ConsoleSceneSelector(QtWidgets.QTabWidget):
     """Widget to mange different scenes in Tab Widgets"""
 
-    def __init__(self,  parent: "MainWindow") -> None:
+    def __init__(self, parent: "MainWindow") -> None:
         super().__init__(parent=parent)
         broadcaster = Broadcaster()
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
@@ -54,11 +55,14 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
                 menu.popup(QtGui.QCursor.pos())
                 break
 
-    def _add_scene(self) -> None:
+    def _add_scene(self, text: str = None) -> None:
         """
         add a new scene
         """
-        text, run = QtWidgets.QInputDialog.getText(self, "Scene Name", "Enter Scene Name:")
+        if not text:
+            text, run = QtWidgets.QInputDialog.getText(self, "Scene Name", "Enter Scene Name:")
+        else:
+            run = True
         if run:
             universe_selector = UniverseSelector(self)
             self._scenes.append(universe_selector)
@@ -90,6 +94,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
             self.tabBar().setCurrentIndex(self._last_tab)
         else:
             self._scenes[scene_index].send_all_universe()
+            self._scenes[scene_index].notify_activate()
 
     def _tab_clicked(self, scene_index: int) -> None:
         self._last_tab = self.tabBar().currentIndex()
@@ -102,7 +107,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
          See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd
         """
         data: str = ""
-        for scene in self._scenes:
+        for index, scene in enumerate(self._scenes):
             for universe in scene.universes:
                 data += ""
                 for channel in universe.channels:
@@ -110,7 +115,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
                 data = data[:-1]
                 data += ";"
             data = data[:-1]
-            data += "\n"
+            data += f"# {self.tabText(index)}\n"
         file_name, _ = QtWidgets.QFileDialog.getSaveFileName(self, "save Scene", "",
                                                              "Text Files (*.txt);;All Files (*)", )
         if file_name:
@@ -124,6 +129,13 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
         if file_name:
             with open(file_name, "r", encoding='UTF-8') as file:
                 for (scene_index, line) in enumerate(file):
+                    name = line.split("\n")[0]
+                    name = name.split("#")[1]
+                    line = line.split("#")[0]
+                    logging.info(f"Add scene {name}")
+                    if scene_index == len(self._scenes):
+                        self._add_scene(name)
+
                     universes = line.split(";")
                     for (universe_index, universe) in enumerate(universes):
                         for (chanel, value) in enumerate(universe.split(",")):

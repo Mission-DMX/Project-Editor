@@ -20,6 +20,7 @@ class PatchingChannel(QtCore.QObject):
         self._fixture: UsedFixture = UsedFixture("Empty", "", set(), "", Mode(channels=["none"], shortName="", name=""))
         self._fixture_channel: int = 0
         self._color: str = color
+        self._ignore_black = True
 
     @property
     def address(self) -> int:
@@ -35,6 +36,15 @@ class PatchingChannel(QtCore.QObject):
     def fixture(self, fixture: UsedFixture):
         self._fixture = fixture
         self.updated_fixture.emit()
+
+    @property
+    def ignore_black(self) -> bool:
+        """The fixture of the channel"""
+        return self._ignore_black
+
+    @ignore_black.setter
+    def ignore_black(self, ignore_black: bool):
+        self._ignore_black = ignore_black
 
     @property
     def fixture_channel(self) -> str:
@@ -55,3 +65,6 @@ class PatchingChannel(QtCore.QObject):
     def color(self, color: str):
         self._color = color
         self.updated_color.emit(self._color)
+
+    def fixture_channel_id(self) -> int:
+        return self._fixture_channel
