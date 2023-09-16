@@ -16,8 +16,8 @@ class SceneTabWidget(QTabWidget):
 
         self.setTabPosition(QTabWidget.TabPosition.West)
 
-        self.addTab(NodeEditorWidget(scene, self), "Editor")
-        self.addTab(SceneManagerWidget(scene, self), "Manager")
+        self.addTab(NodeEditorWidget(scene, self), "Filter Editor")
+        self.addTab(SceneManagerWidget(scene, self), "UI Manager")
 
     @property
     def scene(self) -> Scene:
