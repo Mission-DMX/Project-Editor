@@ -92,3 +92,7 @@ class FilterNode(Node):
     def filter(self) -> Filter:
         """The corresponding filter"""
         return self._filter
+
+    def update_node_after_settings_changed(self):
+        """Override this method in order to update ports after the settings have changed"""
+        pass

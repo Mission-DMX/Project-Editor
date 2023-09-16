@@ -1,4 +1,4 @@
-from model import DataType
+from model import DataType, Scene
 from model.broadcaster import Broadcaster
 from .filternode import FilterNode
 
@@ -9,8 +9,8 @@ class CueListNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=44, name=name, terminals={
-            'time': {'io': 'in'}},
-                         allowAddOutput=True)
+            'time': {'io': 'in'}
+        }, allowAddOutput=True)
 
         try:
             mapping_from_file = model.initial_parameters["mapping"]
@@ -41,4 +41,80 @@ class CueListNode(FilterNode):
                     self.addOutput(channel_name)
                     self.filter.out_data_types[channel_name] = channel_type
 
-    # TODO implement shift effect nodes
+
+class ShiftFilterNode(FilterNode):
+    def __init__(self, model, name, id: int, data_type: DataType):
+        super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True, terminals={
+            'input': {'io': 'in'},
+            'switch_time': {'io': 'in'},
+            'time': {'io': 'in'}
+        }, )
+
+        self.filter.in_data_types["input"] = data_type
+        self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+
+        try:
+            if isinstance(model, Scene):
+                found = False
+                for f in model.filters:
+                    if id == f.filter_id:
+                        self.filter.filter_configurations["nr_outputs"] = str(
+                            int(f.filter_configurations.get("nr_outputs")))
+                        found = True
+                        break
+                if not found:
+                    self.filter.filter_configurations["nr_outputs"] = "0"
+            else:
+                self.filter.filter_configurations["nr_outputs"] = str(int(model.filter_configurations.get("nr_outputs")))
+        except ValueError:
+            self.filter.filter_configurations["nr_outputs"] = "0"
+
+        self._data_type = data_type
+        self.setup_output_terminals()
+
+    def setup_output_terminals(self):
+        existing_output_keys = [k for k in self.outputs().keys()]
+        previous_output_count = len(existing_output_keys)
+        new_output_count = int(self.filter.filter_configurations["nr_outputs"])
+        if previous_output_count > new_output_count:
+            for i in range(previous_output_count - new_output_count):
+                key_to_drop = existing_output_keys[len(existing_output_keys) - i - 1]
+                self.removeTerminal(key_to_drop)
+        else:
+            for i in range(new_output_count):
+                if i >= previous_output_count:
+                    channel_name = "output_" + str(i + 1)
+                    self.addOutput(channel_name)
+                    self.filter.out_data_types[channel_name] = self._data_type
+
+    def update_node_after_settings_changed(self):
+        self.setup_output_terminals()
+
+
+class Shift8BitNode(ShiftFilterNode):
+    nodeName = "filter_shift_8bit"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, 45, DataType.DT_8_BIT)
+
+
+class Shift16BitNode(ShiftFilterNode):
+    nodeName = "filter_shift_16bit"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, 46, DataType.DT_16_BIT)
+
+
+class ShiftFloatNode(ShiftFilterNode):
+    nodeName = "filter_shift_float"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, 47, DataType.DT_DOUBLE)
+
+
+class ShiftColorNode(ShiftFilterNode):
+    nodeName = "filter_shift_color"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, 48, DataType.DT_COLOR)
