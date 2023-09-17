@@ -16,6 +16,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
         self._universes: list[Universe] = []
+        self._universe_widgets: list[DirectUniverseWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
 
         if self._broadcaster.patching_universes:
@@ -37,11 +38,22 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self._broadcaster.send_universe_value.emit(universe)
         self._universes.append(universe)
 
-        direct_editor: DirectUniverseWidget = DirectUniverseWidget(universe, parent=self)
+        widget = QtWidgets.QTabWidget()
+        layout = QtWidgets.QVBoxLayout()
 
-        self.addTab(direct_editor, str(universe.universe_proto.id))
+        direct_editor: DirectUniverseWidget = DirectUniverseWidget(universe, parent=self)
+        layout.addWidget(direct_editor)
+        self._universe_widgets.append(direct_editor)
+
+        widget.setLayout(layout)
+        self.addTab(widget, str(universe.universe_proto.id))
 
     def send_all_universe(self) -> None:
         """send all universes to fish"""
         for universe in self._universes:
             self._broadcaster.send_universe_value.emit(universe)
+
+    def notify_activate(self):
+        # TODO this obviously breaks given multiple universes but it'll work for now
+        for universe_widget in self._universe_widgets:
+            universe_widget.notify_activate()

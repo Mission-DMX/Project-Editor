@@ -19,6 +19,12 @@ class UniverseDialog(QtWidgets.QDialog):
                     port=6454,
                     universe_on_device=patching_universe_or_id
                 )
+                #ftdi_dongle=proto.UniverseControl_pb2.Universe.USBConfig(
+                #    vendor_id=0x0403,
+                #    product_id=0x6001,
+                #    serial="",
+                #    device_name=""
+                #)
             )
         else:
             patching_proto: proto.UniverseControl_pb2.Universe = patching_universe_or_id

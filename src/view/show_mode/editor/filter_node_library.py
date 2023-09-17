@@ -98,5 +98,8 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(nodes.FaderHSIAUNode, [('Filter Fader',)])
 
     def _register_effect_nodes(self):
-        # TODO register shift filters
         self.addNodeType(nodes.CueListNode, [('Effects',)])
+        self.addNodeType(nodes.Shift8BitNode, [('Effects',)])
+        self.addNodeType(nodes.Shift16BitNode, [('Effects',)])
+        self.addNodeType(nodes.ShiftFloatNode, [('Effects',)])
+        self.addNodeType(nodes.ShiftColorNode, [('Effects',)])
