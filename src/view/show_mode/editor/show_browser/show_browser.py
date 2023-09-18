@@ -30,6 +30,7 @@ class ShowBrowser:
 
         self._scene_browsing_tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._scene_browsing_tree.customContextMenuRequested.connect(self._scene_context_menu_triggered)
+        self._scene_browsing_tree.itemDoubleClicked.connect(self._scene_item_double_clicked)
 
         self._scene_browsing_tree.setColumnCount(2)
         self._universe_browsing_tree.setColumnCount(4)
@@ -163,7 +164,7 @@ class ShowBrowser:
         pos = self._widget.pos()
         menu.setGeometry(pos.x() + point.x(), pos.y() + point.y(), 100, 200)
         if has_scenes:
-            menu.addAction(QIcon.fromTheme(""), "Delete", lambda: self._delete_scenes_from_context_menu(selected_items))
+            menu.addAction(QIcon.fromTheme("edit-delete"), "Delete", lambda: self._delete_scenes_from_context_menu(selected_items))
         menu.show()
 
     def _delete_scenes_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
@@ -174,3 +175,9 @@ class ShowBrowser:
                     self._show.broadcaster.delete_scene.emit(scene_to_delete)
                     del si
         self._refresh_scene_browser()
+
+    def _scene_item_double_clicked(self, item):
+        if isinstance(item, AnnotatedTreeWidgetItem):
+            data = item.annotated_data
+            if isinstance(data, Scene):
+                self._show.broadcaster.scene_open_in_editor_requested.emit(data)

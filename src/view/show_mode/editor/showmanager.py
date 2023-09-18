@@ -57,6 +57,7 @@ class ShowEditorWidget(QSplitter):
         self.addWidget(self._open_page_tab_widget)
 
         board_configuration.broadcaster.scene_created.connect(self._add_tab)
+        board_configuration.broadcaster.scene_open_in_editor_requested.connect(self._add_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
 
     def _select_scene_to_be_removed(self):
@@ -88,6 +89,9 @@ class ShowEditorWidget(QSplitter):
         Args:
             scene: The scene to be added
         """
+
+        # TODO in case the scene to be opened already exists, the corresponding tab should be switched to instead of
+        # copy to be opened
 
         # Each scene is represented by its own editor
         scene_tab = SceneTabWidget(scene)
