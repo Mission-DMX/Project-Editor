@@ -15,7 +15,7 @@ from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patch_mode.patch_mode import PatchMode
-from view.show_mode import ShowManagerWidget, ShowPlayerWidget
+from view.show_mode import ShowEditorWidget, ShowPlayerWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -42,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)),
-            ("Editor Mode", MainWidget(ShowManagerWidget(self._board_configuration, self._broadcaster, self), self),
+            ("Editor Mode", MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
              lambda: self._broadcaster.view_to_file_editor.emit()),
             ("Show Mode", MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
              lambda: self._broadcaster.view_to_show_player.emit()),

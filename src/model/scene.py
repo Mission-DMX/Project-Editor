@@ -1,12 +1,13 @@
 # coding=utf-8
 """Scene module"""
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
-from .control_desk import BankSet
 from .filter import Filter
 
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
+    from .control_desk import BankSet
+
 
 
 class FilterPage:
@@ -43,7 +44,7 @@ class Scene:
         self._board_configuration: "BoardConfiguration" = board_configuration
         self._filters: list[Filter] = []
         self._filter_pages: list[FilterPage] = []
-        self._associated_bankset: BankSet | None = None
+        self._associated_bankset: Optional["BankSet"] | None = None
 
     @property
     def scene_id(self) -> int:
@@ -82,11 +83,11 @@ class Scene:
         return self._filter_pages
 
     @property
-    def linked_bankset(self) -> BankSet | None:
+    def linked_bankset(self) -> Optional["BankSet"] | None:
         return self._associated_bankset
 
     @linked_bankset.setter
-    def linked_bankset(self, new_bs: BankSet):
+    def linked_bankset(self, new_bs: "BankSet"):
         if self._associated_bankset:
             if self._associated_bankset.is_linked:
                 self._associated_bankset.unlink()

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar
 
@@ -15,8 +17,8 @@ class ShowBrowser:
     _universe_browser_tab_icon = QIcon("resources/showbrowser-universe.svg")
     _filter_browser_tab_icon = QIcon("resources/showbrowser-filterpages.svg")
 
-    def __init__(self):
-        self._widget = QWidget()
+    def __init__(self, parent: QWidget, show: Optional[BoardConfiguration] = None):
+        self._widget = QWidget(parent)
         self._tab_widget = QTabWidget()
         self._scene_browsing_tree = QTreeWidget()
         self._universe_browsing_tree = QTreeWidget()
@@ -38,7 +40,7 @@ class ShowBrowser:
         layout.addWidget(self._tab_widget)
         self._widget.setLayout(layout)
 
-        self._show: BoardConfiguration | None = None
+        self._show: BoardConfiguration | None = show
         self._selected_scene: Scene | None = None
 
         self._refresh_scene_browser()
@@ -72,22 +74,23 @@ class ShowBrowser:
     def _refresh_universe_browser(self):
         self._universe_browsing_tree.clear()
         i = 0
-        for universe in self._show.universes:
-            item = AnnotatedTreeWidgetItem(self._universe_browsing_tree)
-            item.setText(0, str(universe.id))
-            item.setText(1, str(universe.name))
-            item.setText(2, str(universe.location))
-            item.setText(3, str(universe.description))
-            item.annotated_data = universe
-            self._universe_browsing_tree.insertTopLevelItem(i, item)
-            for pf in universe.patching:
-                fixture_item = AnnotatedTreeWidgetItem(item)
-                fixture_item.setText(0, str(pf.address))
-                fixture_item.setText(1, pf.fixture_channel)
-                fixture_item.setText(2, pf.fixture.mode)
-                fixture_item.setText(3, pf.fixture.name)
-                fixture_item.annotated_data = pf
-            i += 1
+        if self._show:
+            for universe in self._show.universes:
+                item = AnnotatedTreeWidgetItem(self._universe_browsing_tree)
+                item.setText(0, str(universe.id))
+                item.setText(1, str(universe.name))
+                item.setText(2, str(universe.location))
+                item.setText(3, str(universe.description))
+                item.annotated_data = universe
+                self._universe_browsing_tree.insertTopLevelItem(i, item)
+                for pf in universe.patching:
+                    fixture_item = AnnotatedTreeWidgetItem(item)
+                    fixture_item.setText(0, str(pf.address))
+                    fixture_item.setText(1, pf.fixture_channel)
+                    fixture_item.setText(2, pf.fixture.mode)
+                    fixture_item.setText(3, pf.fixture.name)
+                    fixture_item.annotated_data = pf
+                i += 1
         # TODO link with patching update signals
 
     def _refresh_filter_browser(self):
@@ -123,8 +126,9 @@ class ShowBrowser:
 
     def _refresh_scene_browser(self):
         self._scene_browsing_tree.clear()
-        for scene in self._show.scenes:
-            self._add_scene_to_scene_browser(scene)
+        if self._show:
+            for scene in self._show.scenes:
+                self._add_scene_to_scene_browser(scene)
 
     def _add_element_pressed(self):
         selected_tab_widget = self._tab_widget.currentWidget()

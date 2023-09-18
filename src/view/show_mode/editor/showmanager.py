@@ -5,7 +5,7 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog
+from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QHBoxLayout
 from PySide6.QtGui import QAction
 
 from file.write import create_xml
@@ -16,26 +16,27 @@ from .editing_utils import add_scene_to_show
 
 from .scenetab import SceneTabWidget
 from .filter_node_library import FilterNodeLibrary
+from .show_browser.show_browser import ShowBrowser
 
 
-class ShowManagerWidget(QTabWidget):
+class ShowEditorWidget(QWidget):
     """Node Editor to create and manage filters."""
 
     def __init__(self, board_configuration: BoardConfiguration, bcaster: Broadcaster, parent: QWidget) -> None:
         super().__init__(parent)
         self._broadcaster = bcaster
-
         self._library = FilterNodeLibrary()
-
         self._board_configuration = board_configuration
 
         # Buttons to add or remove scenes from show
-        self.setTabsClosable(True)
-        self.addTab(QWidget(), "+")
-        self.tabBar().tabButton(self.count() - 1, QTabBar.ButtonPosition.RightSide).resize(0, 0)
+        self._open_page_tab_widget = QTabWidget(self)
+        self._open_page_tab_widget.setTabsClosable(True)
+        self._open_page_tab_widget.addTab(QWidget(), "+")
+        self._open_page_tab_widget.tabBar().tabButton(self._open_page_tab_widget.count() - 1,
+                                                      QTabBar.ButtonPosition.RightSide).resize(0, 0)
 
-        self.tabBarClicked.connect(self._tab_bar_clicked)
-        self.tabCloseRequested.connect(self._delete_scene)
+        self._open_page_tab_widget.tabBarClicked.connect(self._tab_bar_clicked)
+        self._open_page_tab_widget.tabCloseRequested.connect(self._delete_scene)
 
         # Toolbar for io/network actions
         self._toolbar: list[QAction] = []
@@ -49,6 +50,13 @@ class ShowManagerWidget(QTabWidget):
 
         #self._toolbar.append(save_show_file_button)
         #self._toolbar.append(load_show_file_button)
+
+        self._show_browser = ShowBrowser(parent, board_configuration)
+
+        layout = QHBoxLayout()
+        layout.addWidget(self._show_browser.widget)
+        layout.addWidget(self._open_page_tab_widget)
+        self.setLayout(layout)
 
         board_configuration.broadcaster.scene_created.connect(self._add_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
