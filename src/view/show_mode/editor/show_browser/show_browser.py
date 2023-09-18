@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu
 
-from model import Scene, BoardConfiguration, Universe
+from model import Scene, BoardConfiguration
 from model.scene import FilterPage
 
 from .annotated_item import AnnotatedTreeWidgetItem
@@ -45,9 +45,10 @@ class ShowBrowser:
         layout.addWidget(self._tab_widget)
         self._widget.setLayout(layout)
 
-        self._show: BoardConfiguration | None = show
+        self._show: BoardConfiguration | None = None
         self._selected_scene: Scene | None = None
-        self._refresh_all()
+        if show:
+            self.board_configuration = show
 
     def _refresh_all(self):
         self._refresh_scene_browser()
@@ -64,9 +65,12 @@ class ShowBrowser:
 
     @board_configuration.setter
     def board_configuration(self, b: BoardConfiguration | None):
+        if not self._show and b:
+            b.broadcaster.add_universe.connect(lambda: self._refresh_universe_browser())
+            b.broadcaster.delete_universe.connect(lambda: self._refresh_universe_browser())
+            # TODO listen to scene delete signal
         self._show = b
-        self._refresh_scene_browser()
-        self._refresh_universe_browser()
+        self._refresh_all()
         self.selected_scene = None
 
     @property
@@ -94,7 +98,7 @@ class ShowBrowser:
                     fixture_item = AnnotatedTreeWidgetItem(item)
                     fixture_item.setText(0, str(pf.address))
                     fixture_item.setText(1, pf.fixture_channel)
-                    fixture_item.setText(2, pf.fixture.mode)
+                    fixture_item.setText(2, str(pf.fixture.mode))
                     fixture_item.setText(3, pf.fixture.name)
                     fixture_item.annotated_data = pf
                 i += 1
@@ -138,17 +142,9 @@ class ShowBrowser:
                 self._add_scene_to_scene_browser(scene)
 
     def _add_element_pressed(self):
-        selected_tab_widget = self._tab_widget.currentWidget()
-        if selected_tab_widget == self._scene_browsing_tree:
-            new_scene = add_scene_to_show(self._widget, self._show)
-            if new_scene:
-                self._add_scene_to_scene_browser(new_scene)
-        elif selected_tab_widget == self._universe_browsing_tree:
-            # TODO add universe
-            pass
-        else:
-            # TODO add filter page
-            pass
+        new_scene = add_scene_to_show(self._widget, self._show)
+        if new_scene:
+            self._add_scene_to_scene_browser(new_scene)
 
     def _edit_element_pressed(self):
         pass
