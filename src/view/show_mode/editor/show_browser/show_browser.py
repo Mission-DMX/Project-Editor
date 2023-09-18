@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 
+from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar
+from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu
 
 from model import Scene, BoardConfiguration, Universe
 from model.scene import FilterPage
@@ -27,6 +28,9 @@ class ShowBrowser:
         self._tab_widget.addTab(self._universe_browsing_tree, ShowBrowser._universe_browser_tab_icon, "Universes")
         self._tab_widget.addTab(self._filter_browsing_tree, ShowBrowser._filter_browser_tab_icon, "Current Scene")
 
+        self._scene_browsing_tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._scene_browsing_tree.customContextMenuRequested.connect(self._scene_context_menu_triggered)
+
         self._scene_browsing_tree.setColumnCount(2)
         self._universe_browsing_tree.setColumnCount(4)
         self._filter_browsing_tree.setColumnCount(1)
@@ -34,6 +38,7 @@ class ShowBrowser:
         self._tool_bar = QToolBar()
         self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Element", lambda: self._add_element_pressed())
         self._tool_bar.addAction(QIcon.fromTheme("document-properties"), "Edit", lambda: self._edit_element_pressed())
+        self._tool_bar.addAction(QIcon.fromTheme("view-refresh"), "Refresh", lambda: self._refresh_all())
 
         layout = QVBoxLayout()
         layout.addWidget(self._tool_bar)
@@ -42,7 +47,9 @@ class ShowBrowser:
 
         self._show: BoardConfiguration | None = show
         self._selected_scene: Scene | None = None
+        self._refresh_all()
 
+    def _refresh_all(self):
         self._refresh_scene_browser()
         self._refresh_universe_browser()
         self._refresh_filter_browser()
@@ -119,8 +126,8 @@ class ShowBrowser:
 
     def _add_scene_to_scene_browser(self, s: Scene):
         item = AnnotatedTreeWidgetItem(self._scene_browsing_tree)
-        item.setText(0, s.scene_id)
-        item.setText(1, s.human_readable_name)
+        item.setText(0, str(s.scene_id))
+        item.setText(1, str(s.human_readable_name))
         item.annotated_data = s
         self._scene_browsing_tree.insertTopLevelItem(self._scene_browsing_tree.topLevelItemCount(), item)
 
@@ -145,3 +152,29 @@ class ShowBrowser:
 
     def _edit_element_pressed(self):
         pass
+
+    def _scene_context_menu_triggered(self, point: QPoint):
+        selected_items = self._scene_browsing_tree.selectedItems()
+
+        has_scenes = False
+
+        for si in selected_items:
+            if isinstance(si, AnnotatedTreeWidgetItem):
+                if isinstance(si.annotated_data, Scene):
+                    has_scenes = True
+
+        menu = QMenu(self._scene_browsing_tree)
+        pos = self._widget.pos()
+        menu.setGeometry(pos.x() + point.x(), pos.y() + point.y(), 100, 200)
+        if has_scenes:
+            menu.addAction(QIcon.fromTheme(""), "Delete", lambda: self._delete_scenes_from_context_menu(selected_items))
+        menu.show()
+
+    def _delete_scenes_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
+        for si in items:
+            if isinstance(si, AnnotatedTreeWidgetItem):
+                if isinstance(si.annotated_data, Scene):
+                    scene_to_delete = si.annotated_data
+                    self._show.broadcaster.delete_scene.emit(scene_to_delete)
+                    del si
+        self._refresh_scene_browser()

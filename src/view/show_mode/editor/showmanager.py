@@ -5,7 +5,7 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QHBoxLayout, QSplitter
 from PySide6.QtGui import QAction
 
 from file.write import create_xml
@@ -19,7 +19,7 @@ from .filter_node_library import FilterNodeLibrary
 from .show_browser.show_browser import ShowBrowser
 
 
-class ShowEditorWidget(QWidget):
+class ShowEditorWidget(QSplitter):
     """Node Editor to create and manage filters."""
 
     def __init__(self, board_configuration: BoardConfiguration, bcaster: Broadcaster, parent: QWidget) -> None:
@@ -36,7 +36,7 @@ class ShowEditorWidget(QWidget):
                                                       QTabBar.ButtonPosition.RightSide).resize(0, 0)
 
         self._open_page_tab_widget.tabBarClicked.connect(self._tab_bar_clicked)
-        self._open_page_tab_widget.tabCloseRequested.connect(self._delete_scene)
+        self._open_page_tab_widget.tabCloseRequested.connect(self._remove_tab)
 
         # Toolbar for io/network actions
         self._toolbar: list[QAction] = []
@@ -53,17 +53,15 @@ class ShowEditorWidget(QWidget):
 
         self._show_browser = ShowBrowser(parent, board_configuration)
 
-        layout = QHBoxLayout()
-        layout.addWidget(self._show_browser.widget)
-        layout.addWidget(self._open_page_tab_widget)
-        self.setLayout(layout)
+        self.addWidget(self._show_browser.widget)
+        self.addWidget(self._open_page_tab_widget)
 
         board_configuration.broadcaster.scene_created.connect(self._add_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
 
     def _select_scene_to_be_removed(self):
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
-        if ok_button_pressed and 0 <= scene_index < self.tabBar().count() - 2:
+        if ok_button_pressed and 0 <= scene_index < self._open_page_tab_widget.tabBar().count() - 2:
             self._board_configuration.broadcaster.delete_scene()
 
     @property
@@ -78,7 +76,7 @@ class ShowEditorWidget(QWidget):
             index: Index of the clicked tab
         """
         # Left to right, first "+" button, second "-" button
-        if index == self.tabBar().count() - 1:
+        if index == self._open_page_tab_widget.tabBar().count() - 1:
             self._add_button_clicked()
 
     def _add_button_clicked(self):
@@ -94,39 +92,31 @@ class ShowEditorWidget(QWidget):
         # Each scene is represented by its own editor
         scene_tab = SceneTabWidget(scene)
         # Move +/- buttons one to the right and insert new tab for the scene
-        self.insertTab(self.tabBar().count() - 1, scene_tab, scene.human_readable_name)
+        self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab, scene.human_readable_name)
         # When loading scene from a file, set displayed tab to first loaded scene
-        if self.count() == 2 or self._board_configuration.default_active_scene == scene.scene_id:
-            self.setCurrentWidget(scene_tab)
+        if self._open_page_tab_widget.count() == 2 or self._board_configuration.default_active_scene == scene.scene_id:
+            self._open_page_tab_widget.setCurrentWidget(scene_tab)
         return scene_tab
 
-    def _remove_tab(self, scene: Scene):
-        """Removes the tab corresponding to the scene.
+    def _remove_tab(self, scene_or_index: Scene | int):
+        """Removes the tab corresponding to the scene or index.
 
         Args:
-            scene: The that is being deleted.
+            scene_or_index: The that is being removed.
         """
-        for index in range(self.count() - 1):
-            tab_widget = self.widget(index)
-            if not isinstance(tab_widget, SceneTabWidget):
-                continue
-            if tab_widget.scene == scene:
-                widget_index = self.indexOf(tab_widget)
-                if self.count() > 0:
-                    self.setCurrentIndex(widget_index - 1)
-                self.removeTab(widget_index)
-                return
-
-    def _delete_scene(self, index: int):
-        """Emits  signal to delete the scene represented by the tab clicked.
-
-        Args:
-            index: The index of the tab clicked.
-        """
-        widget = self.widget(index)
-        if not isinstance(widget, SceneTabWidget):
-            return
-        self._board_configuration.broadcaster.delete_scene.emit(widget.scene)
+        if isinstance(scene_or_index, Scene):
+            for index in range(self._open_page_tab_widget.count() - 1):
+                tab_widget = self._open_page_tab_widget.widget(index)
+                if not isinstance(tab_widget, SceneTabWidget):
+                    continue
+                if tab_widget.scene == scene_or_index:
+                    widget_index = self._open_page_tab_widget.indexOf(tab_widget)
+                    if self._open_page_tab_widget.count() > 0:
+                        self._open_page_tab_widget.setCurrentIndex(widget_index - 1)
+                    self._open_page_tab_widget.removeTab(widget_index)
+                    return
+        else:
+            self._open_page_tab_widget.removeTab(scene_or_index)
 
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""
