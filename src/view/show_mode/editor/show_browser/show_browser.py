@@ -1,5 +1,7 @@
 from typing import Optional, List
 
+import proto.UniverseControl_pb2
+
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu
@@ -70,7 +72,6 @@ class ShowBrowser:
             b.broadcaster.add_universe.connect(lambda: self._refresh_universe_browser())
             b.broadcaster.delete_universe.connect(lambda: self._refresh_universe_browser())
             # TODO listen to scene delete signal
-            # TODO link with patching update signals
             b.broadcaster.fixture_patched.connect(lambda: self._refresh_universe_browser())
         self._show = b
         self._refresh_all()
@@ -86,6 +87,17 @@ class ShowBrowser:
         self._refresh_filter_browser()
 
     def _refresh_universe_browser(self):
+
+        def location_to_string(location):
+            if isinstance(location, proto.UniverseControl_pb2.Universe.ArtNet):
+                return "{}:{}/{}".format(location.ip_address, location.port, location.universe_on_device)
+            elif isinstance(location, proto.UniverseControl_pb2.Universe.USBConfig):
+                return "USB:{}".format(location.serial)
+            elif isinstance(location, int):
+                return "local/{}".format(location)
+            else:
+                return str(location)
+
         self._universe_browsing_tree.clear()
         i = 0
         if self._show:
@@ -93,7 +105,7 @@ class ShowBrowser:
                 item = AnnotatedTreeWidgetItem(self._universe_browsing_tree)
                 item.setText(0, str(universe.id))
                 item.setText(1, str(universe.name))
-                item.setText(2, str(universe.location))
+                item.setText(2, location_to_string(universe.location))
                 item.setText(3, str(universe.description))
                 item.annotated_data = universe
                 self._universe_browsing_tree.insertTopLevelItem(i, item)
