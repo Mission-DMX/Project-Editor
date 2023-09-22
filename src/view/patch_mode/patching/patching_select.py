@@ -11,7 +11,7 @@ from PySide6.examples.widgets.layouts.flowlayout.flowlayout import FlowLayout
 
 from Style import Style
 from model.broadcaster import Broadcaster
-from ofl.fixture import Fixture
+from ofl.fixture import Fixture, UsedFixture
 from ofl.manufacture import generate_manufacturers, Manufacture
 from view.dialogs.patching_dialog import PatchingDialog
 from view.patch_mode.patching.fixture_item import FixtureItem
@@ -131,7 +131,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
                 color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
                 for index in range(len(fixture.mode['channels'])):
                     item = self._broadcaster.patching_universes[universe].patching[channel + index]
-                    item.fixture = fixture
+                    item.fixture = fixture.copy()
                     item.fixture_channel = index
                     item.color = color
                 if offset == 0:
@@ -140,3 +140,4 @@ class PatchingSelect(QtWidgets.QScrollArea):
                     channel += offset
 
         self._broadcaster.view_leave_patching.emit()
+        self._broadcaster.fixture_patched.emit()

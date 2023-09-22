@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu
 
-from model import Scene, BoardConfiguration
+from model import Scene, BoardConfiguration, Device
 from model.scene import FilterPage
 
 from .annotated_item import AnnotatedTreeWidgetItem
@@ -70,6 +70,8 @@ class ShowBrowser:
             b.broadcaster.add_universe.connect(lambda: self._refresh_universe_browser())
             b.broadcaster.delete_universe.connect(lambda: self._refresh_universe_browser())
             # TODO listen to scene delete signal
+            # TODO link with patching update signals
+            b.broadcaster.fixture_patched.connect(lambda: self._refresh_universe_browser())
         self._show = b
         self._refresh_all()
         self.selected_scene = None
@@ -95,15 +97,17 @@ class ShowBrowser:
                 item.setText(3, str(universe.description))
                 item.annotated_data = universe
                 self._universe_browsing_tree.insertTopLevelItem(i, item)
-                for pf in universe.patching:
-                    fixture_item = AnnotatedTreeWidgetItem(item)
-                    fixture_item.setText(0, str(pf.address))
-                    fixture_item.setText(1, pf.fixture_channel)
-                    fixture_item.setText(2, str(pf.fixture.mode))
-                    fixture_item.setText(3, pf.fixture.name)
-                    fixture_item.annotated_data = pf
+                placed_fixtures = set()
+                for patching_channel in universe.patching:
+                    if not patching_channel.fixture.is_placeholder and patching_channel.fixture not in placed_fixtures:
+                        fixture_item = AnnotatedTreeWidgetItem(item)
+                        fixture_item.setText(0, "{}/{}".format(universe.id, patching_channel.address))
+                        fixture_item.setText(1, patching_channel.fixture_channel)
+                        fixture_item.setText(2, str(patching_channel.fixture.mode))
+                        fixture_item.setText(3, patching_channel.fixture.name)
+                        fixture_item.annotated_data = patching_channel
+                        placed_fixtures.add(patching_channel.fixture)
                 i += 1
-        # TODO link with patching update signals
 
     def _refresh_filter_browser(self):
         self._filter_browsing_tree.clear()
