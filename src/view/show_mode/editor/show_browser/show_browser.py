@@ -110,15 +110,25 @@ class ShowBrowser:
                 item.annotated_data = universe
                 self._universe_browsing_tree.insertTopLevelItem(i, item)
                 placed_fixtures = set()
+                last_fixture_object: AnnotatedTreeWidgetItem | None = None
                 for patching_channel in universe.patching:
-                    if not patching_channel.fixture.is_placeholder and patching_channel.fixture not in placed_fixtures:
-                        fixture_item = AnnotatedTreeWidgetItem(item)
-                        fixture_item.setText(0, "{}/{}".format(universe.id, patching_channel.address))
-                        fixture_item.setText(1, patching_channel.fixture_channel)
-                        fixture_item.setText(2, str(patching_channel.fixture.mode))
-                        fixture_item.setText(3, patching_channel.fixture.name)
-                        fixture_item.annotated_data = patching_channel
-                        placed_fixtures.add(patching_channel.fixture)
+                    channel_fixture = patching_channel.fixture
+                    if not channel_fixture.is_placeholder and (channel_fixture not in placed_fixtures
+                                                               or last_fixture_object is None):
+                        last_fixture_object = AnnotatedTreeWidgetItem(item)
+                        last_fixture_object.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
+                        last_fixture_object.setText(1, channel_fixture.name)
+                        last_fixture_object.setText(2, str(channel_fixture.mode))
+                        last_fixture_object.setText(3, channel_fixture.comment)
+                        last_fixture_object.annotated_data = channel_fixture
+                        placed_fixtures.add(channel_fixture)
+                    if not channel_fixture.is_placeholder:
+                        channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
+                        channel_item.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
+                        channel_item.setText(1, patching_channel.fixture_channel)
+                        channel_item.setText(2, str(channel_fixture.mode))
+                        channel_item.setText(3, channel_fixture.name)
+                        channel_item.annotated_data = patching_channel
                 i += 1
 
     def _refresh_filter_browser(self):
