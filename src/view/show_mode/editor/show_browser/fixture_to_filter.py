@@ -96,5 +96,17 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         fp.filters.append(rgb_filter)
                         fp.parent_scene.filters.append(rgb_filter)
                 i += 1
+            elif c[c_i].fixture_channel == "Dimmer":
+                adapter_name = _sanitize_name("dimmer_{}_{}".format(i, name))
+                global_dimmer_filter = Filter(scene=fp.parent_scene,
+                                              filter_id=adapter_name,
+                                              filter_type=49,
+                                              pos=(x, float(2 * len(c) + i)))
+                universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":brightness"
+                fp.filters.append(global_dimmer_filter)
+                fp.parent_scene.filters.append(global_dimmer_filter)
+                i += 1
         except IndexError:
             continue
+        if i > 0:
+            universe_filter.pos[0] += 30
