@@ -21,24 +21,29 @@ class UniverseNode(FilterNode):
                              allowAddInput=True)
 
         try:
-            for key in self.filter.filter_configurations:
-                self.filter.filter_configurations[key] = model.filter_configurations[key]
             if len(model.filter_configurations) == 0:
                 self.filter.filter_configurations["input_1"] = "0"
+                self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
                 self.filter.filter_configurations["universe"] = self.name()[9:]
+            else:
+                for key in self.filter.filter_configurations:
+                    self.filter.filter_configurations[key] = model.filter_configurations[key]
+                    if key != "universe":
+                        self.filter.in_data_types[key] = DataType.DT_8_BIT
+                        term = super().addInput(key)
         except:
             self.filter.filter_configurations["input_1"] = "0"
+            self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
             self.filter.filter_configurations["universe"] = self.name()[9:]
-        for index in range(1, 513):
-            self.filter.in_data_types[f"input_{index}"] = DataType.DT_8_BIT
 
     def addInput(self, name="input", **args):
         """Allows to add up to 512 input channels."""
         next_input = len(self.inputs())
         if next_input >= 512:
             return
-        input_channel = f"input_{next_input + 1}"
+        input_channel = f"{name}_{next_input + 1}"
         self.filter.filter_configurations[input_channel] = str(next_input)
+        self.filter.in_data_types[input_channel] = DataType.DT_8_BIT
         term = super().addInput(input_channel, **args)
         universe_id = int(self._filter.filter_configurations["universe"])
         universe = self._filter.scene.board_configuration.universe(universe_id)

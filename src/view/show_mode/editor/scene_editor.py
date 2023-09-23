@@ -3,7 +3,7 @@
 from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QGridLayout, QDialog
 
 from model import Scene
-from .scenepage import ScenePageWidget
+from .scene_filter_page_widget import ScenePageWidget
 
 
 class SceneManagerWidget(QTabWidget):

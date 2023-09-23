@@ -85,7 +85,7 @@ class Filter:
         return self._filter_type
 
     @property
-    def pos(self) -> list[float] | None:
+    def pos(self) -> tuple[float] | None:
         """The position of the filter node inside the ui"""
         return self._pos
 

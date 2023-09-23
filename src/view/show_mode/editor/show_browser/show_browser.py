@@ -8,9 +8,12 @@ from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget,
 
 from model import Scene, BoardConfiguration, Device
 from model.scene import FilterPage
+from ofl.fixture import UsedFixture
 
 from .annotated_item import AnnotatedTreeWidgetItem
+from .fixture_to_filter import place_fixture_filters_in_scene
 from ..editing_utils import add_scene_to_show
+from ..scenetab import SceneTabWidget
 
 
 class ShowBrowser:
@@ -20,7 +23,7 @@ class ShowBrowser:
     _universe_browser_tab_icon = QIcon("resources/showbrowser-universe.svg")
     _filter_browser_tab_icon = QIcon("resources/showbrowser-filterpages.svg")
 
-    def __init__(self, parent: QWidget, show: Optional[BoardConfiguration] = None):
+    def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget):
         self._widget = QWidget(parent)
         self._widget.setMaximumWidth(450)
         self._widget.setMinimumWidth(250)
@@ -36,6 +39,8 @@ class ShowBrowser:
         self._scene_browsing_tree.customContextMenuRequested.connect(self._scene_context_menu_triggered)
         self._scene_browsing_tree.itemDoubleClicked.connect(self._scene_item_double_clicked)
 
+        self._universe_browsing_tree.itemDoubleClicked.connect(self._universe_item_double_clicked)
+
         self._scene_browsing_tree.setColumnCount(2)
         self._universe_browsing_tree.setColumnCount(4)
         self._filter_browsing_tree.setColumnCount(1)
@@ -50,6 +55,7 @@ class ShowBrowser:
         layout.addWidget(self._tab_widget)
         self._widget.setLayout(layout)
 
+        self._editor_tab_widget = editor_tab_browser
         self._show: BoardConfiguration | None = None
         self._selected_scene: Scene | None = None
         if show:
@@ -109,6 +115,7 @@ class ShowBrowser:
                 item.setText(1, str(universe.name))
                 item.setText(2, location_to_string(universe.location))
                 item.setText(3, str(universe.description))
+                item.setExpanded(True)
                 item.annotated_data = universe
                 self._universe_browsing_tree.insertTopLevelItem(i, item)
                 placed_fixtures = set()
@@ -158,10 +165,19 @@ class ShowBrowser:
                 i += 1
 
     def _add_scene_to_scene_browser(self, s: Scene):
+        def add_filter_page(parent_item: AnnotatedTreeWidgetItem, fp: FilterPage):
+            filter_page_item = AnnotatedTreeWidgetItem(parent_item)
+            filter_page_item.setText(0, fp.name)
+            filter_page_item.setText(1, str(len(fp.filters)) + " Filters")
+            filter_page_item.annotated_data = fp
+            for fp_child in fp.child_pages:
+                add_filter_page(filter_page_item, fp_child)
         item = AnnotatedTreeWidgetItem(self._scene_browsing_tree)
         item.setText(0, str(s.scene_id))
         item.setText(1, str(s.human_readable_name))
         item.annotated_data = s
+        for fp in s.pages:
+            add_filter_page(item, fp)
         self._scene_browsing_tree.insertTopLevelItem(self._scene_browsing_tree.topLevelItemCount(), item)
 
     def _refresh_scene_browser(self):
@@ -209,3 +225,14 @@ class ShowBrowser:
             data = item.annotated_data
             if isinstance(data, Scene):
                 self._show.broadcaster.scene_open_in_editor_requested.emit(data)
+
+    def _universe_item_double_clicked(self, item: QTreeWidgetItem, column: int):
+        if not isinstance(item, AnnotatedTreeWidgetItem):
+            return
+        if isinstance(item.annotated_data, UsedFixture):
+            current_widget = self._editor_tab_widget.currentWidget()
+            if isinstance(current_widget, SceneTabWidget):
+                # TODO distinguish filter pages once implemented
+                if place_fixture_filters_in_scene(item.annotated_data, current_widget.scene.pages[0]):
+                    pass
+                    # TODO notify editor about filter update

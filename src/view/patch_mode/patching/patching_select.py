@@ -135,11 +135,13 @@ class PatchingSelect(QtWidgets.QScrollArea):
                 if channel + fixture_channel_count >= len(self._broadcaster.patching_universes[universe].patching):
                     universe += 1
                 used_fixture = fixture.copy()
+                used_fixture.parent_universe = universe + 1
                 for index in range(fixture_channel_count):
                     item = self._broadcaster.patching_universes[universe].patching[channel + index]
                     item.fixture = used_fixture
                     item.fixture_channel = index
                     item.color = color
+                    used_fixture.channels.append(item)
                 if offset == 0:
                     channel += fixture_channel_count
                 else:

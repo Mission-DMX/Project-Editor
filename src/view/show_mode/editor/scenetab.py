@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget, QTabWidget, QPushButton, QGridLayout
 
 from model import Scene
 from .nodeeditor import NodeEditorWidget
-from .scenemanager import SceneManagerWidget
+from .scene_editor import SceneManagerWidget
 
 
 class SceneTabWidget(QTabWidget):

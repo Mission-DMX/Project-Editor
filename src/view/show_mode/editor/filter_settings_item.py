@@ -134,7 +134,7 @@ class FilterSettingsDialog(QDialog):
                 universe = uni
                 break
         else:
-            logging.warning("Could not find universe %s", universe_id)
+            logging.warning("FilterSettingsItem: Could not find universe %s", universe_id)
             return key
         # Fetch patching short name
         for channel in universe.patching:

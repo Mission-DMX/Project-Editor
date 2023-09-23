@@ -11,9 +11,10 @@ if TYPE_CHECKING:
 
 
 class FilterPage:
-    def __init__(self):
+    def __init__(self, parent: "Scene"):
         self._filters: list[Filter] = []
         self._child_pages: list["FilterPage"] = []
+        self._parent_scene: "Scene" = parent
         self._name: str = ""
 
     @property
@@ -31,6 +32,10 @@ class FilterPage:
     @property
     def child_pages(self) -> list["FilterPage"]:
         return self._child_pages
+
+    @property
+    def parent_scene(self) -> "Scene":
+        return self._parent_scene
 
 
 class Scene:
@@ -75,7 +80,7 @@ class Scene:
     def pages(self) -> list[FilterPage]:
         """Returns the associated list of filter pages"""
         if len(self._filter_pages) == 0:
-            default_page = FilterPage()
+            default_page = FilterPage(self)
             default_page.name = "default"
             for f in self._filters:
                 default_page.filters.append(f)
@@ -92,3 +97,8 @@ class Scene:
             if self._associated_bankset.is_linked:
                 self._associated_bankset.unlink()
         self._associated_bankset = new_bs
+
+    def __str__(self) -> str:
+        if self.human_readable_name:
+            return self.human_readable_name
+        return str(self._scene_id)

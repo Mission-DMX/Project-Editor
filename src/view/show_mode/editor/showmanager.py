@@ -52,7 +52,7 @@ class ShowEditorWidget(QSplitter):
         #self._toolbar.append(save_show_file_button)
         #self._toolbar.append(load_show_file_button)
 
-        self._show_browser = ShowBrowser(parent, board_configuration)
+        self._show_browser = ShowBrowser(parent, board_configuration, self._open_page_tab_widget)
 
         self.addWidget(self._show_browser.widget)
         self.addWidget(self._open_page_tab_widget)

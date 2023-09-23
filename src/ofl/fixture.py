@@ -83,17 +83,22 @@ class UsedFixture:
     """ Fixture in use with a specific mode"""
 
     def __init__(self, name: str, short_name: str, categories: set[Category], comment: str, mode: Mode,
-                 base: Fixture | None = None) -> None:
+                 base: Fixture | None = None, parent_universe: int = -1) -> None:
         self.name: str = name
         self.short_name: str = short_name
         self.categories: set[Category] = categories
         self.comment: str = comment
         self.mode: Mode = mode
         self.base_fixture: Fixture | None = base
+        self.parent_universe: int = parent_universe
+        self.channels: list["PatchingChannel"] = []
 
     def copy(self):
+        """
+        This method clones the used fixture entry, except for the occupied channels
+        """
         return UsedFixture(self.name, self.short_name, self.categories,
-                           self.comment, self.mode, self.base_fixture)
+                           self.comment, self.mode, self.base_fixture, self.parent_universe)
 
     @property
     def is_placeholder(self) -> bool:
