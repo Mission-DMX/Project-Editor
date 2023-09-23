@@ -2,7 +2,10 @@
 """Fixture Definitions from OFL """
 import json
 from enum import Enum
-from typing import TypedDict, NotRequired
+from typing import TypedDict, NotRequired, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.patching_channel import PatchingChannel
 
 
 class Category(Enum):
