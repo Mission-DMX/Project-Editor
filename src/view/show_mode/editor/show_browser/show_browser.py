@@ -22,6 +22,8 @@ class ShowBrowser:
 
     def __init__(self, parent: QWidget, show: Optional[BoardConfiguration] = None):
         self._widget = QWidget(parent)
+        self._widget.setMaximumWidth(450)
+        self._widget.setMinimumWidth(250)
         self._tab_widget = QTabWidget()
         self._scene_browsing_tree = QTreeWidget()
         self._universe_browsing_tree = QTreeWidget()
