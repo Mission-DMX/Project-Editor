@@ -27,6 +27,7 @@ class ShowEditorWidget(QSplitter):
         self._broadcaster = bcaster
         self._library = FilterNodeLibrary()
         self._board_configuration = board_configuration
+        self._opened_scenes = set()
 
         # Buttons to add or remove scenes from show
         self._open_page_tab_widget = QTabWidget(self)
@@ -90,17 +91,24 @@ class ShowEditorWidget(QSplitter):
             scene: The scene to be added
         """
 
-        # TODO in case the scene to be opened already exists, the corresponding tab should be switched to instead of
-        # copy to be opened
-
-        # Each scene is represented by its own editor
-        scene_tab = SceneTabWidget(scene)
-        # Move +/- buttons one to the right and insert new tab for the scene
-        self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab, scene.human_readable_name)
-        # When loading scene from a file, set displayed tab to first loaded scene
-        if self._open_page_tab_widget.count() == 2 or self._board_configuration.default_active_scene == scene.scene_id:
-            self._open_page_tab_widget.setCurrentWidget(scene_tab)
-        return scene_tab
+        if scene in self._opened_scenes:
+            for tab_index in range(self._open_page_tab_widget.count()):
+                tab = self._open_page_tab_widget.widget(tab_index)
+                if isinstance(tab, SceneTabWidget):
+                    if tab.scene == scene:
+                        self._open_page_tab_widget.setCurrentIndex(tab_index)
+                        return tab
+            return None
+        else:
+            # Each scene is represented by its own editor
+            self._opened_scenes.add(scene)
+            scene_tab = SceneTabWidget(scene)
+            # Move +/- buttons one to the right and insert new tab for the scene
+            self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab, scene.human_readable_name)
+            # When loading scene from a file, set displayed tab to first loaded scene
+            if self._open_page_tab_widget.count() == 2 or self._board_configuration.default_active_scene == scene.scene_id:
+                self._open_page_tab_widget.setCurrentWidget(scene_tab)
+            return scene_tab
 
     def _remove_tab(self, scene_or_index: Scene | int):
         """Removes the tab corresponding to the scene or index.
@@ -118,8 +126,12 @@ class ShowEditorWidget(QSplitter):
                     if self._open_page_tab_widget.count() > 0:
                         self._open_page_tab_widget.setCurrentIndex(widget_index - 1)
                     self._open_page_tab_widget.removeTab(widget_index)
+                    self._opened_scenes.remove(tab_widget.scene)
                     return
         else:
+            widget = self._open_page_tab_widget.widget(scene_or_index)
+            if isinstance(widget, SceneTabWidget):
+                self._opened_scenes.remove(widget.scene)
             self._open_page_tab_widget.removeTab(scene_or_index)
 
     def _send_show_file(self) -> None:
