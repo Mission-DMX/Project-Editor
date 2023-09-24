@@ -1,5 +1,6 @@
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QToolBar, QListWidget, QListWidgetItem
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QListWidgetItem, QHBoxLayout, QLineEdit, \
+    QCheckBox
 
 from model.control_desk import BankSet, FaderBank
 
@@ -16,7 +17,7 @@ class BankSetTabWidget(QWidget):
         self._bank_list = QListWidget(self)
         self._bank_list.itemClicked.connect(self._select_bank_to_edit)
 
-        self._bank_edit_widget = _BankEditWidget("Columns in selected Bank (Up to eight)")  # TODO
+        self._bank_edit_widget = _BankEditWidget()
 
         layout.addWidget(self._tool_bar)  # TODO do we want the list view to be next to the tool bar?
         layout.addWidget(self._bank_list)
@@ -35,7 +36,7 @@ class BankSetTabWidget(QWidget):
     def _select_bank_to_edit(self, item: QListWidgetItem):
         if not isinstance(item, _BankItem):
             return
-        self._bank_edit_widget.bank = item._bank
+        self._bank_edit_widget.bank = item.bank
 
 
 class _BankItem(QListWidgetItem):
@@ -43,8 +44,38 @@ class _BankItem(QListWidgetItem):
         super().__init__(str(index))
         self._bank = bank
 
+    @property
+    def bank(self) -> FaderBank:
+        return self._bank
 
-class _BankEditWidget(QLabel):
+    @bank.setter
+    def bank(self, b: FaderBank):
+        self._bank = b
+
+
+class _BankEditWidget(QWidget):
+
+    def __init__(self):
+        self._bank: FaderBank | None = None
+        layout = QHBoxLayout()
+
+        self._text_widgets: list[QLineEdit] = []
+        self._top_inverted_widgets: list[QCheckBox] = []
+        self._bottom_inverted_widgets: list[QCheckBox] = []
+        # TODO add type selection combo box
+        # TODO add type specific widgets
+
+        for i in range(8):
+            column_widget = QWidget(self)
+            column_layout = QVBoxLayout()
+            column_widget.setLayout(column_layout)
+            self._text_widgets[i] = QLineEdit(column_widget)
+            self._text_widgets[i].textChanged.connect(lambda i=i: self._display_text_field_changed(i))
+            column_layout.addWidget(self._text_widgets[i])
+            # TODO add remaining widgets
+            # TODO add border around column
+        self.setLayout(layout)
+
     @property
     def bank(self) -> FaderBank:
         return self._bank
@@ -52,3 +83,7 @@ class _BankEditWidget(QLabel):
     @bank.setter
     def bank(self, bank: FaderBank):
         self._bank = bank
+
+    def _display_text_field_changed(self, index: int):
+        if self._bank:
+            self._bank.columns[index].display_name = self._text_widgets[index].text()
