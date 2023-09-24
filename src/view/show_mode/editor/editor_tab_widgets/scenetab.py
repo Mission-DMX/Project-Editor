@@ -3,8 +3,8 @@
 from PySide6.QtWidgets import QWidget, QTabWidget, QPushButton, QGridLayout
 
 from model import Scene
-from .nodeeditor import NodeEditorWidget
-from .scene_editor import SceneManagerWidget
+from view.show_mode.editor.nodeeditor import NodeEditorWidget
+from view.show_mode.editor.scene_editor import SceneManagerWidget
 
 
 class SceneTabWidget(QTabWidget):

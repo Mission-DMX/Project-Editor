@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List
 
 import proto.UniverseControl_pb2
 
@@ -7,14 +7,15 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu
 
 from file.transmitting_to_fish import transmit_to_fish
-from model import Scene, BoardConfiguration, Device
+from model import Scene, BoardConfiguration
+from model.control_desk import BankSet
 from model.scene import FilterPage
 from ofl.fixture import UsedFixture
 
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
 from ..editing_utils import add_scene_to_show
-from ..scenetab import SceneTabWidget
+from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 
 
 class ShowBrowser:
@@ -23,6 +24,7 @@ class ShowBrowser:
     _scene_browser_tab_icon = QIcon("resources/showbrowser-show.svg")
     _universe_browser_tab_icon = QIcon("resources/showbrowser-universe.svg")
     _filter_browser_tab_icon = QIcon("resources/showbrowser-filterpages.svg")
+    _fader_icon = QIcon("resources/faders.svg")
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget):
         self._widget = QWidget(parent)
@@ -182,6 +184,12 @@ class ShowBrowser:
         item.setText(0, str(s.scene_id))
         item.setText(1, str(s.human_readable_name))
         item.annotated_data = s
+        bankset_item = AnnotatedTreeWidgetItem(item)
+        s.ensure_bankset()
+        bankset_item.setText(0, "Bankset")
+        bankset_item.setIcon(0, ShowBrowser._fader_icon)
+        bankset_item.setText(1, s.linked_bankset.description)
+        bankset_item.annotated_data = s.linked_bankset
         for fp in s.pages:
             add_filter_page(item, fp)
         self._scene_browsing_tree.insertTopLevelItem(self._scene_browsing_tree.topLevelItemCount(), item)
@@ -231,6 +239,11 @@ class ShowBrowser:
             data = item.annotated_data
             if isinstance(data, Scene):
                 self._show.broadcaster.scene_open_in_editor_requested.emit(data)
+            elif isinstance(data, FilterPage):
+                # TODO exchange for correct loading of page
+                self._show.broadcaster.scene_open_in_editor_requested.emit(data.parent_scene)
+            elif isinstance(data, BankSet):
+                self._show.broadcaster.bankset_open_in_editor_requested.emit({"bankset": data})
 
     def _universe_item_double_clicked(self, item: QTreeWidgetItem, column: int):
         if not isinstance(item, AnnotatedTreeWidgetItem):

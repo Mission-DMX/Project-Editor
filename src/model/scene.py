@@ -101,3 +101,11 @@ class Scene:
         if self.human_readable_name:
             return self.human_readable_name
         return str(self._scene_id)
+
+    def ensure_bankset(self) -> bool:
+        if self._associated_bankset is None:
+            from .control_desk import BankSet
+            self._associated_bankset = BankSet(description="Bankset associated with scene {}.".format(self._scene_id),
+                                               gui_controlled=True)
+            return False
+        return True

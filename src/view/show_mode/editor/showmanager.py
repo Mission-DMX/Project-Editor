@@ -5,17 +5,16 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QHBoxLayout, QSplitter
+from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QSplitter
 from PySide6.QtGui import QAction
 
 from file.transmitting_to_fish import transmit_to_fish
-from file.write import create_xml
-from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog
 
 from model.board_configuration import BoardConfiguration, Scene, Broadcaster
 from .editing_utils import add_scene_to_show
 
-from .scenetab import SceneTabWidget
+from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
+from .editor_tab_widgets.bankset_tab import BankSetTabWidget
 from .filter_node_library import FilterNodeLibrary
 from .show_browser.show_browser import ShowBrowser
 
@@ -29,6 +28,7 @@ class ShowEditorWidget(QSplitter):
         self._library = FilterNodeLibrary()
         self._board_configuration = board_configuration
         self._opened_scenes = set()
+        self._opened_banksets = set()
 
         # Buttons to add or remove scenes from show
         self._open_page_tab_widget = QTabWidget(self)
@@ -58,8 +58,9 @@ class ShowEditorWidget(QSplitter):
         self.addWidget(self._show_browser.widget)
         self.addWidget(self._open_page_tab_widget)
 
-        board_configuration.broadcaster.scene_created.connect(self._add_tab)
-        board_configuration.broadcaster.scene_open_in_editor_requested.connect(self._add_tab)
+        board_configuration.broadcaster.scene_created.connect(self._add_scene_tab)
+        board_configuration.broadcaster.scene_open_in_editor_requested.connect(self._add_scene_tab)
+        board_configuration.broadcaster.bankset_open_in_editor_requested.connect(self._add_bankset_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
 
     def _select_scene_to_be_removed(self):
@@ -85,7 +86,7 @@ class ShowEditorWidget(QSplitter):
     def _add_button_clicked(self):
         add_scene_to_show(self, self._board_configuration)
 
-    def _add_tab(self, scene: Scene) -> SceneTabWidget | None:
+    def _add_scene_tab(self, scene: Scene) -> SceneTabWidget | None:
         """Creates a tab for a scene
         
         Args:
@@ -111,6 +112,27 @@ class ShowEditorWidget(QSplitter):
                 self._open_page_tab_widget.setCurrentWidget(scene_tab)
             return scene_tab
 
+    def _add_bankset_tab(self, data: dict):
+        bankset = data["bankset"]
+        if bankset in self._opened_banksets:
+            for tab_index in range(self._open_page_tab_widget.count()):
+                tab = self._open_page_tab_widget.widget(tab_index)
+                if isinstance(tab, BankSetTabWidget):
+                    if tab.bankset == bankset:
+                        self._open_page_tab_widget.setCurrentIndex(tab_index)
+                        return tab
+            return None
+        else:
+            self._opened_banksets.add(bankset)
+            tab = BankSetTabWidget(bankset)
+            self._open_page_tab_widget.insertTab(
+                self._open_page_tab_widget.tabBar().count() - 1,
+                tab,
+                bankset.description
+            )
+            self._open_page_tab_widget.setCurrentWidget(tab)
+        pass
+
     def _remove_tab(self, scene_or_index: Scene | int):
         """Removes the tab corresponding to the scene or index.
 
@@ -133,6 +155,8 @@ class ShowEditorWidget(QSplitter):
             widget = self._open_page_tab_widget.widget(scene_or_index)
             if isinstance(widget, SceneTabWidget):
                 self._opened_scenes.remove(widget.scene)
+            elif isinstance(widget, BankSetTabWidget):
+                self._opened_banksets.remove(widget.bankset)
             self._open_page_tab_widget.removeTab(scene_or_index)
 
     def _send_show_file(self) -> None:
