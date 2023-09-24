@@ -8,6 +8,7 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
 from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QHBoxLayout, QSplitter
 from PySide6.QtGui import QAction
 
+from file.transmitting_to_fish import transmit_to_fish
 from file.write import create_xml
 from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog
 
@@ -136,5 +137,4 @@ class ShowEditorWidget(QSplitter):
 
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""
-        xml = create_xml(self._board_configuration)
-        self._board_configuration.broadcaster.load_show_file.emit(xml)
+        transmit_to_fish(self._board_configuration)

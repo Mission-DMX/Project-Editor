@@ -56,7 +56,6 @@ class NetworkManager(QtCore.QObject):
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
         self._broadcaster.view_to_console_mode.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
-        self._broadcaster.load_show_file.connect(lambda xml: self.load_show_file(xml, True))
         self._broadcaster.change_active_scene.connect(self.enter_scene)
 
         self._broadcaster.load_show_file.connect(self.load_show_file)

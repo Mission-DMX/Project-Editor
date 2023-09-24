@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu
 
+from file.transmitting_to_fish import transmit_to_fish
 from model import Scene, BoardConfiguration, Device
 from model.scene import FilterPage
 from ofl.fixture import UsedFixture
@@ -46,9 +47,14 @@ class ShowBrowser:
         self._filter_browsing_tree.setColumnCount(1)
 
         self._tool_bar = QToolBar()
-        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Element", lambda: self._add_element_pressed())
+        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Scene", lambda: self._add_element_pressed())
         self._tool_bar.addAction(QIcon.fromTheme("document-properties"), "Edit", lambda: self._edit_element_pressed())
         self._tool_bar.addAction(QIcon.fromTheme("view-refresh"), "Refresh", lambda: self._refresh_all())
+        self._tool_bar.addAction(QIcon.fromTheme("document-send"), "Send showfile to fish",
+                                 lambda: self._upload_showfile())
+
+        self._toolbar_edit_action = self._tool_bar.actions()[1]
+        self._toolbar_edit_action.setEnabled(False)
 
         layout = QVBoxLayout()
         layout.addWidget(self._tool_bar)
@@ -236,3 +242,6 @@ class ShowBrowser:
                 if place_fixture_filters_in_scene(item.annotated_data, current_widget.scene.pages[0]):
                     current_widget.refresh()
                     # TODO notify editor about filter update
+
+    def _upload_showfile(self):
+        transmit_to_fish(self._show, False)

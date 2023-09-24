@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from .control_desk import BankSet
 
 
-
 class FilterPage:
     def __init__(self, parent: "Scene"):
         self._filters: list[Filter] = []
