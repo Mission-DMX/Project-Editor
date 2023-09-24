@@ -25,15 +25,16 @@ class NodeEditorWidget(QWidget):
 
         self._flowchart = FilterFlowchart(scene=self._scene, library=FilterNodeLibrary())
 
-        self._flowchart.removeNode(self._flowchart.outputNode)
-        self._flowchart.removeNode(self._flowchart.inputNode)
+        self._populate_flowchart()
 
         self.setLayout(QGridLayout())
         self.layout().addWidget(self._flowchart.widget().chartWidget.viewDock)
 
+    def _populate_flowchart(self):
+        self._flowchart.removeNode(self._flowchart.outputNode)
+        self._flowchart.removeNode(self._flowchart.inputNode)
         for filter_ in self._scene.filters:
             self._flowchart.create_node_with_filter(filter_=filter_, node_type=nodes.type_to_node[filter_.filter_type])
-
         for name, node in self._flowchart.nodes().items():
             if not isinstance(node, FilterNode):
                 logging.warning("Trying to connect non-FilterNode %s", name)
@@ -62,3 +63,7 @@ class NodeEditorWidget(QWidget):
     def flowchart(self) -> Flowchart:
         """The flowchart of the scene"""
         return self._flowchart
+
+    def refresh(self):
+        self._flowchart.clear()
+        self._populate_flowchart()

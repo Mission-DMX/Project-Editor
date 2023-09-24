@@ -16,10 +16,15 @@ class SceneTabWidget(QTabWidget):
 
         self.setTabPosition(QTabWidget.TabPosition.West)
 
-        self.addTab(NodeEditorWidget(scene, self), "Filter Editor")
-        self.addTab(SceneManagerWidget(scene, self), "UI Manager")
+        self._node_editor_widget = NodeEditorWidget(scene, self)
+        self.addTab(self._node_editor_widget, "Filter Editor")
+        self._scene_ui_editor_widget = SceneManagerWidget(scene, self)
+        self.addTab(self._scene_ui_editor_widget, "Scene UI Editor")
 
     @property
     def scene(self) -> Scene:
         """The scene the tab represents"""
         return self._scene
+
+    def refresh(self):
+        self._node_editor_widget.refresh()

@@ -234,5 +234,5 @@ class ShowBrowser:
             if isinstance(current_widget, SceneTabWidget):
                 # TODO distinguish filter pages once implemented
                 if place_fixture_filters_in_scene(item.annotated_data, current_widget.scene.pages[0]):
-                    pass
+                    current_widget.refresh()
                     # TODO notify editor about filter update
