@@ -3,8 +3,8 @@ from typing import List
 import proto.UniverseControl_pb2
 
 from PySide6.QtCore import Qt, QPoint
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu
+from PySide6.QtGui import QIcon, QAction
+from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu, QInputDialog
 
 from file.transmitting_to_fish import transmit_to_fish
 from model import Scene, BoardConfiguration
@@ -226,7 +226,7 @@ class ShowBrowser:
         scenes_delete_action.setEnabled(has_scenes)
         menu.addAction(scenes_delete_action)
         scenes_rename_action = QAction("Rename", lambda: self._rename_scene_from_context_menu(selected_items))
-        scenes_rename_action.setEnabled(False)
+        scenes_rename_action.setEnabled(has_scenes)
         menu.addAction(scenes_rename_action)
         menu.show()
 
@@ -241,8 +241,19 @@ class ShowBrowser:
         self._refresh_scene_browser()
 
     def _rename_scene_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
-        # TODO
-        pass
+        def rename(c, scene, text):
+            scene.human_readable_name = text
+            c._refresh_scene_browser()
+        for si in items:
+            if isinstance(si, AnnotatedTreeWidgetItem):
+                if isinstance(si.annotated_data, Scene):
+                    input_dialog = QInputDialog(self.widget)
+                    input_dialog.setInputMode(QInputDialog.TextInput)
+                    input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
+                    input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
+                    input_dialog.setWindowTitle('Rename Scene')
+                    input_dialog.open()
+                    input_dialog.deleteLater()
 
     def _scene_item_double_clicked(self, item):
         if isinstance(item, AnnotatedTreeWidgetItem):
