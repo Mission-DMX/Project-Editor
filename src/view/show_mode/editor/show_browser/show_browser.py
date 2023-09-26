@@ -206,6 +206,7 @@ class ShowBrowser:
             self._add_scene_to_scene_browser(new_scene)
 
     def _edit_element_pressed(self):
+        # TODO
         pass
 
     def _scene_context_menu_triggered(self, point: QPoint):
@@ -220,12 +221,17 @@ class ShowBrowser:
 
         menu = QMenu(self._scene_browsing_tree)
         pos = self._widget.pos()
-        menu.setGeometry(pos.x() + point.x(), pos.y() + point.y(), 100, 200)
-        if has_scenes:
-            menu.addAction(QIcon.fromTheme("edit-delete"), "Delete", lambda: self._delete_scenes_from_context_menu(selected_items))
+        menu.move(self._scene_browsing_tree.mapToGlobal(point))
+        scenes_delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", lambda: self._delete_scenes_from_context_menu(selected_items))
+        scenes_delete_action.setEnabled(has_scenes)
+        menu.addAction(scenes_delete_action)
+        scenes_rename_action = QAction("Rename", lambda: self._rename_scene_from_context_menu(selected_items))
+        scenes_rename_action.setEnabled(False)
+        menu.addAction(scenes_rename_action)
         menu.show()
 
     def _delete_scenes_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
+        # TODO show confirmation dialog
         for si in items:
             if isinstance(si, AnnotatedTreeWidgetItem):
                 if isinstance(si.annotated_data, Scene):
@@ -233,6 +239,10 @@ class ShowBrowser:
                     self._show.broadcaster.delete_scene.emit(scene_to_delete)
                     del si
         self._refresh_scene_browser()
+
+    def _rename_scene_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
+        # TODO
+        pass
 
     def _scene_item_double_clicked(self, item):
         if isinstance(item, AnnotatedTreeWidgetItem):
