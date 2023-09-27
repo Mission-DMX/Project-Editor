@@ -1,6 +1,6 @@
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QListWidgetItem, QHBoxLayout, QLineEdit, \
-    QCheckBox, QGroupBox, QLabel, QComboBox
+    QCheckBox, QGroupBox, QLabel, QComboBox, QDoubleSpinBox, QSpinBox
 
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 
@@ -89,6 +89,7 @@ class _BankEditWidget(QWidget):
         self._top_inverted_widgets: list[QCheckBox] = []
         self._bottom_inverted_widgets: list[QCheckBox] = []
         # TODO add type specific widgets
+        self._raw_encoder_spin_boxes: list[QSpinBox] = []
 
         column_edit_row_container = QWidget(self)
         column_edit_row_container_layout = QHBoxLayout()
@@ -96,7 +97,7 @@ class _BankEditWidget(QWidget):
         for i in range(8):
             column_widget = QGroupBox(self, "Column " + str(i))
             column_widget.setMinimumWidth(100)
-            column_widget.setMinimumHeight(200)
+            column_widget.setMinimumHeight(300)
             column_layout = QVBoxLayout()
             column_widget.setLayout(column_layout)
             self._labels.append(QLabel("Empty"))
@@ -117,6 +118,13 @@ class _BankEditWidget(QWidget):
                 lambda checked, ci=i: self._bottom_inverted_changed(ci, checked)
             )
             column_layout.addWidget(self._bottom_inverted_widgets[i])
+            self._raw_encoder_spin_boxes.append(QSpinBox(column_widget))
+            self._raw_encoder_spin_boxes[i].setMinimum(0)
+            self._raw_encoder_spin_boxes[i].setMaximum(2**16-1)
+            self._raw_encoder_spin_boxes[i].valueChanged.connect(
+                lambda new_value, ci=i: self._raw_encoder_value_changed(ci, new_value)
+            )
+            column_layout.addWidget(self._raw_encoder_spin_boxes[i])
             # TODO add remaining widgets
             column_edit_row_container_layout.addWidget(column_widget)
         column_edit_row_container.setLayout(column_edit_row_container_layout)
@@ -150,20 +158,35 @@ class _BankEditWidget(QWidget):
                 self._text_widgets[i].setText(current_column.display_name)
                 self._top_inverted_widgets[i].setChecked(current_column.top_display_line_inverted)
                 self._bottom_inverted_widgets[i].setChecked(current_column.bottom_display_line_inverted)
+                self._raw_encoder_spin_boxes[i].setEnabled(isinstance(current_column, RawDeskColumn))
+                if isinstance(current_column, RawDeskColumn):
+                    self._raw_encoder_spin_boxes[i].setValue(current_column.encoder_position)
             else:
                 self._labels[i].setText("Empty")
                 self._text_widgets[i].setText("")
                 self._top_inverted_widgets[i].setChecked(False)
                 self._bottom_inverted_widgets[i].setChecked(False)
+                self._raw_encoder_spin_boxes[i].setEnabled(False)
+                self._raw_encoder_spin_boxes[i].setValue(0)
 
     def _display_text_field_changed(self, index: int, text: str):
         if self._bank:
-            self._bank.columns[index].display_name = self._text_widgets[index].text()
+            if len(self._bank.columns) > index:
+                self._bank.columns[index].display_name = self._text_widgets[index].text()
 
     def _top_inverted_changed(self, index: int, checked: bool):
         if self._bank:
-            self._bank.columns[index].top_display_line_inverted = self._top_inverted_widgets[index].isChecked()
+            if len(self._bank.columns) > index:
+                self._bank.columns[index].top_display_line_inverted = self._top_inverted_widgets[index].isChecked()
 
     def _bottom_inverted_changed(self, index: int, checked: bool):
         if self._bank:
-            self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[index].isChecked()
+            if len(self._bank.columns) > index:
+                self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[index].isChecked()
+
+    def _raw_encoder_value_changed(self, index: int, new_value: int):
+        if self._bank:
+            if len(self._bank.columns) > index:
+                col = self._bank.columns[index]
+                if isinstance(col, RawDeskColumn):
+                    col.encoder_position = new_value
