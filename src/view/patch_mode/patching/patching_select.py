@@ -26,14 +26,18 @@ class PatchingSelect(QtWidgets.QScrollArea):
         super().__init__(parent)
         self._broadcaster = Broadcaster()
         cache_path = '/var/cache/missionDMX'
+        if not os.path.exists(cache_path):
+            os.mkdir(cache_path)
         fixtures_path = os.path.join(cache_path, 'fixtures/')
         zip_path = os.path.join(cache_path, 'fixtures.zip')
         if not os.path.exists(fixtures_path):
+            print("Downloading fixture library. Please wait")
             url = 'https://open-fixture-library.org/download.ofl'
             r = requests.get(url, allow_redirects=True)
-            open(os.path.join(cache_path, 'fixtures.zip'), 'wb').write(r.content)
+            open(zip_path, 'wb').write(r.content)
             with zipfile.ZipFile(zip_path) as zip_ref:
                 zip_ref.extractall(fixtures_path)
+            print("Fixture lib downloaded and installed.")
         manufacturers: list[tuple[Manufacture, list[Fixture]]] = generate_manufacturers(fixtures_path)
         self.index = 0
         self.container = QtWidgets.QStackedWidget()

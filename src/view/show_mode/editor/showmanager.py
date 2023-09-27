@@ -34,8 +34,11 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget = QTabWidget(self)
         self._open_page_tab_widget.setTabsClosable(True)
         self._open_page_tab_widget.addTab(QWidget(), "+")
-        self._open_page_tab_widget.tabBar().tabButton(self._open_page_tab_widget.count() - 1,
-                                                      QTabBar.ButtonPosition.RightSide).resize(0, 0)
+        plus_button = self._open_page_tab_widget.tabBar().tabButton(
+            self._open_page_tab_widget.count() - 1, QTabBar.ButtonPosition.RightSide
+        )
+        if plus_button:
+            plus_button.resize(0, 0)
 
         self._open_page_tab_widget.tabBarClicked.connect(self._tab_bar_clicked)
         self._open_page_tab_widget.tabCloseRequested.connect(self._remove_tab)
