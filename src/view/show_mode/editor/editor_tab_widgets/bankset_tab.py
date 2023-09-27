@@ -1,7 +1,9 @@
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QListWidgetItem, QHBoxLayout, QLineEdit, \
     QCheckBox, QGroupBox, QLabel, QComboBox, QDoubleSpinBox, QSpinBox
 
+from model import ColorHSI
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 
 
@@ -60,13 +62,16 @@ class BankSetTabWidget(QWidget):
                 col = RawDeskColumn()
             item.bank.columns.append(col)
             self._bank_edit_widget.refresh_column_count()
+            item.update_description_text()
             break
 
 
 class _BankItem(QListWidgetItem):
     def __init__(self, bank: FaderBank, index: int):
-        super().__init__(str(index))
+        super().__init__("")
         self._bank = bank
+        self._index = index
+        self.update_description_text()
 
     @property
     def bank(self) -> FaderBank:
@@ -75,6 +80,12 @@ class _BankItem(QListWidgetItem):
     @bank.setter
     def bank(self, b: FaderBank):
         self._bank = b
+
+    def update_description_text(self):
+        text_items: list[str] = []
+        for col in self._bank.columns:
+            text_items.append(col.display_name)
+        self.setText(str(self._index) + ": " + ", ".join(text_items))
 
 
 class _BankEditWidget(QWidget):
@@ -88,8 +99,12 @@ class _BankEditWidget(QWidget):
         self._text_widgets: list[QLineEdit] = []
         self._top_inverted_widgets: list[QCheckBox] = []
         self._bottom_inverted_widgets: list[QCheckBox] = []
-        # TODO add type specific widgets
         self._raw_encoder_spin_boxes: list[QSpinBox] = []
+        self._raw_fader_spin_boxes: list[QSpinBox] = []
+        self._color_hue_dspin_boxes: list[QDoubleSpinBox] = []
+        self._color_saturation_dspin_boxes: list[QDoubleSpinBox] = []
+        self._color_intensity_dspin_boxes: list[QDoubleSpinBox] = []
+        self._color_labels: list[QWidget] = []
 
         column_edit_row_container = QWidget(self)
         column_edit_row_container_layout = QHBoxLayout()
@@ -118,6 +133,7 @@ class _BankEditWidget(QWidget):
                 lambda checked, ci=i: self._bottom_inverted_changed(ci, checked)
             )
             column_layout.addWidget(self._bottom_inverted_widgets[i])
+            column_layout.addWidget(QLabel("Encoder position"))
             self._raw_encoder_spin_boxes.append(QSpinBox(column_widget))
             self._raw_encoder_spin_boxes[i].setMinimum(0)
             self._raw_encoder_spin_boxes[i].setMaximum(2**16-1)
@@ -125,7 +141,42 @@ class _BankEditWidget(QWidget):
                 lambda new_value, ci=i: self._raw_encoder_value_changed(ci, new_value)
             )
             column_layout.addWidget(self._raw_encoder_spin_boxes[i])
-            # TODO add remaining widgets
+            column_layout.addWidget(QLabel("Fader position"))
+            self._raw_fader_spin_boxes.append(QSpinBox(column_widget))
+            self._raw_fader_spin_boxes[i].setMinimum(0)
+            self._raw_fader_spin_boxes[i].setMaximum(2 ** 16 - 1)
+            self._raw_fader_spin_boxes[i].valueChanged.connect(
+                lambda new_value, ci=i: self._raw_fader_value_changed(ci, new_value)
+            )
+            column_layout.addWidget(self._raw_fader_spin_boxes[i])
+            column_layout.addWidget(QLabel("Hue"))
+            self._color_hue_dspin_boxes.append(QDoubleSpinBox(column_widget))
+            self._color_hue_dspin_boxes[i].setMinimum(0.0)
+            self._color_hue_dspin_boxes[i].setMaximum(360.0)
+            self._color_hue_dspin_boxes[i].valueChanged.connect(
+                lambda new_value, ci=i: self._color_hue_value_changed(ci, new_value)
+            )
+            column_layout.addWidget(self._color_hue_dspin_boxes[i])
+            column_layout.addWidget(QLabel("Saturation"))
+            self._color_saturation_dspin_boxes.append(QDoubleSpinBox(column_widget))
+            self._color_saturation_dspin_boxes[i].setMinimum(0.0)
+            self._color_saturation_dspin_boxes[i].setMaximum(1.0)
+            self._color_saturation_dspin_boxes[i].valueChanged.connect(
+                lambda new_value, ci=i: self._color_saturation_value_changed(ci, new_value)
+            )
+            column_layout.addWidget(self._color_saturation_dspin_boxes[i])
+            column_layout.addWidget(QLabel("Intensity"))
+            self._color_intensity_dspin_boxes.append(QDoubleSpinBox(column_widget))
+            self._color_intensity_dspin_boxes[i].setMinimum(0.0)
+            self._color_intensity_dspin_boxes[i].setMaximum(1.0)
+            self._color_intensity_dspin_boxes[i].valueChanged.connect(
+                lambda new_value, ci=i: self._color_intensity_value_changed(ci, new_value)
+            )
+            column_layout.addWidget(self._color_intensity_dspin_boxes[i])
+            self._color_labels.append(QWidget(column_widget))
+            self._color_labels[i].setMinimumWidth(80)
+            self._color_labels[i].setMinimumHeight(20)
+            column_layout.addWidget(self._color_labels[i])
             column_edit_row_container_layout.addWidget(column_widget)
         column_edit_row_container.setLayout(column_edit_row_container_layout)
         layout.addWidget(column_edit_row_container)
@@ -158,9 +209,26 @@ class _BankEditWidget(QWidget):
                 self._text_widgets[i].setText(current_column.display_name)
                 self._top_inverted_widgets[i].setChecked(current_column.top_display_line_inverted)
                 self._bottom_inverted_widgets[i].setChecked(current_column.bottom_display_line_inverted)
-                self._raw_encoder_spin_boxes[i].setEnabled(isinstance(current_column, RawDeskColumn))
-                if isinstance(current_column, RawDeskColumn):
+                is_raw_column_instance = isinstance(current_column, RawDeskColumn)
+                self._raw_encoder_spin_boxes[i].setEnabled(is_raw_column_instance)
+                self._raw_fader_spin_boxes[i].setEnabled(is_raw_column_instance)
+                self._color_hue_dspin_boxes[i].setEnabled(not is_raw_column_instance)
+                self._color_saturation_dspin_boxes[i].setEnabled(not is_raw_column_instance)
+                self._color_intensity_dspin_boxes[i].setEnabled(not is_raw_column_instance)
+                if is_raw_column_instance:
                     self._raw_encoder_spin_boxes[i].setValue(current_column.encoder_position)
+                    self._raw_fader_spin_boxes[i].setValue(current_column.fader_position)
+                    self._color_labels[i].setAutoFillBackground(False)
+                    self._color_hue_dspin_boxes[i].setValue(0)
+                    self._color_saturation_dspin_boxes[i].setValue(0)
+                    self._color_intensity_dspin_boxes[i].setValue(0)
+                else:
+                    self._color_hue_dspin_boxes[i].setValue(current_column.color.hue)
+                    self._color_saturation_dspin_boxes[i].setValue(current_column.color.saturation)
+                    self._color_intensity_dspin_boxes[i].setValue(current_column.color.intensity)
+                    self._color_labels[i].setAutoFillBackground(True)
+                    self._raw_encoder_spin_boxes[i].setValue(0)
+                    self._raw_fader_spin_boxes[i].setValue(0)
             else:
                 self._labels[i].setText("Empty")
                 self._text_widgets[i].setText("")
@@ -168,6 +236,16 @@ class _BankEditWidget(QWidget):
                 self._bottom_inverted_widgets[i].setChecked(False)
                 self._raw_encoder_spin_boxes[i].setEnabled(False)
                 self._raw_encoder_spin_boxes[i].setValue(0)
+                self._raw_fader_spin_boxes[i].setEnabled(False)
+                self._raw_fader_spin_boxes[i].setValue(0)
+                self._color_hue_dspin_boxes[i].setEnabled(False)
+                self._color_saturation_dspin_boxes[i].setEnabled(False)
+                self._color_intensity_dspin_boxes[i].setEnabled(False)
+                self._color_hue_dspin_boxes[i].setValue(0)
+                self._color_saturation_dspin_boxes[i].setValue(0)
+                self._color_intensity_dspin_boxes[i].setValue(0)
+                self._color_labels[i].setAutoFillBackground(False)
+            self._update_color_label(i)
 
     def _display_text_field_changed(self, index: int, text: str):
         if self._bank:
@@ -190,3 +268,51 @@ class _BankEditWidget(QWidget):
                 col = self._bank.columns[index]
                 if isinstance(col, RawDeskColumn):
                     col.encoder_position = new_value
+
+    def _raw_fader_value_changed(self, index: int, new_value: int):
+        if self._bank:
+            if len(self._bank.columns) > index:
+                col = self._bank.columns[index]
+                if isinstance(col, RawDeskColumn):
+                    col.fader_position = new_value
+
+    def _color_hue_value_changed(self, index: int, new_value: float):
+        if self._bank:
+            if len(self._bank.columns) > index:
+                col = self._bank.columns[index]
+                if isinstance(col, ColorDeskColumn):
+                    c = col.color
+                    ca = ColorHSI(new_value, c.saturation, c.intensity)
+                    col.color = ca
+                    self._update_color_label(index)
+
+    def _color_saturation_value_changed(self, index: int, new_value: float):
+        if self._bank:
+            if len(self._bank.columns) > index:
+                col = self._bank.columns[index]
+                if isinstance(col, ColorDeskColumn):
+                    c = col.color
+                    ca = ColorHSI(c.hue, new_value, c.intensity)
+                    col.color = ca
+                    self._update_color_label(index)
+
+    def _color_intensity_value_changed(self, index: int, new_value: float):
+        if self._bank:
+            if len(self._bank.columns) > index:
+                col = self._bank.columns[index]
+                if isinstance(col, ColorDeskColumn):
+                    c = col.color
+                    ca = ColorHSI(c.hue, c.saturation, new_value)
+                    col.color = ca
+                    self._update_color_label(index)
+
+    def _update_color_label(self, index: int):
+        c = Qt.gray
+        if self._bank:
+            if len(self._bank.columns) > index:
+                col = self._bank.columns[index]
+                if isinstance(col, ColorDeskColumn):
+                    c = col.color.to_qt_color()
+        p = self._color_labels[index].palette()
+        p.setColor(self._color_labels[index].backgroundRole(), c)
+        self._color_labels[index].setPalette(p)
