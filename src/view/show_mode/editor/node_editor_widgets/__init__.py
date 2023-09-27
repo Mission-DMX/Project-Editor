@@ -2,6 +2,7 @@
 """Node editor widgets"""
 
 from model import Filter
+from .lua_widget import LuaScriptConfigWidget
 from .node_editor_widget import NodeEditorFilterConfigWidget
 from .standard_widget import StandardWidget
 from .cue_editor import CueEditor
@@ -14,5 +15,7 @@ def filter_to_widget(filter_: Filter) -> NodeEditorFilterConfigWidget:
             return ColumnSelect()
         case 44:
             return CueEditor()
+        case 50:
+            return LuaScriptConfigWidget()
         case _:
             return StandardWidget(filter_)

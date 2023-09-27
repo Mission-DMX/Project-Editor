@@ -9,6 +9,7 @@ from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
+from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -62,6 +63,8 @@ def check_if_filter_has_special_widget(filter_):
         return ColumnSelect()
     elif filter_.filter_type == 44:
         return CueEditor()
+    elif filter_.filter_type == 50:
+        return LuaScriptConfigWidget()
     else:
         return None
 

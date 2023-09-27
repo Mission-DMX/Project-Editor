@@ -10,6 +10,7 @@ from .time import *
 from .faders import *
 from .effects import *
 from .universenode import UniverseNode
+from .scripting import *
 
 type_to_node: dict[int, str] = {
         0: Constants8BitNode.nodeName,
@@ -62,4 +63,5 @@ type_to_node: dict[int, str] = {
         47: ShiftFloatNode.nodeName,
         48: ShiftColorNode.nodeName,
         49: FaderMainBrightness.nodeName,
+        50: LuaFilterNode.nodeName,
     }
