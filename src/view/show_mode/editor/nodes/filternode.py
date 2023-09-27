@@ -52,12 +52,16 @@ class FilterNode(Node):
             localTerm.disconnectFrom(remoteTerm)
             return
 
-        if not self.filter.in_data_types[localTerm.name()] == remote_node.filter.out_data_types[remoteTerm.name()]:
-            logging.warning("Tried to connect incompatible filter channels. Forced disconnection.")
-            localTerm.disconnectFrom(remoteTerm)
-            return
+        try:
+            if not self.filter.in_data_types[localTerm.name()] == remote_node.filter.out_data_types[remoteTerm.name()]:
+                logging.warning("Tried to connect incompatible filter channels. Forced disconnection.")
+                localTerm.disconnectFrom(remoteTerm)
+                return
+            self.filter.channel_links[localTerm.name()] = remote_node.name() + ":" + remoteTerm.name()
+        except KeyError as e:
+            logging.error(str(e) + " Possible key candidates are: " + ", ".join(self.filter.in_data_types.keys()) +
+                          "\nRemote options are: " + ", ".join(remote_node.filter.out_data_types.keys()))
 
-        self.filter.channel_links[localTerm.name()] = remote_node.name() + ":" + remoteTerm.name()
 
     def disconnected(self, localTerm, remoteTerm):
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.
