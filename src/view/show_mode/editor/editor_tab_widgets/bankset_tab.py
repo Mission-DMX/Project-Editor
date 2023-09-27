@@ -10,7 +10,7 @@ from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColum
 class BankSetTabWidget(QWidget):
     def __init__(self, parent: QWidget, bankset: BankSet):
         super().__init__(parent)
-        self._bankset = bankset
+        self._bankset = None
 
         layout = QVBoxLayout()
         self._tool_bar = QToolBar()
@@ -19,7 +19,6 @@ class BankSetTabWidget(QWidget):
         self._new_column_type_cbox = QComboBox()
         self._new_column_type_cbox.insertItems(0, ["Numbers", "Color"])
         self._new_column_type_cbox.setCurrentIndex(1)
-        self._new_column_type_cbox.setEnabled(not self._bankset.is_empty)
         self._tool_bar.addWidget(self._new_column_type_cbox)
 
         self._bank_list = QListWidget(self)
@@ -32,22 +31,45 @@ class BankSetTabWidget(QWidget):
         layout.addWidget(self._bank_edit_widget)
         self.setLayout(layout)
 
+        self.bankset = bankset
+
     @property
     def bankset(self) -> BankSet:
         return self._bankset
 
+    @bankset.setter
+    def bankset(self, bs: BankSet):
+        self._bank_list.clear()
+        self._bankset = bs
+        first_bank = True
+        if self._bankset:
+            for fb in self._bankset.banks:
+                self._insert_bank(fb, first_bank)
+                first_bank = False
+            self._new_column_type_cbox.setEnabled(not self._bankset.is_empty)
+            self._tool_bar.setEnabled(True)
+        else:
+            self._bank_edit_widget.bank = None
+            self._new_column_type_cbox.setEnabled(False)
+            self._tool_bar.setEnabled(False)
+
     def _add_bank(self):
         was_empty = self._bankset.is_empty
         b = FaderBank()
-        self._bank_list.addItem(_BankItem(b, self._bank_list.count()))
         self._bankset.add_bank(b)
+        self._insert_bank(b, was_empty)
+
+    def _insert_bank(self, b: FaderBank, was_empty: bool):
+        self._bank_list.addItem(_BankItem(b, self._bank_list.count()))
         if was_empty:
             self._new_column_type_cbox.setEnabled(True)
             self._bank_list.setCurrentRow(0)
+            self._bank_edit_widget.bank = b
 
     def _select_bank_to_edit(self, item: QListWidgetItem):
         if not isinstance(item, _BankItem):
             return
+        item.update_description_text()
         self._bank_edit_widget.bank = item.bank
 
     def _add_column(self):
