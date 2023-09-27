@@ -127,7 +127,7 @@ class ShowEditorWidget(QSplitter):
             return None
         else:
             self._opened_banksets.add(bankset)
-            tab = BankSetTabWidget(bankset)
+            tab = BankSetTabWidget(self._open_page_tab_widget, bankset)
             self._open_page_tab_widget.insertTab(
                 self._open_page_tab_widget.tabBar().count() - 1,
                 tab,

@@ -1,13 +1,13 @@
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QListWidgetItem, QHBoxLayout, QLineEdit, \
-    QCheckBox
+    QCheckBox, QGroupBox, QLabel
 
 from model.control_desk import BankSet, FaderBank
 
 
 class BankSetTabWidget(QWidget):
-    def __init__(self, bankset: BankSet):
-        super().__init__()
+    def __init__(self, parent: QWidget, bankset: BankSet):
+        super().__init__(parent)
         self._bankset = bankset
 
         layout = QVBoxLayout()
@@ -17,7 +17,7 @@ class BankSetTabWidget(QWidget):
         self._bank_list = QListWidget(self)
         self._bank_list.itemClicked.connect(self._select_bank_to_edit)
 
-        self._bank_edit_widget = _BankEditWidget()
+        self._bank_edit_widget = _BankEditWidget(self)
 
         layout.addWidget(self._tool_bar)  # TODO do we want the list view to be next to the tool bar?
         layout.addWidget(self._bank_list)
@@ -55,9 +55,10 @@ class _BankItem(QListWidgetItem):
 
 class _BankEditWidget(QWidget):
 
-    def __init__(self):
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
         self._bank: FaderBank | None = None
-        layout = QHBoxLayout()
+        layout = QVBoxLayout()
 
         self._text_widgets: list[QLineEdit] = []
         self._top_inverted_widgets: list[QCheckBox] = []
@@ -65,15 +66,24 @@ class _BankEditWidget(QWidget):
         # TODO add type selection combo box
         # TODO add type specific widgets
 
+        column_edit_row_container = QWidget(self)
+        column_edit_row_container_layout = QHBoxLayout()
+
         for i in range(8):
-            column_widget = QWidget(self)
+            column_widget = QGroupBox(self, "Column " + str(i))
+            column_widget.setMinimumWidth(100)
+            column_widget.setMinimumHeight(200)
             column_layout = QVBoxLayout()
             column_widget.setLayout(column_layout)
-            self._text_widgets[i] = QLineEdit(column_widget)
+            column_layout.addWidget(QLabel("Display Text:"))
+            self._text_widgets.append(QLineEdit(column_widget))
             self._text_widgets[i].textChanged.connect(lambda i=i: self._display_text_field_changed(i))
             column_layout.addWidget(self._text_widgets[i])
             # TODO add remaining widgets
             # TODO add border around column
+            column_edit_row_container_layout.addWidget(column_widget)
+        column_edit_row_container.setLayout(column_edit_row_container_layout)
+        layout.addWidget(column_edit_row_container)
         self.setLayout(layout)
 
     @property
