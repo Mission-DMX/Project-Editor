@@ -22,15 +22,15 @@ class NodeEditorWidget(QWidget):
 
         # Flag to differentiate between loading filters from file and creating filters.
         self._loading = False
+        self._library = FilterNodeLibrary()
 
-        self._flowchart = FilterFlowchart(scene=self._scene, library=FilterNodeLibrary())
+        layout = QGridLayout()
+        self.setLayout(layout)
 
         self._populate_flowchart()
 
-        self.setLayout(QGridLayout())
-        self.layout().addWidget(self._flowchart.widget().chartWidget.viewDock)
-
     def _populate_flowchart(self):
+        self._flowchart = FilterFlowchart(scene=self._scene, library=self._library)
         self._flowchart.removeNode(self._flowchart.outputNode)
         self._flowchart.removeNode(self._flowchart.inputNode)
         for filter_ in self._scene.filters:
@@ -53,6 +53,8 @@ class NodeEditorWidget(QWidget):
                     logging.critical("Fetched non-terminal object while trying to connect terminals")
                     continue
                 self._flowchart.connectTerminals(local_term, remote_term)
+        self.layout().addWidget(self._flowchart.widget().chartWidget.viewDock)
+
 
     @property
     def scene(self) -> Scene:
@@ -65,5 +67,5 @@ class NodeEditorWidget(QWidget):
         return self._flowchart
 
     def refresh(self):
-        self._flowchart.clear()
+        self.layout().removeWidget(self._flowchart.widget().chartWidget.viewDock)
         self._populate_flowchart()

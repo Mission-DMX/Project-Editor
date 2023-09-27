@@ -15,7 +15,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage
         return False
 
     scene = filter_page.parent_scene
-    name = "{}/{} {}".format(fixture.parent_universe, channels[0].address, fixture.name)
+    name = "{}-{} {}".format(fixture.parent_universe, channels[0].address, fixture.name)
     max_x = 0.0
 
     for filter in filter_page.filters:
