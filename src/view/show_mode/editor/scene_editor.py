@@ -15,7 +15,9 @@ class SceneManagerWidget(QTabWidget):
         self.setTabsClosable(True)
 
         self.addTab(QWidget(), "+")
-        self.tabBar().tabButton(self.count() - 1, QTabBar.ButtonPosition.RightSide).hide()
+        plus_button = self.tabBar().tabButton(self.count() - 1, QTabBar.ButtonPosition.RightSide)
+        if plus_button:
+            plus_button.hide()
 
         self._poped_pages: list[QDialog] = []
         self._nodeeditor_dialog = None

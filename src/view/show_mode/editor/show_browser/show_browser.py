@@ -68,6 +68,7 @@ class ShowBrowser:
         self._selected_scene: Scene | None = None
         if show:
             self.board_configuration = show
+        self._input_dialog = None
 
     def _refresh_all(self):
         self._refresh_scene_browser()
@@ -222,10 +223,12 @@ class ShowBrowser:
         menu = QMenu(self._scene_browsing_tree)
         pos = self._widget.pos()
         menu.move(self._scene_browsing_tree.mapToGlobal(point))
-        scenes_delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", lambda: self._delete_scenes_from_context_menu(selected_items))
+        scenes_delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", menu)
+        scenes_delete_action.triggered.connect(lambda: self._delete_scenes_from_context_menu(selected_items))
         scenes_delete_action.setEnabled(has_scenes)
         menu.addAction(scenes_delete_action)
-        scenes_rename_action = QAction("Rename", lambda: self._rename_scene_from_context_menu(selected_items))
+        scenes_rename_action = QAction("Rename", menu)
+        scenes_rename_action.triggered.connect(lambda: self._rename_scene_from_context_menu(selected_items))
         scenes_rename_action.setEnabled(has_scenes)
         menu.addAction(scenes_rename_action)
         menu.show()
@@ -247,13 +250,14 @@ class ShowBrowser:
         for si in items:
             if isinstance(si, AnnotatedTreeWidgetItem):
                 if isinstance(si.annotated_data, Scene):
-                    input_dialog = QInputDialog(self.widget)
-                    input_dialog.setInputMode(QInputDialog.TextInput)
-                    input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
-                    input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
-                    input_dialog.setWindowTitle('Rename Scene')
-                    input_dialog.open()
-                    input_dialog.deleteLater()
+                    scene_to_rename = si.annotated_data
+                    if not self._input_dialog:
+                        self._input_dialog = QInputDialog(self.widget)
+                    self._input_dialog.setInputMode(QInputDialog.TextInput)
+                    self._input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
+                    self._input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
+                    self._input_dialog.setWindowTitle('Rename Scene')
+                    self._input_dialog.open()
 
     def _scene_item_double_clicked(self, item):
         if isinstance(item, AnnotatedTreeWidgetItem):
