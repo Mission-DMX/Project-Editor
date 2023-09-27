@@ -74,3 +74,6 @@ class ColorHSI:
 
     def to_qt_color(self) -> QColor:
         return QColor.fromHslF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)
+
+    def copy(self) -> "ColorHSI":
+        return ColorHSI(self._hue, self._saturation, self._intensity)

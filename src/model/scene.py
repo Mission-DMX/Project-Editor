@@ -36,6 +36,25 @@ class FilterPage:
     def parent_scene(self) -> "Scene":
         return self._parent_scene
 
+    def copy(self, new_scene: "Scene" = None):
+        if not new_scene:
+            new_fp = FilterPage(self._parent_scene)
+            # Internal copying should not copy filters as they are unique within scene
+        else:
+            new_fp = FilterPage(new_scene)
+            for filter in self._filters:
+                found_filter = None
+                for f in new_scene.filters:
+                    if f.filter_id == filter.filter_id:
+                        found_filter = f
+                        break
+                if found_filter:
+                    new_fp._filters.append(found_filter)
+        for child_fp in self._child_pages:
+            new_fp._child_pages.append(child_fp.copy(new_scene))
+        new_fp._name = self.name
+        return new_fp
+
 
 class Scene:
     """Scene for show file."""
@@ -109,3 +128,28 @@ class Scene:
                                                gui_controlled=True)
             return False
         return True
+
+    def copy(self, existing_scenes: list["Scene"]) -> "Scene":
+        """
+        This method returns a copy of the scene, jet containing a new unique ID.
+
+        existing_scenes: A list of scenes to check the new id against.
+        """
+        chosen_id = len(existing_scenes)
+        id_check_passed: bool = False
+        while not id_check_passed:
+            for s in existing_scenes:
+                if chosen_id == s.scene_id:
+                    chosen_id *= 2
+                    break
+            id_check_passed = True
+        scene = Scene(scene_id=chosen_id,
+                      human_readable_name=self.human_readable_name,
+                      board_configuration=self.board_configuration)
+        for f in self._filters:
+            new_filter = f.copy(new_scene=scene)
+            scene.filters.append(new_filter)
+        for fp in self._filter_pages:
+            scene._filter_pages.append(fp.copy(scene))
+        scene.linked_bankset = self._associated_bankset.copy()
+        return scene

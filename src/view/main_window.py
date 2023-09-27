@@ -179,8 +179,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """Dialog modify tho selected Column"""
         active_bank_set = BankSet.active_bank_set()
         column = active_bank_set.get_column(index)
-        if not active_bank_set.activ_column == column:
-            if active_bank_set.activ_column:
+        if not active_bank_set.active_column == column:
+            if active_bank_set.active_column:
                 self._broadcaster.view_change_colum_select.emit()
             active_bank_set.set_active_column(column)
             if isinstance(column, ColorDeskColumn):
@@ -193,6 +193,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
             return
-        if not BankSet.active_bank_set().activ_column:
+        if not BankSet.active_bank_set().active_column:
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()

@@ -231,6 +231,11 @@ class ShowBrowser:
         scenes_rename_action.triggered.connect(lambda: self._rename_scene_from_context_menu(selected_items))
         scenes_rename_action.setEnabled(has_scenes)
         menu.addAction(scenes_rename_action)
+        menu.addSeparator()
+        copy_scene_action = QAction("Duplicate Scene" if len(selected_items) == 1 else "Duplicate Scenes", menu)
+        copy_scene_action.triggered.connect(lambda: self._duplicate_scene(selected_items))
+        copy_scene_action.setEnabled(has_scenes)
+        menu.addAction(copy_scene_action)
         menu.show()
 
     def _delete_scenes_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
@@ -283,3 +288,15 @@ class ShowBrowser:
 
     def _upload_showfile(self):
         transmit_to_fish(self._show, False)
+
+    def _duplicate_scene(self, selected_items: list[QTreeWidgetItem]):
+        i: int = 1
+        for item in selected_items:
+            if not isinstance(item, AnnotatedTreeWidgetItem):
+                continue
+            if not isinstance(item.annotated_data, Scene):
+                continue
+            sc = item.annotated_data.copy(item.annotated_data.board_configuration.scenes)
+            sc.human_readable_name = "Copy ({}) of Scene '{}'".format(i, sc.human_readable_name)
+            self._show.scenes.append(sc)
+            self._add_scene_to_scene_browser(sc)

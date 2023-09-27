@@ -34,6 +34,17 @@ class DeskColumn(ABC):
         self._upper_text = ""
         self.data_changed_callback = None
 
+    def copy_base(self, dc: "DeskColumn"):
+        dc._bottom_display_line_inverted = self._bottom_display_line_inverted
+        dc._top_display_line_inverted = self._top_display_line_inverted
+        dc.display_color = self.display_color
+        dc._lower_text = self._lower_text
+        dc._upper_text = self._upper_text
+
+    @abstractmethod
+    def copy(self) -> "DeskColumn":
+        pass
+
     def update(self) -> bool:
         """This method updates the state of this column with fish"""
         if not BankSet.fish_connector().is_running or not self._pushed_to_device:
@@ -96,6 +107,18 @@ class DeskColumn(ABC):
 
 
 class RawDeskColumn(DeskColumn):
+    def copy(self) -> "DeskColumn":
+        base_dc = RawDeskColumn(self.id)
+        self.copy_base(base_dc)
+        base_dc._fader_position = self._fader_position
+        base_dc._encoder_position = self._encoder_position
+        base_dc._select_button_led_active = self._select_button_led_active
+        base_dc._b1_button_led_active = self._b1_button_led_active
+        base_dc._b2_button_led_active = self._b2_button_led_active
+        base_dc._b3_button_led_active = self._b3_button_led_active
+        base_dc._secondary_text_line = self._secondary_text_line
+        return base_dc
+
     def __init__(self, _id: str = None):
         super().__init__(_id)
         self._fader_position = 0
@@ -183,6 +206,12 @@ class RawDeskColumn(DeskColumn):
 
 
 class ColorDeskColumn(DeskColumn):
+    def copy(self) -> "DeskColumn":
+        base_dc = ColorDeskColumn(self.id)
+        self.copy_base(base_dc)
+        base_dc._color = self._color.copy()
+        return base_dc
+
     def __init__(self, _id: str = None):
         super().__init__(_id)
         self._color: ColorHSI = ColorHSI(0.0, 0.0, 0.0)
@@ -242,6 +271,12 @@ class FaderBank:
             msg.cols.extend([col._generate_column_message()])  # TODO private Methode
         return msg
 
+    def copy(self) -> "FaderBank":
+        new_fb = FaderBank()
+        for c in self.columns:
+            new_fb.columns.append(c.copy())
+        return new_fb
+
 
 class BankSet:
     """This class represents a bank set.
@@ -293,7 +328,7 @@ class BankSet:
         self.id = _generate_unique_id()
         self.pushed_to_fish = False
         self._broadcaster: Broadcaster = Broadcaster()
-        self.activ_column: DeskColumn | None = None
+        self.active_column: DeskColumn | None = None
         if banks:
             self.banks: list[FaderBank] = banks
         else:
@@ -361,15 +396,15 @@ class BankSet:
             self.push_messages_now()
 
     def _leaf_selected(self):
-        if not self.activ_column:
+        if not self.active_column:
             return
-        self.activ_column = None
+        self.active_column = None
         self._send_desk_update_message()
 
     def _send_desk_update_message(self):
         msg = proto.Console_pb2.desk_update()
-        if self.activ_column:
-            msg.selected_column_id = self.activ_column.id
+        if self.active_column:
+            msg.selected_column_id = self.active_column.id
         else:
             msg.selected_column_id = ""  # Do not update the set of selected columns yet
         msg.find_active_on_column_id = ""  # Do not update the column with active 'find fixture' feature yet
@@ -458,7 +493,7 @@ class BankSet:
                     return c
 
     def set_active_column(self, column: DeskColumn):
-        self.activ_column = column
+        self.active_column = column
 
     def get_column_by_number(self, index: int) -> DeskColumn:
         """This method iterates through the banks and returns column i"""
@@ -474,6 +509,12 @@ class BankSet:
     @staticmethod
     def handle_column_update_message(message: proto.Console_pb2.fader_column):
         BankSet._active_bank_set.get_column(message.column_id).update_from_message(message)
+
+    def copy(self) -> "BankSet":
+        new_bs = BankSet(description=self.description, gui_controlled=self._gui_controlled)
+        for b in self.banks:
+            new_bs.banks.append(b.copy())
+        return new_bs
 
 
 def set_network_manager(network_manager: NetworkManager):
