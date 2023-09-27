@@ -309,7 +309,10 @@ class BankSet:
     def __del__(self):
         if self.pushed_to_fish:
             self.unlink()
-        super().__del__()
+        try:
+            super().__del__()
+        except AttributeError:
+            pass
 
     def update(self) -> bool:
         """push the bank set to fish or update it if required
@@ -438,6 +441,11 @@ class BankSet:
     def is_linked(self) -> bool:
         """Returns True if the bank set is loaded to fish."""
         return self.pushed_to_fish
+
+    @property
+    def is_empty(self) -> bool:
+        """Returns true if the bank set is empty."""
+        return len(self.banks) == 0
 
     @staticmethod
     def push_messages_now():

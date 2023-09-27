@@ -1,8 +1,8 @@
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QListWidgetItem, QHBoxLayout, QLineEdit, \
-    QCheckBox, QGroupBox, QLabel
+    QCheckBox, QGroupBox, QLabel, QComboBox
 
-from model.control_desk import BankSet, FaderBank
+from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 
 
 class BankSetTabWidget(QWidget):
@@ -12,7 +12,13 @@ class BankSetTabWidget(QWidget):
 
         layout = QVBoxLayout()
         self._tool_bar = QToolBar()
-        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Bank", lambda: self._add_bank())
+        self._tool_bar.addAction(QIcon.fromTheme("document-new"), "Add Bank", lambda: self._add_bank())
+        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Column to current Bank", lambda: self._add_column())
+        self._new_column_type_cbox = QComboBox()
+        self._new_column_type_cbox.insertItems(0, ["Numbers", "Color"])
+        self._new_column_type_cbox.setCurrentIndex(1)
+        self._new_column_type_cbox.setEnabled(not self._bankset.is_empty)
+        self._tool_bar.addWidget(self._new_column_type_cbox)
 
         self._bank_list = QListWidget(self)
         self._bank_list.itemClicked.connect(self._select_bank_to_edit)
@@ -29,14 +35,32 @@ class BankSetTabWidget(QWidget):
         return self._bankset
 
     def _add_bank(self):
+        was_empty = self._bankset.is_empty
         b = FaderBank()
         self._bank_list.addItem(_BankItem(b, self._bank_list.count()))
         self._bankset.add_bank(b)
+        if was_empty:
+            self._new_column_type_cbox.setEnabled(True)
+            self._bank_list.setCurrentRow(0)
 
     def _select_bank_to_edit(self, item: QListWidgetItem):
         if not isinstance(item, _BankItem):
             return
         self._bank_edit_widget.bank = item.bank
+
+    def _add_column(self):
+        for item in self._bank_list.selectedItems():
+            if not isinstance(item, _BankItem):
+                continue
+            if len(item.bank.columns) > 7:
+                continue
+            if self._new_column_type_cbox.currentText() == "Color":
+                col = ColorDeskColumn()
+            else:
+                col = RawDeskColumn()
+            item.bank.columns.append(col)
+            self._bank_edit_widget.refresh_column_count()
+            break
 
 
 class _BankItem(QListWidgetItem):
@@ -77,23 +101,65 @@ class _BankEditWidget(QWidget):
             column_widget.setLayout(column_layout)
             column_layout.addWidget(QLabel("Display Text:"))
             self._text_widgets.append(QLineEdit(column_widget))
-            self._text_widgets[i].textChanged.connect(lambda i=i: self._display_text_field_changed(i))
+            self._text_widgets[i].textChanged.connect(
+                lambda text, ci=i: self._display_text_field_changed(ci, text)
+            )
             column_layout.addWidget(self._text_widgets[i])
+            self._top_inverted_widgets.append(QCheckBox("Top line inverted", column_widget))
+            self._top_inverted_widgets[i].stateChanged.connect(
+                lambda checked, ci=i: self._top_inverted_changed(ci, checked)
+            )
+            column_layout.addWidget(self._top_inverted_widgets[i])
+            self._bottom_inverted_widgets.append(QCheckBox("Bottom line inverted", column_widget))
+            self._bottom_inverted_widgets[i].stateChanged.connect(
+                lambda checked, ci=i: self._bottom_inverted_changed(ci, checked)
+            )
+            column_layout.addWidget(self._bottom_inverted_widgets[i])
             # TODO add remaining widgets
-            # TODO add border around column
             column_edit_row_container_layout.addWidget(column_widget)
         column_edit_row_container.setLayout(column_edit_row_container_layout)
         layout.addWidget(column_edit_row_container)
         self.setLayout(layout)
+
+        self.bank = None
 
     @property
     def bank(self) -> FaderBank:
         return self._bank
 
     @bank.setter
-    def bank(self, bank: FaderBank):
+    def bank(self, bank: FaderBank | None):
         self._bank = bank
+        self.refresh_column_count()
 
-    def _display_text_field_changed(self, index: int):
+    def refresh_column_count(self):
+        if self._bank:
+            number_of_columns = len(self._bank.columns)
+        else:
+            number_of_columns = 0
+        for i in range(len(self._text_widgets)):
+            column_enabled = i < number_of_columns
+            self._text_widgets[i].setEnabled(column_enabled)
+            self._top_inverted_widgets[i].setEnabled(column_enabled)
+            self._bottom_inverted_widgets[i].setEnabled(column_enabled)
+            if column_enabled:
+                current_column = self._bank.columns[i]
+                self._text_widgets[i].setText(current_column.display_name)
+                self._top_inverted_widgets[i].setChecked(current_column.top_display_line_inverted)
+                self._bottom_inverted_widgets[i].setChecked(current_column.bottom_display_line_inverted)
+            else:
+                self._text_widgets[i].setText("")
+                self._top_inverted_widgets[i].setChecked(False)
+                self._bottom_inverted_widgets[i].setChecked(False)
+
+    def _display_text_field_changed(self, index: int, text: str):
         if self._bank:
             self._bank.columns[index].display_name = self._text_widgets[index].text()
+
+    def _top_inverted_changed(self, index: int, checked: bool):
+        if self._bank:
+            self._bank.columns[index].top_display_line_inverted = self._top_inverted_widgets[index].isChecked()
+
+    def _bottom_inverted_changed(self, index: int, checked: bool):
+        if self._bank:
+            self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[index].isChecked()
