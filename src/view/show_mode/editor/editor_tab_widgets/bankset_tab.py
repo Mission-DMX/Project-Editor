@@ -84,10 +84,10 @@ class _BankEditWidget(QWidget):
         self._bank: FaderBank | None = None
         layout = QVBoxLayout()
 
+        self._labels: list[QLabel] = []
         self._text_widgets: list[QLineEdit] = []
         self._top_inverted_widgets: list[QCheckBox] = []
         self._bottom_inverted_widgets: list[QCheckBox] = []
-        # TODO add type selection combo box
         # TODO add type specific widgets
 
         column_edit_row_container = QWidget(self)
@@ -99,6 +99,8 @@ class _BankEditWidget(QWidget):
             column_widget.setMinimumHeight(200)
             column_layout = QVBoxLayout()
             column_widget.setLayout(column_layout)
+            self._labels.append(QLabel("Empty"))
+            column_layout.addWidget(self._labels[i])
             column_layout.addWidget(QLabel("Display Text:"))
             self._text_widgets.append(QLineEdit(column_widget))
             self._text_widgets[i].textChanged.connect(
@@ -144,10 +146,12 @@ class _BankEditWidget(QWidget):
             self._bottom_inverted_widgets[i].setEnabled(column_enabled)
             if column_enabled:
                 current_column = self._bank.columns[i]
+                self._labels[i].setText("Color" if isinstance(current_column, ColorDeskColumn) else "Number")
                 self._text_widgets[i].setText(current_column.display_name)
                 self._top_inverted_widgets[i].setChecked(current_column.top_display_line_inverted)
                 self._bottom_inverted_widgets[i].setChecked(current_column.bottom_display_line_inverted)
             else:
+                self._labels[i].setText("Empty")
                 self._text_widgets[i].setText("")
                 self._top_inverted_widgets[i].setChecked(False)
                 self._bottom_inverted_widgets[i].setChecked(False)
