@@ -50,6 +50,7 @@ class BankSetTabWidget(QWidget):
             self._tool_bar.setEnabled(True)
         else:
             self._bank_edit_widget.bank = None
+            self._bank_edit_widget.set_linked_bank_item(None)
             self._new_column_type_cbox.setEnabled(False)
             self._tool_bar.setEnabled(False)
 
@@ -60,17 +61,20 @@ class BankSetTabWidget(QWidget):
         self._insert_bank(b, was_empty)
 
     def _insert_bank(self, b: FaderBank, was_empty: bool):
-        self._bank_list.addItem(_BankItem(b, self._bank_list.count()))
+        bank_list_item = _BankItem(b, self._bank_list.count())
+        self._bank_list.addItem(bank_list_item)
         if was_empty:
             self._new_column_type_cbox.setEnabled(True)
             self._bank_list.setCurrentRow(0)
             self._bank_edit_widget.bank = b
+            self._bank_edit_widget.set_linked_bank_item(bank_list_item)
 
     def _select_bank_to_edit(self, item: QListWidgetItem):
         if not isinstance(item, _BankItem):
             return
         item.update_description_text()
         self._bank_edit_widget.bank = item.bank
+        self._bank_edit_widget.set_linked_bank_item(item)
 
     def _add_column(self):
         for item in self._bank_list.selectedItems():
@@ -115,6 +119,7 @@ class _BankEditWidget(QWidget):
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self._bank: FaderBank | None = None
+        self._bank_item: _BankItem | None = None
         layout = QVBoxLayout()
 
         self._labels: list[QLabel] = []
@@ -215,6 +220,9 @@ class _BankEditWidget(QWidget):
         self._bank = bank
         self.refresh_column_count()
 
+    def set_linked_bank_item(self, item: _BankItem | None):
+        self._bank_item = item
+
     def refresh_column_count(self):
         if self._bank:
             number_of_columns = len(self._bank.columns)
@@ -273,6 +281,8 @@ class _BankEditWidget(QWidget):
         if self._bank:
             if len(self._bank.columns) > index:
                 self._bank.columns[index].display_name = self._text_widgets[index].text()
+                if self._bank_item:
+                    self._bank_item.update_description_text()
 
     def _top_inverted_changed(self, index: int, checked: bool):
         if self._bank:
