@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QTextEdit, QVBoxLayout, QListWidget, QToolBar, QComboBox, QLineEdit
 
 from model import DataType
-from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from .node_editor_widget import NodeEditorFilterConfigWidget
+from ..show_browser.annotated_item import AnnotatedListWidgetItem
 
 
 class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
@@ -17,21 +18,34 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
 
     def _load_configuration(self, conf: dict[str, str]):
         self._channel_list.clear()
+        self._channels.clear()
+        self._new_channel_name.setText("")
         for in_item in conf["in_mapping"].split(';'):
+            if not in_item:
+                continue
             channel_name, data_type = in_item.split(':')
             self._channels[channel_name] = (True, DataType.from_filter_str(data_type))
-            # TODO replace with AnnotatedListWidgetItem
-            self._channel_list.insertItem(0, "{}: input,{}".format(channel_name, data_type))
+            self._insert_channel_in_list(channel_name, data_type, True)
         for out_item in conf["out_mapping"].split(';'):
+            if not out_item:
+                continue
             channel_name, data_type = out_item.split(':')
             self._channels[channel_name] = (False, DataType.from_filter_str(data_type))
-            self._channel_list.insertItem(0, "{}: output,{}".format(channel_name, data_type))
+            self._insert_channel_in_list(channel_name, data_type, False)
+
+    def _insert_channel_in_list(self, channel_name: str, data_type: DataType, is_input: bool):
+        # TODO replace with AnnotatedListWidgetItem
+        format_str = "{}: input,{}" if is_input else "{}: output,{}"
+        item = AnnotatedListWidgetItem(self._channel_list)
+        item.setText(format_str.format(channel_name, data_type))
+        item.annotated_data = (channel_name, data_type, is_input)
+        self._channel_list.insertItem(0, item)
 
     def _get_configuration(self) -> dict[str, str]:
         in_maps: list[str] = []
         out_maps: list[str] = []
-        for channel_name, channel_props in self._channels:
-            is_input: str = channel_props[0]
+        for channel_name, channel_props in self._channels.items():
+            is_input: bool = channel_props[0]
             dt: DataType = channel_props[1]
             description = "{}:{}".format(channel_name, dt.format_for_filters())
             if is_input:
@@ -53,8 +67,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         self._toolbar = QToolBar(side_container)
         self._toolbar.addAction("Add Input", self._add_input)
         self._toolbar.addAction("Add Output", self._add_output)
-        self._toolbar.addAction("Remove Selected Port")
-        # TODO implement removal
+        self._toolbar.addAction("Remove Selected Port", self._remove_channel)
         self._data_type_combo_box = QComboBox(self._toolbar)
         self._data_type_combo_box.addItems(DataType.names())
         self._toolbar.addWidget(self._data_type_combo_box)
@@ -74,8 +87,25 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
 
     def _add_input(self):
         name = self._new_channel_name.text()
-        self._channels[name] = (True, DataType.from_filter_str(self._data_type_combo_box.currentText()))
+        if name and name not in self._channels.keys():
+            data_type = DataType.from_filter_str(self._data_type_combo_box.currentText())
+            self._channels[name] = (True, data_type)
+            self._insert_channel_in_list(name, data_type, True)
+        else:
+            pass  # TODO error message
 
     def _add_output(self):
         name = self._new_channel_name.text()
-        self._channels[name] = (False, DataType.from_filter_str(self._data_type_combo_box.currentText()))
+        if name and name not in self._channels.keys():
+            data_type = DataType.from_filter_str(self._data_type_combo_box.currentText())
+            self._channels[name] = (False, data_type)
+            self._insert_channel_in_list(name, data_type, False)
+        else:
+            pass  # TODO show appropriate error message
+
+    def _remove_channel(self):
+        for item in self._channel_list.selectedItems().copy():
+            if not isinstance(item, AnnotatedListWidgetItem):
+                continue
+            self._channels.pop(item.annotated_data[0])
+            self._channel_list.takeItem(self._channel_list.row(item))

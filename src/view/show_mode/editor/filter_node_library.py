@@ -105,5 +105,5 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(nodes.ShiftFloatNode, [('Effects',)])
         self.addNodeType(nodes.ShiftColorNode, [('Effects',)])
 
-    def register_scripting_nodes(self):
+    def _register_scripting_nodes(self):
         self.addNodeType(nodes.LuaFilterNode, [('Script',)])
