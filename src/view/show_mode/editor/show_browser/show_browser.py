@@ -214,14 +214,16 @@ class ShowBrowser:
         selected_items = self._scene_browsing_tree.selectedItems()
 
         has_scenes = False
+        has_filter_pages = False
 
         for si in selected_items:
             if isinstance(si, AnnotatedTreeWidgetItem):
                 if isinstance(si.annotated_data, Scene):
                     has_scenes = True
+                if isinstance(si.annotated_data, FilterPage):
+                    has_filter_pages = True
 
         menu = QMenu(self._scene_browsing_tree)
-        pos = self._widget.pos()
         menu.move(self._scene_browsing_tree.mapToGlobal(point))
         scenes_delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", menu)
         scenes_delete_action.triggered.connect(lambda: self._delete_scenes_from_context_menu(selected_items))
@@ -229,13 +231,17 @@ class ShowBrowser:
         menu.addAction(scenes_delete_action)
         scenes_rename_action = QAction("Rename", menu)
         scenes_rename_action.triggered.connect(lambda: self._rename_scene_from_context_menu(selected_items))
-        scenes_rename_action.setEnabled(has_scenes)
+        scenes_rename_action.setEnabled(has_scenes or has_filter_pages)
         menu.addAction(scenes_rename_action)
         menu.addSeparator()
         copy_scene_action = QAction("Duplicate Scene" if len(selected_items) == 1 else "Duplicate Scenes", menu)
         copy_scene_action.triggered.connect(lambda: self._duplicate_scene(selected_items))
         copy_scene_action.setEnabled(has_scenes)
         menu.addAction(copy_scene_action)
+        add_filter_page_action = QAction("Add Filter Page", menu)
+        add_filter_page_action.triggered.connect(lambda: self._add_filter_page(selected_items))
+        add_filter_page_action.setEnabled(has_scenes or has_filter_pages)
+        menu.addAction(add_filter_page_action)
         menu.show()
 
     def _delete_scenes_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
@@ -249,8 +255,11 @@ class ShowBrowser:
         self._refresh_scene_browser()
 
     def _rename_scene_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
-        def rename(c, scene, text):
-            scene.human_readable_name = text
+        def rename(c, scene: Scene | FilterPage, text):
+            if isinstance(scene, Scene):
+                scene.human_readable_name = text
+            else:
+                scene.name = text
             c._refresh_scene_browser()
         for si in items:
             if isinstance(si, AnnotatedTreeWidgetItem):
@@ -262,6 +271,15 @@ class ShowBrowser:
                     self._input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
                     self._input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
                     self._input_dialog.setWindowTitle('Rename Scene')
+                    self._input_dialog.open()
+                if isinstance(si.annotated_data, FilterPage):
+                    page_to_rename = si.annotated_data
+                    if not self._input_dialog:
+                        self._input_dialog = QInputDialog(self.widget)
+                    self._input_dialog.setInputMode(QInputDialog.TextInput)
+                    self._input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
+                    self._input_dialog.setLabelText("Rename filter page '" + page_to_rename.name + "' to:")
+                    self._input_dialog.setWindowTitle('Rename Filter Page')
                     self._input_dialog.open()
 
     def _scene_item_double_clicked(self, item):
@@ -300,3 +318,27 @@ class ShowBrowser:
             sc.human_readable_name = "Copy ({}) of Scene '{}'".format(i, sc.human_readable_name)
             self._show.scenes.append(sc)
             self._add_scene_to_scene_browser(sc)
+
+    def _add_filter_page(self, selected_items: list[QTreeWidgetItem]):
+        def add(c, scene: Scene | FilterPage, text):
+            if isinstance(scene, Scene):
+                fp = FilterPage(scene)
+                scene.pages.append(fp)
+                fp.name = text
+            else:
+                fp = FilterPage(scene.parent_scene)
+                scene.child_pages.append(fp)
+                fp.name = text
+            c._refresh_scene_browser()
+        for item in selected_items:
+            if not isinstance(item, AnnotatedTreeWidgetItem):
+                continue
+            if isinstance(item.annotated_data, Scene) or isinstance(item.annotated_data, FilterPage):
+                parent_to_append_to = item.annotated_data
+                if not self._input_dialog:
+                    self._input_dialog = QInputDialog(self.widget)
+                self._input_dialog.setInputMode(QInputDialog.TextInput)
+                self._input_dialog.textValueSelected.connect(lambda text: add(self, parent_to_append_to, text))
+                self._input_dialog.setLabelText("Please enter the name of the new page.")
+                self._input_dialog.setWindowTitle('Enter Name')
+                self._input_dialog.open()
