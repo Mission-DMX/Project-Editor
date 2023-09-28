@@ -7,6 +7,7 @@ from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 
 # from model import Scene, Filter
 from model import Scene
+from model.scene import FilterPage
 from . import nodes
 from .filter_flowchart import FilterFlowchart
 from .nodes import FilterNode
@@ -16,9 +17,12 @@ from .filter_node_library import FilterNodeLibrary
 class NodeEditorWidget(QWidget):
     """Nodeeditor to edit scenes and their filter nodes"""
 
-    def __init__(self, scene: Scene, parent: QWidget) -> None:
+    def __init__(self, page_or_scene: Scene | FilterPage, parent: QWidget) -> None:
         super().__init__(parent)
-        self._scene = scene
+        if isinstance(page_or_scene, Scene):
+            self._page: FilterPage = page_or_scene.pages[0]
+        else:
+            self._page = page_or_scene
 
         # Flag to differentiate between loading filters from file and creating filters.
         self._loading = False
@@ -30,11 +34,32 @@ class NodeEditorWidget(QWidget):
         self._populate_flowchart()
 
     def _populate_flowchart(self):
-        self._flowchart = FilterFlowchart(scene=self._scene, library=self._library)
+        self._flowchart = FilterFlowchart(page=self._page, library=self._library)
         self._flowchart.removeNode(self._flowchart.outputNode)
         self._flowchart.removeNode(self._flowchart.inputNode)
-        for filter_ in self._scene.filters:
+        loaded_in_filters: set[str] = set()
+        required_filters: set[str] = set()
+        for filter_ in self._page.filters:
             self._flowchart.create_node_with_filter(filter_=filter_, node_type=nodes.type_to_node[filter_.filter_type])
+            loaded_in_filters.add(filter_.filter_id)
+            for remote_filter_channel in filter_.channel_links.values():
+                filter_name, _ = remote_filter_channel.split(':')
+                required_filters.add(filter_name)
+        still_missing_filters = required_filters - loaded_in_filters
+        for filter_candidate in self._page.parent_scene.filters:
+            if len(still_missing_filters) < 1:
+                break
+            if filter_candidate.filter_id in still_missing_filters:
+                still_missing_filters.remove(filter_candidate.filter_id)
+                logging.info("Adding foreign filter '{}' from scene '{}'.".format(filter_candidate.filter_id,
+                                                                                  self._page.parent_scene))
+                self._flowchart.create_node_with_filter(
+                    filter_=filter_candidate,
+                    node_type=nodes.type_to_node[filter_candidate.filter_type], is_from_different_page=True
+            )
+        if len(still_missing_filters) > 0:
+            raise Exception("Missing filters '{}' in scene '{}'.".
+                            format(still_missing_filters, self._page.parent_scene))
         for name, node in self._flowchart.nodes().items():
             if not isinstance(node, FilterNode):
                 logging.warning("Trying to connect non-FilterNode %s", name)
@@ -55,11 +80,10 @@ class NodeEditorWidget(QWidget):
                 self._flowchart.connectTerminals(local_term, remote_term)
         self.layout().addWidget(self._flowchart.widget().chartWidget.viewDock)
 
-
     @property
     def scene(self) -> Scene:
         """The scene of the tab"""
-        return self._scene
+        return self._page.parent_scene
 
     @property
     def flowchart(self) -> Flowchart:

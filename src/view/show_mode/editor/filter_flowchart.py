@@ -1,22 +1,24 @@
 # encoding=utf-8
 """Extended Flowchart to handle creating nodes from file"""
+from PySide6.QtGui import QBrush, QColor
 from pyqtgraph.flowchart import Flowchart
 
 from model import Scene, Filter
+from model.scene import FilterPage
 from .nodes import FilterNode
 
 
 class FilterFlowchart(Flowchart):
     """Flowchart that can handle creating nodes from file"""
 
-    def __init__(self, scene: Scene, terminals=None, filePath=None, library=None):
-        super().__init__(terminals, scene.human_readable_name, filePath, library)
-        self._scene = scene
+    def __init__(self, page: FilterPage, terminals=None, filePath=None, library=None):
+        super().__init__(terminals, page.parent_scene.human_readable_name + "/" + page.name, filePath, library)
+        self._page = page
 
     @property
-    def show_scene(self):
+    def show_scene(self) -> Scene:
         """The scene this flowchart represents"""
-        return self._scene
+        return self._page.parent_scene
 
     def createNode(self, nodeType, name=None, pos=None):
         """Adds a node to the flowchart. Overrides Flowchart behaviour by passing scene to node.
@@ -35,11 +37,11 @@ class FilterFlowchart(Flowchart):
                     name = tmp
                     break
                 index += 1
-        node = self.library.getNodeType(nodeType)(self._scene, name)
+        node = self.library.getNodeType(nodeType)(self._page.parent_scene, name)
         self.addNode(node, name, pos)
         return node
 
-    def create_node_with_filter(self, filter_: Filter, node_type):
+    def create_node_with_filter(self, filter_: Filter, node_type, is_from_different_page: bool = False):
         """Creates a node and adds it to the flowchart.
 
         Args:
@@ -54,7 +56,11 @@ class FilterFlowchart(Flowchart):
                     filter_.filter_id = name
                     break
                 index += 1
-        node = self.library.getNodeType(node_type)(filter_, filter_.filter_id)
+        node: FilterNode = self.library.getNodeType(node_type)(filter_, filter_.filter_id)
+        if is_from_different_page:
+            b: QBrush = node.graphicsItem().brush
+            b.setColor(QColor.fromRgb(30, 40, 30, 255))
+            node.graphicsItem().setBrush(b)
         self.addNode(node, filter_.filter_id, filter_.pos)
         return node
 
