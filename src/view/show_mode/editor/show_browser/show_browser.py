@@ -286,10 +286,10 @@ class ShowBrowser:
         if isinstance(item, AnnotatedTreeWidgetItem):
             data = item.annotated_data
             if isinstance(data, Scene):
-                self._show.broadcaster.scene_open_in_editor_requested.emit(data)
+                self._show.broadcaster.scene_open_in_editor_requested.emit(data.pages[0])
             elif isinstance(data, FilterPage):
                 # TODO exchange for correct loading of page
-                self._show.broadcaster.scene_open_in_editor_requested.emit(data.parent_scene)
+                self._show.broadcaster.scene_open_in_editor_requested.emit(data)
             elif isinstance(data, BankSet):
                 self._show.broadcaster.bankset_open_in_editor_requested.emit({"bankset": data})
 
@@ -299,10 +299,8 @@ class ShowBrowser:
         if isinstance(item.annotated_data, UsedFixture):
             current_widget = self._editor_tab_widget.currentWidget()
             if isinstance(current_widget, SceneTabWidget):
-                # TODO distinguish filter pages once implemented
-                if place_fixture_filters_in_scene(item.annotated_data, current_widget.scene.pages[0]):
+                if place_fixture_filters_in_scene(item.annotated_data, current_widget.filter_page):
                     current_widget.refresh()
-                    # TODO notify editor about filter update
 
     def _upload_showfile(self):
         transmit_to_fish(self._show, False)

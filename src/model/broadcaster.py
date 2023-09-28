@@ -10,7 +10,7 @@ from model.patching_universe import PatchingUniverse
 from view.dialogs.patching_dialog import PatchingDialog
 
 from .device import Device
-from .scene import Scene
+from .scene import Scene, FilterPage
 from .universe import Universe
 
 
@@ -40,7 +40,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
     board_configuration_loaded: QtCore.Signal = QtCore.Signal()
     scene_created: QtCore.Signal = QtCore.Signal(Scene)
-    scene_open_in_editor_requested: QtCore.Signal = QtCore.Signal(Scene)
+    scene_open_in_editor_requested: QtCore.Signal = QtCore.Signal(FilterPage)
     bankset_open_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
     delete_scene: QtCore.Signal = QtCore.Signal(Scene)
     delete_universe: QtCore.Signal = QtCore.Signal(Universe)

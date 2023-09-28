@@ -3,6 +3,7 @@
 from PySide6.QtWidgets import QWidget, QTabWidget, QPushButton, QGridLayout
 
 from model import Scene
+from model.scene import FilterPage
 from view.show_mode.editor.nodeeditor import NodeEditorWidget
 from view.show_mode.editor.scene_editor import SceneManagerWidget
 
@@ -10,7 +11,7 @@ from view.show_mode.editor.scene_editor import SceneManagerWidget
 class SceneTabWidget(QTabWidget):
     """Widget representing a scene as a tab page"""
 
-    def __init__(self, scene: Scene):
+    def __init__(self, scene: Scene | FilterPage):
         super().__init__()
         self._scene = scene
 
@@ -24,6 +25,13 @@ class SceneTabWidget(QTabWidget):
     @property
     def scene(self) -> Scene:
         """The scene the tab represents"""
+        if isinstance(self._scene, Scene):
+            return self._scene
+        else:
+            return self._scene.parent_scene
+
+    @property
+    def filter_page(self):
         return self._scene
 
     def refresh(self):

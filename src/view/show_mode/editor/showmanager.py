@@ -11,6 +11,7 @@ from PySide6.QtGui import QAction
 from file.transmitting_to_fish import transmit_to_fish
 
 from model.board_configuration import BoardConfiguration, Scene, Broadcaster
+from model.scene import FilterPage
 from .editing_utils import add_scene_to_show
 
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
@@ -27,7 +28,7 @@ class ShowEditorWidget(QSplitter):
         self._broadcaster = bcaster
         self._library = FilterNodeLibrary()
         self._board_configuration = board_configuration
-        self._opened_scenes = set()
+        self._opened_pages = set()
         self._opened_banksets = set()
 
         # Buttons to add or remove scenes from show
@@ -89,29 +90,33 @@ class ShowEditorWidget(QSplitter):
     def _add_button_clicked(self):
         add_scene_to_show(self, self._board_configuration)
 
-    def _add_scene_tab(self, scene: Scene) -> SceneTabWidget | None:
+    def _add_scene_tab(self, page: Scene | FilterPage) -> SceneTabWidget | None:
         """Creates a tab for a scene
         
         Args:
-            scene: The scene to be added
+            page: The scene to be added
         """
+        if isinstance(page, Scene):
+            page = page.pages[0]
 
-        if scene in self._opened_scenes:
+        if page in self._opened_pages:
             for tab_index in range(self._open_page_tab_widget.count()):
                 tab = self._open_page_tab_widget.widget(tab_index)
                 if isinstance(tab, SceneTabWidget):
-                    if tab.scene == scene:
+                    if tab.scene == page:
                         self._open_page_tab_widget.setCurrentIndex(tab_index)
                         return tab
             return None
         else:
             # Each scene is represented by its own editor
-            self._opened_scenes.add(scene)
-            scene_tab = SceneTabWidget(scene)
+            self._opened_pages.add(page)
+            scene_tab = SceneTabWidget(page)
             # Move +/- buttons one to the right and insert new tab for the scene
-            self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab, scene.human_readable_name)
+            self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab,
+                                                 page.parent_scene.human_readable_name + "/" + page.name)
             # When loading scene from a file, set displayed tab to first loaded scene
-            if self._open_page_tab_widget.count() == 2 or self._board_configuration.default_active_scene == scene.scene_id:
+            if (self._open_page_tab_widget.count() == 2 or
+                    self._board_configuration.default_active_scene == page.parent_scene.scene_id):
                 self._open_page_tab_widget.setCurrentWidget(scene_tab)
             return scene_tab
 
@@ -152,12 +157,12 @@ class ShowEditorWidget(QSplitter):
                     if self._open_page_tab_widget.count() > 0:
                         self._open_page_tab_widget.setCurrentIndex(widget_index - 1)
                     self._open_page_tab_widget.removeTab(widget_index)
-                    self._opened_scenes.remove(tab_widget.scene)
+                    self._opened_pages.remove(tab_widget.scene)
                     return
         else:
             widget = self._open_page_tab_widget.widget(scene_or_index)
             if isinstance(widget, SceneTabWidget):
-                self._opened_scenes.remove(widget.scene)
+                self._opened_pages.remove(widget.filter_page)
             elif isinstance(widget, BankSetTabWidget):
                 self._opened_banksets.remove(widget.bankset)
             self._open_page_tab_widget.removeTab(scene_or_index)
