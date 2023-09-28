@@ -69,6 +69,7 @@ class ShowBrowser:
         if show:
             self.board_configuration = show
         self._input_dialog = None
+        self._show.broadcaster.show_file_loaded.connect(self._refresh_all)
 
     def _refresh_all(self):
         self._refresh_scene_browser()

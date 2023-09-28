@@ -26,7 +26,8 @@ def _load_show_file(file_name: str, show_data: BoardConfiguration):
     Args:
         file_name: Path to the file to be loaded
     """
-    read_document(file_name, show_data)
+    if read_document(file_name, show_data):
+        show_data.broadcaster.show_file_loaded.emit()
 
 
 def _save_show_file(file_name: str, show_data: BoardConfiguration):

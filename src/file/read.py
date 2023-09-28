@@ -12,7 +12,7 @@ from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse
 from view.dialogs import ExceptionsDialog
 
 
-def read_document(file_name: str, board_configuration: BoardConfiguration):
+def read_document(file_name: str, board_configuration: BoardConfiguration) -> bool:
     """Parses the specified file to a board configuration data model.
     
     Args:
@@ -29,7 +29,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration):
         schema.validate(file_name)
     except Exception as error:
         ExceptionsDialog(error).exec()
-        return
+        return False
 
     board_configuration.broadcaster.clear_board_configuration.emit()
     tree = ElementTree.parse(file_name)
@@ -67,6 +67,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration):
                                 board_configuration.show_name, child.tag)
 
     board_configuration.broadcaster.board_configuration_loaded.emit()
+    return True
 
 
 def _clean_tags(element: ElementTree.Element, prefix: str):

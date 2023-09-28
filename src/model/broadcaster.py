@@ -33,6 +33,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType) # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(int)
     load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
+    show_file_loaded: QtCore.Signal = QtCore.Signal()
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
