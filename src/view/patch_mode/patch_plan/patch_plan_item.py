@@ -41,6 +41,6 @@ class PatchItem(QtWidgets.QFrame):
 
     def _update_fixture(self) -> None:
         """update fixture of a item"""
-        self._fixture_name.setText(self._channel.fixture.name)
-        self._fixture_channel.setText(self._channel.fixture_channel)
+        self._fixture_name.setText(str(self._channel.fixture.name))
+        self._fixture_channel.setText(str(self._channel.fixture_channel))
         self.setToolTip(f"{self._channel.fixture.name}\n{self._channel.fixture_channel}")
