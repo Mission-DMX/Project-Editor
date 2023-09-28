@@ -43,6 +43,8 @@ class NodeEditorWidget(QWidget):
             self._flowchart.create_node_with_filter(filter_=filter_, node_type=nodes.type_to_node[filter_.filter_type])
             loaded_in_filters.add(filter_.filter_id)
             for remote_filter_channel in filter_.channel_links.values():
+                if not remote_filter_channel:
+                    continue
                 filter_name, _ = remote_filter_channel.split(':')
                 required_filters.add(filter_name)
         still_missing_filters = required_filters - loaded_in_filters

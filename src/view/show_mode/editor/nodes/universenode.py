@@ -1,5 +1,9 @@
 # coding=utf-8
 """Universe filter node"""
+import logging
+
+from pyqtgraph.flowchart import Terminal
+
 from model import DataType, Filter
 from . import FilterNode
 
@@ -30,7 +34,13 @@ class UniverseNode(FilterNode):
                     self.filter.filter_configurations[key] = model.filter_configurations[key]
                     if key != "universe":
                         self.filter.in_data_types[key] = DataType.DT_8_BIT
-                        term = super().addInput(key)
+                        if key not in self.terminals.keys():
+                            term = super().addInput(key)
+                        else:
+                            t: Terminal = self.terminals[key]
+                            if not t.isInput():
+                                logging.error("Universe output filter '{}' has corrupted terminal '{}'."
+                                              .format(self.name(), key))
         except:
             self.filter.filter_configurations["input_1"] = "0"
             self.filter.in_data_types["input_1"] = DataType.DT_8_BIT

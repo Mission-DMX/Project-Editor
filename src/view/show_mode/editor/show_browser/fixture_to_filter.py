@@ -26,7 +26,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage
     filter = Filter(
         filter_id="universe-output_{}".format(_sanitize_name(name)),
         filter_type=11,
-        pos=(max_x + 1.0, 0.5),
+        pos=(0.5, max_x + 25.0),
         scene=scene
     )
 
@@ -70,7 +70,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         rgbw_filter = Filter(scene=fp.parent_scene,
                                              filter_id=adapter_name,
                                              filter_type=16,
-                                             pos=(x, float(2 * len(c) + i * 5)))
+                                             pos=(x, float(10 * len(c) + i * 5)))
                         universe_filter.channel_links[
                             _sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":r"
                         universe_filter.channel_links[
@@ -86,7 +86,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         rgb_filter = Filter(scene=fp.parent_scene,
                                             filter_id=adapter_name,
                                             filter_type=15,
-                                            pos=(x, float(2 * len(c) + i * 5)))
+                                            pos=(x, float(10 * len(c) + i * 5)))
                         universe_filter.channel_links[
                             _sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":r"
                         universe_filter.channel_links[
@@ -101,7 +101,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 global_dimmer_filter = Filter(scene=fp.parent_scene,
                                               filter_id=dimmer_name,
                                               filter_type=49,
-                                              pos=(x, float(2 * len(c) + i * 5)))
+                                              pos=(x, float(10 * len(c) + i * 5)))
                 fp.filters.append(global_dimmer_filter)
                 fp.parent_scene.filters.append(global_dimmer_filter)
                 x += 10
@@ -109,7 +109,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 dimmer_to_byte_filter = Filter(scene=fp.parent_scene,
                                                filter_id=adapter_name,
                                                filter_type=8,
-                                               pos=(x, float(2 * len(c) + i * 5)))
+                                               pos=(x, float(10 * len(c) + i * 5)))
                 dimmer_to_byte_filter.channel_links["value"] = dimmer_name + ":brightness"
                 universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":value_upper"
                 fp.filters.append(dimmer_to_byte_filter)
