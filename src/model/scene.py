@@ -7,6 +7,7 @@ from .filter import Filter
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
     from .control_desk import BankSet
+    from .ui_configuration import UIPage
 
 
 class FilterPage:
@@ -68,6 +69,7 @@ class Scene:
         self._filters: list[Filter] = []
         self._filter_pages: list[FilterPage] = []
         self._associated_bankset: Optional["BankSet"] | None = None
+        self._ui_pages: list["UIPage"] = []
 
     @property
     def scene_id(self) -> int:
@@ -152,4 +154,6 @@ class Scene:
         for fp in self._filter_pages:
             scene._filter_pages.append(fp.copy(scene))
         scene.linked_bankset = self._associated_bankset.copy()
+        for page in self._ui_pages:
+            scene._ui_pages.append(page.copy(scene))
         return scene

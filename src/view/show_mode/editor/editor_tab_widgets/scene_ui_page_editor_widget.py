@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QMouseEvent, QAction
 
 from model import Scene, Filter
-from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget, filter_to_widget
+from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget, filter_to_ui_widget
 
 
 class _WidgetHolder(QWidget):
@@ -76,6 +76,8 @@ class SceneUIPageEditorWidget(QWidget):
     def _widget_selection_menu(self, pos: QPoint):
         menu = QMenu(self)
         for filter_ in self._scene.filters:
+            if len(filter_.gui_update_keys.keys()) < 1:
+                continue
             action = QAction(filter_.filter_id, self)
             menu.addAction(action)
             action.triggered.connect(lambda checked=False, filter__=filter_: self._add_filter_widget(filter__, pos))
@@ -88,7 +90,8 @@ class SceneUIPageEditorWidget(QWidget):
             ui_widget: A widget to manage a filter
             pos: The position at which the widget should be placed
         """
-        config_widget = filter_to_widget(filter_)
+        # TODO replace with filter.gui_update_keys to ui widget / Change function to construct one from the keys
+        config_widget = filter_to_ui_widget(filter_)
         widget = _WidgetHolder(config_widget, self)
         widget.holding.parameters = filter_.initial_parameters
         widget.holding.configuration = filter_.filter_configurations

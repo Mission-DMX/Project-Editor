@@ -3,7 +3,11 @@ from abc import ABC, abstractmethod
 from PySide6.QtWidgets import QWidget
 
 from network import NetworkManager
-from .scene import Scene
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from model.scene import Scene
+
 
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
@@ -69,24 +73,31 @@ class UIWidget(ABC):
         self.size = new_size
         # TODO notify player about UI update if running
 
+    def copy(self, new_parent: "UIPage") -> "UIWidget":
+        w = UIWidget(new_parent)
+        w._position = self._position
+        w._size = self._size
+        w._filter_id = self._filter_id
+        return w
+
 
 class UIPage:
     """This class represents a page containing widgets that can be used to control the show."""
 
-    def __init__(self, scene: Scene):
+    def __init__(self, parent: "Scene"):
         """Construct a UI Page
 
         Arguments:
             sid -- The id of the scene where the corresponding filter is located.
         """
         self._widgets: list[UIWidget] = []
-        self._scene: int = scene
+        self._parent_scene: Scene = parent
         self._player = None
 
     @property
-    def scene(self) -> Scene:
+    def scene(self) -> "Scene":
         """Get the scene this page is bound to"""
-        return self._scene
+        return self._parent_scene
 
     @property
     def page_active_on_player(self) -> bool:
@@ -102,6 +113,13 @@ class UIPage:
     def widgets(self) -> list[UIWidget]:
         """Returns a copy of the internal widget list"""
         return list(self._widgets)
+
+    def copy(self, new_parent: "Scene") -> "UIPage":
+        new_page = UIPage(new_parent)
+        new_page._player = self._player
+        for w in self._widgets:
+            new_page._widgets.append(w.copy(new_page))
+        return new_page
 
 
 class ShowUI:
@@ -161,7 +179,7 @@ class ShowUI:
     #@staticmethod
     #@property
     #def network_connection() -> NetworkManager:
-        """Get the linked network manager"""
+    #    """Get the linked network manager"""
     #    return ShowUI._fish_connector
 
     #@staticmethod
