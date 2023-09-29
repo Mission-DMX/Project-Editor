@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QGridLayout, QDialog
 
 from model import Scene
 from model.scene import FilterPage
-from .scene_filter_page_widget import ScenePageWidget
+from view.show_mode.editor.editor_tab_widgets.scene_ui_page_editor_widget import SceneUIPageEditorWidget
 
 
 class SceneManagerWidget(QTabWidget):
@@ -36,7 +36,7 @@ class SceneManagerWidget(QTabWidget):
 
     def _add_page(self):
         """Adds a page to the scene"""
-        page_widget = ScenePageWidget(self.scene, self)
+        page_widget = SceneUIPageEditorWidget(self.scene, self)
         self.insertTab(self.count() - 1, page_widget, f"Page {self.count()}")
         self.setCurrentWidget(page_widget)
 

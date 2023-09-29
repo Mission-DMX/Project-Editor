@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QMouseEvent, QAction
 
 from model import Scene, Filter
-from .node_editor_widgets import NodeEditorFilterConfigWidget, filter_to_widget
+from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget, filter_to_widget
 
 
 class _WidgetHolder(QWidget):
@@ -60,7 +60,7 @@ class _WidgetHolder(QWidget):
         return self._child
 
 
-class ScenePageWidget(QWidget):
+class SceneUIPageEditorWidget(QWidget):
     """This class represents a part of a scene"""
 
     def __init__(self, scene: Scene, parent: QWidget) -> None:

@@ -288,9 +288,15 @@ class ShowBrowser:
             data = item.annotated_data
             if isinstance(data, Scene):
                 self._show.broadcaster.scene_open_in_editor_requested.emit(data.pages[0])
+                if self._selected_scene != data:
+                    self._selected_scene = data
+                    self._refresh_filter_browser()
             elif isinstance(data, FilterPage):
                 # TODO exchange for correct loading of page
                 self._show.broadcaster.scene_open_in_editor_requested.emit(data)
+                if self._selected_scene != data.parent_scene:
+                    self._selected_scene = data.parent_scene
+                    self._refresh_filter_browser()
             elif isinstance(data, BankSet):
                 self._show.broadcaster.bankset_open_in_editor_requested.emit({"bankset": data})
 
