@@ -21,6 +21,7 @@ class UIWidget(ABC):
         self._position: tuple[int, int] = (0, 0)
         self._size: tuple[int, int] = (0, 0)
         self._filter_id: str = fid
+        self._configuration: dict[str, str] = {}
         self._parent = parent_page
 
     @abstractmethod
@@ -73,12 +74,16 @@ class UIWidget(ABC):
         self.size = new_size
         # TODO notify player about UI update if running
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = UIWidget(new_parent)
+    def copy_base(self, w: "UIWidget") -> "UIWidget":
         w._position = self._position
         w._size = self._size
         w._filter_id = self._filter_id
+        w._configuration = self._configuration.copy()
         return w
+
+    @abstractmethod
+    def copy(self, new_parent: "UIPage") -> "UIWidget":
+        raise NotImplementedError()
 
 
 class UIPage:
