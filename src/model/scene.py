@@ -118,6 +118,10 @@ class Scene:
                 self._associated_bankset.unlink()
         self._associated_bankset = new_bs
 
+    @property
+    def ui_pages(self) -> list["UIPage"]:
+        return self._ui_pages
+
     def __str__(self) -> str:
         if self.human_readable_name:
             return self.human_readable_name

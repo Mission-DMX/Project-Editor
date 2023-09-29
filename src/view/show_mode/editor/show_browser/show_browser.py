@@ -25,6 +25,7 @@ class ShowBrowser:
     _universe_browser_tab_icon = QIcon("resources/showbrowser-universe.svg")
     _filter_browser_tab_icon = QIcon("resources/showbrowser-filterpages.svg")
     _fader_icon = QIcon("resources/faders.svg")
+    _uipage_icon = QIcon("resources/uipage.svg")
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget):
         self._widget = QWidget(parent)
@@ -192,6 +193,13 @@ class ShowBrowser:
         bankset_item.setIcon(0, ShowBrowser._fader_icon)
         bankset_item.setText(1, s.linked_bankset.description)
         bankset_item.annotated_data = s.linked_bankset
+        i = 0
+        for ui_page in s.ui_pages:
+            i += 1
+            uipage_item = AnnotatedTreeWidgetItem(item)
+            uipage_item.setText(0, "UI Page {}".format(i))
+            uipage_item.setIcon(0, ShowBrowser._uipage_icon)
+            uipage_item.annotated_data = ui_page
         for fp in s.pages:
             add_filter_page(item, fp)
         self._scene_browsing_tree.insertTopLevelItem(self._scene_browsing_tree.topLevelItemCount(), item)
