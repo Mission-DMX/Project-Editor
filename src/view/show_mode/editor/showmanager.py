@@ -16,7 +16,9 @@ from .editing_utils import add_scene_to_show
 
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
+from .editor_tab_widgets.scene_ui_page_editor_widget import SceneUIPageEditorWidget
 from .filter_node_library import FilterNodeLibrary
+from .scene_editor import SceneUIManagerWidget
 from .show_browser.show_browser import ShowBrowser
 
 
@@ -30,6 +32,7 @@ class ShowEditorWidget(QSplitter):
         self._board_configuration = board_configuration
         self._opened_pages = set()
         self._opened_banksets = set()
+        self._opened_uieditors = set()
 
         # Buttons to add or remove scenes from show
         self._open_page_tab_widget = QTabWidget(self)
@@ -65,6 +68,7 @@ class ShowEditorWidget(QSplitter):
         board_configuration.broadcaster.scene_created.connect(self._add_scene_tab)
         board_configuration.broadcaster.scene_open_in_editor_requested.connect(self._add_scene_tab)
         board_configuration.broadcaster.bankset_open_in_editor_requested.connect(self._add_bankset_tab)
+        board_configuration.broadcaster.uipage_opened_in_editor_requested.connect(self._add_uipage_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
 
     def _select_scene_to_be_removed(self):
@@ -141,6 +145,26 @@ class ShowEditorWidget(QSplitter):
             self._open_page_tab_widget.setCurrentWidget(tab)
         pass
 
+    def _add_uipage_tab(self, data: dict):
+        uipage = data["uipage"]
+        if uipage in self._opened_uieditors:
+            for tab_index in range(self._open_page_tab_widget.count()):
+                tab = self._open_page_tab_widget.widget(tab_index)
+                if isinstance(tab, SceneUIPageEditorWidget):
+                    if tab.ui_page == uipage:
+                        self._open_page_tab_widget.setCurrentIndex(tab_index)
+                        return tab
+            return None
+        else:
+            self._opened_uieditors.add(uipage)
+            tab = SceneUIPageEditorWidget(uipage, self._open_page_tab_widget)
+            self._open_page_tab_widget.insertTab(
+                self._open_page_tab_widget.tabBar().count() - 1,
+                tab,
+                uipage.scene.human_readable_name + "/UI Page"  # TODO query index
+            )
+            self._open_page_tab_widget.setCurrentWidget(tab)
+
     def _remove_tab(self, scene_or_index: Scene | int):
         """Removes the tab corresponding to the scene or index.
 
@@ -165,6 +189,8 @@ class ShowEditorWidget(QSplitter):
                 self._opened_pages.remove(widget.filter_page)
             elif isinstance(widget, BankSetTabWidget):
                 self._opened_banksets.remove(widget.bankset)
+            elif isinstance(widget, SceneUIPageEditorWidget):
+                self._opened_uieditors.remove(widget.ui_page)
             self._open_page_tab_widget.removeTab(scene_or_index)
 
     def _send_show_file(self) -> None:

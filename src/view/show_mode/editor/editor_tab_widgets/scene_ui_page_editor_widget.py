@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QMouseEvent, QAction
 
-from model import Scene, Filter
+from model import Scene, Filter, UIPage
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget, filter_to_ui_widget
 
 
@@ -63,9 +63,9 @@ class _WidgetHolder(QWidget):
 class SceneUIPageEditorWidget(QWidget):
     """This class represents a part of a scene"""
 
-    def __init__(self, scene: Scene, parent: QWidget) -> None:
+    def __init__(self, page: UIPage, parent: QWidget) -> None:
         super().__init__(parent)
-        self._scene = scene
+        self._ui_page: UIPage = page
         self.setLayout(QGridLayout(self))
         self._widgets: list[_WidgetHolder] = []
 
@@ -75,12 +75,18 @@ class SceneUIPageEditorWidget(QWidget):
 
     def _widget_selection_menu(self, pos: QPoint):
         menu = QMenu(self)
-        for filter_ in self._scene.filters:
+        added_filters = 0
+        for filter_ in self.ui_page.scene.filters:
             if len(filter_.gui_update_keys.keys()) < 1:
                 continue
             action = QAction(filter_.filter_id, self)
             menu.addAction(action)
             action.triggered.connect(lambda checked=False, filter__=filter_: self._add_filter_widget(filter__, pos))
+            added_filters += 1
+        if added_filters == 0:
+            action = QAction("There are no suitable filters in the scene", menu)
+            action.setEnabled(False)
+            menu.addAction(action)
         menu.popup(pos)
 
     def _add_filter_widget(self, filter_: Filter, pos: QPoint):
@@ -102,9 +108,9 @@ class SceneUIPageEditorWidget(QWidget):
         widget.setVisible(True)
 
     @property
-    def scene(self) -> Scene:
+    def ui_page(self) -> UIPage:
         """The scene the page represents"""
-        return self._scene
+        return self._ui_page
 
     @property
     def filter_widgets(self) -> list[NodeEditorFilterConfigWidget]:

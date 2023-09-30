@@ -7,7 +7,7 @@ from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu, QInputDialog
 
 from file.transmitting_to_fish import transmit_to_fish
-from model import Scene, BoardConfiguration
+from model import Scene, BoardConfiguration, UIPage
 from model.control_desk import BankSet
 from model.scene import FilterPage
 from ofl.fixture import UsedFixture
@@ -193,12 +193,15 @@ class ShowBrowser:
         bankset_item.setIcon(0, ShowBrowser._fader_icon)
         bankset_item.setText(1, s.linked_bankset.description)
         bankset_item.annotated_data = s.linked_bankset
+        if len(s.ui_pages) < 1:
+            s.ui_pages.append(UIPage(s))
         i = 0
         for ui_page in s.ui_pages:
             i += 1
             uipage_item = AnnotatedTreeWidgetItem(item)
             uipage_item.setText(0, "UI Page {}".format(i))
             uipage_item.setIcon(0, ShowBrowser._uipage_icon)
+            uipage_item.setText(1, str(len(ui_page.widgets)) + " widgets")
             uipage_item.annotated_data = ui_page
         for fp in s.pages:
             add_filter_page(item, fp)
@@ -251,6 +254,10 @@ class ShowBrowser:
         add_filter_page_action.triggered.connect(lambda: self._add_filter_page(selected_items))
         add_filter_page_action.setEnabled(has_scenes or has_filter_pages)
         menu.addAction(add_filter_page_action)
+        add_ui_page_action = QAction("Add UI page", menu)
+        add_ui_page_action.triggered.connect(lambda: self._add_ui_page(selected_items))
+        add_ui_page_action.setEnabled(has_scenes)
+        menu.addAction(add_ui_page_action)
         menu.show()
 
     def _delete_scenes_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
@@ -307,6 +314,8 @@ class ShowBrowser:
                     self._refresh_filter_browser()
             elif isinstance(data, BankSet):
                 self._show.broadcaster.bankset_open_in_editor_requested.emit({"bankset": data})
+            elif isinstance(data, UIPage):
+                self._show.broadcaster.uipage_opened_in_editor_requested.emit({"uipage": data})
 
     def _universe_item_double_clicked(self, item: QTreeWidgetItem, column: int):
         if not isinstance(item, AnnotatedTreeWidgetItem):
@@ -355,3 +364,16 @@ class ShowBrowser:
                 self._input_dialog.setLabelText("Please enter the name of the new page.")
                 self._input_dialog.setWindowTitle('Enter Name')
                 self._input_dialog.open()
+
+    def _add_ui_page(self, selected_items: list[QTreeWidgetItem]):
+        update_occurred = False
+        for item in selected_items:
+            if not isinstance(item, AnnotatedTreeWidgetItem):
+                continue
+            data = item.annotated_data
+            if not isinstance(data, Scene):
+                continue
+            data.ui_pages.append(UIPage(data))
+            update_occurred = True
+        if update_occurred:
+            self._refresh_scene_browser()

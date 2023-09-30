@@ -7,11 +7,12 @@ from model.scene import FilterPage
 from view.show_mode.editor.editor_tab_widgets.scene_ui_page_editor_widget import SceneUIPageEditorWidget
 
 
-class SceneManagerWidget(QTabWidget):
+class SceneUIManagerWidget(QTabWidget):
     """Widget containing the scene pages"""
 
     def __init__(self, scene: Scene | FilterPage, parent: QWidget):
         super().__init__(parent)
+        self.ui_page = None
         self._scene = scene
         self.setTabsClosable(True)
 
@@ -36,7 +37,7 @@ class SceneManagerWidget(QTabWidget):
 
     def _add_page(self):
         """Adds a page to the scene"""
-        page_widget = SceneUIPageEditorWidget(self.scene, self)
+        page_widget = SceneUIPageEditorWidget(self.scene.ui_pages[0], self)
         self.insertTab(self.count() - 1, page_widget, f"Page {self.count()}")
         self.setCurrentWidget(page_widget)
 
