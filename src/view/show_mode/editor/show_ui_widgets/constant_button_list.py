@@ -63,10 +63,10 @@ class ConstantNumberButtonList(UIWidget):
 
     def _set_value(self, new_value: int):
         self._value = new_value
-        # TODO notify update
+        self.push_update()
 
     def generate_update_content(self) -> list[tuple[str, str]]:
-        pass
+        return [("value", str(self._value))]
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if not self._player_widget:

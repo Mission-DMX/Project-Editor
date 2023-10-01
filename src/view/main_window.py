@@ -37,6 +37,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector: NetworkManager = NetworkManager(self)
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
+        from model.ui_configuration import setup_network_manager
+        setup_network_manager(self._fish_connector)
+
         #from file.read import read_document #todo remove me xxx
         #read_document("/home/fish/Desktop/debug/workinprogress.xml",self._board_configuration)
         # views

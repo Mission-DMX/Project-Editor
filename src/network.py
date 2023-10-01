@@ -309,6 +309,16 @@ class NetworkManager(QtCore.QObject):
         else:
             self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
 
+    def send_gui_update_to_fish(self, scene_id: int, filter_id: str, key: str, value: str):
+        if not self.is_running:
+            return
+        msg = proto.FilterMode_pb2.update_parameter()
+        msg.filter_id = filter_id
+        msg.scene_id = scene_id
+        msg.parameter_key = key
+        msg.parameter_value = value
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+
 
 def on_error(error) -> None:
     """logging current error

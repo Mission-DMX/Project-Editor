@@ -9,6 +9,14 @@ if TYPE_CHECKING:
     from model.scene import Scene
 
 
+_network_manager_instance: NetworkManager = None
+
+
+def setup_network_manager(nm: NetworkManager):
+    global _network_manager_instance
+    _network_manager_instance = nm
+
+
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
@@ -105,6 +113,12 @@ class UIWidget(ABC):
         """This method shall return a widget that will be placed within the configuration dialog"""
         raise NotImplementedError()
 
+    def push_update(self):
+        for entry in self.generate_update_content():
+            k = entry[0]
+            v = entry[1]
+            _network_manager_instance.send_gui_update_to_fish(self.parent.scene.scene_id, self.filter_id, k, v)
+
 
 class UIPage:
     """This class represents a page containing widgets that can be used to control the show."""
@@ -148,6 +162,9 @@ class UIPage:
 
     def append_widget(self, widget: UIWidget):
         self._widgets.append(widget)
+
+    def push_update(self):
+        """This method indicates that updates to the running filters should be sent."""
 
 
 class ShowUI:
