@@ -87,7 +87,7 @@ class SceneUIPageEditorWidget(QWidget):
             action = QAction("There are no suitable filters in the scene", menu)
             action.setEnabled(False)
             menu.addAction(action)
-        menu.popup(pos)
+        menu.popup(self.mapToGlobal(pos))
 
     def _add_filter_widget(self, filter_: Filter, pos: QPoint):
         """Adds the filter widget to the page at the specified position.

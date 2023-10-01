@@ -108,7 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
                      ["Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)],
                      ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]],
             "Show": [["Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)],
-                     ["Save Showfile", lambda: show_save_showfile_dialog(self, self._board_configuration)]]
+                     ["Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)]]
         }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
