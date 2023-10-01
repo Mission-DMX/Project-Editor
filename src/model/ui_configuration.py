@@ -34,13 +34,23 @@ class UIWidget(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_qt_widget(self) -> QWidget:
+    def get_player_widget(self, parent: QWidget | None) -> QWidget:
         """This method needs to yield a QWidget that can be placed on the player page.
 
         Returns:
             A fully set up QWidget instance
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
+        """This method needs to return a QWidget that can be used to configure the UI widget within
+        the UI editor.
+
+        Returns:
+            A fully set up QWidget instance
+        """
+        raise NotImplementedError()
 
     @property
     def filter_id(self) -> str:

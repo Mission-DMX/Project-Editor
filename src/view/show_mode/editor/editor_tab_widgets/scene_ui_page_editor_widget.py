@@ -6,8 +6,9 @@ from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QMouseEvent, QAction
 
-from model import Scene, Filter, UIPage
-from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget, filter_to_ui_widget
+from model import Scene, Filter, UIPage, UIWidget
+from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
 
 
 class _WidgetHolder(QWidget):
@@ -15,16 +16,20 @@ class _WidgetHolder(QWidget):
 
     closing = Signal()
 
-    def __init__(self, child: NodeEditorFilterConfigWidget, parent: QWidget):
+    def __init__(self, child: UIWidget, parent: QWidget):
         super().__init__(parent)
-        self._child = child
-        self._child.get_widget().setParent(self)
-        self.resize(self._child.get_widget().width(), int(self._child.get_widget().height() * 1.5))
+        self._model = child
+        self._child = child.get_configuration_widget(self)
+        self._child.setParent(self)
+        self.resize(self._child.width(), int(self._child.height() * 1.5))
         self._close_button = QPushButton("X", self)
         self._close_button.resize(30, 30)
         self._close_button.move(self.width() - 40, 0)
         self._close_button.clicked.connect(self.close)
         self._old_pos = QPoint()
+        self.setStyleSheet("border: 1px solid black")
+        self.setVisible(True)
+        super().move(self._model.position[0], self._model.position[1])
 
     def closeEvent(self, event) -> None:
         """Emits closing signal.
@@ -33,6 +38,7 @@ class _WidgetHolder(QWidget):
             event: The closing event.
         """
         self.closing.emit()
+        self._model.parent.widgets.remove(self._model)
         super().closeEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -59,6 +65,10 @@ class _WidgetHolder(QWidget):
         """The widget the holder is holding"""
         return self._child
 
+    def move(self, new_pos: QPoint):
+        super().move(new_pos)
+        self._model.position = (new_pos.x(), new_pos.y())
+
 
 class SceneUIPageEditorWidget(QWidget):
     """This class represents a part of a scene"""
@@ -68,6 +78,10 @@ class SceneUIPageEditorWidget(QWidget):
         self._ui_page: UIPage = page
         self.setLayout(QGridLayout(self))
         self._widgets: list[_WidgetHolder] = []
+        for uiw in self._ui_page.widgets:
+            widget = _WidgetHolder(uiw, self)
+            self._widgets.append(widget)
+            widget.closing.connect(lambda: self._widgets.remove(widget))
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() is Qt.MouseButton.RightButton:
@@ -99,13 +113,12 @@ class SceneUIPageEditorWidget(QWidget):
         # TODO replace with filter.gui_update_keys to ui widget / Change function to construct one from the keys
         config_widget = filter_to_ui_widget(filter_)
         widget = _WidgetHolder(config_widget, self)
-        widget.holding.parameters = filter_.initial_parameters
-        widget.holding.configuration = filter_.filter_configurations
+        # widget.holding.parameters = filter_.initial_parameters
+        # widget.holding.configuration = filter_.filter_configurations
         self._widgets.append(widget)
         widget.closing.connect(lambda: self._widgets.remove(widget))
-        widget.setStyleSheet("border: 1px solid black")
         widget.move(pos)
-        widget.setVisible(True)
+        self._ui_page.widgets.append(config_widget)
 
     @property
     def ui_page(self) -> UIPage:
