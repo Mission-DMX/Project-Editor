@@ -28,6 +28,7 @@ class ShowPlayerWidget(QWidget):
 
         self._board_configuration.broadcaster.scene_created.connect(self._add_scene)
         self._board_configuration.broadcaster.delete_scene.connect(self._remove_scene)
+        # TODO add UIPage player
 
     def _index_to_position(self, index: int) -> tuple[int, int]:
         """Calculates the grid position from index.

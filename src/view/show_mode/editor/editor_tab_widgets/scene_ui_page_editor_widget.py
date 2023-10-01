@@ -2,7 +2,7 @@
 """A scene can have multiple pages"""
 import logging
 
-from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton
+from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton, QDialog, QVBoxLayout
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QMouseEvent, QAction
 
@@ -26,10 +26,17 @@ class _WidgetHolder(QWidget):
         self._close_button.resize(30, 30)
         self._close_button.move(self.width() - 40, 0)
         self._close_button.clicked.connect(self.close)
+        self._edit_button = QPushButton("Edit", self)
+        self._edit_button.resize(50, 30)
+        self._edit_button.move(0, 0)
+        self._edit_button.clicked.connect(self._show_edit_dialog)
         self._old_pos = QPoint()
         self.setStyleSheet("border: 1px solid black")
         self.setVisible(True)
         super().move(self._model.position[0], self._model.position[1])
+        self._edit_dialog = None
+        self.setMinimumWidth(50)
+        self.setMinimumHeight(30)
 
     def closeEvent(self, event) -> None:
         """Emits closing signal.
@@ -38,7 +45,10 @@ class _WidgetHolder(QWidget):
             event: The closing event.
         """
         self.closing.emit()
-        self._model.parent.widgets.remove(self._model)
+        try:
+            self._model.parent.widgets.remove(self._model)
+        except ValueError:
+            pass
         super().closeEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -56,8 +66,9 @@ class _WidgetHolder(QWidget):
         Args:
             event: The mouse event.
         """
-        offset = QPoint(event.globalPos() - self._old_pos)
-        self.move(self.x() + offset.x(), self.y() + offset.y())
+        # offset = QPoint(event.globalPos() - self._old_pos)
+        self.move(self.parent().mapFromGlobal(event.globalPos()))
+        # self.move(self.x() + offset.x(), self.y() + offset.y())
         self._old_pos = event.globalPos()
 
     @property
@@ -68,6 +79,15 @@ class _WidgetHolder(QWidget):
     def move(self, new_pos: QPoint):
         super().move(new_pos)
         self._model.position = (new_pos.x(), new_pos.y())
+
+    def _show_edit_dialog(self):
+        if not self._edit_dialog:
+            self._edit_dialog = QDialog(self)
+            layout = QVBoxLayout()
+            layout.addWidget(self._model.get_config_dialog_widget(self._edit_dialog))
+            # TODO add cancel and close buttons
+            self._edit_dialog.setLayout(layout)
+        self._edit_dialog.show()
 
 
 class SceneUIPageEditorWidget(QWidget):
@@ -111,14 +131,14 @@ class SceneUIPageEditorWidget(QWidget):
             pos: The position at which the widget should be placed
         """
         # TODO replace with filter.gui_update_keys to ui widget / Change function to construct one from the keys
-        config_widget = filter_to_ui_widget(filter_)
+        config_widget = filter_to_ui_widget(filter_, self._ui_page)
         widget = _WidgetHolder(config_widget, self)
         # widget.holding.parameters = filter_.initial_parameters
         # widget.holding.configuration = filter_.filter_configurations
         self._widgets.append(widget)
         widget.closing.connect(lambda: self._widgets.remove(widget))
         widget.move(pos)
-        self._ui_page.widgets.append(config_widget)
+        self._ui_page.append_widget(config_widget)
 
     @property
     def ui_page(self) -> UIPage:

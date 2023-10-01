@@ -84,6 +84,10 @@ class UIWidget(ABC):
         self.size = new_size
         # TODO notify player about UI update if running
 
+    @property
+    def configuration(self) -> dict[str, str]:
+        return self._configuration
+
     def copy_base(self, w: "UIWidget") -> "UIWidget":
         w._position = self._position
         w._size = self._size
@@ -93,6 +97,12 @@ class UIWidget(ABC):
 
     @abstractmethod
     def copy(self, new_parent: "UIPage") -> "UIWidget":
+        """This method needs to perform a deep copy of the object, excluding generatable state, such as the widgets"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+        """This method shall return a widget that will be placed within the configuration dialog"""
         raise NotImplementedError()
 
 
@@ -135,6 +145,9 @@ class UIPage:
         for w in self._widgets:
             new_page._widgets.append(w.copy(new_page))
         return new_page
+
+    def append_widget(self, widget: UIWidget):
+        self._widgets.append(widget)
 
 
 class ShowUI:

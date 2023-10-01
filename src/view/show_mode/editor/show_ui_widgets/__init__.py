@@ -1,10 +1,14 @@
-from model import Filter, UIWidget
+from model import Filter, UIWidget, UIPage
+from view.show_mode.editor.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 
 
-def filter_to_ui_widget(filter_: Filter) -> UIWidget:
+def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage") -> UIWidget:
     match filter_.filter_type:
-        case 0 | 1 | 2 | 3:
-            # constants
+        case 0 | 1 | 3:
+            # number constants
+            return ConstantNumberButtonList(filter_.filter_id, parent_page, filter_)
+        case 3:
+            # color constant
             return None
         case 39 | 40 | 41 | 42 | 43:
             # Faders: Update Color
