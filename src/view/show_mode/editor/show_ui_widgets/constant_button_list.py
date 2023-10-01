@@ -25,6 +25,11 @@ class ConstantNumberButtonList(UIWidget):
         add_button = QPushButton("Add Button", widget)
         layout.addWidget(add_button)
         list_widget = QListWidget(widget)
+        bc = self.configuration.get("buttons")
+        if bc:
+            for entry in bc.split(';'):
+                name, value = entry.split(':')
+                list_widget.addItem("{} -> {}".format(name, value))
         layout.addWidget(list_widget)
         widget.setLayout(layout)
 
@@ -40,9 +45,12 @@ class ConstantNumberButtonList(UIWidget):
             if self._configuration_widget:
                 conf_button = QPushButton(name_edit.text(), self._configuration_widget)
                 conf_button.setEnabled(False)
+                conf_button.setMinimumWidth(max(30, len(name_edit.text()) * 10))
+                conf_button.setMinimumHeight(30)
                 wl = self._configuration_widget.layout()
                 wl.addWidget(conf_button)
                 self._configuration_widget.setLayout(wl)
+                self._configuration_widget.parent().update_size()
         add_button.clicked.connect(add_action)
         return widget
 

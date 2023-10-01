@@ -21,7 +21,7 @@ class _WidgetHolder(QWidget):
         self._model = child
         self._child = child.get_configuration_widget(self)
         self._child.setParent(self)
-        self.resize(self._child.width(), int(self._child.height() * 1.5))
+        self.update_size()
         self._close_button = QPushButton("X", self)
         self._close_button.resize(30, 30)
         self._close_button.move(self.width() - 40, 0)
@@ -35,8 +35,15 @@ class _WidgetHolder(QWidget):
         self.setVisible(True)
         super().move(self._model.position[0], self._model.position[1])
         self._edit_dialog = None
-        self.setMinimumWidth(50)
+
+    def update_size(self):
+        self.setMinimumWidth(100)
         self.setMinimumHeight(30)
+        minimum_size = self._child.layout().totalMinimumSize()
+        w = max(minimum_size.width() + 10, self.minimumWidth())
+        h = max(minimum_size.height() + 10, self.minimumHeight())
+        self.resize(w, h)
+        self.repaint()
 
     def closeEvent(self, event) -> None:
         """Emits closing signal.
