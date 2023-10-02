@@ -29,6 +29,8 @@ class ColorHSI:
         Arguments:
             filter_format -- The color provided as a filter configuration string
         """
+        if not filter_format or filter_format.count(",") < 2:
+            return ColorHSI(128.0, 0.5, 1.0)
         parts = filter_format.split(",")
         hue = float(parts[0]) % 360.0
         saturation = float(parts[1])
@@ -77,3 +79,7 @@ class ColorHSI:
 
     def copy(self) -> "ColorHSI":
         return ColorHSI(self._hue, self._saturation, self._intensity)
+
+    @classmethod
+    def from_qt_color(cls, c: QColor):
+        return ColorHSI(c.hslHueF() * 360.0, c.hslSaturationF(), c.lightnessF())

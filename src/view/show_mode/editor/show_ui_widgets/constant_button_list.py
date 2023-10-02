@@ -7,6 +7,7 @@ from model import UIWidget, UIPage, Filter
 class ConstantNumberButtonList(UIWidget):
 
     def get_config_dialog_widget(self, parent) -> QWidget:
+        # TODO add option to configure images instead of text (to be used as GOBO select or color wheel choice etc.)
         widget = QWidget(parent)
         layout = QVBoxLayout()
         row_layout1 = QHBoxLayout()
