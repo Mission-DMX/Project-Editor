@@ -20,7 +20,7 @@ def setup_network_manager(nm: NetworkManager):
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
-    def __init__(self, fid: str, parent_page: "UIPage"):
+    def __init__(self, fid: str, parent_page: "UIPage", configuration: dict[str, str] = None):
         """ Set up the basic components of a widget.
 
         Arguments:
@@ -29,7 +29,10 @@ class UIWidget(ABC):
         self._position: tuple[int, int] = (0, 0)
         self._size: tuple[int, int] = (0, 0)
         self._filter_id: str = fid
-        self._configuration: dict[str, str] = {}
+        if isinstance(configuration, dict):
+            self._configuration: dict[str, str] = configuration.copy()
+        else:
+            self._configuration = dict()
         self._parent = parent_page
 
     @abstractmethod

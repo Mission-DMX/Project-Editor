@@ -54,8 +54,8 @@ class ConstantNumberButtonList(UIWidget):
         add_button.clicked.connect(add_action)
         return widget
 
-    def __init__(self, fid: str, parent: "UIPage", filter_model: Filter):
-        super().__init__(fid, parent)
+    def __init__(self, fid: str, parent: "UIPage", filter_model: Filter, configuration: dict[str, str]):
+        super().__init__(fid, parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
         self._value = int(filter_model.initial_parameters["value"])
