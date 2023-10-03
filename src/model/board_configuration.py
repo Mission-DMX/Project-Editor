@@ -15,6 +15,7 @@ class BoardConfiguration:
         self._default_active_scene: int = default_active_scene
         self._notes: str = notes
         self._scenes: list[Scene] = []
+        self._scenes_index: dict[int, int] = dict()
         self._devices: list[Device] = []
         self._universes: list[Universe] = []
         self._ui_hints: dict[str, str] = {}
@@ -47,6 +48,7 @@ class BoardConfiguration:
             scene: The scene to be added.
         """
         self._scenes.append(scene)
+        self._scenes_index[scene.scene_id] = len(self._scenes) - 1
 
     def _delete_scene(self, scene: Scene):
         """Removes the passed scene from the list of scenes.
@@ -55,6 +57,7 @@ class BoardConfiguration:
             scene: The scene to be removed.
         """
         self._scenes.remove(scene)
+        self._scenes_index.pop(scene.scene_id)
 
     def _add_universe(self, patching_universe: PatchingUniverse):
         """Creates and adds a universe from passed patching universe.
@@ -157,3 +160,13 @@ class BoardConfiguration:
     def broadcaster(self) -> Broadcaster:
         """The broadcaster the board configuration uses"""
         return self._broadcaster
+
+    def get_scene_by_id(self, scene_id: int) -> Scene | None:
+        looked_up_position = self._scenes_index.get(scene_id)
+        if looked_up_position is not None:
+            if looked_up_position < len(self._scenes):
+                return self._scenes[looked_up_position]
+        for scene in self._scenes:
+            if scene.scene_id == scene_id:
+                return scene
+        return None

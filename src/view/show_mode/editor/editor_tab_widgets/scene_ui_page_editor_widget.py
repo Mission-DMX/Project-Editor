@@ -11,27 +11,34 @@ from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidg
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
 
 
-class _WidgetHolder(QWidget):
+class UIWidgetHolder(QWidget):
     """Widget to hold node editor widgets and move them around"""
 
     closing = Signal()
 
-    def __init__(self, child: UIWidget, parent: QWidget):
+    def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True):
         super().__init__(parent)
         self._model = child
-        self._child = child.get_configuration_widget(self)
+        if instance_for_editor:
+            self._child = child.get_configuration_widget(self)
+        else:
+            self._child = child.get_player_widget(self)
+            self._child.setEnabled(True)
+            self._child.setVisible(True)
         self._child.setParent(self)
         self.update_size()
-        self._close_button = QPushButton("X", self)
-        self._close_button.resize(30, 30)
-        self._close_button.move(self.width() - 40, 0)
-        self._close_button.clicked.connect(self.close)
-        self._edit_button = QPushButton("Edit", self)
-        self._edit_button.resize(50, 30)
-        self._edit_button.move(0, 0)
-        self._edit_button.clicked.connect(self._show_edit_dialog)
+        if instance_for_editor:
+            self._close_button = QPushButton("X", self)
+            self._close_button.resize(30, 30)
+            self._close_button.move(self.width() - 40, 0)
+            self._close_button.clicked.connect(self.close)
+            self._edit_button = QPushButton("Edit", self)
+            self._edit_button.resize(50, 30)
+            self._edit_button.move(0, 0)
+            self._edit_button.clicked.connect(self._show_edit_dialog)
         self._old_pos = QPoint()
-        self.setStyleSheet("border: 1px solid black")
+        if instance_for_editor:
+            self.setStyleSheet("border: 1px solid black")
         self.setVisible(True)
         super().move(self._model.position[0], self._model.position[1])
         self._edit_dialog = None
@@ -96,6 +103,12 @@ class _WidgetHolder(QWidget):
             self._edit_dialog.setLayout(layout)
         self._edit_dialog.show()
 
+    def unregister(self):
+        # setting the parent to None is required!
+        self._child.setParent(None)
+        self._child.setVisible(False)
+        self._child.setEnabled(False)
+
 
 class SceneUIPageEditorWidget(QWidget):
     """This class represents a part of a scene"""
@@ -104,9 +117,9 @@ class SceneUIPageEditorWidget(QWidget):
         super().__init__(parent)
         self._ui_page: UIPage = page
         self.setLayout(QGridLayout(self))
-        self._widgets: list[_WidgetHolder] = []
+        self._widgets: list[UIWidgetHolder] = []
         for uiw in self._ui_page.widgets:
-            widget = _WidgetHolder(uiw, self)
+            widget = UIWidgetHolder(uiw, self)
             self._widgets.append(widget)
             widget.closing.connect(lambda: self._widgets.remove(widget))
 
@@ -139,7 +152,7 @@ class SceneUIPageEditorWidget(QWidget):
         """
         # TODO replace with filter.gui_update_keys to ui widget / Change function to construct one from the keys
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
-        widget = _WidgetHolder(config_widget, self)
+        widget = UIWidgetHolder(config_widget, self)
         # widget.holding.parameters = filter_.initial_parameters
         # widget.holding.configuration = filter_.filter_configurations
         self._widgets.append(widget)

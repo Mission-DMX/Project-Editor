@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QGridLayout
 
 from model import BoardConfiguration, Scene
 from .scenetransmitbutton import SceneTransmitButton
+from .ui_player_widget import UIPlayerWidget
 
 
 class _PlaceholderWidget(QWidget):
@@ -28,7 +29,8 @@ class ShowPlayerWidget(QWidget):
 
         self._board_configuration.broadcaster.scene_created.connect(self._add_scene)
         self._board_configuration.broadcaster.delete_scene.connect(self._remove_scene)
-        # TODO add UIPage player
+        self._board_configuration.broadcaster.change_active_scene.connect(self._switch_scene)
+        self._ui_container = UIPlayerWidget(self)
 
     def _index_to_position(self, index: int) -> tuple[int, int]:
         """Calculates the grid position from index.
@@ -69,7 +71,21 @@ class ShowPlayerWidget(QWidget):
     def _reload(self):
         """Reloads all scene widgets by filling up emtpty spaces"""
         index = 0
+        max_height = 0
+        last_height = 0
         for scene_widget in self._grid:
             column, row = self._index_to_position(index)
-            scene_widget.move(column * scene_widget.width + 5, row * scene_widget.height + 5)
+            height = row * scene_widget.height + 5
+            last_height = scene_widget.height
+            if height > max_height:
+                max_height = height
+            scene_widget.move(column * scene_widget.width + 5, height)
             index += 1
+        max_height += last_height
+        self._ui_container.move(0, max_height + 5)
+        self._ui_container.resize(self.width() - 10, self.height() - 10 - max_height)
+
+    def _switch_scene(self, scene_index: int):
+        if not (scene_index < len(self._board_configuration.scenes)):
+            return
+        self._ui_container.scene = self._board_configuration.get_scene_by_id(scene_index)
