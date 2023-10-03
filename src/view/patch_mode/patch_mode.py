@@ -1,13 +1,10 @@
 # coding=utf-8
 """Patching Mode"""
-import random
 
 from PySide6 import QtWidgets, QtGui
-from PySide6.QtWidgets import QMessageBox
 
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
-from ofl.fixture import UsedFixture, Mode
 from view.patch_mode.patch_plan.patch_plan_selector import PatchPlanSelector
 from view.patch_mode.patching.patching_select import PatchingSelect
 
