@@ -61,6 +61,7 @@ class Fixture(TypedDict):
     #    availableChannels
     #    templateChannels
     modes: list[Mode]
+    fileName: str
 
 
 def load_fixture(file) -> Fixture:
@@ -68,7 +69,7 @@ def load_fixture(file) -> Fixture:
     f = open(file)
     ob: json = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
-                   categories=ob["categories"], modes=ob["modes"])
+                   categories=ob["categories"], modes=ob["modes"], fileName=file.split("/fixtures/")[1])
 
 
 def try_load(ob: json, name: object) -> str:
@@ -82,15 +83,18 @@ def try_load(ob: json, name: object) -> str:
 class UsedFixture:
     """ Fixture in use with a specific mode"""
 
-    def __init__(self, name: str, short_name: str, categories: set[Category], comment: str, mode: Mode) -> None:
+    def __init__(self, name: str, short_name: str, categories: set[Category], comment: str, mode: Mode,
+                 fixture_file: str, mode_index: int) -> None:
         self.name: str = name
         self.short_name: str = short_name
         self.categories: set[Category] = categories
         self.comment: str = comment
         self.mode: Mode = mode
+        self.fixture_file: str = fixture_file
+        self.mode_index: int = mode_index
 
 
 def make_used_fixture(fixture: Fixture, mode_index: int) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
     return UsedFixture(fixture['name'], fixture['shortName'], fixture['categories'], fixture['comment'],
-                       fixture['modes'][mode_index])
+                       fixture['modes'][mode_index], fixture["fileName"], mode_index)
