@@ -8,6 +8,7 @@ Usage:
 from xml.etree import ElementTree
 
 from model import Filter, Scene, Universe, BoardConfiguration
+from model.patching_channel import PatchingChannel
 from proto import UniverseControl_pb2
 
 
@@ -71,6 +72,8 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
             _create_ftdi_location_element(ftdi_location=proto.ftdi_dongle, parent=universe_element)
         else:
             _create_physical_location_element(physical=proto.physical_location, parent=universe_element)
+
+        _create_patching_element(patching=universe.patching, parent=universe_element)
 
     for device in board_configuration.devices:
         _create_device_element(device=device, parent=root)
@@ -218,6 +221,22 @@ def _create_ftdi_location_element(ftdi_location: UniverseControl_pb2.Universe.US
         "device_name": str(ftdi_location.device_name),
         "serial_identifier": str(ftdi_location.serial)
     })
+
+
+def _create_patching_element(patching: list[PatchingChannel], parent: ElementTree.Element):
+    patching_element = ElementTree.SubElement(parent, "patching")
+    index: int = 0
+    while index < len(patching):
+        channel = patching[index]
+        if not channel.fixture.name == "Empty":
+            ElementTree.SubElement(patching_element, "fixture", attrib={
+                "start": str(channel.address),
+                "fixture_file": channel.fixture.fixture_file,
+                "mode": str(channel.fixture.mode_index)
+            })
+            index += len(channel.fixture.mode["channels"])
+        else:
+            index += 1
 
 
 def _create_device_element(device, parent: ElementTree.Element) -> ElementTree.Element:
