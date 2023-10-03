@@ -1,13 +1,10 @@
 # coding=utf-8
 """Patching Mode"""
-import random
 
 from PySide6 import QtWidgets, QtGui
-from PySide6.QtWidgets import QMessageBox
 
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
-from ofl.fixture import UsedFixture, Mode
 from view.patch_mode.patch_plan.patch_plan_selector import PatchPlanSelector
 from view.patch_mode.patching.patching_select import PatchingSelect
 
@@ -25,11 +22,6 @@ class PatchMode(QtWidgets.QStackedWidget):
         self._broadcaster.view_to_patch_menu.connect(lambda: self.setCurrentIndex(0))
         self._broadcaster.view_patching.connect(lambda: self.setCurrentIndex(1))
         self._broadcaster.view_leave_patching.connect(lambda: self.setCurrentIndex(0))
-
-    @property
-    def toolbar(self) -> list[QtGui.QAction]:
-        """toolbar for Console mode"""
-        return self._toolbar
 
     def _add_universe(self, universe: PatchingUniverse):
         self._broadcaster.patching_universes.append(universe)
