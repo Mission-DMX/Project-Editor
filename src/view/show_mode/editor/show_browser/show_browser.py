@@ -134,7 +134,7 @@ class ShowBrowser:
                 last_fixture: UsedFixture | None = None
                 for patching_channel in universe.patching:
                     channel_fixture = patching_channel.fixture
-                    is_placeholder = not (channel_fixture == last_fixture)
+                    is_placeholder = not (channel_fixture == last_fixture) or channel_fixture.parent_universe == -1
                     last_fixture = channel_fixture
                     if not is_placeholder and (channel_fixture not in placed_fixtures
                                                                or last_fixture_object is None):

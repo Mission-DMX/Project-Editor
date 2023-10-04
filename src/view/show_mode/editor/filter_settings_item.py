@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDialog, QFormLayout
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
+from model import Universe
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
@@ -134,7 +135,7 @@ class FilterSettingsDialog(QDialog):
         universe_id = int(self.filter.filter_configurations["universe"])
         for uni in self.filter.scene.board_configuration.universes:
             if uni.universe_proto.id == universe_id:
-                universe = uni
+                universe: Universe = uni
                 break
         else:
             logging.warning("FilterSettingsItem: Could not find universe %s", universe_id)

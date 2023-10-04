@@ -1,14 +1,15 @@
 # coding=utf-8
 """Handles reading a xml document"""
 import logging
+import os
+import random
 from xml.etree import ElementTree
-
-from PySide6.QtWidgets import QDialog, QGridLayout
 
 import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse
+from ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from view.dialogs import ExceptionsDialog
 
 
@@ -214,6 +215,7 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     physical: int | None = None
     artnet: Proto.Universe.ArtNet | None = None
     ftdi: Proto.Universe.ArtNet | None = None
+    patching = None
 
     for child in universe_element:
         match child.tag:
@@ -223,6 +225,9 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
                 artnet = _parse_artnet_location(child)
             case "ftdi_location":
                 ftdi = _parse_ftdi_location(child)
+            case "patching":
+                patching = _parse_patching(child, universe_id)
+
             case _:
                 logging.warning("Universe %s contains unknown element: %s",
                                 universe_id, child.tag)
@@ -238,7 +243,17 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     universe = Universe(patching_universe)
     universe.name = name
     universe.description = description
+    if patching:
+        for index, fixture in patching:
+            current_channel = index
+            color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
+            for index in range(len(fixture.mode['channels'])):
+                item = patching_universe.patching[current_channel + index]
+                item.fixture = fixture
+                item.fixture_channel = index
+                item.color = color
 
+    board_configuration.broadcaster.fixture_patched.emit()
     board_configuration.broadcaster.add_universe.emit(patching_universe)
 
 
@@ -286,6 +301,18 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Univers
                                     vendor_id=vendor_id,
                                     device_name=device_name,
                                     serial=serial_identifier)
+
+
+def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> list[tuple[int, UsedFixture]]:
+    fixtures_path = '/var/cache/missionDMX/fixtures'
+    used_fixtures: list[tuple[int, UsedFixture]] = []
+    for child in location_element:
+        used_fixture = make_used_fixture(load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
+                                         int(child.attrib['mode']), universe_id)
+
+        used_fixtures.append((int(child.attrib['start']), used_fixture))
+
+    return used_fixtures
 
 
 def _parse_ui_hint(ui_hint_element: ElementTree.Element, board_configuration: BoardConfiguration):
