@@ -9,6 +9,7 @@ import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse
+from model.scene import FilterPage
 from ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from view.dialogs import ExceptionsDialog
 
@@ -77,6 +78,47 @@ def _clean_tags(element: ElementTree.Element, prefix: str):
         _clean_tags(child, prefix)
 
 
+def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instantiated_pages: list[FilterPage]):
+    f = FilterPage(parent_scene)
+    for key, value in element.attrib.items():
+        match key:
+            case "name":
+                f.name = str(value)
+            case "parent":
+                if value:
+                    parent_page: FilterPage | None = None
+                    for parent_candidate in instantiated_pages:
+                        if parent_candidate.name == value:
+                            parent_page = parent_candidate
+                            break
+                    if not parent_page:
+                        return False
+                    else:
+                        parent_page.child_pages.append(f)
+                else:
+                    parent_scene.pages.append(f)
+                instantiated_pages.append(f)
+            case _:
+                logging.warning(
+                    "Found attribute %s=%s while parsing filter page for scene %s",
+                    key, value, parent_scene.human_readable_name)
+    for child in element:
+        if child.tag != "filterid":
+            logging.error("Found unknown tag '{}' in filter page.".format(child.tag))
+        else:
+            filter_id = child.text()
+            found = False
+            for f_candidate in parent_scene.filters:
+                if f_candidate.filter_id == filter_id:
+                    f.filters.append(f_candidate)
+                    found = True
+                    break
+            if not found:
+                logging.error("Didn't find filter '{}' in scene '{}'.".format(filter_id,
+                                                                              parent_scene.human_readable_name))
+    return True
+
+
 def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardConfiguration):
     human_readable_name = ""
     scene_id = 0
@@ -95,13 +137,28 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                   human_readable_name=human_readable_name,
                   board_configuration=board_configuration)
 
+    filter_pages = []
     for child in scene_element:
         match child.tag:
             case "filter":
                 _parse_filter(child, scene)
+            case "filterpage":
+                filter_pages.append(child)
             case _:
                 logging.warning("Scene %s contains unknown element: %s",
                                 human_readable_name, child.tag)
+
+    i: int = 0
+    instantiated_pages: list[FilterPage] = []
+    while len(filter_pages) > 0:
+        if _parse_filter_page(filter_pages[i], scene, instantiated_pages):
+            filter_pages.remove(filter_pages[i])
+            i = 0
+        else:
+            i += 1
+            if i >= len(filter_pages):
+                logging.error("No suitable parent found while parsing filter pages")
+                break
 
     board_configuration.broadcaster.scene_created.emit(scene)
 
