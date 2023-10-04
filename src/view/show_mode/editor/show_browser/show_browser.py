@@ -187,6 +187,7 @@ class ShowBrowser:
         item.setText(0, str(s.scene_id))
         item.setText(1, str(s.human_readable_name))
         item.annotated_data = s
+        item.setExpanded(True)
         bankset_item = AnnotatedTreeWidgetItem(item)
         s.ensure_bankset()
         bankset_item.setText(0, "Bankset")

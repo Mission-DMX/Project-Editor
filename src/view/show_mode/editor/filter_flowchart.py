@@ -37,7 +37,8 @@ class FilterFlowchart(Flowchart):
                     name = tmp
                     break
                 index += 1
-        node = self.library.getNodeType(nodeType)(self._page.parent_scene, name)
+        node: FilterNode = self.library.getNodeType(nodeType)(self._page.parent_scene, name)
+        self._page.filters.append(node.filter)
         self.addNode(node, name, pos)
         return node
 

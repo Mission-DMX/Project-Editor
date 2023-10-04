@@ -6,6 +6,7 @@ from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
 
 from model import Scene, Filter, DataType, Broadcaster
+from model.scene import FilterPage
 
 from ..filter_settings_item import FilterSettingsItem
 

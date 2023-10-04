@@ -23,6 +23,8 @@ class FaderRawNode(FilterNode):
         except:
             self.filter.filter_configurations["column_id"] = ""
 
+        # TODO search for linked bankset and register id update watcher
+
         self.filter.out_data_types["fader"] = DataType.DT_16_BIT
         self.filter.out_data_types["encoder"] = DataType.DT_16_BIT
 
