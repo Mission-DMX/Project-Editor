@@ -73,19 +73,26 @@ class ShowPlayerWidget(QWidget):
         index = 0
         max_height = 0
         last_height = 0
+        last_width = 0
         for scene_widget in self._grid:
             column, row = self._index_to_position(index)
             height = row * scene_widget.height + 5
             last_height = scene_widget.height
             if height > max_height:
                 max_height = height
-            scene_widget.move(column * scene_widget.width + 5, height)
+            last_width = column * scene_widget.width + 5
+            scene_widget.move(last_width, height)
+            last_width += scene_widget.width
             index += 1
         max_height += last_height
-        self._ui_container.move(0, max_height + 5)
-        self._ui_container.resize(self.width() - 10, self.height() - 10 - max_height)
+        #self._ui_container.move(0, max_height + 5)
+        self._ui_container.move(last_width + 5, 5)
+        uipage_container_width = self.width() - 10 - last_width
+        uipage_container_height = self.height() - 10 - max_height
+        self._ui_container.resize(uipage_container_width, uipage_container_height)
 
     def _switch_scene(self, scene_index: int):
         if not (scene_index < len(self._board_configuration.scenes)):
             return
         self._ui_container.scene = self._board_configuration.get_scene_by_id(scene_index)
+        self._reload()

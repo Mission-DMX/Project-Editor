@@ -18,10 +18,12 @@ class UIPlayerWidget(QWidget):
 
     @scene.setter
     def scene(self, new_scene: Scene):
-        #if self._scene:
-        #    for w in self._widgets:
-        #        w.unregister()
-        #    self._widgets.clear()
+        if self._scene:
+            for w in self._widgets:
+                w.unregister()
+                w.setParent(None)
+                w.deleteLater()
+            self._widgets.clear()
         self._scene = new_scene
         if new_scene:
             if self._ui_page_window_index < len(new_scene.ui_pages):

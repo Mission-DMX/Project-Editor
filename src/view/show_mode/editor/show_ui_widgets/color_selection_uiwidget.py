@@ -68,8 +68,9 @@ class ColorSelectionUIWidget(UIWidget):
         return w
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if not self._player_widget:
-            self._player_widget = self._build_base_widget(parent, True)
+        if self._player_widget:
+            self._player_widget.deleteLater()
+        self._player_widget = self._build_base_widget(parent, True)
         return self._player_widget
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:

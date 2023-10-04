@@ -43,8 +43,9 @@ class CueControlUIWidget(UIWidget):
         return self._command_chain
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if not self._player_widget:
-            self._player_widget = self.construct_widget(parent, True)
+        if self._player_widget:
+            self._player_widget.deleteLater()
+        self._player_widget = self.construct_widget(parent, True)
         return self._player_widget
 
     def construct_widget(self, parent: QWidget | None, enabled: bool):

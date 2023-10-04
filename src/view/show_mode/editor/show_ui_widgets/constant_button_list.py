@@ -70,8 +70,9 @@ class ConstantNumberButtonList(UIWidget):
         return [("value", str(self._value))]
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if not self._player_widget:
-            self.construct_player_widget(parent)
+        if self._player_widget:
+            self._player_widget.deleteLater()
+        self.construct_player_widget(parent)
         return self._player_widget
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
