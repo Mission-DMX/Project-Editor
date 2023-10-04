@@ -106,4 +106,4 @@ class UsedFixture:
 def make_used_fixture(fixture: Fixture, mode_index: int) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
     return UsedFixture(fixture['name'], fixture['shortName'], fixture['categories'], fixture['comment'],
-                       fixture['modes'][mode_index], fixture)
+                       fixture['modes'][mode_index])
