@@ -9,6 +9,7 @@ from xml.etree import ElementTree
 
 from model import Filter, Scene, Universe, BoardConfiguration
 from model.patching_channel import PatchingChannel
+from model.scene import FilterPage
 from proto import UniverseControl_pb2
 
 
@@ -31,6 +32,18 @@ def write_document(file_name: str, xml: ElementTree.Element) -> bool:
     # except IOError:
     #    print(f"Could not save {file_name}")
     #    return False
+
+
+def _add_filter_page_to_element(scene_element: ElementTree.Element, page: FilterPage, parent_page: FilterPage | None):
+    item = ElementTree.SubElement(scene_element, "filterpage", attrib={
+        'name': page.name,
+        'parent': parent_page.name if parent_page else ''
+    })
+    for f in page.filters:
+        filter_id_item = ElementTree.SubElement(item, "filterid", attrib={})
+        filter_id_item.text = f.filter_id
+    for cp in page.child_pages:
+        _add_filter_page_to_element(item, cp, page)
 
 
 def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
@@ -60,6 +73,9 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
 
             for filter_configuration in filter_.filter_configurations.items():
                 _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
+
+        for page in scene.pages:
+            _add_filter_page_to_element(scene_element, page, None)
 
     for universe in board_configuration.universes:
         universe_element = _create_universe_element(universe=universe, parent=root)
