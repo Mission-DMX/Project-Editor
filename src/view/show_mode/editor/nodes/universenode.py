@@ -28,7 +28,7 @@ class UniverseNode(FilterNode):
             if len(model.filter_configurations) == 0:
                 self.filter.filter_configurations["input_1"] = "0"
                 self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
-                self.filter.filter_configurations["universe"] = self.name()[9:]
+                self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
             else:
                 for key in self.filter.filter_configurations:
                     self.filter.filter_configurations[key] = model.filter_configurations[key]
@@ -44,7 +44,7 @@ class UniverseNode(FilterNode):
         except:
             self.filter.filter_configurations["input_1"] = "0"
             self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
-            self.filter.filter_configurations["universe"] = self.name()[9:]
+            self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
 
     def addInput(self, name="input", **args):
         """Allows to add up to 512 input channels."""
