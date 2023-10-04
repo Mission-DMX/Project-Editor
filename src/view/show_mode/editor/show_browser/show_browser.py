@@ -131,9 +131,12 @@ class ShowBrowser:
                 self._universe_browsing_tree.insertTopLevelItem(i, item)
                 placed_fixtures = set()
                 last_fixture_object: AnnotatedTreeWidgetItem | None = None
+                last_fixture: UsedFixture | None = None
                 for patching_channel in universe.patching:
                     channel_fixture = patching_channel.fixture
-                    if not channel_fixture.is_placeholder and (channel_fixture not in placed_fixtures
+                    is_placeholder = not (channel_fixture == last_fixture)
+                    last_fixture = channel_fixture
+                    if not is_placeholder and (channel_fixture not in placed_fixtures
                                                                or last_fixture_object is None):
                         last_fixture_object = AnnotatedTreeWidgetItem(item)
                         last_fixture_object.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
@@ -142,7 +145,7 @@ class ShowBrowser:
                         last_fixture_object.setText(3, channel_fixture.comment)
                         last_fixture_object.annotated_data = channel_fixture
                         placed_fixtures.add(channel_fixture)
-                    if not channel_fixture.is_placeholder:
+                    if not is_placeholder:
                         channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
                         channel_item.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
                         channel_item.setText(1, patching_channel.fixture_channel)
