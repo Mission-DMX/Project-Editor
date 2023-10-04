@@ -278,6 +278,12 @@ class FaderBank:
         return new_fb
 
 
+class BanksetIDUpdateListener(ABC):
+    @abstractmethod
+    def notify_on_new_id(self, new_id: str):
+        raise NotImplementedError()
+
+
 class BankSet:
     """This class represents a bank set.
 
@@ -316,7 +322,8 @@ class BankSet:
         """This method returns a copy of the linked bank sets, save to be used by non friend classes."""
         return list(BankSet._linked_bank_sets)
 
-    def __init__(self, banks: list[FaderBank] = None, description: str = None, gui_controlled: bool = False):
+    def __init__(self, banks: list[FaderBank] = None, description: str = None, gui_controlled: bool = False,
+                 id: str | None = None):
         """Construct a bank set object.
         After construction link() needs to be called in order to link the set with the control desk.
 
@@ -324,8 +331,12 @@ class BankSet:
         banks -- The initial list of fader banks
         description -- Optional. A human-readable description used in the fader bank editor to identify the set to edit
         gui_controlled -- Indicates that the set is managed by the gui thread.
+        id -- If a specific ID should be used for initialization
         """
-        self.id = _generate_unique_id()
+        if id:
+            self._id = id
+        else:
+            self.id = _generate_unique_id()
         self.pushed_to_fish = False
         self._broadcaster: Broadcaster = Broadcaster()
         self.active_column: DeskColumn | None = None
@@ -340,6 +351,7 @@ class BankSet:
             self.description = "No description"
         self._gui_controlled = gui_controlled
         self._broadcaster.view_leave_colum_select.connect(self._leaf_selected)
+        self.id_update_listeners: list[BanksetIDUpdateListener] = []
 
     def __del__(self):
         if self.pushed_to_fish:
@@ -362,10 +374,16 @@ class BankSet:
             return False
         if self.active_bank > bank_set_size - 1:
             self.active_bank = bank_set_size - 1
-        new_id = _generate_unique_id()
+        old_set_id: str = self.id
+        if self.is_linked:
+            new_id = _generate_unique_id()
+        else:
+            new_id = old_set_id
+        # TODO find out if we actually really need to change the ID as this messes with the filters
         BankSet._fish_connector.send_add_fader_bank_set_message(new_id, self.active_bank, self.banks)
         if self.pushed_to_fish:
-            BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
+            if new_id != old_set_id:
+                BankSet._fish_connector.send_fader_bank_set_delete_message(old_set_id)
         else:
             BankSet._linked_bank_sets.append(self)
         if BankSet._active_bank_set_id == self.id:
@@ -376,6 +394,9 @@ class BankSet:
             self.activate()
         else:
             self.id = new_id
+        if new_id != old_set_id:
+            for notifier in self.id_update_listeners:
+                notifier.notify_on_new_id(new_id)
         self.pushed_to_fish = True
         if self._gui_controlled:
             self.push_messages_now()
@@ -470,6 +491,7 @@ class BankSet:
         if found_index != -1:
             BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
             BankSet._linked_bank_sets.pop(found_index)
+        self.pushed_to_fish = False
         return True
 
     @property
