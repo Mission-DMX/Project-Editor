@@ -74,7 +74,7 @@ class FilterNode(Node):
         if localTerm.isInput() and remoteTerm.isOutput():
             self.filter.channel_links[localTerm.name()] = ""
 
-    def rename(self, name):
+    def rename(self, name: str):
         """Handles behaviour if node was renamed. Changes filter.id.
         Could emit signals. See pyqtgraph.flowchart.Node.rename()
 
@@ -84,7 +84,19 @@ class FilterNode(Node):
         Returns:
             The return value of pyqtgraph.flowchart.Node.rename()
         """
+        name + name.replace(":", "_")
+        old_name = self.filter.filter_id
         self.filter.filter_id = name
+        filters_to_update: set[Filter] = set()
+        for terminal in self.outputs().values():
+            for next_filter_node in terminal.dependentNodes():
+                if isinstance(next_filter_node, FilterNode):
+                    filters_to_update.add(next_filter_node.filter)
+        for filter in filters_to_update:
+            for input_key in filter.channel_links.keys():
+                prefix, suffix = filter.channel_links[input_key].split(":")
+                if prefix == old_name:
+                    filter.channel_links[input_key] = "{}:{}".format(name, suffix)
         return super().rename(name)
 
     def update_filter_pos(self):
