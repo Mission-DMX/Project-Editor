@@ -34,7 +34,11 @@ class PatchingChannel(QtCore.QObject):
 
     @fixture.setter
     def fixture(self, fixture: UsedFixture):
+        if self._fixture:
+            self._fixture.channels.remove(self)
         self._fixture = fixture
+        if self._fixture:
+            self._fixture.channels.append(self)
         self.updated_fixture.emit()
 
     @property

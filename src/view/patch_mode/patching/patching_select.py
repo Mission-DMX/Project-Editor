@@ -145,7 +145,6 @@ class PatchingSelect(QtWidgets.QScrollArea):
                     item.fixture = used_fixture
                     item.fixture_channel = index
                     item.color = color
-                    used_fixture.channels.append(item)
                 if offset == 0:
                     channel += fixture_channel_count
                 else:
