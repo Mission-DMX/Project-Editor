@@ -112,3 +112,8 @@ class FilterNode(Node):
     def update_node_after_settings_changed(self):
         """Override this method in order to update ports after the settings have changed"""
         pass
+
+    def close(self):
+        """Closes the node and removes the linked filter from the scene."""
+        self.filter.scene.filters.remove(self.filter)
+        super().close()
