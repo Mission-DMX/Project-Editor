@@ -116,6 +116,11 @@ class UIWidget(ABC):
         """This method shall return a widget that will be placed within the configuration dialog"""
         raise NotImplementedError()
 
+    def get_variante(self) -> str:
+        """This method needs to be overridden if there are multiple fitting widgets for a filter
+        type in order for the show file saving (and loading) to choose the correct one."""
+        return ""
+
     def push_update(self):
         for entry in self.generate_update_content():
             k = entry[0]

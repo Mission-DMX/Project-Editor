@@ -4,7 +4,8 @@ from view.show_mode.editor.show_ui_widgets.constant_button_list import ConstantN
 from view.show_mode.editor.show_ui_widgets.cue_control import CueControlUIWidget
 
 
-def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None) -> UIWidget:
+def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None,
+                        variante: str = "") -> UIWidget:
     selected_configuration = configuration if configuration else dict()
     match filter_.filter_type:
         case 0 | 1 | 2:
