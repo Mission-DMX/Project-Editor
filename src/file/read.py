@@ -96,7 +96,7 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
                     else:
                         parent_page.child_pages.append(f)
                 else:
-                    parent_scene.pages.append(f)
+                    parent_scene.insert_filterpage(f)
                 instantiated_pages.append(f)
             case _:
                 logging.warning(
@@ -106,7 +106,7 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
         if child.tag != "filterid":
             logging.error("Found unknown tag '{}' in filter page.".format(child.tag))
         else:
-            filter_id = child.text()
+            filter_id = child.text
             found = False
             for f_candidate in parent_scene.filters:
                 if f_candidate.filter_id == filter_id:

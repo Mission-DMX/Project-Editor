@@ -43,7 +43,7 @@ def _add_filter_page_to_element(scene_element: ElementTree.Element, page: Filter
         filter_id_item = ElementTree.SubElement(item, "filterid", attrib={})
         filter_id_item.text = f.filter_id
     for cp in page.child_pages:
-        _add_filter_page_to_element(item, cp, page)
+        _add_filter_page_to_element(scene_element, cp, page)
 
 
 def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:

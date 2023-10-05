@@ -107,6 +107,9 @@ class Scene:
             self._filter_pages.append(default_page)
         return self._filter_pages
 
+    def insert_filterpage(self, fp: FilterPage):
+        self._filter_pages.append(fp)
+
     @property
     def linked_bankset(self) -> Optional["BankSet"] | None:
         return self._associated_bankset

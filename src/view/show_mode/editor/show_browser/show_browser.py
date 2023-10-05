@@ -349,7 +349,7 @@ class ShowBrowser:
         def add(c, scene: Scene | FilterPage, text):
             if isinstance(scene, Scene):
                 fp = FilterPage(scene)
-                scene.pages.append(fp)
+                scene.insert_filterpage(fp)
                 fp.name = text
             else:
                 fp = FilterPage(scene.parent_scene)

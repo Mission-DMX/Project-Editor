@@ -98,8 +98,6 @@
         </annotation>
         <sequence>
             <element name="filter" maxOccurs="unbounded" type="tns:Filter"></element>
-        </sequence>
-        <sequence>
             <element name="filterpage" minOccurs="0" maxOccurs="unbounded" type="tns:FilterPage"></element>
         </sequence>
         <attribute name="human_readable_name" type="string">
@@ -120,6 +118,13 @@
         <annotation>
             <documentation>A filter page provides a view to the filters of a scene.</documentation>
         </annotation>
+        <sequence>
+            <element name="filterid" minOccurs="0" maxOccurs="unbounded" type="string">
+                <annotation>
+                    <documentation>The filters in this page, identified by their id.</documentation>
+                </annotation>
+            </element>
+        </sequence>
         <attribute name="name" type="string">
             <annotation>
                 <documentation>A unique human-readable name of the filter page</documentation>
@@ -130,13 +135,6 @@
                 <documentation>The name of the parent filter page. Leave empty if the parent is the scene.</documentation>
             </annotation>
         </attribute>
-        <sequence>
-            <element name="filterid" minOccurs="0" maxOccurs="unbounded" type="string">
-                <annotation>
-                    <documentation>The filters in this page, identified by their id.</documentation>
-                </annotation>
-            </element>
-        </sequence>
     </complexType>
 
     <complexType name="ChannelLink">
