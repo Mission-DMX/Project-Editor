@@ -7,7 +7,7 @@ Usage:
 """
 from xml.etree import ElementTree
 
-from model import Filter, Scene, Universe, BoardConfiguration
+from model import Filter, Scene, Universe, BoardConfiguration, UIPage
 from model.patching_channel import PatchingChannel
 from model.scene import FilterPage
 from proto import UniverseControl_pb2
@@ -46,6 +46,26 @@ def _add_filter_page_to_element(scene_element: ElementTree.Element, page: Filter
         _add_filter_page_to_element(scene_element, cp, page)
 
 
+def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage):
+    page_element = ElementTree.SubElement(scene_element, "uipage", attrib={
+        'title': ""
+    })
+    for widget in ui_page.widgets:
+        widget_element = ElementTree.SubElement(page_element, "widget", attrib={
+            'posX': str(widget.position[0]),
+            'posY': str(widget.position[1]),
+            'sizeW': str(widget.size[0]),
+            'sizeH': str(widget.size[1]),
+            'filterID': str(widget.filter_id),
+            'variante': str(widget.get_variante())
+        })
+        for k, v in widget.configuration.items():
+            config_element = ElementTree.SubElement(widget_element, "configurationEntry", attrib={
+                'name': str(k),
+                'value': str(v)
+            })
+
+
 def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
     """Creates a xml element from the given board configuration.
     
@@ -76,6 +96,9 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
 
         for page in scene.pages:
             _add_filter_page_to_element(scene_element, page, None)
+
+        for ui_page in scene.ui_pages:
+            _add_ui_page_to_element(scene_element, ui_page)
 
     for universe in board_configuration.universes:
         universe_element = _create_universe_element(universe=universe, parent=root)
@@ -109,13 +132,14 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
        ...
     </board_configuration>
     """
+    # TODO we're not filling in the version attribute
     return ElementTree.Element("bord_configuration", attrib={
         "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "show_name": str(board_configuration.show_name),
         "default_active_scene": str(board_configuration.default_active_scene),
-        "notes": str(board_configuration.notes)
+        "notes": str(board_configuration.notes),
     })
 
 

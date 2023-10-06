@@ -99,6 +99,7 @@
         <sequence>
             <element name="filter" maxOccurs="unbounded" type="tns:Filter"></element>
             <element name="filterpage" minOccurs="0" maxOccurs="unbounded" type="tns:FilterPage"></element>
+            <element name="uipage" minOccurs="0" maxOccurs="unbounded" type="tns:UIPage"></element>
         </sequence>
         <attribute name="human_readable_name" type="string">
             <annotation>
@@ -113,7 +114,7 @@
             </annotation>
         </attribute>
     </complexType>
-    
+
     <complexType name="FilterPage">
         <annotation>
             <documentation>A filter page provides a view to the filters of a scene.</documentation>
@@ -133,6 +134,67 @@
         <attribute name="parent" type="string">
             <annotation>
                 <documentation>The name of the parent filter page. Leave empty if the parent is the scene.</documentation>
+            </annotation>
+        </attribute>
+    </complexType>
+
+    <complexType name="UIPage">
+        <annotation>
+            <documentation>A UI page contains the widgets that are used to perform advanced control while the show is running.</documentation>
+        </annotation>
+        <sequence>
+            <element name="widget" minOccurs="0" maxOccurs="unbounded" type="tns:UIWidget">
+                <annotation>
+                    <documentation>The widgets displayed in the page while the scene is active.</documentation>
+                </annotation>
+            </element>
+        </sequence>
+        <attribute name="title" type="string">
+            <annotation>
+                <documentation>The title of the page that will be displayed on top of the mapped monitor.</documentation>
+            </annotation>
+        </attribute>
+    </complexType>
+
+    <complexType name="UIWidget">
+        <annotation>
+            <documentation>A UI page contains the widgets that are used to perform advanced control while the show is running.</documentation>
+        </annotation>
+        <sequence>
+            <element name="configurationEntry" minOccurs="0" maxOccurs="unbounded" type="tns:KeyValuePair">
+                <annotation>
+                    <documentation>The key-value-pairs defining the widgets configuration dict property.</documentation>
+                </annotation>
+            </element>
+        </sequence>
+        <attribute name="posX" type="int">
+            <annotation>
+                <documentation>The X coordinate of the widgets position on the page.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="posY" type="int">
+            <annotation>
+                <documentation>The Y coordinate of the widgets position on the page.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="sizeW" type="int">
+            <annotation>
+                <documentation>The width of the widgets on the page.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="sizeH" type="int">
+            <annotation>
+                <documentation>The height of the widgets on the page.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="filterID" type="string">
+            <annotation>
+                <documentation>The ID of the filter to map to.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="variante" type="string">
+            <annotation>
+                <documentation>In case there are multiple possible widgets for the provided filter type, this hint will be used.</documentation>
             </annotation>
         </attribute>
     </complexType>

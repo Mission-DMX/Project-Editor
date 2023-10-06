@@ -92,7 +92,7 @@ class UIWidget(ABC):
     @size.setter
     def size(self, new_size: tuple[int, int]):
         """Update the size of the widget"""
-        self.size = new_size
+        self._size = new_size
         # TODO notify player about UI update if running
 
     @property
@@ -139,6 +139,7 @@ class UIPage:
         """
         self._widgets: list[UIWidget] = []
         self._parent_scene: Scene = parent
+        self._title: str = ""
         self._player = None
 
     @property
@@ -161,9 +162,18 @@ class UIPage:
         """Returns a copy of the internal widget list"""
         return list(self._widgets)
 
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @title.setter
+    def title(self, new_title: str):
+        self._title = new_title
+
     def copy(self, new_parent: "Scene") -> "UIPage":
         new_page = UIPage(new_parent)
         new_page._player = self._player
+        new_page._title = self._title
         for w in self._widgets:
             new_page._widgets.append(w.copy(new_page))
         return new_page

@@ -8,10 +8,11 @@ from xml.etree import ElementTree
 import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
-from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse
+from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage
 from model.scene import FilterPage
 from ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from view.dialogs import ExceptionsDialog
+from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration) -> bool:
@@ -106,15 +107,11 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
         if child.tag != "filterid":
             logging.error("Found unknown tag '{}' in filter page.".format(child.tag))
         else:
-            filter_id = child.text
-            found = False
-            for f_candidate in parent_scene.filters:
-                if f_candidate.filter_id == filter_id:
-                    f.filters.append(f_candidate)
-                    found = True
-                    break
-            if not found:
-                logging.error("Didn't find filter '{}' in scene '{}'.".format(filter_id,
+            filter = parent_scene.get_filter_by_id(child.text)
+            if filter:
+                f.filters.append(filter)
+            else:
+                logging.error("Didn't find filter '{}' in scene '{}'.".format(child.text,
                                                                               parent_scene.human_readable_name))
     return True
 
@@ -138,12 +135,15 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                   board_configuration=board_configuration)
 
     filter_pages = []
+    ui_page_elements = []
     for child in scene_element:
         match child.tag:
             case "filter":
                 _parse_filter(child, scene)
             case "filterpage":
                 filter_pages.append(child)
+            case "uipage":
+                ui_page_elements.append(child)
             case _:
                 logging.warning("Scene %s contains unknown element: %s",
                                 human_readable_name, child.tag)
@@ -160,7 +160,54 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                 logging.error("No suitable parent found while parsing filter pages")
                 break
 
+    for ui_page_element in ui_page_elements:
+        _append_ui_page(ui_page_element, scene)
+
     board_configuration.broadcaster.scene_created.emit(scene)
+
+
+def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
+    page = UIPage(scene)
+    for k, v in page_def.attrib.items():
+        match k:
+            case 'title':
+                page.title = str(v)
+            case _:
+                logging.error("Unexpected attribute '{}':'{}' in ui page definition.".format(k, v))
+    for widget_def in page_def:
+        posX: int = 0
+        posY: int = 0
+        w: int = 0
+        h: int = 0
+        fid: str = ""
+        variante: str = ""
+        conf: dict[str, str] = {}
+        for k, v in widget_def.attrib.items():
+            match k:
+                case "posX":
+                    posX = int(v)
+                case "posY":
+                    posY = int(v)
+                case "sizeW":
+                    w = int(v)
+                case "sizeH":
+                    h = int(v)
+                case "filterID":
+                    fid = str(v)
+                case "variante":
+                    variante = str(v)
+                case _:
+                    logging.error("Unexpected attribute '{}':'{}' in ui widget definition.".format(k, v))
+        for config_entry in widget_def:
+            if config_entry.tag != "configurationEntry":
+                logging.error("Found unexpected child '{}' in ui widget definition.".format(config_entry.tag))
+                continue
+            conf[str(config_entry.attrib['name'])] = str(config_entry.attrib['value'])
+        ui_widget = filter_to_ui_widget(scene.get_filter_by_id(fid), page, conf, variante)
+        ui_widget.position = (posX, posY)
+        ui_widget.size = (w, h)
+        page.append_widget(ui_widget)
+    scene.ui_pages.append(page)
 
 
 def _parse_filter(filter_element: ElementTree.Element, scene: Scene):

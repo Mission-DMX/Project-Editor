@@ -164,3 +164,11 @@ class Scene:
         for page in self._ui_pages:
             scene._ui_pages.append(page.copy(scene))
         return scene
+
+    def get_filter_by_id(self, fid: str) -> Filter | None:
+        # TODO implement index for filter lookup as we need this in multiple places
+        for f in self._filters:
+            if f.filter_id == fid:
+                # TODO add filter to index as it was clearly missing
+                return f
+        return None

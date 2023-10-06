@@ -203,7 +203,7 @@ class ShowBrowser:
         for ui_page in s.ui_pages:
             i += 1
             uipage_item = AnnotatedTreeWidgetItem(item)
-            uipage_item.setText(0, "UI Page {}".format(i))
+            uipage_item.setText(0, "UI Page {} '{}'".format(i, ui_page.title))
             uipage_item.setIcon(0, ShowBrowser._uipage_icon)
             uipage_item.setText(1, str(len(ui_page.widgets)) + " widgets")
             uipage_item.annotated_data = ui_page
