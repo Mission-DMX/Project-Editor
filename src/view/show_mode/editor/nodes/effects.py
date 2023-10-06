@@ -59,14 +59,12 @@ class ShiftFilterNode(FilterNode):
 
         try:
             if isinstance(model, Scene):
-                found = False
-                for f in model.filters:
-                    if id == f.filter_id:
-                        self.filter.filter_configurations["nr_outputs"] = str(
-                            int(f.filter_configurations.get("nr_outputs")))
-                        found = True
-                        break
-                if not found:
+                # FIXME using the filter type as its ID seams odd
+                found_filter = model.get_filter_by_id(str(id))
+                if found_filter:
+                    self.filter.filter_configurations["nr_outputs"] = str(
+                        int(found_filter.filter_configurations.get("nr_outputs")))
+                else:
                     self.filter.filter_configurations["nr_outputs"] = "0"
             else:
                 self.filter.filter_configurations["nr_outputs"] = str(int(model.filter_configurations.get("nr_outputs")))

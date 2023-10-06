@@ -44,11 +44,7 @@ class FilterPage:
         else:
             new_fp = FilterPage(new_scene)
             for filter in self._filters:
-                found_filter = None
-                for f in new_scene.filters:
-                    if f.filter_id == filter.filter_id:
-                        found_filter = f
-                        break
+                found_filter = new_scene.get_filter_by_id(filter.filter_id)
                 if found_filter:
                     new_fp._filters.append(found_filter)
         for child_fp in self._child_pages:
