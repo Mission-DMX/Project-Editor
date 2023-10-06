@@ -240,7 +240,7 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case _:
                 logging.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
-    scene.filters.append(filter_)
+    scene.append_filter(filter_)
 
 
 def _parse_channel_link(initial_parameters_element: ElementTree.Element, filter_: Filter):

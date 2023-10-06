@@ -68,6 +68,12 @@ class UIWidget(ABC):
         """Get the id of the linked filter"""
         return self._filter_id
 
+    def notify_id_rename(self, old_id: str, new_id: str):
+        """This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
+        in order to implement special behaviour"""
+        if self._filter_id == old_id:
+            self._filter_id = new_id
+
     @property
     def parent(self) -> "UIPage":
         """Get the parent page of this widget"""

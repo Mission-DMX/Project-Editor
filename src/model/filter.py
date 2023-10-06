@@ -78,9 +78,10 @@ class Filter:
 
     @filter_id.setter
     def filter_id(self, id_):
+        old_id: str = self._filter_id
         self._filter_id = id_
-        # TODO notify parent scene filter index
-        # TODO notify ui widgets in parent scene
+        if self.scene:
+            self.scene.notify_about_filter_rename_action(self, old_id)
 
     @property
     def filter_type(self) -> int:

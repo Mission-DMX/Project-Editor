@@ -67,6 +67,7 @@ class Scene:
         self._human_readable_name: str = human_readable_name
         self._board_configuration: "BoardConfiguration" = board_configuration
         self._filters: list[Filter] = []
+        self._filter_index: dict[str, Filter] = {}
         self._filter_pages: list[FilterPage] = []
         self._associated_bankset: Optional["BankSet"] | None = None
         self._ui_pages: list["UIPage"] = []
@@ -157,7 +158,7 @@ class Scene:
                       board_configuration=self.board_configuration)
         for f in self._filters:
             new_filter = f.copy(new_scene=scene)
-            scene.filters.append(new_filter)
+            scene.append_filter(new_filter)
         for fp in self._filter_pages:
             scene._filter_pages.append(fp.copy(scene))
         scene.linked_bankset = self._associated_bankset.copy()
@@ -166,9 +167,26 @@ class Scene:
         return scene
 
     def get_filter_by_id(self, fid: str) -> Filter | None:
-        # TODO implement index for filter lookup as we need this in multiple places
+        f = self._filter_index.get(fid)
+        if f:
+            return f
         for f in self._filters:
             if f.filter_id == fid:
-                # TODO add filter to index as it was clearly missing
+                self._filter_index[fid] = f
                 return f
         return None
+
+    def append_filter(self, f: Filter):
+        self._filters.append(f)
+        self._filter_index[f.filter_id] = f
+
+    def remove_filter(self, f: Filter):
+        self._filters.remove(f)
+        self._filter_index.pop(f.filter_id)
+
+    def notify_about_filter_rename_action(self, sender: Filter, old_id: str):
+        self._filter_index.pop(old_id)
+        self._filter_index[sender.filter_id] = sender
+        for page in self._ui_pages:
+            for widget in page.widgets:
+                widget.notify_id_rename(old_id, sender.filter_id)

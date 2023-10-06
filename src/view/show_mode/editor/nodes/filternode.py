@@ -23,7 +23,7 @@ class FilterNode(Node):
         super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
         if isinstance(model, Scene):
             self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
-            model.filters.append(self._filter)
+            model.append_filter(self._filter)
         elif isinstance(model, Filter):
             self._filter = model
         else:
@@ -116,5 +116,5 @@ class FilterNode(Node):
 
     def close(self):
         """Closes the node and removes the linked filter from the scene."""
-        self.filter.scene.filters.remove(self.filter)
+        self.filter.scene.remove_filter(self.filter)
         super().close()

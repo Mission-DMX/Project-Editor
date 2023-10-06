@@ -39,7 +39,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage
         filter.filter_configurations[selected_input_name] = str(c.address)
         i += 1
 
-    scene.filters.append(filter)
+    scene.append_filter(filter)
     filter_page.filters.append(filter)
 
     _check_and_add_auxiliary_filters(fixture, filter_page, filter, max_x, name)
@@ -61,7 +61,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":value_lower"
                 universe_filter.channel_links[_sanitize_name(c[c_i-1].fixture_channel)] = adapter_name + ":value_upper"
                 fp.filters.append(split_filter)
-                fp.parent_scene.filters.append(split_filter)
+                fp.parent_scene.append_filter(split_filter)
                 i += 1
             elif c[c_i].fixture_channel == "Red":
                 if c[c_i + 1].fixture_channel == "Green" and c[c_i + 2].fixture_channel == "Blue":
@@ -80,7 +80,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         universe_filter.channel_links[
                             _sanitize_name(c[c_i + 3].fixture_channel)] = adapter_name + ":w"
                         fp.filters.append(rgbw_filter)
-                        fp.parent_scene.filters.append(rgbw_filter)
+                        fp.parent_scene.append_filter(rgbw_filter)
                     else:
                         adapter_name = _sanitize_name("color2rgb_{}_{}".format(i, name))
                         rgb_filter = Filter(scene=fp.parent_scene,
@@ -94,7 +94,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         universe_filter.channel_links[
                             _sanitize_name(c[c_i + 2].fixture_channel)] = adapter_name + ":b"
                         fp.filters.append(rgb_filter)
-                        fp.parent_scene.filters.append(rgb_filter)
+                        fp.parent_scene.append_filter(rgb_filter)
                 i += 1
             elif c[c_i].fixture_channel == "Dimmer":
                 dimmer_name = _sanitize_name("dimmer_{}_{}".format(i, name))
@@ -103,7 +103,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                                               filter_type=49,
                                               pos=(x, float(10 * len(c) + i * 5)))
                 fp.filters.append(global_dimmer_filter)
-                fp.parent_scene.filters.append(global_dimmer_filter)
+                fp.parent_scene.append_filter(global_dimmer_filter)
                 x += 10
                 adapter_name = _sanitize_name("dimmer2byte_{}_{}".format(i, name))
                 dimmer_to_byte_filter = Filter(scene=fp.parent_scene,
@@ -113,7 +113,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 dimmer_to_byte_filter.channel_links["value"] = dimmer_name + ":brightness"
                 universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":value_upper"
                 fp.filters.append(dimmer_to_byte_filter)
-                fp.parent_scene.filters.append(dimmer_to_byte_filter)
+                fp.parent_scene.append_filter(dimmer_to_byte_filter)
                 i += 1
         except IndexError:
             continue
