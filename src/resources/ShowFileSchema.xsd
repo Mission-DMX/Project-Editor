@@ -217,7 +217,7 @@
 		</documentation>
 	</annotation>
 	<sequence>
-		<element name="bank" maxOccurs="unbounded">
+		<element name="bank" minOccurs="0" maxOccurs="unbounded">
 			<complexType>
 				<sequence>
 					<element name="hslcolumn" maxOccurs="unbounded" minOccurs="0">
