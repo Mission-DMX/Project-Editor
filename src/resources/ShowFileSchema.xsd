@@ -15,6 +15,11 @@
                 </annotation>
             </element>
             <element name="uihint" type="tns:KeyValuePair" maxOccurs="unbounded" minOccurs="0"></element>
+            <element name="bankset" type="tns:BankSet" maxOccurs="unbounded" minOccurs="0">
+              <annotation>
+                <documentation>This field defines the non temporary bank sets</documentation>
+              </annotation>
+            </element>
         </sequence>
         <attribute name="show_name" type="string">
             <annotation>
@@ -97,7 +102,7 @@
             <documentation>A scene contains the filter chain description.</documentation>
         </annotation>
         <sequence>
-            <element name="filter" maxOccurs="unbounded" type="tns:Filter"></element>
+            <element name="filter" minOccurs="0" maxOccurs="unbounded" type="tns:Filter"></element>
             <element name="filterpage" minOccurs="0" maxOccurs="unbounded" type="tns:FilterPage"></element>
             <element name="uipage" minOccurs="0" maxOccurs="unbounded" type="tns:UIPage"></element>
         </sequence>
@@ -113,6 +118,11 @@
                 </documentation>
             </annotation>
         </attribute>
+	<attribute name="linkedBankset" type="string" use="optional">
+	    <annotation>
+                <documentation>The ID of a previously registered bank set</documentation>
+            </annotation>
+	</attribute>
     </complexType>
 
     <complexType name="FilterPage">
@@ -198,6 +208,55 @@
             </annotation>
         </attribute>
     </complexType>
+
+    <complexType name="BankSet">
+	<annotation>
+		<documentation>
+			A bank set that should be available with the show file. This won't be loaded by fish but needs to be managed by the
+			GUI as the GUI will also manage additional temporary bank sets.
+		</documentation>
+	</annotation>
+	<sequence>
+		<element name="bank" maxOccurs="unbounded">
+			<complexType>
+				<sequence>
+					<element name="hslcolumn" maxOccurs="unbounded" minOccurs="0">
+						<complexType>
+							<attribute name="id" type="string" use="required"></attribute>
+							<attribute name="display_name" type="string" use="required"></attribute>
+							<attribute name="top_line_inverted" type="boolean" use="optional"></attribute>
+							<attribute name="bottom_line_inverted" type="boolean" use="optional"></attribute>
+							<attribute name="lcd_color" type="string" use="optional"><!-- TODO use choice type--></attribute>
+							<attribute name="color" type="string" use="required"><!-- TODO introduce format regex for syntax check--></attribute>
+						</complexType>
+					</element>
+					<element name="rawcolumn" maxOccurs="unbounded" minOccurs="0">
+						<complexType>
+							<attribute name="id" type="string" use="required"></attribute>
+							<attribute name="display_name" type="string" use="required"></attribute>
+							<attribute name="secondary_text_line" type="string" use="required"></attribute>
+							<attribute name="top_line_inverted" type="boolean" use="optional"></attribute>
+							<attribute name="bottom_line_inverted" type="boolean" use="optional"></attribute>
+							<attribute name="lcd_color" type="string" use="optional"><!-- TODO use choice type--></attribute>
+							<attribute name="fader_position" type="int" use="required"><!-- TODO use simple type with minInclusive and maxInclusive --></attribute>
+							<attribute name="encoder_position" type="int" use="required"><!-- TODO use simple type with minInclusive and maxInclusive --></attribute>
+						</complexType>
+					</element>
+				</sequence>
+			</complexType>
+		</element>
+	</sequence>
+	<attribute name="linked_by_default" type="boolean" use="optional">
+		<annotation>
+			<documentation>If this attribute is obmitted or set to true, the bank set will be linked with fish by default.</documentation>
+		</annotation>
+	</attribute>
+	<attribute name="id" type="string" use="optional">
+		<annotation>
+			<documentation>If provided the bank set will be created with this id.</documentation>
+		</annotation>
+	</attribute>
+</complexType>
 
     <complexType name="ChannelLink">
         <annotation>

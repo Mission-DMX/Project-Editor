@@ -20,6 +20,7 @@ class BoardConfiguration:
         self._universes: list[Universe] = []
         self._ui_hints: dict[str, str] = {}
 
+        self._show_file_path: str = ""
         self._broadcaster: Broadcaster = Broadcaster()
 
         self._broadcaster.add_universe.connect(self._add_universe)
@@ -160,6 +161,15 @@ class BoardConfiguration:
     def broadcaster(self) -> Broadcaster:
         """The broadcaster the board configuration uses"""
         return self._broadcaster
+
+    @property
+    def file_path(self) -> str:
+        return self._show_file_path
+
+    @file_path.setter
+    def file_path(self, new_path: str):
+        self._show_file_path = new_path
+        self._broadcaster.show_file_path_changed.emit(new_path)
 
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
         looked_up_position = self._scenes_index.get(scene_id)

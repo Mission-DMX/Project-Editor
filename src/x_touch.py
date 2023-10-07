@@ -34,6 +34,16 @@ VIEW_NOT_TEMPERATURE_MSG: proto.Console_pb2.button_state_change = proto.Console_
     button=proto.Console_pb2.ButtonCode.BTN_REPLACE_TEMPERATURE,
     new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
 
+SAVE_BUTTON_ACTIVE_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_SAVE_SAVE,
+    new_state=proto.Console_pb2.ButtonState.BS_ACTIVE
+)
+
+SAVE_BUTTON_DEACTIVATE_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_SAVE_SAVE,
+    new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+)
+
 
 class XTouchMessages:
     """messages to the XTouch"""
@@ -56,3 +66,11 @@ class XTouchMessages:
 
         self._broadcaster.view_to_temperature.connect(lambda: send(VIEW_TEMPERATURE_MSG))
         self._broadcaster.view_leave_temperature.connect(lambda: send(VIEW_NOT_TEMPERATURE_MSG))
+        self._broadcaster.show_file_path_changed.connect(self._update_save_button)
+        self._send: callable = send
+
+    def _update_save_button(self, file_path: str):
+        if file_path:
+            self._send(SAVE_BUTTON_ACTIVE_MSG)
+        else:
+            self._send(SAVE_BUTTON_DEACTIVATE_MSG)

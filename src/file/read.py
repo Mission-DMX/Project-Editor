@@ -8,11 +8,49 @@ from xml.etree import ElementTree
 import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
-from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage
+from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
+from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from model.scene import FilterPage
 from ofl.fixture import load_fixture, UsedFixture, make_used_fixture
+from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
+
+
+def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str, BankSet]):
+    _id = child.attrib.get('id')
+    bs: BankSet = BankSet(gui_controlled=True, id=_id)
+    for bank_element in child:
+        bank = FaderBank()
+        if bank_element.tag != 'bank':
+            logging.error("Unexpected element '{}' while parsing bank".format(bank_element.tag))
+            continue
+        for column_element in bank_element:
+            if column_element.tag == 'hslcolumn':
+                col = ColorDeskColumn(_id=column_element.attrib['id'])
+                col.display_name = column_element.attrib['display_name']
+                col.top_display_line_inverted = column_element.attrib.get('top_line_inverted') == 'true'
+                col.bottom_display_line_inverted = column_element.attrib.get('bottom_line_inverted') == 'true'
+                col.display_color = lcd_color_from_string(column_element.attrib['lcd_color'])
+                col.color = ColorHSI.from_filter_str(column_element.attrib['color'])
+            elif column_element.tag == 'rawcolumn':
+                col = RawDeskColumn(_id=column_element.attrib['id'])
+                col.display_name = column_element.attrib['display_name']
+                col.top_display_line_inverted = column_element.attrib.get('top_line_inverted') == 'true'
+                col.bottom_display_line_inverted = column_element.attrib.get('bottom_line_inverted') == 'true'
+                col.display_color = lcd_color_from_string(column_element.attrib['lcd_color'])
+                col.secondary_text_line = column_element.attrib['secondary_text_line']
+                col.fader_position = int(column_element.attrib['fader_position'])
+                col.encoder_position = int(column_element.attrib['encoder_position'])
+            else:
+                logging.error("Unsupported bank column type '{}'.".format(column_element.tag))
+                continue
+            bank.add_column(col)
+        bs.add_bank(bank)
+    if child.attrib.get('linked_by_default') == 'true':
+        bs.link()
+    loaded_banksets[bs.id] = bs
+    pass
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration) -> bool:
@@ -31,6 +69,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         schema = xmlschema.XMLSchema(schema_file)
         schema.validate(file_name)
     except Exception as error:
+        logging.error("Error while validating show file: {}".format(error))
         ExceptionsDialog(error).exec()
         return False
 
@@ -55,22 +94,53 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     _clean_tags(root, prefix)
 
+    scene_defs_to_be_parsed = []
+    loaded_banksets: dict[str, BankSet] = {}
+
     for child in root:
         match child.tag:
             case "scene":
-                _parse_scene(child, board_configuration)
+                scene_defs_to_be_parsed.append(child)
             case "device":
                 _parse_device(child, board_configuration)
             case "universe":
                 _parse_universe(child, board_configuration)
             case "uihint":
                 _parse_ui_hint(child, board_configuration)
+            case 'bankset':
+                _parse_and_add_bankset(child, loaded_banksets)
             case _:
                 logging.warning("Show %s contains unknown element: %s",
                                 board_configuration.show_name, child.tag)
 
-    board_configuration.broadcaster.board_configuration_loaded.emit()
+    for scene_def in scene_defs_to_be_parsed:
+        _parse_scene(scene_def, board_configuration, loaded_banksets)
+
+    board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
+    board_configuration.file_path = file_name
     return True
+
+
+def lcd_color_from_string(display_color: str) -> lcd_color:
+    match display_color:
+        case 'white':
+            return lcd_color.white
+        case 'red':
+            return lcd_color.red
+        case 'blue':
+            return lcd_color.blue
+        case 'cyan':
+            return lcd_color.cyan
+        case 'black':
+            return lcd_color.black
+        case 'green':
+            return lcd_color.green
+        case 'magenta':
+            return lcd_color.magenta
+        case 'yellow':
+            return lcd_color.yellow
+        case _:
+            return lcd_color.white
 
 
 def _clean_tags(element: ElementTree.Element, prefix: str):
@@ -116,7 +186,8 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
     return True
 
 
-def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardConfiguration):
+def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardConfiguration,
+                 loaded_banksets: dict[str, BankSet]):
     human_readable_name = ""
     scene_id = 0
     for key, value in scene_element.attrib.items():
@@ -159,6 +230,9 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
             if i >= len(filter_pages):
                 logging.error("No suitable parent found while parsing filter pages")
                 break
+
+    if scene_element.attrib.get('linkedBankset') in loaded_banksets.keys():
+        scene.linked_bankset = loaded_banksets[scene_element.attrib['linkedBankset']]
 
     for ui_page_element in ui_page_elements:
         _append_ui_page(ui_page_element, scene)

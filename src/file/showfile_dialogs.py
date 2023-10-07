@@ -37,7 +37,9 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration):
         file_name: File in which the config is saved.
     """
     xml = create_xml(show_data)
-    write_document(file_name, xml)
+    if write_document(file_name, xml):
+        if show_data.file_path != file_name:
+            show_data.file_path = file_name
 
 
 def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration):

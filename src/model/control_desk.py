@@ -336,7 +336,7 @@ class BankSet:
         if id:
             self._id = id
         else:
-            self.id = _generate_unique_id()
+            self._id = _generate_unique_id()
         self.pushed_to_fish = False
         self._broadcaster: Broadcaster = Broadcaster()
         self.active_column: DeskColumn | None = None
@@ -376,7 +376,8 @@ class BankSet:
             self.active_bank = bank_set_size - 1
         old_set_id: str = self.id
         if self.is_linked:
-            new_id = _generate_unique_id()
+            #new_id = _generate_unique_id()
+            new_id = old_set_id
         else:
             new_id = old_set_id
         # TODO find out if we actually really need to change the ID as this messes with the filters
@@ -387,13 +388,13 @@ class BankSet:
         else:
             BankSet._linked_bank_sets.append(self)
         if BankSet._active_bank_set_id == self.id:
-            self.id = new_id
+            self._id = new_id
             self.activate()
         elif not BankSet._active_bank_set_id:
-            self.id = new_id
+            self._id = new_id
             self.activate()
         else:
-            self.id = new_id
+            self._id = new_id
         if new_id != old_set_id:
             for notifier in self.id_update_listeners:
                 notifier.notify_on_new_id(new_id)
@@ -401,6 +402,10 @@ class BankSet:
         if self._gui_controlled:
             self.push_messages_now()
         return True
+
+    @property
+    def id(self) -> str:
+        return self._id
 
     def activate(self):
         """Calling this method makes this bank set the active one.
