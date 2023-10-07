@@ -4,7 +4,7 @@
 from PySide6 import QtWidgets, QtGui
 
 from Style import Style
-from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog
+from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog, _save_show_file
 from proto.RealTimeControl_pb2 import RunMode
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
@@ -74,6 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster.select_column_id.connect(self._show_column_dialog)
         self._broadcaster.view_to_color.connect(self._is_column_dialog)
         self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
+        self._broadcaster.save_button_pressed.connect(self._save_show)
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -111,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
                      ["Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)],
                      ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]],
             "Show": [["Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)],
+                     ["Save Showfile", self._save_show],
                      ["Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)]]
         }
         for name, entries in menus.items():
@@ -199,3 +201,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if not BankSet.active_bank_set().active_column:
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
+
+    def _save_show(self):
+        if self._board_configuration:
+            if self._board_configuration.file_path:
+                _save_show_file(self._board_configuration.file_path, self._board_configuration)
+            else:
+                show_save_showfile_dialog(self, self._board_configuration)

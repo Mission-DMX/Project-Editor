@@ -16,16 +16,17 @@ from proto import UniverseControl_pb2
 from proto.Console_pb2 import lcd_color
 
 
-def write_document(file_name: str, xml: ElementTree.Element) -> bool:
+def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     """Writes the xml element to the specified file.
     See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information.
     
     Args:
         file_name: The (path and) file to which the xml element should be written.
-        xml: The xml element to write
+        show_data: The show to save
         
     Returns: True, if successfully, otherwise false with error message.
     """
+    xml = create_xml(show_data)
     with open(file_name, 'w+', encoding="UTF-8") as file:
         ElementTree.indent(xml)
         file.write(ElementTree.tostring(xml, encoding='unicode', method='xml'))

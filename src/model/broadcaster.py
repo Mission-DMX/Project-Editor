@@ -73,6 +73,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     view_to_console_mode: QtCore.Signal = QtCore.Signal()
     ################################################################
+    save_button_pressed: QtCore.Signal = QtCore.Signal()
     jogwheel_rotated_left: QtCore.Signal = QtCore.Signal()
     jogwheel_rotated_right: QtCore.Signal = QtCore.Signal()
     desk_media_rev_pressed: QtCore.Signal = QtCore.Signal()
