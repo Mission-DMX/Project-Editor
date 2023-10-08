@@ -30,17 +30,19 @@ class UniverseNode(FilterNode):
                 self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
                 self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
             else:
-                for key in self.filter.filter_configurations:
-                    self.filter.filter_configurations[key] = model.filter_configurations[key]
+                for key in self.filter.filter_configurations.keys():
+                    if self.filter != model:
+                        self.filter.filter_configurations[key] = model.filter_configurations[key]
                     if key != "universe":
-                        self.filter.in_data_types[key] = DataType.DT_8_BIT
+                        input_channel = key
+                        self.filter.in_data_types[input_channel] = DataType.DT_8_BIT
                         if key not in self.terminals.keys():
                             term = super().addInput(key)
                         else:
                             t: Terminal = self.terminals[key]
                             if not t.isInput():
                                 logging.error("Universe output filter '{}' has corrupted terminal '{}'."
-                                              .format(self.name(), key))
+                                              .format(self.name(), input_channel))
         except:
             self.filter.filter_configurations["input_1"] = "0"
             self.filter.in_data_types["input_1"] = DataType.DT_8_BIT

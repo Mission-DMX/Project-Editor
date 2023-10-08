@@ -6,6 +6,8 @@ from view.show_mode.editor.nodes import UniverseNode
 
 
 def _sanitize_name(input: str) -> str:
+    if input == 'universe':
+        return '_universe_channel'
     return input.replace(" ", "_").replace("/", "_").replace("\\", "_")
 
 
@@ -51,6 +53,8 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
     i = 0
     for c_i in range(len(c)):
         try:
+            if not c[c_i].fixture_channel:
+                continue
             if ((c[c_i].fixture_channel == "Pan fine" and c[c_i-1].fixture_channel == "Pan") or
                     (c[c_i].fixture_channel == "Tilt fine" and c[c_i-1].fixture_channel == "Tilt")):
                 adapter_name = _sanitize_name("pos2channel_{}_{}".format(i, name))

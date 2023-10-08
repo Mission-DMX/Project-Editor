@@ -142,8 +142,12 @@ class FilterSettingsDialog(QDialog):
             return key
         # Fetch patching short name
         for channel in universe.patching:
-            if channel.address == int(value):
-                key = f"{key} : {channel.fixture.short_name}"
+            try:
+                if channel.address == int(value):
+                    key = f"{key} : {channel.fixture.short_name}"
+            except ValueError:
+                # We've loaded from a generated filter. Nothing to do here
+                pass
         return key
 
     def _ip_value_changed(self, key, value):

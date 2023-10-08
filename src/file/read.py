@@ -361,10 +361,7 @@ def _parse_filter_configuration(filter_configuration_element: ElementTree.Elemen
                 logging.warning("Found attribute %s=%s while parsing filter configuration for filter %s",
                                 key, value, filter_.filter_id)
 
-    if filter_.filter_type == 11 and fc_key != "universe":
-        filter_.filter_configurations[fc_value] = fc_key
-    else:
-        filter_.filter_configurations[fc_key] = fc_value
+    filter_.filter_configurations[fc_key] = fc_value
 
 
 def _parse_device(device_element: ElementTree.Element, board_configuration: BoardConfiguration):
