@@ -106,7 +106,7 @@ class FilterSettingsDialog(QDialog):
                 for key, value in self.filter.initial_parameters.items():
                     line_edit = QLineEdit()
                     line_edit.setText(value)
-                    line_edit.textChanged.connect(lambda new_value: self._ip_value_changed(key, new_value))
+                    line_edit.textChanged.connect(lambda new_value, _key=key: self._ip_value_changed(_key, new_value))
                     layout.addRow(key, line_edit)
             # Only add filter configuration section if present
             if len(self.filter.filter_configurations) > 0:
@@ -114,7 +114,7 @@ class FilterSettingsDialog(QDialog):
                 for key, value in self.filter.filter_configurations.items():
                     line_edit = QLineEdit()
                     line_edit.setText(value)
-                    line_edit.textChanged.connect(lambda new_value: self._fc_value_changed(key, new_value))
+                    line_edit.textChanged.connect(lambda new_value, _key=key: self._fc_value_changed(_key, new_value))
                     if add_patch_info:
                         key = self._add_patch_info(key, value)
                     layout.addRow(key, line_edit)

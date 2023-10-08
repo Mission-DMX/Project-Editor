@@ -18,18 +18,18 @@ from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 class CueEditor(NodeEditorFilterConfigWidget):
 
-    def _get_configuration(self) -> dict[str, str]:
+    def _get_parameters(self) -> dict[str, str]:
         # TODO implement
         return dict()
 
-    def _load_configuration(self, conf: dict[str, str]):
+    def _load_parameters(self, conf: dict[str, str]):
         # TODO implement
         pass
 
     def get_widget(self) -> QWidget:
         return self._parent_widget
 
-    def _load_parameters(self, parameters: dict[str, str]):
+    def _load_configuration(self, parameters: dict[str, str]):
         self._global_restart_on_end = parameters.get("end_handling") == "start_again"
         mapping_str = parameters.get("mapping")
         cuelist_definition_str = parameters.get("cuelist")
@@ -54,7 +54,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._bankset.update()
             BankSet.push_messages_now()
 
-    def _get_parameters(self) -> dict[str, str]:
+    def _get_configuration(self) -> dict[str, str]:
         if len(self._cues) > 0:
             mapping_str = ";".join(["{}:{}".format(t[0], t[1].format_for_filters()) for t in self._cues[0].channels])
         else:
@@ -352,6 +352,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._bankset.unlink()
             BankSet.push_messages_now()
         if self._broadcaster:
+            # FIXME This might not be set
             self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
             self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
             self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)

@@ -535,7 +535,9 @@ class BankSet:
 
     @staticmethod
     def handle_column_update_message(message: proto.Console_pb2.fader_column):
-        BankSet._active_bank_set.get_column(message.column_id).update_from_message(message)
+        col = BankSet._active_bank_set.get_column(message.column_id)
+        if col:
+            col.update_from_message(message)
 
     def copy(self) -> "BankSet":
         new_bs = BankSet(description=self.description, gui_controlled=self._gui_controlled)

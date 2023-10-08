@@ -150,7 +150,7 @@ class Scene:
                     break
             id_check_passed = True
         scene = Scene(scene_id=chosen_id,
-                      human_readable_name=self.human_readable_name,
+                      human_readable_name=str(self.human_readable_name),
                       board_configuration=self.board_configuration)
         for f in self._filters:
             new_filter = f.copy(new_scene=scene)
@@ -181,7 +181,10 @@ class Scene:
         self._filter_index.pop(f.filter_id)
 
         def remove_filter_from_page(p: FilterPage):
-            p.filters.remove(f)
+            try:
+                p.filters.remove(f)
+            except ValueError:
+                pass
             for pc in p.child_pages:
                 remove_filter_from_page(pc)
         for p in self.pages:

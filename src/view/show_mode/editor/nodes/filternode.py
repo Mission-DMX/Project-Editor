@@ -95,6 +95,7 @@ class FilterNode(Node):
                     filters_to_update.add(next_filter_node.filter)
         for filter in filters_to_update:
             for input_key in filter.channel_links.keys():
+                # FIXME the name is not always present
                 prefix, suffix = filter.channel_links[input_key].split(":")
                 if prefix == old_name:
                     filter.channel_links[input_key] = "{}:{}".format(name, suffix)

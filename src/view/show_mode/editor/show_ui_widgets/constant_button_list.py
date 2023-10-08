@@ -65,6 +65,7 @@ class ConstantNumberButtonList(UIWidget):
     def _set_value(self, new_value: int):
         self._value = new_value
         self.push_update()
+        print("Pushed update", new_value)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", str(self._value))]
@@ -94,7 +95,7 @@ class ConstantNumberButtonList(UIWidget):
             name, value = value_name_tuple.split(":")
             value = int(value)
             button = QPushButton(name, self._player_widget)
-            button.clicked.connect(lambda _value=value: self._set_value(_value))
+            button.clicked.connect(lambda checked=False, _value=value: self._set_value(_value))
             button.setMinimumWidth(max(30, len(name) * 10))
             button.setMinimumHeight(30)
             layout.addWidget(button)

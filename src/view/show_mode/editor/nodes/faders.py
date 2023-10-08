@@ -36,7 +36,7 @@ class FaderRawNode(FilterNode):
                     self._bankset_model = bs
                     break
             if not self._bankset_model:
-                column_candidate = self.filter.scene.linked_bankset.get_column(model.filter_configurations["column_id"])
+                column_candidate = self.filter.scene.linked_bankset.get_column(self.filter.filter_configurations.get("column_id"))
                 if column_candidate:
                     self.filter.filter_configurations["set_id"] = self.filter.scene.linked_bankset.id
                     self._bankset_model = self.filter.scene.linked_bankset

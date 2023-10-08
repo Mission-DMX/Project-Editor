@@ -181,7 +181,7 @@ class ShowEditorWidget(QSplitter):
                     if self._open_page_tab_widget.count() > 0:
                         self._open_page_tab_widget.setCurrentIndex(widget_index - 1)
                     self._open_page_tab_widget.removeTab(widget_index)
-                    self._opened_pages.remove(tab_widget.scene)
+                    self._opened_pages.remove(tab_widget.filter_page)
                     return
         else:
             widget = self._open_page_tab_widget.widget(scene_or_index)

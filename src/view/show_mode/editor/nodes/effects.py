@@ -13,21 +13,21 @@ class CueListNode(FilterNode):
         }, allowAddOutput=True)
 
         try:
-            mapping_from_file = model.initial_parameters["mapping"]
-            self.filter.initial_parameters["mapping"] = mapping_from_file
+            mapping_from_file = model.filter_configurations["mapping"]
+            self.filter.filter_configurations["mapping"] = mapping_from_file
             self.parse_and_add_output_channels(mapping_from_file)
         except:
-            self.filter.initial_parameters["mapping"] = ""
+            self.filter.filter_configurations["mapping"] = ""
 
         try:
-            self.filter.initial_parameters["end_handling"] = model.initial_parameters["end_handling"]
+            self.filter.filter_configurations["end_handling"] = model.filter_configurations["end_handling"]
         except:
-            self.filter.initial_parameters["end_handling"] = ""
+            self.filter.filter_configurations["end_handling"] = ""
 
         try:
-            self.filter.initial_parameters["cuelist"] = model.initial_parameters["cuelist"]
+            self.filter.filter_configurations["cuelist"] = model.filter_configurations["cuelist"]
         except:
-            self.filter.initial_parameters["cuelist"] = ""
+            self.filter.filter_configurations["cuelist"] = ""
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
         self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]

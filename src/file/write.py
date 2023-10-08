@@ -243,7 +243,7 @@ def _create_channel_link_element(channel_link: tuple[str, str], parent: ElementT
     # Some nodes have input and output named value.
     # Internally, the input is saved as 'value_in', but must be written as 'value'.
     return ElementTree.SubElement(parent, "channellink", attrib={
-        "input_channel_id": "value" if channel_link[0] == "value_in" else str(channel_link[0]),
+        "input_channel_id": str(channel_link[0]),
         "output_channel_id": str(channel_link[1])
     })
 

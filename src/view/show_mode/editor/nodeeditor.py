@@ -74,10 +74,11 @@ class NodeEditorWidget(QWidget):
                 remote_node = self._flowchart.nodes()[remote_name]
                 if not isinstance(remote_node, FilterNode):
                     logging.warning("Trying to connect node %s to non-FilterNode %s", name, remote_name)
-                remote_term = remote_node.outputs()[remote_term]
-                local_term = node.inputs()[input_channel]
+                remote_term = remote_node.outputs().get(remote_term)
+                local_term = node.inputs().get(input_channel)
                 if not isinstance(remote_term, Terminal) or not isinstance(local_term, Terminal):
-                    logging.critical("Fetched non-terminal object while trying to connect terminals")
+                    logging.critical("Fetched non-terminal object while trying to "
+                                     "connect terminals {} -> {}".format(remote_term, local_term))
                     continue
                 self._flowchart.connectTerminals(local_term, remote_term)
         self.layout().addWidget(self._flowchart.widget().chartWidget.viewDock)

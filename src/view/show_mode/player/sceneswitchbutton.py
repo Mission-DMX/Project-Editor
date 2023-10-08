@@ -7,7 +7,7 @@ from model import Scene
 from file.write import create_xml
 
 
-class SceneTransmitButton(QPushButton):
+class SceneSwitchButton(QPushButton):
     """Widget to be displayed for a scene in the show player.
     Clicking the button will transmit the board config to fish and change the active scene.
     """
@@ -23,7 +23,7 @@ class SceneTransmitButton(QPushButton):
 
     def _clicked(self):
         """Handles behaviour when scene button was clicked"""
-        transmit_to_fish(self._scene.board_configuration)
+        #transmit_to_fish(self._scene.board_configuration)
         self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene.scene_id)
 
     @property

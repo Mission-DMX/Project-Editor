@@ -3,7 +3,7 @@
 from PySide6.QtWidgets import QWidget, QGridLayout
 
 from model import BoardConfiguration, Scene
-from .scenetransmitbutton import SceneTransmitButton
+from .sceneswitchbutton import SceneSwitchButton
 from .ui_player_widget import UIPlayerWidget
 
 
@@ -12,7 +12,7 @@ class _PlaceholderWidget(QWidget):
 
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
-        self.setFixedSize(SceneTransmitButton.width, SceneTransmitButton.height)
+        self.setFixedSize(SceneSwitchButton.width, SceneSwitchButton.height)
 
 
 class ShowPlayerWidget(QWidget):
@@ -25,7 +25,7 @@ class ShowPlayerWidget(QWidget):
         self._max_columns = 10  # int(self.width() / SceneWidget.width)
         self._max_rows = 10  # int(self.height() / SceneWidget.height)
 
-        self._grid: list[SceneTransmitButton] = []
+        self._grid: list[SceneSwitchButton] = []
 
         self._board_configuration.broadcaster.scene_created.connect(self._add_scene)
         self._board_configuration.broadcaster.delete_scene.connect(self._remove_scene)
@@ -51,7 +51,7 @@ class ShowPlayerWidget(QWidget):
         Args:
             scene: Scene to be added.
         """
-        scene_widget = SceneTransmitButton(scene, self)
+        scene_widget = SceneSwitchButton(scene, self)
         self._grid.append(scene_widget)
         self._reload()
 

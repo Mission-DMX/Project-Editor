@@ -2,7 +2,7 @@
 """A scene can have multiple pages"""
 import logging
 
-from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton, QDialog, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton, QDialog, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QMouseEvent, QAction
 
@@ -26,6 +26,7 @@ class UIWidgetHolder(QWidget):
             self._child.setEnabled(True)
             self._child.setVisible(True)
         self._child.setParent(self)
+        self._label = QLabel(child.filter_id, self)
         self.update_size()
         if instance_for_editor:
             self._close_button = QPushButton("X", self)
@@ -47,8 +48,10 @@ class UIWidgetHolder(QWidget):
         self.setMinimumWidth(100)
         self.setMinimumHeight(30)
         minimum_size = self._child.layout().totalMinimumSize()
-        w = max(minimum_size.width() + 10, self.minimumWidth())
-        h = max(minimum_size.height() + 10, self.minimumHeight())
+        w = max(minimum_size.width() + 50, self.minimumWidth())
+        h = max(minimum_size.height() + 50, self.minimumHeight())
+        self._label.resize(w, 20)
+        self._label.move(10, w - 30)
         self.resize(w, h)
         self.repaint()
 

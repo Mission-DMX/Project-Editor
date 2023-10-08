@@ -20,7 +20,7 @@ class CueControlUIWidget(UIWidget):
                 self._cues.append(new_item)
 
         if filter_model:
-            cuelist_str = filter_model.initial_parameters.get("cuelist")
+            cuelist_str = filter_model.filter_configurations.get("cuelist")
             if cuelist_str:
                 cuelist_count = cuelist_str.count("$") + 1
                 while len(self._cues) < cuelist_count:
