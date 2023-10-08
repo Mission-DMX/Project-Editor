@@ -297,7 +297,7 @@ class ShowBrowser:
                     if not self._input_dialog:
                         self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
-                    self._input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
+                    self._input_dialog.textValueSelected.connect(lambda text: rename(self, page_to_rename, text))
                     self._input_dialog.setLabelText("Rename filter page '" + page_to_rename.name + "' to:")
                     self._input_dialog.setWindowTitle('Rename Filter Page')
                     self._input_dialog.open()
