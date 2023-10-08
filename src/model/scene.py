@@ -180,6 +180,13 @@ class Scene:
         self._filters.remove(f)
         self._filter_index.pop(f.filter_id)
 
+        def remove_filter_from_page(p: FilterPage):
+            p.filters.remove(f)
+            for pc in p.child_pages:
+                remove_filter_from_page(pc)
+        for p in self.pages:
+            remove_filter_from_page(p)
+
     def notify_about_filter_rename_action(self, sender: Filter, old_id: str):
         self._filter_index.pop(old_id)
         self._filter_index[sender.filter_id] = sender
