@@ -201,6 +201,8 @@ class RawDeskColumn(DeskColumn):
 
     @encoder_position.setter
     def encoder_position(self, position: int):
+        if position == self._encoder_position:
+            return
         self._encoder_position = position
         self.update()
 
@@ -237,6 +239,8 @@ class ColorDeskColumn(DeskColumn):
 
     @color.setter
     def color(self, color: ColorHSI):
+        if color == self._color:
+            return
         self._color = color
         self.update()
 
@@ -410,8 +414,8 @@ class BankSet:
     def activate(self):
         """Calling this method makes this bank set the active one.
         """
-        if BankSet._active_bank_set_id == self.id:
-            return
+        #if BankSet._active_bank_set_id == self.id:
+        #    return
         BankSet._active_bank_set_id = self.id
         BankSet._active_bank_set = self
         text = "Bank: " + self.description

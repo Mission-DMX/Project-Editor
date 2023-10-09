@@ -138,30 +138,33 @@ class NetworkManager(QtCore.QObject):
             start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
             msg = msg_bytes[start:start + msg_len]
             msg_bytes = msg_bytes[start + msg_len:]
-            match msg_type:
-                case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
-                    message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
-                    message.ParseFromString(bytes(msg))
-                    self._fish_update(message)
-                case proto.MessageTypes_pb2.MSGT_LOG_MESSAGE:
-                    message: proto.RealTimeControl_pb2.long_log_update = proto.RealTimeControl_pb2.long_log_update()
-                    message.ParseFromString(bytes(msg))
-                    self._log_fish(message)
-                case proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE:
-                    message: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change()
-                    message.ParseFromString(bytes(msg))
-                    self._button_clicked(message)
-                case proto.MessageTypes_pb2.MSGT_DESK_UPDATE:
-                    message: proto.Console_pb2.desk_update = proto.Console_pb2.desk_update()
-                    message.ParseFromString(bytes(msg))
-                    self._handle_desk_update(message)
-                case proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN:
-                    message: proto.Console_pb2.fader_column = proto.Console_pb2.fader_column()
-                    message.ParseFromString(bytes(msg))
-                    from model.control_desk import BankSet
-                    BankSet.handle_column_update_message(message)
-                case _:
-                    pass
+            try:
+                match msg_type:
+                    case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
+                        message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
+                        message.ParseFromString(bytes(msg))
+                        self._fish_update(message)
+                    case proto.MessageTypes_pb2.MSGT_LOG_MESSAGE:
+                        message: proto.RealTimeControl_pb2.long_log_update = proto.RealTimeControl_pb2.long_log_update()
+                        message.ParseFromString(bytes(msg))
+                        self._log_fish(message)
+                    case proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE:
+                        message: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change()
+                        message.ParseFromString(bytes(msg))
+                        self._button_clicked(message)
+                    case proto.MessageTypes_pb2.MSGT_DESK_UPDATE:
+                        message: proto.Console_pb2.desk_update = proto.Console_pb2.desk_update()
+                        message.ParseFromString(bytes(msg))
+                        self._handle_desk_update(message)
+                    case proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN:
+                        message: proto.Console_pb2.fader_column = proto.Console_pb2.fader_column()
+                        message.ParseFromString(bytes(msg))
+                        from model.control_desk import BankSet
+                        BankSet.handle_column_update_message(message)
+                    case _:
+                        pass
+            except:
+                print("ERROR: Failed to parse message.")
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
         """
@@ -269,6 +272,9 @@ class NetworkManager(QtCore.QObject):
         """
         if scene.linked_bankset:
             scene.linked_bankset.activate()
+            print("Activated Bankset")
+        else:
+            print("No Bankset.")
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene.scene_id)
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
         if scene.linked_bankset:
