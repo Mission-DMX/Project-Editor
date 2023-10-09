@@ -35,6 +35,32 @@ class Adapter16BitToBoolNode(FilterNode):
         self.filter.out_data_types["value"] = DataType.DT_BOOL
 
 
+class Adapter16bitToFloat(FilterNode):
+    nodeName = "8bit to Float converter"
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=52, name=name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+        self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+
+
+class Adapter8bitToFloat(FilterNode):
+    nodeName = "8bit to Float converter"
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=51, name=name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+
+
 class AdapterColorToRGBNode(FilterNode):
     """Filter to convert a color value to a rgb value."""
     nodeName = 'Color to rgb converter'
