@@ -31,7 +31,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType) # TODO Remove
-    change_active_scene: QtCore.Signal = QtCore.Signal(int)
+    change_active_scene: QtCore.Signal = QtCore.Signal(Scene)
     load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
     show_file_loaded: QtCore.Signal = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
