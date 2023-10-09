@@ -36,7 +36,7 @@ class Adapter16BitToBoolNode(FilterNode):
 
 
 class Adapter16bitToFloat(FilterNode):
-    nodeName = "8bit to Float converter"
+    nodeName = "16bit to Float converter"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=52, name=name, terminals={
