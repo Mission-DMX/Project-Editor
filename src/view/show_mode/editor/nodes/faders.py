@@ -13,9 +13,10 @@ class FaderRawNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=39, name=name, terminals={
-            'fader': {'io': 'out'},
-            'encoder': {'io': 'out'}
+            'primary': {'io': 'out'},
+            'secondary': {'io': 'out'}
         })
+
         try:
             self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
         except:
@@ -44,8 +45,8 @@ class FaderRawNode(FilterNode):
         if self._bankset_model:
             self._bankset_model.id_update_listeners.append(self)
 
-        self.filter.out_data_types["fader"] = DataType.DT_16_BIT
-        self.filter.out_data_types["encoder"] = DataType.DT_16_BIT
+        self.filter.out_data_types["primary"] = DataType.DT_16_BIT
+        self.filter.out_data_types["secondary"] = DataType.DT_16_BIT
 
     def __del__(self):
         if self._bankset_model:
