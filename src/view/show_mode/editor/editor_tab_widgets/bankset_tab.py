@@ -20,6 +20,9 @@ class BankSetTabWidget(QWidget):
         self._new_column_type_cbox.insertItems(0, ["Numbers", "Color"])
         self._new_column_type_cbox.setCurrentIndex(1)
         self._tool_bar.addWidget(self._new_column_type_cbox)
+        self._description_text_box = QLineEdit(self._tool_bar)
+        self._description_text_box.textChanged.connect(self._description_text_changed)
+        self._tool_bar.addWidget(self._description_text_box)
 
         self._bank_list = QListWidget(self)
         self._bank_list.itemClicked.connect(self._select_bank_to_edit)
@@ -48,13 +51,19 @@ class BankSetTabWidget(QWidget):
                 first_bank = False
             self._new_column_type_cbox.setEnabled(not self._bankset.is_empty)
             self._tool_bar.setEnabled(True)
+            self._description_text_box.setText(bs.description)
+            self._description_text_box.setEnabled(True)
         else:
             self._bank_edit_widget.bank = None
             self._bank_edit_widget.set_linked_bank_item(None)
             self._new_column_type_cbox.setEnabled(False)
             self._tool_bar.setEnabled(False)
+            self._description_text_box.setText("")
+            self._description_text_box.setEnabled(False)
 
     def _add_bank(self):
+        if not self._bankset:
+            return
         was_empty = self._bankset.is_empty
         b = FaderBank()
         self._bankset.add_bank(b)
@@ -90,6 +99,10 @@ class BankSetTabWidget(QWidget):
             self._bank_edit_widget.refresh_column_count()
             item.update_description_text()
             break
+
+    def _description_text_changed(self, text: str):
+        if text and self._bankset:
+            self.bankset.description = text
 
 
 class _BankItem(QListWidgetItem):
