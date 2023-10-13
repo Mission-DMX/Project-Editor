@@ -29,7 +29,8 @@ def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     Returns: True, if successfully, otherwise false with error message.
     """
     xml = create_xml(show_data)
-    copyfile(file_name, os.path.splitext(file_name)[0] + '.show_backup')
+    if os.path.exists(file_name):
+        copyfile(file_name, os.path.splitext(file_name)[0] + '.show_backup')
     with open(file_name, 'w+', encoding="UTF-8") as file:
         ElementTree.indent(xml)
         file.write(ElementTree.tostring(xml, encoding='unicode', method='xml'))
