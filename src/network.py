@@ -219,6 +219,8 @@ class NetworkManager(QtCore.QObject):
                     self._broadcaster.view_to_color.emit()
                 case proto.Console_pb2.ButtonCode.BTN_SAVE_SAVE:
                     self._broadcaster.save_button_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_PAN_COMMITSHOW:
+                    self._broadcaster.commit_button_pressed.emit()
                 case _:
                     pass
         else:

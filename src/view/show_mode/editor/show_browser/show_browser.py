@@ -71,6 +71,7 @@ class ShowBrowser:
             self.board_configuration = show
         self._input_dialog = None
         self._show.broadcaster.show_file_loaded.connect(self._refresh_all)
+        self._show.broadcaster.commit_button_pressed.connect(self._upload_showfile)
 
     def _refresh_all(self):
         self._refresh_scene_browser()
