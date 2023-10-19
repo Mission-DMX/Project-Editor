@@ -1,5 +1,9 @@
 # coding=utf-8
 """Universe filter node"""
+import logging
+
+from pyqtgraph.flowchart import Terminal
+
 from model import DataType, Filter
 from . import FilterNode
 
@@ -21,24 +25,37 @@ class UniverseNode(FilterNode):
                              allowAddInput=True)
 
         try:
-            for key in self.filter.filter_configurations:
-                self.filter.filter_configurations[key] = model.filter_configurations[key]
             if len(model.filter_configurations) == 0:
                 self.filter.filter_configurations["input_1"] = "0"
-                self.filter.filter_configurations["universe"] = self.name()[9:]
+                self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
+                self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
+            else:
+                for key in self.filter.filter_configurations.keys():
+                    if self.filter != model:
+                        self.filter.filter_configurations[key] = model.filter_configurations[key]
+                    if key != "universe":
+                        input_channel = key
+                        self.filter.in_data_types[input_channel] = DataType.DT_8_BIT
+                        if key not in self.terminals.keys():
+                            term = super().addInput(key)
+                        else:
+                            t: Terminal = self.terminals[key]
+                            if not t.isInput():
+                                logging.error("Universe output filter '{}' has corrupted terminal '{}'."
+                                              .format(self.name(), input_channel))
         except:
             self.filter.filter_configurations["input_1"] = "0"
-            self.filter.filter_configurations["universe"] = self.name()[9:]
-        for index in range(1, 513):
-            self.filter.in_data_types[f"input_{index}"] = DataType.DT_8_BIT
+            self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
+            self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
 
     def addInput(self, name="input", **args):
         """Allows to add up to 512 input channels."""
         next_input = len(self.inputs())
         if next_input >= 512:
             return
-        input_channel = f"input_{next_input + 1}"
+        input_channel = f"{name}_{next_input + 1}"
         self.filter.filter_configurations[input_channel] = str(next_input)
+        self.filter.in_data_types[input_channel] = DataType.DT_8_BIT
         term = super().addInput(input_channel, **args)
         universe_id = int(self._filter.filter_configurations["universe"])
         universe = self._filter.scene.board_configuration.universe(universe_id)

@@ -26,7 +26,8 @@ def _load_show_file(file_name: str, show_data: BoardConfiguration):
     Args:
         file_name: Path to the file to be loaded
     """
-    read_document(file_name, show_data)
+    if read_document(file_name, show_data):
+        show_data.broadcaster.show_file_loaded.emit()
 
 
 def _save_show_file(file_name: str, show_data: BoardConfiguration):
@@ -35,8 +36,9 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration):
     Args:
         file_name: File in which the config is saved.
     """
-    xml = create_xml(show_data)
-    write_document(file_name, xml)
+    if write_document(file_name, show_data):
+        if show_data.file_path != file_name:
+            show_data.file_path = file_name
 
 
 def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration):

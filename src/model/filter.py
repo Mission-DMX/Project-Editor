@@ -62,6 +62,7 @@ class Filter:
         self._channel_links: dict[str, str] = {}
         self._initial_parameters: dict[str, str] = {}
         self._filter_configurations: dict[str, str] = {}
+        self._gui_update_keys: dict[str, DataType | list[str]] = {}
         self._in_data_types: dict[str, DataType] = {}
         self._out_data_types: dict[str, DataType] = {}
 
@@ -77,7 +78,10 @@ class Filter:
 
     @filter_id.setter
     def filter_id(self, id_):
+        old_id: str = self._filter_id
         self._filter_id = id_
+        if self.scene:
+            self.scene.notify_about_filter_rename_action(self, old_id)
 
     @property
     def filter_type(self) -> int:
@@ -85,7 +89,7 @@ class Filter:
         return self._filter_type
 
     @property
-    def pos(self) -> list[float] | None:
+    def pos(self) -> tuple[float] | None:
         """The position of the filter node inside the ui"""
         return self._pos
 
@@ -117,3 +121,17 @@ class Filter:
     def out_data_types(self) -> dict[str, DataType]:
         """Dict mapping output channel names to their data types"""
         return self._out_data_types
+
+    @property
+    def gui_update_keys(self) -> dict[str, DataType | str]:
+        return self._gui_update_keys
+
+    def copy(self, new_scene: "Scene" = None, new_id: str = None) -> "Filter":
+        f = Filter(new_scene if new_scene else self.scene, self._filter_id if not new_id else new_id, self._filter_type, self._pos)
+        f._channel_links = self.channel_links.copy()
+        f._initial_parameters = self._initial_parameters.copy()
+        f._filter_configurations = self._filter_configurations.copy()
+        f._in_data_types = self._in_data_types.copy()
+        f._out_data_types = self._out_data_types.copy()
+        f._gui_update_keys = self._gui_update_keys.copy()
+        return f

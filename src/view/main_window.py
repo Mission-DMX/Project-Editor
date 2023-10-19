@@ -4,7 +4,7 @@
 from PySide6 import QtWidgets, QtGui
 
 from Style import Style
-from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog
+from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog, _save_show_file
 from proto.RealTimeControl_pb2 import RunMode
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
@@ -15,7 +15,7 @@ from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patch_mode.patch_mode import PatchMode
-from view.show_mode import ShowManagerWidget, ShowPlayerWidget
+from view.show_mode import ShowEditorWidget, ShowPlayerWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -37,12 +37,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector: NetworkManager = NetworkManager(self)
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
+        from model.ui_configuration import setup_network_manager
+        setup_network_manager(self._fish_connector)
+
         #from file.read import read_document #todo remove me xxx
         #read_document("/home/fish/Desktop/debug/workinprogress.xml",self._board_configuration)
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)),
-            ("Editor Mode", MainWidget(ShowManagerWidget(self._board_configuration, self._broadcaster, self), self),
+            ("Editor Mode", MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
              lambda: self._broadcaster.view_to_file_editor.emit()),
             ("Show Mode", MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
              lambda: self._broadcaster.view_to_show_player.emit()),
@@ -71,6 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster.select_column_id.connect(self._show_column_dialog)
         self._broadcaster.view_to_color.connect(self._is_column_dialog)
         self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
+        self._broadcaster.save_button_pressed.connect(self._save_show)
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -108,7 +112,8 @@ class MainWindow(QtWidgets.QMainWindow):
                      ["Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)],
                      ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]],
             "Show": [["Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)],
-                     ["Save Showfile", lambda: show_save_showfile_dialog(self, self._board_configuration)]]
+                     ["Save Showfile", self._save_show],
+                     ["Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)]]
         }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
@@ -179,8 +184,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """Dialog modify tho selected Column"""
         active_bank_set = BankSet.active_bank_set()
         column = active_bank_set.get_column(index)
-        if not active_bank_set.activ_column == column:
-            if active_bank_set.activ_column:
+        if not active_bank_set.active_column == column:
+            if active_bank_set.active_column:
                 self._broadcaster.view_change_colum_select.emit()
             active_bank_set.set_active_column(column)
             if isinstance(column, ColorDeskColumn):
@@ -193,6 +198,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
             return
-        if not BankSet.active_bank_set().activ_column:
+        if not BankSet.active_bank_set().active_column:
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
+
+    def _save_show(self):
+        if self._board_configuration:
+            if self._board_configuration.file_path:
+                _save_show_file(self._board_configuration.file_path, self._board_configuration)
+            else:
+                show_save_showfile_dialog(self, self._board_configuration)

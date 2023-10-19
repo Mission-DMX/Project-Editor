@@ -5,23 +5,34 @@ Usage:
     xml = createXML(board_configuration)
     writeDocument("ShowFiles/show_file.xml", xml)
 """
+import logging
+import os
+from shutil import copyfile
 from xml.etree import ElementTree
 
-from model import Filter, Scene, Universe, BoardConfiguration
+from model import Filter, Scene, Universe, BoardConfiguration, UIPage
+from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn
+from model.patching_channel import PatchingChannel
+from model.scene import FilterPage
 from proto import UniverseControl_pb2
+from proto.Console_pb2 import lcd_color
 
 
-def write_document(file_name: str, xml: ElementTree.Element) -> bool:
+def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     """Writes the xml element to the specified file.
     See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information.
     
     Args:
         file_name: The (path and) file to which the xml element should be written.
-        xml: The xml element to write
+        show_data: The show to save
         
     Returns: True, if successfully, otherwise false with error message.
     """
+    xml = create_xml(show_data)
+    if os.path.exists(file_name):
+        copyfile(file_name, os.path.splitext(file_name)[0] + '.show_backup')
     with open(file_name, 'w+', encoding="UTF-8") as file:
+        ElementTree.indent(xml)
         file.write(ElementTree.tostring(xml, encoding='unicode', method='xml'))
     return True
     # try:
@@ -30,6 +41,88 @@ def write_document(file_name: str, xml: ElementTree.Element) -> bool:
     # except IOError:
     #    print(f"Could not save {file_name}")
     #    return False
+
+
+def _add_filter_page_to_element(scene_element: ElementTree.Element, page: FilterPage, parent_page: FilterPage | None):
+    item = ElementTree.SubElement(scene_element, "filterpage", attrib={
+        'name': page.name,
+        'parent': parent_page.name if parent_page else ''
+    })
+    for f in page.filters:
+        filter_id_item = ElementTree.SubElement(item, "filterid", attrib={})
+        filter_id_item.text = f.filter_id
+    for cp in page.child_pages:
+        _add_filter_page_to_element(scene_element, cp, page)
+
+
+def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage):
+    page_element = ElementTree.SubElement(scene_element, "uipage", attrib={
+        'title': ""
+    })
+    for widget in ui_page.widgets:
+        widget_element = ElementTree.SubElement(page_element, "widget", attrib={
+            'posX': str(widget.position[0]),
+            'posY': str(widget.position[1]),
+            'sizeW': str(widget.size[0]),
+            'sizeH': str(widget.size[1]),
+            'filterID': str(widget.filter_id),
+            'variante': str(widget.get_variante())
+        })
+        for k, v in widget.configuration.items():
+            config_element = ElementTree.SubElement(widget_element, "configurationEntry", attrib={
+                'name': str(k),
+                'value': str(v)
+            })
+
+
+def lcd_color_to_string(display_color: lcd_color) -> str:
+    match display_color:
+        case lcd_color.white:
+            return 'white'
+        case lcd_color.red:
+            return 'red'
+        case lcd_color.blue:
+            return 'blue'
+        case lcd_color.cyan:
+            return 'cyan'
+        case lcd_color.black:
+            return 'black'
+        case lcd_color.green:
+            return 'green'
+        case lcd_color.magenta:
+            return 'magenta'
+        case lcd_color.yellow:
+            return 'yellow'
+        case _:
+            return 'white'
+
+
+def _create_scene_bankset(root_element: ElementTree.Element, scene_element: ElementTree.Element, scene: Scene):
+    bs_element = ElementTree.SubElement(root_element, "bankset", attrib={
+        'linked_by_default': "true",
+        'id': str(scene.linked_bankset.id)
+    })
+    for bank in scene.linked_bankset.banks:
+        bank_item = ElementTree.SubElement(bs_element, "bank")
+        for col in bank.columns:
+            if isinstance(col, ColorDeskColumn):
+                column_item = ElementTree.SubElement(bank_item, "hslcolumn", attrib={
+                    'color': col.color.format_for_filter()
+                })
+            elif isinstance(col, RawDeskColumn):
+                column_item = ElementTree.SubElement(bank_item, "rawcolumn", attrib={
+                    'secondary_text_line': col.secondary_text_line,
+                    'fader_position': str(col.fader_position),
+                    'encoder_position': str(col.encoder_position)
+                })
+            else:
+                logging.error("Unsupported desk column type while saving file.")
+                continue
+            column_item.attrib['id'] = str(col.id)
+            column_item.attrib['display_name'] = str(col.display_name)
+            column_item.attrib['top_line_inverted'] = "true" if col.top_display_line_inverted else "false"
+            column_item.attrib['bottom_line_inverted'] = "true" if col.bottom_display_line_inverted else "false"
+            column_item.attrib['lcd_color'] = lcd_color_to_string(col.display_color)
 
 
 def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
@@ -47,6 +140,9 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
     for scene in board_configuration.scenes:
         scene_element = _create_scene_element(scene=scene, parent=root)
 
+        if scene.linked_bankset:
+            _create_scene_bankset(root, scene_element, scene)
+
         for filter_ in scene.filters:
 
             filter_element = _create_filter_element(filter_=filter_, parent=scene_element)
@@ -60,6 +156,12 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
             for filter_configuration in filter_.filter_configurations.items():
                 _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
+        for page in scene.pages:
+            _add_filter_page_to_element(scene_element, page, None)
+
+        for ui_page in scene.ui_pages:
+            _add_ui_page_to_element(scene_element, ui_page)
+
     for universe in board_configuration.universes:
         universe_element = _create_universe_element(universe=universe, parent=root)
 
@@ -71,6 +173,8 @@ def create_xml(board_configuration: BoardConfiguration) -> ElementTree.Element:
             _create_ftdi_location_element(ftdi_location=proto.ftdi_dongle, parent=universe_element)
         else:
             _create_physical_location_element(physical=proto.physical_location, parent=universe_element)
+
+        _create_patching_element(patching=universe.patching, parent=universe_element)
 
     for device in board_configuration.devices:
         _create_device_element(device=device, parent=root)
@@ -90,13 +194,14 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
        ...
     </board_configuration>
     """
+    # TODO we're not filling in the version attribute
     return ElementTree.Element("bord_configuration", attrib={
         "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "show_name": str(board_configuration.show_name),
         "default_active_scene": str(board_configuration.default_active_scene),
-        "notes": str(board_configuration.notes)
+        "notes": str(board_configuration.notes),
     })
 
 
@@ -107,10 +212,13 @@ def _create_scene_element(scene: Scene, parent: ElementTree.Element) -> ElementT
       ...
     </scene>
     """
-    return ElementTree.SubElement(parent, "scene", attrib={
+    se =  ElementTree.SubElement(parent, "scene", attrib={
         "id": str(scene.scene_id),
         "human_readable_name": str(scene.human_readable_name)
     })
+    if scene.linked_bankset:
+        se.attrib['linkedBankset'] = str(scene.linked_bankset.id)
+    return se
 
 
 def _create_filter_element(filter_: Filter, parent: ElementTree.Element) -> ElementTree.Element:
@@ -136,7 +244,7 @@ def _create_channel_link_element(channel_link: tuple[str, str], parent: ElementT
     # Some nodes have input and output named value.
     # Internally, the input is saved as 'value_in', but must be written as 'value'.
     return ElementTree.SubElement(parent, "channellink", attrib={
-        "input_channel_id": "value" if channel_link[0] == "value_in" else str(channel_link[0]),
+        "input_channel_id": str(channel_link[0]),
         "output_channel_id": str(channel_link[1])
     })
 
@@ -218,6 +326,22 @@ def _create_ftdi_location_element(ftdi_location: UniverseControl_pb2.Universe.US
         "device_name": str(ftdi_location.device_name),
         "serial_identifier": str(ftdi_location.serial)
     })
+
+
+def _create_patching_element(patching: list[PatchingChannel], parent: ElementTree.Element):
+    patching_element = ElementTree.SubElement(parent, "patching")
+    index: int = 0
+    while index < len(patching):
+        channel = patching[index]
+        if not channel.fixture.name == "Empty":
+            ElementTree.SubElement(patching_element, "fixture", attrib={
+                "start": str(channel.address),
+                "fixture_file": channel.fixture.fixture_file,
+                "mode": str(channel.fixture.mode_index)
+            })
+            index += len(channel.fixture.mode["channels"])
+        else:
+            index += 1
 
 
 def _create_device_element(device, parent: ElementTree.Element) -> ElementTree.Element:

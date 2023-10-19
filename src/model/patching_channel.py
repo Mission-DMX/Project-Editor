@@ -17,7 +17,9 @@ class PatchingChannel(QtCore.QObject):
         if 0 > channel_address or channel_address > 511:
             raise ValueError(f"Tried to create a channel with address {channel_address}")
         self._address: int = channel_address
-        self._fixture: UsedFixture = UsedFixture("Empty", "", set(), "", Mode(channels=["none"], shortName="", name=""))
+        parent_universe_id = -1
+        self._fixture: UsedFixture = UsedFixture("Empty", "", set(), "", Mode(channels=["none"], shortName="", name=""),
+                                                 "", 0, parent_universe_id)
         self._fixture_channel: int = 0
         self._color: str = color
         self._ignore_black = True
@@ -34,7 +36,14 @@ class PatchingChannel(QtCore.QObject):
 
     @fixture.setter
     def fixture(self, fixture: UsedFixture):
+        if self._fixture:
+            try:
+                self._fixture.channels.remove(self)
+            except ValueError:
+                pass
         self._fixture = fixture
+        if self._fixture:
+            self._fixture.channels.append(self)
         self.updated_fixture.emit()
 
     @property

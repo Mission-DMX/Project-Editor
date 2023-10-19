@@ -1,19 +1,22 @@
 # coding=utf-8
 """Column fader filter nodes"""
 from model import DataType
+from model.control_desk import BankSet, BanksetIDUpdateListener
 
 from . import FilterNode
 
 
 class FaderRawNode(FilterNode):
     """Filter to represent any filter fader"""
+
     nodeName = "Raw"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=39, name=name, terminals={
-            'fader': {'io': 'out'},
-            'encoder': {'io': 'out'}
+            'primary': {'io': 'out'},
+            'secondary': {'io': 'out'}
         })
+
         try:
             self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
         except:
@@ -23,8 +26,34 @@ class FaderRawNode(FilterNode):
         except:
             self.filter.filter_configurations["column_id"] = ""
 
-        self.filter.out_data_types["fader"] = DataType.DT_16_BIT
-        self.filter.out_data_types["encoder"] = DataType.DT_16_BIT
+        # TODO search for linked bankset and register id update watcher
+        set_id = self.filter.filter_configurations["set_id"]
+        if self.filter.scene.linked_bankset.id == set_id:
+            self._bankset_model = self.filter.scene.linked_bankset
+        else:
+            self._bankset_model = None
+            for bs in BankSet.linked_bank_sets():
+                if bs.id == set_id:
+                    self._bankset_model = bs
+                    break
+            if not self._bankset_model:
+                column_candidate = self.filter.scene.linked_bankset.get_column(self.filter.filter_configurations.get("column_id"))
+                if column_candidate:
+                    self.filter.filter_configurations["set_id"] = self.filter.scene.linked_bankset.id
+                    self._bankset_model = self.filter.scene.linked_bankset
+
+        if self._bankset_model:
+            self._bankset_model.id_update_listeners.append(self)
+
+        self.filter.out_data_types["primary"] = DataType.DT_16_BIT
+        self.filter.out_data_types["secondary"] = DataType.DT_16_BIT
+
+    def __del__(self):
+        if self._bankset_model:
+            self._bankset_model.id_update_listeners.remove(self)
+
+    def notify_on_new_id(self, new_id: str):
+        self.filter.filter_configurations["set_id"] = new_id
 
 
 class FaderHSINode(FilterNode):

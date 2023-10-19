@@ -10,7 +10,7 @@ from model.patching_universe import PatchingUniverse
 from view.dialogs.patching_dialog import PatchingDialog
 
 from .device import Device
-from .scene import Scene
+from .scene import Scene, FilterPage
 from .universe import Universe
 
 
@@ -31,19 +31,25 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType) # TODO Remove
-    change_active_scene: QtCore.Signal = QtCore.Signal(int)
+    change_active_scene: QtCore.Signal = QtCore.Signal(Scene)
     load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
+    show_file_loaded: QtCore.Signal = QtCore.Signal()
+    show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
     ################################################################
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
-    board_configuration_loaded: QtCore.Signal = QtCore.Signal()
+    board_configuration_loaded: QtCore.Signal = QtCore.Signal(str)
     scene_created: QtCore.Signal = QtCore.Signal(Scene)
+    scene_open_in_editor_requested: QtCore.Signal = QtCore.Signal(FilterPage)
+    bankset_open_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
+    uipage_opened_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
     delete_scene: QtCore.Signal = QtCore.Signal(Scene)
     delete_universe: QtCore.Signal = QtCore.Signal(Universe)
     device_created: QtCore.Signal = QtCore.Signal(Device)
     delete_device: QtCore.Signal = QtCore.Signal(Device)
+    fixture_patched: QtCore.Signal = QtCore.Signal()
     ################################################################
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()
     view_patching: QtCore.Signal = QtCore.Signal()
@@ -67,6 +73,8 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     view_to_console_mode: QtCore.Signal = QtCore.Signal()
     ################################################################
+    save_button_pressed: QtCore.Signal = QtCore.Signal()
+    commit_button_pressed: QtCore.Signal = QtCore.Signal()
     jogwheel_rotated_left: QtCore.Signal = QtCore.Signal()
     jogwheel_rotated_right: QtCore.Signal = QtCore.Signal()
     desk_media_rev_pressed: QtCore.Signal = QtCore.Signal()

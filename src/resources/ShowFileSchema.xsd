@@ -1,179 +1,349 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<schema targetNamespace="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile">
+<schema targetNamespace="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile" elementFormDefault="qualified"
+        xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile"
+>
 
     <complexType name="BordConfiguration">
-    	<sequence>
-    		<element name="scene" type="tns:Scene" maxOccurs="unbounded" minOccurs="1"></element>
-    		<element name="device" maxOccurs="unbounded" type="tns:Device" minOccurs="0"></element>
-    		<element name="universe" maxOccurs="unbounded" type="tns:Universe" minOccurs="0">
-    			<annotation>
-    				<documentation>The universe option will be updated by the real time application. It can to be configured using protobuffs though.</documentation>
-    			</annotation>
+        <choice maxOccurs="unbounded" minOccurs="0">
+            <element name="scene" type="tns:Scene" maxOccurs="unbounded" minOccurs="1"></element>
+            <element name="device" maxOccurs="unbounded" type="tns:Device" minOccurs="0"></element>
+            <element name="universe" maxOccurs="unbounded" type="tns:Universe" minOccurs="0">
+                <annotation>
+                    <documentation>The universe option will be updated by the real time application. It can to be
+                        configured using protobuffs though.
+                    </documentation>
+                </annotation>
             </element>
             <element name="uihint" type="tns:KeyValuePair" maxOccurs="unbounded" minOccurs="0"></element>
-    	</sequence>
-    	<attribute name="show_name" type="string">
-    		<annotation>
-    			<documentation>
-    				A human readable Name of the show
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="default_active_scene" type="int">
-    		<annotation>
-    			<documentation>
-    				The ID of the scene to start at first startup.
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="notes" type="string">
-    		<annotation>
-    			<documentation>A human readable description of the show file or notes that can be viewed by the operator. This attribute is not used by the real time software.</documentation>
-    		</annotation>
+            <element name="bankset" type="tns:BankSet" maxOccurs="unbounded" minOccurs="0">
+              <annotation>
+                <documentation>This field defines the non temporary bank sets</documentation>
+              </annotation>
+            </element>
+        </choice>
+        <attribute name="show_name" type="string">
+            <annotation>
+                <documentation>
+                    A human-readable Name of the show
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="default_active_scene" type="int">
+            <annotation>
+                <documentation>
+                    The ID of the scene to start at first startup.
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="notes" type="string">
+            <annotation>
+                <documentation>A human-readable description of the show file or notes that can be viewed by the
+                    operator. This attribute is not used by the real time software.
+                </documentation>
+            </annotation>
         </attribute>
     </complexType>
 
     <complexType name="Filter">
         <annotation>
-        	<documentation>A Filter object is used to construct a filter in the processing chain. It may refer to an input filter, a processing filter or an output filter.</documentation>
+            <documentation>A Filter object is used to construct a filter in the processing chain. It may refer to an
+                input filter, a processing filter or an output filter.
+            </documentation>
         </annotation>
-        <sequence>
-        	<annotation>
-        		<documentation>
-        			This sequence specifies the linking of output
-        			channels to this filters input channels.
-        		</documentation>
-        	</annotation>
-        	<element name="channellink" minOccurs="0" maxOccurs="unbounded" type="tns:ChannelLink"></element>
-        	<element name="filterConfiguration" minOccurs="0"
-        		maxOccurs="unbounded" type="tns:KeyValuePair">
-        		<annotation>
-        			<documentation>
-        				The static filter properties (used in
-        				construction)
-        			</documentation>
-        		</annotation>
-        	</element>
-        	<element name="initialParameters" minOccurs="0" maxOccurs="unbounded" type="tns:KeyValuePair">
-        		<annotation>
-        			<documentation>The initial filter parameters. Parameters can be used to set data from the non real time application.
-These should only be used if strictly nessessary as updating them is very expensive.
-They can be used to implement UI controls on the touch screens besides scene switching though.</documentation>
-        		</annotation>
+        <choice maxOccurs="unbounded" minOccurs="0">
+            <annotation>
+                <documentation>
+                    This sequence specifies the linking of output
+                    channels to this filters input channels.
+                </documentation>
+            </annotation>
+            <element name="channellink" minOccurs="0" maxOccurs="unbounded" type="tns:ChannelLink"></element>
+            <element name="filterConfiguration" minOccurs="0"
+                     maxOccurs="unbounded" type="tns:KeyValuePair">
+                <annotation>
+                    <documentation>
+                        The static filter properties (used in
+                        construction)
+                    </documentation>
+                </annotation>
             </element>
-        </sequence>
+            <element name="initialParameters" minOccurs="0" maxOccurs="unbounded" type="tns:KeyValuePair">
+                <annotation>
+                    <documentation>The initial filter parameters. Parameters can be used to set data from the non real
+                        time application.
+                        These should only be used if strictly nessessary as updating them is very expensive.
+                        They can be used to implement UI controls on the touch screens besides scene switching though.
+                    </documentation>
+                </annotation>
+            </element>
+        </choice>
         <attribute name="type" type="int" use="required">
-    		<annotation>
-    			<documentation>The type contains the type ID of the filter (for example a sequence or shiftregister).</documentation>
-    		</annotation></attribute>
-    	<attribute name="id" type="string" use="required">
-    		<annotation>
-    			<documentation>The ID is used to query this filter during scene construction (to the filters output to the inputs of other filters). It must not contain colons.</documentation>
+            <annotation>
+                <documentation>The type contains the type ID of the filter (for example a sequence or shiftregister).
+                </documentation>
             </annotation>
         </attribute>
-		<attribute name="pos" type="string" use="required">
-    		<annotation>
-    			<documentation>Filter node position inside the editor ui.</documentation>
+        <attribute name="id" type="string" use="required">
+            <annotation>
+                <documentation>The ID is used to query this filter during scene construction (to the filters output to
+                    the inputs of other filters). It must not contain colons.
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="pos" type="string" use="required">
+            <annotation>
+                <documentation>Filter node position inside the editor ui.</documentation>
             </annotation>
         </attribute>
     </complexType>
 
     <complexType name="Scene">
         <annotation>
-        	<documentation>A scene contains the filter chain description.</documentation>
+            <documentation>A scene contains the filter chain description.</documentation>
         </annotation>
         <sequence>
-        	<element name="filter" maxOccurs="unbounded" type="tns:Filter"></element>
+            <element name="filter" minOccurs="0" maxOccurs="unbounded" type="tns:Filter"></element>
+            <element name="filterpage" minOccurs="0" maxOccurs="unbounded" type="tns:FilterPage"></element>
+            <element name="uipage" minOccurs="0" maxOccurs="unbounded" type="tns:UIPage"></element>
         </sequence>
         <attribute name="human_readable_name" type="string">
-    		<annotation>
-    			<documentation>A human readable name for the scene</documentation>
-    		</annotation>
+            <annotation>
+                <documentation>A human-readable name for the scene</documentation>
+            </annotation>
         </attribute>
-    	<attribute name="id" type="int">
-    		<annotation>
-    			<documentation>The internal ID of the scene used for reference and for communication with other bords. It must be unique.</documentation>
-    		</annotation>
+        <attribute name="id" type="int">
+            <annotation>
+                <documentation>The internal ID of the scene used for reference and for communication with other bords.
+                    It must be unique.
+                </documentation>
+            </annotation>
+        </attribute>
+	<attribute name="linkedBankset" type="string" use="optional">
+	    <annotation>
+                <documentation>The ID of a previously registered bank set</documentation>
+            </annotation>
+	</attribute>
+    </complexType>
+
+    <complexType name="FilterPage">
+        <annotation>
+            <documentation>A filter page provides a view to the filters of a scene.</documentation>
+        </annotation>
+        <sequence>
+            <element name="filterid" minOccurs="0" maxOccurs="unbounded" type="string">
+                <annotation>
+                    <documentation>The filters in this page, identified by their id.</documentation>
+                </annotation>
+            </element>
+        </sequence>
+        <attribute name="name" type="string">
+            <annotation>
+                <documentation>A unique human-readable name of the filter page</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="parent" type="string">
+            <annotation>
+                <documentation>The name of the parent filter page. Leave empty if the parent is the scene.</documentation>
+            </annotation>
         </attribute>
     </complexType>
 
+    <complexType name="UIPage">
+        <annotation>
+            <documentation>A UI page contains the widgets that are used to perform advanced control while the show is running.</documentation>
+        </annotation>
+        <sequence>
+            <element name="widget" minOccurs="0" maxOccurs="unbounded" type="tns:UIWidget">
+                <annotation>
+                    <documentation>The widgets displayed in the page while the scene is active.</documentation>
+                </annotation>
+            </element>
+        </sequence>
+        <attribute name="title" type="string">
+            <annotation>
+                <documentation>The title of the page that will be displayed on top of the mapped monitor.</documentation>
+            </annotation>
+        </attribute>
+    </complexType>
+
+    <complexType name="UIWidget">
+        <annotation>
+            <documentation>A UI page contains the widgets that are used to perform advanced control while the show is running.</documentation>
+        </annotation>
+        <sequence>
+            <element name="configurationEntry" minOccurs="0" maxOccurs="unbounded" type="tns:KeyValuePair">
+                <annotation>
+                    <documentation>The key-value-pairs defining the widgets configuration dict property.</documentation>
+                </annotation>
+            </element>
+        </sequence>
+        <attribute name="posX" type="int">
+            <annotation>
+                <documentation>The X coordinate of the widgets position on the page.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="posY" type="int">
+            <annotation>
+                <documentation>The Y coordinate of the widgets position on the page.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="sizeW" type="int">
+            <annotation>
+                <documentation>The width of the widgets on the page.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="sizeH" type="int">
+            <annotation>
+                <documentation>The height of the widgets on the page.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="filterID" type="string">
+            <annotation>
+                <documentation>The ID of the filter to map to.</documentation>
+            </annotation>
+        </attribute>
+        <attribute name="variante" type="string">
+            <annotation>
+                <documentation>In case there are multiple possible widgets for the provided filter type, this hint will be used.</documentation>
+            </annotation>
+        </attribute>
+    </complexType>
+
+    <complexType name="BankSet">
+	<annotation>
+		<documentation>
+			A bank set that should be available with the show file. This won't be loaded by fish but needs to be managed by the
+			GUI as the GUI will also manage additional temporary bank sets.
+		</documentation>
+	</annotation>
+	<sequence>
+		<element name="bank" minOccurs="0" maxOccurs="unbounded">
+			<complexType>
+				<choice maxOccurs="unbounded" minOccurs="0">
+					<element name="hslcolumn" maxOccurs="unbounded" minOccurs="0">
+						<complexType>
+							<attribute name="id" type="string" use="required"></attribute>
+							<attribute name="display_name" type="string" use="required"></attribute>
+							<attribute name="top_line_inverted" type="boolean" use="optional"></attribute>
+							<attribute name="bottom_line_inverted" type="boolean" use="optional"></attribute>
+							<attribute name="lcd_color" type="string" use="optional"><!-- TODO use choice type--></attribute>
+							<attribute name="color" type="string" use="required"><!-- TODO introduce format regex for syntax check--></attribute>
+						</complexType>
+					</element>
+					<element name="rawcolumn" maxOccurs="unbounded" minOccurs="0">
+						<complexType>
+							<attribute name="id" type="string" use="required"></attribute>
+							<attribute name="display_name" type="string" use="required"></attribute>
+							<attribute name="secondary_text_line" type="string" use="required"></attribute>
+							<attribute name="top_line_inverted" type="boolean" use="optional"></attribute>
+							<attribute name="bottom_line_inverted" type="boolean" use="optional"></attribute>
+							<attribute name="lcd_color" type="string" use="optional"><!-- TODO use choice type--></attribute>
+							<attribute name="fader_position" type="int" use="required"><!-- TODO use simple type with minInclusive and maxInclusive --></attribute>
+							<attribute name="encoder_position" type="int" use="required"><!-- TODO use simple type with minInclusive and maxInclusive --></attribute>
+						</complexType>
+					</element>
+				</choice>
+			</complexType>
+		</element>
+	</sequence>
+	<attribute name="linked_by_default" type="boolean" use="optional">
+		<annotation>
+			<documentation>If this attribute is obmitted or set to true, the bank set will be linked with fish by default.</documentation>
+		</annotation>
+	</attribute>
+	<attribute name="id" type="string" use="optional">
+		<annotation>
+			<documentation>If provided the bank set will be created with this id.</documentation>
+		</annotation>
+	</attribute>
+</complexType>
+
     <complexType name="ChannelLink">
         <annotation>
-        	<documentation>A Channel link is used to register the pointer of an output channel with an input channel of the current filter</documentation>
+            <documentation>A Channel link is used to register the pointer of an output channel with an input channel of
+                the current filter
+            </documentation>
         </annotation>
-    	<attribute name="input_channel_id" type="string" use="required">
-    		<annotation>
-    			<documentation>The input channel id to register the pointer of the previous filters output with.</documentation>
-    		</annotation>
+        <attribute name="input_channel_id" type="string" use="required">
+            <annotation>
+                <documentation>The input channel id to register the pointer of the previous filters output with.
+                </documentation>
+            </annotation>
         </attribute>
-    	<attribute name="output_channel_id" type="string" use="required">
-    		<annotation>
-    			<documentation>This id is used to fetch the output channel pointer. It's syntax is &lt;filter_id&gt;:&lt;channel_id&gt;. For example move_head_control1:pan</documentation>
-    		</annotation>
+        <attribute name="output_channel_id" type="string" use="required">
+            <annotation>
+                <documentation>This id is used to fetch the output channel pointer. It's syntax is &lt;filter_id&gt;:&lt;channel_id&gt;.
+                    For example move_head_control1:pan
+                </documentation>
+            </annotation>
         </attribute>
     </complexType>
 
     <complexType name="Universe">
-    	<annotation>
-    		<documentation>
-    			A universe contains the routing information for the
-    			devices.
-    		</documentation>
-    	</annotation>
-    	<choice>
-    		<element name="physical_location" type="int">
-    			<annotation>
-    				<documentation>
-    					Route the universe to one of the physical
-    					outputs of the desk
-    				</documentation>
-    			</annotation>
-    		</element>
-    		<element name="artnet_location" type="tns:ArtnetLocation"></element>
-            <element name="ftdi_location" type="tns:FTDILocation"></element>
-    	</choice>
-    	<attribute name="name" type="string">
-    		<annotation>
-    			<documentation>
-    				A human readable name of the universe. It is only
-    				relevant to the operator but not to the real time
-    				application.
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="description" type="string">
-    		<annotation>
-    			<documentation>
-    				A human readable description of the universe. It is
-    				only relevant to the operator but not to the real
-    				time application.
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="id" type="int" use="required">
-    		<annotation>
-    			<documentation>
-    				The id used to identify the universe.
-    			</documentation>
-    		</annotation>
-    	</attribute>
+        <annotation>
+            <documentation>
+                A universe contains the routing information for the
+                devices.
+            </documentation>
+        </annotation>
+        <sequence>
+            <choice>
+                <element name="physical_location" type="int">
+                    <annotation>
+                        <documentation>
+                            Route the universe to one of the physical
+                            outputs of the desk
+                        </documentation>
+                    </annotation>
+                </element>
+                <element name="artnet_location" type="tns:ArtnetLocation"></element>
+                <element name="ftdi_location" type="tns:FTDILocation"></element>
+            </choice>
+            <element name="patching" type="tns:Patching"></element>
+        </sequence>
+
+        <attribute name="name" type="string">
+            <annotation>
+                <documentation>
+                    A human-readable name of the universe. It is only
+                    relevant to the operator but not to the real time
+                    application.
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="description" type="string">
+            <annotation>
+                <documentation>
+                    A human-readable description of the universe. It is
+                    only relevant to the operator but not to the real
+                    time application.
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="id" type="int" use="required">
+            <annotation>
+                <documentation>
+                    The id used to identify the universe.
+                </documentation>
+            </annotation>
+        </attribute>
     </complexType>
 
     <complexType name="ArtnetLocation">
-    	<attribute name="ip_address" type="string" use="required">
-    		<annotation>
-    			<documentation>The IPv4 or IPv6 address of the stage box</documentation>
-    		</annotation>
+        <attribute name="ip_address" type="string" use="required">
+            <annotation>
+                <documentation>The IPv4 or IPv6 address of the stage box</documentation>
+            </annotation>
         </attribute>
-    	<attribute name="udp_port" type="int" use="required">
-    		<annotation>
-    			<documentation>The udp port the stage box listens on</documentation>
-    		</annotation>
+        <attribute name="udp_port" type="int" use="required">
+            <annotation>
+                <documentation>The udp port the stage box listens on</documentation>
+            </annotation>
         </attribute>
-    	<attribute name="device_universe_id" type="int" use="required">
-    		<annotation>
-    			<documentation>The configured universe id on the stage box</documentation>
-    		</annotation>
+        <attribute name="device_universe_id" type="int" use="required">
+            <annotation>
+                <documentation>The configured universe id on the stage box</documentation>
+            </annotation>
         </attribute>
     </complexType>
 
@@ -185,78 +355,117 @@ They can be used to implement UI controls on the touch screens besides scene swi
     </complexType>
 
     <complexType name="Device">
-    	<attribute name="id" type="int">
-    		<annotation>
-    			<documentation>
-    				Internal id to identify the device
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="channel" type="int">
-    		<annotation>
-    			<documentation>
-    				The lowest channel utilized by the device
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="type" type="string">
-    		<annotation>
-    			<documentation>
-    				The Model / Manufacturer of the device
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="name" type="string">
-    		<annotation>
-    			<documentation>
-    				The human readable name used to refer to this device
-    				in the GUI
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="universe_id" type="int">
-    		<annotation>
-    			<documentation>
-    				The ID of the universe where the device is located.
-    			</documentation>
-    		</annotation>
-    	</attribute>
+        <attribute name="id" type="int">
+            <annotation>
+                <documentation>
+                    Internal id to identify the device
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="channel" type="int">
+            <annotation>
+                <documentation>
+                    The lowest channel utilized by the device
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="type" type="string">
+            <annotation>
+                <documentation>
+                    The Model / Manufacturer of the device
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="name" type="string">
+            <annotation>
+                <documentation>
+                    The human readable name used to refer to this device
+                    in the GUI
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="universe_id" type="int">
+            <annotation>
+                <documentation>
+                    The ID of the universe where the device is located.
+                </documentation>
+            </annotation>
+        </attribute>
     </complexType>
 
 
     <attribute name="version">
-    	<annotation>
-    		<documentation>
-    			Specify the file format version used. This is version 0.
-    		</documentation>
-    	</annotation>
-    	<simpleType>
-    		<restriction base="int">
-    			<minInclusive value="0"></minInclusive>
-    		</restriction>
-    	</simpleType>
+        <annotation>
+            <documentation>
+                Specify the file format version used. This is version 0.
+            </documentation>
+        </annotation>
+        <simpleType>
+            <restriction base="int">
+                <minInclusive value="0"></minInclusive>
+            </restriction>
+        </simpleType>
     </attribute>
 
     <complexType name="KeyValuePair">
-    	<annotation>
-    		<documentation>
-    			This type contains a K-V pair for UI hints that will not
-    			be utilized by the real time engine but can be used by
-    			the project editor to store miscallaneus things, like
-    			for example view settings or filter groups
-    		</documentation>
-    	</annotation>
-    	<attribute name="name" type="string" use="required">
-    		<annotation>
-    			<documentation>
-    				This is the unique name of the data entry
-    			</documentation>
-    		</annotation>
-    	</attribute>
-    	<attribute name="value" type="string" use="required">
-    		<annotation>
-    			<documentation>The data to be stored (needs to be encoded as an XML compliant string).</documentation>
-    		</annotation>
+        <annotation>
+            <documentation>
+                This type contains a K-V pair for UI hints that will not
+                be utilized by the real time engine but can be used by
+                the project editor to store miscellaneous things, like
+                for example view settings or filter groups
+            </documentation>
+        </annotation>
+        <attribute name="name" type="string" use="required">
+            <annotation>
+                <documentation>
+                    This is the unique name of the data entry
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="value" type="string" use="required">
+            <annotation>
+                <documentation>The data to be stored (needs to be encoded as an XML compliant string).</documentation>
+            </annotation>
+        </attribute>
+    </complexType>
+
+    <complexType name="Patching">
+        <annotation>
+            <documentation>
+                Patching Information.
+            </documentation>
+        </annotation>
+        <sequence>
+            <element name="fixture" minOccurs="0" maxOccurs="unbounded" type="tns:fixture"/>
+        </sequence>
+
+
+    </complexType>
+
+    <complexType name="fixture">
+        <annotation>
+            <documentation>
+                Fixtures for Patching.
+            </documentation>
+        </annotation>
+        <attribute name="start" type="int">
+            <annotation>
+                <documentation>The start channel of the Fixture.
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="fixture_file" type="string">
+            <annotation>
+                <documentation>The file in /var/.../fixture directory.
+                </documentation>
+            </annotation>
+        </attribute>
+        <attribute name="mode" type="int">
+            <annotation>
+                <documentation>The Mode of the fixture.
+                </documentation>
+            </annotation>
         </attribute>
     </complexType>
 

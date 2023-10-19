@@ -2,8 +2,8 @@
 """Color in HSI Form"""
 import colorsys
 
+from PySide6.QtGui import QColor
 from pydantic import confloat
-
 
 class ColorHSI:
     """Color Definition"""
@@ -29,6 +29,8 @@ class ColorHSI:
         Arguments:
             filter_format -- The color provided as a filter configuration string
         """
+        if not filter_format or filter_format.count(",") < 2:
+            return ColorHSI(128.0, 0.5, 1.0)
         parts = filter_format.split(",")
         hue = float(parts[0]) % 360.0
         saturation = float(parts[1])
@@ -71,3 +73,13 @@ class ColorHSI:
         """This method returns the RGB representations as int between 0 and 255"""
         rr, rg, rb = colorsys.hls_to_rgb((self._hue % 360) / 360.0, self._intensity, self._saturation)
         return int(rr * 255), int(rg * 255), int(rb * 255)
+
+    def to_qt_color(self) -> QColor:
+        return QColor.fromHslF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)
+
+    def copy(self) -> "ColorHSI":
+        return ColorHSI(self._hue, self._saturation, self._intensity)
+
+    @classmethod
+    def from_qt_color(cls, c: QColor):
+        return ColorHSI(c.hslHueF() * 360.0, c.hslSaturationF(), c.lightnessF())

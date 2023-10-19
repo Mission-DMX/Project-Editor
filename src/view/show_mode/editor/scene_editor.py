@@ -3,19 +3,23 @@
 from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QGridLayout, QDialog
 
 from model import Scene
-from .scenepage import ScenePageWidget
+from model.scene import FilterPage
+from view.show_mode.editor.editor_tab_widgets.scene_ui_page_editor_widget import SceneUIPageEditorWidget
 
 
-class SceneManagerWidget(QTabWidget):
+class SceneUIManagerWidget(QTabWidget):
     """Widget containing the scene pages"""
 
-    def __init__(self, scene: Scene, parent: QWidget):
+    def __init__(self, scene: Scene | FilterPage, parent: QWidget):
         super().__init__(parent)
+        self.ui_page = None
         self._scene = scene
         self.setTabsClosable(True)
 
         self.addTab(QWidget(), "+")
-        self.tabBar().tabButton(self.count() - 1, QTabBar.ButtonPosition.RightSide).hide()
+        plus_button = self.tabBar().tabButton(self.count() - 1, QTabBar.ButtonPosition.RightSide)
+        if plus_button:
+            plus_button.hide()
 
         self._poped_pages: list[QDialog] = []
         self._nodeeditor_dialog = None
@@ -33,7 +37,7 @@ class SceneManagerWidget(QTabWidget):
 
     def _add_page(self):
         """Adds a page to the scene"""
-        page_widget = ScenePageWidget(self._scene, self)
+        page_widget = SceneUIPageEditorWidget(self.scene.ui_pages[0], self)
         self.insertTab(self.count() - 1, page_widget, f"Page {self.count()}")
         self.setCurrentWidget(page_widget)
 
@@ -66,4 +70,7 @@ class SceneManagerWidget(QTabWidget):
     @property
     def scene(self):
         """The scene managed by the scene manager"""
-        return self._scene
+        if isinstance(self._scene, Scene):
+            return self._scene
+        else:
+            return self._scene.parent_scene

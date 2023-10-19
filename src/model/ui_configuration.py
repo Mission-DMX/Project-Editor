@@ -3,12 +3,24 @@ from abc import ABC, abstractmethod
 from PySide6.QtWidgets import QWidget
 
 from network import NetworkManager
-from .scene import Scene
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from model.scene import Scene
+
+
+_network_manager_instance: NetworkManager = None
+
+
+def setup_network_manager(nm: NetworkManager):
+    global _network_manager_instance
+    _network_manager_instance = nm
+
 
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
-    def __init__(self, fid: str, parent_page: "UIPage"):
+    def __init__(self, fid: str, parent_page: "UIPage", configuration: dict[str, str] = None):
         """ Set up the basic components of a widget.
 
         Arguments:
@@ -17,6 +29,10 @@ class UIWidget(ABC):
         self._position: tuple[int, int] = (0, 0)
         self._size: tuple[int, int] = (0, 0)
         self._filter_id: str = fid
+        if isinstance(configuration, dict):
+            self._configuration: dict[str, str] = configuration.copy()
+        else:
+            self._configuration = dict()
         self._parent = parent_page
 
     @abstractmethod
@@ -29,18 +45,34 @@ class UIWidget(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_qt_widget(self) -> QWidget:
+    def get_player_widget(self, parent: QWidget | None) -> QWidget:
         """This method needs to yield a QWidget that can be placed on the player page.
 
         Returns:
             A fully set up QWidget instance
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
+        """This method needs to return a QWidget that can be used to configure the UI widget within
+        the UI editor.
+
+        Returns:
+            A fully set up QWidget instance
+        """
+        raise NotImplementedError()
 
     @property
     def filter_id(self) -> str:
         """Get the id of the linked filter"""
         return self._filter_id
+
+    def notify_id_rename(self, old_id: str, new_id: str):
+        """This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
+        in order to implement special behaviour"""
+        if self._filter_id == old_id:
+            self._filter_id = new_id
 
     @property
     def parent(self) -> "UIPage":
@@ -66,27 +98,60 @@ class UIWidget(ABC):
     @size.setter
     def size(self, new_size: tuple[int, int]):
         """Update the size of the widget"""
-        self.size = new_size
+        self._size = new_size
         # TODO notify player about UI update if running
+
+    @property
+    def configuration(self) -> dict[str, str]:
+        return self._configuration
+
+    def copy_base(self, w: "UIWidget") -> "UIWidget":
+        w._position = self._position
+        w._size = self._size
+        w._filter_id = self._filter_id
+        w._configuration = self._configuration.copy()
+        return w
+
+    @abstractmethod
+    def copy(self, new_parent: "UIPage") -> "UIWidget":
+        """This method needs to perform a deep copy of the object, excluding generatable state, such as the widgets"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+        """This method shall return a widget that will be placed within the configuration dialog"""
+        raise NotImplementedError()
+
+    def get_variante(self) -> str:
+        """This method needs to be overridden if there are multiple fitting widgets for a filter
+        type in order for the show file saving (and loading) to choose the correct one."""
+        return ""
+
+    def push_update(self):
+        for entry in self.generate_update_content():
+            k = entry[0]
+            v = entry[1]
+            _network_manager_instance.send_gui_update_to_fish(self.parent.scene.scene_id, self.filter_id, k, v)
 
 
 class UIPage:
     """This class represents a page containing widgets that can be used to control the show."""
 
-    def __init__(self, scene: Scene):
+    def __init__(self, parent: "Scene"):
         """Construct a UI Page
 
         Arguments:
             sid -- The id of the scene where the corresponding filter is located.
         """
         self._widgets: list[UIWidget] = []
-        self._scene: int = scene
+        self._parent_scene: Scene = parent
+        self._title: str = ""
         self._player = None
 
     @property
-    def scene(self) -> Scene:
+    def scene(self) -> "Scene":
         """Get the scene this page is bound to"""
-        return self._scene
+        return self._parent_scene
 
     @property
     def page_active_on_player(self) -> bool:
@@ -102,6 +167,28 @@ class UIPage:
     def widgets(self) -> list[UIWidget]:
         """Returns a copy of the internal widget list"""
         return list(self._widgets)
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @title.setter
+    def title(self, new_title: str):
+        self._title = new_title
+
+    def copy(self, new_parent: "Scene") -> "UIPage":
+        new_page = UIPage(new_parent)
+        new_page._player = self._player
+        new_page._title = self._title
+        for w in self._widgets:
+            new_page._widgets.append(w.copy(new_page))
+        return new_page
+
+    def append_widget(self, widget: UIWidget):
+        self._widgets.append(widget)
+
+    def push_update(self):
+        """This method indicates that updates to the running filters should be sent."""
 
 
 class ShowUI:
@@ -161,7 +248,7 @@ class ShowUI:
     #@staticmethod
     #@property
     #def network_connection() -> NetworkManager:
-        """Get the linked network manager"""
+    #    """Get the linked network manager"""
     #    return ShowUI._fish_connector
 
     #@staticmethod

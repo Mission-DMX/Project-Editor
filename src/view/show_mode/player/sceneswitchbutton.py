@@ -2,11 +2,12 @@
 """Scene widget for scene player"""
 from PySide6.QtWidgets import QWidget, QPushButton
 
+from file.transmitting_to_fish import transmit_to_fish
 from model import Scene
 from file.write import create_xml
 
 
-class SceneTransmitButton(QPushButton):
+class SceneSwitchButton(QPushButton):
     """Widget to be displayed for a scene in the show player.
     Clicking the button will transmit the board config to fish and change the active scene.
     """
@@ -22,9 +23,8 @@ class SceneTransmitButton(QPushButton):
 
     def _clicked(self):
         """Handles behaviour when scene button was clicked"""
-        xml = create_xml(self._scene.board_configuration)
-        self._scene.board_configuration.broadcaster.load_show_file.emit(xml, False)
-        self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene.scene_id)
+        #transmit_to_fish(self._scene.board_configuration)
+        self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene)
 
     @property
     def scene(self) -> Scene:

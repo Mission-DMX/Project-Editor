@@ -22,6 +22,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_time_nodes()
         self._register_fader_nodes()
         self._register_effect_nodes()
+        self._register_scripting_nodes()
 
     def _register_constants_nodes(self):
         """Registers all the constants nodes."""
@@ -49,6 +50,8 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(nodes.AdapterColorToRGBWNode, [('Adapters',)])
         self.addNodeType(nodes.AdapterColorToRGBWANode, [('Adapters',)])
         self.addNodeType(nodes.AdapterFloatToColorNode, [('Adapters',)])
+        self.addNodeType(nodes.Adapter8bitToFloat, [('Adapters',)])
+        self.addNodeType(nodes.Adapter16bitToFloat, [('Adapters',)])
 
     def _register_arithmetic_nodes(self):
         """Registers all the arithmetics nodes."""
@@ -103,3 +106,6 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(nodes.Shift16BitNode, [('Effects',)])
         self.addNodeType(nodes.ShiftFloatNode, [('Effects',)])
         self.addNodeType(nodes.ShiftColorNode, [('Effects',)])
+
+    def _register_scripting_nodes(self):
+        self.addNodeType(nodes.LuaFilterNode, [('Script',)])

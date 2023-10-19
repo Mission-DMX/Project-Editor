@@ -13,23 +13,26 @@ class CueListNode(FilterNode):
         }, allowAddOutput=True)
 
         try:
-            mapping_from_file = model.initial_parameters["mapping"]
-            self.filter.initial_parameters["mapping"] = mapping_from_file
+            mapping_from_file = model.filter_configurations["mapping"]
+            self.filter.filter_configurations["mapping"] = mapping_from_file
             self.parse_and_add_output_channels(mapping_from_file)
         except:
-            self.filter.initial_parameters["mapping"] = ""
+            self.filter.filter_configurations["mapping"] = ""
 
         try:
-            self.filter.initial_parameters["end_handling"] = model.initial_parameters["end_handling"]
+            self.filter.filter_configurations["end_handling"] = model.filter_configurations["end_handling"]
         except:
-            self.filter.initial_parameters["end_handling"] = ""
+            self.filter.filter_configurations["end_handling"] = ""
 
         try:
-            self.filter.initial_parameters["cuelist"] = model.initial_parameters["cuelist"]
+            self.filter.filter_configurations["cuelist"] = model.filter_configurations["cuelist"]
         except:
-            self.filter.initial_parameters["cuelist"] = ""
+            self.filter.filter_configurations["cuelist"] = ""
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]
+        self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
+        self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
 
     def parse_and_add_output_channels(self, mappings: str):
         for channel_dev in mappings.split(';'):
@@ -56,14 +59,12 @@ class ShiftFilterNode(FilterNode):
 
         try:
             if isinstance(model, Scene):
-                found = False
-                for f in model.filters:
-                    if id == f.filter_id:
-                        self.filter.filter_configurations["nr_outputs"] = str(
-                            int(f.filter_configurations.get("nr_outputs")))
-                        found = True
-                        break
-                if not found:
+                # FIXME using the filter type as its ID seams odd
+                found_filter = model.get_filter_by_id(str(id))
+                if found_filter:
+                    self.filter.filter_configurations["nr_outputs"] = str(
+                        int(found_filter.filter_configurations.get("nr_outputs")))
+                else:
                     self.filter.filter_configurations["nr_outputs"] = "0"
             else:
                 self.filter.filter_configurations["nr_outputs"] = str(int(model.filter_configurations.get("nr_outputs")))

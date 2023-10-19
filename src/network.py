@@ -24,6 +24,7 @@ from model.universe import Universe
 if TYPE_CHECKING:
     from view.main_window import MainWindow
     from cli.bankset_command import FaderBank
+    from model import Scene
 
 
 class NetworkManager(QtCore.QObject):
@@ -56,8 +57,6 @@ class NetworkManager(QtCore.QObject):
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
         self._broadcaster.view_to_console_mode.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
-        self._broadcaster.load_show_file.connect(lambda xml: self.load_show_file(xml, True))
-        self._broadcaster.change_active_scene.connect(self.enter_scene)
 
         self._broadcaster.load_show_file.connect(self.load_show_file)
         self._broadcaster.change_active_scene.connect(self.enter_scene)
@@ -139,30 +138,33 @@ class NetworkManager(QtCore.QObject):
             start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
             msg = msg_bytes[start:start + msg_len]
             msg_bytes = msg_bytes[start + msg_len:]
-            match msg_type:
-                case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
-                    message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
-                    message.ParseFromString(bytes(msg))
-                    self._fish_update(message)
-                case proto.MessageTypes_pb2.MSGT_LOG_MESSAGE:
-                    message: proto.RealTimeControl_pb2.long_log_update = proto.RealTimeControl_pb2.long_log_update()
-                    message.ParseFromString(bytes(msg))
-                    self._log_fish(message)
-                case proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE:
-                    message: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change()
-                    message.ParseFromString(bytes(msg))
-                    self._button_clicked(message)
-                case proto.MessageTypes_pb2.MSGT_DESK_UPDATE:
-                    message: proto.Console_pb2.desk_update = proto.Console_pb2.desk_update()
-                    message.ParseFromString(bytes(msg))
-                    self._handle_desk_update(message)
-                case proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN:
-                    message: proto.Console_pb2.fader_column = proto.Console_pb2.fader_column()
-                    message.ParseFromString(bytes(msg))
-                    from model.control_desk import BankSet
-                    BankSet.handle_column_update_message(message)
-                case _:
-                    pass
+            try:
+                match msg_type:
+                    case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
+                        message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
+                        message.ParseFromString(bytes(msg))
+                        self._fish_update(message)
+                    case proto.MessageTypes_pb2.MSGT_LOG_MESSAGE:
+                        message: proto.RealTimeControl_pb2.long_log_update = proto.RealTimeControl_pb2.long_log_update()
+                        message.ParseFromString(bytes(msg))
+                        self._log_fish(message)
+                    case proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE:
+                        message: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change()
+                        message.ParseFromString(bytes(msg))
+                        self._button_clicked(message)
+                    case proto.MessageTypes_pb2.MSGT_DESK_UPDATE:
+                        message: proto.Console_pb2.desk_update = proto.Console_pb2.desk_update()
+                        message.ParseFromString(bytes(msg))
+                        self._handle_desk_update(message)
+                    case proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN:
+                        message: proto.Console_pb2.fader_column = proto.Console_pb2.fader_column()
+                        message.ParseFromString(bytes(msg))
+                        from model.control_desk import BankSet
+                        BankSet.handle_column_update_message(message)
+                    case _:
+                        pass
+            except:
+                print("ERROR: Failed to parse message.")
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
         """
@@ -215,6 +217,10 @@ class NetworkManager(QtCore.QObject):
                     self._broadcaster.view_to_temperature.emit()
                 case proto.Console_pb2.ButtonCode.BTN_DROP_COLOR:
                     self._broadcaster.view_to_color.emit()
+                case proto.Console_pb2.ButtonCode.BTN_SAVE_SAVE:
+                    self._broadcaster.save_button_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_PAN_COMMITSHOW:
+                    self._broadcaster.commit_button_pressed.emit()
                 case _:
                     pass
         else:
@@ -260,14 +266,23 @@ class NetworkManager(QtCore.QObject):
                                                   goto_default_scene=goto_default_scene)
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
-    def enter_scene(self, scene_id: int) -> None:
+    def enter_scene(self, scene: "Scene") -> None:
         """
         Tells fish to load a specific scene
         Args:
-            scene_id: The scene to be loaded
+            scene: The scene to be loaded
         """
-        msg = proto.FilterMode_pb2.enter_scene(scene_id=scene_id)
+        if scene.linked_bankset:
+            scene.linked_bankset.activate()
+            print("Activated Bankset")
+        else:
+            print("No Bankset.")
+        msg = proto.FilterMode_pb2.enter_scene(scene_id=scene.scene_id)
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
+        if scene.linked_bankset:
+            for f in scene.filters:
+                if f.filter_type in [39, 40, 41, 42, 43]:
+                    self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id))
 
     def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode.ValueType):
         """Changes fish's run mode
@@ -309,6 +324,16 @@ class NetworkManager(QtCore.QObject):
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
         else:
             self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
+
+    def send_gui_update_to_fish(self, scene_id: int, filter_id: str, key: str, value: str):
+        if not self.is_running:
+            return
+        msg = proto.FilterMode_pb2.update_parameter()
+        msg.filter_id = filter_id
+        msg.scene_id = scene_id
+        msg.parameter_key = key
+        msg.parameter_value = value
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
 
 
 def on_error(error) -> None:
