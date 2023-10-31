@@ -51,6 +51,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._default_cue_combo_box.addItem("Cue {}".format(i))
         if len(self._cues) > 0:
             self.select_cue(0)
+            self._default_cue_combo_box.setEnabled(True)
         if parameters.get("default_cue"):
             try:
                 di = int(parameters.get("default_cue"))
@@ -106,9 +107,10 @@ class CueEditor(NodeEditorFilterConfigWidget):
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
 
-        self._default_cue_combo_box = QComboBox(cue_list_and_current_settings_container)
+        self._default_cue_combo_box = QComboBox(cue_settings_container)
         self._default_cue_combo_box.addItem("No default Cue")
-        cue_list_and_current_settings_container_layout.addWidget(self._default_cue_combo_box)
+        self._default_cue_combo_box.setEnabled(False)
+        cue_settings_container_layout.addWidget(self._default_cue_combo_box)
 
         cue_list_and_current_settings_container.setLayout(cue_list_and_current_settings_container_layout)
         top_layout.addWidget(cue_list_and_current_settings_container)
@@ -203,7 +205,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         target_row = self._cue_list_widget.rowCount()
         self._cue_list_widget.setRowCount(target_row + 1)
         num_item = QTableWidgetItem(1)
-        num_item.setText(str(target_row + 1))
+        cue_name = str(target_row + 1)
+        num_item.setText(cue_name)
         self._cue_list_widget.setItem(target_row, 0, num_item)
         duration_item = QTableWidgetItem(1)
         duration_item.setText(cue.duration_formatted)
@@ -216,6 +219,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
                 cue.add_channel(c[0], c[1])
         cue.index_in_editor = target_row + 1
         self._cues.append(cue)
+        self._default_cue_combo_box.addItem("Cue {}".format(cue_name))
+        self._default_cue_combo_box.setEnabled(True)
         return target_row
 
     def select_cue(self, cue_index: int, from_manual_input: bool = False):
