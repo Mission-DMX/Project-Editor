@@ -20,18 +20,6 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
         self._node_type_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 128))
 
     def updateTerminals(self):
-        for terminal_index in self.terminals.keys():
-            terminal, terminal_graphics_item = self.terminals[terminal_index]
-            if isinstance(terminal.graphicsItem(), TerminalTypeGraphicsItem):
-                continue
-            if terminal.isInput():
-                dt: DataType = self.node.filter.in_data_types.get(terminal_index)
-            elif terminal.isOutput():
-                dt = self.node.filter.out_data_types.get(terminal_index)
-            else:
-                raise ValueError("Expected terminal to be either input or output")
-            terminal._graphicsItem = TerminalTypeGraphicsItem(terminal, dt, self)
-
         # TODO uncomment to this, once PR got accepted.
         #super().updateTerminals()
         # TODO delete this once PR got accepted
@@ -69,6 +57,12 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
             self.terminals[i] = (t, item)
             y += self.nodeOffset
         # TODO end of code to delete
+
+        for terminal_index in self.terminals.keys():
+            terminal, terminal_graphics_item = self.terminals[terminal_index]
+            if isinstance(terminal.graphicsItem(), TerminalTypeGraphicsItem):
+                continue
+            terminal._graphicsItem = TerminalTypeGraphicsItem(terminal, self.node.filter, self)
 
     def paint(self, p: QPainter, *args):
         super().paint(p, *args)
