@@ -8,7 +8,8 @@ from PySide6.QtGui import QFont
 from model import Scene, Filter, DataType, Broadcaster
 from model.scene import FilterPage
 
-from ..filter_settings_item import FilterSettingsItem
+from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
+from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
 
 
 class FilterNode(Node):
@@ -21,6 +22,7 @@ class FilterNode(Node):
                  allowAddInput: bool = False,
                  allowAddOutput: bool = False):
         super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
+        self._graphicsItem = FilterNodeGraphicsItem(self)
         if isinstance(model, Scene):
             self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
             model.append_filter(self._filter)

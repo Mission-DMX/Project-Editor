@@ -15,7 +15,8 @@ from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patch_mode.patch_mode import PatchMode
-from view.show_mode import ShowEditorWidget, ShowPlayerWidget
+from view.show_mode.editor.showmanager import ShowEditorWidget
+from view.show_mode.player.showplayer import ShowPlayerWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):

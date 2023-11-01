@@ -1,6 +1,5 @@
 from model import DataType, Scene
-from model.broadcaster import Broadcaster
-from .filternode import FilterNode
+from src.view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class CueListNode(FilterNode):

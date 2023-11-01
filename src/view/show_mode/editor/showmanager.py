@@ -17,8 +17,7 @@ from .editing_utils import add_scene_to_show
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
 from .editor_tab_widgets.scene_ui_page_editor_widget import SceneUIPageEditorWidget
-from .filter_node_library import FilterNodeLibrary
-from .scene_editor import SceneUIManagerWidget
+from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
 from .show_browser.show_browser import ShowBrowser
 
 

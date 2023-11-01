@@ -2,7 +2,7 @@
 """Debug filter nodes"""
 from model import DataType
 
-from .filternode import FilterNode
+from src.view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class DebugNode(FilterNode):

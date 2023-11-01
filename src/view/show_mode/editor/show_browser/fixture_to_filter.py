@@ -2,7 +2,6 @@ from model import Broadcaster, Scene, Filter, DataType
 from model.patching_channel import PatchingChannel
 from model.scene import FilterPage
 from ofl.fixture import UsedFixture
-from view.show_mode.editor.nodes import UniverseNode
 
 
 def _sanitize_name(input: str) -> str:

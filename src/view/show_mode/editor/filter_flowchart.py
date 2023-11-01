@@ -5,7 +5,7 @@ from pyqtgraph.flowchart import Flowchart
 
 from model import Scene, Filter
 from model.scene import FilterPage
-from .nodes import FilterNode
+from .nodes.base.filternode import FilterNode
 
 
 class FilterFlowchart(Flowchart):

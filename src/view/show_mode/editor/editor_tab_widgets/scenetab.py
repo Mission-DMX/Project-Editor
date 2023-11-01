@@ -6,7 +6,6 @@ from PySide6.QtWidgets import QWidget, QTabWidget, QPushButton, QGridLayout, QVB
 from model import Scene
 from model.scene import FilterPage
 from view.show_mode.editor.nodeeditor import NodeEditorWidget
-from view.show_mode.editor.scene_editor import SceneUIManagerWidget
 
 
 class SceneTabWidget(QWidget):

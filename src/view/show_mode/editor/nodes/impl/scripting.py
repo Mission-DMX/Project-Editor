@@ -1,5 +1,5 @@
 from model import Filter, DataType
-from view.show_mode.editor.nodes import FilterNode
+from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class ConfigurationError(Exception):
