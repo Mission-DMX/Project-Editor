@@ -22,15 +22,16 @@ class FilterNode(Node):
                  allowAddInput: bool = False,
                  allowAddOutput: bool = False):
         super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
-        self._graphicsItem = FilterNodeGraphicsItem(self)
+
         if isinstance(model, Scene):
             self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
             model.append_filter(self._filter)
         elif isinstance(model, Filter):
             self._filter = model
         else:
+            self._filter = None
             logging.warning("Tried creating filter node with unknown model %s", str(type(model)))
-
+        self._graphicsItem = FilterNodeGraphicsItem(self)
         self.fsi = FilterSettingsItem(self, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
