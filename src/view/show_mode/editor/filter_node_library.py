@@ -50,6 +50,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(nodes.AdapterColorToRGBWNode, [('Adapters',)])
         self.addNodeType(nodes.AdapterColorToRGBWANode, [('Adapters',)])
         self.addNodeType(nodes.AdapterFloatToColorNode, [('Adapters',)])
+        self.addNodeType(nodes.AdapterColorToFloatsNode, [('Adapters',)])
         self.addNodeType(nodes.Adapter8bitToFloat, [('Adapters',)])
         self.addNodeType(nodes.Adapter16bitToFloat, [('Adapters',)])
 

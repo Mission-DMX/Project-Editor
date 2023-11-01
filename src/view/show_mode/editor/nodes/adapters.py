@@ -133,3 +133,20 @@ class AdapterFloatToColorNode(FilterNode):
         self.filter.in_data_types["s"] = DataType.DT_DOUBLE
         self.filter.in_data_types["i"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_COLOR
+
+
+class AdapterColorToFloatsNode(FilterNode):
+    """Filter that splits the HSI values into three individual float channels."""
+    nodeName = 'Color to Float converter'
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=53, name=name, terminals={
+            'input': {'io': 'in'},
+            'h': {'io': 'out'},
+            's': {'io': 'out'},
+            'i': {'io': 'out'},
+        })
+        self.filter.in_data_types["input"] = DataType.DT_COLOR
+        self.filter.out_data_types["h"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["s"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["i"] = DataType.DT_DOUBLE

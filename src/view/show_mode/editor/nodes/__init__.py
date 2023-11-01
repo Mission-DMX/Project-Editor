@@ -66,4 +66,5 @@ type_to_node: dict[int, str] = {
         50: LuaFilterNode.nodeName,
         51: Adapter8bitToFloat.nodeName,
         52: Adapter16bitToFloat.nodeName,
+        53: AdapterColorToFloatsNode.nodeName,
     }
