@@ -21,8 +21,6 @@ class FilterNode(Node):
                  terminals: dict[str, dict[str, str]] = None,
                  allowAddInput: bool = False,
                  allowAddOutput: bool = False):
-        super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
-
         if isinstance(model, Scene):
             self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
             model.append_filter(self._filter)
@@ -31,12 +29,21 @@ class FilterNode(Node):
         else:
             self._filter = None
             logging.warning("Tried creating filter node with unknown model %s", str(type(model)))
-        self._graphicsItem = FilterNodeGraphicsItem(self)
+
+        super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
+
         self.fsi = FilterSettingsItem(self, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
         self.graphicsItem().xChanged.connect(self.update_filter_pos)
+
+    def graphicsItem(self):
+        """Return the GraphicsItem for this node. Subclasses may re-implement
+        this method to customize their appearance in the flowchart."""
+        if self._graphicsItem is None:
+            self._graphicsItem = FilterNodeGraphicsItem(self)
+        return self._graphicsItem
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.

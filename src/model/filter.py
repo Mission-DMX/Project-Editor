@@ -48,6 +48,11 @@ class DataType(IntFlag):
             case _:
                 return DataType.DT_8_BIT
 
+    def __str__(self) -> str:
+        if self.value == DataType.DT_BOOL.value:
+            return "bool (8bit)"
+        return self.format_for_filters()
+
 
 class Filter:
     """Filter for show file"""
