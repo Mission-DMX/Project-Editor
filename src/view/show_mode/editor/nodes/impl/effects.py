@@ -1,5 +1,5 @@
 from model import DataType, Scene
-from src.view.show_mode.editor.nodes.base.filternode import FilterNode
+from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class CueListNode(FilterNode):

@@ -65,7 +65,8 @@ class NodeEditorWidget(QWidget):
                             format(still_missing_filters, self._page.parent_scene))
         for name, node in self._flowchart.nodes().items():
             if not isinstance(node, FilterNode):
-                logging.warning("Trying to connect non-FilterNode %s", name)
+                logging.warning("Trying to connect non-FilterNode %s. Got type: %s. Expected: %s",
+                                name, str(type(node)), str(FilterNode.__class__))
                 continue
             for input_channel, output_channel in node.filter.channel_links.items():
                 if output_channel == "":

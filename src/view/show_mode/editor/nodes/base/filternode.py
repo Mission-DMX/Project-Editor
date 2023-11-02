@@ -59,7 +59,8 @@ class FilterNode(Node):
             return
 
         if not isinstance(remote_node, FilterNode):
-            logging.warning("Tried to non-FilterNode nodes. Forced disconnection.")
+            logging.warning("Tried to non-FilterNode nodes. Forced disconnection. Got type: " + str(type(remote_node)) +
+                            " and expected: " + str(FilterNode.__class__) + " instance.")
             localTerm.disconnectFrom(remoteTerm)
             return
 
