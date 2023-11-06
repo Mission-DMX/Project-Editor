@@ -2,9 +2,7 @@
 """Scene widget for scene player"""
 from PySide6.QtWidgets import QWidget, QPushButton
 
-from file.transmitting_to_fish import transmit_to_fish
 from model import Scene
-from file.write import create_xml
 
 
 class SceneSwitchButton(QPushButton):

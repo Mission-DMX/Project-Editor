@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QFileDialog
 
-from file.read import read_document
-from file.write import write_document, create_xml
+from controller.file.read import read_document
+from controller.file.write import write_document
 from model import BoardConfiguration
 
 

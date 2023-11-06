@@ -1,4 +1,4 @@
-from file.write import create_xml
+from controller.file.write import create_xml
 from model import BoardConfiguration
 
 

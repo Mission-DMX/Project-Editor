@@ -4,7 +4,7 @@
 from PySide6 import QtWidgets, QtGui
 
 from Style import Style
-from file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog, _save_show_file
+from controller.file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog, _save_show_file
 from proto.RealTimeControl_pb2 import RunMode
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster

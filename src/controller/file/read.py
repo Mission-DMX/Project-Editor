@@ -11,7 +11,7 @@ import proto.UniverseControl_pb2 as Proto
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from model.scene import FilterPage
-from ofl.fixture import load_fixture, UsedFixture, make_used_fixture
+from controller.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
