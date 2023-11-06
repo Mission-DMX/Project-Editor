@@ -11,14 +11,14 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 
-from Gui.GuiTab import GuiTab
-from ImageOptimizer.BasicOptimizer import CropOptimizer
-from ImageOptimizer.ImagePipeline import ImagePipeline
-from Helpers.ImageHelper import cv2qim
-from Sources.CameraLoader import CameraLoader
-from Sources.FileLoader import FileLoader
-from Helpers.InstanceManager import InstanceManager
-from Sources.FrameManager import FrameManager
+from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
+from controller.autotrack.ImageOptimizer.ImagePipeline import ImagePipeline
+from controller.autotrack.Helpers.ImageHelper import cv2qim
+from controller.autotrack.Sources.CameraLoader import CameraLoader
+from controller.autotrack.Sources.FileLoader import FileLoader
+from controller.autotrack.Helpers.InstanceManager import InstanceManager
+from controller.autotrack.Sources.FrameManager import FrameManager
 
 
 class SourcesTab(GuiTab):

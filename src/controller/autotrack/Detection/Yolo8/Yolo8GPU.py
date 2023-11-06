@@ -1,7 +1,7 @@
 import time
 import cv2
 import numpy as np
-from Detection.Detector import Detector
+from controller.autotrack.Detection.Detector import Detector
 import logging
 import onnxruntime as rt
 
@@ -60,7 +60,7 @@ class Yolo8GPU(Detector):
         """
         # self.model = cv2.dnn.readNetFromONNX("./Detection/Yolo8/models/yolov8n.onnx")
         self.model = rt.InferenceSession(
-            "./Detection/Yolo8/models/yolov8n.onnx",
+            "resources/autotrack_models/yolov8n.onnx",
             providers=[
                 "CUDAExecutionProvider",
                 "MIGraphXExecutionProvider",

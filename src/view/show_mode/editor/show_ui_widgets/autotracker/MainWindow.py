@@ -1,15 +1,13 @@
 from PySide6.QtCore import QTimer, QThread
 from PySide6.QtWidgets import QMainWindow, QMenuBar, QTabWidget
 
-from Gui.GuiTab import GuiTab
-from Sources.FileLoader import FileLoader
-from Helpers.ImageHelper import cv2qim
-from Gui.SourcesTab import SourcesTab
-from Gui.SettingsTab import SettingsTab
-from Gui.CropTab import CropTab
-from Helpers.InstanceManager import InstanceManager
-from Gui.DetectionTab import DetectionTab
-from Gui.LightSetupTab import LightSetupTab
+from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab
+from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
+from view.show_mode.editor.show_ui_widgets.autotracker.CropTab import CropTab
+from controller.autotrack.Helpers.InstanceManager import InstanceManager
+from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
+from view.show_mode.editor.show_ui_widgets.autotracker.LightSetupTab import LightSetupTab
 
 
 class MainWindow(QMainWindow):

@@ -1,6 +1,6 @@
-from Helpers.Settings import Settings
-from ImageOptimizer.ImagePipeline import ImagePipeline
-from Sources.Loader import Loader
+from controller.autotrack.Helpers.Settings import Settings
+from controller.autotrack.ImageOptimizer.ImagePipeline import ImagePipeline
+from controller.autotrack.Sources.Loader import Loader
 
 
 class InstanceManager:

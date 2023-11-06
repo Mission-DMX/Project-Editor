@@ -12,11 +12,10 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from Calibration.MappingCalibration import MappingCalibration
-from Gui.GuiTab import GuiTab
-from Helpers import ImageHelper
-from Helpers.ImageHelper import cv2qim, draw_overlay
-from Helpers.InstanceManager import InstanceManager
+from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
+from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from controller.autotrack.Helpers.ImageHelper import cv2qim, draw_overlay
+from controller.autotrack.Helpers.InstanceManager import InstanceManager
 
 
 class LightSetupTab(GuiTab):

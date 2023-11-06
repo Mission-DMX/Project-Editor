@@ -1,6 +1,6 @@
 import cv2
 
-from ImageOptimizer.Optimizer import Optimizer
+from controller.autotrack.ImageOptimizer.Optimizer import Optimizer
 
 
 class ResizeOptimizer(Optimizer):

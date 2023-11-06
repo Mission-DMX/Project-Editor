@@ -1,7 +1,7 @@
 import time
 import cv2
 import numpy as np
-from Detection.Detector import Detector
+from controller.autotrack.Detection.Detector import Detector
 import logging
 
 class Yolo8(Detector):

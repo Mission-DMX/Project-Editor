@@ -7,9 +7,9 @@ from PySide6.QtWidgets import (
     QSlider,
 )
 
-from Gui.GuiTab import GuiTab
-from Helpers.ImageHelper import cv2qim, draw_overlay
-from Helpers.InstanceManager import InstanceManager
+from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from controller.autotrack.Helpers.ImageHelper import cv2qim, draw_overlay
+from controller.autotrack.Helpers.InstanceManager import InstanceManager
 
 
 class CropTab(GuiTab):

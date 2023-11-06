@@ -1,6 +1,6 @@
 import cv2
 
-from Calibration.Calibration import Calibration
+from controller.autotrack.Calibration.Calibration import Calibration
 
 
 class DistortionCalibration(Calibration):

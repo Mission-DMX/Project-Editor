@@ -1,7 +1,7 @@
 import cv2
 import time
 import os
-from Sources.Loader import Loader
+from controller.autotrack.Sources.Loader import Loader
 
 
 class FileLoader(Loader):

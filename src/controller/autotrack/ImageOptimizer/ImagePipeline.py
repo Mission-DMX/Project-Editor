@@ -1,4 +1,4 @@
-from ImageOptimizer.BasicOptimizer import (
+from controller.autotrack.ImageOptimizer.BasicOptimizer import (
     ResizeOptimizer,
     CropOptimizer,
     GrayScaleOptimizer,

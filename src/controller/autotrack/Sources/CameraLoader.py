@@ -1,6 +1,5 @@
 import cv2
-from Sources.Loader import Loader
-from Sources.WebRTCLoader import WebRTCLoader
+from controller.autotrack.Sources.Loader import Loader
 
 
 # TODO: Add caching for Frames again -> probably 10 frames

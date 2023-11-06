@@ -1,6 +1,3 @@
-import Lights
-from Lights.ArtNet import ArtNet
-
 
 class Settings:
     """
@@ -42,7 +39,7 @@ class Settings:
     @property
     def lights(self):
         if self._lights is None:
-            self._lights = ArtNet()
+            self._lights = None
         return self._lights
 
     @crop.setter

@@ -8,8 +8,8 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
-from Gui.GuiTab import GuiTab
-from Helpers.InstanceManager import InstanceManager
+from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from controller.autotrack.Helpers.InstanceManager import InstanceManager
 
 
 class SettingsTab(GuiTab):
