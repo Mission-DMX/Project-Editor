@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import qimage2ndarray
 from PySide6.QtGui import QPixmap
-from ultralytics.utils import yaml_load
-from ultralytics.utils.checks import check_yaml
+#from ultralytics.utils import yaml_load
+#from ultralytics.utils.checks import check_yaml
 
 
 def cv2qim(frame):

@@ -1,16 +1,16 @@
 from PySide6.QtCore import QTimer, QThread
-from PySide6.QtWidgets import QMainWindow, QMenuBar, QTabWidget
+from PySide6.QtWidgets import QMainWindow, QMenuBar, QTabWidget, QWidget
 
 from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
 from view.show_mode.editor.show_ui_widgets.autotracker.CropTab import CropTab
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
+#from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.editor.show_ui_widgets.autotracker.LightSetupTab import LightSetupTab
 
 
-class MainWindow(QMainWindow):
+class AutoTrackDialogWidget(QTabWidget):
     """
     The `MainWindow` class represents the main application window.
 
@@ -31,22 +31,18 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.instance = InstanceManager()
-        # Create a QTabWidget
-        self.tab_widget = QTabWidget()
-
         tabs = [
             SourcesTab("Sources", self.instance),
             SettingsTab("Settings", self.instance),
             CropTab("Crop", self.instance),
-            DetectionTab("Detect", self.instance),
+            #DetectionTab("Detect", self.instance),
             LightSetupTab("Lights", self.instance),
         ]
-        self.register_tabs(self.tab_widget, tabs)
+        self.register_tabs(self, tabs)
 
         # Set the tab widget as the central widget
-        self.setCentralWidget(self.tab_widget)
 
-        self.tab_widget.currentChanged.connect(self.tab_changed)
+        self.currentChanged.connect(self.tab_changed)
 
         self.video_timer = QTimer(self)
         self.video_timer.timeout.connect(self.video_update_all)
@@ -56,8 +52,8 @@ class MainWindow(QMainWindow):
         """
         Update video content for all active tabs.
         """
-        for i in range(self.tab_widget.count()):
-            tab = self.tab_widget.widget(i)
+        for i in range(self.count()):
+            tab = self.widget(i)
             if isinstance(tab, GuiTab):
                 tab.video_update()
 
@@ -68,8 +64,8 @@ class MainWindow(QMainWindow):
         Args:
             index (int): The index of the selected tab.
         """
-        for i in range(self.tab_widget.count()):
-            tab = self.tab_widget.widget(i)
+        for i in range(self.count()):
+            tab = self.widget(i)
             if isinstance(tab, GuiTab):
                 tab.tab_changed(index)
 

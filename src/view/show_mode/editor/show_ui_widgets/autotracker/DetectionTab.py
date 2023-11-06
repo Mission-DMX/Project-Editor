@@ -2,8 +2,8 @@ import asyncio
 
 import cv2
 import numpy as np
-from ultralytics.utils import yaml_load
-from ultralytics.utils.checks import check_yaml
+#from ultralytics.utils import yaml_load
+#from ultralytics.utils.checks import check_yaml
 
 from controller.autotrack.Detection.Yolo8.Yolo8 import Yolo8
 from controller.autotrack.Detection.Yolo8.Yolo8GPU import Yolo8GPU
