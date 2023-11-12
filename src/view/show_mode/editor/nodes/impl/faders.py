@@ -3,7 +3,7 @@
 from model import DataType
 from model.control_desk import BankSet, BanksetIDUpdateListener
 
-from . import FilterNode
+from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class FaderRawNode(FilterNode):

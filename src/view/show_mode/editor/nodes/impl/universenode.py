@@ -5,7 +5,7 @@ import logging
 from pyqtgraph.flowchart import Terminal
 
 from model import DataType, Filter
-from . import FilterNode
+from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class UniverseNode(FilterNode):

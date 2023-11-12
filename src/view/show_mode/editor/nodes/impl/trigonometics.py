@@ -2,7 +2,7 @@
 """Trigonometric filter nodes"""
 from model import DataType
 
-from . import FilterNode
+from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class TrigonometricNode(FilterNode):

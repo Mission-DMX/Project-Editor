@@ -8,7 +8,8 @@ from PySide6.QtGui import QFont
 from model import Scene, Filter, DataType, Broadcaster
 from model.scene import FilterPage
 
-from ..filter_settings_item import FilterSettingsItem
+from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
+from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
 
 
 class FilterNode(Node):
@@ -20,20 +21,29 @@ class FilterNode(Node):
                  terminals: dict[str, dict[str, str]] = None,
                  allowAddInput: bool = False,
                  allowAddOutput: bool = False):
-        super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
         if isinstance(model, Scene):
             self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
             model.append_filter(self._filter)
         elif isinstance(model, Filter):
             self._filter = model
         else:
+            self._filter = None
             logging.warning("Tried creating filter node with unknown model %s", str(type(model)))
+
+        super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
 
         self.fsi = FilterSettingsItem(self, self.graphicsItem())
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
         self.graphicsItem().xChanged.connect(self.update_filter_pos)
+
+    def graphicsItem(self):
+        """Return the GraphicsItem for this node. Subclasses may re-implement
+        this method to customize their appearance in the flowchart."""
+        if self._graphicsItem is None:
+            self._graphicsItem = FilterNodeGraphicsItem(self)
+        return self._graphicsItem
 
     def connected(self, localTerm: Terminal, remoteTerm: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.
@@ -49,7 +59,8 @@ class FilterNode(Node):
             return
 
         if not isinstance(remote_node, FilterNode):
-            logging.warning("Tried to non-FilterNode nodes. Forced disconnection.")
+            logging.warning("Tried to non-FilterNode nodes. Forced disconnection. Got type: " + str(type(remote_node)) +
+                            " and expected: " + str(FilterNode.__class__) + " instance.")
             localTerm.disconnectFrom(remoteTerm)
             return
 

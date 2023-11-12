@@ -10,8 +10,9 @@ from model import Scene
 from model.scene import FilterPage
 from . import nodes
 from .filter_flowchart import FilterFlowchart
-from .nodes import FilterNode
-from .filter_node_library import FilterNodeLibrary
+from .nodes.base.filternode import FilterNode
+from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
+from .nodes.type_to_node_dict import type_to_node
 
 
 class NodeEditorWidget(QWidget):
@@ -40,7 +41,7 @@ class NodeEditorWidget(QWidget):
         loaded_in_filters: set[str] = set()
         required_filters: set[str] = set()
         for filter_ in self._page.filters:
-            self._flowchart.create_node_with_filter(filter_=filter_, node_type=nodes.type_to_node[filter_.filter_type])
+            self._flowchart.create_node_with_filter(filter_=filter_, node_type=type_to_node[filter_.filter_type])
             loaded_in_filters.add(filter_.filter_id)
             for remote_filter_channel in filter_.channel_links.values():
                 if not remote_filter_channel:
@@ -57,14 +58,15 @@ class NodeEditorWidget(QWidget):
                                                                                   self._page.parent_scene))
                 self._flowchart.create_node_with_filter(
                     filter_=filter_candidate,
-                    node_type=nodes.type_to_node[filter_candidate.filter_type], is_from_different_page=True
+                    node_type=type_to_node[filter_candidate.filter_type], is_from_different_page=True
             )
         if len(still_missing_filters) > 0:
             raise Exception("Missing filters '{}' in scene '{}'.".
                             format(still_missing_filters, self._page.parent_scene))
         for name, node in self._flowchart.nodes().items():
             if not isinstance(node, FilterNode):
-                logging.warning("Trying to connect non-FilterNode %s", name)
+                logging.warning("Trying to connect non-FilterNode %s. Got type: %s. Expected: %s",
+                                name, str(type(node)), str(FilterNode.__class__))
                 continue
             for input_channel, output_channel in node.filter.channel_links.items():
                 if output_channel == "":
