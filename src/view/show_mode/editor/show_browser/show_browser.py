@@ -20,12 +20,12 @@ from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 
 class ShowBrowser:
 
-    _filter_icon = QIcon("resources/filter.svg")
-    _scene_browser_tab_icon = QIcon("resources/showbrowser-show.svg")
-    _universe_browser_tab_icon = QIcon("resources/showbrowser-universe.svg")
-    _filter_browser_tab_icon = QIcon("resources/showbrowser-filterpages.svg")
-    _fader_icon = QIcon("resources/faders.svg")
-    _uipage_icon = QIcon("resources/uipage.svg")
+    _filter_icon = QIcon("resources/icons/filter.svg")
+    _scene_browser_tab_icon = QIcon("resources/icons/showbrowser-show.svg")
+    _universe_browser_tab_icon = QIcon("resources/icons/showbrowser-universe.svg")
+    _filter_browser_tab_icon = QIcon("resources/icons/showbrowser-filterpages.svg")
+    _fader_icon = QIcon("resources/icons/faders.svg")
+    _uipage_icon = QIcon("resources/icons/uipage.svg")
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget):
         self._widget = QWidget(parent)

@@ -1,0 +1,6 @@
+[submodule "submodules/resources"]
+	path = submodules/resources
+	url = git@git.chaotikum.org:doralitze/mission-dmx-resources.git
+[submodule "submodules/docs"]
+	path = submodules/docs
+	url = https://github.com/Mission-DMX/Docs.git
