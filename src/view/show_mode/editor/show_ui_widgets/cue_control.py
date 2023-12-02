@@ -11,6 +11,8 @@ class CueControlUIWidget(UIWidget):
         self._cues: list[tuple[str, int]] = []
         self._command_chain: list[tuple[str, str]] = []
 
+        filter_model.getScene().get_board_configuration().broadcaster.update_filter_parameter_direct.connect(self.update_parameter)
+
         cuelist_str = super().configuration.get("cue_names")
         if cuelist_str:
             for entry_text in cuelist_str.split(";"):
@@ -82,8 +84,9 @@ class CueControlUIWidget(UIWidget):
         progressBar.setEnabled(enabled)
         progressBar.setMinimumHeight(60)
         progressBar.setMinimum(0)
-        progressBar.setMaximum(200)
-        progressBar.setValue(100)
+        progressBar.setMaximum(2)
+        progressBar.setValue(1)
+        self._progressBar = progressBar
         layout.addWidget(progressBar)
         w.setLayout(layout)
         return w
@@ -147,3 +150,5 @@ class CueControlUIWidget(UIWidget):
                     return str(selected_cue_item.annotated_data[1])
         return None
 
+    def update_parameter(self, params: str):
+        print("test  a " + params)

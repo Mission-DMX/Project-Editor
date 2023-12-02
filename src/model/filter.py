@@ -71,6 +71,8 @@ class Filter:
         self._in_data_types: dict[str, DataType] = {}
         self._out_data_types: dict[str, DataType] = {}
 
+    def getScene(self):
+        return self._scene
     @property
     def scene(self) -> "Scene":
         """The scene the filter belongs to"""
