@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog, QProgressBar
 
 from model import UIWidget, UIPage, Filter
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -77,6 +77,14 @@ class CueControlUIWidget(UIWidget):
         else:
             self._config_cue_list_widget = cue_list
         layout.addWidget(cue_list)
+
+        progressBar = QProgressBar(w)
+        progressBar.setEnabled(enabled)
+        progressBar.setMinimumHeight(60)
+        progressBar.setMinimum(0)
+        progressBar.setMaximum(200)
+        progressBar.setValue(100)
+        layout.addWidget(progressBar)
         w.setLayout(layout)
         return w
 
