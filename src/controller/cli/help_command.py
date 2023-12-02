@@ -1,6 +1,6 @@
 # coding=utf-8
 """Commands for Help"""
-from cli.command import Command
+from controller.cli.command import Command
 
 
 class HelpCommand(Command):

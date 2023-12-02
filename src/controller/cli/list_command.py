@@ -1,6 +1,6 @@
 # coding=utf-8
 """Client Commands"""
-from cli.command import Command
+from controller.cli.command import Command
 from model.control_desk import BankSet
 
 

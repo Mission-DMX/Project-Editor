@@ -23,7 +23,7 @@ from model.universe import Universe
 
 if TYPE_CHECKING:
     from view.main_window import MainWindow
-    from cli.bankset_command import FaderBank
+    from controller.cli import FaderBank
     from model import Scene
 
 

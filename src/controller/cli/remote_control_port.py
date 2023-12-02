@@ -6,7 +6,7 @@ from socket import error as socket_error
 from socket import socket
 from threading import Thread
 
-from cli.cli_context import CLIContext
+from controller.cli.cli_context import CLIContext
 
 
 class SocketStreamReader:

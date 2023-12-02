@@ -1,6 +1,6 @@
 # coding=utf-8
 """commands for the Bank Sets"""
-from cli.command import Command
+from controller.cli.command import Command
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 
 

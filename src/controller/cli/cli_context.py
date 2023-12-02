@@ -3,10 +3,10 @@
 import argparse
 import traceback
 
-from cli.bankset_command import BankSetCommand
-from cli.help_command import HelpCommand
-from cli.list_command import ListCommand
-from cli.select_command import SelectCommand
+from controller.cli.bankset_command import BankSetCommand
+from controller.cli.help_command import HelpCommand
+from controller.cli.list_command import ListCommand
+from controller.cli.select_command import SelectCommand
 
 
 class CLIContext:
