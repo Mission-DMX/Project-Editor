@@ -66,4 +66,9 @@ type_to_node: dict[int, str] = {
         51: Adapter8bitToFloat.nodeName,
         52: Adapter16bitToFloat.nodeName,
         53: AdapterColorToFloatsNode.nodeName,
+        54: AdapterFloatTo8BitRange.nodeName,
+        55: AdapterFloatTo16BitRange.nodeName,
+        56: AdapterFloatToFloatRange.nodeName,
+        57: CombineTwo8BitToSingle16Bit.nodeName,
+        58: Map8BitTo16Bit.nodeName,
     }
