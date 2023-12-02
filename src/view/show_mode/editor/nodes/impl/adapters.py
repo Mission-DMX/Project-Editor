@@ -150,3 +150,91 @@ class AdapterColorToFloatsNode(FilterNode):
         self.filter.out_data_types["h"] = DataType.DT_DOUBLE
         self.filter.out_data_types["s"] = DataType.DT_DOUBLE
         self.filter.out_data_types["i"] = DataType.DT_DOUBLE
+
+class AdapterFloatToRange(FilterNode):
+    """Filter maps a range of float to another range of specific type (template)"""
+
+    def __init__(self, model, name, filter_type):
+        super().__init__(model, filter_type, name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'}
+        })
+
+        try:
+            self.filter.initial_parameters["lower_bound_in"] = model.initial_parameters["lower_bound_in"]
+            self.filter.initial_parameters["upper_bound_in"] = model.initial_parameters["upper_bound_in"]
+            self.filter.initial_parameters["lower_bound_out"] = model.initial_parameters["lower_bound_out"]
+            self.filter.initial_parameters["limit_range"] = model.initial_parameters["limit_range"]
+        except:
+            self.filter.initial_parameters["lower_bound_in"] = "0"
+            self.filter.initial_parameters["upper_bound_in"] = "1"
+            self.filter.initial_parameters["lower_bound_out"] = "0"
+            self.filter.initial_parameters["limit_range"] = "0"
+        self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.gui_update_keys["lower_bound_in"] = DataType.DT_DOUBLE
+        self.filter.gui_update_keys["upper_bound_in"] = DataType.DT_DOUBLE
+        self.filter.gui_update_keys["lower_bound_out"] = DataType.DT_DOUBLE
+        self.filter.gui_update_keys["upper_bound_out"] = DataType.DT_DOUBLE
+        self.filter.gui_update_keys["limit_range"] = DataType.DT_BOOL
+
+class AdapterFloatTo8BitRange(AdapterFloatToRange):
+    """Filter maps a range of float to a range of 8bit"""
+    nodeName = 'Float range to 8bit'
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=54, name=name)
+        try:
+            self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
+        except:
+            self.filter.initial_parameters["upper_bound_out"] = "255"
+        self.filter.out_data_types["value"] = DataType.DT_8_BIT
+
+class AdapterFloatTo16BitRange(AdapterFloatToRange):
+    """Filter maps a range of float to a range of 16bit"""
+    nodeName = 'Float range to 16bit'
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=55, name=name)
+        try:
+            self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
+        except:
+            self.filter.initial_parameters["upper_bound_out"] = "65535"
+        self.filter.out_data_types["value"] = DataType.DT_16_BIT
+
+class AdapterFloatToFloatRange(AdapterFloatToRange):
+    """Filter maps a range of float to a range of float"""
+    nodeName = 'Float range to float range'
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=56, name=name)
+        try:
+            self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
+        except:
+            self.filter.initial_parameters["upper_bound_out"] = "1"
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+
+class CombineTwo8BitToSingle16Bit(FilterNode):
+    """Filter that combines two 8bit values to a 16bit one."""
+    nodeName = 'Dual 8bit to single 16bit'
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=57, name=name, terminals={
+            'lower': {'io': 'in'},
+            'upper': {'io': 'in'},
+            'value': {'io': 'out'},
+        })
+        self.filter.in_data_types["lower"] = DataType.DT_8_BIT
+        self.filter.in_data_types["upper"] = DataType.DT_8_BIT
+        self.filter.out_data_types["value"] = DataType.DT_16_BIT
+
+class Map8BitTo16Bit(FilterNode):
+    """Filter that maps an 8bit value to a 16bit one."""
+    nodeName = 'Map 8bit to 16bit'
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=58, name=name, terminals={
+            'value_in': {'io': 'in'},
+            'value': {'io': 'out'},
+        })
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.out_data_types["value"] = DataType.DT_16_BIT
