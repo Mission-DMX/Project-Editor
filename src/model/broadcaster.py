@@ -87,7 +87,6 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(update_parameter)
-    update_filter_parameter_direct: QtCore.Signal = QtCore.Signal(str)
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []

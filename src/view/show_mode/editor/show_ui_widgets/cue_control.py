@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInpu
 
 from model import UIWidget, UIPage, Filter
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
-
+from proto.FilterMode_pb2 import update_parameter
 
 class CueControlUIWidget(UIWidget):
 
@@ -11,7 +11,8 @@ class CueControlUIWidget(UIWidget):
         self._cues: list[tuple[str, int]] = []
         self._command_chain: list[tuple[str, str]] = []
 
-        filter_model.getScene().get_board_configuration().broadcaster.update_filter_parameter_direct.connect(self.update_parameter)
+        filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self.update_parameter)
+        self._filter = filter_model
 
         cuelist_str = super().configuration.get("cue_names")
         if cuelist_str:
@@ -150,5 +151,8 @@ class CueControlUIWidget(UIWidget):
                     return str(selected_cue_item.annotated_data[1])
         return None
 
-    def update_parameter(self, params: str):
-        print("test  a " + params)
+    def update_parameter(self, param: update_parameter):
+        print("a1: " + str(self._filter.scene))
+        print("a2: " + str(param.scene_id))
+        if self._filter.filter_id == param.filter_id:
+            print("test  a " + str(param.scene_id) + str(param.filter_id) + str(param.parameter_value))

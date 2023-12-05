@@ -5,7 +5,6 @@ from .device import Device
 from .patching_universe import PatchingUniverse
 from .scene import Scene
 from .universe import Universe
-from proto.FilterMode_pb2 import update_parameter
 
 
 class BoardConfiguration:
@@ -31,8 +30,6 @@ class BoardConfiguration:
         self._broadcaster.delete_universe.connect(self._delete_universe)
         self._broadcaster.device_created.connect(self._add_device)
         self._broadcaster.delete_device.connect(self._delete_device)
-
-        self._broadcaster.update_filter_parameter.connect(self.update_filter_parameter)
 
     def _clear(self):
         for scene in self._scenes:
@@ -183,12 +180,3 @@ class BoardConfiguration:
             if scene.scene_id == scene_id:
                 return scene
         return None
-
-    def update_filter_parameter(self, param: update_parameter):
-        for scene in self._scenes:
-            if scene.scene_id == param.scene_id:
-                for filter in scene.filters:
-                    if filter.filter_id == param.filter_id:
-                        # filter.update_parameter(param.parameter_value)
-                        self._broadcaster.update_filter_parameter_direct.emit(param.parameter_value)
-        pass

@@ -83,9 +83,6 @@ class Scene:
         """Sets the human readable name of the scene displayed by the ui"""
         self._human_readable_name = human_readable_name
 
-
-    def get_board_configuration(self):
-        return self._board_configuration
     @property
     def board_configuration(self) -> "BoardConfiguration":
         """The board configuration the scene is part of"""
