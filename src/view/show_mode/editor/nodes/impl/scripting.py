@@ -54,17 +54,20 @@ class LuaFilterNode(FilterNode):
                 self.addOutput(name=channel_name)
             self.filter.out_data_types[channel_name] = DataType.from_filter_str(data_type)
             legal_inputs.append(channel_name)
+        terms_to_remove = []
         for term in self.terminals.keys():
             if term not in legal_inputs:
-                self.removeTerminal(term)
-                try:
-                    self.filter.in_data_types.pop(term)
-                except KeyError:
-                    pass
-                try:
-                    self.filter.out_data_types.pop(term)
-                except KeyError:
-                    pass
+                terms_to_remove.append(term)
+        for term in terms_to_remove:
+            self.removeTerminal(term)
+            try:
+                self.filter.in_data_types.pop(term)
+            except KeyError:
+                pass
+            try:
+                self.filter.out_data_types.pop(term)
+            except KeyError:
+                pass
 
     def _ensure_parameters(self):
         if not self.filter.filter_configurations.get("in_mapping"):
