@@ -17,6 +17,9 @@ from view.dialogs import ExceptionsDialog
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
 
 
+logger = logging.getLogger(__name__)
+
+
 def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str, BankSet]):
     _id = child.attrib.get('id')
     bs: BankSet = BankSet(gui_controlled=True, id=_id)
@@ -277,7 +280,12 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
                 logging.error("Found unexpected child '{}' in ui widget definition.".format(config_entry.tag))
                 continue
             conf[str(config_entry.attrib['name'])] = str(config_entry.attrib['value'])
-        ui_widget = filter_to_ui_widget(scene.get_filter_by_id(fid), page, conf, variante)
+        corresponding_filter = scene.get_filter_by_id(fid)
+        if not corresponding_filter:
+            logger.error("Did not load ui widget for filter with id '{}' from scene '{}' as it does not exist."
+                         .format(fid, scene))
+            continue
+        ui_widget = filter_to_ui_widget(corresponding_filter, page, conf, variante)
         ui_widget.position = (posX, posY)
         ui_widget.size = (w, h)
         page.append_widget(ui_widget)

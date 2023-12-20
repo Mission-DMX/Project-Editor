@@ -140,3 +140,6 @@ class Filter:
         f._out_data_types = self._out_data_types.copy()
         f._gui_update_keys = self._gui_update_keys.copy()
         return f
+
+    def __str__(self):
+        return "Filter '{}' from scene '{}'".format(self._filter_id, self.scene)
