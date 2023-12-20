@@ -1,18 +1,37 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog, QProgressBar
+import datetime
+from enum import Enum
+
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog, QProgressBar, QLabel
 
 from model import UIWidget, UIPage, Filter
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from proto.FilterMode_pb2 import update_parameter
 
+from src.fish.cue_state import CueState
+
+
+class State(Enum):
+    STOP = 1
+    PLAY = 2
+    PAUSE = 3
 class CueControlUIWidget(UIWidget):
 
     def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
         super().__init__(fid, parent, configuration)
+        self._progressBar = QProgressBar()
+        self._statuslabel = QLabel()
+        self._cue_state = CueState()
         self._cues: list[tuple[str, int]] = []
         self._command_chain: list[tuple[str, str]] = []
 
         filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self.update_parameter)
         self._filter = filter_model
+
+        self._timer = QTimer()
+        self._timer.setInterval(50)
+        self._timer.timeout.connect(self.update_time_passed)
+        self._timer.start()
 
         cuelist_str = super().configuration.get("cue_names")
         if cuelist_str:
@@ -74,30 +93,41 @@ class CueControlUIWidget(UIWidget):
             item.annotated_data = cue
             cue_list.addItem(item)
         cue_list.setEnabled(enabled)
-        cue_list.setMinimumHeight(100)
+        cue_list.setMinimumHeight(300)
         if enabled:
             self._player_cue_list_widget = cue_list
         else:
             self._config_cue_list_widget = cue_list
         layout.addWidget(cue_list)
 
-        progressBar = QProgressBar(w)
-        progressBar.setEnabled(enabled)
-        progressBar.setMinimumHeight(60)
-        progressBar.setMinimum(0)
-        progressBar.setMaximum(2)
-        progressBar.setValue(1)
-        self._progressBar = progressBar
-        layout.addWidget(progressBar)
+        self._progressBar.setParent(w)
+        self._progressBar.setEnabled(enabled)
+        self._progressBar.setMinimumHeight(60)
+        self._progressBar.setMinimum(0)
+        self._progressBar.setMaximum(20)
+        layout.addWidget(self._progressBar)
+
+        self._statuslabel.setParent(w)
+        self._statuslabel.setEnabled(enabled)
+        self._statuslabel.setMinimumHeight(40)
+        self._statuslabel.setVisible(True)
+        self._statuslabel.setText("Init text")
+        self._statuslabel.show()
+        layout.addWidget(self._statuslabel)
+
+        self.update_time_passed()
+
         w.setLayout(layout)
         return w
 
     def insert_action(self, action: str | None, state: str | None):
+        print("inact: " + action + " ")
         if not action or not state:
             return
         command = (action, state)
         self._command_chain.append(command)
         self.push_update()
+        self._command_chain.clear()
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if not self._config_widget:
@@ -152,7 +182,12 @@ class CueControlUIWidget(UIWidget):
         return None
 
     def update_parameter(self, param: update_parameter):
-        print("a1: " + str(self._filter.scene))
-        print("a2: " + str(param.scene_id))
         if self._filter.filter_id == param.filter_id:
-            print("test  a " + str(param.scene_id) + str(param.filter_id) + str(param.parameter_value))
+            self._cue_state.update(param)
+            self._statuslabel.setText(str(self._cue_state))
+            self._progressBar.setMaximum(self._cue_state.get_max_time())
+            self._progressBar.setMaximum(self._cue_state.get_current_time())
+    def update_time_passed(self):
+        self._progressBar.setValue(self._cue_state.get_current_time())
+        self._progressBar.setMaximum(self._cue_state.get_max_time())
+        self._statuslabel.setText(str(self._cue_state))
