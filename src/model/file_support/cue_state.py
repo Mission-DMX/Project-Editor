@@ -1,7 +1,6 @@
 import datetime
 from enum import Enum
-
-from src.proto.FilterMode_pb2 import update_parameter
+from proto.FilterMode_pb2 import update_parameter
 
 
 class State(Enum):
@@ -11,7 +10,8 @@ class State(Enum):
 
 
 class CueState():
-    def __init__(self):
+    def __init__(self, filter):
+        self._filter = filter
         self._state = State.STOP
         self._end_time = datetime.timedelta(seconds=float(20))
         self._paused_time = datetime.timedelta(seconds=float(0))
@@ -24,7 +24,7 @@ class CueState():
             return "stopped"
         elif self._state == State.PAUSE:
             ret = ("paused at " +
-                   str(self._paused_time))
+                   self.time_delta_to_str(self._paused_time))
         if self._state == State.PLAY:
             ret = self.time_delta_to_str(datetime.datetime.now() - self._start_time)
         ret = (ret + " / " +
@@ -35,24 +35,18 @@ class CueState():
         return ret
 
     def update(self, param: update_parameter):
-        values = param.parameter_value.split(";")
-        print(values)
-        self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
-        self._end_time = datetime.timedelta(seconds=float(values[3]))
-        self._active_cue = int(values[1])
-        if values[0] == 'play':
-            self._state = State.PLAY
-        elif values[0] == 'pause':
-            self._paused_time = datetime.timedelta(seconds=float(values[2]))
-            self._state = State.PAUSE
-        elif values[0] == 'stop':
-            self._state = State.STOP
-
-    def get_max_time(self):
-        return self._end_time.total_seconds() * 1000
-
-    def get_current_time(self):
-        return (datetime.datetime.now() - self._start_time).total_seconds() * 1000
+        if self._filter.filter_id == param.filter_id:
+            values = param.parameter_value.split(";")
+            self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
+            self._end_time = datetime.timedelta(seconds=float(values[3]))
+            self._active_cue = int(values[1])
+            if values[0] == 'play':
+                self._state = State.PLAY
+            elif values[0] == 'pause':
+                self._paused_time = datetime.timedelta(seconds=float(values[2]))
+                self._state = State.PAUSE
+            elif values[0] == 'stop':
+                self._state = State.STOP
 
     def time_delta_to_str(self, delta: datetime.timedelta):
         ret = ""
@@ -66,11 +60,11 @@ class CueState():
             delta -= datetime.timedelta(hours=hours)
         # if self._end_time >= datetime.timedelta(minutes=1):
         minutes = int(delta.total_seconds() / 60)
-        ret += f'{minutes:02d}' + ":"
+        ret += f'{minutes:02d}'
         delta -= datetime.timedelta(minutes=minutes)
         if self._end_time < datetime.timedelta(days=1):
             seconds = int(delta.total_seconds())
-            ret += f'{seconds:02d}'
+            ret += ":" + f'{seconds:02d}'
             delta -= datetime.timedelta(seconds=seconds)
         if self._end_time < datetime.timedelta(hours=1):
             ret += "." + f'{int(delta.total_seconds()*100):02d}'

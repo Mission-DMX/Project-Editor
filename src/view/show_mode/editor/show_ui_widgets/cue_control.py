@@ -1,4 +1,3 @@
-import datetime
 from enum import Enum
 
 from PySide6.QtCore import QTimer
@@ -6,27 +5,20 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInpu
 
 from model import UIWidget, UIPage, Filter
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
-from proto.FilterMode_pb2 import update_parameter
 
-from src.fish.cue_state import CueState
+from model.file_support.cue_state import CueState
 
-
-class State(Enum):
-    STOP = 1
-    PLAY = 2
-    PAUSE = 3
 class CueControlUIWidget(UIWidget):
 
     def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
         super().__init__(fid, parent, configuration)
-        self._progressBar = QProgressBar()
         self._statuslabel = QLabel()
-        self._cue_state = CueState()
         self._cues: list[tuple[str, int]] = []
         self._command_chain: list[tuple[str, str]] = []
 
-        filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self.update_parameter)
         self._filter = filter_model
+        self._cue_state = CueState(self._filter)
+        filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._cue_state.update)
 
         self._timer = QTimer()
         self._timer.setInterval(50)
@@ -56,6 +48,9 @@ class CueControlUIWidget(UIWidget):
         self._config_widget: QWidget | None = None
         self._input_dialog: QInputDialog | None = None
         self._dialog_widget: QWidget | None = None
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._filter.scene.board_configuration.broadcaster.update_filter_parameter.disconnect(self._cue_state.update)
 
     @property
     def configuration(self) -> dict[str, str]:
@@ -100,16 +95,9 @@ class CueControlUIWidget(UIWidget):
             self._config_cue_list_widget = cue_list
         layout.addWidget(cue_list)
 
-        self._progressBar.setParent(w)
-        self._progressBar.setEnabled(enabled)
-        self._progressBar.setMinimumHeight(60)
-        self._progressBar.setMinimum(0)
-        self._progressBar.setMaximum(20)
-        layout.addWidget(self._progressBar)
-
         self._statuslabel.setParent(w)
         self._statuslabel.setEnabled(enabled)
-        self._statuslabel.setMinimumHeight(40)
+        self._statuslabel.setMinimumHeight(20)
         self._statuslabel.setVisible(True)
         self._statuslabel.setText("Init text")
         self._statuslabel.show()
@@ -121,7 +109,6 @@ class CueControlUIWidget(UIWidget):
         return w
 
     def insert_action(self, action: str | None, state: str | None):
-        print("inact: " + action + " ")
         if not action or not state:
             return
         command = (action, state)
@@ -181,13 +168,5 @@ class CueControlUIWidget(UIWidget):
                     return str(selected_cue_item.annotated_data[1])
         return None
 
-    def update_parameter(self, param: update_parameter):
-        if self._filter.filter_id == param.filter_id:
-            self._cue_state.update(param)
-            self._statuslabel.setText(str(self._cue_state))
-            self._progressBar.setMaximum(self._cue_state.get_max_time())
-            self._progressBar.setMaximum(self._cue_state.get_current_time())
     def update_time_passed(self):
-        self._progressBar.setValue(self._cue_state.get_current_time())
-        self._progressBar.setMaximum(self._cue_state.get_max_time())
         self._statuslabel.setText(str(self._cue_state))
