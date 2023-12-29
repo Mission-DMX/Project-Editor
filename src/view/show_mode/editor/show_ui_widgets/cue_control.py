@@ -18,6 +18,7 @@ class CueControlUIWidget(UIWidget):
 
         self._filter = filter_model
         self._cue_state = CueState(self._filter)
+        # Todo: remove callback of the signal
         filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._cue_state.update)
 
         self._timer = QTimer()
@@ -48,9 +49,6 @@ class CueControlUIWidget(UIWidget):
         self._config_widget: QWidget | None = None
         self._input_dialog: QInputDialog | None = None
         self._dialog_widget: QWidget | None = None
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self._filter.scene.board_configuration.broadcaster.update_filter_parameter.disconnect(self._cue_state.update)
 
     @property
     def configuration(self) -> dict[str, str]:
