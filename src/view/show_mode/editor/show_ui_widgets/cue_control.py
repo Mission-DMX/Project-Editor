@@ -1,15 +1,30 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog
+from enum import Enum
+
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog, QProgressBar, QLabel
 
 from model import UIWidget, UIPage, Filter
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
+from model.file_support.cue_state import CueState
 
 class CueControlUIWidget(UIWidget):
 
     def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
         super().__init__(fid, parent, configuration)
+        self._statuslabel = QLabel()
         self._cues: list[tuple[str, int]] = []
         self._command_chain: list[tuple[str, str]] = []
+
+        self._filter = filter_model
+        self._cue_state = CueState(self._filter)
+        # Todo: remove callback of the signal
+        filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._cue_state.update)
+
+        self._timer = QTimer()
+        self._timer.setInterval(50)
+        self._timer.timeout.connect(self.update_time_passed)
+        self._timer.start()
 
         cuelist_str = super().configuration.get("cue_names")
         if cuelist_str:
@@ -71,12 +86,23 @@ class CueControlUIWidget(UIWidget):
             item.annotated_data = cue
             cue_list.addItem(item)
         cue_list.setEnabled(enabled)
-        cue_list.setMinimumHeight(100)
+        cue_list.setMinimumHeight(300)
         if enabled:
             self._player_cue_list_widget = cue_list
         else:
             self._config_cue_list_widget = cue_list
         layout.addWidget(cue_list)
+
+        self._statuslabel.setParent(w)
+        self._statuslabel.setEnabled(enabled)
+        self._statuslabel.setMinimumHeight(20)
+        self._statuslabel.setVisible(True)
+        self._statuslabel.setText("Init text")
+        self._statuslabel.show()
+        layout.addWidget(self._statuslabel)
+
+        self.update_time_passed()
+
         w.setLayout(layout)
         return w
 
@@ -86,6 +112,7 @@ class CueControlUIWidget(UIWidget):
         command = (action, state)
         self._command_chain.append(command)
         self.push_update()
+        self._command_chain.clear()
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if not self._config_widget:
@@ -139,3 +166,5 @@ class CueControlUIWidget(UIWidget):
                     return str(selected_cue_item.annotated_data[1])
         return None
 
+    def update_time_passed(self):
+        self._statuslabel.setText(str(self._cue_state))

@@ -161,6 +161,10 @@ class NetworkManager(QtCore.QObject):
                         message.ParseFromString(bytes(msg))
                         from model.control_desk import BankSet
                         BankSet.handle_column_update_message(message)
+                    case proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER:
+                        message: proto.FilterMode_pb2.update_parameter = proto.FilterMode_pb2.update_parameter()
+                        message.ParseFromString(bytes(msg))
+                        self._broadcaster.update_filter_parameter.emit(message)
                     case _:
                         pass
             except:
