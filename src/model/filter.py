@@ -148,6 +148,13 @@ class Filter:
 
 
 class VirtualFilter(Filter, abc.ABC):
+    """
+    This abstract class can be used in order to implement virtual filters. The configuration of these filters is still
+    stored within the filter configuration, however, these filters will not be sent to fish. Instead, their
+    instantiate_filters method will be called in order to provide a representation that fish can understand in the event
+    that the show will be serialized for fish.
+    """
+
     @abc.abstractmethod
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         """
