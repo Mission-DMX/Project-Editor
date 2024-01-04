@@ -1,6 +1,6 @@
 # coding=utf-8
 """Filter module"""
-
+import abc
 from typing import TYPE_CHECKING
 from enum import IntFlag, auto, Enum
 
@@ -78,7 +78,7 @@ class Filter:
 
     @property
     def filter_id(self) -> str:
-        """The unique id/name of the filter."""
+        """The unique id/name of the filter. This is not to be confused with the filter type."""
         return self._filter_id
 
     @filter_id.setter
@@ -90,7 +90,8 @@ class Filter:
 
     @property
     def filter_type(self) -> int:
-        """The type of the filter"""
+        """The type of the filter. This might be a positive number for a filter that fish understands or a negative
+        one in case of a virtual filter that the GUI needs to resolve first."""
         return self._filter_type
 
     @property
@@ -131,6 +132,10 @@ class Filter:
     def gui_update_keys(self) -> dict[str, DataType | str]:
         return self._gui_update_keys
 
+    @property
+    def is_virtual_filter(self) -> bool:
+        return self.filter_type < 0
+
     def copy(self, new_scene: "Scene" = None, new_id: str = None) -> "Filter":
         f = Filter(new_scene if new_scene else self.scene, self._filter_id if not new_id else new_id, self._filter_type, self._pos)
         f._channel_links = self.channel_links.copy()
@@ -140,3 +145,40 @@ class Filter:
         f._out_data_types = self._out_data_types.copy()
         f._gui_update_keys = self._gui_update_keys.copy()
         return f
+
+
+class VirtualFilter(Filter, abc.ABC):
+    """
+    This abstract class can be used in order to implement virtual filters. The configuration of these filters is still
+    stored within the filter configuration, however, these filters will not be sent to fish. Instead, their
+    instantiate_filters method will be called in order to provide a representation that fish can understand in the event
+    that the show will be serialized for fish.
+    """
+
+    @abc.abstractmethod
+    def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
+        """
+        This method shall be consulted by the show file generator if it serializes the show in order to send it to fish.
+        The purpose of this method is to translate the virtual filter output port to the filterid:portid string of the
+        actually instantiated corresponding filter. It should return None, if and only if the provided input
+        virtual_port_id does not exist with this filter type.
+
+        :param virtual_port_id: The name of the port of this virtual filter that should be translated to the channel id
+        of an instantiated filter.
+        :returns: The resolved real filter and output port combination or None if the input was invalid.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def instantiate_filters(self, filter_list: list[Filter]):
+        """
+        This method will be called by the show file serializer when it serializes the show for fish. It places the real
+        filters inside the provided filter_list argument.
+
+        :param filter_list: The list to resolve the real filters into
+
+        :note: Implementing classes do not need to resolve real port addresses from other filters themselves as this
+        method will be called prior to resolving filter addresses. Instead, instantiated filters need to contain the
+        configured channel mappings.
+        """
+        raise NotImplementedError()
