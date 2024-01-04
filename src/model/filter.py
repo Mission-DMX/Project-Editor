@@ -185,4 +185,3 @@ class VirtualFilter(Filter, abc.ABC):
         configured channel mappings.
         """
         raise NotImplementedError()
->>>>>>> main

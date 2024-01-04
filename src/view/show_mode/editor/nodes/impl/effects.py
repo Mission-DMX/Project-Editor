@@ -1,4 +1,5 @@
 from model import DataType, Scene
+from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -118,3 +119,24 @@ class ShiftColorNode(ShiftFilterNode):
 
     def __init__(self, model, name):
         super().__init__(model, name, 48, DataType.DT_COLOR)
+
+
+class AutoTrackerNode(FilterNode):
+    def __init__(self, model, name, id: int, data_type: DataType):
+        super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True, terminals={})
+        self.setup_output_terminals()
+
+    def setup_output_terminals(self):
+
+        if isinstance(self.model, AutoTrackerFilter):
+            trackers = self.model.number_of_concurrent_trackers
+            if trackers < len(self.terminals):
+                self.terminals.clear()
+            for i in range(len(self.terminals), trackers, 1):
+                self.addOutput("Tracker{}_Pan".format(i))
+                self.addOutput("Tracker{}_Tilt".format(i))
+                self.filter.out_data_types["Tracker{}_Pan".format(i)] = DataType.DT_16_BIT
+                self.filter.out_data_types["Tracker{}_Tilt".format(i)] = DataType.DT_16_BIT
+
+    def update_node_after_settings_changed(self):
+        self.setup_output_terminals()
