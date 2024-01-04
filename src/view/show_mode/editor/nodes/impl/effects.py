@@ -128,8 +128,9 @@ class AutoTrackerNode(FilterNode):
 
     def setup_output_terminals(self):
 
-        if isinstance(self.model, AutoTrackerFilter):
-            trackers = self.model.number_of_concurrent_trackers
+        f = self.filter
+        if isinstance(f, AutoTrackerFilter):
+            trackers = f.number_of_concurrent_trackers
             if trackers < len(self.terminals):
                 self.terminals.clear()
             for i in range(len(self.terminals), trackers, 1):
