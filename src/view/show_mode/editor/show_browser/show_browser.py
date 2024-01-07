@@ -286,8 +286,7 @@ class ShowBrowser:
             if isinstance(si, AnnotatedTreeWidgetItem):
                 if isinstance(si.annotated_data, Scene):
                     scene_to_rename = si.annotated_data
-                    if not self._input_dialog:
-                        self._input_dialog = QInputDialog(self.widget)
+                    self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
                     self._input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
                     self._input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
@@ -295,8 +294,7 @@ class ShowBrowser:
                     self._input_dialog.open()
                 if isinstance(si.annotated_data, FilterPage):
                     page_to_rename = si.annotated_data
-                    if not self._input_dialog:
-                        self._input_dialog = QInputDialog(self.widget)
+                    self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
                     self._input_dialog.textValueSelected.connect(lambda text: rename(self, page_to_rename, text))
                     self._input_dialog.setLabelText("Rename filter page '" + page_to_rename.name + "' to:")
@@ -362,8 +360,7 @@ class ShowBrowser:
                 continue
             if isinstance(item.annotated_data, Scene) or isinstance(item.annotated_data, FilterPage):
                 parent_to_append_to = item.annotated_data
-                if not self._input_dialog:
-                    self._input_dialog = QInputDialog(self.widget)
+                self._input_dialog = QInputDialog(self.widget)
                 self._input_dialog.setInputMode(QInputDialog.TextInput)
                 self._input_dialog.textValueSelected.connect(lambda text: add(self, parent_to_append_to, text))
                 self._input_dialog.setLabelText("Please enter the name of the new page.")
