@@ -96,7 +96,10 @@ class FilterNode(Node):
         Returns:
             The return value of pyqtgraph.flowchart.Node.rename()
         """
-        name + name.replace(":", "_")
+        name = name.replace(":", "_")
+        # check for name collision
+        name = self.filter.scene.ensure_name_uniqueness(name):
+
         old_name = self.filter.filter_id
         self.filter.filter_id = name
         filters_to_update: set[Filter] = set()
