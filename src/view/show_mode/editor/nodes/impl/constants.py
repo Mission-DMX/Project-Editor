@@ -71,3 +71,22 @@ class ConstantsColorNode(FilterNode):
             self.filter.initial_parameters["value"] = "0,0,0"
         self.filter.out_data_types["value"] = DataType.DT_COLOR
         self.filter.gui_update_keys["value"] = DataType.DT_COLOR
+
+class PanTiltConstant(FilterNode):
+    """Filter to represent a pan/tilt position."""
+    nodeName = 'PanTilt_filter'
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=-2, name=name, terminals={
+            'value': {'io': 'out'}
+        })
+        try:
+            self.filter.initial_parameters["pan"] = model.initial_parameters["pan"]
+            self.filter.initial_parameters["tilt"] = model.initial_parameters["tilt"]
+        except:
+            self.filter.initial_parameters["pan"] = "0.0"
+            self.filter.initial_parameters["tilt"] = "0.0"
+        self.filter.out_data_types["pan"] = DataType.DT_16_BIT
+        self.filter.out_data_types["tilt"] = DataType.DT_16_BIT
+        self.filter.gui_update_keys["pan"] = DataType.DT_DOUBLE
+        self.filter.gui_update_keys["tilt"] = DataType.DT_DOUBLE

@@ -12,6 +12,7 @@ from view.show_mode.editor.nodes.impl.universenode import UniverseNode
 from view.show_mode.editor.nodes.impl.scripting import *
 
 type_to_node: dict[int, str] = {
+        -2: PanTiltConstant.nodeName,
         0: Constants8BitNode.nodeName,
         1: Constants16BitNode.nodeName,
         2: ConstantsFloatNode.nodeName,

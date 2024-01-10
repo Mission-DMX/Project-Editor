@@ -11,6 +11,7 @@ from model import Universe
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -66,6 +67,8 @@ def check_if_filter_has_special_widget(filter_):
         return CueEditor()
     elif filter_.filter_type == 50:
         return LuaScriptConfigWidget()
+    elif filter_.filter_type == -2:
+        return PanTiltConstantWidget()
     else:
         return None
 

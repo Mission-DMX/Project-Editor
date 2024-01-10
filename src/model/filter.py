@@ -156,7 +156,7 @@ class VirtualFilter(Filter, abc.ABC):
     """
 
     def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos=None):
-        super().__init__(scene, filter_id, filter_id, filter_type, pos)
+        super().__init__(scene, filter_id, filter_type, pos)
 
     @abc.abstractmethod
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
