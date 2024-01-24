@@ -1,10 +1,10 @@
 from xml.etree import ElementTree
 
 from controller.file.serializing.bankset_config_serialization import _create_scene_bankset
-from controller.file.serializing.filter_serialization import _create_filter_element, _create_channel_link_element, \
-    _create_initial_parameters_element, _create_filter_configuration_element
+from controller.file.serializing.filter_serialization import _create_filter_element, \
+    create_channel_mappings_for_filter_set
 
-from model import UIPage, Scene
+from model import UIPage, Scene, Filter
 from model.scene import FilterPage
 
 
@@ -44,18 +44,13 @@ def generate_scene_xml_description(assemble_for_fish_loading, root, scene):
     scene_element = _create_scene_element(scene=scene, parent=root)
     if scene.linked_bankset:
         _create_scene_bankset(root, scene_element, scene)
+    channel_override_dict: dict[str, str] = dict()
+    channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []
     for filter_ in scene.filters:
-
-        filter_element = _create_filter_element(filter_=filter_, parent=scene_element)
-
-        for channel_link in filter_.channel_links.items():
-            _create_channel_link_element(channel_link=channel_link, parent=filter_element)
-
-        for initial_parameter in filter_.initial_parameters.items():
-            _create_initial_parameters_element(initial_parameter=initial_parameter, parent=filter_element)
-
-        for filter_configuration in filter_.filter_configurations.items():
-            _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
+        _create_filter_element(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading,
+                               override_port_mapping=channel_override_dict,
+                               channel_links_to_be_created=channel_link_list)
+    create_channel_mappings_for_filter_set(channel_link_list, channel_override_dict)
     if not assemble_for_fish_loading:
         for page in scene.pages:
             _add_filter_page_to_element(scene_element, page, None)

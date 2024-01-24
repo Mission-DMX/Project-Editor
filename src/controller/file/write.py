@@ -25,6 +25,7 @@ def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     """
     xml = create_xml(show_data)
     if os.path.exists(file_name):
+        # TODO introduce proper version control
         copyfile(file_name, os.path.splitext(file_name)[0] + '.show_backup')
     with open(file_name, 'w+', encoding="UTF-8") as file:
         ElementTree.indent(xml)
