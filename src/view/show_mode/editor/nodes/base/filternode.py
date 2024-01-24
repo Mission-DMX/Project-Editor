@@ -98,7 +98,7 @@ class FilterNode(Node):
         """
         name = name.replace(":", "_")
         # check for name collision
-        name = self.filter.scene.ensure_name_uniqueness(name):
+        name = self.filter.scene.ensure_name_uniqueness(name)
 
         old_name = self.filter.filter_id
         self.filter.filter_id = name
