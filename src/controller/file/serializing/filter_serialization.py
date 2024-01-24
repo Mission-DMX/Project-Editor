@@ -21,11 +21,13 @@ def _create_filter_element(filter_: Filter, parent: ElementTree.Element, for_fis
         ifl: list[Filter] = []
         filter_.instantiate_filters(ifl)
         for instantiated_filter in ifl:
-            _create_filter_element(instantiated_filter, parent, True, override_port_mapping)
+            _create_filter_element(instantiated_filter, parent, True, override_port_mapping,
+                                   channel_links_to_be_created)
         for output_channel_name in filter_.out_data_types.keys():
             override_port_mapping["{}:{}".format(filter_.filter_id, output_channel_name)] = \
                 filter_.resolve_output_port_id(output_channel_name)
     else:
+        # TODO implement postprocessing optimizations here
         filter_element = ElementTree.SubElement(parent, "filter", attrib={
             "id": str(filter_.filter_id),
             "type": str(filter_.filter_type),
