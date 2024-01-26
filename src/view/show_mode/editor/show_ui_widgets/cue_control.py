@@ -1,5 +1,3 @@
-from enum import Enum
-
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog, QProgressBar, QLabel
 

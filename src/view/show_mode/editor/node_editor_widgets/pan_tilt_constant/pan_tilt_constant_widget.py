@@ -25,8 +25,6 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
     def __init__(self, parent: QWidget = None):
         super().__init__()
         self._parent_widget = QWidget(parent=parent)
-        self._parent_widget.setMinimumHeight(300)
-        self._parent_widget.setMaximumHeight(300)
         top_layout = QHBoxLayout()
         graph = PanTiltConstantContentWidget(self._parent_widget)
         top_layout.addWidget(graph)
