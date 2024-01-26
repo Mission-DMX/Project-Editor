@@ -96,6 +96,7 @@ class PanTiltConstantContentWidget(QLabel):
                 self.joy_input_y = key.value
 
     def update_time_passed(self):
-        self._filter.pan = min(max(self._filter.pan + 0.01 * self.joy_input_x, 0.0), self.prange)
-        self._filter.tilt = min(max(self._filter.tilt + 0.01 * self.joy_input_y, 0.0), self.trange)
-        self.repaint()
+        if self.isVisible():
+            self._filter.pan = min(max(self._filter.pan + 0.01 * self.joy_input_x, 0.0), self.prange)
+            self._filter.tilt = min(max(self._filter.tilt + 0.01 * self.joy_input_y, 0.0), self.trange)
+            self.repaint()
