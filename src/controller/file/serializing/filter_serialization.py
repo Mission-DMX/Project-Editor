@@ -1,12 +1,12 @@
 from xml.etree import ElementTree
 
+from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 from model import Filter
 from model.filter import VirtualFilter
 
 
 def _create_filter_element(filter_: Filter, parent: ElementTree.Element, for_fish: bool,
-                           override_port_mapping: dict[str, str],
-                           channel_links_to_be_created: list[tuple[Filter, ElementTree.SubElement]]):
+                           om: SceneOptimizerModule):
     """Creates a xml element of type filter.
 
     <filter type="0" id="id">
@@ -21,20 +21,20 @@ def _create_filter_element(filter_: Filter, parent: ElementTree.Element, for_fis
         ifl: list[Filter] = []
         filter_.instantiate_filters(ifl)
         for instantiated_filter in ifl:
-            _create_filter_element(instantiated_filter, parent, True, override_port_mapping,
-                                   channel_links_to_be_created)
+            _create_filter_element(instantiated_filter, parent, True, om)
         for output_channel_name in filter_.out_data_types.keys():
-            override_port_mapping["{}:{}".format(filter_.filter_id, output_channel_name)] = \
+            om.channel_override_dict["{}:{}".format(filter_.filter_id, output_channel_name)] = \
                 filter_.resolve_output_port_id(output_channel_name)
     else:
-        # TODO implement postprocessing optimizations here
+        if om.filter_was_substituted(filter_):
+            return
         filter_element = ElementTree.SubElement(parent, "filter", attrib={
             "id": str(filter_.filter_id),
             "type": str(filter_.filter_type),
             "pos": f"{filter_.pos[0]},{filter_.pos[1]}"
         })
 
-        channel_links_to_be_created.append((filter_, filter_element))
+        om.channel_link_list.append((filter_, filter_element))
 
         for initial_parameter in filter_.initial_parameters.items():
             _create_initial_parameters_element(initial_parameter=initial_parameter, parent=filter_element)

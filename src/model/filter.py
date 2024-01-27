@@ -54,6 +54,11 @@ class DataType(IntFlag):
         return self.format_for_filters()
 
 
+class FilterTypeEnumeration(IntFlag):
+    FILTER_TYPE_TIME_INPUT = 32
+    FILTER_TYPE_MAIN_BRIGHTNESS = 49
+
+
 class Filter:
     """Filter for show file"""
 

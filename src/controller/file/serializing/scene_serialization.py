@@ -3,6 +3,7 @@ from xml.etree import ElementTree
 from controller.file.serializing.bankset_config_serialization import _create_scene_bankset
 from controller.file.serializing.filter_serialization import _create_filter_element, \
     create_channel_mappings_for_filter_set
+from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 
 from model import UIPage, Scene, Filter
 from model.scene import FilterPage
@@ -44,13 +45,10 @@ def generate_scene_xml_description(assemble_for_fish_loading, root, scene):
     scene_element = _create_scene_element(scene=scene, parent=root)
     if scene.linked_bankset:
         _create_scene_bankset(root, scene_element, scene)
-    channel_override_dict: dict[str, str] = dict()
-    channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []
+    om = SceneOptimizerModule()
     for filter_ in scene.filters:
-        _create_filter_element(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading,
-                               override_port_mapping=channel_override_dict,
-                               channel_links_to_be_created=channel_link_list)
-    create_channel_mappings_for_filter_set(channel_link_list, channel_override_dict)
+        _create_filter_element(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading, om=om)
+    create_channel_mappings_for_filter_set(om.channel_link_list, om.channel_override_dict)
     if not assemble_for_fish_loading:
         for page in scene.pages:
             _add_filter_page_to_element(scene_element, page, None)

@@ -1,6 +1,7 @@
 # coding=utf-8
 """Filter nodes related to time"""
 from model import DataType
+from model.filter import FilterTypeEnumeration
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -10,7 +11,7 @@ class TimeNode(FilterNode):
     nodeName = 'Time'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=32, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, name=name, terminals={
             'value': {'io': 'out'}
         })
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
