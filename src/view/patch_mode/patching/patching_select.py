@@ -6,7 +6,6 @@ import zipfile
 
 import requests
 from PySide6 import QtWidgets
-from PySide6.examples.widgets.layouts.flowlayout.flowlayout import FlowLayout
 
 from Style import Style
 from model.broadcaster import Broadcaster
@@ -16,6 +15,7 @@ from view.dialogs.patching_dialog import PatchingDialog
 from view.patch_mode.patching.fixture_item import FixtureItem
 from view.patch_mode.patching.manufacturer_item import ManufacturerItem
 from view.patch_mode.patching.mode_item import ModeItem
+from layouts.flow_layout import FlowLayout
 
 
 class PatchingSelect(QtWidgets.QScrollArea):
