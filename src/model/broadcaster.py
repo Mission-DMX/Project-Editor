@@ -90,6 +90,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []
+    log_message: QtCore.Signal = QtCore.Signal(str)
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:
