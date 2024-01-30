@@ -28,7 +28,6 @@ class LoggingWidget(QtWidgets.QTabWidget):
 
     def new_log_message(self, massage: str):
         """ handle incoming log messages """
-        print(massage)
         massage_content: dict = json.loads(massage)
 
         self._widget.appendPlainText(massage_content["level"])
