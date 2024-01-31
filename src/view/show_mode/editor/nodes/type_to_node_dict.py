@@ -12,6 +12,7 @@ from view.show_mode.editor.nodes.impl.universenode import UniverseNode
 from view.show_mode.editor.nodes.impl.scripting import *
 
 type_to_node: dict[int, str] = {
+        FilterTypeEnumeration.VFILTER_AUTOTRACKER: AutoTrackerNode.nodeName,
         0: Constants8BitNode.nodeName,
         1: Constants16BitNode.nodeName,
         2: ConstantsFloatNode.nodeName,
@@ -44,7 +45,7 @@ type_to_node: dict[int, str] = {
         29: ArithmeticExponentialNode.nodeName,
         30: ArithmeticMinimumNode.nodeName,
         31: ArithmeticMaximumNode.nodeName,
-        32: TimeNode.nodeName,
+        FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT: TimeNode.nodeName,
         33: TimeSwitchOnDelay8BitNode.nodeName,
         34: TimeSwitchOnDelay16BitNode.nodeName,
         35: TimeSwitchOnDelayFloatNode.nodeName,
@@ -61,7 +62,7 @@ type_to_node: dict[int, str] = {
         46: Shift16BitNode.nodeName,
         47: ShiftFloatNode.nodeName,
         48: ShiftColorNode.nodeName,
-        49: FaderMainBrightness.nodeName,
+        FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS: FaderMainBrightness.nodeName,
         50: LuaFilterNode.nodeName,
         51: Adapter8bitToFloat.nodeName,
         52: Adapter16bitToFloat.nodeName,

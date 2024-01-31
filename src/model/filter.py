@@ -55,6 +55,8 @@ class DataType(IntFlag):
 
 
 class FilterTypeEnumeration(IntFlag):
+    VFILTER_UNIVERSE = -2
+    VFILTER_AUTOTRACKER = -1
     FILTER_TYPE_TIME_INPUT = 32
     FILTER_TYPE_MAIN_BRIGHTNESS = 49
 
