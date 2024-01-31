@@ -55,6 +55,10 @@ class DataType(IntFlag):
 
 
 class FilterTypeEnumeration(IntFlag):
+    VFILTER_COMBINED_FILTER_PRESET = -6
+    VFILTER_POSITION_CONSTANT = -5
+    VFILTER_EFFECTSSTACK = -4
+    VFILTER_CUES = -3
     VFILTER_UNIVERSE = -2
     VFILTER_AUTOTRACKER = -1
     FILTER_TYPE_TIME_INPUT = 32
@@ -64,7 +68,7 @@ class FilterTypeEnumeration(IntFlag):
 class Filter:
     """Filter for show file"""
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos=None):
+    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
         if pos is None:
             pos = [0.0, 0.0]
         self._scene: "Scene" = scene
@@ -165,8 +169,8 @@ class VirtualFilter(Filter, abc.ABC):
     that the show will be serialized for fish.
     """
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos=None):
-        super().__init__(scene, filter_id, filter_id, filter_type, pos)
+    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
+        super().__init__(scene, filter_id, filter_type, pos)
 
     @abc.abstractmethod
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:

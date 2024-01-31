@@ -7,6 +7,7 @@ from PySide6.QtGui import QFont
 
 from model import Scene, Filter, DataType, Broadcaster
 from model.scene import FilterPage
+from model.virtual_filters import construct_virtual_filter_instance
 
 from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
@@ -22,7 +23,10 @@ class FilterNode(Node):
                  allowAddInput: bool = False,
                  allowAddOutput: bool = False):
         if isinstance(model, Scene):
-            self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
+            if filter_type < 0:
+                self._filter = construct_virtual_filter_instance(scene=model, filter_id=name, filter_type=filter_type)
+            else:
+                self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
             model.append_filter(self._filter)
         elif isinstance(model, Filter):
             self._filter = model
