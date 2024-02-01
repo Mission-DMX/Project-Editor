@@ -1,15 +1,16 @@
 # coding=utf-8
 """Basic filter node"""
-import logging
+from logging import getLogger
 
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
 
-from model import Scene, Filter, DataType, Broadcaster
-from model.scene import FilterPage
+from model import Scene, Filter
 
 from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
+
+logger = getLogger(__name__)
 
 
 class FilterNode(Node):
@@ -28,7 +29,7 @@ class FilterNode(Node):
             self._filter = model
         else:
             self._filter = None
-            logging.warning("Tried creating filter node with unknown model %s", str(type(model)))
+            logger.warning("Tried creating filter node with unknown model %s", str(type(model)))
 
         super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
 
@@ -59,21 +60,20 @@ class FilterNode(Node):
             return
 
         if not isinstance(remote_node, FilterNode):
-            logging.warning("Tried to non-FilterNode nodes. Forced disconnection. Got type: " + str(type(remote_node)) +
-                            " and expected: " + str(FilterNode.__class__) + " instance.")
+            logger.warning("Tried to non-FilterNode nodes. Forced disconnection. Got type: " + str(type(remote_node)) +
+                           " and expected: " + str(FilterNode.__class__) + " instance.")
             localTerm.disconnectFrom(remoteTerm)
             return
 
         try:
             if not self.filter.in_data_types[localTerm.name()] == remote_node.filter.out_data_types[remoteTerm.name()]:
-                logging.warning("Tried to connect incompatible filter channels. Forced disconnection.")
+                logger.warning("Tried to connect incompatible filter channels. Forced disconnection.")
                 localTerm.disconnectFrom(remoteTerm)
                 return
             self.filter.channel_links[localTerm.name()] = remote_node.name() + ":" + remoteTerm.name()
         except KeyError as e:
-            logging.error(str(e) + " Possible key candidates are: " + ", ".join(self.filter.in_data_types.keys()) +
-                          "\nRemote options are: " + ", ".join(remote_node.filter.out_data_types.keys()))
-
+            logger.error(str(e) + " Possible key candidates are: " + ", ".join(self.filter.in_data_types.keys()) +
+                         "\nRemote options are: " + ", ".join(remote_node.filter.out_data_types.keys()))
 
     def disconnected(self, localTerm, remoteTerm):
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.

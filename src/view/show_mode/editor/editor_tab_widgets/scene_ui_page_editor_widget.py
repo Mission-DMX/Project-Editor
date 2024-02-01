@@ -1,7 +1,5 @@
 # coding=utf-8
 """A scene can have multiple pages"""
-import logging
-
 from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton, QDialog, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtGui import QMouseEvent, QAction

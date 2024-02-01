@@ -1,6 +1,6 @@
 # coding=utf-8
 """Handles reading a xml document"""
-import logging
+
 import os
 import random
 from xml.etree import ElementTree
@@ -8,6 +8,7 @@ from xml.etree import ElementTree
 import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
+from file import logger
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from model.scene import FilterPage
@@ -23,7 +24,7 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
     for bank_element in child:
         bank = FaderBank()
         if bank_element.tag != 'bank':
-            logging.error("Unexpected element '{}' while parsing bank".format(bank_element.tag))
+            logger.error("Unexpected element '{}' while parsing bank".format(bank_element.tag))
             continue
         for column_element in bank_element:
             if column_element.tag == 'hslcolumn':
@@ -43,7 +44,7 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
                 col.fader_position = int(column_element.attrib['fader_position'])
                 col.encoder_position = int(column_element.attrib['encoder_position'])
             else:
-                logging.error("Unsupported bank column type '{}'.".format(column_element.tag))
+                logger.error("Unsupported bank column type '{}'.".format(column_element.tag))
                 continue
             bank.add_column(col)
         bs.add_bank(bank)
@@ -69,7 +70,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         schema = xmlschema.XMLSchema(schema_file)
         schema.validate(file_name)
     except Exception as error:
-        logging.error("Error while validating show file: {}".format(error))
+        logger.error("Error while validating show file: {}".format(error))
         ExceptionsDialog(error).exec()
         return False
 
@@ -90,7 +91,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
             case "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation":
                 prefix = "{" + value + "}"
             case _:
-                logging.warning("Found attribute %s=%s while parsing board configuration", key, value)
+                logger.warning("Found attribute %s=%s while parsing board configuration", key, value)
 
     _clean_tags(root, prefix)
 
@@ -110,7 +111,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
             case 'bankset':
                 _parse_and_add_bankset(child, loaded_banksets)
             case _:
-                logging.warning("Show %s contains unknown element: %s",
+                logger.warning("Show %s contains unknown element: %s",
                                 board_configuration.show_name, child.tag)
 
     for scene_def in scene_defs_to_be_parsed:
@@ -170,18 +171,18 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
                     parent_scene.insert_filterpage(f)
                 instantiated_pages.append(f)
             case _:
-                logging.warning(
+                logger.warning(
                     "Found attribute %s=%s while parsing filter page for scene %s",
                     key, value, parent_scene.human_readable_name)
     for child in element:
         if child.tag != "filterid":
-            logging.error("Found unknown tag '{}' in filter page.".format(child.tag))
+            logger.error("Found unknown tag '{}' in filter page.".format(child.tag))
         else:
             filter = parent_scene.get_filter_by_id(child.text)
             if filter:
                 f.filters.append(filter)
             else:
-                logging.error("Didn't find filter '{}' in scene '{}'.".format(child.text,
+                logger.error("Didn't find filter '{}' in scene '{}'.".format(child.text,
                                                                               parent_scene.human_readable_name))
     return True
 
@@ -197,7 +198,7 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
             case "id":
                 scene_id = int(value)
             case _:
-                logging.warning(
+                logger.warning(
                     "Found attribute %s=%s while parsing scene for show %s",
                     key, value, board_configuration.show_name)
 
@@ -216,7 +217,7 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
             case "uipage":
                 ui_page_elements.append(child)
             case _:
-                logging.warning("Scene %s contains unknown element: %s",
+                logger.warning("Scene %s contains unknown element: %s",
                                 human_readable_name, child.tag)
 
     i: int = 0
@@ -228,7 +229,7 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
         else:
             i += 1
             if i >= len(filter_pages):
-                logging.error("No suitable parent found while parsing filter pages")
+                logger.error("No suitable parent found while parsing filter pages")
                 break
 
     if scene_element.attrib.get('linkedBankset') in loaded_banksets.keys():
@@ -247,7 +248,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
             case 'title':
                 page.title = str(v)
             case _:
-                logging.error("Unexpected attribute '{}':'{}' in ui page definition.".format(k, v))
+                logger.error("Unexpected attribute '{}':'{}' in ui page definition.".format(k, v))
     for widget_def in page_def:
         posX: int = 0
         posY: int = 0
@@ -271,10 +272,10 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
                 case "variante":
                     variante = str(v)
                 case _:
-                    logging.error("Unexpected attribute '{}':'{}' in ui widget definition.".format(k, v))
+                    logger.error("Unexpected attribute '{}':'{}' in ui widget definition.".format(k, v))
         for config_entry in widget_def:
             if config_entry.tag != "configurationEntry":
-                logging.error("Found unexpected child '{}' in ui widget definition.".format(config_entry.tag))
+                logger.error("Found unexpected child '{}' in ui widget definition.".format(config_entry.tag))
                 continue
             conf[str(config_entry.attrib['name'])] = str(config_entry.attrib['value'])
         ui_widget = filter_to_ui_widget(scene.get_filter_by_id(fid), page, conf, variante)
@@ -297,7 +298,7 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case "pos":
                 pos = (float(value.split(",")[0]), float(value.split(",")[1]))
             case _:
-                logging.warning(
+                logger.warning(
                     "Found attribute %s=%s while parsing filter for scene %s",
                     key, value, scene.human_readable_name)
 
@@ -312,7 +313,7 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case "filterConfiguration":
                 _parse_filter_configuration(child, filter_)
             case _:
-                logging.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
+                logger.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
     scene.append_filter(filter_)
 
@@ -327,7 +328,7 @@ def _parse_channel_link(initial_parameters_element: ElementTree.Element, filter_
             case "output_channel_id":
                 cl_value = value
             case _:
-                logging.warning("Found attribute %s=%s while parsing key-value-pair", key, value)
+                logger.warning("Found attribute %s=%s while parsing key-value-pair", key, value)
 
     filter_.channel_links[cl_key] = cl_value
 
@@ -342,7 +343,7 @@ def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, f
             case "value":
                 ip_value = value
             case _:
-                logging.warning("Found attribute %s=%s while parsing initial parameter for filter %s",
+                logger.warning("Found attribute %s=%s while parsing initial parameter for filter %s",
                                 key, value, filter_.filter_id)
 
     filter_.initial_parameters[ip_key] = ip_value
@@ -358,7 +359,7 @@ def _parse_filter_configuration(filter_configuration_element: ElementTree.Elemen
             case "value":
                 fc_value = value
             case _:
-                logging.warning("Found attribute %s=%s while parsing filter configuration for filter %s",
+                logger.warning("Found attribute %s=%s while parsing filter configuration for filter %s",
                                 key, value, filter_.filter_id)
 
     filter_.filter_configurations[fc_key] = fc_value
@@ -381,11 +382,11 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
             case "description":
                 description = value
             case _:
-                logging.warning("Found attribute %s=%s while parsing universe for show %s",
+                logger.warning("Found attribute %s=%s while parsing universe for show %s",
                                 key, value, board_configuration.show_name)
 
     if universe_id is None:
-        logging.error("Could not parse universe element, id attribute is missing")
+        logger.error("Could not parse universe element, id attribute is missing")
 
     physical: int | None = None
     artnet: Proto.Universe.ArtNet | None = None
@@ -404,11 +405,11 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
                 patching = _parse_patching(child, universe_id)
 
             case _:
-                logging.warning("Universe %s contains unknown element: %s",
+                logger.warning("Universe %s contains unknown element: %s",
                                 universe_id, child.tag)
 
     if physical is None and artnet is None and ftdi is None:
-        logging.warning("Could not parse any location for universe %s", universe_id)
+        logger.warning("Could not parse any location for universe %s", universe_id)
 
     universe_proto = Proto.Universe(id=universe_id,
                                     physical_location=physical,
@@ -449,7 +450,7 @@ def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Unive
             case "udp_port":
                 udp_port = int(value)
             case _:
-                logging.warning("Found attribute %s=%s while parsing artnet location", key, value)
+                logger.warning("Found attribute %s=%s while parsing artnet location", key, value)
 
     return Proto.Universe.ArtNet(ip_address=ip_address, port=udp_port, universe_on_device=device_universe_id)
 
@@ -470,7 +471,7 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Univers
             case "serial_identifier":
                 serial_identifier = value
             case _:
-                logging.warning("Found attribute %s=%s while parsing ftdi location", key, value)
+                logger.warning("Found attribute %s=%s while parsing ftdi location", key, value)
 
     return Proto.Universe.USBConfig(product_id=product_id,
                                     vendor_id=vendor_id,
@@ -500,6 +501,6 @@ def _parse_ui_hint(ui_hint_element: ElementTree.Element, board_configuration: Bo
             case "value":
                 ui_hint_value = value
             case _:
-                logging.warning("Found attribute %s=%s while parsing ui hint", key, value)
+                logger.warning("Found attribute %s=%s while parsing ui hint", key, value)
 
     board_configuration.ui_hints[ui_hint_key] = ui_hint_value

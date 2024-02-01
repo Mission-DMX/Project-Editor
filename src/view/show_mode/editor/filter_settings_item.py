@@ -1,6 +1,6 @@
 # coding=utf-8
 """Module for filter settings editor"""
-import logging
+from logging import getLogger
 
 import PySide6
 from PySide6.QtCore import Qt
@@ -11,6 +11,8 @@ from model import Universe
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+
+logger = getLogger(__name__)
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -138,7 +140,7 @@ class FilterSettingsDialog(QDialog):
                 universe: Universe = uni
                 break
         else:
-            logging.warning("FilterSettingsItem: Could not find universe %s", universe_id)
+            logger.warning("FilterSettingsItem: Could not find universe %s", universe_id)
             return key
         # Fetch patching short name
         for channel in universe.patching:

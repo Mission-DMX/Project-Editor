@@ -5,11 +5,11 @@ Usage:
     xml = createXML(board_configuration)
     writeDocument("ShowFiles/show_file.xml", xml)
 """
-import logging
 import os
 from shutil import copyfile
 from xml.etree import ElementTree
 
+from file import logger
 from model import Filter, Scene, Universe, BoardConfiguration, UIPage
 from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn
 from model.patching_channel import PatchingChannel
@@ -116,7 +116,7 @@ def _create_scene_bankset(root_element: ElementTree.Element, scene_element: Elem
                     'encoder_position': str(col.encoder_position)
                 })
             else:
-                logging.error("Unsupported desk column type while saving file.")
+                logger.error("Unsupported desk column type while saving file.")
                 continue
             column_item.attrib['id'] = str(col.id)
             column_item.attrib['display_name'] = str(col.display_name)
