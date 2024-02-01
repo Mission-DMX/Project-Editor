@@ -6,9 +6,11 @@ from typing import List
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QCompleter
 
 from model.broadcaster import Broadcaster
 from .logging_item_widget import LoggingItemWidget
+from .search import Search, Operation
 
 
 class LoggingWidget(QtWidgets.QTabWidget):
@@ -21,18 +23,22 @@ class LoggingWidget(QtWidgets.QTabWidget):
 
         searchbar = QtWidgets.QLineEdit()
         searchbar.textChanged.connect(self.update_display)
+        completer = QCompleter(["level", "message", "timestamp", "logger", "module", "function", "line", "thread_name"])
+        searchbar.setCompleter(completer)
 
-        self._scroll = QtWidgets.QScrollArea()
-        self._scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self._scroll.setWidgetResizable(True)
-        self._scroll.setLayout(QtWidgets.QVBoxLayout())
+        self._tree = QtWidgets.QTreeWidget()
+        self._tree.setColumnCount(2)
+        self._tree.setHeaderLabels(["key", "value"])
+        self._tree.setColumnWidth(0, 150)
+        self._tree.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self._tree.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._tree.setLayout(QtWidgets.QVBoxLayout())
 
         self._log_items: List[LoggingItemWidget] = []
 
         container_layout = QtWidgets.QVBoxLayout()
         container_layout.addWidget(searchbar)
-        container_layout.addWidget(self._scroll)
+        container_layout.addWidget(self._tree)
 
         self.setLayout(container_layout)
 
@@ -40,15 +46,17 @@ class LoggingWidget(QtWidgets.QTabWidget):
 
     def new_log_message(self, message: str) -> None:
         """ handle incoming log messages """
-        massage_content: dict = json.loads(message)
-        new_log_item: LoggingItemWidget = LoggingItemWidget(self._scroll, massage_content["message"])
+        new_log_item: LoggingItemWidget = LoggingItemWidget(self._tree, json.loads(message))
         self._log_items.append(new_log_item)
-        self._scroll.layout().addWidget(new_log_item)
+        self._tree.addTopLevelItem(new_log_item)
 
     def update_display(self, text: str) -> None:
         """update display for searching items"""
+        search: list[Search] = []
+        ands: [str] = text.split("&")
+        for item in ands:
+            part = item.split(":")
+            if len(part) == 2:
+                search.append(Search((part[0], part[1]), Operation.AND))
         for widget in self._log_items:
-            if text.lower() in widget.content.lower():
-                widget.show()
-            else:
-                widget.hide()
+            widget.search(search)
