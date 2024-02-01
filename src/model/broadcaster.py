@@ -8,7 +8,6 @@ from proto.RealTimeControl_pb2 import RunMode
 from proto.FilterMode_pb2 import update_parameter
 
 from model.patching_universe import PatchingUniverse
-from view.dialogs.patching_dialog import PatchingDialog
 
 from .device import Device
 from .scene import Scene, FilterPage
@@ -31,7 +30,7 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
-    change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType) # TODO Remove
+    change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType)  # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(Scene)
     load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
     show_file_loaded: QtCore.Signal = QtCore.Signal()

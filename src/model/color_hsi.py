@@ -5,6 +5,7 @@ import colorsys
 from PySide6.QtGui import QColor
 from pydantic import confloat
 
+
 class ColorHSI:
     """Color Definition"""
 

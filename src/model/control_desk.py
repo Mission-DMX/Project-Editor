@@ -3,8 +3,6 @@
 from abc import ABC, abstractmethod
 from uuid import uuid4
 
-from PySide6.QtCore import Signal
-
 import proto.Console_pb2
 from model.color_hsi import ColorHSI
 from model.broadcaster import Broadcaster
@@ -380,7 +378,7 @@ class BankSet:
             self.active_bank = bank_set_size - 1
         old_set_id: str = self.id
         if self.is_linked:
-            #new_id = _generate_unique_id()
+            # new_id = _generate_unique_id()
             new_id = old_set_id
         else:
             new_id = old_set_id
@@ -414,7 +412,7 @@ class BankSet:
     def activate(self):
         """Calling this method makes this bank set the active one.
         """
-        #if BankSet._active_bank_set_id == self.id:
+        # if BankSet._active_bank_set_id == self.id:
         #    return
         BankSet._active_bank_set_id = self.id
         BankSet._active_bank_set = self

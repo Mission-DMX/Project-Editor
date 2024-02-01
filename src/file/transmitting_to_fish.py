@@ -1,3 +1,4 @@
+# coding=utf-8
 from file.write import create_xml
 from model import BoardConfiguration
 

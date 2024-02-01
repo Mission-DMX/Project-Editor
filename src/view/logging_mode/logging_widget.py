@@ -26,8 +26,8 @@ class LoggingWidget(QtWidgets.QTabWidget):
 
         logging.info("start DMXGui")
 
-    def new_log_message(self, massage: str):
+    def new_log_message(self, message: str):
         """ handle incoming log messages """
-        massage_content: dict = json.loads(massage)
+        massage_content: dict = json.loads(message)
 
-        self._widget.appendPlainText(massage_content["level"])
+        self._widget.appendPlainText(massage_content["message"])
