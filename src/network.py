@@ -171,7 +171,7 @@ class NetworkManager(QtCore.QObject):
                     case _:
                         pass
             except:
-                print("ERROR: Failed to parse message.")
+                logger.error("Failed to parse message.", exc_info=True)
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
         """
