@@ -24,15 +24,15 @@ class PanTiltConstantFilter(VirtualFilter):
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
-            case 'pan_8bit':
-                return "{}_8bit_pan.value_upper".format(self.filter_id)
-            case 'tilt_8bit':
-                return "{}_8bit_tilt.value_upper".format(self.filter_id)
-            case 'pan_16bit':
-                return "{}_16bit_pan.value".format(self.filter_id)
-            case 'tilt_16bit':
-                return "{}_16bit_tilt.value".format(self.filter_id)
-        return "error"
+            case 'pan8bit':
+                return "{}_8bit_pan:value_upper".format(self.filter_id)
+            case 'tilt8bit':
+                return "{}_8bit_tilt:value_upper".format(self.filter_id)
+            case 'pan16bit':
+                return "{}_16bit_pan:value".format(self.filter_id)
+            case 'tilt16bit':
+                return "{}_16bit_tilt:value".format(self.filter_id)
+        return None
 
     def instantiate_filters(self, filter_list: list[Filter]):
         self.instanitate_16bit_constant_filter(filter_list, False)
@@ -47,7 +47,7 @@ class PanTiltConstantFilter(VirtualFilter):
             filter_type=1,
             scene=self.scene
         )
-        filter._initial_parameters = {'value': str(int(self.tilt * 65535))}
+        filter._initial_parameters = {'value': str(int((self.tilt if tilt else self.pan) * 65535))}
         filter._filter_configurations = {}
         filter._in_data_types = {}
         filter._out_data_types = {'value': DataType.DT_16_BIT}
@@ -70,7 +70,7 @@ class PanTiltConstantFilter(VirtualFilter):
                                   'value_upper': DataType.DT_8_BIT}
         filter._gui_update_keys = {}
         filter._in_data_types = {}
-        filter._channel_links = {'value': "{}_16bit_{}.value".format(self.filter_id, 'tilt' if tilt else 'pan')}
+        filter._channel_links = {'value': "{}_16bit_{}:value".format(self.filter_id, 'tilt' if tilt else 'pan')}
         filter_list.append(filter)
 
     @property

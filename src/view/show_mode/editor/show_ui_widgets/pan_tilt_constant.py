@@ -14,13 +14,14 @@ class PanTiltConstantControlUIWidget(UIWidget):
         if not isinstance(filter_model, PanTiltConstantFilter):
             print("the filter has to be a PanTiltConstantFilter")
         self._filter = filter_model
+        self._player_widget = None
 
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._command_chain
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._player_widget:
+        if self._player_widget is None:
             # self._player_widget.deleteLater()
             self._player_widget = self.construct_widget(parent)
         return self._player_widget
@@ -40,7 +41,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
 
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        if self._player_widget: # Todo: Do these have to differ?
+        if self._player_widget is None: # Todo: Do these have to differ?
             self._player_widget = self.construct_widget(parent)
         return self._player_widget
 
@@ -66,3 +67,11 @@ class PanTiltConstantControlUIWidget(UIWidget):
         # w.itemDoubleClicked.connect(self._config_item_double_clicked)
         # self._dialog_widget = w
         # return w
+
+    def insert_action(self):
+        command = ("value", self._filter.pan)
+        self._command_chain.append(command)
+        command = ("value", self._filter.tilt)
+        self._command_chain.append(command)
+        self.push_update()
+        self._command_chain.clear()
