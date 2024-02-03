@@ -8,13 +8,15 @@ class PanTiltConstantFilter(VirtualFilter):
 
     def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, pos=pos)
-        self._pan = 0.5
-        self._tilt = 0.5
-        self._filter_configurations = {'outputs': '16bit'}
+        self._pan = 0.8
+        self._tilt = 0.8
+        self._filter_configurations = {}
         self._update_allowed = False
         self._pan_delta = 0.0
         self._tilt_delta = 0.0
 
+
+        # Todo: maybe use timer in broadcaster
         self._timer = QTimer()
         self._timer.setInterval(50)
         self._timer.timeout.connect(self.update_time_passed)

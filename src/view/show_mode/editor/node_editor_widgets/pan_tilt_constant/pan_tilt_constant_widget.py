@@ -62,7 +62,7 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
             except:
                 print('error parsing parameter, value: ', value, ' for param: ', key)
                 return False
-            return True
+        return True
 
     def _get_parameters(self) -> dict[str, str]:
         return {'pan': self._filter.pan,
