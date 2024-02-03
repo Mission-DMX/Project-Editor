@@ -68,7 +68,7 @@ def check_if_filter_has_special_widget(filter_):
     elif filter_.filter_type == 50:
         return LuaScriptConfigWidget()
     elif filter_.filter_type == -2:
-        return PanTiltConstantWidget()
+        return PanTiltConstantWidget(filter_)
     else:
         return None
 

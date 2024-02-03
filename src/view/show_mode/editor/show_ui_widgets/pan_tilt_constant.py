@@ -1,4 +1,3 @@
-from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog, QLabel
 
 from model import UIWidget, UIPage, Filter
@@ -6,7 +5,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 
 from model.file_support.cue_state import CueState
 
-class CueControlUIWidget(UIWidget):
+class PanTiltConstantControlUIWidget(UIWidget):
 
     def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
         super().__init__(fid, parent, configuration)
@@ -118,7 +117,7 @@ class CueControlUIWidget(UIWidget):
         return self._config_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = CueControlUIWidget(self.filter_id, self.parent, None, self.configuration)
+        w = PanTiltConstantControlUIWidget(self.filter_id, self.parent, None, self.configuration)
         super().copy_base(w)
         return w
 
@@ -156,13 +155,3 @@ class CueControlUIWidget(UIWidget):
         for i in range(len(self._cues)):
             if self._cues[i] == original_cue:
                 self._cues[i] = new_cue
-
-    def get_selected_cue_id(self) -> str | None:
-        if self._player_cue_list_widget:
-            for selected_cue_item in self._player_cue_list_widget.selectedItems():
-                if isinstance(selected_cue_item, AnnotatedListWidgetItem):
-                    return str(selected_cue_item.annotated_data[1])
-        return None
-
-    def update_time_passed(self):
-        self._statuslabel.setText(str(self._cue_state))

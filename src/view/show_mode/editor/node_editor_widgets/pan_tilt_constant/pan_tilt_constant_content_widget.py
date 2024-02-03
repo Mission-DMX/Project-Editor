@@ -20,17 +20,10 @@ class PanTiltConstantContentWidget(QLabel):
 
         self._filter = filter
 
-        self._timer = QTimer()
-        self._timer.setInterval(50)
-        self._timer.timeout.connect(self.update_time_passed)
-        self._timer.start()
-
-        self.joy_input_x = 0.0
-        self.joy_input_y = 0.0
         mngr = pyjoystick.ThreadEventManager(event_loop=run_event_loop,
                                              handle_key_event=self.handle_key_event)
         mngr.start()
-
+        self._filter.register_observer(self, self.repaint)
         self.repaint()
 
     def repaint(self) -> None:
@@ -81,8 +74,8 @@ class PanTiltConstantContentWidget(QLabel):
         self.repaint()
 
     def update_pan_tilt(self, event: QMouseEvent):
-        self.joy_input_x = 0.0
-        self.joy_input_y = 0.0
+        self._filter.pan_delta = 0.0
+        self._filter.tilt_delta = 0.0
         if self._dragged and event.x() <= self.width() and event.y() <= self.height() and event.x() >= 0 and event.y() >= 0:
             self._filter.pan = event.pos().x() * self.prange / self.width()
             self._filter.tilt = event.pos().y() * self.trange / self.height()
@@ -91,12 +84,6 @@ class PanTiltConstantContentWidget(QLabel):
         # print(key, '-', key.keytype, '-', key.number, '-', key.value)
         if key.keytype == Key.AXIS:
             if key.number == 0:
-                self.joy_input_x = key.value
+                self._filter.pan_delta = key.value
             elif key.number == 1:
-                self.joy_input_y = key.value
-
-    def update_time_passed(self):
-        if self.isVisible():
-            self._filter.pan = min(max(self._filter.pan + 0.01 * self.joy_input_x, 0.0), self.prange)
-            self._filter.tilt = min(max(self._filter.tilt + 0.01 * self.joy_input_y, 0.0), self.trange)
-            self.repaint()
+                self._filter.tilt_delta = key.value
