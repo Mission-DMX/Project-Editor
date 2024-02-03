@@ -15,10 +15,19 @@ class AutoTrackerUIWidget(UIWidget):
                 raise ValueError("Expected AutoTrackerFilter.")
         else:
             raise ValueError("The provided filter id does not exist.")
+        self._associated_filter: AutoTrackerFilter = associated_filter
         self.config_widget = AutoTrackDialogWidget()
 
     def generate_update_content(self) -> list[tuple[str, str]]:
-        pass
+        filter_updates = []
+        for tracker_id in range(self._associated_filter.number_of_concurrent_trackers):
+            pan_filter_id = self._associated_filter.get_pan_filter_id(tracker_id)
+            tilt_filter_id = self._associated_filter.get_tilt_filter_id(tracker_id)
+            if not pan_filter_id or not tilt_filter_id:
+                continue
+            filter_updates.append((pan_filter_id, str(0)))  # TODO query real value based on data type
+            filter_updates.append((tilt_filter_id, str(0)))  # TODO query real value based on data type
+        return filter_updates
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         return self.config_widget
@@ -27,6 +36,7 @@ class AutoTrackerUIWidget(UIWidget):
         return self.config_widget
 
     def copy(self, new_parent: UIPage) -> UIWidget:
+        # TODO
         pass
 
     def get_config_dialog_widget(self, parent: QWidget) -> QWidget:

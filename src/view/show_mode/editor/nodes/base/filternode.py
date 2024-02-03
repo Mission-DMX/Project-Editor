@@ -78,7 +78,6 @@ class FilterNode(Node):
             logging.error(str(e) + " Possible key candidates are: " + ", ".join(self.filter.in_data_types.keys()) +
                           "\nRemote options are: " + ", ".join(remote_node.filter.out_data_types.keys()))
 
-
     def disconnected(self, localTerm, remoteTerm):
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.
         Could emit signals. See pyqtgraph.flowchart.Node.disconnected()

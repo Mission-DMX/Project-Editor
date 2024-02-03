@@ -13,10 +13,10 @@ from view.show_mode.editor.nodes.impl.scripting import *
 
 type_to_node: dict[int, str] = {
         FilterTypeEnumeration.VFILTER_AUTOTRACKER: AutoTrackerNode.nodeName,
-        0: Constants8BitNode.nodeName,
-        1: Constants16BitNode.nodeName,
-        2: ConstantsFloatNode.nodeName,
-        3: ConstantsColorNode.nodeName,
+        FilterTypeEnumeration.FILTER_CONSTANT_8BIT: Constants8BitNode.nodeName,
+        FilterTypeEnumeration.FILTER_CONSTANT_16_BIT: Constants16BitNode.nodeName,
+        FilterTypeEnumeration.FILTER_CONSTANT_FLOAT: ConstantsFloatNode.nodeName,
+        FilterTypeEnumeration.FILTER_CONSTANT_COLOR: ConstantsColorNode.nodeName,
         4: Debug8BitNode.nodeName,
         5: Debug16BitNode.nodeName,
         6: DebugFloatNode.nodeName,
