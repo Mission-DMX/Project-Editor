@@ -198,7 +198,8 @@ class Scene:
 
     def remove_filter(self, f: Filter):
         self._filters.remove(f)
-        self._filter_index.pop(f.filter_id)
+        if self._filter_index.get(f.filter_id):
+            self._filter_index.pop(f.filter_id)
 
         def remove_filter_from_page(p: FilterPage):
             try:
