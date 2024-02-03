@@ -1,10 +1,10 @@
-import pyjoystick
-from PySide6.QtCore import QSize, QTimer
+from PySide6.QtCore import QSize
 from PySide6.QtGui import QPainter, QColor, QPixmap, QMouseEvent
 from PySide6.QtWidgets import QLabel, QWidget, QSizePolicy
-from pyjoystick.sdl2 import run_event_loop, Key
+from pyjoystick.sdl2 import Key
 from qasync import QtGui
 
+from model import Broadcaster
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 
 
@@ -20,11 +20,9 @@ class PanTiltConstantContentWidget(QLabel):
 
         self._filter = filter
 
-        mngr = pyjoystick.ThreadEventManager(event_loop=run_event_loop,
-                                             handle_key_event=self.handle_key_event)
-        mngr.start()
         self._filter.register_observer(self, self.repaint)
         self.repaint()
+        (Broadcaster()).handle_joystick_event.connect(self.handle_key_event)
 
     def repaint(self) -> None:
         canvas = QPixmap(QSize(self.width(), self.height()))
