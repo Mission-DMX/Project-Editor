@@ -58,6 +58,8 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.change_run_mode.connect(self.update_state)
         self._broadcaster.view_to_file_editor.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
+        self._broadcaster.view_to_show_player.connect(
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
         self._broadcaster.view_to_console_mode.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
 
@@ -206,8 +208,8 @@ class NetworkManager(QtCore.QObject):
             match msg.button:
                 case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
                     self._broadcaster.view_to_patch_menu.emit()
-                case proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW:
-                    self._broadcaster.view_to_file_editor.emit()
+                case proto.Console_pb2.ButtonCode.BTN_TRACK_CONSOLE:
+                    self._broadcaster.view_to_console_mode.emit()
                 case proto.Console_pb2.ButtonCode.BTN_REV_LASTCUE:
                     self._broadcaster.desk_media_rev_pressed.emit()
                 case proto.Console_pb2.ButtonCode.BTN_FF_NEXTCUE:
@@ -226,8 +228,10 @@ class NetworkManager(QtCore.QObject):
                     self._broadcaster.view_to_color.emit()
                 case proto.Console_pb2.ButtonCode.BTN_SAVE_SAVE:
                     self._broadcaster.save_button_pressed.emit()
-                case proto.Console_pb2.ButtonCode.BTN_PAN_COMMITSHOW:
-                    self._broadcaster.commit_button_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_PAN_EDITSHOW:
+                    self._broadcaster.view_to_file_editor.emit()
+                case proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI:
+                    self._broadcaster.view_to_show_player.emit()
                 case _:
                     pass
         else:
