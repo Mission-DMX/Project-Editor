@@ -54,10 +54,25 @@ class DataType(IntFlag):
         return self.format_for_filters()
 
 
+class FilterTypeEnumeration(IntFlag):
+    VFILTER_COMBINED_FILTER_PRESET = -6
+    VFILTER_POSITION_CONSTANT = -5
+    VFILTER_EFFECTSSTACK = -4
+    VFILTER_CUES = -3
+    VFILTER_UNIVERSE = -2
+    VFILTER_AUTOTRACKER = -1
+    FILTER_CONSTANT_8BIT = 0
+    FILTER_CONSTANT_16_BIT = 1
+    FILTER_CONSTANT_FLOAT = 2
+    FILTER_CONSTANT_COLOR = 3
+    FILTER_TYPE_TIME_INPUT = 32
+    FILTER_TYPE_MAIN_BRIGHTNESS = 49
+
+
 class Filter:
     """Filter for show file"""
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos=None):
+    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
         if pos is None:
             pos = [0.0, 0.0]
         self._scene: "Scene" = scene
@@ -146,6 +161,9 @@ class Filter:
         f._gui_update_keys = self._gui_update_keys.copy()
         return f
 
+    def __str__(self):
+        return "Filter '{}' from scene '{}'".format(self._filter_id, self.scene)
+
 
 class VirtualFilter(Filter, abc.ABC):
     """
@@ -154,8 +172,7 @@ class VirtualFilter(Filter, abc.ABC):
     instantiate_filters method will be called in order to provide a representation that fish can understand in the event
     that the show will be serialized for fish.
     """
-
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos=None):
+    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, filter_type, pos)
 
     @abc.abstractmethod

@@ -1,14 +1,13 @@
-from PySide6 import QtCore
 from PySide6.QtCore import QTimer
 
 from model import Scene
-from model.filter import VirtualFilter, Filter, DataType
+from model.filter import VirtualFilter, Filter, DataType, FilterTypeEnumeration
 
 
 class PanTiltConstantFilter(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int):
-        super().__init__(scene, filter_id, filter_type)
+    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
+        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, pos=pos)
         self._pan = 0.5
         self._tilt = 0.5
         self._filter_configurations = {'outputs': '16bit'}
@@ -135,12 +134,8 @@ class PanTiltConstantFilter(VirtualFilter):
             self.notify_observer()
 
     def register_observer(self, obs, callback):
-        print(obs)
-        print(callback)
         self.observer[obs] = callback
 
     def notify_observer(self):
-        print(self.observer)
         for obs in self.observer:
-            print(self.observer[obs])
             (self.observer[obs])()

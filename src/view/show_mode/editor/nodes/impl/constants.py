@@ -1,6 +1,7 @@
 # coding=utf-8
 """Constants filter nodes"""
 from model import DataType
+from model.filter import FilterTypeEnumeration
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -79,13 +80,7 @@ class PanTiltConstant(FilterNode):
     nodeName = 'PanTilt_filter'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=-2, name=name, terminals={}, allowAddOutput=True)
-        if isinstance(self.filter, PanTiltConstant):
-            print("test")
-        else:
-            # # just for now:
-            print("had to make self")
-            self._filter = PanTiltConstantFilter(model, filter_id="this new filter", filter_type=-2)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, name=name, terminals={}, allowAddOutput=True)
         try:
             self.filter.initial_parameters["pan"] = model.initial_parameters["pan"]
         except:

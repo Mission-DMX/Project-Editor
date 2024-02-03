@@ -1,7 +1,7 @@
-from model import Broadcaster, Scene, Filter, DataType
+from model import Filter
 from model.patching_channel import PatchingChannel
 from model.scene import FilterPage
-from ofl.fixture import UsedFixture
+from controller.ofl.fixture import UsedFixture
 
 
 def _sanitize_name(input: str) -> str:
