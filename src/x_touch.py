@@ -75,6 +75,12 @@ class XTouchMessages:
         self._broadcaster.view_to_file_editor.connect(lambda: send(VIEW_FILTER_MENU_MSG))
         self._broadcaster.view_leave_file_editor.connect(lambda: send(VIEW_NOT_FILTER_MENU_MSG))
 
+        self._broadcaster.view_to_show_player.connect(lambda: send(VIEW_SHOW_MENU_MSG))
+        self._broadcaster.view_leave_show_player.connect(lambda: send(VIEW_NOT_SHOW_MENU))
+
+        self._broadcaster.view_to_console_mode.connect(lambda: send(VIEW_CONSOLE_MODE))
+        self._broadcaster.view_leave_console_mode.connect(lambda: send(VIEW_NOT_CONSOLSE_MODE))
+
         self._broadcaster.view_to_color.connect(lambda: send(VIEW_COLOR_MSG))
         self._broadcaster.view_leave_color.connect(lambda: send(VIEW_NOT_COLOR_MSG))
 
