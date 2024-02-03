@@ -95,7 +95,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             match self._widgets.currentIndex():
                 case 0:
-                    pass
+                    self._broadcaster.view_leave_console_mode.emit()
                 case 1:
                     self._broadcaster.view_leave_file_editor.emit()
                 case 2:
