@@ -15,9 +15,23 @@ VIEW_PATCHING_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.but
     button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH, new_state=proto.Console_pb2.ButtonState.BS_SET_LED_BLINKING)
 
 VIEW_FILTER_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
-    button=proto.Console_pb2.ButtonCode.BTN_TRACK_CONSOLE, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
+    button=proto.Console_pb2.ButtonCode.BTN_PAN_EDITSHOW, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
 
 VIEW_NOT_FILTER_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_PAN_EDITSHOW,
+    new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
+
+VIEW_SHOW_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
+
+VIEW_NOT_SHOW_MENU: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI,
+    new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
+
+VIEW_CONSOLE_MODE: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_TRACK_CONSOLE, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
+
+VIEW_NOT_CONSOLSE_MODE: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_TRACK_CONSOLE,
     new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
 
