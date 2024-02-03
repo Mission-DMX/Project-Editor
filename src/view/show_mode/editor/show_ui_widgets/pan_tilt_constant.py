@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QVBoxLayout, QCheckBox, QWidget
+from PySide6.QtWidgets import QVBoxLayout, QCheckBox, QWidget, QLabel
 
 from model import UIWidget, UIPage, Filter
 from model.virtual_filters import PanTiltConstantFilter
@@ -15,7 +15,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
             print("the filter has to be a PanTiltConstantFilter")
         self._filter = filter_model
         self._player_widget = None
-
+        self._filter.register_observer(self, self.insert_action)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._command_chain
@@ -34,6 +34,8 @@ class PanTiltConstantControlUIWidget(UIWidget):
         layout.addWidget(pan_tilt)
 
         self._activated = QCheckBox()
+        self._activated.setText("allow changes from joystick")
+        self._activated.stateChanged.connect(self.setting_changed)
         layout.addWidget(self._activated)
 
         w.setLayout(layout)
@@ -53,25 +55,16 @@ class PanTiltConstantControlUIWidget(UIWidget):
 
 
     def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
-        return None
-        # if self._dialog_widget:
-        #     return self._dialog_widget
-        # w = QListWidget(parent)
-        # if self._config_cue_list_widget:
-        #     for item_index in range(self._config_cue_list_widget.count()):
-        #         template_item = self._config_cue_list_widget.item(item_index)
-        #         item = AnnotatedListWidgetItem(w)
-        #         item.setText(template_item.text())
-        #         item.annotated_data = template_item
-        #         w.addItem(item)
-        # w.itemDoubleClicked.connect(self._config_item_double_clicked)
-        # self._dialog_widget = w
-        # return w
+        # Todo: Do we need this?
+        return QLabel()
 
     def insert_action(self):
-        command = ("value", self._filter.pan)
+        command = ("{}_16bit_pan:value".format(self._filter_id), str(int(self._filter.pan*65535)))
         self._command_chain.append(command)
-        command = ("value", self._filter.tilt)
+        command = ("{}_16bit_tilt:value".format(self._filter_id), str(int(self._filter.tilt*65535))) # Todo: inverse Tilt?
         self._command_chain.append(command)
         self.push_update()
         self._command_chain.clear()
+
+    def setting_changed(self):
+        self._filter.update_allowed = self._activated.isChecked()

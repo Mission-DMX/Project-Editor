@@ -2,7 +2,6 @@
 """Constants filter nodes"""
 from model import DataType
 from model.filter import FilterTypeEnumeration
-from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
