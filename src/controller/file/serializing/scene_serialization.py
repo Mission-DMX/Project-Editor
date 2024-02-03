@@ -42,8 +42,15 @@ def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage)
 
 
 def generate_scene_xml_description(assemble_for_fish_loading, root, scene):
+    """
+    This method generates the DOM tree for a given scene.
+
+    :param assemble_for_fish_loading: Boolean that should be true if and only if the data is being transferred to fish
+    :param root: The DOM root
+    :param scene: The scene to generate the XML data for
+    """
     scene_element = _create_scene_element(scene=scene, parent=root)
-    if scene.linked_bankset:
+    if scene.linked_bankset and not assemble_for_fish_loading:
         _create_scene_bankset(root, scene_element, scene)
     om = SceneOptimizerModule()
     for filter_ in scene.filters:

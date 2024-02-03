@@ -45,6 +45,14 @@ def _create_filter_element(filter_: Filter, parent: ElementTree.Element, for_fis
 
 def create_channel_mappings_for_filter_set(channel_links_to_be_created: list[tuple[Filter, ElementTree.SubElement]],
                                            override_port_mapping: dict[str, str]):
+    """
+    This function writes the channel links of the scene to the XML data.
+    This method needs to be called *after* every filter object has been placed as only then all required information
+    are available.
+
+    :param channel_links_to_be_created: The list of channel links that should be created
+    :param override_port_mapping: The dictionary used to update the channel links based on the filter substitution.
+    """
     for f_entry in channel_links_to_be_created:
         filter_ = f_entry[0]
         filter_element = f_entry[1]

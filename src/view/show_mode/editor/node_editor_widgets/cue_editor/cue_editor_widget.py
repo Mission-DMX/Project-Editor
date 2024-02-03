@@ -137,6 +137,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._cues: list[Cue] = []
         self._last_selected_cue = -1
         self._channels_changed_after_load = False
+        self._broadcaster_signals_connected = False
 
     def _link_bankset(self):
         self._broadcaster = Broadcaster()
@@ -145,6 +146,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._broadcaster.jogwheel_rotated_left.connect(self.jg_left)
         self._broadcaster.desk_media_scrub_pressed.connect(self.scrub_pressed)
         self._broadcaster.desk_media_scrub_released.connect(self.scrub_released)
+        self._broadcaster_signals_connected = True
         self._bankset = BankSet(gui_controlled=True)
         self._bankset.description = "Cue Editor BS"
         self._bankset.link()
@@ -369,13 +371,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if self._bankset:
             self._bankset.unlink()
             BankSet.push_messages_now()
-        if self._broadcaster:
-            # FIXME This might not be set
+        if self._broadcaster and self._broadcaster_signals_connected:
             self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
             self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
             self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
             self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
             self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
+            self._broadcaster_signals_connected = False
         super().parent_closed(filter_node)
 
     def parent_opened(self):
