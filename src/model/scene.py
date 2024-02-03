@@ -177,7 +177,7 @@ class Scene:
         :param name_to_try: The name to check for uniqueness
         :returns: A minimal modified version of the provided name that ensures uniqueness.
         """
-        while self.get_filter_by_id(name):
+        while self.get_filter_by_id(name_to_try):
             name_appendix = ""
             while name_to_try[-1].isdigit():
                 name_appendix = name_to_try[-1]
@@ -211,7 +211,8 @@ class Scene:
             remove_filter_from_page(p)
 
     def notify_about_filter_rename_action(self, sender: Filter, old_id: str):
-        self._filter_index.pop(old_id)
+        if self._filter_index.get(old_id):
+            self._filter_index.pop(old_id)
         self._filter_index[sender.filter_id] = sender
         for page in self._ui_pages:
             for widget in page.widgets:
