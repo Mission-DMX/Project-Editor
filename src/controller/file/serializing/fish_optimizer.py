@@ -17,6 +17,25 @@ class SceneOptimizerModule:
         self.channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []
         self._global_time_input_filter: Filter | None = None
         self._main_brightness_input_filter: Filter | None = None
+        self._universe_filter_dict: dict[str, list[tuple[str]]] = dict()
+
+    def _substitute_universe_filter(self, f: Filter):
+        """
+        This method reads the filter configuration and updates the universe filter creation dict.
+        Entries are lists of tuple (input_channel_name, corresponding_universe_channel, foreign_output_channel_to_map).
+
+        :param f: The universe filter to read.
+        """
+        universe_id = f.filter_configuration['universe']
+        fde = self._universe_filter_dict.get(universe_id)
+        if not fde:
+            fde = []
+            self._universe_filter_dict[universe_id] = fde
+        for k, v in f.filter_configuration.items():
+            if k == 'universe':
+                continue
+            fde.append(tuple([k, v, str(f.channel_links.get(k))]))
+        pass
 
     def filter_was_substituted(self, f: Filter) -> bool:
         """
@@ -42,8 +61,13 @@ class SceneOptimizerModule:
                 else:
                     self._main_brightness_input_filter = f
                     return False
+            case FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT:
+                self._substitute_universe_filter(f)
+                return False  # FIXME replace me with True once universe filter output has been implemented
             case _:
                 return False
+
+    # TODO write function to place universe outputs
 
     def _fill_ch_sub_dict(self, f: Filter, substitution_filter: Filter):
         """
