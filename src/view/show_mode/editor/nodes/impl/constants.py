@@ -99,7 +99,6 @@ class PanTiltConstant(FilterNode):
             self.filter.filter_configurations["outputs"] = "16bit"
         self.setup_output_terminals()
         self.filter.gui_update_keys["pan"] = DataType.DT_DOUBLE
-        self.filter.gui_update_keys["tilt"] = DataType.DT_DOUBLE
 
     def setup_output_terminals(self):
         existing_output_keys = [k for k in self.outputs().keys()]
