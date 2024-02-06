@@ -43,16 +43,24 @@ def _create_filter_element(filter_: Filter, parent: ElementTree.Element, for_fis
             _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
 
-def create_channel_mappings_for_filter_set(channel_links_to_be_created: list[tuple[Filter, ElementTree.SubElement]],
-                                           override_port_mapping: dict[str, str]):
+def create_channel_mappings_for_filter_set(om: SceneOptimizerModule, scene_element: ElementTree.Element):
     """
     This function writes the channel links of the scene to the XML data.
     This method needs to be called *after* every filter object has been placed as only then all required information
     are available.
 
-    :param channel_links_to_be_created: The list of channel links that should be created
-    :param override_port_mapping: The dictionary used to update the channel links based on the filter substitution.
+    First, this method calls the wrap_up function from the optimizer module.
+    After doing so, queries the following information from the optimizer module:
+    - list of channel links that should be created
+    - dictionary used to update the channel links based on the filter substitution
+    Finally, it instantiates the mappings.
+
+    :param om: The optimizer module carrying the information
+    :param scene_element: The scene root element (required for the optimizer to finish operations)
     """
+    om.wrap_up(scene_element)
+    channel_links_to_be_created: list[tuple[Filter, ElementTree.SubElement]] = om.channel_link_list
+    override_port_mapping: dict[str, str] = om.channel_override_dict
     for f_entry in channel_links_to_be_created:
         filter_ = f_entry[0]
         filter_element = f_entry[1]

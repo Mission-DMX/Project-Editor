@@ -17,7 +17,8 @@ class SceneOptimizerModule:
         self.channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []
         self._global_time_input_filter: Filter | None = None
         self._main_brightness_input_filter: Filter | None = None
-        self._universe_filter_dict: dict[str, list[tuple[str]]] = dict()
+        self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = dict()
+        self._first_universe_filter_id: dict[str, str] = dict()
 
     def _substitute_universe_filter(self, f: Filter):
         """
@@ -26,16 +27,16 @@ class SceneOptimizerModule:
 
         :param f: The universe filter to read.
         """
-        universe_id = f.filter_configuration['universe']
+        universe_id = f.filter_configurations['universe']
         fde = self._universe_filter_dict.get(universe_id)
         if not fde:
             fde = []
             self._universe_filter_dict[universe_id] = fde
-        for k, v in f.filter_configuration.items():
+        for k, v in f.filter_configurations.items():
             if k == 'universe':
                 continue
-            fde.append(tuple([k, v, str(f.channel_links.get(k))]))
-        pass
+            fde.append((k, v, str(f.channel_links.get(k))))
+        self._first_universe_filter_id[universe_id] = f.filter_id
 
     def filter_was_substituted(self, f: Filter) -> bool:
         """
@@ -63,11 +64,9 @@ class SceneOptimizerModule:
                     return False
             case FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT:
                 self._substitute_universe_filter(f)
-                return False  # FIXME replace me with True once universe filter output has been implemented
+                return True
             case _:
                 return False
-
-    # TODO write function to place universe outputs
 
     def _fill_ch_sub_dict(self, f: Filter, substitution_filter: Filter):
         """
@@ -87,3 +86,26 @@ class SceneOptimizerModule:
         for output_channel_name in f.out_data_types.keys():
             self.channel_override_dict["{}:{}".format(f.filter_id, output_channel_name)] = "{}:{}".format(
                 substitution_filter.filter_id, output_channel_name)
+
+    def _emplace_universe_filters(self, scene_element: ElementTree.Element):
+        for universe, channel_list in self._universe_filter_dict.items():
+            filter_config_parameters = {'universe': universe}
+            channel_mappings = dict()
+            for channel_mapping in channel_list:
+                filter_input_channel, universe_channel, foreign_filter_output_channel = channel_mapping
+                filter_config_parameters[filter_input_channel] = universe_channel
+                channel_mappings[filter_input_channel] = foreign_filter_output_channel
+            filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
+                "id": str(self._first_universe_filter_id[universe]),
+                "type": str(FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT),
+                "pos": "0,0"
+            })
+            for input_ch, output_ch in channel_mappings.items():
+                ElementTree.SubElement(filter_element, "channellink", attrib={
+                    "input_channel_id": str(input_ch),
+                    "output_channel_id": str(output_ch)
+                })
+        pass
+
+    def wrap_up(self, scene_element: ElementTree.Element):
+        self._emplace_universe_filters(scene_element)

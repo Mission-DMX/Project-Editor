@@ -55,7 +55,7 @@ def generate_scene_xml_description(assemble_for_fish_loading, root, scene):
     om = SceneOptimizerModule()
     for filter_ in scene.filters:
         _create_filter_element(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading, om=om)
-    create_channel_mappings_for_filter_set(om.channel_link_list, om.channel_override_dict)
+    create_channel_mappings_for_filter_set(om, scene_element)
     if not assemble_for_fish_loading:
         for page in scene.pages:
             _add_filter_page_to_element(scene_element, page, None)
