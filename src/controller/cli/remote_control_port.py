@@ -1,6 +1,7 @@
 # coding=utf-8
 """Classes for remote connection"""
 from asyncio import IncompleteReadError
+from logging import Logger
 from socket import AF_INET6, SOCK_STREAM
 from socket import error as socket_error
 from socket import socket
@@ -8,6 +9,7 @@ from threading import Thread
 
 from controller.cli.cli_context import CLIContext
 
+logger = Logger(__file__)
 
 class SocketStreamReader:
     """This class is used to split the input TCP stream into separate lines."""
@@ -122,6 +124,10 @@ class Connection:
                 self._client.send(self.context.fetch_print_buffer().encode("utf-8"))
         except socket_error:
             pass
+        except UnicodeDecodeError as e:
+            self._client.send("Unable to decode command. Exiting.")
+            self._client.close()
+            logger.error("Failed to decode CLI command.", e)
         finally:
             self._client.close()
         self._connection_map.pop(self._remote_address)
@@ -168,6 +174,7 @@ class RemoteCLIServer:
                                                                          self._connected_clients)
                 except socket_error:
                     pass
+            logger.info("Exiting CLI server thread")
 
     def stop(self):
         """This method stops the server and disconnects all clients.
