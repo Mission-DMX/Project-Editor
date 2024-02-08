@@ -22,7 +22,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
     _open_dialogs: list[QDialog] = []
 
     def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem):
-        super().__init__("resources/settings.svg", parent)
+        super().__init__("resources/icons/settings.svg", parent)
         self.dialog = None
         self.filter_node = filter_node
         self.on_update = lambda: None

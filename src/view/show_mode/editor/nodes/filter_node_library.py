@@ -118,6 +118,7 @@ class FilterNodeLibrary(NodeLibrary):
 
     def _register_effect_nodes(self):
         self.addNodeType(CueListNode, [('Effects',)])
+        self.addNodeType(AutoTrackerNode, [('Effects',)])
         self.addNodeType(Shift8BitNode, [('Effects',)])
         self.addNodeType(Shift16BitNode, [('Effects',)])
         self.addNodeType(ShiftFloatNode, [('Effects',)])

@@ -172,13 +172,34 @@ class Scene:
                 return f
         return None
 
+    def ensure_name_uniqueness(self, name_to_try: str) -> str:
+        """This methods checks the provided name for uniqueness within this scene.
+        :param name_to_try: The name to check for uniqueness
+        :returns: A minimal modified version of the provided name that ensures uniqueness.
+        """
+        while self.get_filter_by_id(name_to_try):
+            name_appendix = ""
+            while name_to_try[-1].isdigit():
+                name_appendix = name_to_try[-1]
+                name_to_try = name_to_try[:-1]
+            if name_appendix == "":
+                name_appendix = "0"
+            name_to_try = name_to_try + str(int(name_appendix) + 1)
+        return name_to_try
+
     def append_filter(self, f: Filter):
+        if f.scene and f.scene != self:
+            raise Exception("This filter is already added to a scene other than this one")
+        if f.scene == self and f in self.filters:
+            return
+        f.filter_id = self.ensure_name_uniqueness(f.filter_id)
         self._filters.append(f)
         self._filter_index[f.filter_id] = f
 
     def remove_filter(self, f: Filter):
         self._filters.remove(f)
-        self._filter_index.pop(f.filter_id)
+        if self._filter_index.get(f.filter_id):
+            self._filter_index.pop(f.filter_id)
 
         def remove_filter_from_page(p: FilterPage):
             try:
@@ -191,7 +212,8 @@ class Scene:
             remove_filter_from_page(p)
 
     def notify_about_filter_rename_action(self, sender: Filter, old_id: str):
-        self._filter_index.pop(old_id)
+        if self._filter_index.get(old_id):
+            self._filter_index.pop(old_id)
         self._filter_index[sender.filter_id] = sender
         for page in self._ui_pages:
             for widget in page.widgets:

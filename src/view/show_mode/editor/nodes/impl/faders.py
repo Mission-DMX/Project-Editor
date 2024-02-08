@@ -2,6 +2,7 @@
 """Column fader filter nodes"""
 from model import DataType
 from model.control_desk import BankSet, BanksetIDUpdateListener
+from model.filter import FilterTypeEnumeration
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -165,8 +166,7 @@ class FaderMainBrightness(FilterNode):
     nodeName = "global-ilumination"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=49, name=name, terminals={
-            'brightness': {'io': 'out'}
-        })
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS, name=name,
+                         terminals={'brightness': {'io': 'out'}})
 
         self.filter.out_data_types["brightness"] = DataType.DT_16_BIT

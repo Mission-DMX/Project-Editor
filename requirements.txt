@@ -1,3 +1,4 @@
+# Base dependencies
 PySide6
 PySide6-QtAds==4.0.1.2
 pyqtgraph
@@ -8,3 +9,10 @@ pylint
 pylint_protobuf
 requests
 numpy
+# Dependencies for automatic tracking
+opencv-python>=4.8.0
+qimage2ndarray>=1.10
+aiortc>=1.5
+qasync>=0.26
+onnxruntime-gpu>=1.16.1
+onnxruntime-openvino
