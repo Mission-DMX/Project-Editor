@@ -1,3 +1,4 @@
+# coding=utf-8
 import datetime
 from enum import Enum
 from proto.FilterMode_pb2 import update_parameter
@@ -67,5 +68,5 @@ class CueState():
             ret += ":" + f'{seconds:02d}'
             delta -= datetime.timedelta(seconds=seconds)
         if self._end_time < datetime.timedelta(hours=1):
-            ret += "." + f'{int(delta.total_seconds()*100):02d}'
+            ret += "." + f'{int(delta.total_seconds() * 100):02d}'
         return ret

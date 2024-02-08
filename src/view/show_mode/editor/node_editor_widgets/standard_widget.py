@@ -1,12 +1,13 @@
 # coding=utf-8
 """TODO"""
-import logging
+from logging import getLogger
 
 from PySide6.QtWidgets import QWidget, QLineEdit, QLabel, QFormLayout
 
 from model import Filter
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
+logger = getLogger(__name__)
 
 class StandardWidget(NodeEditorFilterConfigWidget):
 
@@ -53,7 +54,7 @@ class StandardWidget(NodeEditorFilterConfigWidget):
                 universe = uni
                 break
         else:
-            logging.warning("Could not find universe %s", universe_id)
+            logger.warning("Could not find universe %s", universe_id)
             return key
         # Fetch patching short name
         for channel in universe.patching:

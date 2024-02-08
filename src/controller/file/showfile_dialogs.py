@@ -1,3 +1,4 @@
+# coding=utf-8
 from PySide6.QtWidgets import QWidget, QFileDialog
 
 from controller.file.read import read_document

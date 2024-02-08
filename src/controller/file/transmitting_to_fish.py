@@ -1,3 +1,4 @@
+# coding=utf-8
 from controller.file.serializing.general_serialization import create_xml
 from model import BoardConfiguration
 

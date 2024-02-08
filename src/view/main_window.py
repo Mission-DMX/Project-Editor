@@ -86,6 +86,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_show_player.emit()
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
+            self._broadcaster.view_leave_console_mode.emit()
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -94,7 +95,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             match self._widgets.currentIndex():
                 case 0:
-                    pass
+                    self._broadcaster.view_leave_console_mode.emit()
                 case 1:
                     self._broadcaster.view_leave_file_editor.emit()
                 case 2:

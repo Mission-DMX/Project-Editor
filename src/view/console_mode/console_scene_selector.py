@@ -1,6 +1,6 @@
 # coding=utf-8
 """mange different scenes"""
-import logging
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6 import QtGui, QtWidgets
@@ -11,6 +11,8 @@ from view.console_mode.console_universe_selector import UniverseSelector
 
 if TYPE_CHECKING:
     from view.main_window import MainWindow
+
+logger = getLogger(__name__)
 
 
 class ConsoleSceneSelector(QtWidgets.QTabWidget):
@@ -132,7 +134,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
                     name = line.split("\n")[0]
                     name = name.split("#")[1]
                     line = line.split("#")[0]
-                    logging.info(f"Add scene {name}")
+                    logger.info(f"Add scene {name}")
                     if scene_index == len(self._scenes):
                         self._add_scene(name)
 

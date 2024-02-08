@@ -1,6 +1,5 @@
 # Base dependencies
 PySide6
-PySide6-QtAds==4.0.1.2
 pyqtgraph
 protobuf
 xmlschema

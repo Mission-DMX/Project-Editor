@@ -1,12 +1,10 @@
 # coding=utf-8
 """A scene can have multiple pages"""
-import logging
-
 from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton, QDialog, QVBoxLayout, QLabel
 from PySide6.QtCore import Qt, QPoint, Signal, QSize
 from PySide6.QtGui import QMouseEvent, QAction
 
-from model import Scene, Filter, UIPage, UIWidget
+from model import Filter, UIPage, UIWidget
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
 from view.show_mode.editor.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
@@ -184,7 +182,3 @@ class SceneUIPageEditorWidget(QWidget):
         """The scene the page represents"""
         return self._ui_page
 
-    @property
-    def filter_widgets(self) -> list[NodeEditorFilterConfigWidget]:
-        """List of all the filter widgets currently displayed on the page"""
-        return self._widgets

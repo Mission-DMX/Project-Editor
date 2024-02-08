@@ -1,11 +1,13 @@
 # coding=utf-8
 """Universe filter node"""
-import logging
+from logging import getLogger
 
 from pyqtgraph.flowchart import Terminal
 
 from model import DataType, Filter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
+
+logger = getLogger(__name__)
 
 
 class UniverseNode(FilterNode):
@@ -41,8 +43,8 @@ class UniverseNode(FilterNode):
                         else:
                             t: Terminal = self.terminals[key]
                             if not t.isInput():
-                                logging.error("Universe output filter '{}' has corrupted terminal '{}'."
-                                              .format(self.name(), input_channel))
+                                logger.error("Universe output filter '{}' has corrupted terminal '{}'."
+                                             .format(self.name(), input_channel))
         except:
             self.filter.filter_configurations["input_1"] = "0"
             self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
