@@ -8,7 +8,7 @@ from xml.etree import ElementTree
 import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
-from file import logger
+from logging import getLogger
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from model.scene import FilterPage
@@ -17,8 +17,7 @@ from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
 
-
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str, BankSet]):
@@ -115,7 +114,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
                 _parse_and_add_bankset(child, loaded_banksets)
             case _:
                 logger.warning("Show %s contains unknown element: %s",
-                                board_configuration.show_name, child.tag)
+                               board_configuration.show_name, child.tag)
 
     for scene_def in scene_defs_to_be_parsed:
         _parse_scene(scene_def, board_configuration, loaded_banksets)
@@ -186,7 +185,7 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
                 f.filters.append(filter)
             else:
                 logger.error("Didn't find filter '{}' in scene '{}'.".format(child.text,
-                                                                              parent_scene.human_readable_name))
+                                                                             parent_scene.human_readable_name))
     return True
 
 
@@ -221,7 +220,7 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                 ui_page_elements.append(child)
             case _:
                 logger.warning("Scene %s contains unknown element: %s",
-                                human_readable_name, child.tag)
+                               human_readable_name, child.tag)
 
     i: int = 0
     instantiated_pages: list[FilterPage] = []
@@ -352,7 +351,7 @@ def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, f
                 ip_value = value
             case _:
                 logger.warning("Found attribute %s=%s while parsing initial parameter for filter %s",
-                                key, value, filter_.filter_id)
+                               key, value, filter_.filter_id)
 
     filter_.initial_parameters[ip_key] = ip_value
 
@@ -368,7 +367,7 @@ def _parse_filter_configuration(filter_configuration_element: ElementTree.Elemen
                 fc_value = value
             case _:
                 logger.warning("Found attribute %s=%s while parsing filter configuration for filter %s",
-                                key, value, filter_.filter_id)
+                               key, value, filter_.filter_id)
 
     filter_.filter_configurations[fc_key] = fc_value
 
@@ -391,7 +390,7 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
                 description = value
             case _:
                 logger.warning("Found attribute %s=%s while parsing universe for show %s",
-                                key, value, board_configuration.show_name)
+                               key, value, board_configuration.show_name)
 
     if universe_id is None:
         logger.error("Could not parse universe element, id attribute is missing")
@@ -414,7 +413,7 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
 
             case _:
                 logger.warning("Universe %s contains unknown element: %s",
-                                universe_id, child.tag)
+                               universe_id, child.tag)
 
     if physical is None and artnet is None and ftdi is None:
         logger.warning("Could not parse any location for universe %s", universe_id)
