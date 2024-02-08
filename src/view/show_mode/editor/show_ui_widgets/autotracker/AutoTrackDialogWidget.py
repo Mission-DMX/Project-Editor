@@ -7,6 +7,7 @@ from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
 from view.show_mode.editor.show_ui_widgets.autotracker.CropTab import CropTab
+from view.show_mode.editor.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
 #from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.editor.show_ui_widgets.autotracker.LightSetupTab import LightSetupTab
@@ -45,6 +46,7 @@ class AutoTrackDialogWidget(QTabWidget):
         # Set the tab widget as the central widget
 
         self.currentChanged.connect(self.tab_changed)
+        self.instance.lights = VFilterLightController(f)
 
         self.video_timer = QTimer(self)
         self.video_timer.timeout.connect(self.video_update_all)

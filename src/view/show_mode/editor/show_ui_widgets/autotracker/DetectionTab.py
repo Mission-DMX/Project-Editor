@@ -217,7 +217,6 @@ class DetectionTab(GuiTab):
         return float(self.instance.settings.settings["confidence_threshold"].text())
 
     def move_lights(self, detections, frame):
-        # TODO modify this to get export data for UIWidget
         if len(detections) > 0:
             max_detection = max(detections, key=lambda arr: arr["confidence"])
             # h, w, _ = frame.shape

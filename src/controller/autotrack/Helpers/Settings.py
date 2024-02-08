@@ -1,5 +1,10 @@
+import logging
+
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
 from controller.autotrack.LightController import LightController
+
+
+logger = logging.Logger(__file__)
 
 
 class Settings:
@@ -44,6 +49,11 @@ class Settings:
         if self._lights is None:
             self._lights = None
         return self._lights
+
+    @lights.setter
+    def lights(self, lc: LightController):
+        logger.debug("New LightController registered.")
+        self._lights = lc
 
     @crop.setter
     def crop(self, value: tuple[int, int, int, int]):
