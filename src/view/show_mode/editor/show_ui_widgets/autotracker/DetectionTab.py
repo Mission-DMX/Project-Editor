@@ -2,8 +2,6 @@ import asyncio
 
 import cv2
 import numpy as np
-#from ultralytics.utils import yaml_load
-#from ultralytics.utils.checks import check_yaml
 
 from controller.autotrack.Detection.Yolo8.Yolo8 import Yolo8
 from controller.autotrack.Detection.Yolo8.Yolo8GPU import Yolo8GPU
@@ -11,6 +9,7 @@ from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 from controller.autotrack.Helpers import ImageHelper
 from controller.autotrack.Helpers.ImageHelper import draw_bounding_box, cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
+from controller.utils.yaml import yaml_load
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
@@ -23,11 +22,11 @@ from PySide6.QtWidgets import (
 
 from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
 
-CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]  # TODO use correct yaml loader
-colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
+#
+# TODO most things in this class actually belong in the controller and not the view. This should be refactored.
+#
 
-
-CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]  # TODO use correct yaml loader
+CLASSES = yaml_load("resources/autotrack_models/coco128.yaml")["names"]
 colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
