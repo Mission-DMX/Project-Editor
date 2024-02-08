@@ -193,7 +193,7 @@ class DetectionTab(GuiTab):
 
     def draw_boxes(self, frame, detections, scale):
         for detection in detections:
-            print(detection)
+            #print(detection)
             # draw_bounding_box(
             #    frame,
             #   detection["class_id"],

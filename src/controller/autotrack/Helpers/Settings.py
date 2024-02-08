@@ -1,3 +1,6 @@
+from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
+from controller.autotrack.LightController import LightController
+
 
 class Settings:
     """
@@ -16,18 +19,18 @@ class Settings:
         """
         Initialize the `Settings` class with default values.
         """
-        self._crop = (0, 0, 0, 0)
-        self._lights = None
+        self._crop: tuple[int, int, int, int] = (0, 0, 0, 0)
+        self._lights: LightController | None = None
         self.settings = {
             "confidence_threshold": "0.25",
             "Setting2": None,
             # Add more settings as needed
         }
-        self._map = None
+        self._map: MappingCalibration | None = None
         self._next_frame = None
 
     @property
-    def crop(self):
+    def crop(self) -> tuple[int, int, int, int]:
         """
         Get or set the crop settings as a tuple (x1, x2, y1, y2).
 
@@ -37,13 +40,13 @@ class Settings:
         return self._crop
 
     @property
-    def lights(self):
+    def lights(self) -> LightController | None:
         if self._lights is None:
             self._lights = None
         return self._lights
 
     @crop.setter
-    def crop(self, value):
+    def crop(self, value: tuple[int, int, int, int]):
         """
         Set the crop settings.
 
@@ -53,11 +56,11 @@ class Settings:
         self._crop = value
 
     @property
-    def map(self):
+    def map(self) -> MappingCalibration | None:
         return self._map
 
     @map.setter
-    def map(self, value):
+    def map(self, value: MappingCalibration):
         self._map = value
 
     @property

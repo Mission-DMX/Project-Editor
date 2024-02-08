@@ -43,7 +43,7 @@ class LightController(ABC):
         pass
 
     @abstractmethod
-    def set_position(self, position):
+    def set_position(self, position: tuple[int, int]):
         """
         Abstract method to set the position or orientation of the light(s).
 
