@@ -8,7 +8,7 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
 from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QSplitter
 from PySide6.QtGui import QAction
 
-from file.transmitting_to_fish import transmit_to_fish
+from controller.file.transmitting_to_fish import transmit_to_fish
 
 from model.board_configuration import BoardConfiguration, Scene, Broadcaster
 from model.scene import FilterPage

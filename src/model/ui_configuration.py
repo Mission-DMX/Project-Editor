@@ -132,7 +132,13 @@ class UIWidget(ABC):
         for entry in self.generate_update_content():
             k = entry[0]
             v = entry[1]
-            _network_manager_instance.send_gui_update_to_fish(self.parent.scene.scene_id, self.filter_id, k, v)
+            if ':' in k:
+                split_key = k.split(":")
+                target_fid = split_key[0]
+                k = split_key[1]
+            else:
+                target_fid = self.filter_id
+            _network_manager_instance.send_gui_update_to_fish(self.parent.scene.scene_id, target_fid, k, v)
 
 
 class UIPage:

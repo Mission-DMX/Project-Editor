@@ -1,12 +1,13 @@
 # coding=utf-8
 """A scene can have multiple pages"""
 from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton, QDialog, QVBoxLayout, QLabel
-from PySide6.QtCore import Qt, QPoint, Signal
+from PySide6.QtCore import Qt, QPoint, Signal, QSize
 from PySide6.QtGui import QMouseEvent, QAction
 
 from model import Filter, UIPage, UIWidget
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
+from view.show_mode.editor.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
 
 
 class UIWidgetHolder(QWidget):
@@ -45,7 +46,12 @@ class UIWidgetHolder(QWidget):
     def update_size(self):
         self.setMinimumWidth(100)
         self.setMinimumHeight(30)
-        minimum_size = self._child.layout().totalMinimumSize()
+
+        child_layout = self._child.layout()
+        if child_layout:
+            minimum_size = child_layout.totalMinimumSize()
+        else:
+            minimum_size = QSize(250, 100)
         w = max(minimum_size.width() + 50, self.minimumWidth())
         h = max(minimum_size.height() + 50, self.minimumHeight())
         self._label.resize(w, 20)
@@ -142,6 +148,12 @@ class SceneUIPageEditorWidget(QWidget):
             action = QAction("There are no suitable filters in the scene", menu)
             action.setEnabled(False)
             menu.addAction(action)
+        menu.addSeparator()
+        auto_track_action = QAction("Auto Tracker", self)
+        auto_track_action.triggered.connect(lambda checked=False, filter__=None: self._add_generic_widget(
+            AutoTrackerUIWidget("", self._ui_page), pos)
+        )
+        menu.addAction(auto_track_action)
         menu.popup(self.mapToGlobal(pos))
 
     def _add_filter_widget(self, filter_: Filter, pos: QPoint):
@@ -153,6 +165,9 @@ class SceneUIPageEditorWidget(QWidget):
         """
         # TODO replace with filter.gui_update_keys to ui widget / Change function to construct one from the keys
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
+        self._add_generic_widget(config_widget, pos)
+
+    def _add_generic_widget(self, config_widget: UIWidget, pos: QPoint):
         widget = UIWidgetHolder(config_widget, self)
         # widget.holding.parameters = filter_.initial_parameters
         # widget.holding.configuration = filter_.filter_configurations
@@ -160,6 +175,7 @@ class SceneUIPageEditorWidget(QWidget):
         widget.closing.connect(lambda: self._widgets.remove(widget))
         widget.move(pos)
         self._ui_page.append_widget(config_widget)
+
 
     @property
     def ui_page(self) -> UIPage:

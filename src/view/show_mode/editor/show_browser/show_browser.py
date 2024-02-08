@@ -6,11 +6,11 @@ from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu, QInputDialog
 
-from file.transmitting_to_fish import transmit_to_fish
+from controller.file.transmitting_to_fish import transmit_to_fish
 from model import Scene, BoardConfiguration, UIPage
 from model.control_desk import BankSet
 from model.scene import FilterPage
-from ofl.fixture import UsedFixture
+from controller.ofl.fixture import UsedFixture
 
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
@@ -20,12 +20,12 @@ from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 
 class ShowBrowser:
 
-    _filter_icon = QIcon("resources/filter.svg")
-    _scene_browser_tab_icon = QIcon("resources/showbrowser-show.svg")
-    _universe_browser_tab_icon = QIcon("resources/showbrowser-universe.svg")
-    _filter_browser_tab_icon = QIcon("resources/showbrowser-filterpages.svg")
-    _fader_icon = QIcon("resources/faders.svg")
-    _uipage_icon = QIcon("resources/uipage.svg")
+    _filter_icon = QIcon("resources/icons/filter.svg")
+    _scene_browser_tab_icon = QIcon("resources/icons/showbrowser-show.svg")
+    _universe_browser_tab_icon = QIcon("resources/icons/showbrowser-universe.svg")
+    _filter_browser_tab_icon = QIcon("resources/icons/showbrowser-filterpages.svg")
+    _fader_icon = QIcon("resources/icons/faders.svg")
+    _uipage_icon = QIcon("resources/icons/uipage.svg")
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget):
         self._widget = QWidget(parent)
@@ -286,8 +286,7 @@ class ShowBrowser:
             if isinstance(si, AnnotatedTreeWidgetItem):
                 if isinstance(si.annotated_data, Scene):
                     scene_to_rename = si.annotated_data
-                    if not self._input_dialog:
-                        self._input_dialog = QInputDialog(self.widget)
+                    self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
                     self._input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
                     self._input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
@@ -295,8 +294,7 @@ class ShowBrowser:
                     self._input_dialog.open()
                 if isinstance(si.annotated_data, FilterPage):
                     page_to_rename = si.annotated_data
-                    if not self._input_dialog:
-                        self._input_dialog = QInputDialog(self.widget)
+                    self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
                     self._input_dialog.textValueSelected.connect(lambda text: rename(self, page_to_rename, text))
                     self._input_dialog.setLabelText("Rename filter page '" + page_to_rename.name + "' to:")
@@ -362,8 +360,7 @@ class ShowBrowser:
                 continue
             if isinstance(item.annotated_data, Scene) or isinstance(item.annotated_data, FilterPage):
                 parent_to_append_to = item.annotated_data
-                if not self._input_dialog:
-                    self._input_dialog = QInputDialog(self.widget)
+                self._input_dialog = QInputDialog(self.widget)
                 self._input_dialog.setInputMode(QInputDialog.TextInput)
                 self._input_dialog.textValueSelected.connect(lambda text: add(self, parent_to_append_to, text))
                 self._input_dialog.setLabelText("Please enter the name of the new page.")

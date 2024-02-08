@@ -9,8 +9,8 @@ from PySide6 import QtWidgets
 
 from Style import Style
 from model.broadcaster import Broadcaster
-from ofl.fixture import Fixture, UsedFixture
-from ofl.manufacture import generate_manufacturers, Manufacture
+from controller.ofl.fixture import Fixture
+from controller.ofl.manufacture import generate_manufacturers, Manufacture
 from view.dialogs.patching_dialog import PatchingDialog
 from view.patch_mode.patching.fixture_item import FixtureItem
 from view.patch_mode.patching.manufacturer_item import ManufacturerItem

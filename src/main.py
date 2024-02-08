@@ -11,7 +11,7 @@ from PySide6 import QtWidgets
 
 from Style import Style
 from view.main_window import MainWindow
-from cli.remote_control_port import RemoteCLIServer
+from controller.cli.remote_control_port import RemoteCLIServer
 
 logger = logging.getLogger("Project-Editor")
 

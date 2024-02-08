@@ -5,7 +5,9 @@ from logging import getLogger
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
 
+
 from model import Scene, Filter
+from model.virtual_filters import construct_virtual_filter_instance
 
 from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
@@ -23,7 +25,10 @@ class FilterNode(Node):
                  allowAddInput: bool = False,
                  allowAddOutput: bool = False):
         if isinstance(model, Scene):
-            self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
+            if filter_type < 0:
+                self._filter = construct_virtual_filter_instance(scene=model, filter_id=name, filter_type=filter_type)
+            else:
+                self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
             model.append_filter(self._filter)
         elif isinstance(model, Filter):
             self._filter = model
@@ -96,7 +101,10 @@ class FilterNode(Node):
         Returns:
             The return value of pyqtgraph.flowchart.Node.rename()
         """
-        name + name.replace(":", "_")
+        name = name.replace(":", "_")
+        # check for name collision
+        name = self.filter.scene.ensure_name_uniqueness(name)
+
         old_name = self.filter.filter_id
         self.filter.filter_id = name
         filters_to_update: set[Filter] = set()
