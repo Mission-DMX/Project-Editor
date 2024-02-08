@@ -64,10 +64,10 @@ class SettingsTab(GuiTab):
         """
         Save the settings entered in the QLineEdit widgets.
         """
+        filter_config = self.instance.filter.filter_configurations
         for setting, edit in self.instance.settings.settings.items():
             value = edit.text()
-            # TODO: Implement setting validation and saving logic
-            print(f"{setting}: {value}")
+            filter_config[setting] = value
 
     def tab_activated(self):
         """

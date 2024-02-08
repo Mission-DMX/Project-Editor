@@ -16,7 +16,7 @@ class AutoTrackerUIWidget(UIWidget):
         else:
             raise ValueError("The provided filter id does not exist.")
         self._associated_filter: AutoTrackerFilter = associated_filter
-        self.config_widget = AutoTrackDialogWidget()
+        self.config_widget = AutoTrackDialogWidget(associated_filter)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         filter_updates = []

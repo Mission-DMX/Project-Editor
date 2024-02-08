@@ -1,6 +1,7 @@
 from controller.autotrack.Helpers.Settings import Settings
 from controller.autotrack.ImageOptimizer.ImagePipeline import ImagePipeline
 from controller.autotrack.Sources.Loader import Loader
+from model.virtual_filters import AutoTrackerFilter
 
 
 class InstanceManager:
@@ -15,11 +16,14 @@ class InstanceManager:
     """
 
     # TODO refactor to Properties
-    def __init__(self):
+    def __init__(self, f: AutoTrackerFilter):
         self.loader = None
         self.preview_pipeline = None
         self.processing_pipeline = None
         self._settings = Settings()
+        self.filter: AutoTrackerFilter = f
+        for setting, value in f.filter_configurations.items():
+            self._settings.settings[setting] = value
 
     def set_loader(self, loader: Loader):
         self.loader = loader

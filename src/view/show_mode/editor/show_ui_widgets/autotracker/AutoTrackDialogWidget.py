@@ -1,6 +1,7 @@
 from PySide6.QtCore import QTimer, QThread
 from PySide6.QtWidgets import QMainWindow, QMenuBar, QTabWidget, QWidget
 
+from model.virtual_filters import AutoTrackerFilter
 from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
@@ -25,12 +26,12 @@ class AutoTrackDialogWidget(QTabWidget):
         - `register_tabs(tab_widget, tabs)`: Register tabs in the main window.
     """
 
-    def __init__(self):
+    def __init__(self, f: AutoTrackerFilter):
         """
         Initialize the main application window.
         """
         super().__init__()
-        self.instance = InstanceManager()
+        self.instance = InstanceManager(f)
         tabs = [
             SourcesTab("Sources", self.instance),
             SettingsTab("Settings", self.instance),
