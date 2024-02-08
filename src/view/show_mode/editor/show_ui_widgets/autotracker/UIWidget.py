@@ -25,7 +25,7 @@ class AutoTrackerUIWidget(UIWidget):
             tilt_filter_id = self._associated_filter.get_tilt_filter_id(tracker_id)
             if not pan_filter_id or not tilt_filter_id:
                 continue
-            filter_updates.append((pan_filter_id, str(0)))  # TODO query real value based on data type
+            filter_updates.append((pan_filter_id, str(0)))  # TODO query real value based on data type (DetectionTab -> move_lights)
             filter_updates.append((tilt_filter_id, str(0)))  # TODO query real value based on data type
         return filter_updates
 

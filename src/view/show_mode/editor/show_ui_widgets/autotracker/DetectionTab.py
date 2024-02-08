@@ -23,11 +23,11 @@ from PySide6.QtWidgets import (
 
 from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
 
-CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]
+CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]  # TODO use correct yaml loader
 colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
-CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]
+CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]  # TODO use correct yaml loader
 colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
@@ -218,6 +218,7 @@ class DetectionTab(GuiTab):
         return float(self.instance.settings.settings["confidence_threshold"].text())
 
     def move_lights(self, detections, frame):
+        # TODO modify this to get export data for UIWidget
         if len(detections) > 0:
             max_detection = max(detections, key=lambda arr: arr["confidence"])
             # h, w, _ = frame.shape

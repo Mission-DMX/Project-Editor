@@ -2,6 +2,7 @@ from PySide6.QtCore import QTimer, QThread
 from PySide6.QtWidgets import QMainWindow, QMenuBar, QTabWidget, QWidget
 
 from model.virtual_filters import AutoTrackerFilter
+from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
@@ -36,7 +37,7 @@ class AutoTrackDialogWidget(QTabWidget):
             SourcesTab("Sources", self.instance),
             SettingsTab("Settings", self.instance),
             CropTab("Crop", self.instance),
-            #DetectionTab("Detect", self.instance),
+            DetectionTab("Detect", self.instance),
             LightSetupTab("Lights", self.instance),
         ]
         self.register_tabs(self, tabs)
@@ -57,6 +58,7 @@ class AutoTrackDialogWidget(QTabWidget):
             tab = self.widget(i)
             if isinstance(tab, GuiTab):
                 tab.video_update()
+        # TODO call generate_update_content from ui widget
 
     def tab_changed(self, index):
         """
