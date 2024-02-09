@@ -46,7 +46,6 @@ class AutoTrackDialogWidget(QTabWidget):
         # Set the tab widget as the central widget
 
         self.currentChanged.connect(self.tab_changed)
-        self.instance.lights = VFilterLightController(f)
 
         self.video_timer = QTimer(self)
         self.video_timer.timeout.connect(self.video_update_all)

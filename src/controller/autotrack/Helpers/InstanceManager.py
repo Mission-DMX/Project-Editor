@@ -1,4 +1,4 @@
-from controller.autotrack.Helpers.Settings import Settings
+from controller.autotrack.Helpers.AutoTrackerSettings import AutoTrackerSettings
 from controller.autotrack.ImageOptimizer.ImagePipeline import ImagePipeline
 from controller.autotrack.Sources.Loader import Loader
 from model.virtual_filters import AutoTrackerFilter
@@ -12,7 +12,7 @@ class InstanceManager:
         loader (Loader): The data loader instance.
         preview_pipeline (ImagePipeline): The image preview pipeline instance.
         processing_pipeline (ImagePipeline): The image processing pipeline instance.
-        _settings (Settings): The application settings.
+        _settings (AutoTrackerSettings): The application settings.
     """
 
     # TODO refactor to Properties
@@ -20,7 +20,7 @@ class InstanceManager:
         self.loader = None
         self.preview_pipeline = None
         self.processing_pipeline = None
-        self._settings = Settings()
+        self._settings = AutoTrackerSettings(f)
         self.filter: AutoTrackerFilter = f
         for setting, value in f.filter_configurations.items():
             self._settings.settings[setting] = value
@@ -59,6 +59,6 @@ class InstanceManager:
         Get the application settings.
 
         Returns:
-            Settings: The application settings.
+            AutoTrackerSettings: The application settings.
         """
         return self._settings

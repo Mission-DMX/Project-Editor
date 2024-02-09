@@ -1,8 +1,13 @@
+import logging
+
 from PySide6.QtWidgets import QWidget
 
 from model import UIWidget, UIPage
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
+from view.show_mode.editor.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
+
+logger = logging.Logger(__file__)
 
 
 class AutoTrackerUIWidget(UIWidget):
@@ -17,16 +22,21 @@ class AutoTrackerUIWidget(UIWidget):
             raise ValueError("The provided filter id does not exist.")
         self._associated_filter: AutoTrackerFilter = associated_filter
         self.config_widget = AutoTrackDialogWidget(associated_filter)
+        self.config_widget.instance.settings.lights.set_ui_widget(self)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         filter_updates = []
+        lc = self.config_widget.instance.settings.lights
+        if not isinstance(lc, VFilterLightController):
+            logger.error("Expected VFilterLightController. Got {} instead.".format(type(lc)))
         for tracker_id in range(self._associated_filter.number_of_concurrent_trackers):
             pan_filter_id = self._associated_filter.get_pan_filter_id(tracker_id)
             tilt_filter_id = self._associated_filter.get_tilt_filter_id(tracker_id)
             if not pan_filter_id or not tilt_filter_id:
                 continue
-            filter_updates.append((pan_filter_id, str(0)))  # TODO query real value based on data type (DetectionTab -> move_lights)
-            filter_updates.append((tilt_filter_id, str(0)))  # TODO query real value based on data type
+            # TODO upgrade value query to multi tracker support
+            filter_updates.append((pan_filter_id, str(lc.last_pan)))
+            filter_updates.append((tilt_filter_id, str(lc.last_tilt)))
         return filter_updates
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
@@ -36,8 +46,8 @@ class AutoTrackerUIWidget(UIWidget):
         return self.config_widget
 
     def copy(self, new_parent: UIPage) -> UIWidget:
-        # TODO
-        pass
+        return AutoTrackerUIWidget(self._associated_filter.filter_id, new_parent,
+                                   self.config_widget.instance.settings.as_dict())
 
     def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
         return self.config_widget

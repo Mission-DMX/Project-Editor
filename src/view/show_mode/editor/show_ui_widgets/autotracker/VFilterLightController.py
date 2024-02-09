@@ -1,5 +1,16 @@
+import logging
+from typing import TYPE_CHECKING
+
 from controller.autotrack.LightController import LightController
 from model.virtual_filters import AutoTrackerFilter
+
+
+if TYPE_CHECKING:
+    from view.show_mode.editor.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
+
+
+logger = logging.Logger(__file__)
+
 
 class VFilterLightController(LightController):
     """
@@ -8,6 +19,38 @@ class VFilterLightController(LightController):
     """
 
     def __init__(self, f: AutoTrackerFilter):
+        super().__init__()
+        self._minimum_brightness: float = 0.0
+        self._widget: "AutoTrackerUIWidget" = None
+        self.last_pan: int = 0
+        self.last_tilt: int = 0
+
+    def turn_on(self):
+        self._minimum_brightness = 1.0
+        self._request_update()
+
+    def turn_off(self):
+        self._minimum_brightness = 0.0
+        self._request_update()
+
+    def set_brightness(self, brightness: float):
+        self._minimum_brightness = brightness
+        self._request_update()
+
+    def set_position(self, position: tuple[int, int]):
+        self.last_pan = position[0]
+        self.last_tilt = position[1]
+        self._request_update()
+
+    def set_color(self, color):
+        logger.error("Someone wanted to set the moving head color to '{}'. This however is not supported.".format(color))
         pass
 
-    # TODO implement as in ArtNet.py from BA
+    def _request_update(self):
+        if not self._widget:
+            logger.error("Unable to pass auto tracker updates. No UIWidget was loaded yet.")
+            return
+        self._widget.push_update()
+
+    def set_ui_widget(self, w: "AutoTrackerUIWidget"):
+        self._widget = w

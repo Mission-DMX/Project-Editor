@@ -3,7 +3,10 @@ import numpy as np
 
 
 class MappingCalibration:
-    def __init__(self, points: list[tuple[tuple[int, int], tuple[int, int]]]):
+    def __init__(self, points: list[tuple[tuple[int, int], tuple[int, int]]] | str):
+        if isinstance(points, str):
+            # TODO implement parsing from string
+            raise NotImplementedError("Parsing points from a string is not yet implemented")
         obj_points = []
         img_points = []
         for i in points:
@@ -25,3 +28,7 @@ class MappingCalibration:
         transformed_point = cv2.perspectiveTransform(pt.reshape(-1, 1, 2), self.M)
         c = (int(transformed_point[0][0][0]), int(transformed_point[0][0][1]))
         return c
+
+    def __str__(self):
+        # TODO implement export of calibration points as string
+        return ""

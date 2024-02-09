@@ -2,12 +2,12 @@ import logging
 
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
 from controller.autotrack.LightController import LightController
-
+from model.virtual_filters import AutoTrackerFilter
 
 logger = logging.Logger(__file__)
 
 
-class Settings:
+class AutoTrackerSettings:
     """
     The `Settings` class manages application settings.
 
@@ -20,18 +20,21 @@ class Settings:
         - `crop`: Get or set the crop settings as a tuple (x1, x2, y1, y2).
     """
 
-    def __init__(self):
+    def __init__(self, f: AutoTrackerFilter):
         """
         Initialize the `Settings` class with default values.
         """
         self._crop: tuple[int, int, int, int] = (0, 0, 0, 0)
-        self._lights: LightController | None = None
+        self._lights: LightController = f.light_controller
+        self._filter: AutoTrackerFilter = f
         self.settings = {
             "confidence_threshold": "0.25",
-            "Setting2": None,
-            # Add more settings as needed
+            "Setting2": "",
         }
         self._map: MappingCalibration | None = None
+        if self.settings.get("mapping_calibration"):
+            self._map = MappingCalibration(self.settings["mapping_calibration"])
+        # TODO parse 'crop' from settings if available
         self._next_frame = None
 
     @property
@@ -45,15 +48,8 @@ class Settings:
         return self._crop
 
     @property
-    def lights(self) -> LightController | None:
-        if self._lights is None:
-            self._lights = None
+    def lights(self) -> LightController:
         return self._lights
-
-    @lights.setter
-    def lights(self, lc: LightController):
-        logger.debug("New LightController registered.")
-        self._lights = lc
 
     @crop.setter
     def crop(self, value: tuple[int, int, int, int]):
@@ -64,6 +60,7 @@ class Settings:
             value (tuple): A tuple representing the crop settings (x1, x2, y1, y2).
         """
         self._crop = value
+        self._filter.filter_configurations.update(self.as_dict())
 
     @property
     def map(self) -> MappingCalibration | None:
@@ -72,6 +69,7 @@ class Settings:
     @map.setter
     def map(self, value: MappingCalibration):
         self._map = value
+        self._filter.filter_configurations.update(self.as_dict())
 
     @property
     def next_frame(self):
@@ -80,3 +78,13 @@ class Settings:
     @next_frame.setter
     def next_frame(self, value):
         self._next_frame = value
+        # This does not need to be saved to filter preferences as it is just the last image that was captured.
+        # TODO perform a proper refactor to remove this from settings
+
+    def as_dict(self):
+        return {
+            "confidence_threshold": "0.25",
+            "Setting2": "",
+            "crop": str(self._crop),
+            "mapping_calibration": str(self._map),
+        }
