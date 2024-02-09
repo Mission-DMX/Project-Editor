@@ -29,6 +29,7 @@ class AutoTrackerFilter(VirtualFilter):
         pass
 
     def instantiate_filters(self, filter_list: list[Filter]):
+        # TODO implement minimum brightness output filter
         for tf in self._control_filters.values():
             filter_list.append(Filter(self.scene, self.get_pan_filter_id(tf),
                                       FilterTypeEnumeration.FILTER_CONSTANT_8BIT if tf.datatype == DataType.DT_8_BIT
