@@ -2,11 +2,21 @@ import cv2
 import numpy as np
 
 
+def _parse_parameters(str_representation: str) -> list[tuple[tuple[int, int], tuple[int, int]]]:
+    param_list = []
+    for p_str in str_representation.split(';'):
+        p_parts = p_str.split(',')
+        for i in range(p_parts):
+            p_parts[i] = int(p_parts[i])
+        param_list.append(((p_parts[0], p_parts[1]), (p_parts[2], p_parts[3])))
+    return param_list
+
+
 class MappingCalibration:
     def __init__(self, points: list[tuple[tuple[int, int], tuple[int, int]]] | str):
         if isinstance(points, str):
-            # TODO implement parsing from string
-            raise NotImplementedError("Parsing points from a string is not yet implemented")
+            points = _parse_parameters(points)
+        self._original_representation = points
         obj_points = []
         img_points = []
         for i in points:
@@ -30,5 +40,6 @@ class MappingCalibration:
         return c
 
     def __str__(self):
-        # TODO implement export of calibration points as string
-        return ""
+        def generate_representation(p: tuple[tuple[int, int], tuple[int, int]]) -> str:
+            return ",".join([str(p[0][0]), str(p[0][1]), str(p[1][0]), str(p[1][1])])
+        return ";".join([generate_representation(p) for p in self._original_representation])
