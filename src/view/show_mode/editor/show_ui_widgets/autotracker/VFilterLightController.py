@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from controller.autotrack.LightController import LightController
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from view.show_mode.editor.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
 
 
-logger = logging.Logger(__file__)
+logger = getLogger(__file__)
 
 
 class VFilterLightController(LightController):

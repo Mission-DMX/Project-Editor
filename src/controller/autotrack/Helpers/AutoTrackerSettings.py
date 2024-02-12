@@ -1,10 +1,10 @@
-import logging
+from logging import getLogger
 
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
 from controller.autotrack.LightController import LightController
 from model.virtual_filters import AutoTrackerFilter
 
-logger = logging.Logger(__file__)
+logger = getLogger(__file__)
 
 
 class AutoTrackerSettings:

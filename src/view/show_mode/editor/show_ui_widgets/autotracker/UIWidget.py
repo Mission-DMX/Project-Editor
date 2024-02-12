@@ -1,4 +1,4 @@
-import logging
+from logging import getLogger
 
 from PySide6.QtWidgets import QWidget
 
@@ -7,7 +7,7 @@ from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
 from view.show_mode.editor.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
 
-logger = logging.Logger(__file__)
+logger = getLogger(__file__)
 
 
 class AutoTrackerUIWidget(UIWidget):
