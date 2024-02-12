@@ -18,8 +18,8 @@ class InstanceManager:
     # TODO refactor to Properties
     def __init__(self, f: AutoTrackerFilter):
         self.loader = None
-        self.preview_pipeline = None
-        self.processing_pipeline = None
+        self.preview_pipeline: ImagePipeline | None = None
+        self.processing_pipeline: ImagePipeline | None = None
         self._settings = AutoTrackerSettings(f)
         self.filter: AutoTrackerFilter = f
         for setting, value in f.filter_configurations.items():
@@ -37,7 +37,7 @@ class InstanceManager:
     def get_loader(self):
         return self.loader
 
-    def get_preview_pipeline(self):
+    def get_preview_pipeline(self) -> ImagePipeline:
         prp = self.preview_pipeline
         if prp is None:
             prp = ImagePipeline()
@@ -45,7 +45,7 @@ class InstanceManager:
             self.set_preview_pipeline(prp)
         return self.preview_pipeline
 
-    def get_processing_pipeline(self):
+    def get_processing_pipeline(self) -> ImagePipeline:
         prp = self.processing_pipeline
         if prp is None:
             prp = ImagePipeline()
