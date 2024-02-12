@@ -1,7 +1,8 @@
-import logging
-import ruamel.yaml
+from logging import getLogger
+import ruamel.yaml as yaml
 
-logger = logging.Logger(__file__)
+logger = getLogger(__file__)
+
 
 def yaml_load(file_path: str) -> dict:
     """
