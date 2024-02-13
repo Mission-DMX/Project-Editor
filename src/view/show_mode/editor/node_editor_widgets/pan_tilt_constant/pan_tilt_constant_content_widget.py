@@ -1,9 +1,9 @@
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QPainter, QColor, QPixmap, QMouseEvent
 from PySide6.QtWidgets import QLabel, QWidget, QSizePolicy
-from pyjoystick.sdl2 import Key
 from qasync import QtGui
 
+from controller.cli.joystick_enum import JoystickList
 from model import Broadcaster
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 
@@ -78,10 +78,8 @@ class PanTiltConstantContentWidget(QLabel):
             self._filter.pan = event.pos().x() * self.prange / self.width()
             self._filter.tilt = event.pos().y() * self.trange / self.height()
 
-    def handle_key_event(self, key):
-        # print(key, '-', key.keytype, '-', key.number, '-', key.value)
-        if key.keytype == Key.AXIS:
-            if key.number == 0:
-                self._filter.pan_delta = key.value
-            elif key.number == 1:
-                self._filter.tilt_delta = key.value
+    def handle_key_event(self, joystick: JoystickList, val: float, tilt: bool):
+        if tilt:
+            self._filter.pan_delta = val
+        else:
+            self._filter.tilt_delta = val

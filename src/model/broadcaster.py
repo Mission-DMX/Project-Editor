@@ -3,8 +3,8 @@
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
-from pyjoystick import Key
 
+from controller.cli.joystick_enum import JoystickList
 from proto.RealTimeControl_pb2 import RunMode
 from proto.FilterMode_pb2 import update_parameter
 
@@ -86,7 +86,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
 
-    handle_joystick_event: QtCore.Signal = QtCore.Signal(Key)
+    handle_joystick_event: QtCore.Signal = QtCore.Signal(JoystickList, float, bool)
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(update_parameter)
     #################################################################
