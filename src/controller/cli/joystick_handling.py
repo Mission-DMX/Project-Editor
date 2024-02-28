@@ -7,6 +7,7 @@ from pyjoystick.sdl2 import run_event_loop, Key
 from controller.cli.joystick_enum import JoystickList
 from model import Broadcaster
 
+
 class JoystickHandler:
 
     @staticmethod
@@ -27,8 +28,6 @@ class JoystickHandler:
                 case _:
                     return
             (Broadcaster()).handle_joystick_event.emit(jstick, key.value, tilt)
-
-
 
     def __new__(cls):
         mngr = pyjoystick.ThreadEventManager(event_loop=run_event_loop,

@@ -79,7 +79,4 @@ class PanTiltConstantContentWidget(QLabel):
             self._filter.tilt = event.pos().y() * self.trange / self.height()
 
     def handle_key_event(self, joystick: JoystickList, val: float, tilt: bool):
-        if tilt:
-            self._filter.pan_delta = val
-        else:
-            self._filter.tilt_delta = val
+        self._filter.set_delta(val, joystick, tilt)

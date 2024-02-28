@@ -1,5 +1,6 @@
 from PySide6.QtCore import QTimer
 
+from controller.cli.joystick_enum import JoystickList
 from model import Scene
 from model.filter import VirtualFilter, Filter, DataType, FilterTypeEnumeration
 
@@ -14,6 +15,7 @@ class PanTiltConstantFilter(VirtualFilter):
         self._update_allowed = False
         self._pan_delta = 0.0
         self._tilt_delta = 0.0
+        self._joystick = JoystickList.NoJoystick
 
 
         # Todo: maybe use timer in broadcaster
@@ -122,6 +124,14 @@ class PanTiltConstantFilter(VirtualFilter):
     def tilt_delta(self, tilt_delta):
         if self._update_allowed:
             self._tilt_delta = tilt_delta
+
+    def set_delta(self, delta: float, joystick: JoystickList, tilt: bool):
+        if tilt:
+            if self._update_allowed and joystick == self._joystick:
+                self._tilt_delta = delta
+        else:
+            if self._update_allowed and joystick == self._joystick:
+                self._pan_delta = delta
 
     @property
     def sixteen_bit_available(self):

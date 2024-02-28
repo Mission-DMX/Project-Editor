@@ -5,6 +5,8 @@ from enum import Enum
 
 class JoystickList(Enum):
     """Joysticks available"""
-    Gamepad_Left = 1
-    Gamepad_Right = 2
-    Joystick = 3
+    NoJoystick = 1
+    EveryJoystick = 2
+    Gamepad_Left = 3
+    Gamepad_Right = 4
+    Joystick = 5
