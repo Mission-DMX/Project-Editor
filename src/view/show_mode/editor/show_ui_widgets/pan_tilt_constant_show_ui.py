@@ -36,7 +36,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
 
         self._choosenJoystick = QComboBox()
         self._choosenJoystick.addItems(JoystickHandler.joystickMap.keys())
-        self._choosenJoystick.currentTextChanged.connect(lambda x: self._filter.setjoystick(JoystickHandler.joystickMap[x]))
+        self._choosenJoystick.currentTextChanged.connect(lambda x: self._filter.set_joystick(JoystickHandler.joystickMap[x]))
         layout.addWidget(self._choosenJoystick)
 
         w.setLayout(layout)

@@ -1,8 +1,7 @@
 from PySide6.QtCore import QTimer
 
 from controller.cli.joystick_enum import JoystickList
-from controller.cli.joystick_handling import JoystickHandler
-from model import Scene
+from model import Scene, Broadcaster
 from model.filter import VirtualFilter, Filter, DataType, FilterTypeEnumeration
 
 
@@ -16,6 +15,8 @@ class PanTiltConstantFilter(VirtualFilter):
         self._pan_delta = 0.0
         self._tilt_delta = 0.0
         self._joystick = JoystickList.NoJoystick
+        self._broadcaster = Broadcaster()
+        self._broadcaster.joystick_selected_event.connect(lambda joystick: self.set_joystick(JoystickList.NoJoystick if joystick == self._joystick else self._joystick))
 
 
         # Todo: maybe use timer in broadcaster
@@ -37,13 +38,13 @@ class PanTiltConstantFilter(VirtualFilter):
         return None
 
     def instantiate_filters(self, filter_list: list[Filter]):
-        self.instanitate_16bit_constant_filter(filter_list, False)
-        self.instanitate_16bit_constant_filter(filter_list, True)
+        self.instantiate_16bit_constant_filter(filter_list, False)
+        self.instantiate_16bit_constant_filter(filter_list, True)
         if self.eight_bit_available:
-            self.instanitate_16bit_to_8bit_conversion_filter(filter_list, False)
-            self.instanitate_16bit_to_8bit_conversion_filter(filter_list, True)
+            self.instantiate_16bit_to_8bit_conversion_filter(filter_list, False)
+            self.instantiate_16bit_to_8bit_conversion_filter(filter_list, True)
 
-    def instanitate_16bit_constant_filter(self, filter_list: list[Filter], tilt: bool):
+    def instantiate_16bit_constant_filter(self, filter_list: list[Filter], tilt: bool):
         filter = Filter(
             filter_id="{}_16bit_{}".format(self.filter_id, 'tilt' if tilt else 'pan'),
             filter_type=1,
@@ -58,7 +59,7 @@ class PanTiltConstantFilter(VirtualFilter):
         filter._channel_links = {}
         filter_list.append(filter)
 
-    def instanitate_16bit_to_8bit_conversion_filter(self, filter_list: list[Filter], tilt: bool):
+    def instantiate_16bit_to_8bit_conversion_filter(self, filter_list: list[Filter], tilt: bool):
         filter = Filter(
             filter_id="{}_8bit_{}".format(self.filter_id,
                                           'tilt' if tilt else 'pan'),
@@ -137,10 +138,21 @@ class PanTiltConstantFilter(VirtualFilter):
         for obs in self.observer:
             (self.observer[obs])()
 
-    def setjoystick(self, joystick: JoystickList):
+    @property
+    def joystick(self):
+        return self._joystick
+
+    @joystick.setter
+    def joystick(self, joystick):
         if joystick != self._joystick:
             if joystick == JoystickList.NoJoystick:
                 self._timer.stop()
             elif self._joystick == JoystickList.NoJoystick:
                 self._timer.start()
+                self._pan_delta = 0.0
+                self._tilt_delta = 0.0
+            self._broadcaster.joystick_selected_event.emit(joystick)
             self._joystick = joystick
+
+    def set_joystick(self, joystick):
+        self.joystick = joystick

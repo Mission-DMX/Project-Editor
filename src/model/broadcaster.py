@@ -87,6 +87,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
 
     handle_joystick_event: QtCore.Signal = QtCore.Signal(JoystickList, float, bool)
+    joystick_selected_event: QtCore.Signal = QtCore.Signal(JoystickList)
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(update_parameter)
     #################################################################
