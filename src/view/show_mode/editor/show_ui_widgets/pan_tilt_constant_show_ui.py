@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QVBoxLayout, QCheckBox, QWidget, QLabel
+from PySide6.QtWidgets import QVBoxLayout, QCheckBox, QWidget, QLabel, QComboBox
 
+from controller.cli.joystick_handling import JoystickHandler
 from model import UIWidget, UIPage, Filter
 from model.virtual_filters import PanTiltConstantFilter
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \
@@ -33,10 +34,10 @@ class PanTiltConstantControlUIWidget(UIWidget):
         pan_tilt = PanTiltConstantContentWidget(self._filter, w)
         layout.addWidget(pan_tilt)
 
-        self._activated = QCheckBox()
-        self._activated.setText("allow changes from joystick")
-        self._activated.stateChanged.connect(self.setting_changed)
-        layout.addWidget(self._activated)
+        self._choosenJoystick = QComboBox()
+        self._choosenJoystick.addItems(JoystickHandler.joystickMap.keys())
+        self._choosenJoystick.currentTextChanged.connect(lambda x: self._filter.setjoystick(JoystickHandler.joystickMap[x]))
+        layout.addWidget(self._choosenJoystick)
 
         w.setLayout(layout)
         return w
@@ -65,6 +66,3 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._command_chain.append(command)
         self.push_update()
         self._command_chain.clear()
-
-    def setting_changed(self):
-        self._filter.update_allowed = self._activated.isChecked()

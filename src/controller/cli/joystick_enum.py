@@ -2,7 +2,10 @@
 """List of all joysticks"""
 from enum import Enum
 
+from PySide6.QtCore import QEnum
 
+
+@QEnum
 class JoystickList(Enum):
     """Joysticks available"""
     NoJoystick = 1

@@ -1,6 +1,7 @@
 from PySide6.QtCore import QEvent
 from PySide6.QtWidgets import QWidget, QCheckBox, QVBoxLayout
 
+from controller.cli.joystick_enum import JoystickList
 from model import Scene, BoardConfiguration
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
@@ -69,10 +70,10 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
                 'tilt': self._filter.tilt}
 
     def parent_closed(self, filter_node: "FilterNode"):
-        self._filter.update_allowed = False
+        self._filter.setjoystick(JoystickList.NoJoystick)
         filter_node.outputs_changed(self.cB8Bit.isChecked(), self.cB16Bit.isChecked())
 
     def parent_opened(self):
-        self._filter.update_allowed = True
+        self._filter.setjoystick(JoystickList.EveryJoystick)
         self.cB8Bit.setChecked(self._filter.eight_bit_available)
         self.cB16Bit.setChecked(self._filter.sixteen_bit_available)

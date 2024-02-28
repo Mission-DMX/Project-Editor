@@ -1,6 +1,7 @@
 from PySide6.QtCore import QTimer
 
 from controller.cli.joystick_enum import JoystickList
+from controller.cli.joystick_handling import JoystickHandler
 from model import Scene
 from model.filter import VirtualFilter, Filter, DataType, FilterTypeEnumeration
 
@@ -12,7 +13,6 @@ class PanTiltConstantFilter(VirtualFilter):
         self._pan = 0.8
         self._tilt = 0.8
         self._filter_configurations = {}
-        self._update_allowed = False
         self._pan_delta = 0.0
         self._tilt_delta = 0.0
         self._joystick = JoystickList.NoJoystick
@@ -94,27 +94,12 @@ class PanTiltConstantFilter(VirtualFilter):
         self.notify_observer()
 
     @property
-    def update_allowed(self):
-        return self._update_allowed
-
-    @update_allowed.setter
-    def update_allowed(self, update_allowed):
-        if update_allowed:
-            self._timer.start()
-        else:
-            self._timer.stop()
-            self._pan_delta = 0.0
-            self._tilt_delta = 0.0
-        self._update_allowed = update_allowed
-
-    @property
     def pan_delta(self):
         return self._pan_delta
 
     @pan_delta.setter
     def pan_delta(self, pan_delta):
-        if self._update_allowed:
-            self._pan_delta = pan_delta
+        self._pan_delta = pan_delta
 
     @property
     def tilt_delta(self):
@@ -122,16 +107,15 @@ class PanTiltConstantFilter(VirtualFilter):
 
     @tilt_delta.setter
     def tilt_delta(self, tilt_delta):
-        if self._update_allowed:
-            self._tilt_delta = tilt_delta
+        self._tilt_delta = tilt_delta
 
     def set_delta(self, delta: float, joystick: JoystickList, tilt: bool):
-        if tilt:
-            if self._update_allowed and joystick == self._joystick:
-                self._tilt_delta = delta
-        else:
-            if self._update_allowed and joystick == self._joystick:
-                self._pan_delta = delta
+        if self._joystick != JoystickList.NoJoystick:
+            if joystick == self._joystick or self._joystick == JoystickList.EveryJoystick:
+                if tilt:
+                        self._tilt_delta = delta
+                else:
+                        self._pan_delta = delta
 
     @property
     def sixteen_bit_available(self):
@@ -142,10 +126,9 @@ class PanTiltConstantFilter(VirtualFilter):
         return self._filter_configurations['outputs'] == 'both' or self._filter_configurations['outputs'] == '8bit'
 
     def update_time_passed(self):
-        if self._update_allowed:
-            self._pan = min(max(self._pan + 0.01 * self._pan_delta, 0.0), 1)
-            self._tilt = min(max(self._tilt + 0.01 * self._tilt_delta, 0.0), 1)
-            self.notify_observer()
+        self._pan = min(max(self._pan + 0.01 * self._pan_delta, 0.0), 1.0)
+        self._tilt = min(max(self._tilt + 0.01 * self._tilt_delta, 0.0), 1.0)
+        self.notify_observer()
 
     def register_observer(self, obs, callback):
         self.observer[obs] = callback
@@ -153,3 +136,11 @@ class PanTiltConstantFilter(VirtualFilter):
     def notify_observer(self):
         for obs in self.observer:
             (self.observer[obs])()
+
+    def setjoystick(self, joystick: JoystickList):
+        if joystick != self._joystick:
+            if joystick == JoystickList.NoJoystick:
+                self._timer.stop()
+            elif self._joystick == JoystickList.NoJoystick:
+                self._timer.start()
+            self._joystick = joystick
