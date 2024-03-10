@@ -1,15 +1,15 @@
 # coding=utf-8
 """main Window for the Editor"""
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtGui, QtWidgets
 
-from Style import Style
-from controller.file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog, _save_show_file
-from proto.RealTimeControl_pb2 import RunMode
+from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
 from network import NetworkManager
+from proto.RealTimeControl_pb2 import RunMode
+from Style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_mode.logging_widget import LoggingWidget
