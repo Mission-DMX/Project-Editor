@@ -254,6 +254,16 @@ class FaderBank:
         self.columns: list[DeskColumn] = []
         self._pushed_to_device = False
 
+    @property
+    def pushed_to_device(self) -> bool:
+        """property for pushed_to_device"""
+        return self._pushed_to_device
+
+    @pushed_to_device.setter
+    def pushed_to_device(self, pushed: bool) -> None:
+        """setter for pushed_to_device"""
+        self._pushed_to_device = pushed
+
     def add_column(self, col: DeskColumn):
         """add a new colum"""
         self.columns.append(col)
