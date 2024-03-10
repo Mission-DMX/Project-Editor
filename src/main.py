@@ -19,7 +19,7 @@ logger = logging.getLogger("Project-Editor")
 def setup_logging():
     """read logging from config file and set up the logger"""
     config_file = pathlib.Path("../configs/logging.json")
-    with open(config_file) as f_in:
+    with open(config_file, encoding="utf-8") as f_in:
         config = json.load(f_in)
 
     logging.config.dictConfig(config)
