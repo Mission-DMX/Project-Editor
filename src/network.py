@@ -146,8 +146,8 @@ class NetworkManager(QtCore.QObject):
             msg_type = varint.decode_bytes(msg_bytes[0])
             msg_len = varint.decode_bytes(msg_bytes[1:])
             start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
-            msg = msg_bytes[start : start + msg_len]
-            msg_bytes = msg_bytes[start + msg_len :]
+            msg = msg_bytes[start: start + msg_len]
+            msg_bytes = msg_bytes[start + msg_len:]
             try:
                 match msg_type:
                     case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
