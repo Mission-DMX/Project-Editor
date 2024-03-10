@@ -4,6 +4,7 @@
 import math
 import queue
 import xml.etree.ElementTree as ET
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -20,12 +21,11 @@ import x_touch
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
-from logging import getLogger
 
 if TYPE_CHECKING:
-    from view.main_window import MainWindow
-    from controller.cli import FaderBank
     from model import Scene
+    from model.control_desk import FaderBank
+    from view.main_window import MainWindow
 
 logger = getLogger(__name__)
 
