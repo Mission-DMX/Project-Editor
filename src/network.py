@@ -58,11 +58,14 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe_value.connect(self._send_universe)
         self._broadcaster.change_run_mode.connect(self.update_state)
         self._broadcaster.view_to_file_editor.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
+        )
         self._broadcaster.view_to_show_player.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
+        )
         self._broadcaster.view_to_console_mode.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT)
+        )
 
         self._broadcaster.load_show_file.connect(self.load_show_file)
         self._broadcaster.change_active_scene.connect(self.enter_scene)
