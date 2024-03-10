@@ -249,10 +249,10 @@ class NetworkManager(QtCore.QObject):
     def _handle_desk_update(self, msg: proto.Console_pb2.desk_update):
         # TODO handle update of selected column
         if msg.jogwheel_change_since_last_update < 0:
-            for i in range(msg.jogwheel_change_since_last_update * -1):
+            for _ in range(msg.jogwheel_change_since_last_update * -1):
                 self._broadcaster.jogwheel_rotated_left.emit()
         else:
-            for i in range(msg.jogwheel_change_since_last_update):
+            for _ in range(msg.jogwheel_change_since_last_update):
                 self._broadcaster.jogwheel_rotated_right.emit()
         if msg.selected_column_id:
             self._broadcaster.select_column_id.emit(msg.selected_column_id)
