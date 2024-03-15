@@ -1,6 +1,7 @@
 from model import Scene
 from model.filter import Filter, VirtualFilter, FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
+from model.virtual_filters.effectstacks import EffectsStack
 
 
 def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id: str, pos: tuple[int] | None = None) -> VirtualFilter:
@@ -19,7 +20,7 @@ def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id:
             pass
         case FilterTypeEnumeration.VFILTER_EFFECTSSTACK:
             # TODO implement effects stack virtual filter (as described in issue #87)
-            pass
+            return EffectsStack(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_AUTOTRACKER:
             return AutoTrackerFilter(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_UNIVERSE:
