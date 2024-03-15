@@ -10,7 +10,7 @@ from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColum
 class BankSetTabWidget(QWidget):
     def __init__(self, parent: QWidget, bankset: BankSet):
         super().__init__(parent)
-        self._bankset = None
+        self._bankset: BankSet | None = None
 
         layout = QVBoxLayout()
         self._tool_bar = QToolBar()
@@ -68,6 +68,7 @@ class BankSetTabWidget(QWidget):
         b = FaderBank()
         self._bankset.add_bank(b)
         self._insert_bank(b, was_empty)
+        self._bankset.update_required = True
 
     def _insert_bank(self, b: FaderBank, was_empty: bool):
         bank_list_item = _BankItem(b, self._bank_list.count())
@@ -77,6 +78,7 @@ class BankSetTabWidget(QWidget):
             self._bank_list.setCurrentRow(0)
             self._bank_edit_widget.bank = b
             self._bank_edit_widget.set_linked_bank_item(bank_list_item)
+        self._bankset.update_required = True
 
     def _select_bank_to_edit(self, item: QListWidgetItem):
         if not isinstance(item, _BankItem):
@@ -99,6 +101,7 @@ class BankSetTabWidget(QWidget):
             self._bank_edit_widget.refresh_column_count()
             item.update_description_text()
             break
+        self._bankset.update_required = True
 
     def _description_text_changed(self, text: str):
         if text and self._bankset:

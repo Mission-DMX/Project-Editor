@@ -9,6 +9,8 @@ def transmit_to_fish(show: BoardConfiguration, goto_default_scene: bool = True) 
         if scene.linked_bankset:
             if not scene.linked_bankset.is_linked:
                 scene.linked_bankset.link()
+            if scene.linked_bankset.update_required:
+                scene.linked_bankset.update()
     xml = create_xml(show, assemble_for_fish_loading=True)
     # TODO query current active scene
     show.broadcaster.load_show_file.emit(xml, goto_default_scene)
