@@ -28,19 +28,27 @@ class AutoTrackDialogWidget(QTabWidget):
         - `register_tabs(tab_widget, tabs)`: Register tabs in the main window.
     """
 
-    def __init__(self, f: AutoTrackerFilter):
+    def __init__(self, f: AutoTrackerFilter, provided_instance: InstanceManager | None):
         """
         Initialize the main application window.
         """
         super().__init__()
-        self.instance = InstanceManager(f)
-        tabs = [
-            SourcesTab("Sources", self.instance),
-            SettingsTab("Settings", self.instance),
-            CropTab("Crop", self.instance),
-            DetectionTab("Detect", self.instance),
-            LightSetupTab("Lights", self.instance),
-        ]
+        if not provided_instance:
+            # We're constructing the player widget
+            self.instance = InstanceManager(f)
+            tabs = [
+                DetectionTab("Detect", self.instance)
+            ]
+        else:
+            self.instance = provided_instance
+            tabs = [
+                SourcesTab("Sources", self.instance),
+                SettingsTab("Settings", self.instance),
+                CropTab("Crop", self.instance),
+                DetectionTab("Detect", self.instance),
+                LightSetupTab("Lights", self.instance),
+            ]
+
         self.register_tabs(self, tabs)
 
         # Set the tab widget as the central widget
