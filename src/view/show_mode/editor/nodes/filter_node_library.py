@@ -41,6 +41,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(Constants16BitNode, [('Constants',)])
         self.addNodeType(ConstantsFloatNode, [('Constants',)])
         self.addNodeType(ConstantsColorNode, [('Constants',)])
+        self.addNodeType(PanTiltConstant, [('Constants',)])
 
     def _register_debug_nodes(self):
         """Registers all the debugs nodes."""
