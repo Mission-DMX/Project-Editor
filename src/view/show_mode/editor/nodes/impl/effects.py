@@ -144,3 +144,19 @@ class AutoTrackerNode(FilterNode):
 
     def update_node_after_settings_changed(self):
         self.setup_output_terminals()
+
+
+class EffectsStackNode(FilterNode):
+    nodeName = "EffectsStack"
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK, name=name,
+                         allowAddOutput=True, terminals={})
+        self.setup_output_terminals()
+
+    def setup_output_terminals(self):
+        pass
+
+    def update_node_after_settings_changed(self):
+        super().update_node_after_settings_changed()
+        self.setup_output_terminals()
