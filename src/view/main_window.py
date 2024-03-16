@@ -87,6 +87,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
             self._broadcaster.view_leave_console_mode.emit()
+        self._about_window = None
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -115,7 +116,8 @@ class MainWindow(QtWidgets.QMainWindow):
                      ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]],
             "Show": [["Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)],
                      ["Save Showfile", self._save_show],
-                     ["Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)]]
+                     ["Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)]],
+            "Help": [["About", self._open_about_window]]
         }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
@@ -210,3 +212,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 _save_show_file(self._board_configuration.file_path, self._board_configuration)
             else:
                 show_save_showfile_dialog(self, self._board_configuration)
+
+    def _open_about_window(self):
+        if not self._about_window:
+            from view.misc.about_window import AboutWindow
+            self._about_window = AboutWindow(self)
+        self._about_window.show()
