@@ -1,7 +1,9 @@
 from logging import getLogger
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
+from html2text import html2text
 
 logger = getLogger(__file__)
 
@@ -17,14 +19,21 @@ def read_entire_file_as_str(file_path: str) -> str:
 
 
 VERSION_STR = read_entire_file_as_str("resources/version.txt")
-CONTRIBUTORS_STR = read_entire_file_as_str("resources/contributors.html")
+CONTRIBUTORS_STR = html2text(read_entire_file_as_str("resources/contributors.html"))
 
 
 class AboutWindow(QMessageBox):
     def __init__(self, parent):
-        super().__init__(title="About", parent=parent)
-        self.setIcon(QMessageBox.Icon.Information)
+        super().__init__(
+            QMessageBox.Icon.Information,
+            "<b>About</b>",
+            "<i>MissionDMX</i> - Version {}".format(VERSION_STR),
+            parent=parent)
         self.setStandardButtons(QMessageBox.StandardButton.Close)
-        self.setText("MissionDMX - Version {}".format(VERSION_STR))
-        self.setInformativeText("Copyright (c) the MissionDMX contributors")
+        self.setInformativeText('<br>The Manual for this software can be found by clicking the help button or by '
+                                'visiting <a href="https://github.com/Mission-DMX/Docs/blob/main/Editor/Readme.md">'
+                                'the online manual</a>.<br>Copyright (c) the MissionDMX contributors')
         self.setDetailedText(CONTRIBUTORS_STR)
+        self.setMinimumWidth(800)
+        self.setMinimumHeight(600)
+        self.setTextFormat(Qt.RichText)
