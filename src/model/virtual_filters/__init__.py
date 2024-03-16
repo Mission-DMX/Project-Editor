@@ -1,7 +1,7 @@
 from model import Scene
-from model.filter import Filter, VirtualFilter, FilterTypeEnumeration
+from model.filter import VirtualFilter, FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
-from model.virtual_filters.effectstacks import EffectsStack
+from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
 
 def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id: str, pos: tuple[int] | None = None) -> VirtualFilter:
