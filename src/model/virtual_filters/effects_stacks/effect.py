@@ -1,8 +1,21 @@
 from abc import ABC, abstractmethod
+from enum import IntFlag
 
 from PySide6.QtWidgets import QWidget
 
 from model import Filter
+
+
+class EffectType(IntFlag):
+    COLOR = 0,
+    LIGHT_INTENSITY = 1,
+    ENABLED_SEGMENTS = 2,
+    PAN_TILT_COORDINATES = 3,
+    POSITION_3D = 4,
+    SPEED = 5,
+    SHUTTER_STROBE = 6,
+    GOBO_SELECTION = 7,
+    ZOOM_FOCUS = 8
 
 
 class Effect(ABC):
@@ -36,13 +49,14 @@ class Effect(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def emplace_filter(self, heading_effects: dict[str, "Effect"], filter_list: list[Filter]):
+    def emplace_filter(self, heading_effects: dict[str, tuple["Effect", int]], filter_list: list[Filter]):
         """
         This method gets called in order to generate the filters. This method needs to accept the case that an input
         slot is not occupied and needs to emplace reasonable defaults in that case.
 
         :param heading_effects: For every connected input slot there may be a previous effect that should be input into
-        this slot. The string identifies the slot.
+        this slot. The string identifies the slot. The second parameter of the provided tuple defines the output slot of
+        the filter to use.
         :param filter_list: The list to place the filters in.
         """
         raise NotImplementedError()
