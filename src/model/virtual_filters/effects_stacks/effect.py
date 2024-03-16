@@ -15,7 +15,8 @@ class EffectType(IntFlag):
     SPEED = 5,
     SHUTTER_STROBE = 6,
     GOBO_SELECTION = 7,
-    ZOOM_FOCUS = 8
+    ZOOM_FOCUS = 8,
+    GENERIC_NUMBER = 9,
 
 
 class Effect(ABC):
@@ -60,3 +61,11 @@ class Effect(ABC):
         :param filter_list: The list to place the filters in.
         """
         raise NotImplementedError()
+
+    def get_human_filter_name(self) -> str:
+        """This method is used in order to retrieve a human-readable name of the effect"""
+        return self.__name__
+
+    def get_description(self) -> str:
+        """This method may be used in order to return a human-readable description of the effect"""
+        return ""

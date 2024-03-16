@@ -6,11 +6,11 @@ from model import Filter
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
-class ColorEffect(Effect, ABC):
+class GenericEffect(Effect, ABC):
     pass
 
 
-class ColorWheelEffect(ColorEffect):
+class FunctionEffect(GenericEffect):
     def generate_configuration_widget(self) -> QWidget | None:
         pass
 
@@ -23,8 +23,11 @@ class ColorWheelEffect(ColorEffect):
     def emplace_filter(self, heading_effects: dict[str, tuple["Effect", int]], filter_list: list[Filter]):
         pass
 
+    def __init__(self):
+        super().__init__()
+
     def get_human_filter_name(self):
-        return "Color Wheel"
+        return "Function"
 
     def get_description(self):
-        return "This effect cycles through a color wheel"
+        return "This effect creates wave forms that it follows."
