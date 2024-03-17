@@ -39,22 +39,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         from model.ui_configuration import setup_network_manager
+
         setup_network_manager(self._fish_connector)
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
             ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)),
-            ("Editor Mode", MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
-             lambda: self._broadcaster.view_to_file_editor.emit()),
-            ("Show Mode", MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
-             lambda: self._broadcaster.view_to_show_player.emit()),
+            (
+                "Editor Mode",
+                MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
+                lambda: self._broadcaster.view_to_file_editor.emit(),
+            ),
+            (
+                "Show Mode",
+                MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
+                lambda: self._broadcaster.view_to_show_player.emit(),
+            ),
             ("Patch", MainWidget(PatchMode(self), self), lambda: self._broadcaster.view_to_patch_menu.emit()),
-            ("Debug", debug_console, lambda: self._to_widget(4))]
+            ("Debug", debug_console, lambda: self._to_widget(4)),
+        ]
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
         self._toolbar = self.addToolBar("Mode")
-        for index, view in enumerate(views):
+        for _, view in enumerate(views):
             self._widgets.addWidget(view[1])
             mode_button = QtGui.QAction(view[0], self._toolbar)
             mode_button.triggered.connect(view[2])
@@ -78,6 +86,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector.start()
         if self._fish_connector:
             from model.control_desk import set_network_manager
+
             set_network_manager(self._fish_connector)
             self._broadcaster.view_leave_patch_menu.emit()
             self._broadcaster.view_leave_file_editor.emit()
@@ -105,15 +114,20 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[list[str, callable]]] = {
-            "Fish": [["Connect", self._start_connection], ["Disconnect", self._fish_connector.disconnect],
-                     ["Change", self._change_server_name],
-                     ["Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)],
-                     ["Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)],
-                     ["Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)]],
-            "Show": [["Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)],
-                     ["Save Showfile", self._save_show],
-                     ["Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)]]
+        menus: dict[str, list[tuple[str, callable]]] = {
+            "Fish": [
+                ("Connect", self._start_connection),
+                ("Disconnect", self._fish_connector.disconnect),
+                ("Change", self._change_server_name),
+                ("Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)),
+                ("Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)),
+                ("Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)),
+            ],
+            "Show": [
+                ("Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)),
+                ("Save Showfile", self._save_show),
+                ("Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)),
+            ],
         }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
@@ -123,10 +137,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_connection(self):  # TODO rework to signals
         self._fish_connector.start()
         from model.control_desk import commit_all_bank_sets
+
         commit_all_bank_sets()
 
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
-        """ add entries to a menu"""
+        """add entries to a menu"""
         for entry in entries:
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
             menu_entry.triggered.connect(entry[1])
@@ -139,7 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._fish_connector.change_server_name(text)
 
     def _setup_status_bar(self) -> None:
-        """ build status bor"""
+        """build status bor"""
         status_bar = QtWidgets.QStatusBar()
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
