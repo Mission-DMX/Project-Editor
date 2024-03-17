@@ -9,8 +9,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QCompleter
 
 from model.broadcaster import Broadcaster
+
 from .logging_item_widget import LoggingItemWidget
-from .search import Search, Operation
+from .search import Operation, Search
 
 
 class LoggingWidget(QtWidgets.QTabWidget):
@@ -45,7 +46,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
         logging.info("start DMXGui")
 
     def new_log_message(self, message: str) -> None:
-        """ handle incoming log messages """
+        """handle incoming log messages"""
         new_log_item: LoggingItemWidget = LoggingItemWidget(self._tree, json.loads(message))
         self._log_items.append(new_log_item)
         self._tree.addTopLevelItem(new_log_item)
