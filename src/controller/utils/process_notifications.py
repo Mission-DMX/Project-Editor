@@ -1,4 +1,5 @@
 from PySide6 import QtCore, QtGui
+from PySide6.QtCore import QObject
 
 
 class ProcessNotifier:
@@ -44,11 +45,17 @@ class ProcessNotifier:
 
 
 _process_list: list[ProcessNotifier] = []
-global_process_progress_changed = QtCore.Signal()
+
+
+class _SignalWrapper(QObject):
+    global_process_progress_changed = QtCore.Signal()
+
+
+inst = _SignalWrapper()
 
 
 def get_progress_changed_signal() -> QtCore.Signal:
-    return global_process_progress_changed
+    return inst.global_process_progress_changed
 
 
 def get_process_notifier(name: str, number_of_steps: int) -> ProcessNotifier:
@@ -59,7 +66,7 @@ def get_process_notifier(name: str, number_of_steps: int) -> ProcessNotifier:
 
 def _close_progress_handler(p: ProcessNotifier):
     _process_list.remove(p)
-    global_process_progress_changed.emit()
+    inst.global_process_progress_changed.emit()
 
 
 def get_global_process_state() -> tuple[int, int]:

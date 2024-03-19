@@ -27,7 +27,7 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier, ass
     pn.current_step_number += 1
 
     for scene in board_configuration.scenes:
-        generate_scene_xml_description(assemble_for_fish_loading, root, scene)
+        generate_scene_xml_description(assemble_for_fish_loading, root, scene, pn)
         pn.total_step_count += 1
 
     pn.current_step_description = "Creating universes."
