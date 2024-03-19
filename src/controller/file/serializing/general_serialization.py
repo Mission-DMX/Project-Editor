@@ -5,10 +5,11 @@ from controller.file.serializing.ui_settings_serialization import _create_ui_hin
 from controller.file.serializing.universe_serialization import _create_universe_element, \
     _create_artnet_location_element, _create_ftdi_location_element, _create_physical_location_element, \
     _create_patching_element
+from controller.utils.process_notifications import ProcessNotifier
 from model import BoardConfiguration
 
 
-def create_xml(board_configuration: BoardConfiguration, assemble_for_fish_loading: bool = False) -> ElementTree.Element:
+def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier, assemble_for_fish_loading: bool = False) -> ElementTree.Element:
     """Creates a xml element from the given board configuration.
 
     Args:
@@ -19,11 +20,17 @@ def create_xml(board_configuration: BoardConfiguration, assemble_for_fish_loadin
         The xml element containing the board configuration.
         See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information
     """
+    pn.current_step_description = "Creating document root."
+    pn.total_step_count += 1 + len(board_configuration.scenes) + 3
     root = _create_board_configuration_element(board_configuration)
+    pn.current_step_description = "Writing scenes."
+    pn.current_step_number += 1
 
     for scene in board_configuration.scenes:
         generate_scene_xml_description(assemble_for_fish_loading, root, scene)
+        pn.total_step_count += 1
 
+    pn.current_step_description = "Creating universes."
     for universe in board_configuration.universes:
         universe_element = _create_universe_element(universe=universe, parent=root)
 
@@ -38,13 +45,18 @@ def create_xml(board_configuration: BoardConfiguration, assemble_for_fish_loadin
 
         _create_patching_element(patching=universe.patching, parent=universe_element,
                                  assemble_for_fish=assemble_for_fish_loading)
+    pn.total_step_count += 1
+    pn.current_step_description = "Storing device list."
 
     for device in board_configuration.devices:
         _create_device_element(device=device, parent=root)
+    pn.total_step_count += 1
 
+    pn.current_step_description = "Saving GUI state."
     if not assemble_for_fish_loading:
         for ui_hint in board_configuration.ui_hints.items():
             _create_ui_hint_element(ui_hint=ui_hint, parent=root)
+    pn.total_step_count += 1
 
     return root
 
