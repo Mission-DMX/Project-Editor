@@ -36,7 +36,7 @@ class SceneOptimizerModule:
         for k, v in f.filter_configurations.items():
             if k == 'universe':
                 continue
-            fde.append((k, v, str(f.channel_links.get(k))))
+            fde.append((str(f.filter_id) + "__" + str(k), v, str(f.channel_links.get(k))))
         self._first_universe_filter_id[universe_id] = f.filter_id
 
     def filter_was_substituted(self, f: Filter) -> bool:
@@ -49,6 +49,7 @@ class SceneOptimizerModule:
         :returns: true if the filter was scheduled to be substituted and therefore should not be emplaced for transmission to fish.
         """
         match f.filter_type:
+            # TODO expand this by also reduce constants with the same value
             case FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT:
                 if self._global_time_input_filter is not None:
                     self._fill_ch_sub_dict(f, self._global_time_input_filter)
@@ -101,6 +102,11 @@ class SceneOptimizerModule:
                 "type": str(FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT),
                 "pos": "0,0"
             })
+            for param_k, param_v in filter_config_parameters.items():
+                ElementTree.SubElement(filter_element, "filterConfiguration", {
+                    'name': str(param_k),
+                    'value': str(param_v)
+                })
             for input_ch, output_ch in channel_mappings.items():
                 ElementTree.SubElement(filter_element, "channellink", attrib={
                     "input_channel_id": str(input_ch),
