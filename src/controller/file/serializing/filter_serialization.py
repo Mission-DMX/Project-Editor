@@ -5,14 +5,15 @@ from model import Filter
 from model.filter import VirtualFilter
 
 
-def _create_filter_element(filter_: Filter, parent: ElementTree.Element, for_fish: bool,
-                           om: SceneOptimizerModule):
+def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element, for_fish: bool,
+                                    om: SceneOptimizerModule):
     """Creates a xml element of type filter.
 
     <filter type="0" id="id">
       ...
     </filter>
     """
+    # TODO check that no optimizations are performed if not fish
     if for_fish and filter_.is_virtual_filter:
         if not isinstance(filter_, VirtualFilter):
             raise RuntimeError("This filter instance was supposed to be a virtual filter. SID: '{}' FID: '{}'".format(
@@ -21,13 +22,14 @@ def _create_filter_element(filter_: Filter, parent: ElementTree.Element, for_fis
         ifl: list[Filter] = []
         filter_.instantiate_filters(ifl)
         for instantiated_filter in ifl:
-            _create_filter_element(instantiated_filter, parent, True, om)
+            _create_filter_element_for_fish(instantiated_filter, parent, True, om)
         for output_channel_name in filter_.out_data_types.keys():
             om.channel_override_dict["{}:{}".format(filter_.filter_id, output_channel_name)] = \
                 filter_.resolve_output_port_id(output_channel_name)
     else:
-        if om.filter_was_substituted(filter_):
-            return
+        if for_fish:
+            if om.filter_was_substituted(filter_):
+                return
         filter_element = ElementTree.SubElement(parent, "filter", attrib={
             "id": str(filter_.filter_id),
             "type": str(filter_.filter_type),
@@ -43,7 +45,7 @@ def _create_filter_element(filter_: Filter, parent: ElementTree.Element, for_fis
             _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
 
-def create_channel_mappings_for_filter_set(om: SceneOptimizerModule, scene_element: ElementTree.Element):
+def create_channel_mappings_for_filter_set_for_fish(om: SceneOptimizerModule, scene_element: ElementTree.Element):
     """
     This function writes the channel links of the scene to the XML data.
     This method needs to be called *after* every filter object has been placed as only then all required information
@@ -58,6 +60,7 @@ def create_channel_mappings_for_filter_set(om: SceneOptimizerModule, scene_eleme
     :param om: The optimizer module carrying the information
     :param scene_element: The scene root element (required for the optimizer to finish operations)
     """
+    # TODO check that no optimizations are performed if not fish
     om.wrap_up(scene_element)
     channel_links_to_be_created: list[tuple[Filter, ElementTree.SubElement]] = om.channel_link_list
     override_port_mapping: dict[str, str] = om.channel_override_dict

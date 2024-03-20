@@ -1,9 +1,10 @@
 from xml.etree import ElementTree
 
 from controller.file.serializing.bankset_config_serialization import _create_scene_bankset
-from controller.file.serializing.filter_serialization import _create_filter_element, \
-    create_channel_mappings_for_filter_set
+from controller.file.serializing.filter_serialization import _create_filter_element_for_fish, \
+    create_channel_mappings_for_filter_set_for_fish
 from controller.file.serializing.fish_optimizer import SceneOptimizerModule
+from controller.utils.process_notifications import ProcessNotifier
 
 from model import UIPage, Scene, Filter
 from model.scene import FilterPage
@@ -41,7 +42,7 @@ def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage)
             })
 
 
-def generate_scene_xml_description(assemble_for_fish_loading, root, scene):
+def generate_scene_xml_description(assemble_for_fish_loading, root, scene, pn: ProcessNotifier):
     """
     This method generates the DOM tree for a given scene.
 
@@ -52,10 +53,12 @@ def generate_scene_xml_description(assemble_for_fish_loading, root, scene):
     scene_element = _create_scene_element(scene=scene, parent=root)
     if scene.linked_bankset and not assemble_for_fish_loading:
         _create_scene_bankset(root, scene_element, scene)
-    om = SceneOptimizerModule()
+    pn.total_step_count += len(scene.filters)
+    om = SceneOptimizerModule(assemble_for_fish_loading)
     for filter_ in scene.filters:
-        _create_filter_element(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading, om=om)
-    create_channel_mappings_for_filter_set(om, scene_element)
+        _create_filter_element_for_fish(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading, om=om)
+        pn.current_step_number += 1
+    create_channel_mappings_for_filter_set_for_fish(om, scene_element)
     if not assemble_for_fish_loading:
         for page in scene.pages:
             _add_filter_page_to_element(scene_element, page, None)
