@@ -14,6 +14,7 @@ from controller.ofl.fixture import UsedFixture
 
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
+from .universe_tree_browser_widget import UniverseTreeBrowserWidget
 from ..editing_utils import add_scene_to_show
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 
@@ -33,7 +34,7 @@ class ShowBrowser:
         self._widget.setMinimumWidth(250)
         self._tab_widget = QTabWidget()
         self._scene_browsing_tree = QTreeWidget()
-        self._universe_browsing_tree = QTreeWidget()
+        self._universe_browsing_tree = UniverseTreeBrowserWidget()
         self._filter_browsing_tree = QTreeWidget()
         self._tab_widget.addTab(self._scene_browsing_tree, ShowBrowser._scene_browser_tab_icon, "Show")
         self._tab_widget.addTab(self._universe_browsing_tree, ShowBrowser._universe_browser_tab_icon, "Universes")
@@ -46,7 +47,6 @@ class ShowBrowser:
         self._universe_browsing_tree.itemDoubleClicked.connect(self._universe_item_double_clicked)
 
         self._scene_browsing_tree.setColumnCount(2)
-        self._universe_browsing_tree.setColumnCount(4)
         self._filter_browsing_tree.setColumnCount(1)
 
         self._tool_bar = QToolBar()
@@ -75,7 +75,7 @@ class ShowBrowser:
 
     def _refresh_all(self):
         self._refresh_scene_browser()
-        self._refresh_universe_browser()
+        self._universe_browsing_tree.refresh()
         self._refresh_filter_browser()
 
     @property
@@ -89,11 +89,12 @@ class ShowBrowser:
     @board_configuration.setter
     def board_configuration(self, b: BoardConfiguration | None):
         if not self._show and b:
-            b.broadcaster.add_universe.connect(lambda: self._refresh_universe_browser())
-            b.broadcaster.delete_universe.connect(lambda: self._refresh_universe_browser())
+            b.broadcaster.add_universe.connect(lambda: self._universe_browsing_tree.refresh())
+            b.broadcaster.delete_universe.connect(lambda: self._universe_browsing_tree.refresh())
             # TODO listen to scene delete signal
-            b.broadcaster.fixture_patched.connect(lambda: self._refresh_universe_browser())
+            b.broadcaster.fixture_patched.connect(lambda: self._universe_browsing_tree.refresh())
         self._show = b
+        self._universe_browsing_tree._show = b
         self._refresh_all()
         self.selected_scene = None
 
@@ -105,55 +106,6 @@ class ShowBrowser:
     def selected_scene(self, s: Scene | None):
         self._selected_scene = s
         self._refresh_filter_browser()
-
-    def _refresh_universe_browser(self):
-
-        def location_to_string(location):
-            if isinstance(location, proto.UniverseControl_pb2.Universe.ArtNet):
-                return "{}:{}/{}".format(location.ip_address, location.port, location.universe_on_device)
-            elif isinstance(location, proto.UniverseControl_pb2.Universe.USBConfig):
-                return "USB:{}".format(location.serial)
-            elif isinstance(location, int):
-                return "local/{}".format(location)
-            else:
-                return str(location)
-
-        self._universe_browsing_tree.clear()
-        i = 0
-        if self._show:
-            for universe in self._show.universes:
-                item = AnnotatedTreeWidgetItem(self._universe_browsing_tree)
-                item.setText(0, str(universe.id))
-                item.setText(1, str(universe.name))
-                item.setText(2, location_to_string(universe.location))
-                item.setText(3, str(universe.description))
-                item.setExpanded(True)
-                item.annotated_data = universe
-                self._universe_browsing_tree.insertTopLevelItem(i, item)
-                placed_fixtures = set()
-                last_fixture_object: AnnotatedTreeWidgetItem | None = None
-                last_fixture: UsedFixture | None = None
-                for patching_channel in universe.patching:
-                    channel_fixture = patching_channel.fixture
-                    is_placeholder = (channel_fixture == last_fixture) or channel_fixture.parent_universe == -1
-                    last_fixture = channel_fixture
-                    if not is_placeholder and (channel_fixture not in placed_fixtures
-                                                               or last_fixture_object is None):
-                        last_fixture_object = AnnotatedTreeWidgetItem(item)
-                        last_fixture_object.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
-                        last_fixture_object.setText(1, channel_fixture.name)
-                        last_fixture_object.setText(2, str(channel_fixture.mode))
-                        last_fixture_object.setText(3, channel_fixture.comment)
-                        last_fixture_object.annotated_data = channel_fixture
-                        placed_fixtures.add(channel_fixture)
-                    if not is_placeholder:
-                        channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
-                        channel_item.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
-                        channel_item.setText(1, patching_channel.fixture_channel)
-                        channel_item.setText(2, str(channel_fixture.mode))
-                        channel_item.setText(3, channel_fixture.name)
-                        channel_item.annotated_data = patching_channel
-                i += 1
 
     def _refresh_filter_browser(self):
         self._filter_browsing_tree.clear()
