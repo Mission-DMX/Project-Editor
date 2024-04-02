@@ -1,10 +1,14 @@
+from PySide6 import QtGui
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QPainter, QColor, QBrush, QTransform
+from PySide6.QtWidgets import QWidget, QLabel
 
 from controller.ofl.fixture import UsedFixture
+from model.virtual_filters import EffectsStack
+from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
 
-class EffectCompilationWidget(QWidget):
+class EffectCompilationWidget(QLabel):
 
     _background_css = """
     background-image: repeating-linear-gradient(
@@ -19,12 +23,50 @@ class EffectCompilationWidget(QWidget):
     background-blend-mode: screen;
     """
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, filter: EffectsStack, parent: QWidget):
         super().__init__(parent=parent)
+        self._filter = filter
         self.setMinimumWidth(600)
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setStyleSheet("background-color: gray;")
+        # self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        # self.setStyleSheet("background-color: gray;")
+        self.repaint()
 
     def add_fixture_or_group(self, fg: UsedFixture):
-        # TODO implement
-        pass
+        es = EffectsSocket(fg)
+        self._filter.sockets.append(es)
+        self.setMinimumHeight(len(self._filter.sockets) * 50)  # FIXME why do we not get our desired height?
+        self.repaint()
+
+    def repaint(self):
+        canvas = self.pixmap()
+        h = canvas.height()
+        w = canvas.width()
+        if w == 0 or h == 0:
+            return
+        p = QtGui.QPainter(canvas)
+        p.setRenderHint(QPainter.Antialiasing)
+        color_dark_gray = QColor.fromRgb(0x3A, 0x3A, 0x3A)
+        p.fillRect(0, 0, w, h, color_dark_gray)
+
+        y = 0
+        for s in self._filter.sockets:
+            y = self._paint_socket_stack(s, p, w, h, y)
+
+        p.end()
+        self.setPixmap(canvas)
+
+    def _paint_socket_stack(self, s: EffectsSocket, p: QPainter, w: int, h: int, y: int) -> int:
+        light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
+        p.setBrush(light_gray_brush)
+        y += 5
+        p.drawLine(0, y, w, y)
+        y += 5
+        if s.has_color_property:
+            transform = QTransform()
+            old_transform = p.transform()
+            transform.rotate(90.0)
+            p.setTransform(transform, True)
+            p.drawText(y, 15, "Color")
+            p.setTransform(old_transform)
+            y += 35
+        return y

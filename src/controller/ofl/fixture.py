@@ -1,7 +1,7 @@
 # coding=utf-8
 """Fixture Definitions from OFL """
 import json
-from enum import Enum
+from enum import Enum, IntFlag
 from typing import TypedDict, NotRequired, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -67,6 +67,16 @@ class Fixture(TypedDict):
     fileName: str
 
 
+class ColorSupport(IntFlag):
+    NO_COLOR_SUPPORT = 0
+    COLD_AND_WARM_WHITE = 1
+    HAS_RGB_SUPPORT = 2
+    HAS_WHITE_SEGMENT = 4
+    HAS_AMBER_SEGMENT = 8
+    HAS_UV_SEGMENT = 16
+
+
+
 def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
     f = open(file)
@@ -104,6 +114,40 @@ class UsedFixture:
         """
         return UsedFixture(self.name, self.short_name, self.categories,
                            self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe)
+
+    def check_for_color_property(self) -> ColorSupport:
+        found_color = ColorSupport.NO_COLOR_SUPPORT
+
+        has_red = False
+        has_green = False
+        has_blue = False
+        has_white = False
+        has_amber = False
+        has_uv = False
+
+        for f in self.channels:
+            if f.fixture_channel.lower().startswith("red"):
+                has_red = True
+            if f.fixture_channel.lower().startswith("green"):
+                has_green = True
+            if f.fixture_channel.lower().startswith("blue"):
+                has_blue = True
+            if f.fixture_channel.lower().startswith("white"):
+                has_white = True
+            if f.fixture_channel.lower().startswith("uv"):
+                has_uv = True
+            if f.fixture_channel.lower().startswith("amber"):
+                has_amber = True
+
+        if has_red and has_green and has_blue:
+            found_color += ColorSupport.HAS_RGB_SUPPORT
+        if has_uv:
+            found_color += ColorSupport.HAS_UV_SEGMENT
+        if has_amber:
+            found_color += ColorSupport.HAS_AMBER_SEGMENT
+        if has_white:
+            found_color += ColorSupport.HAS_WHITE_SEGMENT
+        return found_color
 
 
 def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int) -> UsedFixture:
