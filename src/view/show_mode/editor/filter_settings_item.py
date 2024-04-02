@@ -63,7 +63,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
             self.dialog.show()
 
 
-def check_if_filter_has_special_widget(filter_):
+def check_if_filter_has_special_widget(filter_: Filter):
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
     elif filter_.filter_type == 44:
@@ -164,10 +164,8 @@ class FilterSettingsDialog(QDialog):
 
     def ok_button_pressed(self):
         if self._special_widget:
-            for k in self._special_widget.configuration.keys():
-                self.filter.filter_configurations[k] = self._special_widget.configuration[k]
-            for k in self._special_widget.parameters.keys():
-                self.filter.initial_parameters[k] = self._special_widget.parameters[k]
+            self.filter.filter_configurations.update(self._special_widget.configuration)
+            self.filter.initial_parameters.update(self._special_widget.parameters)
         self.close()
 
     def closeEvent(self, arg__1: PySide6.QtGui.QCloseEvent) -> None:
