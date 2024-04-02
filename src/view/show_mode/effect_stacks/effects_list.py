@@ -14,6 +14,8 @@ EFFECT_LIST = [
 
 
 class EffectLabel(QWidget):
+    button_icon = QIcon.fromTheme("window-new")
+
     def __init__(self, effect_cls, parent: QWidget):
         super().__init__(parent=parent)
         layout = QHBoxLayout()
@@ -29,7 +31,9 @@ class EffectLabel(QWidget):
 
         # TODO do we want to introduce an opportunity here to display an effect icon?
 
-        self._button = QPushButton(self, QIcon.fromTheme("window-new"), "Add Effect")
+        self._button = QPushButton(self, "Add Effect")
+        if self.button_icon:
+            self._button.setIcon(self.button_icon)
         layout.addWidget(self._button)
         self.setToolTip(self.description)
 

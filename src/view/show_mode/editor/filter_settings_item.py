@@ -8,11 +8,12 @@ from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDi
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Universe
-from model.filter import FilterTypeEnumeration
+from model.filter import FilterTypeEnumeration, Filter
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+from ..effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
 
 logger = getLogger(__name__)
 
@@ -72,6 +73,8 @@ def check_if_filter_has_special_widget(filter_: Filter):
         return LuaScriptConfigWidget()
     elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):
         return AutotrackerSettingsWidget()
+    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_EFFECTSSTACK):
+        return EffectsStackFilterConfigWidget(filter_)
     else:
         return None
 
