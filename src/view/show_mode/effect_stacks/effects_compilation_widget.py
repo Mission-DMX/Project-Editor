@@ -1,6 +1,6 @@
 from PySide6 import QtGui
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPainter, QColor, QBrush, QTransform
+from PySide6.QtCore import Qt, QRect
+from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFontMetrics
 from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from controller.ofl.fixture import UsedFixture
@@ -41,23 +41,33 @@ class EffectCompilationWidget(QWidget):
         self.setMinimumHeight(len(self._filter.sockets) * 50)  # FIXME why do we not get our desired height?
         self.repaint()
 
-    def paintEvent(self, redraw_hint):
+    def paintEvent(self, redraw_hint: QPaintEvent):
         h = self.height()
         w = self.width()
         if w == 0 or h == 0:
             return
         p = QtGui.QPainter(self)
+        p.setFont(self.font())
+        area_to_update = redraw_hint.rect()
         p.setRenderHint(QPainter.Antialiasing)
         color_dark_gray = QColor.fromRgb(0x3A, 0x3A, 0x3A)
         p.fillRect(0, 0, w, h, color_dark_gray)
 
-        y = 0
-        for s in self._filter.sockets:
-            y = self._paint_socket_stack(s, p, w, h, y)
+        if len(self._filter.sockets) > 0:
+            y = 0
+            for s in self._filter.sockets:
+                y = self._paint_socket_stack(s, p, w, h, y, area_to_update)
+        else:
+            p.setBrush(QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC)))
+            no_socket_hint_str = "There are no sockets defined. Please add some from the available fixtures."
+            fm: QFontMetrics = p.fontMetrics()
+            text_width = fm.horizontalAdvance(no_socket_hint_str)
+            text_height = fm.height()
+            p.drawText(int(w / 2 - text_width / 2), int(h / 2 - text_height / 2), no_socket_hint_str)
 
         p.end()
 
-    def _paint_socket_stack(self, s: EffectsSocket, p: QPainter, w: int, h: int, y: int) -> int:
+    def _paint_socket_stack(self, s: EffectsSocket, p: QPainter, w: int, h: int, y: int, drawing_area: QRect) -> int:
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         p.setBrush(light_gray_brush)
         y += 5
