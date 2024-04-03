@@ -1,14 +1,14 @@
 from PySide6 import QtGui
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter, QColor, QBrush, QTransform
-from PySide6.QtWidgets import QWidget, QLabel
+from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from controller.ofl.fixture import UsedFixture
 from model.virtual_filters import EffectsStack
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
 
-class EffectCompilationWidget(QLabel):
+class EffectCompilationWidget(QWidget):
 
     _background_css = """
     background-image: repeating-linear-gradient(
@@ -27,6 +27,10 @@ class EffectCompilationWidget(QLabel):
         super().__init__(parent=parent)
         self._filter = filter
         self.setMinimumWidth(600)
+        self.setSizePolicy(
+            QSizePolicy.MinimumExpanding,
+            QSizePolicy.MinimumExpanding
+        )
         # self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         # self.setStyleSheet("background-color: gray;")
         self.repaint()
@@ -37,13 +41,12 @@ class EffectCompilationWidget(QLabel):
         self.setMinimumHeight(len(self._filter.sockets) * 50)  # FIXME why do we not get our desired height?
         self.repaint()
 
-    def repaint(self):
-        canvas = self.pixmap()
-        h = canvas.height()
-        w = canvas.width()
+    def paintEvent(self, redraw_hint):
+        h = self.height()
+        w = self.width()
         if w == 0 or h == 0:
             return
-        p = QtGui.QPainter(canvas)
+        p = QtGui.QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         color_dark_gray = QColor.fromRgb(0x3A, 0x3A, 0x3A)
         p.fillRect(0, 0, w, h, color_dark_gray)
@@ -53,7 +56,6 @@ class EffectCompilationWidget(QLabel):
             y = self._paint_socket_stack(s, p, w, h, y)
 
         p.end()
-        self.setPixmap(canvas)
 
     def _paint_socket_stack(self, s: EffectsSocket, p: QPainter, w: int, h: int, y: int) -> int:
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
