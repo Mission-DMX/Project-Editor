@@ -1,15 +1,18 @@
 from PySide6 import QtGui
-from PySide6.QtCore import Qt, QRect
+from PySide6.QtCore import Qt, QRect, Signal
 from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFontMetrics
 from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from controller.ofl.fixture import UsedFixture
 from model.virtual_filters import EffectsStack
+from model.virtual_filters.effects_stacks.color_effects import ColorEffect
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
 
 class EffectCompilationWidget(QWidget):
+
+    effect_added = Signal()
 
     _background_css = """
     background-image: repeating-linear-gradient(
@@ -96,6 +99,8 @@ class EffectCompilationWidget(QWidget):
                 p.drawText(x - name_length, y + text_height + 10, name)
                 x -= (name_length + 10)
                 # TODO draw effect config button
+                # TODO update socket height if there are further branching inputs to effects
+                # TODO check if the effect on top of this socket can accept the parameters.
             if self._pending_effect is not None:
                 if Effect.can_convert_slot(self._pending_effect.get_slot_type(), EffectType.COLOR):
                     slot_counter_str = str(self._slot_counter)
@@ -115,7 +120,45 @@ class EffectCompilationWidget(QWidget):
         y += 5
         return y
 
-    def add_effect(self, e: Effect):
+    def load_effect_to_add(self, e: Effect | None):
         self._pending_effect = e
-        # TODO activate number input
+        # TODO change jogwheel input to select slot for add operation
         self.update()
+
+    def add_effect_to_slot(self, i: int):
+        if self._pending_effect is None:
+            return False
+        slots = 0
+        candidate = self._pending_effect.get_slot_type()
+        for socket in self._filter.sockets:
+            slot_valid = False
+            if socket.has_color_property and Effect.can_convert_slot(candidate, EffectType.COLOR):
+                slot_valid = True
+            # TODO implement for other slot types
+            # TODO implement for branching slots
+            # TODO check if the effect on top of this socket can accept the parameters.
+            if slot_valid:
+                if slots == i:
+                    if not isinstance(self._pending_effect, ColorEffect):
+                        return False  # TODO instantiate adapter
+                    socket.color_socket.append(self._pending_effect)
+                    self._pending_effect = None
+                    self.effect_added.emit()
+                    self.update()
+                    return True
+                else:
+                    slots += 1
+        return False
+
+    def get_maximum_slot_counter(self) -> int:
+        if self._pending_effect is None:
+            return 0
+        slots = 0
+        candidate = self._pending_effect.get_slot_type()
+        for socket in self._filter.sockets:
+            if socket.has_color_property and Effect.can_convert_slot(candidate, EffectType.COLOR):
+                slots += 1
+            # TODO implement for other slot types
+            # TODO implement for branching slots
+            # TODO check if the effect on top of this socket can accept the parameters.
+        return slots
