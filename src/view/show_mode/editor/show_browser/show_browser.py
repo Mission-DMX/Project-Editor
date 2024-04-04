@@ -149,7 +149,7 @@ class ShowBrowser:
                     if not is_placeholder:
                         channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
                         channel_item.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
-                        channel_item.setText(1, patching_channel.fixture_channel)
+                        channel_item.setText(1, str(patching_channel.fixture_channel))
                         channel_item.setText(2, str(channel_fixture.mode))
                         channel_item.setText(3, channel_fixture.name)
                         channel_item.annotated_data = patching_channel

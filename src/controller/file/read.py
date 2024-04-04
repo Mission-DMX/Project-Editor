@@ -9,6 +9,8 @@ import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
 from logging import getLogger
+
+from controller.utils.process_notifications import get_process_notifier
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from model.scene import FilterPage
@@ -66,14 +68,19 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         A BoardConfiguration instance parsed from the provided file.
     """
 
+    pn = get_process_notifier("Load Showfile", 2)
+
     try:
+        pn.current_step_description = "Load file from disk."
         schema_file = open("resources/ShowFileSchema.xsd", 'r')
 
         schema = xmlschema.XMLSchema(schema_file)
         schema.validate(file_name)
+        pn.current_step_number += 1
     except Exception as error:
         logger.error("Error while validating show file: {}".format(error))
         ExceptionsDialog(error).exec()
+        pn.close()
         return False
 
     board_configuration.broadcaster.clear_board_configuration.emit()
@@ -82,6 +89,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     prefix = ""
 
+    pn.total_step_count += len(root.attrib.items())
     for key, value in root.attrib.items():
         match key:
             case "show_name":
@@ -94,12 +102,14 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
                 prefix = "{" + value + "}"
             case _:
                 logger.warning("Found attribute %s=%s while parsing board configuration", key, value)
+        pn.current_step_number += 1
 
     _clean_tags(root, prefix)
 
     scene_defs_to_be_parsed = []
     loaded_banksets: dict[str, BankSet] = {}
 
+    pn.total_step_count += len(root)
     for child in root:
         match child.tag:
             case "scene":
@@ -115,12 +125,17 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
             case _:
                 logger.warning("Show %s contains unknown element: %s",
                                board_configuration.show_name, child.tag)
+        pn.total_step_count += 1
 
+    pn.total_step_count += len(scene_defs_to_be_parsed)
     for scene_def in scene_defs_to_be_parsed:
         _parse_scene(scene_def, board_configuration, loaded_banksets)
+        pn.current_step_number += 1
 
+    pn.current_step_number += 1
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name
+    pn.close()
     return True
 
 

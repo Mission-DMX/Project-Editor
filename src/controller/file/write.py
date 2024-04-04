@@ -10,6 +10,7 @@ from shutil import copyfile
 from xml.etree import ElementTree
 
 from controller.file.serializing.general_serialization import create_xml
+from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration
 
 
@@ -23,13 +24,18 @@ def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
         
     Returns: True, if successfully, otherwise false with error message.
     """
-    xml = create_xml(show_data)
+    pn = get_process_notifier("Saving Showfile", 2)
+    xml = create_xml(show_data, pn)
     if os.path.exists(file_name):
         # TODO introduce proper version control
         copyfile(file_name, os.path.splitext(file_name)[0] + '.show_backup')
+    pn.current_step_description = "Writing to disk."
+    pn.current_step_number += 1
     with open(file_name, 'w+', encoding="UTF-8") as file:
         ElementTree.indent(xml)
         file.write(ElementTree.tostring(xml, encoding='unicode', method='xml'))
+    pn.current_step_number += 1
+    pn.close()
     return True
     # try:
     #
