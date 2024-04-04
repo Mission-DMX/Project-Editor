@@ -2,9 +2,11 @@
 """main Window for the Editor"""
 
 from PySide6 import QtWidgets, QtGui
+from PySide6.QtWidgets import QProgressBar
 
 from Style import Style
 from controller.file.showfile_dialogs import show_load_showfile_dialog, show_save_showfile_dialog, _save_show_file
+from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from proto.RealTimeControl_pb2 import RunMode
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
@@ -148,8 +150,14 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
 
+        self._status_pbar = QProgressBar(parent=status_bar)
+        self._status_pbar.setVisible(False)
+        self._status_pbar.setMinimumWidth(50)
+        status_bar.addWidget(self._status_pbar)
+
         self._label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value
         self._broadcaster.connection_state_updated.connect(self._fish_state_update)
+        get_progress_changed_signal().connect(self._proccess_status_listener)
         status_bar.addWidget(self._label_state_update)
 
         label_last_error = QtWidgets.QLabel("Error", status_bar)
@@ -160,6 +168,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._fish_connector.last_cycle_time_update.connect(self._update_last_cycle_time)
         status_bar.addWidget(self._last_cycle_time_widget)
+
+    def _proccess_status_listener(self):
+        c, m = get_global_process_state()
+        self._status_pbar.setVisible(c != m)
+        self._status_pbar.setValue(int((c/m)*100))
 
     def _fish_state_update(self, connected: bool):
         if connected:
