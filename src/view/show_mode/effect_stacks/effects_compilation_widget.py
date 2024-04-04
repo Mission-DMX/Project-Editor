@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from controller.ofl.fixture import UsedFixture
 from model.virtual_filters import EffectsStack
+from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
 
@@ -31,8 +32,8 @@ class EffectCompilationWidget(QWidget):
             QSizePolicy.MinimumExpanding,
             QSizePolicy.MinimumExpanding
         )
-        # self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        # self.setStyleSheet("background-color: gray;")
+        self._pending_effect: Effect | None = None
+        self._slot_counter: int = 0
         self.repaint()
 
     def add_fixture_or_group(self, fg: UsedFixture):
@@ -52,6 +53,7 @@ class EffectCompilationWidget(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         color_dark_gray = QColor.fromRgb(0x3A, 0x3A, 0x3A)
         p.fillRect(0, 0, w, h, color_dark_gray)
+        self._slot_counter = 0
 
         if len(self._filter.sockets) > 0:
             y = 0
@@ -69,6 +71,7 @@ class EffectCompilationWidget(QWidget):
 
     def _paint_socket_stack(self, s: EffectsSocket, p: QPainter, w: int, h: int, y: int, drawing_area: QRect) -> int:
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
+        light_blue_brush = QBrush(QColor.fromRgb(0x03, 0x9B, 0xE5))
         p.setBrush(light_gray_brush)
         initial_y = y
         old_transform = p.transform()
@@ -77,13 +80,32 @@ class EffectCompilationWidget(QWidget):
         fm = p.fontMetrics()
         p.drawLine(0, y, w, y)
         y += 5
+        # TODO write method that renders slots in a generic way
         if s.has_color_property:
             p.setTransform(transform_90deg, True)
             text_length = fm.horizontalAdvance("Color")
+            socket_height = max(35, text_length)
             p.drawText(-y - text_length, w - 25, "Color")
             p.setTransform(old_transform, False)
-            # TODO draw effects
-            y += max(35, text_length)
+            x = w - 50
+            text_height = fm.height()
+            for e in s.color_socket:
+                p.drawLine(x, y + 1, x, y + socket_height - 2)
+                name = e.get_human_filter_name()
+                name_length = fm.horizontalAdvance(name) + 10
+                p.drawText(x - name_length, y + text_height + 10, name)
+                x -= (name_length + 10)
+                # TODO draw effect config button
+            if self._pending_effect is not None:
+                if Effect.can_convert_slot(self._pending_effect.get_slot_type(), EffectType.COLOR):
+                    slot_counter_str = str(self._slot_counter)
+                    x -= 10
+                    slot_counter_str_width = fm.horizontalAdvance(slot_counter_str)
+                    p.fillRect(x - slot_counter_str_width - 6, int(y + socket_height / 2 - text_height / 2 - 3),
+                               slot_counter_str_width + 6, text_height / 2 + 6, light_blue_brush)
+                    p.drawText(x - slot_counter_str_width - 3, y + socket_height / 2 + 3, slot_counter_str)
+                    self._slot_counter += 1
+            y += socket_height
         socket_name = s.target.name
         socket_name_width = fm.horizontalAdvance(socket_name)
         p.setTransform(transform_90deg, True)
@@ -92,3 +114,8 @@ class EffectCompilationWidget(QWidget):
         p.setTransform(old_transform, False)
         y += 5
         return y
+
+    def add_effect(self, e: Effect):
+        self._pending_effect = e
+        # TODO activate number input
+        self.update()

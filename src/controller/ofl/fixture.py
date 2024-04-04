@@ -126,6 +126,8 @@ class UsedFixture:
         has_uv = False
 
         for f in self.channels:
+            if not isinstance(f.fixture_channel, str):
+                continue
             if f.fixture_channel.lower().startswith("red"):
                 has_red = True
             if f.fixture_channel.lower().startswith("green"):

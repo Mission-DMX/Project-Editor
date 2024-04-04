@@ -7,10 +7,17 @@ from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
 class ColorEffect(Effect, ABC):
-    pass
+    def get_slot_type(self):
+        return EffectType.COLOR
 
 
 class ColorWheelEffect(ColorEffect):
+
+    EFFECT_ID = "effect.colors.colorwheel"
+
+    def get_serializable_effect_name(self) -> str:
+        return self.EFFECT_ID
+
     def generate_configuration_widget(self) -> QWidget | None:
         pass
 

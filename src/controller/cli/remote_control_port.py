@@ -188,4 +188,7 @@ class RemoteCLIServer:
             to_be_stopped.append(self._connected_clients[k_addr])
         for c in to_be_stopped:
             c.stop()
-        self._server_thread.join()
+        try:
+            self._server_thread.join()
+        except KeyboardInterrupt:
+            logger.warning("Shutdown of remote control network socket interrupted by keyboard signal.")

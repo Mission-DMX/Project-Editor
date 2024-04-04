@@ -1,22 +1,59 @@
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QIcon, QPaintEvent, QPainter, QBrush, QColor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, \
-    QScrollArea, QLineEdit, QCompleter
+    QScrollArea, QLineEdit, QCompleter, QFrame
 
 from model.virtual_filters.effects_stacks.color_effects import ColorWheelEffect
 from model.virtual_filters.effects_stacks.effect import Effect
 from model.virtual_filters.effects_stacks.generic_effects import FunctionEffect
 
-EFFECT_LIST = [
-    ColorWheelEffect,
-    FunctionEffect,
-]
+EFFECT_LIST = {
+    "colors:": [ColorWheelEffect],
+    "animations": [FunctionEffect],
+}
 
 
-class EffectLabel(QWidget):
+class _EffectSeparator(QWidget):
+    def __init__(self, parent: QWidget, text: str):
+        super().__init__(parent=parent)
+        self._children: list[QWidget] = []
+        self._text = text
+        self.setFont(self.font())
+
+    def setFont(self, arg__1):
+        super().setFont(arg__1)
+        fm = self.fontMetrics()
+        self.setMinimumHeight(fm.height() + 2)
+        self.setMinimumWidth(fm.horizontalAdvance(self._text) + 10)
+
+    def add_child(self, c: QWidget):
+        self._children.append(c)
+        self.update_visibility()
+
+    def update_visibility(self):
+        visible = False
+        for c in self._children:
+            visible |= not c.isHidden()
+        self.setVisible(visible)
+
+    def paintEvent(self, event: QPaintEvent):
+        p = QPainter(self)
+        if self.isVisible():
+            fm = self.fontMetrics()
+            text_height = fm.height()
+            text_space = fm.horizontalAdvance(' ')
+            text_width = fm.horizontalAdvance(self._text)
+            p.drawText(int(text_space / 2), text_height + 1, self._text)
+            p.setBrush(QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC)))
+            p.drawLine(int(text_space * 1.5 + text_width), int(text_height * 0.75),
+                       int(self.width() - text_space / 2), int(text_height * 0.75))
+        p.end()
+
+
+class _EffectLabel(QWidget):
     button_icon = QIcon.fromTheme("window-new")
 
-    def __init__(self, effect_cls, parent: QWidget):
+    def __init__(self, effect_cls, parent: QWidget, separator: _EffectSeparator, list_widget: "EffectsListWidget"):
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self.setLayout(layout)
@@ -34,22 +71,31 @@ class EffectLabel(QWidget):
         self._button = QPushButton(self, "Add Effect")
         if self.button_icon:
             self._button.setIcon(self.button_icon)
+        self._button.clicked.connect(self.add_effect)
         layout.addWidget(self._button)
         self.setToolTip(self.description)
-
-    def get_instance(self) -> Effect:
-        return self._template()
+        self._separator = separator
+        separator.add_child(self)
+        self._list_widget = list_widget
 
     def show(self):
         for w in [self, self._label, self._button]:
             w.setVisible(True)
+        self._separator.update_visibility()
 
     def hide(self):
         for w in [self, self._label, self._button]:
             w.setVisible(False)
+        self._separator.update_visibility()
+
+    def add_effect(self):
+        self._list_widget.effect_selected.emit(self._template())
 
 
 class EffectsListWidget(QWidget):
+
+    effect_selected = Signal(Effect)
+
     def __init__(self, parent: QWidget):
         super().__init__(parent=parent)
         central_layout = QVBoxLayout()
@@ -57,6 +103,7 @@ class EffectsListWidget(QWidget):
 
         self._search_bar = QLineEdit(parent=self)
         self._search_bar.textChanged.connect(self._update_search)
+        self._search_bar.setPlaceholderText("Search Effects")
         central_layout.addWidget(self._search_bar)
 
         self._effect_container = QScrollArea(parent=self)
@@ -68,15 +115,17 @@ class EffectsListWidget(QWidget):
         self._scroller.setWidgetResizable(True)
         self._scroller.setWidget(self._effect_container)
         central_layout.addWidget(self._scroller)
-        self._effect_widgets: list[EffectLabel] = []
+        self._effect_widgets: list[_EffectLabel] = []
         names: list[str] = []
 
-        for effect_template in EFFECT_LIST:
-            w = EffectLabel(effect_template, self._effect_container)
-            self._effect_widgets.append(w)
-            container_layout.addWidget(w)
-            names.append(w.effect_name)
-            # TODO introduce category splitters
+        for collection_name, effect_collection in EFFECT_LIST.items():
+            sep = _EffectSeparator(self._effect_container, collection_name)
+            container_layout.addWidget(sep)
+            for effect_template in effect_collection:
+                w = _EffectLabel(effect_template, self._effect_container, sep, self)
+                self._effect_widgets.append(w)
+                container_layout.addWidget(w)
+                names.append(w.effect_name)
 
         self._search_completer = QCompleter(names)
         self._search_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)

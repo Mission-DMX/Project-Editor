@@ -7,10 +7,17 @@ from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
 class GenericEffect(Effect, ABC):
-    pass
+    def get_slot_type(self):
+        return EffectType.GENERIC_NUMBER
 
 
 class FunctionEffect(GenericEffect):
+
+    EFFECT_ID = "effect.animation.trigonometric_function"
+
+    def get_serializable_effect_name(self) -> str:
+        return self.EFFECT_ID
+
     def generate_configuration_widget(self) -> QWidget | None:
         pass
 

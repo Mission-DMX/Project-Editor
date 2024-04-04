@@ -23,6 +23,7 @@ class EffectsStackEditor(QWidget):
         self._effects_list_widget = EffectsListWidget(self)
         global_layout.addWidget(self._effects_list_widget)
         self._compilation_widget = EffectCompilationWidget(f, self)
+        self._effects_list_widget.effect_selected.connect(self._compilation_widget.add_effect)
         global_layout.addWidget(self._compilation_widget)
         self._fixture_list_widget = UniverseTreeBrowserWidget(f.scene.board_configuration)
         self._fixture_list_widget.setParent(self)

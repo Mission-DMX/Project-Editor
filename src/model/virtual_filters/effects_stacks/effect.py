@@ -40,6 +40,12 @@ class Effect(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_slot_type(self) -> EffectType:
+        """This method needs to return the slot that this effect provides.
+        :returns: The EffectType that this effect imposes"""
+        raise NotImplementedError()
+
+    @abstractmethod
     def resolve_input_port_name(self, slot_id: str) -> str:
         """
         This method is called in order to resolve human-readable names for the given input slot.
@@ -66,6 +72,25 @@ class Effect(ABC):
         """This method is used in order to retrieve a human-readable name of the effect"""
         return self.__name__
 
+    @abstractmethod
+    def get_serializable_effect_name(self) -> str:
+        """
+        This method needs to be implemented in order to obtain an effect name that can be used to store and recover the
+        effects state.
+
+        :returns: A unique identifier for the effect
+        """
+        raise NotImplementedError()
+
     def get_description(self) -> str:
         """This method may be used in order to return a human-readable description of the effect"""
         return ""
+
+    @classmethod
+    def can_convert_slot(cls, candidate: EffectType, target: EffectType) -> bool:
+        if candidate == target:
+            return True
+        if candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY, EffectType.GOBO_SELECTION, EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]:
+            return True
+        # TODO add more capabilities once adapters are implemented
+        return False
