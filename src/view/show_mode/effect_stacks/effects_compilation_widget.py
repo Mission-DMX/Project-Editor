@@ -70,15 +70,25 @@ class EffectCompilationWidget(QWidget):
     def _paint_socket_stack(self, s: EffectsSocket, p: QPainter, w: int, h: int, y: int, drawing_area: QRect) -> int:
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         p.setBrush(light_gray_brush)
-        y += 5
+        initial_y = y
+        old_transform = p.transform()
+        transform_90deg = QTransform()
+        transform_90deg.rotate(-90.0)
+        fm = p.fontMetrics()
         p.drawLine(0, y, w, y)
         y += 5
         if s.has_color_property:
-            transform = QTransform()
-            old_transform = p.transform()
-            transform.rotate(90.0)
-            p.setTransform(transform, True)
-            p.drawText(y, 15, "Color")
-            p.setTransform(old_transform)
-            y += 35
+            p.setTransform(transform_90deg, True)
+            text_length = fm.horizontalAdvance("Color")
+            p.drawText(-y - text_length, w - 25, "Color")
+            p.setTransform(old_transform, False)
+            # TODO draw effects
+            y += max(35, text_length)
+        socket_name = s.target.name
+        socket_name_width = fm.horizontalAdvance(socket_name)
+        p.setTransform(transform_90deg, True)
+        y = max(y, socket_name_width + initial_y)
+        p.drawText(-int(initial_y - (initial_y - y) / 2 + socket_name_width / 2), w - 10, socket_name)
+        p.setTransform(old_transform, False)
+        y += 5
         return y
