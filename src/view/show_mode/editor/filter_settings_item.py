@@ -66,7 +66,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
 def check_if_filter_has_special_widget(filter_):
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
-    elif filter_.filter_type == 44:
+    elif filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
         return CueEditor()
     elif filter_.filter_type == 50:
         return LuaScriptConfigWidget()
