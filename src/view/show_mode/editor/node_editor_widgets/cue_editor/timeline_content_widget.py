@@ -1,8 +1,8 @@
 import PySide6
 from PySide6 import QtGui
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath
-from PySide6.QtWidgets import QLabel, QWidget
+from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath, QPaintEvent
+from PySide6.QtWidgets import QWidget
 
 from model import DataType
 from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
@@ -14,7 +14,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_
 from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
 
-class TimelineContentWidget(QLabel):
+class TimelineContentWidget(QWidget):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent=parent)
         self._last_keyframe_end_point = 0  # Defines the length of the Cue in seconds
@@ -38,13 +38,13 @@ class TimelineContentWidget(QLabel):
             self._cue_index = arg
             self._update_7seg_text()
 
-    def repaint(self) -> None:
-        canvas = self.pixmap()
-        w = canvas.width()
-        h = canvas.height()
+    def paintEvent(self, ev: QPaintEvent) -> None:
+        # TODO we should implement to only redraw required areas based on the hints provided within ev
+        w = self.width()
+        h = self.height()
         if w == 0 or h == 0:
             return
-        painter = QtGui.QPainter(canvas)
+        painter = QtGui.QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
         # Render background
@@ -128,7 +128,6 @@ class TimelineContentWidget(QLabel):
         painter.fillPath(cursor_path, QBrush(QColor.fromRgb(0xFF, 0x2F, 0x2F)))
 
         painter.end()
-        self.setPixmap(canvas)
 
     def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         super().mousePressEvent(ev)
@@ -137,10 +136,11 @@ class TimelineContentWidget(QLabel):
 
     def resizeEvent(self, event: PySide6.QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
-        canvas = QtGui.QPixmap(event.size().width(), event.size().height())
-        canvas.fill(Qt.black)
-        self.setPixmap(canvas)
-        self.repaint()
+        # TODO I don't think we'll need this anymore
+        #canvas = QtGui.QPixmap(event.size().width(), event.size().height())
+        #canvas.fill(Qt.black)
+        #self.setPixmap(canvas)
+        #self.repaint()
 
     def compute_resize(self):
         p = self.parent()
