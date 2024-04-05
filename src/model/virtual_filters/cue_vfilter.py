@@ -16,6 +16,8 @@ class CueFilter(VirtualFilter):
 
     def instantiate_filters(self, filter_list: list[Filter]):
         if self.in_preview_mode:
+            if self.associated_editor_widget is None:
+                raise RuntimeError("The preview mode has been enabled but no editor was assigned. This is a bug.")
             # TODO implement
             pass
         else:

@@ -9,7 +9,7 @@ class CueListNode(FilterNode):
     nodeName = "Cues"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=44, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
             'time': {'io': 'in'}
         }, allowAddOutput=True)
 
