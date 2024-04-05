@@ -18,10 +18,11 @@ from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class ExternalChannelDefinition:
-    def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn):
+    def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet):
         self.data_type = data_type
         self.name = name
         self.fader = associated_fader
+        self.bankset = bank_set
 
 
 class CueEditor(NodeEditorFilterConfigWidget):
@@ -171,6 +172,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         BankSet.push_messages_now()
         if self._filter_instance:
             self._filter_instance.in_preview_mode = True
+            # TODO commit show file in order to activate bank set
 
     def setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
         zoom_panel = QWidget(cue_settings_container)
@@ -408,5 +410,6 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if len(self._cues) == 0:
             return channel_list
         for name, c_type in self._cues[0].channels:
-            channel_list.append(ExternalChannelDefinition(c_type, name, self._bs_to_channel_mapping.get(name)))
+            channel_list.append(ExternalChannelDefinition(c_type, name,
+                                                          self._bs_to_channel_mapping.get(name), self._bankset))
         return channel_list

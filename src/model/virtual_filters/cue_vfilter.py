@@ -1,3 +1,5 @@
+# coding=utf-8
+"""This file contains the switching vFilter implementation for the cue filter."""
 from model import Filter, Scene
 from model.filter import VirtualFilter, FilterTypeEnumeration, DataType
 
@@ -11,6 +13,11 @@ logger = getLogger(__file__)
 
 
 class CueFilter(VirtualFilter):
+    """
+    This class implements a switch for the cue filter. In case of enabled live preview it links the faders of the
+    temporary bank set to the outputs of the filter. Otherwise, it will simply instantiate a plain cue filter on
+    elaboration.
+    """
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, filter_type=int(FilterTypeEnumeration.VFILTER_CUES), pos=pos)
@@ -44,6 +51,11 @@ class CueFilter(VirtualFilter):
                                           FilterTypeEnumeration.FILTER_FADER_RAW,
                                           pos=self.pos)
                     fader_filter_id += ":color" if channel.data_type == DataType.DT_COLOR else ":primary"
+
+                fader_filter.filter_configurations["column_id"] = channel.fader.id
+                fader_filter.filter_configurations["set_id"] = channel.bankset.id
+                fader_filter.filter_configurations["ignore_main_brightness_control"] = "true"
+
                 if channel.data_type == DataType.DT_8_BIT:
                     adapter_filter_name = "{}__ADAPTER__{}".format(self.filter_id, channel.name)
                     adapter_filter = Filter(self.scene, adapter_filter_name,
