@@ -3,18 +3,20 @@
 
 import os
 import random
+from logging import getLogger
 from xml.etree import ElementTree
 
 import xmlschema
 
 import proto.UniverseControl_pb2 as Proto
-from logging import getLogger
-
+from controller.file.deserialization.migrations import replace_old_filter_configurations
+from controller.file.deserialization.post_load_operations import link_patched_fixtures
+from controller.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from controller.utils.process_notifications import get_process_notifier
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
 from model.scene import FilterPage
-from controller.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
+from model.virtual_filters import construct_virtual_filter_instance
 from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
@@ -68,7 +70,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         A BoardConfiguration instance parsed from the provided file.
     """
 
-    pn = get_process_notifier("Load Showfile", 2)
+    pn = get_process_notifier("Load Showfile", 4)
 
     try:
         pn.current_step_description = "Load file from disk."
@@ -133,6 +135,10 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         pn.current_step_number += 1
 
     pn.current_step_number += 1
+
+    link_patched_fixtures(board_configuration)
+    pn.current_step_number += 2
+
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name
     pn.close()
@@ -324,7 +330,10 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
                     "Found attribute %s=%s while parsing filter for scene %s",
                     key, value, scene.human_readable_name)
 
-    filter_ = Filter(scene=scene, filter_id=filter_id, filter_type=filter_type, pos=pos)
+    if filter_type < 0:
+        filter_ = construct_virtual_filter_instance(scene, filter_type, filter_id, pos=pos)
+    else:
+        filter_ = Filter(scene=scene, filter_id=filter_id, filter_type=filter_type, pos=pos)
 
     for child in filter_element:
         match child.tag:
@@ -337,6 +346,7 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case _:
                 logger.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
+    filter_ = replace_old_filter_configurations(filter_)
     scene.append_filter(filter_)
 
 
