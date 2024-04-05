@@ -1,6 +1,7 @@
 # coding=utf-8
 """Adapters and converters filter nodes"""
 from model import DataType
+from model.filter import FilterTypeEnumeration
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -10,7 +11,7 @@ class Adapter16BitTo8BitNode(FilterNode):
     nodeName = '16 bit to 8 bit converter'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=8, name=name, terminals={
+        super().__init__(model=model, filter_type=int(FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT), name=name, terminals={
             'value': {'io': 'in'},
             'value_lower': {'io': 'out'},
             'value_upper': {'io': 'out'},
@@ -27,7 +28,7 @@ class Adapter16BitToBoolNode(FilterNode):
     nodeName = '16 bit to bool converter'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=9, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -39,7 +40,7 @@ class Adapter16bitToFloat(FilterNode):
     nodeName = "16bit to Float converter"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=52, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })

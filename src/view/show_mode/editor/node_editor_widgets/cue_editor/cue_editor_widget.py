@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBox
 
 from model import DataType
 from model.broadcaster import Broadcaster
-from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn
+from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, DeskColumn
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, \
     StateDouble, \
@@ -14,6 +14,13 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.cue import Cue, EndAct
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from ..node_editor_widget import NodeEditorFilterConfigWidget
+
+
+class ExternalChannelDefinition:
+    def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn):
+        self.data_type = data_type
+        self.name = name
+        self.fader = associated_fader
 
 
 class CueEditor(NodeEditorFilterConfigWidget):
@@ -135,6 +142,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._set_zoom_label_text()
         self._global_restart_on_end: bool = False
         self._cues: list[Cue] = []
+        self._bs_to_channel_mapping: dict[str, DeskColumn] = {}
         self._last_selected_cue = -1
         self._channels_changed_after_load = False
         self._broadcaster_signals_connected = False
@@ -310,6 +318,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             c = RawDeskColumn()
         c.display_name = channel_name
         self._bankset.add_column_to_next_bank(c)
+        self._bs_to_channel_mapping[channel_name] = c
         if not is_part_of_mass_update:
             self._bankset.update()
 
@@ -382,3 +391,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def parent_opened(self):
         self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
+
+    @property
+    def channels(self) -> list[ExternalChannelDefinition]:
+        channel_list = []
+        # it should be sufficient to only check the fist cue as all cues should have the same channels
+        if len(self._cues) == 0:
+            return channel_list
+        for name, c_type in self._cues[0].channels:
+            channel_list.append(ExternalChannelDefinition(c_type, name, self._bs_to_channel_mapping.get(name)))
+        return channel_list
