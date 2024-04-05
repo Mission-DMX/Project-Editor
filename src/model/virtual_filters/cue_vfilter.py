@@ -1,6 +1,9 @@
 from model import Filter, Scene
 from model.filter import VirtualFilter, FilterTypeEnumeration, DataType
-from view.show_mode.editor.node_editor_widgets import CueEditor
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from view.show_mode.editor.node_editor_widgets import CueEditor
 
 
 from logging import getLogger
@@ -12,7 +15,7 @@ class CueFilter(VirtualFilter):
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, filter_type=int(FilterTypeEnumeration.VFILTER_CUES), pos=pos)
         self.in_preview_mode = False
-        self.associated_editor_widget: CueEditor | None = None
+        self.associated_editor_widget: "CueEditor" | None = None
         self._channel_mapping: dict[str, str] = {}
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:

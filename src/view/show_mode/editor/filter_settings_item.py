@@ -67,7 +67,7 @@ def check_if_filter_has_special_widget(filter_):
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
     elif filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
-        return CueEditor()
+        return CueEditor(f=filter_)
     elif filter_.filter_type == 50:
         return LuaScriptConfigWidget()
     elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):

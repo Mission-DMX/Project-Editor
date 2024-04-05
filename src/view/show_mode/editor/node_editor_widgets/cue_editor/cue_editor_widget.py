@@ -4,9 +4,10 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBox
     QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QAbstractItemView, \
     QMessageBox, QDialog
 
-from model import DataType
+from model import DataType, Filter
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, DeskColumn
+from model.virtual_filters import CueFilter
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, \
     StateDouble, \
@@ -82,7 +83,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         }
         return d
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None, f: Filter | None = None):
         super().__init__()
         self._parent_widget = QWidget(parent=parent)
         top_layout = QVBoxLayout()
@@ -143,9 +144,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._global_restart_on_end: bool = False
         self._cues: list[Cue] = []
         self._bs_to_channel_mapping: dict[str, DeskColumn] = {}
+        self._filter_instance = f if isinstance(f, CueFilter) else None
         self._last_selected_cue = -1
         self._channels_changed_after_load = False
         self._broadcaster_signals_connected = False
+
+        if self._filter_instance:
+            self._filter_instance.associated_editor_widget = self
 
     def _link_bankset(self):
         self._broadcaster = Broadcaster()
@@ -164,6 +169,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._link_column_to_channel(c[0], c[1], True)
         self._bankset.update()
         BankSet.push_messages_now()
+        if self._filter_instance:
+            self._filter_instance.in_preview_mode = True
 
     def setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
         zoom_panel = QWidget(cue_settings_container)
@@ -387,6 +394,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
             self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
             self._broadcaster_signals_connected = False
+        if self._filter_instance:
+            self._filter_instance.in_preview_mode = False
         super().parent_closed(filter_node)
 
     def parent_opened(self):
