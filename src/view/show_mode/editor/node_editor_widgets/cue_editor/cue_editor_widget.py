@@ -18,6 +18,11 @@ from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class ExternalChannelDefinition:
+    """In case we're in preview mode we need to instantiate filters for the preview based on this information.
+
+    As I didn't want to write a tuple of the channel name, its type as well as fader source, this class provides them
+    in a named fashion.
+    """
     def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet):
         self.data_type = data_type
         self.name = name

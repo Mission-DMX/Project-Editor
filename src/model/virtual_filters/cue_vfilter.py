@@ -27,8 +27,10 @@ class CueFilter(VirtualFilter):
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if self.in_preview_mode:
+            # query the corresponding output channels from the fader filters
             return self._channel_mapping.get(virtual_port_id)
         else:
+            # just return the output ports as-is
             return "{}:{}".format(self.filter_id, virtual_port_id)
 
     def instantiate_filters(self, filter_list: list[Filter]):
