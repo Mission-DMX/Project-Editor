@@ -32,3 +32,6 @@ class ChainingEffectDummy(Effect):
         self._effect = e
         self._sname = socket_name
         self._accepted_input_types = accepted_input_types
+
+    def attach(self, slot_id: str, e: "Effect") -> bool:
+        return self._effect.attach(slot_id, e)

@@ -131,7 +131,7 @@ class Effect(ABC):
         return self._inputs.items()
 
     def attach(self, slot_id: str, e: "Effect") -> bool:
-        if e.get_output_slot_type() not in self.get_accepted_input_types():
+        if e.get_output_slot_type() not in self.get_accepted_input_types()[slot_id]:
             return False
         if not slot_id in self._inputs.keys():
             raise ValueError("The requested slot id is not present within this filter.")
