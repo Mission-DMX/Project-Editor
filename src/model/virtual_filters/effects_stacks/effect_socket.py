@@ -10,7 +10,7 @@ from model.virtual_filters.effects_stacks.effect import EffectType, Effect
 logger = getLogger(__file__)
 
 
-class _EffectDummy(Effect):
+class _EffectDummy_Socket(Effect):
 
     """The purpose of this class is to provide an Effect if required during rendering"""
 
@@ -20,7 +20,7 @@ class _EffectDummy(Effect):
     def get_accepted_input_types(self) -> dict[str, list[EffectType]]:
         return {"": [self._stype]}
 
-    def get_slot_type(self) -> EffectType:
+    def get_output_slot_type(self) -> EffectType:
         return self._stype
 
     def resolve_input_port_name(self, slot_id: str) -> str:
@@ -33,12 +33,12 @@ class _EffectDummy(Effect):
         raise RuntimeError("A dummy socket is not supposed to be serialized")
 
     def __init__(self, socket: "EffectsSocket", stype: EffectType):
-        super().__init__()
+        super().__init__({"": [stype]})
         self._socket = socket
         self._stype = stype
 
-    def attach(self, e: "Effect") -> bool:
-        if e.get_slot_type() != self._stype:
+    def attach(self, slot_id: str, e: "Effect") -> bool:
+        if e.get_output_slot_type() != self._stype:
             return False
         return self._socket.place_effect(e, self._stype)
 
@@ -62,10 +62,10 @@ class EffectsSocket:
     def get_socket_or_dummy(self, socket_typ: EffectType) -> Effect:
         if socket_typ == EffectType.COLOR and self._color_socket:
             return self._color_socket
-        return _EffectDummy(self, socket_typ)
+        return _EffectDummy_Socket(self, socket_typ)
 
     def place_effect(self, e: Effect, target_slot: EffectType) -> bool:
-        if not Effect.can_convert_slot(e.get_slot_type(), target_slot):
+        if not Effect.can_convert_slot(e.get_output_slot_type(), target_slot):
             return False
         if target_slot == EffectType.COLOR and self.has_color_property:
             self._color_socket = e

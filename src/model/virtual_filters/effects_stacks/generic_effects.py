@@ -7,7 +7,7 @@ from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
 class GenericEffect(Effect, ABC):
-    def get_slot_type(self):
+    def get_output_slot_type(self):
         return EffectType.GENERIC_NUMBER
 
 
@@ -22,9 +22,6 @@ class FunctionEffect(GenericEffect):
         return None
         # TODO implement
 
-    def get_accepted_input_types(self) -> dict[str, list[EffectType]]:
-        return {"phase": [EffectType.GENERIC_NUMBER]}
-
     def resolve_input_port_name(self, slot_id: str) -> str:
         return "TODO implement"
 
@@ -32,7 +29,7 @@ class FunctionEffect(GenericEffect):
         pass
 
     def __init__(self):
-        super().__init__()
+        super().__init__({"phase": [EffectType.GENERIC_NUMBER]})
 
     def get_human_filter_name(self):
         return "Function"

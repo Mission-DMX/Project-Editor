@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections.abc import dict_items
 from enum import IntFlag
 
 from PySide6.QtWidgets import QWidget
@@ -47,9 +46,12 @@ class EffectType(IntFlag):
 
 class Effect(ABC):
 
-    def __init__(self):
+    def __init__(self, supported_input_types: dict[str, list[EffectType]]):
         super().__init__()
-        self._inputs: dict[str, "Effect"] = dict()
+        self._supported_inputs = supported_input_types
+        self._inputs: dict[str, "Effect" | None] = dict()
+        for slot_name in supported_input_types.keys():
+            self._inputs[slot_name] = None
 
     @abstractmethod
     def generate_configuration_widget(self) -> QWidget | None:
@@ -60,17 +62,16 @@ class Effect(ABC):
         """
         raise NotImplementedError()
 
-    @abstractmethod
     def get_accepted_input_types(self) -> dict[str, list[EffectType]]:
         """
         This method will be queried in order to fetch the sockets together with their list of accepted data types.
 
         :returns: A dictionary. The keys encode the input ids. The values are a list of accepted input types.
         """
-        raise NotImplementedError()
+        return self._supported_inputs
 
     @abstractmethod
-    def get_slot_type(self) -> EffectType:
+    def get_output_slot_type(self) -> EffectType:
         """This method needs to return the slot that this effect provides.
         :returns: The EffectType that this effect imposes"""
         raise NotImplementedError()
@@ -125,12 +126,14 @@ class Effect(ABC):
         # TODO add more capabilities once adapters are implemented
         return False
 
-    def attached_inputs(self) -> dict_items[str, "Effect" | None]:
-        """This method return the effects that have been added to this effect as an input"""
+    def slot_definitions(self) -> "dict_items[str, Effect | None]":
+        """This method return the effects that have been added to this effect as an input as well as empty slots"""
         return self._inputs.items()
 
     def attach(self, slot_id: str, e: "Effect") -> bool:
-        if e.get_slot_type() not in self.get_accepted_input_types():
+        if e.get_output_slot_type() not in self.get_accepted_input_types():
             return False
+        if not slot_id in self._inputs.keys():
+            raise ValueError("The requested slot id is not present within this filter.")
         self._inputs[slot_id] = e
         return True
