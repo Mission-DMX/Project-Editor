@@ -1,6 +1,6 @@
 from abc import ABC
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QLabel
 
 from model import Filter
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
@@ -18,9 +18,8 @@ class FunctionEffect(GenericEffect):
     def get_serializable_effect_name(self) -> str:
         return self.EFFECT_ID
 
-    def generate_configuration_widget(self) -> QWidget | None:
-        return None
-        # TODO implement
+    def get_configuration_widget(self) -> QWidget | None:
+        return self._widget
 
     def resolve_input_port_name(self, slot_id: str) -> str:
         return "TODO implement"
@@ -30,6 +29,8 @@ class FunctionEffect(GenericEffect):
 
     def __init__(self):
         super().__init__({"phase": [EffectType.GENERIC_NUMBER]})
+        self._widget: QWidget = QLabel("Curve editor config widget -- Hier koennte Ihre Werbung stehen")
+        # TODO implement curve editor and replace this dummy one with it.
 
     def get_human_filter_name(self):
         return "Function"

@@ -9,7 +9,7 @@ class ChainingEffectDummy(Effect):
     """The purpose of this class is to provide an Effect if required during rendering"""
     # TODO: we need to replace the two dummy classes with something more suited
 
-    def generate_configuration_widget(self) -> QWidget | None:
+    def get_configuration_widget(self) -> QWidget | None:
         return None
 
     def get_accepted_input_types(self) -> dict[str, list[EffectType]]:

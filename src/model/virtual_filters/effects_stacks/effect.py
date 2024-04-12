@@ -54,9 +54,10 @@ class Effect(ABC):
             self._inputs[slot_name] = None
 
     @abstractmethod
-    def generate_configuration_widget(self) -> QWidget | None:
+    def get_configuration_widget(self) -> QWidget | None:
         """
         This method may to return a configuration widget that may be displayed inside the effect block.
+        As this method gets called quite often, it is advised that it should cache the widget.
 
         :returns: the procured widget or none
         """

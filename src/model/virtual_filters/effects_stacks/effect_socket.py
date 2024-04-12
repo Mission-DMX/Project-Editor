@@ -14,7 +14,7 @@ class _EffectDummy_Socket(Effect):
 
     """The purpose of this class is to provide an Effect if required during rendering"""
 
-    def generate_configuration_widget(self) -> QWidget | None:
+    def get_configuration_widget(self) -> QWidget | None:
         return None
 
     def get_accepted_input_types(self) -> dict[str, list[EffectType]]:

@@ -40,6 +40,7 @@ class EffectCompilationWidget(QWidget):
         self._slot_counter: list[tuple[str, Effect]] = []
         self._added_fixtures: set[UsedFixture] = set()
         self._painting_active = False
+        self._config_button_positions: list[tuple[int, int, QWidget]] = []
         self.repaint()
 
     def add_fixture_or_group(self, fg: UsedFixture):
@@ -65,10 +66,11 @@ class EffectCompilationWidget(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         color_dark_gray = QColor.fromRgb(0x3A, 0x3A, 0x3A)
         p.fillRect(0, 0, w, h, color_dark_gray)
-        self._slot_counter = []
+        self._slot_counter.clear()
+        self._config_button_positions.clear()
 
         if len(self._filter.sockets) > 0:
-            y = 0
+            y = 15
             for s in self._filter.sockets:
                 y = self._paint_socket_stack(s, p, w, h, y, area_to_update)
         else:
@@ -107,6 +109,16 @@ class EffectCompilationWidget(QWidget):
         x -= text_length + 10
         p.drawText(x, y + 10, effect_name)
         socket_height = max(socket_height, fm.height() + 10)
+
+        # draw effect config button
+        config_widget = effect.get_configuration_widget()
+        if config_widget is not None:
+            y += 25
+            p.drawRoundedRect(x, y, 20, 20, 3.0, 3.0)
+            p.drawLine(x + 5, y + 10, x + 15, y + 10)
+            p.drawLine(x + 10, y + 5, x + 10, y + 15)
+            self._config_button_positions.append((x, y, config_widget))
+            y += 5
         x -= 10
 
         # recursively render all effects attached to slots
@@ -118,18 +130,20 @@ class EffectCompilationWidget(QWidget):
             text_length = fm.horizontalAdvance(human_slot_name)
             y += text_length
             p.drawText(x, y, human_slot_name)
-            # TODO render some hint indicating that this text is the slot name and not the effect name. Maybe an infinity symbol?
+            # draw slot indicator symbol
+            p.drawLine(x - 7, y - 2, x - 7, y - 7)
+            p.drawLine(x - 2, y - 2, x - 2, y - 7)
+            p.drawLine(x - 7, y - 7, x - 2, y - 2)
+            p.drawLine(x - 7, y - 2, x - 2, y - 7)
             y += 10
 
             if e is not None:
                 # draw name of attached slot
-                p.drawLine(x, y + 1, x, y + socket_height - 2)
-                #name = e.get_human_filter_name()
-                #name_length = fm.horizontalAdvance(name) + 10
-                #p.drawText(x - name_length, y + text_height + 10, name)
-                #x -= (name_length + 10)
+                old_y = y
+                old_x = x
                 x -= 10
                 x, y = self.render_slot(x, y, False, e, p)
+                p.drawLine(old_x - 3, old_y - 3, old_x - 3, y)
             else:
                 # render insertion hint for empty slots
                 if self._pending_effect:
@@ -150,7 +164,7 @@ class EffectCompilationWidget(QWidget):
                             rendered_slots.add(slot_name)
                             dummy_effect = ChainingEffectDummy(effect, slot_name, supported_slot_types)
                             self._slot_counter.append((slot_name, dummy_effect))
-        # TODO draw effect config button
+
         y += socket_height
         return x, y
 

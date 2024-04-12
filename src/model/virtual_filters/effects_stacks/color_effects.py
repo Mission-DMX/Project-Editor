@@ -22,7 +22,7 @@ class ColorWheelEffect(ColorEffect):
     def get_serializable_effect_name(self) -> str:
         return self.EFFECT_ID
 
-    def generate_configuration_widget(self) -> QWidget | None:
+    def get_configuration_widget(self) -> QWidget | None:
         # TODO implement
         return None
 
