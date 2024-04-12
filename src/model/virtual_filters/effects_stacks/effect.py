@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import dict_items
 from enum import IntFlag
 
 from PySide6.QtWidgets import QWidget
@@ -7,6 +8,7 @@ from model import Filter
 
 
 class EffectType(IntFlag):
+
     COLOR = 0,
     LIGHT_INTENSITY = 1,
     ENABLED_SEGMENTS = 2,
@@ -18,8 +20,36 @@ class EffectType(IntFlag):
     ZOOM_FOCUS = 8,
     GENERIC_NUMBER = 9,
 
+    @property
+    def human_readable_name(self) -> str:
+        match self:
+            case EffectType.COLOR:
+                return "Color"
+            case EffectType.LIGHT_INTENSITY:
+                return "Light Intensity"
+            case EffectType.ZOOM_FOCUS:
+                return "Zoom and Focus"
+            case EffectType.ENABLED_SEGMENTS:
+                return "Enabled Lamp Segements"
+            case EffectType.PAN_TILT_COORDINATES:
+                return "Pan / Tilt"
+            case EffectType.POSITION_3D:
+                return "3D Coordinates"
+            case EffectType.SPEED:
+                return "Movement Speed"
+            case EffectType.SHUTTER_STROBE:
+                return "Shutter"
+            case EffectType.GOBO_SELECTION:
+                return "Gobo"
+            case EffectType.GENERIC_NUMBER:
+                return "Number"
+
 
 class Effect(ABC):
+
+    def __init__(self):
+        super().__init__()
+        self._inputs: dict[str, "Effect"] = dict()
 
     @abstractmethod
     def generate_configuration_widget(self) -> QWidget | None:
@@ -94,3 +124,13 @@ class Effect(ABC):
             return True
         # TODO add more capabilities once adapters are implemented
         return False
+
+    def attached_inputs(self) -> dict_items[str, "Effect" | None]:
+        """This method return the effects that have been added to this effect as an input"""
+        return self._inputs.items()
+
+    def attach(self, slot_id: str, e: "Effect") -> bool:
+        if e.get_slot_type() not in self.get_accepted_input_types():
+            return False
+        self._inputs[slot_id] = e
+        return True

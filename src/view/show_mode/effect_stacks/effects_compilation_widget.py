@@ -1,4 +1,4 @@
-from PySide6 import QtGui
+from PySide6 import QtGui, QtCore
 from PySide6.QtCore import Qt, QRect, Signal
 from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFontMetrics
 from PySide6.QtWidgets import QWidget, QSizePolicy
@@ -36,10 +36,14 @@ class EffectCompilationWidget(QWidget):
             QSizePolicy.MinimumExpanding
         )
         self._pending_effect: Effect | None = None
-        self._slot_counter: int = 0
+        self._slot_counter: list[tuple[str, Effect]] = []
+        self._added_fixtures: set[UsedFixture] = set()
         self.repaint()
 
     def add_fixture_or_group(self, fg: UsedFixture):
+        if fg in self._added_fixtures:
+            return
+        self._added_fixtures.add(fg)
         es = EffectsSocket(fg)
         self._filter.sockets.append(es)
         self.setMinimumHeight(len(self._filter.sockets) * 50)  # FIXME why do we not get our desired height?
@@ -56,7 +60,7 @@ class EffectCompilationWidget(QWidget):
         p.setRenderHint(QPainter.Antialiasing)
         color_dark_gray = QColor.fromRgb(0x3A, 0x3A, 0x3A)
         p.fillRect(0, 0, w, h, color_dark_gray)
-        self._slot_counter = 0
+        self._slot_counter = []
 
         if len(self._filter.sockets) > 0:
             y = 0
@@ -83,34 +87,64 @@ class EffectCompilationWidget(QWidget):
         fm = p.fontMetrics()
         p.drawLine(0, y, w, y)
         y += 5
-        # TODO write method that renders slots in a generic way
-        if s.has_color_property:
+
+        def render_slot(y: int, effect_name: str, effect: Effect) -> int:
+            slot_type: EffectType = effect.get_slot_type()
+
+            # draw slot type name
             p.setTransform(transform_90deg, True)
-            text_length = fm.horizontalAdvance("Color")
+            type_name = slot_type.human_readable_name
+            text_length = fm.horizontalAdvance(type_name)
             socket_height = max(35, text_length)
-            p.drawText(-y - text_length, w - 25, "Color")
+            p.drawText(-y - text_length, w - 25, type_name)
             p.setTransform(old_transform, False)
             x = w - 50
+
+            # recursively render all effects attached to slots
             text_height = fm.height()
-            for e in s.color_socket:
+            last_slot_type: EffectType = slot_type
+            e: Effect | None = s.get_socket_by_type(slot_type)
+            while e:
+                rendered_slots: set[str] = set()
                 p.drawLine(x, y + 1, x, y + socket_height - 2)
                 name = e.get_human_filter_name()
                 name_length = fm.horizontalAdvance(name) + 10
                 p.drawText(x - name_length, y + text_height + 10, name)
+                last_slot_type = e.get_slot_type()
                 x -= (name_length + 10)
-                # TODO draw effect config button
-                # TODO update socket height if there are further branching inputs to effects
-                # TODO check if the effect on top of this socket can accept the parameters.
+                attached_inputs = e.attached_inputs()
+                if len(attached_inputs) > 0:
+                    e = attached_inputs[0][0]
+                else:
+                    e = None
+                if len(attached_inputs) > 1:
+                    for further_input, input_slot_name in attached_inputs[1:]:
+                        y = render_slot(y, further_input)
+                        rendered_slots.add(input_slot_name)
+                if self._pending_effect:
+                    for potential_slot_name, potentially_accepted_types in e.get_accepted_input_types().items():
+                        if potential_slot_name not in rendered_slots:
+                            # TODO render placement hint
+                            rendered_slots.add(potential_slot_name)
+                            # TODO create dummy effect for the slot type
+                            self._slot_counter.append((potential_slot_name, dummy_effect))
+            # TODO draw effect config button
             if self._pending_effect is not None:
-                if Effect.can_convert_slot(self._pending_effect.get_slot_type(), EffectType.COLOR):
-                    slot_counter_str = str(self._slot_counter)
+                # TODO should we move this up and only draw unpopulated slots?
+                if Effect.can_convert_slot(self._pending_effect.get_slot_type(), last_slot_type):
+                    slot_counter_str = str(len(self._slot_counter))
                     x -= 10
                     slot_counter_str_width = fm.horizontalAdvance(slot_counter_str)
                     p.fillRect(x - slot_counter_str_width - 6, int(y + socket_height / 2 - text_height / 2 - 3),
                                slot_counter_str_width + 6, text_height / 2 + 6, light_blue_brush)
                     p.drawText(x - slot_counter_str_width - 3, y + socket_height / 2 + 3, slot_counter_str)
-                    self._slot_counter += 1
+                    self._slot_counter.append(("", effect))  # TODO is this a good marker for the primary slot?
             y += socket_height
+            return y
+
+        if s.has_color_property:
+            y = render_slot(y, s.get_socket_or_dummy(EffectType.COLOR))
+
         socket_name = s.target.name
         socket_name_width = fm.horizontalAdvance(socket_name)
         p.setTransform(transform_90deg, True)
@@ -124,41 +158,19 @@ class EffectCompilationWidget(QWidget):
         self._pending_effect = e
         # TODO change jogwheel input to select slot for add operation
         self.update()
+        QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
 
-    def add_effect_to_slot(self, i: int):
-        if self._pending_effect is None:
+    def add_effect_to_slot(self, i: int) -> bool:
+        if self._pending_effect is None or i >= len(self._slot_counter):
             return False
-        slots = 0
-        candidate = self._pending_effect.get_slot_type()
-        for socket in self._filter.sockets:
-            slot_valid = False
-            if socket.has_color_property and Effect.can_convert_slot(candidate, EffectType.COLOR):
-                slot_valid = True
-            # TODO implement for other slot types
-            # TODO implement for branching slots
-            # TODO check if the effect on top of this socket can accept the parameters.
-            if slot_valid:
-                if slots == i:
-                    if not isinstance(self._pending_effect, ColorEffect):
-                        return False  # TODO instantiate adapter
-                    socket.color_socket.append(self._pending_effect)
-                    self._pending_effect = None
-                    self.effect_added.emit()
-                    self.update()
-                    return True
-                else:
-                    slots += 1
-        return False
+        slot_id, candidate_effect = self._slot_counter[i]
+        if not candidate_effect.attach(slot_id, self._pending_effect):
+            return False
+        self._pending_effect = None
+        self._slot_counter = []
+        self.effect_added.emit()
+        self.update()
+        return True
 
     def get_maximum_slot_counter(self) -> int:
-        if self._pending_effect is None:
-            return 0
-        slots = 0
-        candidate = self._pending_effect.get_slot_type()
-        for socket in self._filter.sockets:
-            if socket.has_color_property and Effect.can_convert_slot(candidate, EffectType.COLOR):
-                slots += 1
-            # TODO implement for other slot types
-            # TODO implement for branching slots
-            # TODO check if the effect on top of this socket can accept the parameters.
-        return slots
+        return len(self._slot_counter) - 1

@@ -19,13 +19,14 @@ class FunctionEffect(GenericEffect):
         return self.EFFECT_ID
 
     def generate_configuration_widget(self) -> QWidget | None:
-        pass
+        return None
+        # TODO implement
 
     def get_accepted_input_types(self) -> dict[str, list[EffectType]]:
-        pass
+        return {"phase": [EffectType.GENERIC_NUMBER]}
 
     def resolve_input_port_name(self, slot_id: str) -> str:
-        pass
+        return "TODO implement"
 
     def emplace_filter(self, heading_effects: dict[str, tuple["Effect", int]], filter_list: list[Filter]):
         pass
