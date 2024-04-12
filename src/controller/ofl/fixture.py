@@ -4,6 +4,9 @@ import json
 from enum import Enum, IntFlag
 from typing import TypedDict, NotRequired, TYPE_CHECKING
 
+from logging import getLogger
+logger = getLogger(__file__)
+
 if TYPE_CHECKING:
     from model.patching_channel import PatchingChannel
 
@@ -108,38 +111,58 @@ class UsedFixture:
         self.fixture_file: str = fixture_file
         self.mode_index: int = mode_index
 
+        self.red_segments: list["PatchingChannel"] = []
+        self.blue_segments: list["PatchingChannel"] = []
+        self.green_segments: list["PatchingChannel"] = []
+        self.white_segments: list["PatchingChannel"] = []
+        self.amber_segments: list["PatchingChannel"] = []
+        self.uv_segments: list["PatchingChannel"] = []
+
+        for f in self.channels:
+            # TODO looking at the fixture data this might work well for led based color changes.
+            # Yet, we need to support color wheels as well.
+            if not isinstance(f.fixture_channel, str):
+                continue
+            found_color_hints: int = 0
+            if "red" in f.fixture_channel.lower():
+                self.red_segments.append(f)
+                found_color_hints += 1
+            if "green" in f.fixture_channel.lower():
+                self.green_segments.append(f)
+                found_color_hints += 1
+            if "blue" in f.fixture_channel.lower():
+                self.blue_segments.append(f)
+                found_color_hints += 1
+            if "white" in f.fixture_channel.lower():
+                self.white_segments.append(f)
+                found_color_hints += 1
+            if "uv" in f.fixture_channel.lower():
+                self.uv_segments.append(f)
+                found_color_hints += 1
+            if "amber" in f.fixture_channel.lower():
+                self.amber_segments.append(f)
+                found_color_hints += 1
+            if found_color_hints > 0:
+                logger.warning("Associated %s/%s:%s in multiple color segments.",
+                               str(self.parent_universe), str(f.address), f.fixture_channel)
+
     def copy(self):
         """
         This method clones the used fixture entry, except for the occupied channels
         """
         return UsedFixture(self.name, self.short_name, self.categories,
                            self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe)
+        # we do not need to copy the segment data as it is deduced from the channels data
 
-    def check_for_color_property(self) -> ColorSupport:
+    def color_support(self) -> ColorSupport:
         found_color = ColorSupport.NO_COLOR_SUPPORT
 
-        has_red = False
-        has_green = False
-        has_blue = False
-        has_white = False
-        has_amber = False
-        has_uv = False
-
-        for f in self.channels:
-            if not isinstance(f.fixture_channel, str):
-                continue
-            if f.fixture_channel.lower().startswith("red"):
-                has_red = True
-            if f.fixture_channel.lower().startswith("green"):
-                has_green = True
-            if f.fixture_channel.lower().startswith("blue"):
-                has_blue = True
-            if f.fixture_channel.lower().startswith("white"):
-                has_white = True
-            if f.fixture_channel.lower().startswith("uv"):
-                has_uv = True
-            if f.fixture_channel.lower().startswith("amber"):
-                has_amber = True
+        has_red = len(self.red_segments) > 0
+        has_green = len(self.green_segments) > 0
+        has_blue = len(self.blue_segments) > 0
+        has_white = len(self.white_segments) > 0
+        has_amber = len(self.amber_segments) > 0
+        has_uv = len(self.uv_segments) > 0
 
         if has_red and has_green and has_blue:
             found_color += ColorSupport.HAS_RGB_SUPPORT

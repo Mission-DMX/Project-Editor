@@ -54,7 +54,7 @@ class EffectsSocket:
     def __init__(self, target: UsedFixture):
         self.target: UsedFixture = target  # TODO also implement support for fixture groups
         self._color_socket: ColorEffect | None = None
-        self.has_color_property: bool = target.check_for_color_property() != ColorSupport.NO_COLOR_SUPPORT
+        self.has_color_property: bool = target.color_support() != ColorSupport.NO_COLOR_SUPPORT
 
     # TODO implement serialization
     def get_socket_by_type(self, slot_type: EffectType) -> Effect | None:

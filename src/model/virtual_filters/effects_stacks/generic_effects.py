@@ -24,8 +24,8 @@ class FunctionEffect(GenericEffect):
     def resolve_input_port_name(self, slot_id: str) -> str:
         return "TODO implement"
 
-    def emplace_filter(self, heading_effects: dict[str, tuple["Effect", int]], filter_list: list[Filter]):
-        pass
+    def emplace_filter(self, filter_list: list[Filter]) -> dict[str, str]:
+        return dict()
 
     def __init__(self):
         super().__init__({"phase": [EffectType.GENERIC_NUMBER]})
