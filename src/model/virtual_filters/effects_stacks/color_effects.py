@@ -3,6 +3,8 @@ from abc import ABC
 from PySide6.QtWidgets import QWidget
 
 from model import Filter
+from model.filter import FilterTypeEnumeration
+from model.virtual_filters.effects_stacks.adapters import emplace_adapter
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from view.show_mode.effect_stacks.configuration_widgets.color_wheel_configuration_widget import \
     ColorWheelConfigurationWidget
@@ -23,6 +25,7 @@ class ColorWheelEffect(ColorEffect):
         self._number_of_fragments: int = 0
         self._min_hue: float = 0.0
         self._max_hue: float = 360.0
+        self._default_speed: float = 30.0
         self._widget = ColorWheelConfigurationWidget(self)
 
     def get_serializable_effect_name(self) -> str:
@@ -40,7 +43,22 @@ class ColorWheelEffect(ColorEffect):
         return "Not Implemented"
 
     def emplace_filter(self, filter_list: list[Filter], prefix: str) -> dict[str, str | list[str]]:
-        return {"color": []}
+        speed_effect = self._inputs["speed"]
+        if speed_effect:
+            speed_input_channel = speed_effect.emplace_filter(filter_list, prefix + "__speed_")
+            speed_input_channel = emplace_adapter(speed_effect.get_output_slot_type(), EffectType.GENERIC_NUMBER,
+                                                  speed_input_channel, filter_list)["x"]
+        else:
+            speed_effect_name = prefix + "_speedconst"
+            speed_effect = Filter(self.get_scene(), speed_effect_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                                  self.get_position())
+            speed_effect.initial_parameters["value"] = str(self._default_speed)
+            speed_input_channel = speed_effect_name + ":value"
+        # TODO inst range input filter or place constants using min and max hue
+        # TODO implement filter that iterates between the hue boundries using the speed as a fraction for the time input
+        #  this should be repeated with the configured phase offset for every desired fragment
+        fragment_outputs = []
+        return {"color": fragment_outputs}
 
     def get_human_filter_name(self):
         return "Color Wheel"
@@ -54,7 +72,7 @@ class ColorWheelEffect(ColorEffect):
 
     @fragment_number.setter
     def fragment_number(self, new_fragment_count: int):
-        self._number_of_fragments = new_fragment_count
+        self._number_of_fragments = min(new_fragment_count, 1)
 
     @property
     def min_hue(self) -> float:

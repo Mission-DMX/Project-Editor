@@ -64,6 +64,7 @@ class EffectsStackEditor(QWidget):
 
     def _effect_add_button_clicked(self, e: Effect):
         self._compilation_widget.load_effect_to_add(e)
+        e.set_parent_filter(self._filter)
         avail_slots = self._compilation_widget.get_maximum_slot_counter()
         if avail_slots >= 0:
             self._effect_placement_bar.setMaximum(avail_slots)

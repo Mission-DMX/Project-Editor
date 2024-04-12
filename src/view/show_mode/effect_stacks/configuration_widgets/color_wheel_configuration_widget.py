@@ -29,6 +29,7 @@ class ColorWheelConfigurationWidget(QWidget):
         self._maximum_hue.valueChanged.connect(self._max_hue_changed)
         layout.addRow("Maximum Hue", self._maximum_hue)
         # TODO add color to hue indicator
+        # TODO add default speed widget
         self._load_values_from_effect()
 
     def _fragment_count_changed(self, e):

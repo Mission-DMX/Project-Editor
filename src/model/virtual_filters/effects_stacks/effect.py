@@ -3,7 +3,11 @@ from enum import IntFlag
 
 from PySide6.QtWidgets import QWidget
 
-from model import Filter
+from model import Filter, Scene
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from model.virtual_filters import EffectsStack
 
 
 class EffectType(IntFlag):
@@ -52,6 +56,7 @@ class Effect(ABC):
         self._inputs: dict[str, "Effect" | None] = dict()
         for slot_name in supported_input_types.keys():
             self._inputs[slot_name] = None
+        self._parent_filter: "EffectsStack" | None = None
 
     @abstractmethod
     def get_configuration_widget(self) -> QWidget | None:
@@ -168,3 +173,20 @@ class Effect(ABC):
 
     def get_human_slot_name(self, slot_name: str) -> str:
         return slot_name
+
+    @property
+    def parent_scene(self) -> Scene | None:
+        return self._parent_filter
+
+    @parent_scene.setter
+    def parent_scene(self, s: Scene):
+        self._parent_filter = s
+
+    def get_scene(self) -> Scene:
+        return self._parent_filter.scene
+
+    def get_position(self) -> tuple[float, float]:
+        return self._parent_filter.pos
+
+    def set_parent_filter(self, f: "EffectsStack"):
+        self._parent_filter = f
