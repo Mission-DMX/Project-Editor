@@ -1,6 +1,7 @@
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QEnterEvent
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QTreeWidgetItem, QVBoxLayout, QSpinBox, QMessageBox
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QTreeWidgetItem, QVBoxLayout, QSpinBox, QMessageBox, QScrollArea, \
+    QSplitter
 
 from controller.ofl.fixture import UsedFixture
 from model import Filter
@@ -31,7 +32,9 @@ class EffectsStackEditor(QWidget):
         self._compilation_widget = EffectCompilationWidget(f, center_container)
         self._compilation_widget.effect_added.connect(self._effect_added)
         self._effects_list_widget.effect_selected.connect(self._effect_add_button_clicked)
-        center_layout.addWidget(self._compilation_widget)
+        self._center_scroll_area = QScrollArea()  # TODO replace once widget can scroll based on jog wheel
+        self._center_scroll_area.setWidget(self._compilation_widget)
+        center_layout.addWidget(self._center_scroll_area)
         self._effect_placement_bar = QSpinBox(center_container)
         self._effect_placement_bar.setMinimum(0)
         self._effect_placement_bar.setMaximum(0)
@@ -40,10 +43,16 @@ class EffectsStackEditor(QWidget):
         self._effect_placement_bar.installEventFilter(self)
         center_layout.addWidget(self._effect_placement_bar)
         global_layout.addWidget(center_container)
+        self._right_side_container = QSplitter(self)
+        self._right_side_container.setOrientation(Qt.Orientation.Vertical)
         self._fixture_list_widget = UniverseTreeBrowserWidget(f.scene.board_configuration)
-        self._fixture_list_widget.setParent(self)
+        self._fixture_list_widget.setParent(self._right_side_container)
         self._fixture_list_widget.itemDoubleClicked.connect(self._fixture_or_group_add_clicked)
-        global_layout.addWidget(self._fixture_list_widget)
+        self._right_side_container.addWidget(self._fixture_list_widget)
+        self._effect_config_widget_container = QScrollArea()
+        self._effect_config_widget_container.setMinimumHeight(50)
+        self._right_side_container.addWidget(self._effect_config_widget_container)
+        global_layout.addWidget(self._right_side_container)
         self._message_box = QMessageBox(self.parent())
 
     def _fixture_or_group_add_clicked(self, item: QTreeWidgetItem, column: int):
