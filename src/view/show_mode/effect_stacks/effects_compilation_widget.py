@@ -73,6 +73,8 @@ class EffectCompilationWidget(QWidget):
             y = 15
             for s in self._filter.sockets:
                 y = self._paint_socket_stack(s, p, w, h, y, area_to_update)
+            if y > self.minimumHeight():
+                self.setMinimumHeight(y + 15)
         else:
             p.setBrush(QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC)))
             no_socket_hint_str = "There are no sockets defined. Please add some from the available fixtures."
@@ -138,7 +140,7 @@ class EffectCompilationWidget(QWidget):
             y += 10
 
             if e is not None:
-                # draw name of attached slot
+                # draw attached slot
                 old_y = y
                 old_x = x
                 x -= 10
@@ -177,7 +179,7 @@ class EffectCompilationWidget(QWidget):
         transform_90deg.rotate(-90.0)
         fm = p.fontMetrics()
         p.drawLine(0, y, w, y)
-        y += 5
+        y += 15
 
         if s.has_color_property:
             x, y = self.render_slot(self.width(), y, True, s.get_socket_or_dummy(EffectType.COLOR), p)
