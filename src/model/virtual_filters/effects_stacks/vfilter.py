@@ -28,11 +28,17 @@ class EffectsStack(VirtualFilter):
             zero_constant_name = "{}__blank_color_slot_constant__{}_{}".format(
                 self.filter_id, socket_target.parent_universe, socket_target.__hash__()
             )
-            zero_constant_required: bool = False
+            zero_constant_8bit_required: bool = False
+            zero_constant_float_required: bool = False
             if socket.has_color_property:
                 color_effect = socket.get_socket_by_type(EffectType.COLOR)
                 if color_effect is not None:
-                    output_dict = color_effect.emplace_filter(filter_list)
+                    filter_prefix = "{}__coloreffect_{}_{}".format(
+                        self.filter_id,
+                        socket_target.parent_universe,
+                        socket_target.channels[0].address
+                    )
+                    output_dict = color_effect.emplace_filter(filter_list, filter_prefix)
                     output_dict = emplace_adapter(color_effect.get_output_slot_type(), EffectType.COLOR,
                                                   output_dict, filter_list)
 
@@ -41,9 +47,15 @@ class EffectsStack(VirtualFilter):
                     if socket.has_segmentation_support:
                         segmentation_effect = socket.get_socket_by_type(EffectType.ENABLED_SEGMENTS)
                         if segmentation_effect:
+                            filter_prefix = "{}__segmentation_{}_{}".format(
+                                self.filter_id,
+                                socket_target.parent_universe,
+                                socket_target.channels[0].address
+                            )
+                            segmentation_outputs = segmentation_effect.emplace_filter(filter_list, filter_prefix)
                             segmentation_outputs = emplace_adapter(segmentation_effect.get_output_slot_type(),
                                                                    EffectType.ENABLED_SEGMENTS,
-                                                                   segmentation_effect.emplace_filter(filter_list),
+                                                                   segmentation_outputs,
                                                                    filter_list)
                             i = 0
                             for segment_number, segment_out_port in segmentation_outputs.items():
@@ -59,8 +71,8 @@ class EffectsStack(VirtualFilter):
                                                            FilterTypeEnumeration.FILTER_ARITHMETICS_MAC, self.pos)
                                 multiply_filter_i.channel_links["factor_1"] = segment_out_port
                                 multiply_filter_i.channel_links["factor_2"] = seg_split_filter_name + ":i"
-                                multiply_filter_i.channel_links["summand"] = zero_constant_name + ":value"
-                                zero_constant_required = True
+                                multiply_filter_i.channel_links["summand"] = zero_constant_name + "_float:value"
+                                zero_constant_float_required = True
                                 filter_list.append(multiply_filter_i)
                                 combination_filter = Filter(self.scene, seg_split_filter_name + "_combine",
                                                             18, self.pos) # TODO rename
@@ -105,13 +117,19 @@ class EffectsStack(VirtualFilter):
                                          socket_target.amber_segments, socket_target.uv_segments]:
                         for rs in segment_list:
                             universe_filter.filter_configurations[rs.fixture_channel] = str(rs.address)
-                            universe_filter.channel_links[rs.fixture_channel] = zero_constant_name + ":value"
+                            universe_filter.channel_links[rs.fixture_channel] = zero_constant_name + "_8bit:value"
+                            zero_constant_8bit_required = True
             # TODO implement other slot types
             #  (except for EffectType.ENABLED_SEGMENTS which will be handled together with the color)
-            if zero_constant_required:
-                constant_filter = Filter(self.scene, zero_constant_name,
+            if zero_constant_8bit_required:
+                constant_filter = Filter(self.scene, zero_constant_name + "_8bit",
                                          FilterTypeEnumeration.FILTER_CONSTANT_8BIT, self.pos)
                 constant_filter.initial_parameters["value"] = "0"
+                filter_list.append(constant_filter)
+            if zero_constant_float_required:
+                constant_filter = Filter(self.scene, zero_constant_name + "_float",
+                                         FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.pos)
+                constant_filter.initial_parameters["value"] = "0.0"
                 filter_list.append(constant_filter)
 
     # TODO implement serialization of effect stack vfilter

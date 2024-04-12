@@ -5,11 +5,13 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushBu
 
 from model.virtual_filters.effects_stacks.color_effects import ColorWheelEffect
 from model.virtual_filters.effects_stacks.effect import Effect
+from model.virtual_filters.effects_stacks.fader_input_effects import ColorInputEffect
 from model.virtual_filters.effects_stacks.generic_effects import FunctionEffect
 
 EFFECT_LIST = {
     "colors:": [ColorWheelEffect],
     "animations": [FunctionEffect],
+    "fader-inputs": [ColorInputEffect],
 }
 
 

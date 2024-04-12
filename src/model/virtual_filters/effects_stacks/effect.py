@@ -88,7 +88,7 @@ class Effect(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def emplace_filter(self, filter_list: list[Filter]) -> dict[str, str | list[str]]:
+    def emplace_filter(self, filter_list: list[Filter], name_prefix: str) -> dict[str, str | list[str]]:
         """
         This method gets called in order to generate the filters. This method needs to accept the case that an input
         slot is not occupied and needs to emplace reasonable defaults in that case.
@@ -121,6 +121,8 @@ class Effect(ABC):
         EffectType.GENERIC_NUMBER -> "x" (double)
 
         :param filter_list: The list to place the filters in.
+        :param name_prefix: The prefix of the filter id that the effect can use. This is to make sure that we're
+                            generating unique ids.
         :returns: a dictionary indicating which outputs can be used by the calling instance.
         """
         raise NotImplementedError()

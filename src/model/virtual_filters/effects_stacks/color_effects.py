@@ -34,7 +34,7 @@ class ColorWheelEffect(ColorEffect):
                 return "Color Range"
         return "Not Implemented"
 
-    def emplace_filter(self, filter_list: list[Filter]) -> dict[str, str | list[str]]:
+    def emplace_filter(self, filter_list: list[Filter], prefix: str) -> dict[str, str | list[str]]:
         return dict()
 
     def get_human_filter_name(self):

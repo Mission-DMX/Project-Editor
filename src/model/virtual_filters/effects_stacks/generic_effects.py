@@ -24,7 +24,7 @@ class FunctionEffect(GenericEffect):
     def resolve_input_port_name(self, slot_id: str) -> str:
         return "TODO implement"
 
-    def emplace_filter(self, filter_list: list[Filter]) -> dict[str, str | list[str]]:
+    def emplace_filter(self, filter_list: list[Filter], prefix: str) -> dict[str, str | list[str]]:
         return dict()
 
     def __init__(self):
