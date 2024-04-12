@@ -31,6 +31,7 @@ class EffectsStackEditor(QWidget):
         center_container.setLayout(center_layout)
         self._compilation_widget = EffectCompilationWidget(f, center_container)
         self._compilation_widget.effect_added.connect(self._effect_added)
+        self._compilation_widget.active_config_widget_changed.connect(self._effect_config_widget_changed)
         self._effects_list_widget.effect_selected.connect(self._effect_add_button_clicked)
         self._center_scroll_area = QScrollArea()  # TODO replace once widget can scroll based on jog wheel
         self._center_scroll_area.setWidget(self._compilation_widget)
@@ -95,3 +96,10 @@ class EffectsStackEditor(QWidget):
         self._effect_placement_bar.setEnabled(False)
         self._effect_placement_bar.setVisible(False)
         self._effect_placement_bar.clearFocus()
+
+    def _effect_config_widget_changed(self, w: QWidget):
+        if w is None:
+            return
+        w.setParent(self._effect_config_widget_container)
+        w.setVisible(True)
+        self._effect_config_widget_container.setWidget(w)

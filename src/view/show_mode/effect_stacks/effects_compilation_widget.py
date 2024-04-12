@@ -1,6 +1,6 @@
 from PySide6 import QtGui, QtCore
 from PySide6.QtCore import Qt, QRect, Signal
-from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFontMetrics
+from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFontMetrics, QMouseEvent
 from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from controller.ofl.fixture import UsedFixture
@@ -14,6 +14,7 @@ from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 class EffectCompilationWidget(QWidget):
 
     effect_added = Signal()
+    active_config_widget_changed = Signal(QWidget)
 
     _background_css = """
     background-image: repeating-linear-gradient(
@@ -41,6 +42,7 @@ class EffectCompilationWidget(QWidget):
         self._added_fixtures: set[UsedFixture] = set()
         self._painting_active = False
         self._config_button_positions: list[tuple[int, int, QWidget]] = []
+        self._active_config_widget: QWidget | None = None
         self.repaint()
 
     def add_fixture_or_group(self, fg: UsedFixture):
@@ -90,6 +92,8 @@ class EffectCompilationWidget(QWidget):
         slot_type: EffectType = effect.get_output_slot_type()
         fm = self.fontMetrics()
         light_blue_brush = QBrush(QColor.fromRgb(0x03, 0x9B, 0xE5))
+        light_gray_color = QBrush(QColor.fromRgb(0xaa, 0xaa, 0xaa))
+        p.setBrush(light_gray_color)
         old_transform = p.transform()
         transform_90deg = QTransform()
         transform_90deg.rotate(-90.0)
@@ -116,7 +120,10 @@ class EffectCompilationWidget(QWidget):
         config_widget = effect.get_configuration_widget()
         if config_widget is not None:
             y += 25
+            p.setBrush(QBrush(QColor.fromRgb(0x30, 0x30, 0x30) if config_widget != self._active_config_widget else
+                              QColor.fromRgb(0, 0xff, 0xff)))
             p.drawRoundedRect(x, y, 20, 20, 3.0, 3.0)
+            p.setBrush(light_gray_color)
             p.drawLine(x + 5, y + 10, x + 15, y + 10)
             p.drawLine(x + 10, y + 5, x + 10, y + 15)
             self._config_button_positions.append((x, y, config_widget))
@@ -213,3 +220,12 @@ class EffectCompilationWidget(QWidget):
 
     def get_maximum_slot_counter(self) -> int:
         return len(self._slot_counter) - 1
+
+    def mousePressEvent(self, event: QMouseEvent):
+        for x, y, widget in self._config_button_positions:
+            if x < event.x() < x + 25:
+                if y < event.y() < y + 25:
+                    self._active_config_widget = widget
+                    self.active_config_widget_changed.emit(widget)
+                    self.update()
+                    return
