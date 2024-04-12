@@ -74,6 +74,12 @@ class EffectsStackEditor(QWidget):
             if key in [Qt.Key_Return, Qt.Key_Enter]:
                 self._compilation_widget.add_effect_to_slot(self._effect_placement_bar.value())
                 return True
+            if key in [Qt.Key_Escape]:
+                self._compilation_widget.load_effect_to_add(None)
+                self._effect_placement_bar.setEnabled(False)
+                self._effect_placement_bar.setVisible(False)
+                self._effect_placement_bar.clearFocus()
+                return True
         return False
 
     def _effect_added(self):

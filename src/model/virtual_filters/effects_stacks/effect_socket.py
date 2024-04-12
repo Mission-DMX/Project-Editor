@@ -42,6 +42,9 @@ class _EffectDummy_Socket(Effect):
             return False
         return self._socket.place_effect(e, self._stype)
 
+    def get_human_filter_name(self) -> str:
+        return ""
+
 
 class EffectsSocket:
     """

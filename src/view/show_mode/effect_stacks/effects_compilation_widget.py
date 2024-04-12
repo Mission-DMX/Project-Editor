@@ -82,36 +82,54 @@ class EffectCompilationWidget(QWidget):
         p.end()
         self._painting_active = False
 
-    def render_slot(self, y: int, effect: Effect, p: QPainter) -> int:
+    def render_slot(self, x: int, y: int, first: bool, effect: Effect, p: QPainter) -> tuple[int, int]:
         slot_type: EffectType = effect.get_output_slot_type()
         fm = self.fontMetrics()
         light_blue_brush = QBrush(QColor.fromRgb(0x03, 0x9B, 0xE5))
         old_transform = p.transform()
         transform_90deg = QTransform()
         transform_90deg.rotate(-90.0)
+        socket_height = 35
 
-        # draw slot type name
-        p.setTransform(transform_90deg, True)
-        type_name = slot_type.human_readable_name
-        text_length = fm.horizontalAdvance(type_name)
-        socket_height = max(35, text_length)
-        p.drawText(-y - text_length, self.width() - 25, type_name)
-        p.setTransform(old_transform, False)
-        x = self.width() - 50
+        if first:
+            # draw slot type name
+            p.setTransform(transform_90deg, True)
+            type_name = slot_type.human_readable_name
+            text_length = fm.horizontalAdvance(type_name)
+            socket_height = max(socket_height, text_length)
+            p.drawText(-y - text_length, x - 25, type_name)
+            p.setTransform(old_transform, False)
+            x = x - 50
+
+        # draw Effect name
+        effect_name = effect.get_human_filter_name()
+        text_length = fm.horizontalAdvance(effect_name)
+        x -= text_length + 10
+        p.drawText(x, y + 10, effect_name)
+        socket_height = max(socket_height, fm.height() + 10)
+        x -= 10
 
         # recursively render all effects attached to slots
         text_height = fm.height()
         for slot_name, e in effect.slot_definitions():
             rendered_slots: set[str] = set()
 
+            human_slot_name = effect.get_human_slot_name(slot_name)
+            text_length = fm.horizontalAdvance(human_slot_name)
+            y += text_length
+            p.drawText(x, y, human_slot_name)
+            # TODO render some hint indicating that this text is the slot name and not the effect name. Maybe an infinity symbol?
+            y += 10
+
             if e is not None:
                 # draw name of attached slot
                 p.drawLine(x, y + 1, x, y + socket_height - 2)
-                name = e.get_human_filter_name()
-                name_length = fm.horizontalAdvance(name) + 10
-                p.drawText(x - name_length, y + text_height + 10, name)
-                x -= (name_length + 10)
-                y = self.render_slot(y, e, p)
+                #name = e.get_human_filter_name()
+                #name_length = fm.horizontalAdvance(name) + 10
+                #p.drawText(x - name_length, y + text_height + 10, name)
+                #x -= (name_length + 10)
+                x -= 10
+                x, y = self.render_slot(x, y, False, e, p)
             else:
                 # render insertion hint for empty slots
                 if self._pending_effect:
@@ -134,7 +152,7 @@ class EffectCompilationWidget(QWidget):
                             self._slot_counter.append((slot_name, dummy_effect))
         # TODO draw effect config button
         y += socket_height
-        return y
+        return x, y
 
     def _paint_socket_stack(self, s: EffectsSocket, p: QPainter, w: int, h: int, y: int, drawing_area: QRect) -> int:
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
@@ -148,7 +166,7 @@ class EffectCompilationWidget(QWidget):
         y += 5
 
         if s.has_color_property:
-            y = self.render_slot(y, s.get_socket_or_dummy(EffectType.COLOR), p)
+            x, y = self.render_slot(self.width(), y, True, s.get_socket_or_dummy(EffectType.COLOR), p)
 
         socket_name = s.target.name
         socket_name_width = fm.horizontalAdvance(socket_name)

@@ -35,3 +35,6 @@ class ChainingEffectDummy(Effect):
 
     def attach(self, slot_id: str, e: "Effect") -> bool:
         return self._effect.attach(slot_id, e)
+
+    def get_human_filter_name(self) -> str:
+        return ""

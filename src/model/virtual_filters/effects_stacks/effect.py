@@ -137,3 +137,6 @@ class Effect(ABC):
             raise ValueError("The requested slot id is not present within this filter.")
         self._inputs[slot_id] = e
         return True
+
+    def get_human_slot_name(self, slot_name: str) -> str:
+        return slot_name
