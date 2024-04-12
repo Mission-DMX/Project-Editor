@@ -12,7 +12,7 @@ class ColorInputEffect(ColorEffect):
     def resolve_input_port_name(self, slot_id: str) -> str:
         pass
 
-    def emplace_filter(self, filter_list: list[Filter]) -> dict[str, str]:
+    def emplace_filter(self, filter_list: list[Filter]) -> dict[str, str | list[str]]:
         return {}
 
     def get_serializable_effect_name(self) -> str:

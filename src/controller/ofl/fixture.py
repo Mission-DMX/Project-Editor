@@ -136,6 +136,8 @@ class UsedFixture:
             if "white" in f.fixture_channel.lower():
                 self.white_segments.append(f)
                 found_color_hints += 1
+                # TODO we also need to append this in case the fixture does not have rgb support but multiple white
+                #  segments (such as a LED blinder)
             if "uv" in f.fixture_channel.lower():
                 self.uv_segments.append(f)
                 found_color_hints += 1
@@ -145,6 +147,9 @@ class UsedFixture:
             if found_color_hints > 0:
                 logger.warning("Associated %s/%s:%s in multiple color segments.",
                                str(self.parent_universe), str(f.address), f.fixture_channel)
+        # TODO discussion: integration of fixture groups would be most straight forward if they would be represented as
+        #  an inheritance of UsedFixture, representing their individual lamps as segments of the group. This way we
+        #  would not need to implement special cases everywhere where this information is accessed.
 
     def copy(self):
         """

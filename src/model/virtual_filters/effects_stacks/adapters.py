@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 def emplace_adapter(given_type: "EffectType", target_type: "EffectType",
-                    input_dict: dict[str, str], filter_list: list["Filter"]) -> dict[str, str]:
+                    input_dict: dict[str, str | list[str]], filter_list: list["Filter"]) -> dict[str, str | list[str]]:
     """This method instantiates required adapter filters. If the provided type and the desired type are already
     compatible, this method returns the input_dict as-is.
 

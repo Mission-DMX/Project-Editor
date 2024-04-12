@@ -6,6 +6,7 @@ from controller.ofl.fixture import UsedFixture, ColorSupport
 from model import Filter
 from model.virtual_filters.effects_stacks.color_effects import ColorEffect
 from model.virtual_filters.effects_stacks.effect import EffectType, Effect
+from model.virtual_filters.effects_stacks.segment_effects import SegmentEffect
 
 logger = getLogger(__file__)
 
@@ -55,16 +56,25 @@ class EffectsSocket:
         self.target: UsedFixture = target  # TODO also implement support for fixture groups
         self._color_socket: ColorEffect | None = None
         self.has_color_property: bool = target.color_support() != ColorSupport.NO_COLOR_SUPPORT
+        self._segment_socket: SegmentEffect | None = None
+        self.has_segmentation_support: bool = (len(target.red_segments) > 1 and len(target.green_segments) > 1 and
+                                               len(target.blue_segments) > 1) or len(target.white_segments) > 1
 
     # TODO implement serialization
     def get_socket_by_type(self, slot_type: EffectType) -> Effect | None:
         if slot_type == EffectType.COLOR and self.has_color_property:
             return self._color_socket
+        if slot_type == EffectType.ENABLED_SEGMENTS and self.has_segmentation_support:
+            return self._segment_socket
+        # TODO implement other slot types
         return None
 
     def get_socket_or_dummy(self, socket_typ: EffectType) -> Effect:
         if socket_typ == EffectType.COLOR and self._color_socket:
             return self._color_socket
+        if socket_typ == EffectType.ENABLED_SEGMENTS and self._segment_socket:
+            return self._segment_socket
+        # TODO implement other slot types
         return _EffectDummy_Socket(self, socket_typ)
 
     def place_effect(self, e: Effect, target_slot: EffectType) -> bool:
@@ -72,6 +82,9 @@ class EffectsSocket:
             return False
         if target_slot == EffectType.COLOR and self.has_color_property:
             self._color_socket = e
+            return True
+        elif target_slot == EffectType.ENABLED_SEGMENTS and self.has_segmentation_support:
+            self._segment_socket = e
             return True
         # TODO implement other slot types
         return False

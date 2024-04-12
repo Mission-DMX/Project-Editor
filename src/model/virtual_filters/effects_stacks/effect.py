@@ -88,7 +88,7 @@ class Effect(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def emplace_filter(self, filter_list: list[Filter]) -> dict[str, str]:
+    def emplace_filter(self, filter_list: list[Filter]) -> dict[str, str | list[str]]:
         """
         This method gets called in order to generate the filters. This method needs to accept the case that an input
         slot is not occupied and needs to emplace reasonable defaults in that case.
@@ -97,15 +97,27 @@ class Effect(ABC):
         that are relevant for using the output. The layout of this dictionary is the following: {"output-name": "filter_id:channel"}
 
         Based on the effect output types, the following outputs(-names) need to be provided:
-        EffectType.COLOR -> "color", pointing to an output port of type HSIColor
+
+        EffectType.COLOR -> "color", (list of) pointers to an output port of type HSIColor. If the value of "color" is
+        not a string but an array of string, the segments of the fixture(group) are matched with the provided outputs,
+        repeating if there are too few outputs and not using them if there are too many.
+
         EffectType.LIGHT_INTENSITY -> "intensity", pointing to an output port of type 8bit
+
         EffectType.ZOOM_FOCUS -> "zoom" (8bit), "focus" (8bit)
+
         EffectType.ENABLED_SEGMENTS -> numbered outputs for each segment of data type double (intensity between 0 and 1)
+
         EffectType.PAN_TILT_COORDINATES -> "pan" (16bit), "tilt"(16bit)
+
         EffectType.POSITION_3D -> "x" (double), "y" (double), "z" (double)
+
         EffectType.SPEED -> "speed" (double); TODO we need to discuss a reasonable unit for this parameter type
+
         EffectType.SHUTTER_STROBE -> "shutter" (double, frequency in Hz)
+
         EffectType.GOBO_SELECTION -> "gobo" (int8, number of the selected gobo)
+
         EffectType.GENERIC_NUMBER -> "x" (double)
 
         :param filter_list: The list to place the filters in.
