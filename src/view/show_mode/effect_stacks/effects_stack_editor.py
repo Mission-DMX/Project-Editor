@@ -98,8 +98,10 @@ class EffectsStackEditor(QWidget):
         self._effect_placement_bar.clearFocus()
 
     def _effect_config_widget_changed(self, w: QWidget):
+        old_w = self._effect_config_widget_container.widget()
         if w is None:
             return
         w.setParent(self._effect_config_widget_container)
         w.setVisible(True)
         self._effect_config_widget_container.setWidget(w)
+        old_w.setVisible(False)
