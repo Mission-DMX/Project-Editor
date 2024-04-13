@@ -13,7 +13,7 @@ class FaderRawNode(FilterNode):
     nodeName = "Raw"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=39, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_RAW, name=name, terminals={
             'primary': {'io': 'out'},
             'secondary': {'io': 'out'}
         })
@@ -62,7 +62,7 @@ class FaderHSINode(FilterNode):
     nodeName = "HSI"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=40, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name, terminals={
             'color': {'io': 'out'}
         })
         try:

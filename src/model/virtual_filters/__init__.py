@@ -2,6 +2,7 @@ from model import Scene
 from model.filter import VirtualFilter, FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
+from model.virtual_filters.cue_vfilter import CueFilter
 
 
 def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id: str, pos: tuple[int] | None = None) -> VirtualFilter:
@@ -16,7 +17,7 @@ def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id:
             #  two dimensional state diagram
             pass
         case FilterTypeEnumeration.VFILTER_CUES:
-            # TODO implement virtual filter for cues (in order to provide preview based editing)
+            return CueFilter(scene, filter_id, pos=pos)
             pass
         case FilterTypeEnumeration.VFILTER_EFFECTSSTACK:
             # TODO implement effects stack virtual filter (as described in issue #87)
