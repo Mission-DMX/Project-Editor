@@ -8,7 +8,8 @@ from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDi
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Universe
-from model.filter import FilterTypeEnumeration
+from model.filter import FilterTypeEnumeration, Filter
+from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
@@ -64,11 +65,19 @@ class FilterSettingsItem(QGraphicsSvgItem):
             self.dialog.show()
 
 
-def check_if_filter_has_special_widget(filter_):
+def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfigWidget | None:
+    """
+    This method checks if there is a special configuration widget implemented for the given filter.
+    In case there is, it will instantiate and return it. Otherwise, it will return None and leave the
+    task of generating a generic one to the dialog.
+
+    :param filter_: The filter to check for.
+    :returns: The instantiates settings widget or None.
+    """
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
-    elif filter_.filter_type == 44:
-        return CueEditor()
+    elif filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
+        return CueEditor(f=filter_)
     elif filter_.filter_type == 50:
         return LuaScriptConfigWidget()
     elif filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
