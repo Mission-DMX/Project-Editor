@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBox
     QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QAbstractItemView, \
     QMessageBox, QDialog
 
+from controller.file.transmitting_to_fish import transmit_to_fish
 from model import DataType, Filter
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, DeskColumn
@@ -177,7 +178,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         BankSet.push_messages_now()
         if self._filter_instance:
             self._filter_instance.in_preview_mode = True
-            # TODO commit show file in order to activate bank set
+            transmit_to_fish(self._filter_instance.scene.board_configuration, False)
+            # TODO switch to scene of filter
 
     def setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
         zoom_panel = QWidget(cue_settings_container)
@@ -403,6 +405,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._broadcaster_signals_connected = False
         if self._filter_instance:
             self._filter_instance.in_preview_mode = False
+            transmit_to_fish(self._filter_instance.scene.board_configuration, False)
+            # TODO switch to scene of filter
         super().parent_closed(filter_node)
 
     def parent_opened(self):
