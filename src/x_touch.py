@@ -15,10 +15,24 @@ VIEW_PATCHING_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.but
     button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH, new_state=proto.Console_pb2.ButtonState.BS_SET_LED_BLINKING)
 
 VIEW_FILTER_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
-    button=proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
+    button=proto.Console_pb2.ButtonCode.BTN_PAN_EDITSHOW, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
 
 VIEW_NOT_FILTER_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
-    button=proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW,
+    button=proto.Console_pb2.ButtonCode.BTN_PAN_EDITSHOW,
+    new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
+
+VIEW_SHOW_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
+
+VIEW_NOT_SHOW_MENU: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI,
+    new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
+
+VIEW_CONSOLE_MODE: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_TRACK_CONSOLE, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
+
+VIEW_NOT_CONSOLSE_MODE: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
+    button=proto.Console_pb2.ButtonCode.BTN_TRACK_CONSOLE,
     new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE)
 
 VIEW_COLOR_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
@@ -60,6 +74,12 @@ class XTouchMessages:
 
         self._broadcaster.view_to_file_editor.connect(lambda: send(VIEW_FILTER_MENU_MSG))
         self._broadcaster.view_leave_file_editor.connect(lambda: send(VIEW_NOT_FILTER_MENU_MSG))
+
+        self._broadcaster.view_to_show_player.connect(lambda: send(VIEW_SHOW_MENU_MSG))
+        self._broadcaster.view_leave_show_player.connect(lambda: send(VIEW_NOT_SHOW_MENU))
+
+        self._broadcaster.view_to_console_mode.connect(lambda: send(VIEW_CONSOLE_MODE))
+        self._broadcaster.view_leave_console_mode.connect(lambda: send(VIEW_NOT_CONSOLSE_MODE))
 
         self._broadcaster.view_to_color.connect(lambda: send(VIEW_COLOR_MSG))
         self._broadcaster.view_leave_color.connect(lambda: send(VIEW_NOT_COLOR_MSG))

@@ -1,10 +1,10 @@
 # coding=utf-8
 """patch Plan Widget for one Universe"""
 from PySide6 import QtCore, QtWidgets
-from PySide6.examples.widgets.layouts.flowlayout.flowlayout import FlowLayout
 
 from model.patching_universe import PatchingUniverse
 from view.patch_mode.patch_plan.patch_plan_item import PatchItem
+from layouts.flow_layout import FlowLayout
 
 
 class PatchPlanWidget(QtWidgets.QScrollArea):

@@ -1,34 +1,18 @@
 import asyncio
 
-import cv2
-import numpy as np
-#from ultralytics.utils import yaml_load
-#from ultralytics.utils.checks import check_yaml
-
-from controller.autotrack.Detection.Yolo8.Yolo8 import Yolo8
+from controller.autotrack.Detection.VideoProcessor import draw_boxes, process
 from controller.autotrack.Detection.Yolo8.Yolo8GPU import Yolo8GPU
 from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
-from controller.autotrack.Helpers import ImageHelper
-from controller.autotrack.Helpers.ImageHelper import draw_bounding_box, cv2qim
+from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget,
     QGridLayout,
     QLayout,
     QLabel,
-    QSlider,
     QCheckBox,
 )
 
 from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
-
-CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]
-colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
-
-
-CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]
-colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
 class DetectionTab(GuiTab):
@@ -65,7 +49,7 @@ class DetectionTab(GuiTab):
                 "crop", (crop[2], h - crop[3], crop[0], w - crop[1])
             ).process(frame)
             scale, detections = self.process_frame(frame)
-            self.draw_boxes(frame, detections, scale)
+            draw_boxes(frame, detections, scale)
             self.image_label.setPixmap(cv2qim(frame))
             if self.swt_detection.isChecked():
                 self.move_lights(detections, frame)
@@ -77,142 +61,9 @@ class DetectionTab(GuiTab):
 
         self.background_frame = frame
         outputs = self.yolo8.detect(self.background_frame)
-        # detections = self.get_filtered_detections(outputs, scale)
-        detections = self.process(outputs, scale)
+        # detections = self.get_filtered_detections(outputs, scale, self.get_confidence_threshold())
+        detections = process(outputs, scale)
         return scale, detections
-
-    def process(self, outputs, scale):
-        scores = []
-        boxes = []
-        for i in range(8400):
-            scores.append(outputs[4][i])
-            boxes.append([outputs[0][i], outputs[1][i], outputs[2][i], outputs[3][i]])
-        result_boxes = self.apply_nms(boxes, scores)
-        print(f"Humans found: {result_boxes}")
-        detections = []
-        for i in range(len(result_boxes)):
-            index = result_boxes[i]
-            box = boxes[index]
-            detection = {
-                "class_id": 0,
-                "class_name": CLASSES[0],
-                "confidence": scores[index],
-                "box": box,
-                "scale": scale,
-            }
-            detections.append(detection)
-        return detections
-
-    def post_process_yolov8_output(self, output, confidence_threshold=0.5):
-        # Flatten and reshape the output
-        predictions = output.reshape(
-            -1, 84
-        )  # Assuming there are 85 values per detection (adjust if needed)
-
-        # Initialize lists to store the filtered and sorted detections
-        filtered_detections = []
-
-        # Iterate through all predictions
-        for prediction in predictions:
-            # Extract class confidence and bounding box coordinates
-            class_confidence = prediction[4]  # Confidence score for the detected class
-            if class_confidence < confidence_threshold:
-                continue  # Skip detections with low confidence
-
-            # You can also extract other information like class IDs and bounding box coordinates if needed
-            class_id = np.argmax(
-                prediction[5:]
-            )  # Assuming class IDs start from index 5
-            bounding_box = prediction[
-                0:4
-            ]  # Assuming bounding box coordinates are in the first 4 values
-
-            # Append the filtered detection to the list
-            filtered_detections.append(
-                {
-                    "class_id": class_id,
-                    "confidence": class_confidence,
-                    "bounding_box": bounding_box,
-                }
-            )
-
-        # Sort the detections by confidence in descending order
-        sorted_detections = sorted(
-            filtered_detections, key=lambda x: x["confidence"], reverse=True
-        )
-
-        return sorted_detections
-
-    def get_filtered_detections(self, outputs, scale):
-        boxes = []
-        scores = []
-        class_ids = []
-
-        for i in range(outputs.shape[1]):
-            classes_scores = outputs[0][i][4:]
-            (minScore, maxScore, minClassLoc, (x, maxClassIndex)) = cv2.minMaxLoc(
-                classes_scores
-            )
-            if (
-                maxScore >= self.get_confidence_threshold()
-                and CLASSES[maxClassIndex] == "person"
-            ):
-                box = [
-                    outputs[0][i][0] - (0.5 * outputs[0][i][2]),
-                    outputs[0][i][1] - (0.5 * outputs[0][i][3]),
-                    outputs[0][i][2],
-                    outputs[0][i][3],
-                ]
-                boxes.append(box)
-                scores.append(maxScore)
-                class_ids.append(maxClassIndex)
-
-        result_boxes = self.apply_nms(boxes, scores)
-        detections = self.create_detections(
-            result_boxes, boxes, scores, class_ids, scale
-        )
-        return detections
-
-    def apply_nms(self, boxes, scores):
-        result_boxes = cv2.dnn.NMSBoxes(boxes, scores, 0.25, 0.45, 0.5)
-        return result_boxes
-
-    def create_detections(self, result_boxes, boxes, scores, class_ids, scale):
-        detections = []
-        for i in range(len(result_boxes)):
-            index = result_boxes[i]
-            box = boxes[index]
-            detection = {
-                "class_id": class_ids[index],
-                "class_name": CLASSES[class_ids[index]],
-                "confidence": scores[index],
-                "box": box,
-                "scale": scale,
-            }
-            detections.append(detection)
-        return detections
-
-    def draw_boxes(self, frame, detections, scale):
-        for detection in detections:
-            print(detection)
-            # draw_bounding_box(
-            #    frame,
-            #   detection["class_id"],
-            #  detection["confidence"],
-            # round(detection["box"][0] * scale),
-            # round(detection["box"][1] * scale),
-            # round((detection["box"][0] + detection["box"][2]) * scale),
-            # round((detection["box"][1] + detection["box"][3]) * scale),
-            # )
-            x, y, w, h = detection["box"]
-            x1 = round((x - w / 2) * scale)
-            y1 = round((y - h / 2) * scale)
-            x2 = round((x + w / 2) * scale)
-            y2 = round((y + h / 2) * scale)
-            detection["box"] = [x1, y1, x2, y2]
-            draw_bounding_box(
-                frame, detection["class_id"], detection["confidence"], x1, y1, x2, y2
-            )
 
     def get_confidence_threshold(self):
         return float(self.instance.settings.settings["confidence_threshold"].text())

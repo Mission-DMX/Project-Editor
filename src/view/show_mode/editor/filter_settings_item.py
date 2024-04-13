@@ -1,6 +1,6 @@
 # coding=utf-8
 """Module for filter settings editor"""
-import logging
+from logging import getLogger
 
 import PySide6
 from PySide6.QtCore import Qt
@@ -9,10 +9,13 @@ from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Universe
 from model.filter import FilterTypeEnumeration
+from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
+
+logger = getLogger(__name__)
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
@@ -70,6 +73,8 @@ def check_if_filter_has_special_widget(filter_):
         return LuaScriptConfigWidget()
     elif filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
         return PanTiltConstantWidget(filter_)
+    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):
+        return AutotrackerSettingsWidget()
     else:
         return None
 
@@ -142,7 +147,7 @@ class FilterSettingsDialog(QDialog):
                 universe: Universe = uni
                 break
         else:
-            logging.warning("FilterSettingsItem: Could not find universe %s", universe_id)
+            logger.warning("FilterSettingsItem: Could not find universe %s", universe_id)
             return key
         # Fetch patching short name
         for channel in universe.patching:

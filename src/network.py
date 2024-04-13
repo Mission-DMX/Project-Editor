@@ -1,6 +1,6 @@
 # coding=utf-8
 """Module to handle connection with real-time software Fish."""
-import logging
+
 import math
 import queue
 import xml.etree.ElementTree as ET
@@ -20,11 +20,14 @@ import x_touch
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
+from logging import getLogger
 
 if TYPE_CHECKING:
     from view.main_window import MainWindow
     from controller.cli import FaderBank
     from model import Scene
+
+logger = getLogger(__name__)
 
 
 class NetworkManager(QtCore.QObject):
@@ -38,7 +41,7 @@ class NetworkManager(QtCore.QObject):
             parent: parent GUI Object
         """
         super().__init__(parent=parent)
-        logging.info("generate new Network Manager")
+        logger.info("generate new Network Manager")
         self._broadcaster = Broadcaster()
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._message_queue = queue.Queue()
@@ -54,6 +57,8 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe_value.connect(self._send_universe)
         self._broadcaster.change_run_mode.connect(self.update_state)
         self._broadcaster.view_to_file_editor.connect(
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
+        self._broadcaster.view_to_show_player.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
         self._broadcaster.view_to_console_mode.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
@@ -79,14 +84,14 @@ class NetworkManager(QtCore.QObject):
     def start(self) -> None:
         """establish connection with current fish socket"""
         if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            logging.info("connect local socket to Server: %s", self._server_name)
+            logger.info("connect local socket to Server: %s", self._server_name)
             self._socket.connectToServer(self._server_name)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
                 self._is_running = True
 
     def disconnect(self) -> None:
         """disconnect from fish socket"""
-        logging.info("disconnect local socket from Server")
+        logger.info("disconnect local socket from Server")
         self._socket.disconnectFromServer()
         self._is_running = False
 
@@ -120,11 +125,11 @@ class NetworkManager(QtCore.QObject):
         """This method pushes the queued messages to fish. This method needs to be called from the GUI thread."""
         while not self._message_queue.empty():
             msg, msg_type = self._message_queue.get()
-            logging.debug("message to send: %s with type: %s", msg, msg_type)
+            logger.debug("message to send: %s with type: %s", msg, msg_type)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
                 self._socket.write(varint.encode(msg_type) + varint.encode(len(msg)) + msg)
             else:
-                logging.error("not Connected with fish server")
+                logger.error("not Connected with fish server")
 
     def _enqueue_message(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         self._message_queue.put(tuple([msg, msg_type]))
@@ -168,7 +173,7 @@ class NetworkManager(QtCore.QObject):
                     case _:
                         pass
             except:
-                print("ERROR: Failed to parse message.")
+                logger.error("Failed to parse message.", exc_info=True)
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
         """
@@ -190,21 +195,21 @@ class NetworkManager(QtCore.QObject):
         """
         match msg.level:
             case proto.RealTimeControl_pb2.LogLevel.LL_INFO:
-                logging.info(msg.what)
+                logger.info(msg.what)
             case proto.RealTimeControl_pb2.LogLevel.LL_DEBUG:
-                logging.debug(msg.what)
+                logger.debug(msg.what)
             case proto.RealTimeControl_pb2.LogLevel.LL_ERROR:
-                logging.error(msg.what)
+                logger.error(msg.what)
             case proto.RealTimeControl_pb2.LogLevel.LL_WARNING:
-                logging.warning(msg.what)
+                logger.warning(msg.what)
 
     def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
         if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
             match msg.button:
                 case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
                     self._broadcaster.view_to_patch_menu.emit()
-                case proto.Console_pb2.ButtonCode.BTN_TRACK_EDITSHOW:
-                    self._broadcaster.view_to_file_editor.emit()
+                case proto.Console_pb2.ButtonCode.BTN_TRACK_CONSOLE:
+                    self._broadcaster.view_to_console_mode.emit()
                 case proto.Console_pb2.ButtonCode.BTN_REV_LASTCUE:
                     self._broadcaster.desk_media_rev_pressed.emit()
                 case proto.Console_pb2.ButtonCode.BTN_FF_NEXTCUE:
@@ -223,8 +228,10 @@ class NetworkManager(QtCore.QObject):
                     self._broadcaster.view_to_color.emit()
                 case proto.Console_pb2.ButtonCode.BTN_SAVE_SAVE:
                     self._broadcaster.save_button_pressed.emit()
-                case proto.Console_pb2.ButtonCode.BTN_PAN_COMMITSHOW:
-                    self._broadcaster.commit_button_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_PAN_EDITSHOW:
+                    self._broadcaster.view_to_file_editor.emit()
+                case proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI:
+                    self._broadcaster.view_to_show_player.emit()
                 case _:
                     pass
         else:
@@ -345,4 +352,4 @@ def on_error(error) -> None:
     Args:
         error: thrown error
     """
-    logging.error(error)
+    logger.error(error, exc_info=True)

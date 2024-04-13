@@ -35,8 +35,12 @@ class SettingsTab(GuiTab):
             name (str): The name of the tab.
             instance (InstanceManager): An instance manager for managing application instances and settings.
         """
-        super().__init__(name, instance)
-        settings = self.instance.settings.settings
+        if isinstance(instance, InstanceManager):
+            super().__init__(name, instance)
+            settings = self.instance.settings.settings
+        else:
+            super().__init__(name, None)
+            settings = instance
 
         layout = QGridLayout()
         layout.setSizeConstraint(QLayout.SetMinimumSize)
@@ -44,6 +48,7 @@ class SettingsTab(GuiTab):
         layout.addWidget(QLabel("Crop:"), 0, 0)
         self.crop_line_edit = QLineEdit()
         layout.addWidget(self.crop_line_edit, 0, 1)
+        self.crop_line_edit.setEnabled(self.instance is not None)
 
         for setting, value in settings.items():
             label = QLabel(setting)
@@ -55,25 +60,26 @@ class SettingsTab(GuiTab):
 
         self.setLayout(layout)
 
-        save_button = QPushButton("Save")
-        layout.addWidget(save_button)
-
-        save_button.clicked.connect(self.save_settings)
+        if isinstance(instance, InstanceManager):
+            save_button = QPushButton("Save")
+            layout.addWidget(save_button)
+            save_button.clicked.connect(self.save_settings)
 
     def save_settings(self):
         """
         Save the settings entered in the QLineEdit widgets.
         """
+        filter_config = self.instance.filter.filter_configurations
         for setting, edit in self.instance.settings.settings.items():
             value = edit.text()
-            # TODO: Implement setting validation and saving logic
-            print(f"{setting}: {value}")
+            filter_config[setting] = value
 
     def tab_activated(self):
         """
         Called when the tab is activated.
         """
-        self.crop_line_edit.setText(", ".join(map(str, self.instance.settings.crop)))
+        if self.instance:
+            self.crop_line_edit.setText(", ".join(map(str, self.instance.settings.crop)))
 
     def video_update(self):
         """

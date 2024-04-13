@@ -1,18 +1,18 @@
 # coding=utf-8
 """Module containing node editor"""
-import logging
+from logging import getLogger
 
 from PySide6.QtWidgets import QWidget, QGridLayout
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
 
-# from model import Scene, Filter
 from model import Scene
 from model.scene import FilterPage
-from . import nodes
 from .filter_flowchart import FilterFlowchart
 from .nodes.base.filternode import FilterNode
 from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
 from .nodes.type_to_node_dict import type_to_node
+
+logger = getLogger(__name__)
 
 
 class NodeEditorWidget(QWidget):
@@ -54,19 +54,19 @@ class NodeEditorWidget(QWidget):
                 break
             if filter_candidate.filter_id in still_missing_filters:
                 still_missing_filters.remove(filter_candidate.filter_id)
-                logging.info("Adding foreign filter '{}' from scene '{}'.".format(filter_candidate.filter_id,
-                                                                                  self._page.parent_scene))
+                logger.info("Adding foreign filter '{}' from scene '{}'.".format(filter_candidate.filter_id,
+                                                                                 self._page.parent_scene))
                 self._flowchart.create_node_with_filter(
                     filter_=filter_candidate,
                     node_type=type_to_node[filter_candidate.filter_type], is_from_different_page=True
-            )
+                )
         if len(still_missing_filters) > 0:
             raise Exception("Missing filters '{}' in scene '{}'.".
                             format(still_missing_filters, self._page.parent_scene))
         for name, node in self._flowchart.nodes().items():
             if not isinstance(node, FilterNode):
-                logging.warning("Trying to connect non-FilterNode %s. Got type: %s. Expected: %s",
-                                name, str(type(node)), str(FilterNode.__class__))
+                logger.warning("Trying to connect non-FilterNode %s. Got type: %s. Expected: %s",
+                               name, str(type(node)), str(FilterNode.__class__))
                 continue
             for input_channel, output_channel in node.filter.channel_links.items():
                 if output_channel == "":
@@ -75,12 +75,12 @@ class NodeEditorWidget(QWidget):
                 remote_term = output_channel.split(':')[1]
                 remote_node = self._flowchart.nodes()[remote_name]
                 if not isinstance(remote_node, FilterNode):
-                    logging.warning("Trying to connect node %s to non-FilterNode %s", name, remote_name)
+                    logger.warning("Trying to connect node %s to non-FilterNode %s", name, remote_name)
                 remote_term = remote_node.outputs().get(remote_term)
                 local_term = node.inputs().get(input_channel)
                 if not isinstance(remote_term, Terminal) or not isinstance(local_term, Terminal):
-                    logging.critical("Fetched non-terminal object while trying to "
-                                     "connect terminals {} -> {}".format(remote_term, local_term))
+                    logger.critical("Fetched non-terminal object while trying to "
+                                    "connect terminals {} -> {}".format(remote_term, local_term))
                     continue
                 self._flowchart.connectTerminals(local_term, remote_term)
         self.layout().addWidget(self._flowchart.widget().chartWidget.viewDock)

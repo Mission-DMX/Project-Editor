@@ -1,3 +1,4 @@
+# coding=utf-8
 from abc import ABC, abstractmethod
 
 from PySide6.QtWidgets import QWidget
@@ -128,6 +129,7 @@ class UIWidget(ABC):
         return ""
 
     def push_update(self):
+        """Use this method to trigger a filter update process"""
         for entry in self.generate_update_content():
             k = entry[0]
             v = entry[1]

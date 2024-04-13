@@ -39,7 +39,6 @@ class JoystickHandler:
                                              handle_key_event=lambda key: cls.reformat(key)
                                              )
         cls.joystickMap["No Joystick"] = JoystickList.NoJoystick
-        cls.joystickMap["Every Joystick"] = JoystickList.EveryJoystick
         cls.joystickMap["Gamepad Left"] = JoystickList.Gamepad_Left
         cls.joystickMap["Gamepad Right"] = JoystickList.Gamepad_Right
         cls.joystickMap["Joystick"] = JoystickList.Joystick

@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABC, abstractmethod
 
 
@@ -33,7 +34,7 @@ class LightController(ABC):
         pass
 
     @abstractmethod
-    def set_brightness(self, brightness):
+    def set_brightness(self, brightness: float):
         """
         Abstract method to set the brightness of the light(s).
 
@@ -43,7 +44,7 @@ class LightController(ABC):
         pass
 
     @abstractmethod
-    def set_position(self, position):
+    def set_position(self, position: tuple[int, int]):
         """
         Abstract method to set the position or orientation of the light(s).
 
@@ -53,7 +54,7 @@ class LightController(ABC):
         pass
 
     @abstractmethod
-    def set_color(self, color):
+    def set_color(self, color: str):
         """
         Abstract method to set the color of the light(s).
 
@@ -62,6 +63,20 @@ class LightController(ABC):
         """
         pass
 
-    @abstractmethod
-    def frame(self, time, corners):
-        pass
+    async def frame(self, time: int, corners: tuple[tuple[int, int], tuple[int, int], tuple[int, int], tuple[int, int]]):
+        """This method illuminates the passed corners if the frame one-by-one.
+
+        :param time: The time for this operation in ms
+        :param corners: The coordinates of the corners to illuminate
+        """
+        timing = time / 5
+        self.set_position(corners[0])
+        await asyncio.sleep(0.5 + timing)
+        self.set_position(corners[1])
+        await asyncio.sleep(0.5 + timing)
+        self.set_position(corners[3])
+        await asyncio.sleep(0.5 + timing)
+        self.set_position(corners[2])
+        await asyncio.sleep(0.5 + timing)
+        self.set_position(corners[0])
+        await asyncio.sleep(timing)

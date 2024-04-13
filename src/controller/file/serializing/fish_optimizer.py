@@ -12,11 +12,32 @@ class SceneOptimizerModule:
     This class contains information required for performing post-processing on a single scene.
     """
 
-    def __init__(self):
+    def __init__(self, replacing_enabled: bool):
+        self._replacing_enabled = replacing_enabled
         self.channel_override_dict: dict[str, str] = dict()
         self.channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []
         self._global_time_input_filter: Filter | None = None
         self._main_brightness_input_filter: Filter | None = None
+        self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = dict()
+        self._first_universe_filter_id: dict[str, str] = dict()
+
+    def _substitute_universe_filter(self, f: Filter):
+        """
+        This method reads the filter configuration and updates the universe filter creation dict.
+        Entries are lists of tuple (input_channel_name, corresponding_universe_channel, foreign_output_channel_to_map).
+
+        :param f: The universe filter to read.
+        """
+        universe_id = f.filter_configurations['universe']
+        fde = self._universe_filter_dict.get(universe_id)
+        if not fde:
+            fde = []
+            self._universe_filter_dict[universe_id] = fde
+        for k, v in f.filter_configurations.items():
+            if k == 'universe':
+                continue
+            fde.append((str(f.filter_id) + "__" + str(k), v, str(f.channel_links.get(k))))
+        self._first_universe_filter_id[universe_id] = f.filter_id
 
     def filter_was_substituted(self, f: Filter) -> bool:
         """
@@ -28,6 +49,7 @@ class SceneOptimizerModule:
         :returns: true if the filter was scheduled to be substituted and therefore should not be emplaced for transmission to fish.
         """
         match f.filter_type:
+            # TODO expand this by also reduce constants with the same value
             case FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT:
                 if self._global_time_input_filter is not None:
                     self._fill_ch_sub_dict(f, self._global_time_input_filter)
@@ -42,6 +64,9 @@ class SceneOptimizerModule:
                 else:
                     self._main_brightness_input_filter = f
                     return False
+            case FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT:
+                self._substitute_universe_filter(f)
+                return True
             case _:
                 return False
 
@@ -63,3 +88,31 @@ class SceneOptimizerModule:
         for output_channel_name in f.out_data_types.keys():
             self.channel_override_dict["{}:{}".format(f.filter_id, output_channel_name)] = "{}:{}".format(
                 substitution_filter.filter_id, output_channel_name)
+
+    def _emplace_universe_filters(self, scene_element: ElementTree.Element):
+        for universe, channel_list in self._universe_filter_dict.items():
+            filter_config_parameters = {'universe': universe}
+            channel_mappings = dict()
+            for channel_mapping in channel_list:
+                filter_input_channel, universe_channel, foreign_filter_output_channel = channel_mapping
+                filter_config_parameters[filter_input_channel] = universe_channel
+                channel_mappings[filter_input_channel] = foreign_filter_output_channel
+            filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
+                "id": str(self._first_universe_filter_id[universe]),
+                "type": str(FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT),
+                "pos": "0,0"
+            })
+            for param_k, param_v in filter_config_parameters.items():
+                ElementTree.SubElement(filter_element, "filterConfiguration", {
+                    'name': str(param_k),
+                    'value': str(param_v)
+                })
+            for input_ch, output_ch in channel_mappings.items():
+                ElementTree.SubElement(filter_element, "channellink", attrib={
+                    "input_channel_id": str(input_ch),
+                    "output_channel_id": str(output_ch)
+                })
+        pass
+
+    def wrap_up(self, scene_element: ElementTree.Element):
+        self._emplace_universe_filters(scene_element)
