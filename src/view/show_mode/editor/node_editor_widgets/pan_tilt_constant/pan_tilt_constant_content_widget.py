@@ -3,7 +3,7 @@ from PySide6.QtGui import QPainter, QColor, QPixmap, QMouseEvent
 from PySide6.QtWidgets import QLabel, QWidget, QSizePolicy
 from qasync import QtGui
 
-from controller.cli.joystick_enum import JoystickList
+from controller.joystick.joystick_enum import JoystickList
 from model import Broadcaster
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 

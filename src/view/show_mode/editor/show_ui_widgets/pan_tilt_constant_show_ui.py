@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QVBoxLayout, QCheckBox, QWidget, QLabel, QComboBox
+from PySide6.QtWidgets import QVBoxLayout, QWidget, QLabel, QComboBox
 
-from controller.cli.joystick_handling import JoystickHandler
+from controller.joystick.joystick_handling import JoystickHandler
 from model import UIWidget, UIPage, Filter
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \

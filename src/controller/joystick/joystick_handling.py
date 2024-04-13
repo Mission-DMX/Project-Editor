@@ -4,7 +4,7 @@
 import pyjoystick
 from pyjoystick.sdl2 import run_event_loop, Key
 
-from controller.cli.joystick_enum import JoystickList
+from controller.joystick.joystick_enum import JoystickList
 from model import Broadcaster
 
 

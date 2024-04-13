@@ -4,7 +4,7 @@ from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
 
-from controller.cli.joystick_enum import JoystickList
+from controller.joystick.joystick_enum import JoystickList
 from proto.RealTimeControl_pb2 import RunMode
 from proto.FilterMode_pb2 import update_parameter
 
