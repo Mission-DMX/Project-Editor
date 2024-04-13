@@ -65,9 +65,6 @@ class FilterSettingsItem(QGraphicsSvgItem):
             self.dialog.show()
 
 
-<<<<<<< HEAD
-def check_if_filter_has_special_widget(filter_: Filter):
-=======
 def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfigWidget | None:
     """
     This method checks if there is a special configuration widget implemented for the given filter.
@@ -77,7 +74,6 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
     :param filter_: The filter to check for.
     :returns: The instantiates settings widget or None.
     """
->>>>>>> main
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
     elif filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
