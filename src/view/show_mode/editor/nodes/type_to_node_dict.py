@@ -12,6 +12,7 @@ from view.show_mode.editor.nodes.impl.universenode import UniverseNode
 from view.show_mode.editor.nodes.impl.scripting import *
 
 type_to_node: dict[int, str] = {
+        FilterTypeEnumeration.VFILTER_POSITION_CONSTANT: PanTiltConstant.nodeName,
         FilterTypeEnumeration.VFILTER_CUES: CueListNode.nodeName,
         FilterTypeEnumeration.VFILTER_AUTOTRACKER: AutoTrackerNode.nodeName,
         FilterTypeEnumeration.VFILTER_EFFECTSSTACK: EffectsStackNode.nodeName,

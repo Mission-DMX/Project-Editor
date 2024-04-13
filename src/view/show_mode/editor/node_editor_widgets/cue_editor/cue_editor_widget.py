@@ -8,7 +8,7 @@ from controller.file.transmitting_to_fish import transmit_to_fish
 from model import DataType, Filter
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, DeskColumn
-from model.virtual_filters import CueFilter
+from model.virtual_filters.cue_vfilter import CueFilter
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, \
     StateDouble, \
