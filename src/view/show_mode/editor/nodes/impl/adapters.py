@@ -1,7 +1,7 @@
 # coding=utf-8
 """Adapters and converters filter nodes"""
-from model import DataType
-from model.filter import FilterTypeEnumeration
+from model import DataType, Scene
+from model.filter import FilterTypeEnumeration, Filter
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
