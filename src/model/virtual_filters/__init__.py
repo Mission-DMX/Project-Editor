@@ -1,6 +1,7 @@
 from model import Scene
 from model.filter import Filter, VirtualFilter, FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
+from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from model.virtual_filters.cue_vfilter import CueFilter
 
 
@@ -12,9 +13,8 @@ def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id:
             # TODO return virtual filter that instantiates a preset (as described in issue #48)
             pass
         case FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
-            # TODO implement pan/tilt position constant (that can be configured using the joystick as well as a
-            #  two dimensional state diagram
-            pass
+            return PanTiltConstantFilter(scene, filter_id, pos=pos)
+
         case FilterTypeEnumeration.VFILTER_CUES:
             return CueFilter(scene, filter_id, pos=pos)
             pass

@@ -14,6 +14,7 @@ from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 
 logger = getLogger(__name__)
 
@@ -79,6 +80,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return CueEditor(f=filter_)
     elif filter_.filter_type == 50:
         return LuaScriptConfigWidget()
+    elif filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
+        return PanTiltConstantWidget(filter_)
     elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):
         return AutotrackerSettingsWidget()
     else:
