@@ -1,6 +1,6 @@
 from PySide6.QtCore import QTimer
 
-from controller.cli.joystick_enum import JoystickList
+from controller.joystick.joystick_enum import JoystickList
 from model import Scene, Broadcaster
 from model.filter import VirtualFilter, Filter, DataType, FilterTypeEnumeration
 

@@ -1,8 +1,6 @@
-from PySide6.QtCore import QEvent
 from PySide6.QtWidgets import QWidget, QCheckBox, QVBoxLayout
 
-from controller.cli.joystick_enum import JoystickList
-from model import Scene, BoardConfiguration
+from controller.joystick.joystick_enum import JoystickList
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \
