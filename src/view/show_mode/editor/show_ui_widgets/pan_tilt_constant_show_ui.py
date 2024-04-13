@@ -56,7 +56,6 @@ class PanTiltConstantControlUIWidget(UIWidget):
 
 
     def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
-        # Todo: Do we need this?
         return QLabel()
 
     def insert_action(self):
