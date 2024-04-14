@@ -143,7 +143,7 @@ class AutoTrackerNode(FilterNode):
                 self.addOutput("Tracker{}_Tilt".format(i))
                 associated_dt = f.get_data_type_of_tracker(i)
                 self.filter.out_data_types["Tracker{}_Pan".format(i)] = associated_dt
-                self.filter.out_data_types["Tracker{}_Tilt".format(i)] = Dassociated_dt
+                self.filter.out_data_types["Tracker{}_Tilt".format(i)] = associated_dt
                 self.filter.out_data_types[min_brightness_filter_id] = DataType.DT_DOUBLE
 
     def update_node_after_settings_changed(self):
