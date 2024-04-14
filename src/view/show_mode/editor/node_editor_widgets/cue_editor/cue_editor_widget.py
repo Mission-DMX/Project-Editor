@@ -128,6 +128,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         cue_settings_container_layout.addWidget(self._default_cue_combo_box)
 
         cue_list_and_current_settings_container.setLayout(cue_list_and_current_settings_container_layout)
+        cue_list_and_current_settings_container.setMaximumHeight(350)
         top_layout.addWidget(cue_list_and_current_settings_container)
 
         self.configure_toolbar(top_layout)
@@ -135,6 +136,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         v_scroll_area = QScrollArea()
         v_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         v_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        v_scroll_area.horizontalScrollBar().setEnabled(False)
+        v_scroll_area.setWidgetResizable(True)
         # TODO link up/down button events to scrolling of v_scroll_area
         self._timeline_container = TimelineContainer(v_scroll_area)
         self._timeline_container.setEnabled(False)
