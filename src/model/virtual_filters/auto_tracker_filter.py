@@ -64,7 +64,7 @@ class AutoTrackerFilter(VirtualFilter):
         return "{}__min_brightness".format(self.filter_id)
 
     def get_data_type_of_tracker(self, tracker_id: int | _MHControlInstance) -> DataType:
-        if is_instance(tracker_id, _MHControlInstance):
+        if isinstance(tracker_id, _MHControlInstance):
             return tracker_id.datatype
         else:
             return self._control_filters[tracker_id].datatype
