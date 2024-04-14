@@ -63,13 +63,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._cues[i].from_string_definition(cue_definitions[i])
             self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 1).setText(self._cues[i].duration_formatted)
             self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 2).setText(str(self._cues[i].end_action))
-            self._default_cue_combo_box.addItem("Cue {}".format(i))
+            #self._default_cue_combo_box.addItem("Cue {}".format(i))
         if len(self._cues) > 0:
             self.select_cue(0)
             self._default_cue_combo_box.setEnabled(True)
         if parameters.get("default_cue"):
             try:
-                di = int(parameters.get("default_cue"))
+                di = int(parameters.get("default_cue")) + 1
             except:
                 di = 0
             self._default_cue_combo_box.setCurrentIndex(di)
