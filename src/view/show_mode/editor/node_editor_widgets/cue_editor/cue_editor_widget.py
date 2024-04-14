@@ -213,7 +213,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar.addAction(toolbar_remove_channel_action)
         toolbar.addSeparator()
         transition_type_select_widget = QComboBox(self._parent_widget)
-        transition_type_select_widget.addItems(["edg", "lin", "sig", "e_i", "e_o"])
+        transition_type_select_widget.addItems(["lin", "edg", "sig", "e_i", "e_o"])
         transition_type_select_widget.currentTextChanged.connect(self._transition_type_changed)
         toolbar.addWidget(transition_type_select_widget)
         self._gui_rec_action = QAction("Record keyframe", self._parent_widget)
