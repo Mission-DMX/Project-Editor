@@ -1,3 +1,4 @@
+# coding=utf-8
 import cv2
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (

@@ -368,6 +368,8 @@ class BankSet:
         self._gui_controlled = gui_controlled
         self._broadcaster.view_leave_colum_select.connect(self._leaf_selected)
         self.id_update_listeners: list[BanksetIDUpdateListener] = []
+        # The variable below should be set to true if the topology of the bank set was changed by the GUI
+        self.update_required = False
 
     def __del__(self):
         if self.pushed_to_fish:
@@ -417,6 +419,7 @@ class BankSet:
         self.pushed_to_fish = True
         if self._gui_controlled:
             self.push_messages_now()
+        self.update_required = False
         return True
 
     @property

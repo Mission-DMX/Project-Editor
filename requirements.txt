@@ -10,6 +10,7 @@ pylint
 pylint_protobuf
 requests
 numpy
+ruamel.yaml
 # Dependencies for automatic tracking
 opencv-python>=4.8.0
 qimage2ndarray>=1.10
@@ -17,3 +18,4 @@ aiortc>=1.5
 qasync>=0.26
 onnxruntime-gpu>=1.16.1
 onnxruntime-openvino
+pyjoystick

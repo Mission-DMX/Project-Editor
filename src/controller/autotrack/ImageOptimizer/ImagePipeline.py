@@ -1,3 +1,6 @@
+from numpy import ndarray
+
+import controller.autotrack.Detection.VideoProcessor
 from controller.autotrack.ImageOptimizer.BasicOptimizer import (
     ResizeOptimizer,
     CropOptimizer,
@@ -34,7 +37,7 @@ class ImagePipeline:
         """
         self.steps.append(step)
 
-    def optimize(self, image):
+    def optimize(self, image) -> ndarray:
         """
         Apply all optimization steps in the pipeline to an input image.
 
@@ -45,7 +48,7 @@ class ImagePipeline:
             numpy.ndarray: The optimized image.
         """
         for step in self.steps:
-            image = step.process(image)
+            image = controller.autotrack.Detection.VideoPreprocessor.process(image)
         return image
 
     def setup(self):
@@ -67,6 +70,7 @@ class ImagePipeline:
         # self.add_step(ResizeOptimizer("Resize 512x512", size=(512, 512)))
         # self.add_step(CropOptimizer("Crop 100:100, 100:100", (0, 1920, 0, 1080)))
         # self.add_step(GrayScaleOptimizer("Grayscale"))
+        pass
 
     def setup_preview(self):
         """
@@ -75,3 +79,4 @@ class ImagePipeline:
         You can uncomment and customize the optimization steps for preview based on your requirements.
         """
         # self.add_step(GrayScaleOptimizer("Grayscale"))
+        pass

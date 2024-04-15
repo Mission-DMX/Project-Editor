@@ -1,10 +1,13 @@
 from PySide6.QtCore import QTimer, QThread
 from PySide6.QtWidgets import QMainWindow, QMenuBar, QTabWidget, QWidget
 
+from model.virtual_filters import AutoTrackerFilter
+from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
 from view.show_mode.editor.show_ui_widgets.autotracker.CropTab import CropTab
+from view.show_mode.editor.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
 #from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.editor.show_ui_widgets.autotracker.LightSetupTab import LightSetupTab
@@ -25,19 +28,27 @@ class AutoTrackDialogWidget(QTabWidget):
         - `register_tabs(tab_widget, tabs)`: Register tabs in the main window.
     """
 
-    def __init__(self):
+    def __init__(self, f: AutoTrackerFilter, provided_instance: InstanceManager | None):
         """
         Initialize the main application window.
         """
         super().__init__()
-        self.instance = InstanceManager()
-        tabs = [
-            SourcesTab("Sources", self.instance),
-            SettingsTab("Settings", self.instance),
-            CropTab("Crop", self.instance),
-            #DetectionTab("Detect", self.instance),
-            LightSetupTab("Lights", self.instance),
-        ]
+        if not provided_instance:
+            # We're constructing the player widget
+            self.instance = InstanceManager(f)
+            tabs = [
+                DetectionTab("Detect", self.instance)
+            ]
+        else:
+            self.instance = provided_instance
+            tabs = [
+                SourcesTab("Sources", self.instance),
+                SettingsTab("Settings", self.instance),
+                CropTab("Crop", self.instance),
+                DetectionTab("Detect", self.instance),
+                LightSetupTab("Lights", self.instance),
+            ]
+
         self.register_tabs(self, tabs)
 
         # Set the tab widget as the central widget
@@ -56,6 +67,7 @@ class AutoTrackDialogWidget(QTabWidget):
             tab = self.widget(i)
             if isinstance(tab, GuiTab):
                 tab.video_update()
+        # TODO call generate_update_content from ui widget
 
     def tab_changed(self, index):
         """

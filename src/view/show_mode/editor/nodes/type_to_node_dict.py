@@ -12,6 +12,8 @@ from view.show_mode.editor.nodes.impl.universenode import UniverseNode
 from view.show_mode.editor.nodes.impl.scripting import *
 
 type_to_node: dict[int, str] = {
+        FilterTypeEnumeration.VFILTER_POSITION_CONSTANT: PanTiltConstant.nodeName,
+        FilterTypeEnumeration.VFILTER_CUES: CueListNode.nodeName,
         FilterTypeEnumeration.VFILTER_AUTOTRACKER: AutoTrackerNode.nodeName,
         FilterTypeEnumeration.FILTER_CONSTANT_8BIT: Constants8BitNode.nodeName,
         FilterTypeEnumeration.FILTER_CONSTANT_16_BIT: Constants16BitNode.nodeName,
@@ -52,12 +54,12 @@ type_to_node: dict[int, str] = {
         36: TimeSwitchOffDelay8BitNode.nodeName,
         37: TimeSwitchOffDelay16BitNode.nodeName,
         38: TimeSwitchOffDelayFloatNode.nodeName,
-        39: FaderRawNode.nodeName,
-        40: FaderHSINode.nodeName,
+        FilterTypeEnumeration.FILTER_FADER_RAW: FaderRawNode.nodeName,
+        FilterTypeEnumeration.FILTER_FADER_HSI: FaderHSINode.nodeName,
         41: FaderHSIANode.nodeName,
         42: FaderHSIUNode.nodeName,
         43: FaderHSIAUNode.nodeName,
-        44: CueListNode.nodeName,
+        FilterTypeEnumeration.FILTER_TYPE_CUES: CueListNode.nodeName,
         45: Shift8BitNode.nodeName,
         46: Shift16BitNode.nodeName,
         47: ShiftFloatNode.nodeName,
@@ -65,7 +67,7 @@ type_to_node: dict[int, str] = {
         FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS: FaderMainBrightness.nodeName,
         50: LuaFilterNode.nodeName,
         51: Adapter8bitToFloat.nodeName,
-        52: Adapter16bitToFloat.nodeName,
+        FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT: Adapter16bitToFloat.nodeName,
         53: AdapterColorToFloatsNode.nodeName,
         54: AdapterFloatTo8BitRange.nodeName,
         55: AdapterFloatTo16BitRange.nodeName,

@@ -73,8 +73,23 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_ADAPTER_16BIT_TO_BOOL = 9
     FILTER_ARITHMETICS_MAC = 10
     FILTER_UNIVERSE_OUTPUT = 11
+    FILTER_ADAPTER_COLOR_TO_RGB = 15
+    FILTER_ADAPTER_COLOR_TO_RGBW = 16
+    FILTER_ADAPTER_COLOR_TO_RGBWA = 17
+    FILTER_ADAPTER_FLOAT_TO_COLOR = 18
     FILTER_TYPE_TIME_INPUT = 32
+    FILTER_FADER_RAW = 39
+    FILTER_FADER_HSI = 40
+    FILTER_TYPE_CUES = 44
     FILTER_TYPE_MAIN_BRIGHTNESS = 49
+    FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT = 51
+    FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT = 52
+    FILTER_ADAPTER_COLOR_TO_FLOAT = 53
+    FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE = 54
+    FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE = 55
+    FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE = 56
+    FILTER_ADAPTER_DUAL_BYTE_TO_16BIT = 57
+    FILTER_ADAPTER_8BIT_TO_16BIT = 58
 
 
 class Filter:
@@ -180,7 +195,6 @@ class VirtualFilter(Filter, abc.ABC):
     instantiate_filters method will be called in order to provide a representation that fish can understand in the event
     that the show will be serialized for fish.
     """
-
     def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, filter_type, pos)
 

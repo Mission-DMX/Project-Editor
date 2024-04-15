@@ -1,6 +1,7 @@
-from controller.autotrack.Helpers.Settings import Settings
+from controller.autotrack.Helpers.AutoTrackerSettings import AutoTrackerSettings
 from controller.autotrack.ImageOptimizer.ImagePipeline import ImagePipeline
 from controller.autotrack.Sources.Loader import Loader
+from model.virtual_filters import AutoTrackerFilter
 
 
 class InstanceManager:
@@ -11,15 +12,18 @@ class InstanceManager:
         loader (Loader): The data loader instance.
         preview_pipeline (ImagePipeline): The image preview pipeline instance.
         processing_pipeline (ImagePipeline): The image processing pipeline instance.
-        _settings (Settings): The application settings.
+        _settings (AutoTrackerSettings): The application settings.
     """
 
     # TODO refactor to Properties
-    def __init__(self):
+    def __init__(self, f: AutoTrackerFilter):
         self.loader = None
-        self.preview_pipeline = None
-        self.processing_pipeline = None
-        self._settings = Settings()
+        self.preview_pipeline: ImagePipeline | None = None
+        self.processing_pipeline: ImagePipeline | None = None
+        self._settings = AutoTrackerSettings(f)
+        self.filter: AutoTrackerFilter = f
+        for setting, value in f.filter_configurations.items():
+            self._settings.settings[setting] = value
 
     def set_loader(self, loader: Loader):
         self.loader = loader
@@ -33,7 +37,7 @@ class InstanceManager:
     def get_loader(self):
         return self.loader
 
-    def get_preview_pipeline(self):
+    def get_preview_pipeline(self) -> ImagePipeline:
         prp = self.preview_pipeline
         if prp is None:
             prp = ImagePipeline()
@@ -41,7 +45,7 @@ class InstanceManager:
             self.set_preview_pipeline(prp)
         return self.preview_pipeline
 
-    def get_processing_pipeline(self):
+    def get_processing_pipeline(self) -> ImagePipeline:
         prp = self.processing_pipeline
         if prp is None:
             prp = ImagePipeline()
@@ -55,6 +59,6 @@ class InstanceManager:
         Get the application settings.
 
         Returns:
-            Settings: The application settings.
+            AutoTrackerSettings: The application settings.
         """
         return self._settings
