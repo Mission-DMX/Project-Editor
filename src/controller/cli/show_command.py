@@ -14,8 +14,10 @@ class ShowCommand(Command):
         commit_parser = subparsers.add_parser("commit", help="Commit the current show file state")
         commit_parser.add_argument("--select-default-scene", help="Load the default scene after commit",
                                    action='store_true')
-        load_parser = subparsers.add_parser("load")
-        load_parser.add_argument("filename")
+        load_parser = subparsers.add_parser("load", help="Load a show file")
+        load_parser.add_argument("filename", help="The location of the .show file.")
+        scene_parser = subparsers.add_parser("select-scene", help="select a specific scene in the running show.")
+        scene_parser.add_argument("scene-id", help="The scene id to select", type=int)
 
     def execute(self, args) -> bool:
         match args.showaction:
@@ -23,4 +25,11 @@ class ShowCommand(Command):
                 return transmit_to_fish(self.context.show, goto_default_scene=args.select_default_scene)
             case "load":
                 return read_document(args.filename, self.context.show)
+            case "select-scene":
+                scene = self.context.show.get_scene_by_id(args.scene_id)
+                if not scene:
+                    self.context.print("ERROR: scene not found.")
+                    return False
+                self.context.show.broadcaster.change_active_scene.emit(scene)
+                return True
 
