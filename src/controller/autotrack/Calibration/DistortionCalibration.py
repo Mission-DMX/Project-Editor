@@ -1,3 +1,5 @@
+# coding=utf-8
+""" perform camera calibration"""
 import cv2
 
 from controller.autotrack.Calibration.Calibration import Calibration

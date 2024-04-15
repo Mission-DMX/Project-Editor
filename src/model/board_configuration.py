@@ -164,6 +164,7 @@ class BoardConfiguration:
 
     @property
     def file_path(self) -> str:
+        """ path to the showfile"""
         return self._show_file_path
 
     @file_path.setter
@@ -172,6 +173,7 @@ class BoardConfiguration:
         self._broadcaster.show_file_path_changed.emit(new_path)
 
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
+        """Returns the scene by her id"""
         looked_up_position = self._scenes_index.get(scene_id)
         if looked_up_position is not None:
             if looked_up_position < len(self._scenes):

@@ -132,10 +132,14 @@ class RawDeskColumn(DeskColumn):
         msg.raw_data.fader = self._fader_position
         msg.raw_data.rotary_position = self._encoder_position
         msg.raw_data.meter_leds = 0
-        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE \
+            if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE \
+            if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE \
+            if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE \
+            if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
         msg.lower_display_text = self._secondary_text_line
         return msg
 
@@ -253,6 +257,16 @@ class FaderBank:
     def __init__(self):
         self.columns: list[DeskColumn] = []
         self._pushed_to_device = False
+
+    @property
+    def pushed_to_device(self) -> bool:
+        """property for pushed_to_device"""
+        return self._pushed_to_device
+
+    @pushed_to_device.setter
+    def pushed_to_device(self, pushed: bool) -> None:
+        """setter for pushed_to_device"""
+        self._pushed_to_device = pushed
 
     def add_column(self, col: DeskColumn):
         """add a new colum"""
