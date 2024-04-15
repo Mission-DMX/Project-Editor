@@ -35,13 +35,13 @@ def main():
     setup_logging()
     logging.basicConfig(level="INFO")
 
-    cli_server = RemoteCLIServer()
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
     JoystickHandler()
     widget = MainWindow()
     widget.showMaximized()
 
+    cli_server = RemoteCLIServer(widget.show_config)
     return_code = app.exec()
     cli_server.stop()
     sys.exit(return_code)
