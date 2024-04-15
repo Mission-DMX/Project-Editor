@@ -1,3 +1,5 @@
+* text=auto
+
 # Source files
 # ============
 *.pxd    text diff=python
