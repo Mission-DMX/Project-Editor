@@ -1,5 +1,6 @@
 from controller.cli.cli_context import CLIContext
 from controller.cli.command import Command
+from controller.file.read import read_document
 from controller.file.transmitting_to_fish import transmit_to_fish
 
 
@@ -9,11 +10,17 @@ class ShowCommand(Command):
         super().__init__(context, "showctl")
 
     def configure_parser(self, parser):
-        parser.add_argument("action", help="What should be done with the current show file?")
+        subparsers = parser.add_subparsers(help="showctrl commands", dest="showaction")
+        commit_parser = subparsers.add_parser("commit", help="Commit the current show file state")
+        commit_parser.add_argument("--select-default-scene", help="Load the default scene after commit",
+                                   action='store_true')
+        load_parser = subparsers.add_parser("load")
+        load_parser.add_argument("filename")
 
     def execute(self, args) -> bool:
-        match args.action:
+        match args.showaction:
             case "commit":
-                # TODO we should introduce a parameter to control if we'd like to switch to the default scene
-                return transmit_to_fish(self.context.show)
+                return transmit_to_fish(self.context.show, goto_default_scene=args.select_default_scene)
+            case "load":
+                return read_document(args.filename, self.context.show)
 
