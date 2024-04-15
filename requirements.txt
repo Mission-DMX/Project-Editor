@@ -1,4 +1,6 @@
 # Base dependencies
+black
+flake8
 PySide6
 pyqtgraph
 protobuf

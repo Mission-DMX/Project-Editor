@@ -76,11 +76,14 @@ class ColorHSI:
         return int(rr * 255), int(rg * 255), int(rb * 255)
 
     def to_qt_color(self) -> QColor:
+        """return color in qt color format"""
         return QColor.fromHslF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)
 
     def copy(self) -> "ColorHSI":
+        """return a copy of The color object"""
         return ColorHSI(self._hue, self._saturation, self._intensity)
 
     @classmethod
     def from_qt_color(cls, c: QColor):
+        """ generate a HSI color from qt color format"""
         return ColorHSI(c.hslHueF() * 360.0, c.hslSaturationF(), c.lightnessF())

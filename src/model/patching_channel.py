@@ -76,4 +76,5 @@ class PatchingChannel(QtCore.QObject):
         self.updated_color.emit(self._color)
 
     def fixture_channel_id(self) -> int:
+        """ id form the fixture channel """
         return self._fixture_channel

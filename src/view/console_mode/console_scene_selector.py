@@ -134,7 +134,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
                     name = line.split("\n")[0]
                     name = name.split("#")[1]
                     line = line.split("#")[0]
-                    logger.info(f"Add scene {name}")
+                    logger.info("Add scene %s", name)
                     if scene_index == len(self._scenes):
                         self._add_scene(name)
 

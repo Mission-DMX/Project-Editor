@@ -23,7 +23,7 @@ class ChannelWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, channel: Channel, patching_channel: PatchingChannel, parent=None, bank_set: BankSet = None,
-                 bank_set_control_list=[]):
+                 bank_set_control_list=None):
         """Inits the ChannelWidget.
 
         Args:
@@ -31,6 +31,8 @@ class ChannelWidget(QtWidgets.QWidget):
             parent: Qt parent of the widget
         """
         super().__init__(parent=parent)
+        if bank_set_control_list is None:
+            bank_set_control_list = []
         self._channel: Channel = channel
         self._patching_channel = patching_channel
 

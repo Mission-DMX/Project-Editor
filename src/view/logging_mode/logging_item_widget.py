@@ -1,10 +1,9 @@
 # coding=utf-8
 """Definition of a single logging item in logging Widget"""
 from PySide6 import QtWidgets
-
 from PySide6.QtWidgets import QTreeWidgetItem
 
-from .search import Search, Operation
+from .search import Operation, Search
 
 
 class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
