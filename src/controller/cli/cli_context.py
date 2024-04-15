@@ -10,6 +10,8 @@ from controller.cli.select_command import SelectCommand
 
 from typing import TYPE_CHECKING
 
+from controller.cli.show_command import ShowCommand
+
 if TYPE_CHECKING:
     from model import BoardConfiguration, Scene
     from model.control_desk import DeskColumn, BankSet
@@ -22,6 +24,7 @@ class CLIContext:
                 ListCommand(self),
                 SelectCommand(self),
                 BankSetCommand(self),
+                ShowCommand(self),
                 HelpCommand(self)
         ]
         self.selected_bank: BankSet | None = None
