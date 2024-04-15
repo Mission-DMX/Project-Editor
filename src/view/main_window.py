@@ -48,14 +48,14 @@ class MainWindow(QtWidgets.QMainWindow):
             (
                 "Editor Mode",
                 MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
-                lambda: self._broadcaster.view_to_file_editor.emit(),
+                self._broadcaster.view_to_file_editor.emit,
             ),
             (
                 "Show Mode",
                 MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
-                lambda: self._broadcaster.view_to_show_player.emit(),
+                self._broadcaster.view_to_show_player.emit,
             ),
-            ("Patch", MainWidget(PatchMode(self), self), lambda: self._broadcaster.view_to_patch_menu.emit()),
+            ("Patch", MainWidget(PatchMode(self), self), self._broadcaster.view_to_patch_menu.emit),
             ("Debug", debug_console, lambda: self._to_widget(4)),
         ]
 
@@ -205,7 +205,7 @@ class MainWindow(QtWidgets.QMainWindow):
             active_bank_set.set_active_column(column)
             if isinstance(column, ColorDeskColumn):
                 column_dialog = ColumnDialog(column)
-                column_dialog.finished.connect(lambda: BankSet.push_messages_now())
+                column_dialog.finished.connect(BankSet.push_messages_now)
                 column_dialog.show()
 
     def _is_column_dialog(self):
