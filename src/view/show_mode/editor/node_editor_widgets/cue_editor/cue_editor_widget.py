@@ -228,6 +228,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         transition_type_select_widget = QComboBox(self._parent_widget)
         transition_type_select_widget.addItems(["lin", "edg", "sig", "e_i", "e_o"])
         transition_type_select_widget.currentTextChanged.connect(self._transition_type_changed)
+        self._timeline_container.transition_type = "lin"
         toolbar.addWidget(transition_type_select_widget)
         self._gui_rec_action = QAction("Record keyframe", self._parent_widget)
         self._gui_rec_action.setStatusTip("Insert a Keyframe at the current cursor position")
