@@ -38,6 +38,8 @@ class HelpCommand(Command):
             case "bank_set":
                 self.context.print("Modify the selected bank set. Usage: bank_set commit/create <description>"
                                    "/add --bank <bank> --col-type <type>/info/activate")
+            case "showctl":
+                self.context.print("Manage the general show file and execution on fish")
             case _:
                 self.context.print("ERROR: The requested help topic '{}' is unknown.".format(args.topic))
                 self.context.print("The following topics are known:")
