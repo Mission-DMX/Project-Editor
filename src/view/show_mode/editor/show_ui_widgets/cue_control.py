@@ -50,7 +50,10 @@ class CueControlUIWidget(UIWidget):
 
     @property
     def configuration(self) -> dict[str, str]:
-        return {"cue_names": ";".join(["{}:{}".format(cue[0], cue[1]) for cue in self._cues])}
+        cue_name_config = ";".join(["{}:{}".format(cue[0], cue[1]) for cue in self._cues])
+        self._filter.filter_configurations["cue_names"] = cue_name_config
+        # FIXME we do not need this redundancy. The whole point is to provide the cue editor with the names
+        return {"cue_names": cue_name_config}
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._command_chain

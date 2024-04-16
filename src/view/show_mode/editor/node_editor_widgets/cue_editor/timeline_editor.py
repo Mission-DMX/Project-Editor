@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QScrollArea
 
 from model import DataType
@@ -19,7 +19,10 @@ class TimelineContainer(QWidget):
         timeline_scroll_area = QScrollArea()
         timeline_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         timeline_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        timeline_scroll_area.verticalScrollBar().setEnabled(False)
+        timeline_scroll_area.setWidgetResizable(True)
         self._keyframes_panel = TimelineContentWidget(parent)
+        self._keyframes_panel.size_changed.connect(self._keyframe_panel_size_changed)
         timeline_scroll_area.setWidget(self._keyframes_panel)  # timeline_scroll_area
         # TODO link jogwheel events to scrolling of cursor (and thus timeline_scroll_area)
         layout.addWidget(timeline_scroll_area)
@@ -127,4 +130,11 @@ class TimelineContainer(QWidget):
     @staticmethod
     def clear_display():
         set_seven_seg_display_content(" " * 12, True)
+
+    def _keyframe_panel_size_changed(self, new_size: QPoint):
+        if new_size.y() != self._channel_label.height():
+            self._channel_label.setMinimumHeight(max(new_size.y(), self._channel_label.height()))
+            self._channel_label.update()
+        self.setMinimumHeight(max(self.height(), self.minimumHeight(),
+                                  self._channel_label.height(), self._channel_label.minimumHeight()))
 

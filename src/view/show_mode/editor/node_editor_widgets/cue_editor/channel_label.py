@@ -1,13 +1,13 @@
 import PySide6
 from PySide6 import QtGui
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPainter, QColor
-from PySide6.QtWidgets import QLabel, QWidget
+from PySide6.QtGui import QPainter, QColor, QPaintEvent
+from PySide6.QtWidgets import QWidget
 
 from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
 
-class TimelineChannelLabel(QLabel):
+class TimelineChannelLabel(QWidget):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent=parent)
         self._names: list[str] = []
@@ -27,25 +27,17 @@ class TimelineChannelLabel(QLabel):
         self._types.clear()
         self._update()
 
-    def resizeEvent(self, event: PySide6.QtGui.QResizeEvent) -> None:
-        super().resizeEvent(event)
-        canvas = QtGui.QPixmap(event.size().width(), event.size().height())
-        canvas.fill(Qt.black)
-        self.setPixmap(canvas)
-        self._repaint()
-
     def _update(self):
         required_height = 2*20 + CHANNEL_DISPLAY_HEIGHT * len(self._names) + self.sb_offset
         self.setMinimumHeight(required_height)
-        self._repaint()
+        self.update()
 
-    def _repaint(self):
-        canvas = self.pixmap()
-        w = canvas.width()
-        h = canvas.height()
+    def paintEvent(self, ev: QPaintEvent):
+        w = self.width()
+        h = self.height()
         if w == 0 or h == 0:
             return
-        painter = QtGui.QPainter(canvas)
+        painter = QtGui.QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillRect(0, 0, w, h, QColor.fromRgb(0x3A, 0x3A, 0x3A))
         i = 0
@@ -59,4 +51,3 @@ class TimelineChannelLabel(QLabel):
                 painter.drawText(10, 60 + i * CHANNEL_DISPLAY_HEIGHT, self._types[i])
             i += 1
         painter.end()
-        self.setPixmap(canvas)
