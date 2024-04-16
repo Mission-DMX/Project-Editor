@@ -41,7 +41,7 @@ def main():
     widget = MainWindow()
     widget.showMaximized()
 
-    cli_server = RemoteCLIServer(widget.show_config)
+    cli_server = RemoteCLIServer(widget.show_configuration)
     return_code = app.exec()
     cli_server.stop()
     sys.exit(return_code)

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class Command(ABC):
     """Client Commands"""
 
-    def __init__(self, cli_context: CLIContext, name: str):
+    def __init__(self, cli_context: "CLIContext", name: str):
         self.context = cli_context
         self._name = name
         self._help_text = ""

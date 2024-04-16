@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class CLIContext:
     """Context of the Client"""
-    def __init__(self, show: BoardConfiguration, exit_available: bool = False):
+    def __init__(self, show: "BoardConfiguration", exit_available: bool = False):
         self.commands = [
                 ListCommand(self),
                 SelectCommand(self),
@@ -27,9 +27,9 @@ class CLIContext:
                 ShowCommand(self),
                 HelpCommand(self)
         ]
-        self.selected_bank: BankSet | None = None
-        self.selected_column: DeskColumn | None = None
-        self.selected_scene: Scene | None = None
+        self.selected_bank: "BankSet" | None = None
+        self.selected_column: "DeskColumn" | None = None
+        self.selected_scene: "Scene" | None = None
         self.show = show
         self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")

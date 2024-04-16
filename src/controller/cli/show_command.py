@@ -1,4 +1,7 @@
-from controller.cli.cli_context import CLIContext
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from controller.cli.cli_context import CLIContext
 from controller.cli.command import Command
 from controller.file.read import read_document
 from controller.file.transmitting_to_fish import transmit_to_fish
@@ -6,7 +9,7 @@ from controller.file.transmitting_to_fish import transmit_to_fish
 
 class ShowCommand(Command):
 
-    def __init__(self, context: CLIContext):
+    def __init__(self, context: "CLIContext"):
         super().__init__(context, "showctl")
 
     def configure_parser(self, parser):
