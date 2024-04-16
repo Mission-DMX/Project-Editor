@@ -43,6 +43,6 @@ class HelpCommand(Command):
             case _:
                 self.context.print("ERROR: The requested help topic '{}' is unknown.".format(args.topic))
                 self.context.print("The following topics are known:")
-                self.context.print("\tselect\tlist\tpatch\tbank_set")
+                self.context.print("\tselect\tlist\tpatch\tbank_set\tshowctl")
                 return False
         return True
