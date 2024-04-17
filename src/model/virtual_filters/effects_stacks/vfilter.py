@@ -11,6 +11,7 @@ class EffectsStack(VirtualFilter):
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_EFFECTSSTACK, pos=pos)
         self.sockets: list[EffectsSocket] = []
+        self.deserialize()
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         # We only need to resolve ports for explicitly configured outputs
@@ -132,6 +133,12 @@ class EffectsStack(VirtualFilter):
                 constant_filter.initial_parameters["value"] = "0.0"
                 filter_list.append(constant_filter)
 
-    # TODO implement serialization of effect stack vfilter
+    def filter_configurations(self) -> dict[str, str]:
+        # TODO implement serialization of effect stack vfilter
+        return {}
+
+    def deserialize(self):
+        pass  # TODO implement deserialization of filter
+
     # TODO implement optional output ports of effect stack vfilter
 
