@@ -21,6 +21,11 @@ class ShowCommand(Command):
         load_parser.add_argument("filename", help="The location of the .show file.")
         scene_parser = subparsers.add_parser("select-scene", help="select a specific scene in the running show.", exit_on_error=False)
         scene_parser.add_argument("scene-id", help="The scene id to select", type=int)
+        filtercmd_parser = subparsers.add_parser("filtermsg", help="Send an update to a filter", exit_on_error=False)
+        filtercmd_parser.add_argument("scene-id", help="The scene id to select", type=int)
+        filtercmd_parser.add_argument("filter-id", help="The filter to update")
+        filtercmd_parser.add_argument("parameter-key", help="The key of the parameter to update")
+        filtercmd_parser.add_argument("parameter-value", help="The value to transmit")
 
     def execute(self, args) -> bool:
         match args.showaction:
