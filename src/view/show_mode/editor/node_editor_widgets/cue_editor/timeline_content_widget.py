@@ -1,6 +1,6 @@
 import PySide6
 from PySide6 import QtGui
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
@@ -15,6 +15,9 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import C
 
 
 class TimelineContentWidget(QWidget):
+
+    size_changed = Signal(QPoint)
+
     def __init__(self, parent: QWidget = None):
         super().__init__(parent=parent)
         self._last_keyframe_end_point = 0  # Defines the length of the Cue in seconds
@@ -136,11 +139,7 @@ class TimelineContentWidget(QWidget):
 
     def resizeEvent(self, event: PySide6.QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
-        # TODO I don't think we'll need this anymore
-        #canvas = QtGui.QPixmap(event.size().width(), event.size().height())
-        #canvas.fill(Qt.black)
-        #self.setPixmap(canvas)
-        #self.repaint()
+        self.size_changed.emit(QPoint(self.width(), self.height()))
 
     def compute_resize(self):
         p = self.parent()

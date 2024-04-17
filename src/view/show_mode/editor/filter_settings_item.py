@@ -4,7 +4,7 @@ from logging import getLogger
 
 import PySide6
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDialog, QFormLayout
+from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDialog, QFormLayout, QVBoxLayout
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 from model import Universe
@@ -108,15 +108,16 @@ class FilterSettingsDialog(QDialog):
         # Filter Configurations
         # fc1_name: fc1_value_editable
         # fc2_name: fc2_value_editable
-        layout = QFormLayout()
         # Function pointer to handle patching information. Only set, when filter is universe filter
 
         self._special_widget = check_if_filter_has_special_widget(self.filter)
         if self._special_widget:
+            layout = QVBoxLayout()
             self._special_widget.configuration = self.filter.filter_configurations
             self._special_widget.parameters = self.filter.initial_parameters
-            layout.addRow("", self._special_widget.get_widget())
+            layout.addWidget(self._special_widget.get_widget())
         else:
+            layout = QFormLayout()
             add_patch_info: bool = self.filter.filter_type == 11
             # Only add initial parameters section if present
             if len(self.filter.initial_parameters) > 0:
@@ -139,7 +140,10 @@ class FilterSettingsDialog(QDialog):
         self._ok_button = QPushButton("Ok")
         self._ok_button.pressed.connect(self.ok_button_pressed)
 
-        layout.addRow("", self._ok_button)
+        if isinstance(layout, QFormLayout):
+            layout.addRow("", self._ok_button)
+        else:
+            layout.addWidget(self._ok_button)
 
         self.setLayout(layout)
 

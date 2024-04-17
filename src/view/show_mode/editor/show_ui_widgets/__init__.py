@@ -20,7 +20,7 @@ def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage", configuration: d
         # case 39 | 40 | 41 | 42 | 43:
         #    # Faders: Update Color
         #    return None
-        case 44:
+        case FilterTypeEnumeration.FILTER_TYPE_CUES | FilterTypeEnumeration.VFILTER_CUES:
             # Cue Editor: play, pause, cue select, etc.
             return CueControlUIWidget(filter_.filter_id, parent_page, filter_, selected_configuration)
         case FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
