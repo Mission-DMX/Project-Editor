@@ -9,6 +9,7 @@ from threading import Thread
 
 from controller.cli.cli_context import CLIContext
 from model import BoardConfiguration
+from network import NetworkManager
 
 logger = Logger(__file__)
 
@@ -97,7 +98,8 @@ class SocketStreamReader:
 
 class Connection:
     """This class handles a remote CLI connection."""
-    def __init__(self, client: socket, address: str, connection_map: dict, show: BoardConfiguration):
+    def __init__(self, client: socket, address: str, connection_map: dict, show: BoardConfiguration,
+                 networkmgr: "NetworkManager"):
         """This constructor takes over the connection.
         
         Arguments:
@@ -105,7 +107,7 @@ class Connection:
         address -- the remote address of the connected client.
         connection_map -- the map handling all active connections.
         """
-        self.context = CLIContext(show, exit_available=True)
+        self.context = CLIContext(show, networkmgr, exit_available=True)
         self._client = client
         self._remote_address = address
         self._connection_map = connection_map
@@ -147,7 +149,7 @@ class Connection:
 class RemoteCLIServer:
     """This class handles the control port. Only IPv6 connections are supported."""
     
-    def __init__(self, show: BoardConfiguration, interface: str = "::", port: int = 2929):
+    def __init__(self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::", port: int = 2929):
         """Construct the handler and opens a port.
         
         Arguments:
@@ -161,6 +163,7 @@ class RemoteCLIServer:
         self._server_socket: socket = None
         self._connected_clients = dict()
         self._show = show
+        self._network_manager = netmgr
         self._server_thread.start()
 
     def run(self):
@@ -174,7 +177,8 @@ class RemoteCLIServer:
                     client, remote_address = s.accept()
                     remote_address = str(remote_address)
                     self._connected_clients[remote_address] = Connection(client, remote_address,
-                                                                         self._connected_clients, self._show)
+                                                                         self._connected_clients,
+                                                                         self._show, self._network_manager)
                 except socket_error:
                     pass
             logger.info("Exiting CLI server thread")

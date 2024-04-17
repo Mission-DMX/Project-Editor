@@ -41,7 +41,7 @@ def main():
     widget = MainWindow()
     widget.showMaximized()
 
-    cli_server = RemoteCLIServer(widget.show_configuration)
+    cli_server = RemoteCLIServer(widget.show_configuration, widget._fish_connector)
     return_code = app.exec()
     cli_server.stop()
     sys.exit(return_code)

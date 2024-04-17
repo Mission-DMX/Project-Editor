@@ -15,11 +15,12 @@ from controller.cli.show_command import ShowCommand
 if TYPE_CHECKING:
     from model import BoardConfiguration, Scene
     from model.control_desk import DeskColumn, BankSet
+    from network import NetworkManager
 
 
 class CLIContext:
     """Context of the Client"""
-    def __init__(self, show: "BoardConfiguration", exit_available: bool = False):
+    def __init__(self, show: "BoardConfiguration", networkmgr: "NetworkManager", exit_available: bool = False):
         self.commands = [
                 ListCommand(self),
                 SelectCommand(self),
@@ -31,6 +32,7 @@ class CLIContext:
         self.selected_column: "DeskColumn" | None = None
         self.selected_scene: "Scene" | None = None
         self.show = show
+        self.networkmgr: "NetworkManager" = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
         for c in self.commands:
