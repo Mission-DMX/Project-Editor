@@ -1,6 +1,7 @@
 # coding=utf-8
 """Debug filter nodes"""
 from model import DataType
+from model.filter import FilterTypeEnumeration
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -20,7 +21,7 @@ class Debug8BitNode(DebugNode):
     nodeName = '8 Bit Filter (Debug)'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=4, name=name)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_DEBUG_OUTPUT_8BIT, name=name)
         self.filter.in_data_types["value"] = DataType.DT_8_BIT
 
 
@@ -31,7 +32,7 @@ class Debug16BitNode(DebugNode):
     nodeName = '16 Bit Filter (Debug)'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=5, name=name)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_DEBUG_OUTPUT_16BIT, name=name)
         self.filter.in_data_types["value"] = DataType.DT_16_BIT
 
 
@@ -42,7 +43,7 @@ class DebugFloatNode(DebugNode):
     nodeName = 'Float Filter (Debug)'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=6, name=name)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_DEBUG_OUTPUT_FLOAT, name=name)
         self.filter.in_data_types["value"] = DataType.DT_DOUBLE
 
 
@@ -53,5 +54,5 @@ class DebugColorNode(DebugNode):
     nodeName = 'Color Filter (Debug)'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=7, name=name)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_DEBUG_OUTPUT_COLOR, name=name)
         self.filter.in_data_types["value"] = DataType.DT_COLOR
