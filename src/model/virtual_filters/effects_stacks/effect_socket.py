@@ -1,3 +1,4 @@
+import json
 from logging import getLogger
 
 from PySide6.QtWidgets import QWidget
@@ -88,3 +89,15 @@ class EffectsSocket:
             return True
         # TODO implement other slot types
         return False
+
+    @property
+    def is_group(self) -> bool:
+        return False  # TODO implement
+
+    def serialize(self) -> str:
+        data = {}
+        if self._color_socket is not None:
+            data["color"] = self._color_socket.serialize()
+        if self._segment_socket is not None:
+            data["segments"] = self._segment_socket.serialize()
+        return json.dumps(data)

@@ -13,6 +13,9 @@ class GenericEffect(Effect, ABC):
 
 class FunctionEffect(GenericEffect):
 
+    def serialize(self) -> dict:
+        return {"type": "generic.function"}
+
     EFFECT_ID = "effect.animation.trigonometric_function"
 
     def get_serializable_effect_name(self) -> str:

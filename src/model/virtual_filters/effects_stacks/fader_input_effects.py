@@ -6,6 +6,9 @@ from model.virtual_filters.effects_stacks.color_effects import ColorEffect
 
 class ColorInputEffect(ColorEffect):
 
+    def serialize(self) -> dict:
+        return {"type": "color.InputFader"}
+
     def get_configuration_widget(self) -> QWidget | None:
         pass
 

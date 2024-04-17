@@ -190,3 +190,8 @@ class Effect(ABC):
 
     def set_parent_filter(self, f: "EffectsStack"):
         self._parent_filter = f
+
+    @abstractmethod
+    def serialize(self) -> dict:
+        """This method needs to return a dictionary, containing at least the 'type' key indicating the effect."""
+        return dict()

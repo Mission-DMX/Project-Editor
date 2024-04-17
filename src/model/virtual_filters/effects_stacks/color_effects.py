@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from PySide6.QtWidgets import QWidget
 
@@ -89,3 +89,10 @@ class ColorWheelEffect(ColorEffect):
     @max_hue.setter
     def max_hue(self, new_value: float):
         self._max_hue = new_value % 360.0
+
+    def serialize(self) -> dict:
+        return {"type": "color.ColorWheel",
+                "number-of-fragments": self._number_of_fragments,
+                "min-hue": self._min_hue,
+                "max-hue": self._max_hue,
+                "default-speed": self._default_speed}

@@ -134,8 +134,12 @@ class EffectsStack(VirtualFilter):
                 filter_list.append(constant_filter)
 
     def filter_configurations(self) -> dict[str, str]:
-        # TODO implement serialization of effect stack vfilter
-        return {}
+        d = {}
+        for s in self.sockets:
+            name = "{}/{}/{}".format('g' if s.is_group else 'f', s.target.parent_universe,
+                                     s.target.channels[0].address)
+            d[name] = s.serialize()
+        return d
 
     def deserialize(self):
         pass  # TODO implement deserialization of filter
