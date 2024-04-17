@@ -22,6 +22,10 @@ class TrigonometricNode(FilterNode):
         self.filter.in_data_types["phase"] = DataType.DT_DOUBLE
         self.filter.in_data_types["offset"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+        self.filter.default_values['factor_outer'] = '1'
+        self.filter.default_values['factor_inner'] = '0.1'
+        self.filter.default_values['phase'] = '0'
+        self.filter.default_values['offset'] = '0'
 
 
 class TrigonometricSineNode(TrigonometricNode):
@@ -62,6 +66,7 @@ class TrigonometricArcSinNode(TrigonometricNode):
 
     def __init__(self, model, name):
         super().__init__(model, filter_type=22, name=name)
+        self.filter.default_values['value_in'] = '1'
 
 
 class TrigonometricArcCosNode(TrigonometricNode):
@@ -72,6 +77,7 @@ class TrigonometricArcCosNode(TrigonometricNode):
 
     def __init__(self, model, name):
         super().__init__(model, filter_type=23, name=name)
+        self.filter.default_values['value_in'] = '1'
 
 
 class TrigonometricArcTanNode(TrigonometricNode):
@@ -82,3 +88,4 @@ class TrigonometricArcTanNode(TrigonometricNode):
 
     def __init__(self, model, name):
         super().__init__(model, filter_type=24, name=name)
+        self.filter.default_values['value_in'] = '1'

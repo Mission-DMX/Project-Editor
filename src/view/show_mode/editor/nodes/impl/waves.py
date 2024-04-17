@@ -14,6 +14,7 @@ class SquareWaveNode(_WaveNode):
         super().__init__(model=model, filter_type=25, name=name)
         self.addInput("length")
         self.filter.in_data_types["length"] = DataType.DT_DOUBLE
+        self.filter.default_values['length'] = '180'
 
 
 class TriangleWaveNode(_WaveNode):

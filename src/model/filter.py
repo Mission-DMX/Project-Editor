@@ -107,6 +107,7 @@ class Filter:
         self._filter_configurations: dict[str, str] = {}
         self._gui_update_keys: dict[str, DataType | list[str]] = {}
         self._in_data_types: dict[str, DataType] = {}
+        self._default_values: dict[str, str] = {}
         self._out_data_types: dict[str, DataType] = {}
 
     @property
@@ -160,6 +161,11 @@ class Filter:
     def in_data_types(self) -> dict[str, DataType]:
         """Dict mapping input channel names to their data types."""
         return self._in_data_types
+
+    @property
+    def default_values(self) -> dict[str, str]:
+        """Dict mapping input channel names to their data types."""
+        return self._default_values
 
     @property
     def out_data_types(self) -> dict[str, DataType]:

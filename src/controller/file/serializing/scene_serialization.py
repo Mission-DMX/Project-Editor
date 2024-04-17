@@ -58,7 +58,7 @@ def generate_scene_xml_description(assemble_for_fish_loading, root, scene, pn: P
     for filter_ in scene.filters:
         _create_filter_element_for_fish(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading, om=om)
         pn.current_step_number += 1
-    create_channel_mappings_for_filter_set_for_fish(om, scene_element)
+    create_channel_mappings_for_filter_set_for_fish(assemble_for_fish_loading, om, scene_element)
     if not assemble_for_fish_loading:
         for page in scene.pages:
             _add_filter_page_to_element(scene_element, page, None)

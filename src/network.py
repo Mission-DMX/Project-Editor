@@ -275,6 +275,7 @@ class NetworkManager(QtCore.QObject):
         """
         msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'),
                                                   goto_default_scene=goto_default_scene)
+        print(ET.tostring(xml, encoding='utf8', method='xml'))
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
     def enter_scene(self, scene: "Scene") -> None:
