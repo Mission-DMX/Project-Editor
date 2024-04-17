@@ -1,3 +1,4 @@
+# coding=utf-8
 from model import Filter
 from model.patching_channel import PatchingChannel
 from model.scene import FilterPage
