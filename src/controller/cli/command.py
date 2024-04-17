@@ -4,6 +4,9 @@ from abc import ABC, abstractmethod
 
 
 from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QObject
+
 if TYPE_CHECKING:
     from .cli_context import CLIContext
 

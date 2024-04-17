@@ -43,11 +43,12 @@ class ShowCommand(Command):
                 if not scene:
                     self.context.print("ERROR: scene not found.")
                     return False
-                self.context.show.broadcaster.change_active_scene.emit(scene)
+                self.context.networkmgr.enter_scene(scene, push_direct=False)
                 return True
             case "filtermsg":
                 self.context.networkmgr.send_gui_update_to_fish(args.sceneid, args.filterid,
-                                                                args.parameterkey, args.parametervalue)
+                                                                args.parameterkey, args.parametervalue,
+                                                                enque=True)
                 return True
         return False
 
