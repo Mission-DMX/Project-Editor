@@ -1,4 +1,5 @@
 from model import Filter, DataType
+from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -25,7 +26,7 @@ class LuaFilterNode(FilterNode):
     nodeName = 'Lua'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=50, name=name, allowAddOutput=True, terminals={})
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_SCRIPTING_LUA, name=name, allowAddOutput=True, terminals={})
         self._setup_terminals()
 
     def update_node_after_settings_changed(self):
