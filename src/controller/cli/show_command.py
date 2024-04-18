@@ -1,3 +1,10 @@
+# coding=utf-8
+
+"""
+This file contains a command implementation to control show files, including their running state on fish.
+:author: Doralitze
+"""
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,10 +17,20 @@ from controller.file.transmitting_to_fish import transmit_to_fish
 
 class ShowCommand(Command):
 
+    """
+    Control the loadding, saving and transmitting of a show file. Furthermore, this command selection enables the
+    control over a running show on fish.
+    """
+
     def __init__(self, context: "CLIContext"):
         super().__init__(context, "showctl")
 
     def configure_parser(self, parser):
+        """
+        Configure the sub parser of the CLI.
+
+        :param parser: The argparse subparser to configure.
+        """
         subparsers = parser.add_subparsers(help="showctl commands", dest="showaction")
         commit_parser: "ArgumentParser" = subparsers.add_parser("commit", help="Commit the current show file state",
                                                                 exit_on_error=False)
