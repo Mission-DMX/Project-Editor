@@ -3,10 +3,18 @@
 from abc import ABC, abstractmethod
 
 
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QObject
+
+if TYPE_CHECKING:
+    from .cli_context import CLIContext
+
+
 class Command(ABC):
     """Client Commands"""
 
-    def __init__(self, cli_context, name: str):
+    def __init__(self, cli_context: "CLIContext", name: str):
         self.context = cli_context
         self._name = name
         self._help_text = ""

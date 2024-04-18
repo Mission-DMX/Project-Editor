@@ -244,3 +244,7 @@ class MainWindow(QtWidgets.QMainWindow):
             from view.misc.about_window import AboutWindow
             self._about_window = AboutWindow(self)
         self._about_window.show()
+
+    @property
+    def show_configuration(self):
+        return self._board_configuration

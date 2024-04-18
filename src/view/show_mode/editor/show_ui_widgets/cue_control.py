@@ -6,6 +6,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 
 from model.file_support.cue_state import CueState
 
+
 class CueControlUIWidget(UIWidget):
 
     def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
