@@ -96,3 +96,4 @@ class ColorWheelEffect(ColorEffect):
                 "min-hue": self._min_hue,
                 "max-hue": self._max_hue,
                 "default-speed": self._default_speed}
+        # TODO implement recurse into slots if they're occupied
