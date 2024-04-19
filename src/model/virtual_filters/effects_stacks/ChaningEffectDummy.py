@@ -7,6 +7,13 @@ from model.virtual_filters.effects_stacks.effect import EffectType, Effect
 class ChainingEffectDummy(Effect):
 
     """The purpose of this class is to provide an Effect if required during rendering"""
+
+    def serialize(self) -> dict:
+        return dict()
+
+    def deserialize(self, data: dict[str, str]):
+        pass
+
     # TODO: we need to replace the two dummy classes with something more suited
 
     def get_configuration_widget(self) -> QWidget | None:

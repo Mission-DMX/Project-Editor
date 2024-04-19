@@ -152,7 +152,7 @@ class UsedFixture:
             if "amber" in f.fixture_channel.lower():
                 self.amber_segments.append(f)
                 found_color_hints += 1
-            if found_color_hints > 0:
+            if found_color_hints > 1:
                 logger.warning("Associated %s/%s:%s in multiple color segments.",
                                str(self.parent_universe), str(f.address), f.fixture_channel)
         # TODO discussion: integration of fixture groups would be most straight forward if they would be represented as

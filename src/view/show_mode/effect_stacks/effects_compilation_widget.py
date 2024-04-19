@@ -65,28 +65,30 @@ class EffectCompilationWidget(QWidget):
         if w == 0 or h == 0:
             return
         p = QtGui.QPainter(self)
-        p.setFont(self.font())
-        area_to_update = redraw_hint.rect()
-        p.setRenderHint(QPainter.Antialiasing)
-        color_dark_gray = QColor.fromRgb(0x3A, 0x3A, 0x3A)
-        p.fillRect(0, 0, w, h, color_dark_gray)
-        self._slot_counter.clear()
-        self._config_button_positions.clear()
+        try:
+            p.setFont(self.font())
+            area_to_update = redraw_hint.rect()
+            p.setRenderHint(QPainter.Antialiasing)
+            color_dark_gray = QColor.fromRgb(0x3A, 0x3A, 0x3A)
+            p.fillRect(0, 0, w, h, color_dark_gray)
+            self._slot_counter.clear()
+            self._config_button_positions.clear()
 
-        if len(self._filter.sockets) > 0:
-            y = 15
-            for s in self._filter.sockets:
-                y = self._paint_socket_stack(s, p, w, h, y, area_to_update)
-            if y > self.minimumHeight():
-                self.setMinimumHeight(y + 15)
-        else:
-            p.setBrush(QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC)))
-            no_socket_hint_str = "There are no sockets defined. Please add some from the available fixtures."
-            fm: QFontMetrics = p.fontMetrics()
-            text_width = fm.horizontalAdvance(no_socket_hint_str)
-            text_height = fm.height()
-            p.drawText(int(w / 2 - text_width / 2), int(h / 2 - text_height / 2), no_socket_hint_str)
-
+            if len(self._filter.sockets) > 0:
+                y = 15
+                for s in self._filter.sockets:
+                    y = self._paint_socket_stack(s, p, w, h, y, area_to_update)
+                if y > self.minimumHeight():
+                    self.setMinimumHeight(y + 15)
+            else:
+                p.setBrush(QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC)))
+                no_socket_hint_str = "There are no sockets defined. Please add some from the available fixtures."
+                fm: QFontMetrics = p.fontMetrics()
+                text_width = fm.horizontalAdvance(no_socket_hint_str)
+                text_height = fm.height()
+                p.drawText(int(w / 2 - text_width / 2), int(h / 2 - text_height / 2), no_socket_hint_str)
+        except Exception as e:
+            print(e)
         p.end()
         self._painting_active = False
 

@@ -105,4 +105,5 @@ class EffectsStackEditor(QWidget):
         w.setParent(self._effect_config_widget_container)
         w.setVisible(True)
         self._effect_config_widget_container.setWidget(w)
-        old_w.setVisible(False)
+        if old_w is not None:
+            old_w.setVisible(False)
