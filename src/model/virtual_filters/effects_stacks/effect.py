@@ -134,7 +134,7 @@ class Effect(ABC):
 
     def get_human_filter_name(self) -> str:
         """This method is used in order to retrieve a human-readable name of the effect"""
-        return self.__name__
+        return self.__class__.__name__
 
     @abstractmethod
     def get_serializable_effect_name(self) -> str:
