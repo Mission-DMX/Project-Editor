@@ -118,8 +118,16 @@ class UsedFixture:
         self.amber_segments: list["PatchingChannel"] = []
         self.uv_segments: list["PatchingChannel"] = []
 
+    def update_segments(self):
+        self.red_segments.clear()
+        self.blue_segments.clear()
+        self.green_segments.clear()
+        self.white_segments.clear()
+        self.amber_segments.clear()
+        self.uv_segments.clear()
+
         for f in self.channels:
-            # TODO looking at the fixture data this might work well for led based color changes.
+            # TODO looking at the fixture data this might work well for led based color changers.
             # Yet, we need to support color wheels as well.
             if not isinstance(f.fixture_channel, str):
                 continue

@@ -39,11 +39,13 @@ class PatchingChannel(QtCore.QObject):
         if self._fixture:
             try:
                 self._fixture.channels.remove(self)
+                self._fixture.update_segments()
             except ValueError:
                 pass
         self._fixture = fixture
         if self._fixture:
             self._fixture.channels.append(self)
+            self._fixture.update_segments()
         self.updated_fixture.emit()
 
     @property

@@ -21,6 +21,9 @@ class _EffectDummy_Socket(Effect):
         logger.error("A dummy effect should never be serialized. Something went wrong.")
         return {}
 
+    def deserialize(self, data: dict[str, str]):
+        pass
+
     def get_configuration_widget(self) -> QWidget | None:
         return None
 
