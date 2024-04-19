@@ -20,7 +20,7 @@ logger = logging.getLogger("Project-Editor")
 def setup_logging():
     """read logging from config file and set up the logger"""
     config_file = pathlib.Path("../configs/logging.json")
-    with open(config_file) as f_in:
+    with open(config_file, encoding="utf-8") as f_in:
         config = json.load(f_in)
 
     logging.config.dictConfig(config)
@@ -35,13 +35,13 @@ def main():
     setup_logging()
     logging.basicConfig(level="INFO")
 
-    cli_server = RemoteCLIServer()
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
     JoystickHandler()
     widget = MainWindow()
     widget.showMaximized()
 
+    cli_server = RemoteCLIServer(widget.show_configuration, widget._fish_connector)
     return_code = app.exec()
     cli_server.stop()
     sys.exit(return_code)

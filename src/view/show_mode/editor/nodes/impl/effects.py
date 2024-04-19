@@ -98,28 +98,28 @@ class Shift8BitNode(ShiftFilterNode):
     nodeName = "filter_shift_8bit"
 
     def __init__(self, model, name):
-        super().__init__(model, name, 45, DataType.DT_8_BIT)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT, DataType.DT_8_BIT)
 
 
 class Shift16BitNode(ShiftFilterNode):
     nodeName = "filter_shift_16bit"
 
     def __init__(self, model, name):
-        super().__init__(model, name, 46, DataType.DT_16_BIT)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT, DataType.DT_16_BIT)
 
 
 class ShiftFloatNode(ShiftFilterNode):
     nodeName = "filter_shift_float"
 
     def __init__(self, model, name):
-        super().__init__(model, name, 47, DataType.DT_DOUBLE)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT, DataType.DT_DOUBLE)
 
 
 class ShiftColorNode(ShiftFilterNode):
     nodeName = "filter_shift_color"
 
     def __init__(self, model, name):
-        super().__init__(model, name, 48, DataType.DT_COLOR)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR, DataType.DT_COLOR)
 
 
 class AutoTrackerNode(FilterNode):
@@ -136,14 +136,14 @@ class AutoTrackerNode(FilterNode):
             trackers = f.number_of_concurrent_trackers + 1
             if trackers < len(self.terminals) / 3:
                 self.terminals.clear()
-            for i in range(len(self.terminals) / 3, trackers, 1):
+            for i in range(int(len(self.terminals) / 3), trackers, 1):
                 min_brightness_filter_id: str = f.get_min_brightness_filter_id(i)
                 self.addOutput(min_brightness_filter_id)
                 self.addOutput("Tracker{}_Pan".format(i))
                 self.addOutput("Tracker{}_Tilt".format(i))
                 associated_dt = f.get_data_type_of_tracker(i)
                 self.filter.out_data_types["Tracker{}_Pan".format(i)] = associated_dt
-                self.filter.out_data_types["Tracker{}_Tilt".format(i)] = Dassociated_dt
+                self.filter.out_data_types["Tracker{}_Tilt".format(i)] = associated_dt
                 self.filter.out_data_types[min_brightness_filter_id] = DataType.DT_DOUBLE
 
     def update_node_after_settings_changed(self):

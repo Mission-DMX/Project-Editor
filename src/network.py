@@ -4,6 +4,7 @@
 import math
 import queue
 import xml.etree.ElementTree as ET
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -20,18 +21,18 @@ import x_touch
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
-from logging import getLogger
 
 if TYPE_CHECKING:
-    from view.main_window import MainWindow
-    from controller.cli import FaderBank
     from model import Scene
+    from model.control_desk import FaderBank
+    from view.main_window import MainWindow
 
 logger = getLogger(__name__)
 
 
 class NetworkManager(QtCore.QObject):
     """Handles connection to Fish."""
+
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
 
@@ -57,11 +58,14 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.send_universe_value.connect(self._send_universe)
         self._broadcaster.change_run_mode.connect(self.update_state)
         self._broadcaster.view_to_file_editor.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
+        )
         self._broadcaster.view_to_show_player.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER))
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
+        )
         self._broadcaster.view_to_console_mode.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT))
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT)
+        )
 
         self._broadcaster.load_show_file.connect(self.load_show_file)
         self._broadcaster.change_active_scene.connect(self.enter_scene)
@@ -102,8 +106,9 @@ class NetworkManager(QtCore.QObject):
             universe: universe to send to fish
         """
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.DirectMode_pb2.dmx_output(universe_id=universe.universe_proto.id,
-                                                  channel_data=[channel.value for channel in universe.channels])
+            msg = proto.DirectMode_pb2.dmx_output(
+                universe_id=universe.universe_proto.id, channel_data=[channel.value for channel in universe.channels]
+            )
 
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
@@ -116,10 +121,11 @@ class NetworkManager(QtCore.QObject):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
-    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
+    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType, push_direct: bool = True) -> None:
         """send message in correct format to fish"""
         self._enqueue_message(msg, msg_type)
-        self.push_messages()
+        if push_direct:
+            self.push_messages()
 
     def push_messages(self):
         """This method pushes the queued messages to fish. This method needs to be called from the GUI thread."""
@@ -141,12 +147,14 @@ class NetworkManager(QtCore.QObject):
             msg_type = varint.decode_bytes(msg_bytes[0])
             msg_len = varint.decode_bytes(msg_bytes[1:])
             start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
-            msg = msg_bytes[start:start + msg_len]
+            msg = msg_bytes[start: start + msg_len]
             msg_bytes = msg_bytes[start + msg_len:]
             try:
                 match msg_type:
                     case proto.MessageTypes_pb2.MSGT_CURRENT_STATE_UPDATE:
-                        message: proto.RealTimeControl_pb2.current_state_update = proto.RealTimeControl_pb2.current_state_update()
+                        message: proto.RealTimeControl_pb2.current_state_update = (
+                            proto.RealTimeControl_pb2.current_state_update()
+                        )
                         message.ParseFromString(bytes(msg))
                         self._fish_update(message)
                     case proto.MessageTypes_pb2.MSGT_LOG_MESSAGE:
@@ -165,6 +173,7 @@ class NetworkManager(QtCore.QObject):
                         message: proto.Console_pb2.fader_column = proto.Console_pb2.fader_column()
                         message.ParseFromString(bytes(msg))
                         from model.control_desk import BankSet
+
                         BankSet.handle_column_update_message(message)
                     case proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER:
                         message: proto.FilterMode_pb2.update_parameter = proto.FilterMode_pb2.update_parameter()
@@ -244,16 +253,17 @@ class NetworkManager(QtCore.QObject):
     def _handle_desk_update(self, msg: proto.Console_pb2.desk_update):
         # TODO handle update of selected column
         if msg.jogwheel_change_since_last_update < 0:
-            for i in range(msg.jogwheel_change_since_last_update * -1):
+            for _ in range(msg.jogwheel_change_since_last_update * -1):
                 self._broadcaster.jogwheel_rotated_left.emit()
         else:
-            for i in range(msg.jogwheel_change_since_last_update):
+            for _ in range(msg.jogwheel_change_since_last_update):
                 self._broadcaster.jogwheel_rotated_right.emit()
         if msg.selected_column_id:
             self._broadcaster.select_column_id.emit(msg.selected_column_id)
         else:
             self._broadcaster.view_leave_colum_select.emit()
-        pass
+        if not self._message_queue.empty():
+            self.push_messages()
 
     def _on_state_changed(self) -> None:
         """Starts or stops to send messages if the connection state changes."""
@@ -273,11 +283,12 @@ class NetworkManager(QtCore.QObject):
             xml: xml data to be sent
             goto_default_scene: scene to be loaded
         """
-        msg = proto.FilterMode_pb2.load_show_file(show_data=ET.tostring(xml, encoding='utf8', method='xml'),
-                                                  goto_default_scene=goto_default_scene)
+        msg = proto.FilterMode_pb2.load_show_file(
+            show_data=ET.tostring(xml, encoding="utf8", method="xml"), goto_default_scene=goto_default_scene
+        )
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
-    def enter_scene(self, scene: "Scene") -> None:
+    def enter_scene(self, scene: "Scene", push_direct: bool = True) -> None:
         """
         Tells fish to load a specific scene
         Args:
@@ -289,11 +300,12 @@ class NetworkManager(QtCore.QObject):
         else:
             print("No Bankset.")
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene.scene_id)
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE, push_direct=push_direct)
         if scene.linked_bankset:
             for f in scene.filters:
                 if f.filter_type in [39, 40, 41, 42, 43]:
-                    self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id))
+                    self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id),
+                                                 enque=not push_direct)
 
     def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode.ValueType):
         """Changes fish's run mode
@@ -317,9 +329,9 @@ class NetworkManager(QtCore.QObject):
             add_set_msg.banks.extend([bank_definition])
         self._enqueue_message(add_set_msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ADD_FADER_BANK_SET)
         for bank in fader_banks:
-            bank._pushed_to_device = True
+            bank.pushed_to_device = True
             for col in bank.columns:
-                col._pushed_to_device = True
+                col.pushed_to_device = True
 
     def send_update_column_message(self, msg: proto.Console_pb2.fader_column):
         """send message to update a column to fish"""
@@ -336,7 +348,8 @@ class NetworkManager(QtCore.QObject):
         else:
             self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
 
-    def send_gui_update_to_fish(self, scene_id: int, filter_id: str, key: str, value: str):
+    def send_gui_update_to_fish(self, scene_id: int, filter_id: str, key: str, value: str, enque: bool = False):
+        """send current state of GUI to fish"""
         if not self.is_running:
             return
         msg = proto.FilterMode_pb2.update_parameter()
@@ -344,7 +357,10 @@ class NetworkManager(QtCore.QObject):
         msg.scene_id = scene_id
         msg.parameter_key = key
         msg.parameter_value = value
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+        if enque:
+            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+        else:
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
 
 
 def on_error(error) -> None:

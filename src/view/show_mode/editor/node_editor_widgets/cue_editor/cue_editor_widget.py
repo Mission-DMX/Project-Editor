@@ -48,12 +48,22 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._global_restart_on_end = parameters.get("end_handling") == "start_again"
         mapping_str = parameters.get("mapping")
         cuelist_definition_str = parameters.get("cuelist")
+        cue_names = parameters.get("cue_names")
+        if cue_names:
+            cue_names = cue_names.split(';')
+        else:
+            cue_names = []
+        tmp_dict = {}
+        for e in cue_names:
+            e = e.split(':')
+            tmp_dict[int(e[1])] = e[0]
+        cue_names = tmp_dict
         if cuelist_definition_str:
             cue_definitions = cuelist_definition_str.split("$")
         else:
             return
         for i in range(len(cue_definitions)):
-            self.add_cue(Cue())
+            self.add_cue(Cue(), name=cue_names.get(i))
         if mapping_str:
             for channel_dev in mapping_str.split(';'):
                 splitted_channel_dev = channel_dev.split(':')
@@ -63,13 +73,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._cues[i].from_string_definition(cue_definitions[i])
             self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 1).setText(self._cues[i].duration_formatted)
             self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 2).setText(str(self._cues[i].end_action))
-            self._default_cue_combo_box.addItem("Cue {}".format(i))
+            #self._default_cue_combo_box.addItem("Cue {}".format(i))
         if len(self._cues) > 0:
             self.select_cue(0)
             self._default_cue_combo_box.setEnabled(True)
         if parameters.get("default_cue"):
             try:
-                di = int(parameters.get("default_cue"))
+                di = int(parameters.get("default_cue")) + 1
             except:
                 di = 0
             self._default_cue_combo_box.setCurrentIndex(di)
@@ -128,6 +138,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         cue_settings_container_layout.addWidget(self._default_cue_combo_box)
 
         cue_list_and_current_settings_container.setLayout(cue_list_and_current_settings_container_layout)
+        cue_list_and_current_settings_container.setMaximumHeight(350)
         top_layout.addWidget(cue_list_and_current_settings_container)
 
         self.configure_toolbar(top_layout)
@@ -135,9 +146,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         v_scroll_area = QScrollArea()
         v_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         v_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        v_scroll_area.horizontalScrollBar().setEnabled(False)
+        v_scroll_area.setWidgetResizable(True)
         # TODO link up/down button events to scrolling of v_scroll_area
         self._timeline_container = TimelineContainer(v_scroll_area)
         self._timeline_container.setEnabled(False)
+        self._timeline_container.transition_type = "lin"
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
@@ -213,7 +227,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar.addAction(toolbar_remove_channel_action)
         toolbar.addSeparator()
         transition_type_select_widget = QComboBox(self._parent_widget)
-        transition_type_select_widget.addItems(["edg", "lin", "sig", "e_i", "e_o"])
+        transition_type_select_widget.addItems(["lin", "edg", "sig", "e_i", "e_o"])
         transition_type_select_widget.currentTextChanged.connect(self._transition_type_changed)
         toolbar.addWidget(transition_type_select_widget)
         self._gui_rec_action = QAction("Record keyframe", self._parent_widget)
@@ -227,11 +241,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def _set_zoom_label_text(self):
         self._zoom_label.setText(self._timeline_container.format_zoom())
 
-    def add_cue(self, cue: Cue) -> int:
+    def add_cue(self, cue: Cue, name: str | None = None) -> int:
         target_row = self._cue_list_widget.rowCount()
         self._cue_list_widget.setRowCount(target_row + 1)
         num_item = QTableWidgetItem(1)
-        cue_name = str(target_row + 1)
+        cue_name = "{} '{}'".format(target_row + 1, name)
         num_item.setText(cue_name)
         self._cue_list_widget.setItem(target_row, 0, num_item)
         duration_item = QTableWidgetItem(1)

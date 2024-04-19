@@ -1,3 +1,5 @@
+# coding=utf-8
+"""methods for camera calibration and image distortion"""
 import cv2
 import numpy as np
 

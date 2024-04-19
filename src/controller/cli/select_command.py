@@ -36,9 +36,16 @@ class SelectCommand(Command):
     def execute(self, args) -> bool:
         match args.what:
             case "scene":
-                self.context.print("ERROR: Not yet implemented.")
+                candidate = self.context.show.get_scene_by_id(args.item)
+                if candidate is None:
+                    self.context.print("No scene with id {} was found.".format(candidate))
+                    return False
+                self.context.selected_scene = candidate
+                self.context.print("Selected scene '{}'.".format(candidate.human_readable_name))
+                return True
             case "column":
                 self.context.print("ERROR: Not yet implemented.")
+                return False
             case "bank_set":
                 found_bank_set = find_bank_set(args.item)
                 if found_bank_set:

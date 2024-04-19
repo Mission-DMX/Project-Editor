@@ -86,7 +86,7 @@ class FaderHSIANode(FilterNode):
     nodeName = "HSI-A"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=41, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIA, name=name, terminals={
             'color': {'io': 'out'},
             'amber': {'io': 'out'}
         })
@@ -112,7 +112,7 @@ class FaderHSIUNode(FilterNode):
     nodeName = "HSI_U"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=42, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIU, name=name, terminals={
             'color': {'io': 'out'},
             'uv': {'io': 'out'}
         })
@@ -138,7 +138,7 @@ class FaderHSIAUNode(FilterNode):
     nodeName = "HSI-AU"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=43, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIAU, name=name, terminals={
             'color': {'io': 'out'},
             'amber': {'io': 'out'},
             'uv': {'io': 'out'}
