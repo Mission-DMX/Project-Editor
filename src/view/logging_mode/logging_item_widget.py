@@ -15,7 +15,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
         self.setText(0, message["level"])
         self.setText(1, message["message"].split("\n")[0])
         for key, value in message.items():
-            self.addChild(QTreeWidgetItem([key, value]))
+            self.addChild(QTreeWidgetItem([key, str(value)]))
 
     def search(self, search: list[Search]) -> None:
         """hide all not feasible items"""
