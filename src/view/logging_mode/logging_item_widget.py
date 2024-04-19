@@ -26,7 +26,4 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
                     if not (entry.items[0] in self._content.keys() and entry.items[1] in self._content[entry.items[0]]):
                         visible = False
 
-        if visible:
-            self.setHidden(False)
-        else:
-            self.setHidden(True)
+        self.setHidden(not visible)
