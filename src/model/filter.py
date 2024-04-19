@@ -187,6 +187,10 @@ class Filter:
         """The filter configurations"""
         return self._filter_configurations
 
+    @filter_configurations.setter
+    def filter_configurations(self, new_values: dict[str, str]):
+        self._filter_configurations.update(new_values)
+
     @property
     def in_data_types(self) -> dict[str, DataType]:
         """Dict mapping input channel names to their data types."""
