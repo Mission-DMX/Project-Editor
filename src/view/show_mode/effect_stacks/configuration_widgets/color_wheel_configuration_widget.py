@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QWidget, QFormLayout, QSpinBox, QDoubleSpinBox
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from model.virtual_filters.effects_stacks.color_effects import ColorWheelEffect
+    from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
 
 
 class ColorWheelConfigurationWidget(QWidget):

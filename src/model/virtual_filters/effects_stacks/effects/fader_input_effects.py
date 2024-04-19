@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget
 
 from model import Filter
-from model.virtual_filters.effects_stacks.color_effects import ColorEffect
+from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
 
 
 class ColorInputEffect(ColorEffect):

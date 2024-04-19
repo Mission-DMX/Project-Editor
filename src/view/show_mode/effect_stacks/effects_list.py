@@ -1,12 +1,12 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon, QPaintEvent, QPainter, QBrush, QColor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, \
-    QScrollArea, QLineEdit, QCompleter, QFrame
+    QScrollArea, QLineEdit, QCompleter
 
-from model.virtual_filters.effects_stacks.color_effects import ColorWheelEffect
+from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
 from model.virtual_filters.effects_stacks.effect import Effect
-from model.virtual_filters.effects_stacks.fader_input_effects import ColorInputEffect
-from model.virtual_filters.effects_stacks.generic_effects import FunctionEffect
+from model.virtual_filters.effects_stacks.effects.fader_input_effects import ColorInputEffect
+from model.virtual_filters.effects_stacks.effects.generic_effects import FunctionEffect
 
 EFFECT_LIST = {
     "colors:": [ColorWheelEffect],

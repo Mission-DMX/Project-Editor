@@ -9,7 +9,7 @@ from threading import Thread
 
 from controller.cli.cli_context import CLIContext
 from model import BoardConfiguration
-from network import NetworkManager
+from controller.network import NetworkManager
 
 logger = Logger(__file__)
 

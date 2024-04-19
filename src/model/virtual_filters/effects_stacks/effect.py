@@ -7,7 +7,7 @@ from model import Filter, Scene
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from model.virtual_filters import EffectsStack
+    from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
 
 class EffectType(IntFlag):

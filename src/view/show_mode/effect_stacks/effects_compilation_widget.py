@@ -1,12 +1,11 @@
 from PySide6 import QtGui, QtCore
-from PySide6.QtCore import Qt, QRect, Signal
+from PySide6.QtCore import QRect, Signal
 from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFontMetrics, QMouseEvent
 from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from controller.ofl.fixture import UsedFixture
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.effects_stacks.ChaningEffectDummy import ChainingEffectDummy
-from model.virtual_filters.effects_stacks.color_effects import ColorEffect
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from PySide6.QtWidgets import QWidget
 
-from network import NetworkManager
+from controller.network import NetworkManager
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

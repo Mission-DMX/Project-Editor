@@ -5,9 +5,10 @@ from PySide6.QtWidgets import QWidget
 
 from controller.ofl.fixture import UsedFixture, ColorSupport
 from model import Filter
-from model.virtual_filters.effects_stacks.color_effects import ColorEffect
+from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
 from model.virtual_filters.effects_stacks.effect import EffectType, Effect
-from model.virtual_filters.effects_stacks.segment_effects import SegmentEffect
+from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
+from model.virtual_filters.effects_stacks.effects.segment_effects import SegmentEffect
 
 logger = getLogger(__file__)
 
@@ -15,6 +16,10 @@ logger = getLogger(__file__)
 class _EffectDummy_Socket(Effect):
 
     """The purpose of this class is to provide an Effect if required during rendering"""
+
+    def serialize(self) -> dict:
+        logger.error("A dummy effect should never be serialized. Something went wrong.")
+        return {}
 
     def get_configuration_widget(self) -> QWidget | None:
         return None
@@ -101,3 +106,16 @@ class EffectsSocket:
         if self._segment_socket is not None:
             data["segments"] = self._segment_socket.serialize()
         return json.dumps(data)
+
+    def deserialize(self, data: str):
+        data: dict = json.loads(data)
+        self._color_socket = None
+        self._segment_socket = None
+        if self.has_color_property:
+            socket_data = data.get("color")
+            if socket_data:
+                self._color_socket = effect_from_deserialization(socket_data)
+        if self.has_segmentation_support:
+            socket_data = data.get("segments")
+            if socket_data:
+                self._segment_socket = effect_from_deserialization(socket_data)

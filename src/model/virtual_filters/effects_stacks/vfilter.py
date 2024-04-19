@@ -5,6 +5,9 @@ from model.virtual_filters.effects_stacks.adapters import emplace_adapter
 from model.virtual_filters.effects_stacks.effect import EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
+from logging import getLogger
+logger = getLogger(__file__)
+
 
 class EffectsStack(VirtualFilter):
 
@@ -136,13 +139,30 @@ class EffectsStack(VirtualFilter):
     def filter_configurations(self) -> dict[str, str]:
         d = {}
         for s in self.sockets:
-            name = "{}/{}/{}".format('g' if s.is_group else 'f', s.target.parent_universe,
-                                     s.target.channels[0].address)
+            name = "{}{}/{}".format('g' if s.is_group else 'f', s.target.parent_universe,
+                                    s.target.channels[0].address)  # TODO Encode start addresses in case of group
             d[name] = s.serialize()
         return d
 
     def deserialize(self):
-        pass  # TODO implement deserialization of filter
+        self.sockets.clear()
+        for k, v in self._filter_configurations.items():
+            is_group = k.startswith('g')
+            if is_group:
+                raise NotImplementedError("Deserialization of groups is not yet implemented.")
+            else:
+                universe, channel = k[1:].split('/')
+                universe = int(universe)
+                channel = int(channel)
+                uf = self.scene.board_configuration.universes[universe].patching[channel].fixture
+                if uf is None:
+                    logger.warning(
+                        "There is no fixture associated with the address {}/{}".format(universe, channel + 1)
+                    )
+                    continue
+                s = EffectsSocket(uf)
+                s.deserialize(v)
+                self.sockets.append(s)
 
     # TODO implement optional output ports of effect stack vfilter
 

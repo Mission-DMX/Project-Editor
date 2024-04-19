@@ -15,7 +15,7 @@ from controller.cli.show_command import ShowCommand
 if TYPE_CHECKING:
     from model import BoardConfiguration, Scene
     from model.control_desk import DeskColumn, BankSet
-    from network import NetworkManager
+    from controller.network import NetworkManager
 
 
 class CLIContext:

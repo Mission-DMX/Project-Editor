@@ -9,7 +9,7 @@ from controller.utils.process_notifications import get_global_process_state, get
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
-from network import NetworkManager
+from controller.network import NetworkManager
 from proto.RealTimeControl_pb2 import RunMode
 from Style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
