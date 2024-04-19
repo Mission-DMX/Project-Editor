@@ -10,7 +10,7 @@
       "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
     },
     "json": {
-      "()": "json_formatter.JSONFormatter",
+      "()": "controller.utils.json_formatter.JSONFormatter",
       "fmt_keys": {
         "level": "levelname",
         "message": "message",

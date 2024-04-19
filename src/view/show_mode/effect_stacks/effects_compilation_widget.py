@@ -4,7 +4,7 @@ from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFo
 from PySide6.QtWidgets import QWidget, QSizePolicy
 
 from controller.ofl.fixture import UsedFixture
-from model.virtual_filters import EffectsStack
+from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.effects_stacks.ChaningEffectDummy import ChainingEffectDummy
 from model.virtual_filters.effects_stacks.color_effects import ColorEffect
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType

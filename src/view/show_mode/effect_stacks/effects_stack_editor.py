@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QTreeWidgetItem, QVBoxLayout
 
 from controller.ofl.fixture import UsedFixture
 from model import Filter
-from model.virtual_filters import EffectsStack
+from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.effects_stacks.effect import Effect
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 from view.show_mode.editor.show_browser.universe_tree_browser_widget import UniverseTreeBrowserWidget

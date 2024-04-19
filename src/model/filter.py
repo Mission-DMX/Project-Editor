@@ -4,8 +4,6 @@ import abc
 from typing import TYPE_CHECKING
 from enum import IntFlag, auto, Enum
 
-from .virtual_filters import construct_virtual_filter_instance
-
 if TYPE_CHECKING:
     from . import Scene
 
@@ -208,6 +206,7 @@ class Filter:
         return self.filter_type < 0
 
     def copy(self, new_scene: "Scene" = None, new_id: str = None) -> "Filter":
+        from .virtual_filters.vfilter_factory import construct_virtual_filter_instance
         if self.is_virtual_filter:
             f = construct_virtual_filter_instance(self.scene, self._filter_type, self._filter_id, pos=self._pos)
             f.filter_configurations.update(self.filter_configurations.copy())
