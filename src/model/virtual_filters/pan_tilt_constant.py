@@ -47,7 +47,7 @@ class PanTiltConstantFilter(VirtualFilter):
     def instantiate_16bit_constant_filter(self, filter_list: list[Filter], tilt: bool):
         filter = Filter(
             filter_id="{}_16bit_{}".format(self.filter_id, 'tilt' if tilt else 'pan'),
-            filter_type=1,
+            filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
             scene=self.scene
         )
         filter._initial_parameters = {'value': str(int((self.tilt if tilt else self.pan) * 65535))} # Todo: inverse Tilt?
@@ -63,7 +63,7 @@ class PanTiltConstantFilter(VirtualFilter):
         filter = Filter(
             filter_id="{}_8bit_{}".format(self.filter_id,
                                           'tilt' if tilt else 'pan'),
-            filter_type=8,
+            filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
             scene=self.scene
         )
         filter._initial_parameters = {}

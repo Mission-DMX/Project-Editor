@@ -1,7 +1,7 @@
 # coding=utf-8
 """Client Commands"""
 from controller.cli.command import Command
-from model.control_desk import BankSet
+from model.control_desk import BankSet, ColorDeskColumn
 
 
 class ListCommand(Command):
@@ -16,18 +16,32 @@ class ListCommand(Command):
     def execute(self, args) -> bool:
         match args.section:
             case "scenes":
-                self.context.print("ERROR: Listing the loaded scenes is not yet implemented.")
-                return False
+                self.context.print(" ID | Description")
+                for scene in self.context.show.scenes:
+                    self.context.print("{} | {}".format(scene.scene_id, scene.human_readable_name))
+                return True
             case "filters":
-                self.context.print("ERROR: Listing the filters of the current selected scene isn't yet implemented.")
-                return False
+                if self.context.selected_scene is None:
+                    self.context.print("ERROR: No scene selected..")
+                    return False
+                self.context.print("Filter ID - Filter Type")
+                for f in self.context.selected_scene.filters:
+                    self.context.print("{} - {}".format(f.filter_id, f.filter_type))
+                return True
             case "columns":
-                self.context.print("ERROR: Listing the columns within the selected bank set is not yet implemented.")
-                return False
+                if self.context.selected_bank is None:
+                    self.context.print("ERROR: No bank set selected")
+                    return False
+                self.context.print("Type - Column description")
+                for bank in self.context.selected_bank.banks:
+                    self.context.print("==================================")
+                    for c in bank.columns:
+                        self.context.print("{} - {}".format("Color" if isinstance(c, ColorDeskColumn) else "Number",
+                                                            c.display_name))
             case "bank_sets":
                 self.context.print(" Bank Set ID                         | Description ")
                 self.context.print("===================================================")
-                selected_bank_set_id = self.context.selected_bank if self.context.selected_bank else ""
+                selected_bank_set_id = self.context.selected_bank.id if self.context.selected_bank else ""
                 for bs in BankSet.get_linked_bank_sets():
                     self.print_bank_set_entry(bs, selected_bank_set_id)
                 if self.context.selected_bank and not self.context.selected_bank.is_linked:

@@ -95,7 +95,9 @@ class SceneOptimizerModule:
             channel_mappings = dict()
             for channel_mapping in channel_list:
                 filter_input_channel, universe_channel, foreign_filter_output_channel = channel_mapping
-                filter_config_parameters[filter_input_channel] = universe_channel
+                filter_config_parameters[filter_input_channel] = str(int(universe_channel) - 1)
+                if foreign_filter_output_channel in self.channel_override_dict.keys():
+                    foreign_filter_output_channel = self.channel_override_dict.get(foreign_filter_output_channel)
                 channel_mappings[filter_input_channel] = foreign_filter_output_channel
             filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
                 "id": str(self._first_universe_filter_id[universe]),
