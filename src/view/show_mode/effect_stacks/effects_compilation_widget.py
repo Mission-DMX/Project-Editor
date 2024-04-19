@@ -42,7 +42,7 @@ class EffectCompilationWidget(QWidget):
         self._painting_active = False
         self._config_button_positions: list[tuple[int, int, QWidget]] = []
         self._active_config_widget: QWidget | None = None
-        self.repaint()
+        self.update()
 
     def add_fixture_or_group(self, fg: UsedFixture):
         if fg in self._added_fixtures:
@@ -50,8 +50,11 @@ class EffectCompilationWidget(QWidget):
         self._added_fixtures.add(fg)
         es = EffectsSocket(fg)
         self._filter.sockets.append(es)
-        self.setMinimumHeight(len(self._filter.sockets) * 50)  # FIXME why do we not get our desired height?
-        self.repaint()
+        self.update()
+
+    def update(self):
+        self.setMinimumHeight(max(len(self._filter.sockets) * 50, self.minimumHeight()))
+        super().update()
 
     def paintEvent(self, redraw_hint: QPaintEvent):
         if self._painting_active:

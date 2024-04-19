@@ -40,3 +40,6 @@ class FunctionEffect(GenericEffect):
 
     def get_description(self):
         return "This effect creates wave forms that it follows."
+
+    def deserialize(self, data: dict[str, str]):
+        pass  # TODO implement

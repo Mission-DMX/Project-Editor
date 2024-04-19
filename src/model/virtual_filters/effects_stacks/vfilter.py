@@ -136,6 +136,7 @@ class EffectsStack(VirtualFilter):
                 constant_filter.initial_parameters["value"] = "0.0"
                 filter_list.append(constant_filter)
 
+    @Filter.filter_configurations.getter
     def filter_configurations(self) -> dict[str, str]:
         d = {}
         for s in self.sockets:
@@ -143,6 +144,11 @@ class EffectsStack(VirtualFilter):
                                     s.target.channels[0].address)  # TODO Encode start addresses in case of group
             d[name] = s.serialize()
         return d
+
+    @Filter.filter_configurations.setter
+    def filter_configurations(self, new_conf: dict[str, str]):
+        self._filter_configurations = new_conf
+        self.deserialize()
 
     def deserialize(self):
         self.sockets.clear()
@@ -154,7 +160,7 @@ class EffectsStack(VirtualFilter):
                 universe, channel = k[1:].split('/')
                 universe = int(universe)
                 channel = int(channel)
-                uf = self.scene.board_configuration.universes[universe].patching[channel].fixture
+                uf = self.scene.board_configuration.universes[universe - 1].patching[channel].fixture
                 if uf is None:
                     logger.warning(
                         "There is no fixture associated with the address {}/{}".format(universe, channel + 1)

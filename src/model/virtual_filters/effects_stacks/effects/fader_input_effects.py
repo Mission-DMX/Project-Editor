@@ -9,6 +9,9 @@ class ColorInputEffect(ColorEffect):
     def serialize(self) -> dict:
         return {"type": "color.InputFader"}
 
+    def deserialize(self, data: dict[str, str]):
+        pass  # TODO implement
+
     def get_configuration_widget(self) -> QWidget | None:
         pass
 

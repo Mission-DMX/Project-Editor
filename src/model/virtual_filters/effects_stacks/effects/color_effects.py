@@ -91,9 +91,16 @@ class ColorWheelEffect(ColorEffect):
         self._max_hue = new_value % 360.0
 
     def serialize(self) -> dict:
-        return {"type": "color.ColorWheel",
+        return {"type": self.EFFECT_ID,
                 "number-of-fragments": self._number_of_fragments,
                 "min-hue": self._min_hue,
                 "max-hue": self._max_hue,
                 "default-speed": self._default_speed}
         # TODO implement recurse into slots if they're occupied
+
+    def deserialize(self, data: dict[str, str]):
+        self._number_of_fragments = data['number-of-fragments']
+        self._min_hue = data["min-hue"]
+        self._max_hue = data["max-hue"]
+        self._default_speed = data["default-speed"]
+        self._widget.load_values_from_effect()

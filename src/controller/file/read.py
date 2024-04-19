@@ -336,6 +336,8 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
     else:
         filter_ = Filter(scene=scene, filter_id=filter_id, filter_type=filter_type, pos=pos)
 
+    fc = {}
+
     for child in filter_element:
         match child.tag:
             case "channellink":
@@ -343,10 +345,11 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case "initialParameters":
                 _parse_initial_parameters(child, filter_)
             case "filterConfiguration":
-                _parse_filter_configuration(child, filter_)
+                _parse_filter_configuration(child, filter_, fc)
             case _:
                 logger.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
+    filter_.filter_configurations = fc
     filter_ = replace_old_filter_configurations(filter_)
     if isinstance(filter_, VirtualFilter):
         filter_.deserialize()
@@ -384,7 +387,7 @@ def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, f
     filter_.initial_parameters[ip_key] = ip_value
 
 
-def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter):
+def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter, fc: dict[str, str]):
     fc_key = ""
     fc_value = ""
     for key, value in filter_configuration_element.attrib.items():
@@ -397,7 +400,7 @@ def _parse_filter_configuration(filter_configuration_element: ElementTree.Elemen
                 logger.warning("Found attribute %s=%s while parsing filter configuration for filter %s",
                                key, value, filter_.filter_id)
 
-    filter_.filter_configurations[fc_key] = fc_value
+    fc[fc_key] = fc_value
 
 
 def _parse_device(device_element: ElementTree.Element, board_configuration: BoardConfiguration):

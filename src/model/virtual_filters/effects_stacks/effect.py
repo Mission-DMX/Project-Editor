@@ -195,3 +195,7 @@ class Effect(ABC):
     def serialize(self) -> dict:
         """This method needs to return a dictionary, containing at least the 'type' key indicating the effect."""
         return dict()
+
+    @abstractmethod
+    def deserialize(self, data: dict[str, str]):
+        raise NotImplementedError("The class did not implement the deserialize method.")
