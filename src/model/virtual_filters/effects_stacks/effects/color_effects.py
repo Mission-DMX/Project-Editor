@@ -73,7 +73,7 @@ class ColorWheelEffect(ColorEffect):
 
     @fragment_number.setter
     def fragment_number(self, new_fragment_count: int):
-        self._number_of_fragments = min(new_fragment_count, 1)
+        self._number_of_fragments = max(new_fragment_count, 1)
 
     @property
     def min_hue(self) -> float:
