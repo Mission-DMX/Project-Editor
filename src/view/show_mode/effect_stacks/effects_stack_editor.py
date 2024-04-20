@@ -104,10 +104,11 @@ class EffectsStackEditor(QWidget):
         self._add_widget_to_config_container(w)
 
     def _add_widget_to_config_container(self, w: QWidget) -> int:
+        if w is None:
+            return -1
         scroll_area = QScrollArea()
         scroll_area.setMinimumHeight(65)
         scroll_area.setWidget(w)
-        # w.setParent(self._effect_config_widget_container)
         self._effect_config_widget_container.addWidget(scroll_area)
         index = self._effect_config_widget_container.indexOf(scroll_area)
         self._config_widget_dict[w] = index

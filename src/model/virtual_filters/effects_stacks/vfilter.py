@@ -136,19 +136,13 @@ class EffectsStack(VirtualFilter):
                 constant_filter.initial_parameters["value"] = "0.0"
                 filter_list.append(constant_filter)
 
-    @Filter.filter_configurations.getter
-    def filter_configurations(self) -> dict[str, str]:
-        d = {}
+    def serialize(self):
+        d = self.filter_configurations
+        d.clear()
         for s in self.sockets:
             name = "{}{}/{}".format('g' if s.is_group else 'f', s.target.parent_universe,
                                     s.target.channels[0].address)  # TODO Encode start addresses in case of group
             d[name] = s.serialize()
-        return d
-
-    @Filter.filter_configurations.setter
-    def filter_configurations(self, new_conf: dict[str, str]):
-        self._filter_configurations = new_conf
-        self.deserialize()
 
     def deserialize(self):
         self.sockets.clear()

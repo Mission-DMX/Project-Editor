@@ -30,6 +30,9 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
         if for_fish:
             if om.filter_was_substituted(filter_):
                 return
+        else:
+            if isinstance(filter_, VirtualFilter):
+                filter_.serialize()
         filter_element = ElementTree.SubElement(parent, "filter", attrib={
             "id": str(filter_.filter_id),
             "type": str(filter_.filter_type),

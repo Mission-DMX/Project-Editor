@@ -336,8 +336,6 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
     else:
         filter_ = Filter(scene=scene, filter_id=filter_id, filter_type=filter_type, pos=pos)
 
-    fc = {}
-
     for child in filter_element:
         match child.tag:
             case "channellink":
@@ -345,11 +343,10 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case "initialParameters":
                 _parse_initial_parameters(child, filter_)
             case "filterConfiguration":
-                _parse_filter_configuration(child, filter_, fc)
+                _parse_filter_configuration(child, filter_, filter_.filter_configurations)
             case _:
                 logger.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
-    filter_.filter_configurations = fc
     filter_ = replace_old_filter_configurations(filter_)
     if isinstance(filter_, VirtualFilter):
         filter_.deserialize()
