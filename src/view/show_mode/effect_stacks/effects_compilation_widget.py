@@ -12,7 +12,7 @@ from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
 class EffectCompilationWidget(QWidget):
 
-    effect_added = Signal()
+    effect_added = Signal(Effect)
     active_config_widget_changed = Signal(QWidget)
 
     _background_css = """
@@ -216,9 +216,9 @@ class EffectCompilationWidget(QWidget):
         slot_id, candidate_effect = self._slot_counter[i]
         if not candidate_effect.attach(slot_id, self._pending_effect):
             return False
-        self._pending_effect = None
         self._slot_counter = []
-        self.effect_added.emit()
+        self.effect_added.emit(self._pending_effect)
+        self._pending_effect = None
         self.update()
         return True
 

@@ -1,7 +1,7 @@
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QEnterEvent
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QTreeWidgetItem, QVBoxLayout, QSpinBox, QMessageBox, QScrollArea, \
-    QSplitter
+    QSplitter, QStackedWidget
 
 from controller.ofl.fixture import UsedFixture
 from model import Filter
@@ -20,6 +20,7 @@ class EffectsStackEditor(QWidget):
         if not isinstance(f, EffectsStack):
             raise ValueError("This filter is supposed to be an instance of the EffectsStack virtual filter.")
         self._filter = f
+        self._config_widget_dict: dict[QWidget, int] = dict()
         self.setMinimumWidth(800)
         self.setMinimumHeight(600)
         global_layout = QHBoxLayout()
@@ -50,9 +51,10 @@ class EffectsStackEditor(QWidget):
         self._fixture_list_widget.setParent(self._right_side_container)
         self._fixture_list_widget.itemDoubleClicked.connect(self._fixture_or_group_add_clicked)
         self._right_side_container.addWidget(self._fixture_list_widget)
-        self._effect_config_widget_container = QScrollArea()
-        self._effect_config_widget_container.setMinimumHeight(50)
+
+        self._effect_config_widget_container = QStackedWidget(self)
         self._right_side_container.addWidget(self._effect_config_widget_container)
+
         global_layout.addWidget(self._right_side_container)
         self._message_box = QMessageBox(self.parent())
 
@@ -93,17 +95,31 @@ class EffectsStackEditor(QWidget):
                 return True
         return False
 
-    def _effect_added(self):
+    def _effect_added(self, e: Effect):
         self._effect_placement_bar.setEnabled(False)
         self._effect_placement_bar.setVisible(False)
         self._effect_placement_bar.clearFocus()
 
+        w = e.get_configuration_widget()
+        self._add_widget_to_config_container(w)
+
+    def _add_widget_to_config_container(self, w: QWidget) -> int:
+        scroll_area = QScrollArea()
+        scroll_area.setMinimumHeight(65)
+        scroll_area.setWidget(w)
+        # w.setParent(self._effect_config_widget_container)
+        self._effect_config_widget_container.addWidget(scroll_area)
+        index = self._effect_config_widget_container.indexOf(scroll_area)
+        self._config_widget_dict[w] = index
+        w.setVisible(True)
+        w.setMinimumWidth(max(w.minimumWidth(), 80))
+        w.setMinimumHeight(max(w.minimumHeight(), 60))
+        return index
+
     def _effect_config_widget_changed(self, w: QWidget):
-        old_w = self._effect_config_widget_container.widget()
         if w is None:
             return
-        w.setParent(self._effect_config_widget_container)
-        w.setVisible(True)
-        self._effect_config_widget_container.setWidget(w)
-        if old_w is not None:
-            old_w.setVisible(False)
+        index = self._config_widget_dict.get(w)
+        if not index:
+            index = self._add_widget_to_config_container(w)
+        self._effect_config_widget_container.setCurrentIndex(index)
