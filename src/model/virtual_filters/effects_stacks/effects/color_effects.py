@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 from PySide6.QtWidgets import QWidget
 
@@ -91,16 +92,29 @@ class ColorWheelEffect(ColorEffect):
         self._max_hue = new_value % 360.0
 
     def serialize(self) -> dict:
-        return {"type": self.EFFECT_ID,
-                "number-of-fragments": self._number_of_fragments,
-                "min-hue": self._min_hue,
-                "max-hue": self._max_hue,
-                "default-speed": self._default_speed}
-        # TODO implement recurse into slots if they're occupied
+        d = {"type": self.EFFECT_ID,
+             "number-of-fragments": self._number_of_fragments,
+             "min-hue": self._min_hue,
+             "max-hue": self._max_hue,
+             "default-speed": self._default_speed}
+        speed_input = self._inputs["speed"]
+        if speed_input is not None:
+            d["speed-input"] = speed_input.serialize()
+        range_input = self._inputs["range"]
+        if range_input is not None:
+            d["range-input"] = range_input.serialize()
+        return d
 
-    def deserialize(self, data: dict[str, str]):
+    def deserialize(self, data: dict[str, Any]):
+        from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
         self._number_of_fragments = data['number-of-fragments']
         self._min_hue = data["min-hue"]
         self._max_hue = data["max-hue"]
         self._default_speed = data["default-speed"]
+        speed_input_data = data.get("speed-input")
+        if speed_input_data is not None:
+            self._inputs["speed"] = effect_from_deserialization(speed_input_data)
+        range_input_data = data.get("range-input")
+        if range_input_data is not None:
+            self._inputs["range"] = effect_from_deserialization(range_input_data)
         self._widget.load_values_from_effect()

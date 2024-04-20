@@ -69,7 +69,6 @@ class EffectsSocket:
         self.has_segmentation_support: bool = (len(target.red_segments) > 1 and len(target.green_segments) > 1 and
                                                len(target.blue_segments) > 1) or len(target.white_segments) > 1
 
-    # TODO implement serialization
     def get_socket_by_type(self, slot_type: EffectType) -> Effect | None:
         if slot_type == EffectType.COLOR and self.has_color_property:
             return self._color_socket
