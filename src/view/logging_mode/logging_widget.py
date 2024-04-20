@@ -33,7 +33,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
                                 lambda: self._loging_level_changed.emit(("INFO", self._levels["INFO"].isChecked())))),
             "WARN": QAction("Warn", level_menu, checkable=True, checked=True,
                             changed=(
-                                lambda: self._loging_level_changed.emit(("WARN", self._levels["WARN"].isChecked())))),
+                                lambda: self._loging_level_changed.emit(("WARNING", self._levels["WARN"].isChecked())))),
             "ERROR": QAction("Error", level_menu, checkable=True, checked=True,
                              changed=(
                                  lambda: self._loging_level_changed.emit(("ERROR", self._levels["ERROR"].isChecked()))))
