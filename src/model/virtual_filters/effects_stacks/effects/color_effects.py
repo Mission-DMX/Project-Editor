@@ -44,6 +44,7 @@ class ColorWheelEffect(ColorEffect):
         return "Not Implemented"
 
     def emplace_filter(self, filter_list: list[Filter], prefix: str) -> dict[str, str | list[str]]:
+        fragment_outputs = []
         speed_effect = self._inputs["speed"]
         if speed_effect:
             speed_input_channel = speed_effect.emplace_filter(filter_list, prefix + "__speed_")
@@ -53,12 +54,54 @@ class ColorWheelEffect(ColorEffect):
             speed_effect_name = prefix + "_speedconst"
             speed_effect = Filter(self.get_scene(), speed_effect_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
                                   self.get_position())
-            speed_effect.initial_parameters["value"] = str(self._default_speed)
+            speed_effect.initial_parameters["value"] = str(self._default_speed)  # TODO normalize to 1/60
             speed_input_channel = speed_effect_name + ":value"
         # TODO inst range input filter or place constants using min and max hue
+        range_input = self._inputs["range"]
+        if range_input is not None:
+            hue_effect_range_factor_name = range_input.emplace_filter(filter_list, prefix + "__range_")
+            hue_effect_range_factor_channel = emplace_adapter(range_input.get_output_slot_type(),
+                                                              EffectType.GENERIC_NUMBER,
+                                                              hue_effect_range_factor_name, filter_list)["x"]
+        else:
+            hue_effect_range_factor_name = prefix + "__range_const_min"
+            filter_list.append(Filter(self.get_scene(), hue_effect_range_factor_name,
+                               FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
+                               {"value": "360.0"}))
+            hue_effect_range_factor_channel = hue_effect_range_factor_name + ":value"
+            # TODO -- hier weiter machen
+
         # TODO implement filter that iterates between the hue boundries using the speed as a fraction for the time input
-        #  this should be repeated with the configured phase offset for every desired fragment
-        fragment_outputs = []
+        hue_effect_range_offset = prefix + "__hue_offset_const"
+        filter_list.append(Filter(self.get_scene(), hue_effect_range_offset,
+                                  FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, pos=self.get_position(),
+                                  filter_configurations={"value": "180.0"}))
+        #for fragment_index in range(self._number_of_fragments):
+        # TODO this should be repeated with the configured phase offset for every desired fragment
+        time_fraction_filter_name = prefix + "__time_fraction"
+        time_fraction_filter = Filter(self.get_scene(), time_fraction_filter_name,
+                                      FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, self.get_position())
+        phase_filter_name = prefix + "__phase"
+        # TODO add option to place phase input effect
+        filter_list.append(Filter(self.get_scene(), phase_filter_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                                  self.get_position(), {"value": "0"}))
+        phase_filter_name += ":value"
+        time_fraction_filter.channel_links["factor_inner"] = speed_input_channel
+        time_fraction_filter.channel_links["factor_outer"] = hue_effect_range_factor_channel
+        time_fraction_filter.channel_links["offset"] = hue_effect_range_offset + ":value"
+        time_fraction_filter.channel_links["phase"] = phase_filter_name + ":value"
+        time_fraction_filter.channel_links["value_in"] = time_filter_name # TODO create filteer
+        filter_list.append(time_fraction_filter)
+
+        color_conv_filter_name = prefix + "__color_conv"
+        color_conv_filter = Filter(self.get_scene(), color_conv_filter_name, FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR)
+        filter_list.append(color_conv_filter)
+        color_conv_filter.channel_links["hue"] = time_fraction_filter_name + ":value"
+        # TODO also add inputs for saturation and intensity
+
+        fragment_outputs.append(color_conv_filter_name + ":value")
+        # end of fragment computation
+
         return {"color": fragment_outputs}
 
     def get_human_filter_name(self):

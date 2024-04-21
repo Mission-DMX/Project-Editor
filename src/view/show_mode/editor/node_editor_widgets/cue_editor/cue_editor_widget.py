@@ -410,6 +410,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if self._bankset:
             self._bankset.unlink()
             BankSet.push_messages_now()
+        show_reset_required = False
         if self._broadcaster and self._broadcaster_signals_connected:
             self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
             self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
@@ -417,10 +418,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
             self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
             self._broadcaster_signals_connected = False
+            show_reset_required = True
         if self._filter_instance:
             self._filter_instance.in_preview_mode = False
-            transmit_to_fish(self._filter_instance.scene.board_configuration, False)
-            # TODO switch to scene of filter
+            if show_reset_required:
+                transmit_to_fish(self._filter_instance.scene.board_configuration, False)
+                # TODO switch to scene of filter
         super().parent_closed(filter_node)
 
     def parent_opened(self):
