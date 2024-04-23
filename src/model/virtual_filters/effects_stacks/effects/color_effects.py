@@ -22,7 +22,8 @@ class ColorWheelEffect(ColorEffect):
 
     def __init__(self):
         super().__init__({"speed": [EffectType.SPEED],
-                          "range": [EffectType.GENERIC_NUMBER]})
+                          "range": [EffectType.GENERIC_NUMBER],
+                          "segments": [EffectType.LIGHT_INTENSITY, EffectType.ENABLED_SEGMENTS]})
         self._number_of_fragments: int = 0
         self._min_hue: float = 0.0
         self._max_hue: float = 360.0
@@ -41,6 +42,8 @@ class ColorWheelEffect(ColorEffect):
                 return "Speed"
             case "range":
                 return "Color Range"
+            case "segments":
+                return "Segment Brightness"
         return "Not Implemented"
 
     def emplace_filter(self, filter_list: list[Filter], prefix: str) -> dict[str, str | list[str]]:
@@ -69,38 +72,65 @@ class ColorWheelEffect(ColorEffect):
                                FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
                                {"value": "360.0"}))
             hue_effect_range_factor_channel = hue_effect_range_factor_name + ":value"
-            # TODO -- hier weiter machen
+
+        saturation_input_filter_name = prefix + "__saturation"
+        filter_list.append(Filter(self.get_scene(), saturation_input_filter_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                                  filter_configurations={"value": "1.0"}))
 
         # TODO implement filter that iterates between the hue boundries using the speed as a fraction for the time input
         hue_effect_range_offset = prefix + "__hue_offset_const"
         filter_list.append(Filter(self.get_scene(), hue_effect_range_offset,
                                   FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, pos=self.get_position(),
                                   filter_configurations={"value": "180.0"}))
-        #for fragment_index in range(self._number_of_fragments):
-        # TODO this should be repeated with the configured phase offset for every desired fragment
-        time_fraction_filter_name = prefix + "__time_fraction"
-        time_fraction_filter = Filter(self.get_scene(), time_fraction_filter_name,
-                                      FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, self.get_position())
-        phase_filter_name = prefix + "__phase"
-        # TODO add option to place phase input effect
-        filter_list.append(Filter(self.get_scene(), phase_filter_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-                                  self.get_position(), {"value": "0"}))
-        phase_filter_name += ":value"
-        time_fraction_filter.channel_links["factor_inner"] = speed_input_channel
-        time_fraction_filter.channel_links["factor_outer"] = hue_effect_range_factor_channel
-        time_fraction_filter.channel_links["offset"] = hue_effect_range_offset + ":value"
-        time_fraction_filter.channel_links["phase"] = phase_filter_name + ":value"
-        time_fraction_filter.channel_links["value_in"] = time_filter_name # TODO create filteer
-        filter_list.append(time_fraction_filter)
 
-        color_conv_filter_name = prefix + "__color_conv"
-        color_conv_filter = Filter(self.get_scene(), color_conv_filter_name, FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR)
-        filter_list.append(color_conv_filter)
-        color_conv_filter.channel_links["hue"] = time_fraction_filter_name + ":value"
-        # TODO also add inputs for saturation and intensity
+        time_filter_name = prefix + "__time"
+        filter_list.append(Filter(self.get_scene(), time_filter_name, FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT))
 
-        fragment_outputs.append(color_conv_filter_name + ":value")
-        # end of fragment computation
+        if self._inputs["segments"] is None:
+            brightness_channel_name = prefix + "__brightness_const"
+            filter_list.append(Filter(self.get_scene(), brightness_channel_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                                      filter_configurations={"value": "1.0"}))
+            brightness_channel_name += ":value"
+        else:
+            brightness_channel_name = self._inputs["segments"].emplace_filter(filter_list,
+                                                                              prefix + "__segments_brightness_")
+            brightness_channel_name = emplace_adapter(
+                self._inputs["segments"].get_output_slot_type(),
+                EffectType.LIGHT_INTENSITY
+                if self._inputs["segments"].get_output_slot_type() != EffectType.ENABLED_SEGMENTS
+                else EffectType.ENABLED_SEGMENTS,
+                brightness_channel_name,
+                filter_list
+            )
+
+        for frag_index in range(self.fragment_number):
+            time_fraction_filter_name = prefix + "__time_fraction"
+            time_fraction_filter = Filter(self.get_scene(), time_fraction_filter_name,
+                                          FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, self.get_position())
+            phase_filter_name = prefix + "__phase"
+            # TODO add option to place phase input effect
+            filter_list.append(Filter(self.get_scene(), phase_filter_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                                      self.get_position(), {"value": "0"}))
+            phase_filter_name += ":value"
+            time_fraction_filter.channel_links["factor_inner"] = speed_input_channel
+            time_fraction_filter.channel_links["factor_outer"] = hue_effect_range_factor_channel
+            time_fraction_filter.channel_links["offset"] = hue_effect_range_offset + ":value"
+            time_fraction_filter.channel_links["phase"] = phase_filter_name + ":value"
+            time_fraction_filter.channel_links["value_in"] = time_filter_name + ":value"
+            filter_list.append(time_fraction_filter)
+
+            if "intensity" in brightness_channel_name.keys():
+                brightness_channel_instance = brightness_channel_name["intensity"]
+            else:
+                brightness_channel_instance = brightness_channel_name[str(frag_index % len(brightness_channel_name))]
+
+            color_conv_filter_name = prefix + "__color_conv"
+            color_conv_filter = Filter(self.get_scene(), color_conv_filter_name, FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR)
+            filter_list.append(color_conv_filter)
+            color_conv_filter.channel_links["h"] = time_fraction_filter_name + ":value"
+            color_conv_filter.channel_links["s"] = saturation_input_filter_name + ":value"
+            color_conv_filter.channel_links["i"] = brightness_channel_instance
+            fragment_outputs.append(color_conv_filter_name + ":value")
 
         return {"color": fragment_outputs}
 
