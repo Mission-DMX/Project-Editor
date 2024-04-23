@@ -121,10 +121,11 @@ class NetworkManager(QtCore.QObject):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
-    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
+    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType, push_direct: bool = True) -> None:
         """send message in correct format to fish"""
         self._enqueue_message(msg, msg_type)
-        self.push_messages()
+        if push_direct:
+            self.push_messages()
 
     def push_messages(self):
         """This method pushes the queued messages to fish. This method needs to be called from the GUI thread."""
@@ -261,6 +262,8 @@ class NetworkManager(QtCore.QObject):
             self._broadcaster.select_column_id.emit(msg.selected_column_id)
         else:
             self._broadcaster.view_leave_colum_select.emit()
+        if not self._message_queue.empty():
+            self.push_messages()
 
     def _on_state_changed(self) -> None:
         """Starts or stops to send messages if the connection state changes."""
@@ -285,7 +288,7 @@ class NetworkManager(QtCore.QObject):
         )
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
-    def enter_scene(self, scene: "Scene") -> None:
+    def enter_scene(self, scene: "Scene", push_direct: bool = True) -> None:
         """
         Tells fish to load a specific scene
         Args:
@@ -297,11 +300,12 @@ class NetworkManager(QtCore.QObject):
         else:
             print("No Bankset.")
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene.scene_id)
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE, push_direct=push_direct)
         if scene.linked_bankset:
             for f in scene.filters:
                 if f.filter_type in [39, 40, 41, 42, 43]:
-                    self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id))
+                    self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id),
+                                                 enque=not push_direct)
 
     def update_state(self, run_mode: proto.RealTimeControl_pb2.RunMode.ValueType):
         """Changes fish's run mode
@@ -344,7 +348,7 @@ class NetworkManager(QtCore.QObject):
         else:
             self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DESK_UPDATE)
 
-    def send_gui_update_to_fish(self, scene_id: int, filter_id: str, key: str, value: str):
+    def send_gui_update_to_fish(self, scene_id: int, filter_id: str, key: str, value: str, enque: bool = False):
         """send current state of GUI to fish"""
         if not self.is_running:
             return
@@ -353,7 +357,10 @@ class NetworkManager(QtCore.QObject):
         msg.scene_id = scene_id
         msg.parameter_key = key
         msg.parameter_value = value
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+        if enque:
+            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+        else:
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
 
 
 def on_error(error) -> None:

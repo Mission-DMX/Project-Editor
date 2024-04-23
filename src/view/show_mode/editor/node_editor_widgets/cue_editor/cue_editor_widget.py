@@ -151,6 +151,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         # TODO link up/down button events to scrolling of v_scroll_area
         self._timeline_container = TimelineContainer(v_scroll_area)
         self._timeline_container.setEnabled(False)
+        self._timeline_container.transition_type = "lin"
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)

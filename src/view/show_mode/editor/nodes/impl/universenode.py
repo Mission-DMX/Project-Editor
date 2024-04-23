@@ -5,6 +5,7 @@ from logging import getLogger
 from pyqtgraph.flowchart import Terminal
 
 from model import DataType, Filter
+from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 logger = getLogger(__name__)
@@ -18,11 +19,11 @@ class UniverseNode(FilterNode):
 
     def __init__(self, model, name):
         if isinstance(model, Filter):
-            super().__init__(model=model, filter_type=11, name=name, terminals={
+            super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name, terminals={
                 input_link: {'io': 'in'} for input_link, _ in model.channel_links.items()},
                              allowAddInput=True)
         else:
-            super().__init__(model=model, filter_type=11, name=name, terminals={
+            super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name, terminals={
                 "input_1": {'io': 'in'}},
                              allowAddInput=True)
 

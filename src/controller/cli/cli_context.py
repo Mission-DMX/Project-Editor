@@ -8,19 +8,31 @@ from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
 from controller.cli.select_command import SelectCommand
 
+from typing import TYPE_CHECKING
+
+from controller.cli.show_command import ShowCommand
+
+if TYPE_CHECKING:
+    from model import BoardConfiguration, Scene
+    from model.control_desk import DeskColumn, BankSet
+    from network import NetworkManager
+
 
 class CLIContext:
     """Context of the Client"""
-    def __init__(self, exit_available: bool = False):
+    def __init__(self, show: "BoardConfiguration", networkmgr: "NetworkManager", exit_available: bool = False):
         self.commands = [
                 ListCommand(self),
                 SelectCommand(self),
                 BankSetCommand(self),
+                ShowCommand(self),
                 HelpCommand(self)
         ]
-        self.selected_bank = None
-        self.selected_column = None
-        self.selected_scene = None
+        self.selected_bank: "BankSet" | None = None
+        self.selected_column: "DeskColumn" | None = None
+        self.selected_scene: "Scene" | None = None
+        self.show = show
+        self.networkmgr: "NetworkManager" = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
         for c in self.commands:

@@ -1,6 +1,7 @@
 # coding=utf-8
 """Basic arithmetic filter nodes"""
 from model import DataType
+from model.filter import FilterTypeEnumeration
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -12,7 +13,7 @@ class ArithmeticMACNode(FilterNode):
     nodeName = 'MAC filter'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=10, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MAC, name=name, terminals={
             'factor1': {'io': 'in'},
             'factor2': {'io': 'in'},
             'summand': {'io': 'in'},
@@ -32,7 +33,7 @@ class ArithmeticFloatTo16BitNode(FilterNode):
     nodeName = 'Float to 16 bit converter'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=12, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_16BIT, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -45,7 +46,7 @@ class ArithmeticFloatTo8BitNode(FilterNode):
     nodeName = 'Float to 8 bit converter'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=13, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -58,7 +59,7 @@ class ArithmeticRoundNode(FilterNode):
     nodeName = 'Round'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=14, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_ROUND, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -73,7 +74,7 @@ class ArithmeticLogarithmNode(FilterNode):
     nodeName = 'log'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=28, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_LOGARITHM, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -89,7 +90,7 @@ class ArithmeticExponentialNode(FilterNode):
     nodeName = 'exp'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=29, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_EXPONENTIAL, name=name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
         })
@@ -104,7 +105,7 @@ class ArithmeticMinimumNode(FilterNode):
     nodeName = 'min'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=30, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MINIMUM, name=name, terminals={
             'param1': {'io': 'in'},
             'param2': {'io': 'in'},
             'value': {'io': 'out'}
@@ -123,7 +124,7 @@ class ArithmeticMaximumNode(FilterNode):
     nodeName = 'max'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=31, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MAXIMUM, name=name, terminals={
             'param1': {'io': 'in'},
             'param2': {'io': 'in'},
             'value': {'io': 'out'}

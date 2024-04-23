@@ -1,10 +1,18 @@
+# coding=utf-8
 from model import Filter
 from model.patching_channel import PatchingChannel
 from model.scene import FilterPage
 from controller.ofl.fixture import UsedFixture
 
 
-def _sanitize_name(input: str) -> str:
+from logging import getLogger
+logger = getLogger(__file__)
+
+
+def _sanitize_name(input: str | dict) -> str:
+    if isinstance(input, dict):
+        input = input.get("insert")
+        logger.error("Did not extract channel macro while creating fixture filters.")
     if input == 'universe':
         return '_universe_channel'
     return input.replace(" ", "_").replace("/", "_").replace("\\", "_")
@@ -16,7 +24,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage
         return False
 
     scene = filter_page.parent_scene
-    name = "{}-{} {}".format(fixture.parent_universe, channels[0].address, fixture.name)
+    name = "{}-{} {}".format(fixture.parent_universe, channels[0].address + 1, fixture.name)
     max_x = 0.0
 
     for filter in filter_page.filters:
@@ -37,7 +45,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage
         selected_input_name = _sanitize_name(c.fixture_channel or str(i))
         if selected_input_name in filter.filter_configurations.keys():
             selected_input_name += str(i)
-        filter.filter_configurations[selected_input_name] = str(c.address)
+        filter.filter_configurations[selected_input_name] = str(c.address + 1)
         i += 1
 
     scene.append_filter(filter)
@@ -54,13 +62,13 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
         try:
             if not c[c_i].fixture_channel:
                 continue
-            if ((c[c_i].fixture_channel == "Pan fine" and c[c_i-1].fixture_channel == "Pan") or
-                    (c[c_i].fixture_channel == "Tilt fine" and c[c_i-1].fixture_channel == "Tilt")):
+            if ((c[c_i].fixture_channel.lower() == "pan fine" and c[c_i-1].fixture_channel.lower() == "pan") or
+                    (c[c_i].fixture_channel.lower() == "tilt fine" and c[c_i-1].fixture_channel.lower() == "tilt")):
                 adapter_name = _sanitize_name("pos2channel_{}_{}".format(i, name))
                 split_filter = Filter(scene=fp.parent_scene,
                                       filter_id=adapter_name,
                                       filter_type=8,
-                                      pos=(x, float(2*len(c) + i * 5)))
+                                      pos=(int(x), int(2*len(c) + i * 5)))
                 universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":value_lower"
                 universe_filter.channel_links[_sanitize_name(c[c_i-1].fixture_channel)] = adapter_name + ":value_upper"
                 fp.filters.append(split_filter)

@@ -100,28 +100,28 @@ class Shift8BitNode(ShiftFilterNode):
     nodeName = "filter_shift_8bit"
 
     def __init__(self, model, name):
-        super().__init__(model, name, 45, DataType.DT_8_BIT)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT, DataType.DT_8_BIT)
 
 
 class Shift16BitNode(ShiftFilterNode):
     nodeName = "filter_shift_16bit"
 
     def __init__(self, model, name):
-        super().__init__(model, name, 46, DataType.DT_16_BIT)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT, DataType.DT_16_BIT)
 
 
 class ShiftFloatNode(ShiftFilterNode):
     nodeName = "filter_shift_float"
 
     def __init__(self, model, name):
-        super().__init__(model, name, 47, DataType.DT_DOUBLE)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT, DataType.DT_DOUBLE)
 
 
 class ShiftColorNode(ShiftFilterNode):
     nodeName = "filter_shift_color"
 
     def __init__(self, model, name):
-        super().__init__(model, name, 48, DataType.DT_COLOR)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR, DataType.DT_COLOR)
 
 
 class AutoTrackerNode(FilterNode):

@@ -4,8 +4,9 @@ import json
 import logging
 from typing import List
 
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QCompleter
 
 from model.broadcaster import Broadcaster
@@ -16,15 +17,39 @@ from .search import Operation, Search
 
 class LoggingWidget(QtWidgets.QTabWidget):
     """widget for logging_mode"""
+    _loging_level_changed: QtCore.Signal = QtCore.Signal(tuple)
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+
+        select_bar = QtWidgets.QMenuBar()
+        level_menu = QtWidgets.QMenu("Level")
+        self._levels: dict = {
+            "DEBUG": QAction("Debug", level_menu, checkable=True, checked=False,
+                             changed=(lambda: self._loging_level_changed.emit(
+                                 ("DEBUG", self._levels["DEBUG"].isChecked())))),
+            "INFO": QAction("Info", level_menu, checkable=True, checked=False,
+                            changed=(
+                                lambda: self._loging_level_changed.emit(("INFO", self._levels["INFO"].isChecked())))),
+            "WARN": QAction("Warn", level_menu, checkable=True, checked=True,
+                            changed=(
+                                lambda: self._loging_level_changed.emit(("WARN", self._levels["WARN"].isChecked())))),
+            "ERROR": QAction("Error", level_menu, checkable=True, checked=True,
+                             changed=(
+                                 lambda: self._loging_level_changed.emit(("ERROR", self._levels["ERROR"].isChecked()))))
+        }
+        level_menu.addAction(QAction("all", level_menu, triggered=(lambda: self.all_log_levels(True))))
+        for key, value in self._levels.items():
+            level_menu.addAction(value)
+        level_menu.addAction(QAction("none", level_menu, triggered=(lambda: self.all_log_levels(False))))
+        select_bar.addMenu(level_menu)
+
         self._broadcaster = Broadcaster()
         self._broadcaster.log_message.connect(self.new_log_message)
 
         searchbar = QtWidgets.QLineEdit()
         searchbar.textChanged.connect(self.update_display)
-        completer = QCompleter(["level", "message", "timestamp", "logger", "module", "function", "line", "thread_name"])
+        completer = QCompleter(["message", "timestamp", "logger", "module", "function", "line", "thread_name"])
         searchbar.setCompleter(completer)
 
         self._tree = QtWidgets.QTreeWidget()
@@ -38,6 +63,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
         self._log_items: List[LoggingItemWidget] = []
 
         container_layout = QtWidgets.QVBoxLayout()
+        container_layout.addWidget(select_bar)
         container_layout.addWidget(searchbar)
         container_layout.addWidget(self._tree)
 
@@ -45,9 +71,17 @@ class LoggingWidget(QtWidgets.QTabWidget):
 
         logging.info("start DMXGui")
 
+    def all_log_levels(self, value: bool):
+        """set all log levels"""
+        for level in self._levels.values():
+            level.setChecked(value)
+
     def new_log_message(self, message: str) -> None:
         """handle incoming log messages"""
-        new_log_item: LoggingItemWidget = LoggingItemWidget(self._tree, json.loads(message))
+        message_dict = json.loads(message)
+        level = message_dict["level"]
+        new_log_item: LoggingItemWidget = LoggingItemWidget(self._tree, message_dict, level,
+                                                            self._levels[level].isChecked(), self._loging_level_changed)
         self._log_items.append(new_log_item)
         self._tree.addTopLevelItem(new_log_item)
 
@@ -58,6 +92,6 @@ class LoggingWidget(QtWidgets.QTabWidget):
         for item in ands:
             part = item.split(":")
             if len(part) == 2:
-                search.append(Search((part[0], part[1]), Operation.AND))
+                search.append(Search((part[0], part[1]), Operation.IS))
         for widget in self._log_items:
             widget.search(search)

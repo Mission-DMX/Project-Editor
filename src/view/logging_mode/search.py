@@ -5,7 +5,7 @@ import enum
 
 class Operation(enum.Enum):
     """possible Operations"""
-
+    IS = 0
     AND = 1
     OR = 2
 

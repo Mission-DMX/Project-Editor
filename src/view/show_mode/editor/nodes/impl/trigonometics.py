@@ -1,6 +1,7 @@
 # coding=utf-8
 """Trigonometric filter nodes"""
 from model import DataType
+from model.filter import FilterTypeEnumeration
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -35,7 +36,7 @@ class TrigonometricSineNode(TrigonometricNode):
     nodeName = 'sin'
 
     def __init__(self, model, name):
-        super().__init__(model, filter_type=19, name=name)
+        super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, name=name)
 
 
 class TrigonometricCosineNode(TrigonometricNode):
@@ -45,7 +46,7 @@ class TrigonometricCosineNode(TrigonometricNode):
     nodeName = 'cos'
 
     def __init__(self, model, name):
-        super().__init__(model, filter_type=20, name=name)
+        super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN, name=name)
 
 
 class TrigonometricTangentNode(TrigonometricNode):
@@ -55,7 +56,7 @@ class TrigonometricTangentNode(TrigonometricNode):
     nodeName = 'tan'
 
     def __init__(self, model, name):
-        super().__init__(model, filter_type=21, name=name)
+        super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_TANGENT, name=name)
 
 
 class TrigonometricArcSinNode(TrigonometricNode):
@@ -65,7 +66,7 @@ class TrigonometricArcSinNode(TrigonometricNode):
     nodeName = 'arcsin'
 
     def __init__(self, model, name):
-        super().__init__(model, filter_type=22, name=name)
+        super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_ARCSIN, name=name)
         self.filter.default_values['value_in'] = '1'
 
 
@@ -76,7 +77,7 @@ class TrigonometricArcCosNode(TrigonometricNode):
     nodeName = 'arccos'
 
     def __init__(self, model, name):
-        super().__init__(model, filter_type=23, name=name)
+        super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_ARCCOSIN, name=name)
         self.filter.default_values['value_in'] = '1'
 
 
@@ -87,5 +88,5 @@ class TrigonometricArcTanNode(TrigonometricNode):
     nodeName = 'arctan'
 
     def __init__(self, model, name):
-        super().__init__(model, filter_type=24, name=name)
+        super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_ARCTANGENT, name=name)
         self.filter.default_values['value_in'] = '1'
