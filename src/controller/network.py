@@ -183,6 +183,7 @@ class NetworkManager(QtCore.QObject):
                         pass
             except:
                 logger.error("Failed to parse message.", exc_info=True)
+        self.push_messages()
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
         """
