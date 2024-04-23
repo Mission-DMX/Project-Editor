@@ -134,6 +134,7 @@ class AdapterFloatToColorNode(FilterNode):
         self.filter.in_data_types["s"] = DataType.DT_DOUBLE
         self.filter.in_data_types["i"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_COLOR
+        self.filter.default_values['i'] = '1'
 
 
 class AdapterColorToFloatsNode(FilterNode):

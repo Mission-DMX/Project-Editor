@@ -84,4 +84,5 @@ class CueFilter(VirtualFilter):
             f.channel_links.update(self.channel_links)
             f.gui_update_keys.update(self.gui_update_keys)
             f.initial_parameters.update(self.initial_parameters)
+            f.in_data_types.update(self.in_data_types)
             filter_list.append(f)

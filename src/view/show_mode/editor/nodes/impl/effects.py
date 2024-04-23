@@ -57,6 +57,8 @@ class ShiftFilterNode(FilterNode):
         self.filter.in_data_types["input"] = data_type
         self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.default_values['time'] = '0'
+        self.filter.default_values['switch_time'] = '1000'
 
         try:
             if isinstance(model, Scene):
