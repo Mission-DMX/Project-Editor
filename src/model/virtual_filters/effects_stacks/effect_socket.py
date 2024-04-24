@@ -10,6 +10,10 @@ from model.virtual_filters.effects_stacks.effect import EffectType, Effect
 from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
 from model.virtual_filters.effects_stacks.effects.segment_effects import SegmentEffect
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from model.virtual_filters.effects_stacks.vfilter import EffectsStack
+
 logger = getLogger(__file__)
 
 
@@ -109,15 +113,15 @@ class EffectsSocket:
             data["segments"] = self._segment_socket.serialize()
         return json.dumps(data)
 
-    def deserialize(self, data: str):
+    def deserialize(self, data: str, parent: "EffectsStack"):
         data: dict = json.loads(data)
         self._color_socket = None
         self._segment_socket = None
         if self.has_color_property:
             socket_data = data.get("color")
             if socket_data:
-                self._color_socket = effect_from_deserialization(socket_data)
+                self._color_socket = effect_from_deserialization(socket_data, parent)
         if self.has_segmentation_support:
             socket_data = data.get("segments")
             if socket_data:
-                self._segment_socket = effect_from_deserialization(socket_data)
+                self._segment_socket = effect_from_deserialization(socket_data, parent)

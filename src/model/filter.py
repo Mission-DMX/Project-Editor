@@ -126,7 +126,7 @@ class Filter:
     """Filter for show file"""
 
     def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None,
-                 filter_configurations: dict[str, str] = {}):
+                 filter_configurations: dict[str, str] | None = None):
         if pos is None:
             pos = [0.0, 0.0]
         self._scene: "Scene" = scene
@@ -135,7 +135,7 @@ class Filter:
         self._pos: tuple[float, float] | None = pos
         self._channel_links: dict[str, str] = {}
         self._initial_parameters: dict[str, str] = {}
-        self._filter_configurations: dict[str, str] = filter_configurations
+        self._filter_configurations: dict[str, str] = filter_configurations or dict()
         self._gui_update_keys: dict[str, DataType | list[str]] = {}
         self._in_data_types: dict[str, DataType] = {}
         self._out_data_types: dict[str, DataType] = {}

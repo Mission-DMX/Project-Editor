@@ -1,7 +1,5 @@
 from typing import List
 
-import proto.UniverseControl_pb2
-
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu, QInputDialog
@@ -14,7 +12,7 @@ from controller.ofl.fixture import UsedFixture
 
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
-from .universe_tree_browser_widget import UniverseTreeBrowserWidget
+from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from ..editing_utils import add_scene_to_show
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 

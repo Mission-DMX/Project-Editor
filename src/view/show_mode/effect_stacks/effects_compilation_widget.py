@@ -10,6 +10,10 @@ from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
 
+from logging import getLogger
+logger = getLogger(__file__)
+
+
 class EffectCompilationWidget(QWidget):
 
     effect_added = Signal(Effect)
@@ -88,7 +92,7 @@ class EffectCompilationWidget(QWidget):
                 text_height = fm.height()
                 p.drawText(int(w / 2 - text_width / 2), int(h / 2 - text_height / 2), no_socket_hint_str)
         except Exception as e:
-            print(e)
+            logger.exception(e)
         p.end()
         self._painting_active = False
 

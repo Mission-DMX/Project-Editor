@@ -1,5 +1,4 @@
 from PySide6.QtCore import QEvent, Qt
-from PySide6.QtGui import QEnterEvent
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QTreeWidgetItem, QVBoxLayout, QSpinBox, QMessageBox, QScrollArea, \
     QSplitter, QStackedWidget
 
@@ -8,7 +7,7 @@ from model import Filter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.effects_stacks.effect import Effect
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
-from view.show_mode.editor.show_browser.universe_tree_browser_widget import UniverseTreeBrowserWidget
+from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.show_mode.effect_stacks.effects_compilation_widget import EffectCompilationWidget
 from view.show_mode.effect_stacks.effects_list import EffectsListWidget
 

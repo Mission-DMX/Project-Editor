@@ -174,18 +174,14 @@ class Effect(ABC):
     def get_human_slot_name(self, slot_name: str) -> str:
         return slot_name
 
-    @property
-    def parent_scene(self) -> Scene | None:
-        return self._parent_filter
-
-    @parent_scene.setter
-    def parent_scene(self, s: Scene):
-        self._parent_filter = s
-
-    def get_scene(self) -> Scene:
+    def get_scene(self) -> Scene | None:
+        if self._parent_filter is None:
+            return None
         return self._parent_filter.scene
 
     def get_position(self) -> tuple[float, float]:
+        if self._parent_filter is None:
+            return 0, 0
         return self._parent_filter.pos
 
     def set_parent_filter(self, f: "EffectsStack"):

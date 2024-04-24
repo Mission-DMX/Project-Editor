@@ -186,8 +186,8 @@ class ColorWheelEffect(ColorEffect):
         self._default_speed = data["default-speed"]
         speed_input_data = data.get("speed-input")
         if speed_input_data is not None:
-            self._inputs["speed"] = effect_from_deserialization(speed_input_data)
+            self._inputs["speed"] = effect_from_deserialization(speed_input_data, self._parent_filter)
         range_input_data = data.get("range-input")
         if range_input_data is not None:
-            self._inputs["range"] = effect_from_deserialization(range_input_data)
+            self._inputs["range"] = effect_from_deserialization(range_input_data, self._parent_filter)
         self._widget.load_values_from_effect()

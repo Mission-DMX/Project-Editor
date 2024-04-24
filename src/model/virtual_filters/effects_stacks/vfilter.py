@@ -161,7 +161,7 @@ class EffectsStack(VirtualFilter):
                     )
                     continue
                 s = EffectsSocket(uf)
-                s.deserialize(v)
+                s.deserialize(v, self)
                 self.sockets.append(s)
 
     # TODO implement optional output ports of effect stack vfilter
