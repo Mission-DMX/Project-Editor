@@ -2,6 +2,7 @@ from PySide6.QtWidgets import (QWidget, QHBoxLayout, QPushButton, QVBoxLayout, Q
                                QLineEdit, QLabel, QDoubleSpinBox)
 
 from model import UIWidget, UIPage, Filter
+from model.filter import FilterTypeEnumeration
 
 
 class ConstantNumberButtonList(UIWidget):
@@ -59,8 +60,9 @@ class ConstantNumberButtonList(UIWidget):
         super().__init__(fid, parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
-        self._value = int(filter_model.initial_parameters["value"])
-        self._maximum = 255 if filter_model.filter_type == 0 else -1 if filter_model.filter_type == 2 else (2**16)-1
+        self._filter_type = filter_model.filter_type
+        self._value = float(filter_model.initial_parameters["value"]) if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(filter_model.initial_parameters["value"])
+        self._maximum = 255 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT else -1 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else (2**16)-1
 
     def _set_value(self, new_value: int):
         self._value = new_value
@@ -91,14 +93,15 @@ class ConstantNumberButtonList(UIWidget):
         self._player_widget.setMinimumWidth(50)
         self._player_widget.setMinimumHeight(30)
         layout = QHBoxLayout()
-        for value_name_tuple in self.configuration["buttons"].split(";"):
-            name, value = value_name_tuple.split(":")
-            value = int(value)
-            button = QPushButton(name, self._player_widget)
-            button.clicked.connect(lambda checked=False, _value=value: self._set_value(_value))
-            button.setMinimumWidth(max(30, len(name) * 10))
-            button.setMinimumHeight(30)
-            layout.addWidget(button)
+        if "buttons" in self.configuration:
+            for value_name_tuple in self.configuration["buttons"].split(";"):
+                name, value = value_name_tuple.split(":")
+                value = float(value) if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(value)
+                button = QPushButton(name, self._player_widget)
+                button.clicked.connect(lambda checked=False, _value=value: self._set_value(_value))
+                button.setMinimumWidth(max(30, len(name) * 10))
+                button.setMinimumHeight(30)
+                layout.addWidget(button)
         self._player_widget.setLayout(layout)
 
     def construct_configuration_widget(self, parent: QWidget | None):
