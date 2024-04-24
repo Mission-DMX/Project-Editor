@@ -64,7 +64,7 @@ class ConstantNumberButtonList(UIWidget):
         self._value = float(filter_model.initial_parameters["value"]) if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(filter_model.initial_parameters["value"])
         self._maximum = 255 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT else -1 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else (2**16)-1
 
-    def _set_value(self, new_value: int):
+    def _set_value(self, new_value):
         self._value = new_value
         self.push_update()
         print("Pushed update", new_value)
