@@ -10,7 +10,8 @@ class CueListNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
-            'time': {'io': 'in'}
+            'time': {'io': 'in'},
+            'time_scale': {'io': 'in'}
         }, allowAddOutput=True)
 
         try:
@@ -31,6 +32,7 @@ class CueListNode(FilterNode):
             self.filter.filter_configurations["cuelist"] = ""
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
         self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]
         self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
