@@ -105,6 +105,7 @@ class EffectsStack(VirtualFilter):
                         adapter_filters.append(adapter_filter)
 
                     # TODO handle uv
+                    # TODO handle main brightness control
                     for segment_channel_name, segment_list in [
                             ("r", socket_target.red_segments), ("g", socket_target.green_segments),
                             ("b", socket_target.blue_segments), ("w", socket_target.white_segments),
