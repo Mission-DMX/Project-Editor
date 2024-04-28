@@ -85,8 +85,7 @@ def load_fixture(file) -> Fixture:
     f = open(file)
     ob: json = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
-                   categories=ob["categories"], modes=ob["modes"], fileName=file.split("/fixtures/")[1])
-
+                   categories=ob["categories"] if "categories" in ob else [], modes=ob["modes"] if "modes" in ob else [], fileName=file.split("/fixtures/")[1])
 
 def try_load(ob: json, name: object) -> str:
     """ try to load not required json parts"""
