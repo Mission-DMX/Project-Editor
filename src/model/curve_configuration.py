@@ -19,6 +19,9 @@ class BaseCurve(IntFlag):
 class CurveConfiguration:
 
     def __init__(self):
+        self.frequencies: dict[BaseCurve, float] = {}
+        for curve in [BaseCurve(2 ** c) for c in range(9)]:
+            self.frequencies[curve] = 1.0
         self.selected_features: BaseCurve = BaseCurve.NONE
         self.append_features_using_addition: bool = False
         self.base_phase: float = 0.0
