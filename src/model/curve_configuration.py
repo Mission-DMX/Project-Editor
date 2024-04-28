@@ -23,3 +23,12 @@ class CurveConfiguration:
         self.append_features_using_addition: bool = False
         self.base_phase: float = 0.0
         self.base_amplitude: float = 1.0
+
+    def serialize(self) -> str:
+        pass  # TODO implement
+
+    @classmethod
+    def from_str(cls, config: str) -> "CurveConfiguration":
+        cc = CurveConfiguration()
+
+        return cc

@@ -3,7 +3,9 @@ from abc import ABC
 from PySide6.QtWidgets import QWidget, QLabel
 
 from model import Filter
+from model.curve_configuration import CurveConfiguration
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
+from view.utility_widgets.curve_editor import CurveEditorWidget
 
 
 class GenericEffect(Effect, ABC):
@@ -14,7 +16,8 @@ class GenericEffect(Effect, ABC):
 class FunctionEffect(GenericEffect):
 
     def serialize(self) -> dict:
-        return {"type": "generic.function"}
+        return {"type": "generic.function",
+                "config": self._config.serialize()}
 
     EFFECT_ID = "effect.animation.trigonometric_function"
 
@@ -32,8 +35,9 @@ class FunctionEffect(GenericEffect):
 
     def __init__(self):
         super().__init__({"phase": [EffectType.GENERIC_NUMBER]})
-        self._widget: QWidget = QLabel("Curve editor config widget -- Hier koennte Ihre Werbung stehen")
-        # TODO implement curve editor and replace this dummy one with it.
+        self._config = CurveConfiguration()
+        self._widget: CurveEditorWidget = CurveEditorWidget()
+        self._widget.set_wave_config(self._config)
 
     def get_human_filter_name(self):
         return "Function"
@@ -43,3 +47,5 @@ class FunctionEffect(GenericEffect):
 
     def deserialize(self, data: dict[str, str]):
         pass  # TODO implement
+        new_config = CurveConfiguration.from_str(data.get("config"))
+        self._widget.set_wave_config(new_config)
