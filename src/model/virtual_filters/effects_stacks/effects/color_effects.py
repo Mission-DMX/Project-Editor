@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget
 
 from model import Filter
 from model.filter import FilterTypeEnumeration
-from model.virtual_filters.effects_stacks.adapters import emplace_adapter
+from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from view.show_mode.effect_stacks.configuration_widgets.color_wheel_configuration_widget import \
     ColorWheelConfigurationWidget
@@ -50,38 +50,37 @@ class ColorWheelEffect(ColorEffect):
         fragment_outputs = []
         speed_effect = self._inputs["speed"]
         if speed_effect:
-            speed_input_channel = speed_effect.emplace_filter(filter_list, prefix + "__speed_")
-            speed_input_channel = emplace_adapter(speed_effect.get_output_slot_type(), EffectType.GENERIC_NUMBER,
-                                                  speed_input_channel, filter_list)["x"]
+            speed_input_channel = emplace_with_adapter(speed_effect, EffectType.GENERIC_NUMBER,
+                                                       filter_list, prefix + "__speed_")["x"]
         else:
             speed_effect_name = prefix + "_speedconst"
             speed_effect = Filter(self.get_scene(), speed_effect_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
                                   self.get_position())
             speed_effect.initial_parameters["value"] = str(self._default_speed)  # TODO normalize to 1/60
+            filter_list.append(speed_effect)
             speed_input_channel = speed_effect_name + ":value"
         # TODO inst range input filter or place constants using min and max hue
         range_input = self._inputs["range"]
         if range_input is not None:
-            hue_effect_range_factor_name = range_input.emplace_filter(filter_list, prefix + "__range_")
-            hue_effect_range_factor_channel = emplace_adapter(range_input.get_output_slot_type(),
-                                                              EffectType.GENERIC_NUMBER,
-                                                              hue_effect_range_factor_name, filter_list)["x"]
+            hue_effect_range_factor_channel = emplace_with_adapter(range_input,
+                                                                   EffectType.GENERIC_NUMBER,
+                                                                   filter_list, prefix + "__range_")["x"]
         else:
             hue_effect_range_factor_name = prefix + "__range_const_min"
             filter_list.append(Filter(self.get_scene(), hue_effect_range_factor_name,
                                FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
-                               {"value": "360.0"}))
+                               initial_parameters={"value": "360.0"}))
             hue_effect_range_factor_channel = hue_effect_range_factor_name + ":value"
 
         saturation_input_filter_name = prefix + "__saturation"
         filter_list.append(Filter(self.get_scene(), saturation_input_filter_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-                                  filter_configurations={"value": "1.0"}))
+                                  initial_parameters={"value": "1.0"}))
 
         # TODO implement filter that iterates between the hue boundries using the speed as a fraction for the time input
         hue_effect_range_offset = prefix + "__hue_offset_const"
         filter_list.append(Filter(self.get_scene(), hue_effect_range_offset,
                                   FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, pos=self.get_position(),
-                                  filter_configurations={"value": "180.0"}))
+                                  initial_parameters={"value": "180.0"}))
 
         time_filter_name = prefix + "__time"
         filter_list.append(Filter(self.get_scene(), time_filter_name, FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT))
@@ -89,18 +88,16 @@ class ColorWheelEffect(ColorEffect):
         if self._inputs["segments"] is None:
             brightness_channel_name = prefix + "__brightness_const"
             filter_list.append(Filter(self.get_scene(), brightness_channel_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-                                      filter_configurations={"value": "1.0"}))
+                                      initial_parameters={"value": "1.0"}))
             brightness_channel_name += ":value"
         else:
-            brightness_channel_name = self._inputs["segments"].emplace_filter(filter_list,
-                                                                              prefix + "__segments_brightness_")
-            brightness_channel_name = emplace_adapter(
-                self._inputs["segments"].get_output_slot_type(),
+            brightness_channel_name = emplace_with_adapter(
+                self._inputs["segments"],
                 EffectType.LIGHT_INTENSITY
                 if self._inputs["segments"].get_output_slot_type() != EffectType.ENABLED_SEGMENTS
                 else EffectType.ENABLED_SEGMENTS,
-                brightness_channel_name,
-                filter_list
+                filter_list,
+                prefix + "__segments_brightness_"
             )
 
         for frag_index in range(self.fragment_number):

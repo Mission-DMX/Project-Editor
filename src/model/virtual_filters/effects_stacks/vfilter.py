@@ -1,7 +1,7 @@
 from controller.ofl.fixture import ColorSupport
 from model import Filter, Scene
 from model.filter import VirtualFilter, FilterTypeEnumeration
-from model.virtual_filters.effects_stacks.adapters import emplace_adapter
+from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
@@ -42,9 +42,7 @@ class EffectsStack(VirtualFilter):
                         socket_target.parent_universe,
                         socket_target.channels[0].address
                     )
-                    output_dict = color_effect.emplace_filter(filter_list, filter_prefix)
-                    output_dict = emplace_adapter(color_effect.get_output_slot_type(), EffectType.COLOR,
-                                                  output_dict, filter_list)
+                    output_dict = emplace_with_adapter(color_effect, EffectType.COLOR, filter_list, filter_prefix)
 
                     if not isinstance(output_dict["color"], list):
                         output_dict["color"] = [output_dict["color"]]
@@ -56,11 +54,9 @@ class EffectsStack(VirtualFilter):
                                 socket_target.parent_universe,
                                 socket_target.channels[0].address
                             )
-                            segmentation_outputs = segmentation_effect.emplace_filter(filter_list, filter_prefix)
-                            segmentation_outputs = emplace_adapter(segmentation_effect.get_output_slot_type(),
-                                                                   EffectType.ENABLED_SEGMENTS,
-                                                                   segmentation_outputs,
-                                                                   filter_list)
+                            segmentation_outputs = emplace_with_adapter(segmentation_effect,
+                                                                        EffectType.ENABLED_SEGMENTS,
+                                                                        filter_list, filter_prefix)
                             i = 0
                             for segment_number, segment_out_port in segmentation_outputs.items():
                                 color_index = i % len(output_dict["color"])

@@ -31,7 +31,7 @@ class FunctionEffect(GenericEffect):
         return "TODO implement"
 
     def emplace_filter(self, filter_list: list[Filter], prefix: str) -> dict[str, str | list[str]]:
-        return dict()
+        return dict()  # TODO
 
     def __init__(self):
         super().__init__({"phase": [EffectType.GENERIC_NUMBER]})
@@ -45,6 +45,5 @@ class FunctionEffect(GenericEffect):
         return "This effect creates wave forms that it follows."
 
     def deserialize(self, data: dict[str, str]):
-        pass  # TODO implement
         new_config = CurveConfiguration.from_str(data.get("config"))
         self._widget.set_wave_config(new_config)
