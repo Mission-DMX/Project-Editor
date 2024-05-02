@@ -17,7 +17,7 @@ class FunctionEffect(GenericEffect):
 
     def serialize(self) -> dict:
         return {"type": "generic.function",
-                "config": self._config.serialize()}
+                "config": self._widget.get_wave_config().serialize()}
 
     EFFECT_ID = "effect.animation.trigonometric_function"
 
@@ -35,9 +35,8 @@ class FunctionEffect(GenericEffect):
 
     def __init__(self):
         super().__init__({"phase": [EffectType.GENERIC_NUMBER]})
-        self._config = CurveConfiguration()
         self._widget: CurveEditorWidget = CurveEditorWidget()
-        self._widget.set_wave_config(self._config)
+        self._widget.set_wave_config(CurveConfiguration())
 
     def get_human_filter_name(self):
         return "Function"

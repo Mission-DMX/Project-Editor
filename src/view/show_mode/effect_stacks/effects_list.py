@@ -134,6 +134,7 @@ class EffectsListWidget(QWidget):
         self._search_bar.setCompleter(self._search_completer)
 
         container_layout.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.setMaximumWidth(400)
 
     def _update_search(self, new_query_text: str):
         new_query_text = new_query_text.lower()
