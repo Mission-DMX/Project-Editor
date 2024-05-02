@@ -59,7 +59,11 @@ class ConstantNumberButtonList(UIWidget):
         super().__init__(fid, parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
-        self._value = int(filter_model.initial_parameters["value"])
+        value_str = filter_model.initial_parameters["value"]
+        if '.' in value_str:
+            self._value = int(float(value_str))
+        else:
+            self._value = int(value_str)
         self._maximum = 255 if filter_model.filter_type == 0 else -1 if filter_model.filter_type == 2 else (2**16)-1
 
     def _set_value(self, new_value: int):
@@ -93,7 +97,7 @@ class ConstantNumberButtonList(UIWidget):
         layout = QHBoxLayout()
         for value_name_tuple in self.configuration["buttons"].split(";"):
             name, value = value_name_tuple.split(":")
-            value = int(value)
+            value = int(float(value))
             button = QPushButton(name, self._player_widget)
             button.clicked.connect(lambda checked=False, _value=value: self._set_value(_value))
             button.setMinimumWidth(max(30, len(name) * 10))
