@@ -7,7 +7,10 @@ from view.show_mode.editor.show_ui_widgets.constant_button_list import ConstantN
 
 
 class ButtonsWithValueSubmit(UIWidget):
-
+    """ UI widget for the showmode (extended with ConstantNumberButtonList also for the editor mode)
+    Provides a textfield with a submit button to update a value (of a constant node),
+    provides also (from ConstantNumberButtonList) a button list to send pre-defined values
+    """
     def get_config_dialog_widget(self, parent) -> QWidget:
         return self._button_list.get_config_dialog_widget(parent)
 
