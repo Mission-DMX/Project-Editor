@@ -1,3 +1,10 @@
+# coding=utf-8
+
+"""This file provides the effect (dummy) socket classes.
+An effect socket provides the inputs for a selected fixture. It is therefore the root of effect chaining.
+
+"""
+
 import json
 from logging import getLogger
 
@@ -63,6 +70,7 @@ class _EffectDummy_Socket(Effect):
 class EffectsSocket:
     """
     This class contains the anchor for an effect stack on a given group or fixture.
+    It furthermore proved the entry-point for show file (de)serialization as well as adding of further effects.
     """
 
     def __init__(self, target: UsedFixture):

@@ -1,3 +1,9 @@
+# coding=utf-8
+
+"""
+This file contains the fundamental building blocks for effects.
+"""
+
 from abc import ABC, abstractmethod
 from enum import IntFlag
 
@@ -11,7 +17,24 @@ if TYPE_CHECKING:
 
 
 class EffectType(IntFlag):
+    """
+    This enum represents the different effect types. An effect type defines the functionality it provides.
+    An effect can only ever represent one type, however it is possible to automatically convert between certain types.
 
+    The following behavior is to be expected from effects of the following types:
+    Color -- Outputs a selection colors.
+    Light Intensity -- Outputs a single number between 0 and 255 indicating the desired brightness
+    Enabled Segments -- Outputs a list of numbers between 0 and 1 indicating the requested lightness
+                        (for example of a pixel segment)
+    Pan / Tilt coordinates -- Provides a tuple (or list of tuples) of pan/tilt coordinates for usage in moving fixtures.
+    Position 3D -- provides a tuple or list of tuples indicating positions in 3D space defined by (x,y,z)
+    Speed -- Indicates the speed of effect transitions
+    Shutter / Strobe -- Defines the stroboscopic speed (as a frequency in Hz [double]) or disables it (by making it
+                        0.0). In case of 0 the light output should be continuously enabled.
+    Gobo Selection -- Indicates the desired GOBO. TODO: we need to define a shared database for images of gobos in lamps
+    Zoom / Focus -- Provides a (list of) tuple(s) of numbers between 0 and 1 indicating the zoom and focus of a fixture.
+    Generic number -- A generic number usable for misc purposes.
+    """
     COLOR = 0,
     LIGHT_INTENSITY = 1,
     ENABLED_SEGMENTS = 2,
@@ -109,7 +132,7 @@ class Effect(ABC):
 
         EffectType.LIGHT_INTENSITY -> "intensity", pointing to an output port of type 8bit
 
-        EffectType.ZOOM_FOCUS -> "zoom" (8bit), "focus" (8bit)
+        EffectType.ZOOM_FOCUS -> "zoom" (double), "focus" (double)
 
         EffectType.ENABLED_SEGMENTS -> numbered outputs for each segment of data type double (intensity between 0 and 1)
 
@@ -164,6 +187,12 @@ class Effect(ABC):
         return self._inputs.items()
 
     def attach(self, slot_id: str, e: "Effect") -> bool:
+        """This method gets called in order to attach an effect to an input slot.
+
+        :param slot_id: The slot that should be populated
+        :param e: The effect to place inside that slot
+        :returns: True if the attachment process was successful.
+        """
         if e.get_output_slot_type() not in self.get_accepted_input_types()[slot_id]:
             return False
         if not slot_id in self._inputs.keys():
@@ -172,26 +201,48 @@ class Effect(ABC):
         return True
 
     def get_human_slot_name(self, slot_name: str) -> str:
+        """This method provides a human-readable name of the input slot.
+        It should be overridden by implementing classes in most cases as it will only return the id by default.
+
+        :param slot_name: The internal id of the slot.
+        :returns: A friendly name.
+        """
         return slot_name
 
     def get_scene(self) -> Scene | None:
+        """This method returns the scene where the effect is used in.
+        Note: this method may return None.
+
+        :returns: The scene (if any)
+        """
         if self._parent_filter is None:
             return None
         return self._parent_filter.scene
 
     def get_position(self) -> tuple[float, float]:
+        """Retuns the position of the parent filter."""
         if self._parent_filter is None:
             return 0, 0
         return self._parent_filter.pos
 
     def set_parent_filter(self, f: "EffectsStack"):
+        """This method sets the parent filter, which needs to be of type EffectsStack."""
         self._parent_filter = f
 
     @abstractmethod
     def serialize(self) -> dict:
-        """This method needs to return a dictionary, containing at least the 'type' key indicating the effect."""
+        """This method needs to return a dictionary, containing at least the 'type' key indicating the effect.
+        The purpose of this method is to generate a restorable state while saving the show file. An implementing function
+        is responsible to call the serialization of its inputs on its own.
+
+        :returns: A dictionary describing the effect."""
         return dict()
 
     @abstractmethod
     def deserialize(self, data: dict[str, str]):
+        """This method is called if a show file is being loaded. It needs to be implemented in order to restore the
+        effect. It is responsible to instantiate all of its input effects.
+
+        :param data: The representation of the effect as a dictionary.
+        """
         raise NotImplementedError("The class did not implement the deserialize method.")

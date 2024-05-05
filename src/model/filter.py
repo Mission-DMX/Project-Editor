@@ -277,4 +277,8 @@ class VirtualFilter(Filter, abc.ABC):
         pass
 
     def serialize(self):
+        """Virtual filter might need to prepare themselves prior to being saved to a show file.
+        For example, they might need to compile some information. This method will be called just prior to generating
+        the filter element within the show file. Afterward the current state of the v-filter needs to be accessible
+        purely by querying the configuration and parameters variables."""
         pass

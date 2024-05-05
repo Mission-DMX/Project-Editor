@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file contains the effects of type color."""
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -17,6 +21,8 @@ class ColorEffect(Effect, ABC):
 
 
 class ColorWheelEffect(ColorEffect):
+    """This effect provides a color wheel. Besides implementing the base methods, it provides further methods to set
+    the default hue range and number of segments."""
 
     EFFECT_ID = "effect.colors.colorwheel"
 

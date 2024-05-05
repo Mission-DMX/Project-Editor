@@ -536,6 +536,7 @@ class BankSet:
 
     @staticmethod
     def push_messages_now():
+        """This method pushes outstanding updates to fish. It should only be called within the Qt event loop."""
         BankSet._fish_connector.push_messages()
 
     def get_column(self, column_id: str) -> DeskColumn | None:

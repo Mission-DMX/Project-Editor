@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file defines effects that provide their output based on a selected input fader."""
+
 from PySide6.QtWidgets import QWidget
 
 from model import Filter

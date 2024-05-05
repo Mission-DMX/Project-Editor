@@ -1,3 +1,4 @@
+# coding=utf-8
 from enum import IntFlag
 
 
@@ -17,6 +18,11 @@ class BaseCurve(IntFlag):
 
 
 class CurveConfiguration:
+    """
+    This class defines curves described using the mathematical primitives provided by fish.
+    It cannot be transferred to fish directly (yet) but is used across different components of
+    the gui that interact with fish. Most notably, it is used by the effects stack to define curves for effects.
+    """
 
     def __init__(self):
         self.frequencies: dict[BaseCurve, float] = {}
@@ -30,6 +36,12 @@ class CurveConfiguration:
         self.base_amplitude: float = 1.0
 
     def serialize(self) -> str:
+        """
+        This method serializes the configuration into a format for being saved inside strings in the showfile.
+        It does not necessarily represent a format that components of fish can understand.
+
+        :returns: A string representing the configuration
+        """
         return ";".join([
             "0",  # Opset
             str(self.selected_features),
@@ -42,6 +54,12 @@ class CurveConfiguration:
 
     @classmethod
     def from_str(cls, config: str) -> "CurveConfiguration":
+        """
+        This method deserializes this class using the format provided by the serialize function.
+
+        :param config: The representation of the object as a serialized string.
+        :returns: a new CurveConfiguration object
+        """
         cc = CurveConfiguration()
         if config is None or len(config) == 0:
             return cc
