@@ -80,8 +80,6 @@ class LoggingWidget(QtWidgets.QTabWidget):
         """handle incoming log messages"""
         message_dict = json.loads(message)
         level = message_dict["level"]
-        if level == "WARNING":
-            level = "WARN"
         new_log_item: LoggingItemWidget = LoggingItemWidget(self._tree, message_dict, level,
                                                             self._levels[level].isChecked(), self._loging_level_changed)
         self._log_items.append(new_log_item)
