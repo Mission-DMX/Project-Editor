@@ -135,7 +135,7 @@ class TimelineContentWidget(QWidget):
     def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         super().mousePressEvent(ev)
         self._drag_begin = (ev.x(), ev.y())
-        self.repaint()
+        self.update()
 
     def resizeEvent(self, event: PySide6.QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
