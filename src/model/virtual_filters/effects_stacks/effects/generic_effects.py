@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file contains effects that provide generic numbers"""
+
 from abc import ABC
 
 from PySide6.QtWidgets import QWidget, QLabel
@@ -14,6 +18,7 @@ class GenericEffect(Effect, ABC):
 
 
 class FunctionEffect(GenericEffect):
+    """This effect implements the emplacement of generic curve functions"""
 
     def serialize(self) -> dict:
         return {"type": "generic.function",

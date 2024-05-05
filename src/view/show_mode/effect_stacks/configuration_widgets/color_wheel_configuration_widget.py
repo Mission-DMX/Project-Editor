@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file contains the configuration widget for the color wheel effect."""
+
 from PySide6.QtWidgets import QWidget, QFormLayout, QSpinBox, QDoubleSpinBox
 
 from typing import TYPE_CHECKING
@@ -7,6 +11,8 @@ if TYPE_CHECKING:
 
 
 class ColorWheelConfigurationWidget(QWidget):
+
+    """This widget enables the user to set up the defaults of the color wheel effect settings."""
 
     def __init__(self, f: "ColorWheelEffect"):
         super().__init__()
@@ -30,6 +36,7 @@ class ColorWheelConfigurationWidget(QWidget):
         layout.addRow("Maximum Hue", self._maximum_hue)
         # TODO add color to hue indicator
         # TODO add default speed widget
+        # TODO disable settings if the corresponding input is occupied
         self.load_values_from_effect()
 
     def _fragment_count_changed(self, e):

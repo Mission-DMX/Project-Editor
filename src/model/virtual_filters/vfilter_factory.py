@@ -1,3 +1,10 @@
+# coding=utf-8
+
+"""
+This file provides a factory for v-filter instances. The primary use case is for restoring efforts after loading a
+show file.
+"""
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -12,6 +19,15 @@ from model.virtual_filters.cue_vfilter import CueFilter
 
 
 def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_id: str, pos: tuple[int] | None = None) -> "VirtualFilter":
+    """
+    This method constructs instances of v-filter based on the provided model for the restoring of show files.
+
+    :param scene: The parent scene of the filter to be constructed.
+    :param filter_type: The type of filter to instantiate
+    :param filter_id: The id of the filter to instantiate
+    :param pos: The position inside the editor of the filter to instantiate.
+    :returns: The generated v-filter
+    """
     if not filter_type < 0:
         raise ValueError("The provided filter is not a virtual description.")
     match filter_type:

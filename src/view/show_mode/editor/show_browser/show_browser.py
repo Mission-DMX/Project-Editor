@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file provides the ShowBrowser widget."""
+
 from typing import List
 
 from PySide6.QtCore import Qt, QPoint
@@ -18,6 +22,8 @@ from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 
 
 class ShowBrowser:
+
+    """This class provides a navigation bar / browser for the complete show."""
 
     _filter_icon = QIcon("resources/icons/filter.svg")
     _scene_browser_tab_icon = QIcon("resources/icons/showbrowser-show.svg")

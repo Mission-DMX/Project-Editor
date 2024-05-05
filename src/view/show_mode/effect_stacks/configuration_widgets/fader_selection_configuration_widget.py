@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file provides the fader input effect configuration widget."""
+
 from typing import TYPE_CHECKING
 
 from model.control_desk import DeskColumn, ColorDeskColumn
@@ -9,6 +13,7 @@ if TYPE_CHECKING:
 
 
 class FaderSelectionConfigurationWidget(FaderColumnSelectorWidget):
+    """This widget enables the user to select a fader as the desired input."""
 
     def __init__(self, effect: "ColorInputEffect"):
         scene = effect.get_scene()

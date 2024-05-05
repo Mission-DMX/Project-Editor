@@ -1,3 +1,9 @@
+# coding=utf-8
+
+"""
+This file provides the column input filter settings widget.
+"""
+
 from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QCheckBox
 
 from model import Filter
@@ -8,6 +14,7 @@ from ..show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 
 class ColumnSelect(NodeEditorFilterConfigWidget):
+    """This class is an adapter to configure the column select filter with the column selection widget."""
     def _load_parameters(self, parameters: dict[str, str]):
         return dict()
 

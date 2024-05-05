@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file provides the v-filter implementation of the effects stack system"""
+
 from controller.ofl.fixture import ColorSupport
 from model import Filter, Scene
 from model.filter import VirtualFilter, FilterTypeEnumeration
@@ -10,6 +14,9 @@ logger = getLogger(__file__)
 
 
 class EffectsStack(VirtualFilter):
+
+    """The v-filter providing the effects stack. This filter provides a system enabling one to assign stackable effects
+    to fixtures, groups of fixtures or configurable output ports."""
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_EFFECTSSTACK, pos=pos)

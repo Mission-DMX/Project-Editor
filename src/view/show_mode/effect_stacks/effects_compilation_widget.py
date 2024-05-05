@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file contains the widget to stack the effects."""
+
 from PySide6 import QtGui, QtCore
 from PySide6.QtCore import QRect, Signal
 from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFontMetrics, QMouseEvent
@@ -15,6 +19,8 @@ logger = getLogger(__file__)
 
 
 class EffectCompilationWidget(QWidget):
+
+    """This widget renders the stacked effects editor."""
 
     effect_added = Signal(Effect)
     active_config_widget_changed = Signal(QWidget)
@@ -49,6 +55,8 @@ class EffectCompilationWidget(QWidget):
         self.update()
 
     def add_fixture_or_group(self, fg: UsedFixture):
+        """This method adds the provided fixture(-group) to the filter by creating and appending a corresponding socket.
+        :param fg: The fixture to add"""
         if fg in self._added_fixtures:
             return
         self._added_fixtures.add(fg)
@@ -96,7 +104,7 @@ class EffectCompilationWidget(QWidget):
         p.end()
         self._painting_active = False
 
-    def render_slot(self, x: int, y: int, first: bool, effect: Effect, p: QPainter) -> tuple[int, int]:
+    def _render_slot(self, x: int, y: int, first: bool, effect: Effect, p: QPainter) -> tuple[int, int]:
         slot_type: EffectType = effect.get_output_slot_type()
         fm = self.fontMetrics()
         light_blue_brush = QBrush(QColor.fromRgb(0x03, 0x9B, 0xE5))
@@ -159,7 +167,7 @@ class EffectCompilationWidget(QWidget):
                 old_y = y
                 old_x = x
                 x -= 10
-                x, y = self.render_slot(x, y, False, e, p)
+                x, y = self._render_slot(x, y, False, e, p)
                 p.drawLine(old_x - 3, old_y - 3, old_x - 3, y)
             else:
                 # render insertion hint for empty slots
@@ -197,7 +205,7 @@ class EffectCompilationWidget(QWidget):
         y += 15
 
         if s.has_color_property:
-            x, y = self.render_slot(self.width(), y, True, s.get_socket_or_dummy(EffectType.COLOR), p)
+            x, y = self._render_slot(self.width(), y, True, s.get_socket_or_dummy(EffectType.COLOR), p)
 
         socket_name = s.target.name
         socket_name_width = fm.horizontalAdvance(socket_name)
@@ -209,12 +217,19 @@ class EffectCompilationWidget(QWidget):
         return y
 
     def load_effect_to_add(self, e: Effect | None):
+        """Prior to adding an effect, it needs to be loaded first.
+
+        :param e: The effect to load.
+        """
         self._pending_effect = e
         # TODO change jogwheel input to select slot for add operation
         self.update()
         QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
 
     def add_effect_to_slot(self, i: int) -> bool:
+        """This method triggers the placement of the previously loaded effect.
+        :param i: The index of the slot to add the effect to.
+        """
         if self._pending_effect is None or i >= len(self._slot_counter):
             return False
         slot_id, candidate_effect = self._slot_counter[i]
@@ -227,6 +242,13 @@ class EffectCompilationWidget(QWidget):
         return True
 
     def get_maximum_slot_counter(self) -> int:
+        """
+        Use this method in order to retrieve the highest available slot index that the currently loaded effect can be
+        placed into.
+
+        :returns: The index of the highest slot. Zero based. -1 indicates that there are no slots that can accept the
+        effect.
+        """
         return len(self._slot_counter) - 1
 
     def mousePressEvent(self, event: QMouseEvent):

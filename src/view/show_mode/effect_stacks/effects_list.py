@@ -1,3 +1,8 @@
+# coding=utf-8
+
+"""This file implements the list widget for effects. Register your effect inside the EFFECT_LIST widget.
+Usage: The key indicates the category of the effect and the list all containing effects."""
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon, QPaintEvent, QPainter, QBrush, QColor
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, \
@@ -16,6 +21,7 @@ EFFECT_LIST = {
 
 
 class _EffectSeparator(QWidget):
+    """This widget provides a separator between effect categories."""
     def __init__(self, parent: QWidget, text: str):
         super().__init__(parent=parent)
         self._children: list[QWidget] = []
@@ -53,6 +59,8 @@ class _EffectSeparator(QWidget):
 
 
 class _EffectLabel(QWidget):
+    """This widget displays the name of the effect and provides a button to add it."""
+
     button_icon = QIcon.fromTheme("window-new")
 
     def __init__(self, effect_cls, parent: QWidget, separator: _EffectSeparator, list_widget: "EffectsListWidget"):
@@ -95,6 +103,9 @@ class _EffectLabel(QWidget):
 
 
 class EffectsListWidget(QWidget):
+    """
+    This widget displays all effects in a searchable manner. It furthermore enables the user to select one.
+    """
 
     effect_selected = Signal(Effect)
 

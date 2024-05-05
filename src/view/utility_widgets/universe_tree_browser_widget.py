@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file provides the universe browser widget."""
+
 from PySide6.QtWidgets import QTreeWidget
 
 from proto.UniverseControl_pb2 import Universe as pbUniverse
@@ -8,6 +12,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class UniverseTreeBrowserWidget(QTreeWidget):
+    """This widget displays a browser for the fixtures within the universes."""
     def __init__(self, show: BoardConfiguration | None = None):
         super().__init__()
         self.setColumnCount(4)

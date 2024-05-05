@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file provides the about-dialog"""
+
 from logging import getLogger
 
 from PySide6.QtCore import Qt
@@ -9,6 +13,12 @@ logger = getLogger(__file__)
 
 
 def read_entire_file_as_str(file_path: str) -> str:
+    """Read the content of a text file and return the content as-is.
+    This method does not throw IO errors but may return a debug hint and log the issue in case something goes wrong.
+
+    :param file_path: The path to the file to load
+    :returns: The content of the loaded file or a hint that something went wrong.
+    """
     try:
         with open(file_path, 'r') as f:
             text = f.read()
@@ -23,6 +33,9 @@ CONTRIBUTORS_STR = html2text(read_entire_file_as_str("resources/contributors.htm
 
 
 class AboutWindow(QMessageBox):
+    """
+    This window displays the credits.
+    """
     def __init__(self, parent):
         super().__init__(
             QMessageBox.Icon.Information,

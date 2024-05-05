@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file provides a widget to browse bank set columns."""
+
 from typing import Type
 
 from PySide6.QtCore import Signal
@@ -8,11 +12,18 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class FaderColumnSelectorWidget(QWidget):
+    """This widget enables the user to select a fader column."""
 
     selection_changed = Signal(DeskColumn)
 
     def __init__(self, parent: QWidget | None = None, column_filter: Type[DeskColumn] | None = None,
                  base_set: BankSet | None = None):
+        """Construct a new browser widget.
+
+        :param parent: The parent widget of this one
+        :param column_filter: an optional column type to filter for
+        :param base_set: Display this set even if it is not linked to fish.
+        """
         super().__init__()
         self._filter = column_filter
         self._base_set: BankSet | None = base_set
@@ -32,6 +43,7 @@ class FaderColumnSelectorWidget(QWidget):
         self.setLayout(layout)
         self.selected_item: AnnotatedTreeWidgetItem | None = None
         self.reload_data()
+        # TODO add button to add a new column right in this widget
 
     def _selection_changed_handler(self, *args):
         item = self._tree.selectedItems()[0]
@@ -41,6 +53,7 @@ class FaderColumnSelectorWidget(QWidget):
 
     @property
     def ignore_main_brightness(self) -> bool:
+        """:returns: True if the user selected to ignore the main brightness fader."""
         return self._ignore_main_brightness_checkbox.isChecked()
 
     @ignore_main_brightness.setter
@@ -49,6 +62,7 @@ class FaderColumnSelectorWidget(QWidget):
 
     @property
     def main_brightness_cb_enabled(self) -> bool:
+        """Is the checkbox to ignore the main brightness fader enabled itself?"""
         return self._ignore_main_brightness_checkbox.isEnabled()
 
     @main_brightness_cb_enabled.setter
@@ -56,6 +70,14 @@ class FaderColumnSelectorWidget(QWidget):
         self._ignore_main_brightness_checkbox.setEnabled(new_value)
 
     def set_selected_item(self, set_id: str, column_id: str):
+        """Use this method to select a specified column.
+
+        If there is no matching column, it will simply do nothing.
+        If there is a matching one, it will also expand the tree up to the selected one.
+
+        :param set_id: The id of the bank set that contains the column
+        :param column_id: The id of the column to select.
+        """
         bank_set = self._item_index.get(set_id)
         if bank_set is None:
             return
@@ -71,6 +93,7 @@ class FaderColumnSelectorWidget(QWidget):
                 current_item_to_expand = current_item_to_expand.parent()
 
     def reload_data(self):
+        """Refresh the displayed data."""
         self._tree.clear()
         bank_sets_to_search: set[BankSet] = set()
         for bs in BankSet.get_linked_bank_sets():

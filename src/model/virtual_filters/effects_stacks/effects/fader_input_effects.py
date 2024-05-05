@@ -61,6 +61,7 @@ class ColorInputEffect(ColorEffect):
 
     @property
     def fader(self) -> ColorDeskColumn:
+        """Access the linked fader"""
         return self._fader
 
     @fader.setter

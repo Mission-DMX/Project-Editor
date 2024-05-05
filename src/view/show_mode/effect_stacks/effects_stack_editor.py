@@ -1,3 +1,7 @@
+# coding=utf-8
+
+"""This file provides the main control widget for the filter stacking v-filter."""
+
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QTreeWidgetItem, QVBoxLayout, QSpinBox, QMessageBox, QScrollArea, \
     QSplitter, QStackedWidget
@@ -13,6 +17,8 @@ from view.show_mode.effect_stacks.effects_list import EffectsListWidget
 
 
 class EffectsStackEditor(QWidget):
+
+    """This configuration widget provides an editor enabling the user to compose effect onto sockets."""
 
     def __init__(self, f: Filter, parent: QWidget | None):
         super().__init__(parent=parent)
