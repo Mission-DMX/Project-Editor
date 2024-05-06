@@ -60,6 +60,11 @@ class ConstantNumberButtonList(UIWidget):
         super().__init__(fid, parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
+        value_str = filter_model.initial_parameters["value"]
+        if '.' in value_str:
+            self._value = float(value_str)
+        else:
+            self._value = int(value_str)
         self._filter_type = filter_model.filter_type
         self._value = float(filter_model.initial_parameters["value"]) if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(filter_model.initial_parameters["value"])
         self._maximum = 255 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT else -1 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else (2**16)-1
