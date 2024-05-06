@@ -45,41 +45,41 @@ class _WaveRenderer(PlotWidget):
         base_amplitude = self._curve_configuration.base_amplitude
         features = self._curve_configuration.selected_features
         if features & BaseCurve.SIN:
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SIN] + numpy.multiply(
                 numpy.sin(numpy.multiply(numpy.add(x, base_phase), 2*pi/360.0*self._curve_configuration.frequencies[BaseCurve.SIN])),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SIN]
             ))
             # TODO implement sin config
         if features & BaseCurve.COS:
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.COS] + numpy.multiply(
                 numpy.cos(numpy.multiply(numpy.add(x, base_phase), 2*pi/360.0*self._curve_configuration.frequencies[BaseCurve.COS])),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.COS]
             ))
             # TODO implement cos config
         if features & BaseCurve.TAN:
             # TODO tan config
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TAN] + numpy.multiply(
                 numpy.tan(numpy.multiply(numpy.add(x, base_phase), 2*pi/360.0*self._curve_configuration.frequencies[BaseCurve.TAN])),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TAN]
             ))
         if features & BaseCurve.ARC_SIN:
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_SIN] + numpy.multiply(
                 numpy.arcsin(numpy.add(x, base_phase)),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_SIN]
             ))
         if features & BaseCurve.ARC_COS:
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_COS] + numpy.multiply(
                 numpy.arccos(numpy.add(x, base_phase)),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_COS]
             ))
         if features & BaseCurve.ARC_TAN:
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_TAN] + numpy.multiply(
                 numpy.arctan(numpy.add(x, base_phase)),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_TAN]
             ))
         if features & BaseCurve.SAWTOOTH:
             # TODO sawtooth config, also include option for repeats/speed until 360 (180 = 2)
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SAWTOOTH] + numpy.multiply(
                 numpy.mod(numpy.add(y, base_phase), 180.0),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SAWTOOTH]
             ))
@@ -88,7 +88,7 @@ class _WaveRenderer(PlotWidget):
             ya = numpy.zeros(steps, dtype=numpy.float32)
             for i in range(int(base_phase * steps / pulse_width), steps, pulse_width):
                 ya[i:i+pulse_width] = 1.0
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.RECT] + numpy.multiply(
                 ya, base_amplitude * self._curve_configuration.amplitudes[BaseCurve.RECT]
             ))
         if features & BaseCurve.TRIANGLE:
@@ -99,7 +99,7 @@ class _WaveRenderer(PlotWidget):
             for i in range(0, steps, pulse_width * 2):
                 ya[i:i+pulse_width] = signal[i:i+pulse_width]
                 ya[i+pulse_width+1:i+pulse_width*2] = numpy.subtract(1, signal[i+pulse_width+1:i+pulse_width*2])
-            y = concat_method(y, numpy.multiply(
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TRIANGLE] + numpy.multiply(
                 ya,
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TRIANGLE]
             ))
@@ -149,6 +149,7 @@ class CurveEditorWidget(QWidget):
         self._enabled_checkboxes: dict[str, QCheckBox] = {}
         self._frequency_dials: dict[str, QDoubleSpinBox] = {}
         self._amplitude_dials: dict[str, QDoubleSpinBox] = {}
+        self._offset_dials: dict[str, QDoubleSpinBox] = {}
 
         for curve_name in [str(BaseCurve(2**c).name) for c in range(9)]:
             curve_widget = QWidget(self._function_property_container)
@@ -162,6 +163,9 @@ class CurveEditorWidget(QWidget):
             self._amplitude_dials[curve_name] = QDoubleSpinBox(curve_widget)
             self._amplitude_dials[curve_name].valueChanged.connect(self._update_values_from_gui)
             c_layout.addRow("Amplitude", self._amplitude_dials[curve_name])
+            self._offset_dials[curve_name] = QDoubleSpinBox(curve_widget)
+            self._offset_dials[curve_name].valueChanged.connect(self._update_values_from_gui)
+            c_layout.addRow("Offset", self._offset_dials[curve_name])
 
             curve_widget.setLayout(c_layout)
             self._function_property_container.addTab(curve_widget, curve_name)
@@ -175,9 +179,11 @@ class CurveEditorWidget(QWidget):
         self._concat_add_radiobutton.setChecked(self._config.append_features_using_addition)
         self._concat_mult_radiobutton.setChecked(not self._config.append_features_using_addition)
         for curve in [BaseCurve(2 ** c) for c in range(9)]:
-            self._enabled_checkboxes[str(curve.name)].setChecked(self._config.selected_features & curve > 0)
-            self._frequency_dials[str(curve.name)].setValue(self._config.frequencies[curve])
-            self._amplitude_dials[str(curve.name)].setValue(self._config.amplitudes[curve])
+            curve_name = str(curve.name)
+            self._enabled_checkboxes[curve_name].setChecked(self._config.selected_features & curve > 0)
+            self._frequency_dials[curve_name].setValue(self._config.frequencies[curve])
+            self._amplitude_dials[curve_name].setValue(self._config.amplitudes[curve])
+            self._offset_dials[curve_name].setValue(self._config.offsets[curve])
         self._loading_values = False
 
     def set_wave_config(self, wc: CurveConfiguration):
@@ -201,6 +207,7 @@ class CurveEditorWidget(QWidget):
                 selected_elements |= curve
             self._config.frequencies[curve] = self._frequency_dials[curve_name].value()
             self._config.amplitudes[curve] = self._amplitude_dials[curve_name].value()
+            self._config.offsets[curve] = self._offset_dials[curve_name].value()
         self._config.selected_features = selected_elements
         # TODO copy values from GUI elements to config
         self._renderer.curve_config = self._config

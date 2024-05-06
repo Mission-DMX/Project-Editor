@@ -27,9 +27,11 @@ class CurveConfiguration:
     def __init__(self):
         self.frequencies: dict[BaseCurve, float] = {}
         self.amplitudes: dict[BaseCurve, float] = {}
+        self.offsets: dict[BaseCurve, float] = {}
         for curve in [BaseCurve(2 ** c) for c in range(9)]:
             self.frequencies[curve] = 1.0
             self.amplitudes[curve] = 1.0
+            self.offsets[curve] = 0.0
         self.selected_features: BaseCurve = BaseCurve.NONE
         self.append_features_using_addition: bool = False
         self.base_phase: float = 0.0
@@ -43,13 +45,14 @@ class CurveConfiguration:
         :returns: A string representing the configuration
         """
         return ";".join([
-            "0",  # Opset
+            "1",  # Opset
             str(self.selected_features),
             str(self.base_phase),
             str(self.base_amplitude),
             "true" if self.append_features_using_addition else "false",
             ",".join([str(k) + ":" + str(v) for k, v in self.frequencies.items()]),
             ",".join([str(k) + ":" + str(v) for k, v in self.amplitudes.items()]),
+            ",".join([str(k) + ":" + str(v) for k, v in self.offsets.items()])
         ])
 
     @classmethod
@@ -78,4 +81,7 @@ class CurveConfiguration:
                 target[k] = v
         decode_common_props(cc.frequencies, config[5])
         decode_common_props(cc.amplitudes, config[6])
+
+        if opset > 0:
+            decode_common_props(cc.offsets, config[7])
         return cc

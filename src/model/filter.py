@@ -125,7 +125,8 @@ class FilterTypeEnumeration(IntFlag):
 class Filter:
     """Filter for show file"""
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None,
+    def __init__(self, scene: "Scene", filter_id: str, filter_type: int,
+                 pos: tuple[int, int] | tuple[float, float] | None = None,
                  filter_configurations: dict[str, str] | None = None,
                  initial_parameters: dict[str, str] | None = None):
         if pos is None:
