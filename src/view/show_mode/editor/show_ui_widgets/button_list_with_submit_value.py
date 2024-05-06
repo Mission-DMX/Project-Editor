@@ -1,5 +1,7 @@
-from PySide6.QtWidgets import (QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QListWidget,
-                               QLineEdit, QLabel, QDoubleSpinBox)
+# coding=utf-8
+"""This file contains a widget with a textfield and a button, extended by a list of buttons to update constants nodes
+with a new value or predefined one in fish"""
+from PySide6.QtWidgets import (QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QDoubleSpinBox)
 
 from model import UIWidget, UIPage, Filter
 from model.filter import FilterTypeEnumeration
