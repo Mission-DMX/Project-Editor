@@ -19,6 +19,13 @@ EFFECT_LIST = {
     "fader-inputs": [ColorInputEffect],
 }
 
+PRESET_LIST: list[tuple[str, str]] = []
+# TODO implement a way to load user defined presets. A preset is a tuple of a name and a string that reassembles the
+#  filter configuration to be loaded. It will call the effect factory in case of instantiation and loads that one inside
+#  the slot instead of a fresh filter object. The json file containing the presets should first be loaded from the
+#  resources folder and from the users home directory afterwards. Therefore it is about time to introduce a file that
+#  handles stuff written to the users directory, including but not limited to, non-show settings of the editor
+
 
 class _EffectSeparator(QWidget):
     """This widget provides a separator between effect categories."""
