@@ -275,6 +275,7 @@ class NetworkManager(QtCore.QObject):
         Returns:
             bool: Connected or Not Connected
         """
+        # TODO at shutdown this sometimes causes the interpreter to crash.
         return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
 
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:

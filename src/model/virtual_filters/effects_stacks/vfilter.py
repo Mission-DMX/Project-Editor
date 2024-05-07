@@ -53,6 +53,8 @@ class EffectsStack(VirtualFilter):
 
                     if not isinstance(output_dict["color"], list):
                         output_dict["color"] = [output_dict["color"]]
+                    if len(output_dict["color"]) == 0:
+                        logger.error("Color Effect '{}' did not produce any output.".format(color_effect))
                     if socket.has_segmentation_support:
                         segmentation_effect = socket.get_socket_by_type(EffectType.ENABLED_SEGMENTS)
                         if segmentation_effect:

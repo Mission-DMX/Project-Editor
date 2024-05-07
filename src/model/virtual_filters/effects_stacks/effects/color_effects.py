@@ -92,12 +92,12 @@ class ColorWheelEffect(ColorEffect):
         filter_list.append(Filter(self.get_scene(), time_filter_name, FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT))
 
         if self._inputs["segments"] is None:
-            brightness_channel_name = prefix + "__brightness_const"
-            filter_list.append(Filter(self.get_scene(), brightness_channel_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+            brightness_channel_names = prefix + "__brightness_const"
+            filter_list.append(Filter(self.get_scene(), brightness_channel_names, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
                                       initial_parameters={"value": "1.0"}))
-            brightness_channel_name += ":value"
+            brightness_channel_names = {'0': brightness_channel_names + ":value"}
         else:
-            brightness_channel_name = emplace_with_adapter(
+            brightness_channel_names = emplace_with_adapter(
                 self._inputs["segments"],
                 EffectType.LIGHT_INTENSITY
                 if self._inputs["segments"].get_output_slot_type() != EffectType.ENABLED_SEGMENTS
@@ -105,8 +105,10 @@ class ColorWheelEffect(ColorEffect):
                 filter_list,
                 prefix + "__segments_brightness_"
             )
+            if 'intensity' in brightness_channel_names.keys():
+                brightness_channel_names = {'0': brightness_channel_names['intensity']} # TODO convert from 0 to 255 fo 0 to 1
 
-        for frag_index in range(self.fragment_number):
+        for frag_index in range(max(self.fragment_number, 1)): # FIXME why are the settings not copied?
             time_fraction_filter_name = prefix + "__time_fraction"
             time_fraction_filter = Filter(self.get_scene(), time_fraction_filter_name,
                                           FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, self.get_position())
@@ -122,17 +124,14 @@ class ColorWheelEffect(ColorEffect):
             time_fraction_filter.channel_links["value_in"] = time_filter_name + ":value"
             filter_list.append(time_fraction_filter)
 
-            if "intensity" in brightness_channel_name.keys():
-                brightness_channel_instance = brightness_channel_name["intensity"]
-            else:
-                brightness_channel_instance = brightness_channel_name[str(frag_index % len(brightness_channel_name))]
+            brightness_channel_instance = brightness_channel_names[str(frag_index % len(brightness_channel_names))]
 
             color_conv_filter_name = prefix + "__color_conv"
             color_conv_filter = Filter(self.get_scene(), color_conv_filter_name, FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR)
             filter_list.append(color_conv_filter)
             color_conv_filter.channel_links["h"] = time_fraction_filter_name + ":value"
             color_conv_filter.channel_links["s"] = saturation_input_filter_name + ":value"
-            color_conv_filter.channel_links["i"] = brightness_channel_instance
+            color_conv_filter.channel_links["i"] = str(brightness_channel_instance)
             fragment_outputs.append(color_conv_filter_name + ":value")
 
         return {"color": fragment_outputs}
