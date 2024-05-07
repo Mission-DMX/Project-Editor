@@ -193,7 +193,12 @@ class Effect(ABC):
         :param e: The effect to place inside that slot
         :returns: True if the attachment process was successful.
         """
-        if e.get_output_slot_type() not in self.get_accepted_input_types()[slot_id]:
+        target_slot_type = e.get_output_slot_type()
+        supported_slot_types = self.get_accepted_input_types()[slot_id]
+        found_working = False
+        for candidate in supported_slot_types:
+            found_working |= Effect.can_convert_slot(target_slot_type, candidate)
+        if not found_working:
             return False
         if not slot_id in self._inputs.keys():
             raise ValueError("The requested slot id is not present within this filter.")
