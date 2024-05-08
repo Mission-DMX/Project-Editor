@@ -66,7 +66,7 @@ class FunctionEffect(GenericEffect):
                                         FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, self.get_position())
             # TODO this yields milliseconds. Is this reasonable?
             filter_list.append(value_input_filter)
-            value_input_filter = value_input_filter.filter_id
+            value_input_filter = value_input_filter.filter_id + ":value"
 
         phase_input = self._inputs.get('phase')
         if phase_input:

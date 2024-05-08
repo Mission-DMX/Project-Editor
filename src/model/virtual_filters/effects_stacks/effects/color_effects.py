@@ -118,8 +118,8 @@ class ColorWheelEffect(ColorEffect):
                 filter_list.append(bg_mapping_filter)
                 brightness_channel_names = {'0': bg_mapping_filter.filter_id + ':value'}
 
-        for frag_index in range(max(self.fragment_number, 1)): # FIXME why are the settings not copied?
-            time_fraction_filter_name = prefix + "__time_fraction"
+        for frag_index in range(max(self.fragment_number, 1)):
+            time_fraction_filter_name = prefix + "__time_fraction_{}".format(frag_index)
             time_fraction_filter = Filter(self.get_scene(), time_fraction_filter_name,
                                           FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, self.get_position())
             phase_filter_name = prefix + "__phase"
@@ -136,7 +136,7 @@ class ColorWheelEffect(ColorEffect):
 
             brightness_channel_instance = brightness_channel_names[str(frag_index % len(brightness_channel_names))]
 
-            color_conv_filter_name = prefix + "__color_conv"
+            color_conv_filter_name = prefix + "__color_conv_{}".format(frag_index)
             color_conv_filter = Filter(self.get_scene(), color_conv_filter_name, FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR)
             filter_list.append(color_conv_filter)
             color_conv_filter.channel_links["h"] = time_fraction_filter_name + ":value"
@@ -192,7 +192,7 @@ class ColorWheelEffect(ColorEffect):
 
     def deserialize(self, data: dict[str, Any]):
         from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
-        self._number_of_fragments = data['number-of-fragments']
+        self.fragment_number = data['number-of-fragments']
         self._min_hue = data["min-hue"]
         self._max_hue = data["max-hue"]
         self._default_speed = data["default-speed"]

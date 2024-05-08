@@ -92,7 +92,7 @@ class EffectsStack(VirtualFilter):
                                 output_dict["color"][color_index] = seg_split_filter_name + "_combine:value"
                                 i += 1
 
-                    color_adapter_name_base = "{}__color_adapter_property"
+                    color_adapter_name_base = "{}__color_adapter_property".format(filter_prefix)
                     color_support_of_target = socket_target.color_support()
 
                     adapter_filters = []
