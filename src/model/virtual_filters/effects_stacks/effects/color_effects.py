@@ -125,8 +125,7 @@ class ColorWheelEffect(ColorEffect):
             phase_filter_name = prefix + "__phase"
             # TODO add option to place phase input effect
             filter_list.append(Filter(self.get_scene(), phase_filter_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-                                      self.get_position(), {"value": "0"}))
-            phase_filter_name += ":value"
+                                      self.get_position(), initial_parameters={"value": "0"}))
             time_fraction_filter.channel_links["factor_inner"] = speed_input_channel
             time_fraction_filter.channel_links["factor_outer"] = hue_effect_range_factor_channel
             time_fraction_filter.channel_links["offset"] = hue_effect_range_offset + ":value"
