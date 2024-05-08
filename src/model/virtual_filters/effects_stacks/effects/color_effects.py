@@ -106,7 +106,17 @@ class ColorWheelEffect(ColorEffect):
                 prefix + "__segments_brightness_"
             )
             if 'intensity' in brightness_channel_names.keys():
-                brightness_channel_names = {'0': brightness_channel_names['intensity']} # TODO convert from 0 to 255 fo 0 to 1
+                bg_input_channel_name = brightness_channel_names['intensity'].split(':')[0]
+                bg_byte_to_float = Filter(self.get_scene(), bg_input_channel_name + "_map_conv_float",
+                                          FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT)
+                bg_byte_to_float.channel_links['value_in'] = brightness_channel_names['intensity']
+                filter_list.append(bg_byte_to_float)
+                bg_mapping_filter = Filter(self.get_scene(), bg_input_channel_name + "_map_output",
+                                           FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE,
+                                           initial_parameters={'upper_bound_in': '255.0', 'limit_range': '1'})
+                bg_mapping_filter.channel_links['value_in'] = bg_byte_to_float.filter_id + ':value'
+                filter_list.append(bg_mapping_filter)
+                brightness_channel_names = {'0': bg_mapping_filter.filter_id + ':value'}
 
         for frag_index in range(max(self.fragment_number, 1)): # FIXME why are the settings not copied?
             time_fraction_filter_name = prefix + "__time_fraction"
