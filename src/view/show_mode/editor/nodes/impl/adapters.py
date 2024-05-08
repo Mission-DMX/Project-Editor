@@ -156,7 +156,8 @@ class AdapterColorToFloatsNode(FilterNode):
 class AdapterFloatToRange(FilterNode):
     """Filter maps a range of float to another range of specific type (template)"""
 
-    def __init__(self, model: Filter | Scene, name: str, filter_type: FilterTypeEnumeration):
+    nodeName = 'float range to float range'
+    def __init__(self, model: Filter | Scene, name: str, filter_type: FilterTypeEnumeration = FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE):
         super().__init__(model, int(filter_type), name, terminals={
             'value_in': {'io': 'in'},
             'value': {'io': 'out'}
@@ -164,15 +165,26 @@ class AdapterFloatToRange(FilterNode):
 
         try:
             self.filter.initial_parameters["lower_bound_in"] = model.initial_parameters["lower_bound_in"]
-            self.filter.initial_parameters["upper_bound_in"] = model.initial_parameters["upper_bound_in"]
-            self.filter.initial_parameters["lower_bound_out"] = model.initial_parameters["lower_bound_out"]
-            self.filter.initial_parameters["limit_range"] = model.initial_parameters["limit_range"]
         except:
             self.filter.initial_parameters["lower_bound_in"] = "0"
+        try:
+            self.filter.initial_parameters["upper_bound_in"] = model.initial_parameters["upper_bound_in"]
+        except:
             self.filter.initial_parameters["upper_bound_in"] = "1"
+        try:
+            self.filter.initial_parameters["lower_bound_out"] = model.initial_parameters["lower_bound_out"]
+        except:
             self.filter.initial_parameters["lower_bound_out"] = "0"
+        try:
+            self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
+        except:
+            self.filter.initial_parameters["upper_bound_out"] = "1"
+        try:
+            self.filter.initial_parameters["limit_range"] = model.initial_parameters["limit_range"]
+        except:
             self.filter.initial_parameters["limit_range"] = "0"
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.filter.gui_update_keys["lower_bound_in"] = DataType.DT_DOUBLE
         self.filter.gui_update_keys["upper_bound_in"] = DataType.DT_DOUBLE
         self.filter.gui_update_keys["lower_bound_out"] = DataType.DT_DOUBLE
@@ -203,17 +215,32 @@ class AdapterFloatTo16BitRange(AdapterFloatToRange):
             self.filter.initial_parameters["upper_bound_out"] = "65535"
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
 
-class AdapterFloatToFloatRange(AdapterFloatToRange):
-    """Filter maps a range of float to a range of float"""
-    nodeName = 'Float range to float range'
+class Adapter16BitToRangeFloat(AdapterFloatToRange):
+    """Filter maps a range of 16bit to a range of float"""
+    nodeName = '16bit range to Float'
 
     def __init__(self, model: Filter | Scene, name: str):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE, name=name)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE, name=name)
         try:
-            self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
+            self.filter.initial_parameters["upper_bound_in"] = model.initial_parameters["upper_bound_in"]
         except:
-            self.filter.initial_parameters["upper_bound_out"] = "1"
+            self.filter.initial_parameters["upper_bound_in"] = "65535"
+        self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+
+class Adapter8BitToRangeFloat(AdapterFloatToRange):
+    """Filter maps a range of 8bit to a range of float"""
+    nodeName = '8bit range to Float'
+
+    def __init__(self, model: Filter | Scene, name: str):
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, name=name)
+        try:
+            self.filter.initial_parameters["upper_bound_in"] = model.initial_parameters["upper_bound_in"]
+        except:
+            self.filter.initial_parameters["upper_bound_in"] = "255"
+        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
+        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+
 
 class CombineTwo8BitToSingle16Bit(FilterNode):
     """Filter that combines two 8bit values to a 16bit one."""

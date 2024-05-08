@@ -1,6 +1,8 @@
 # coding=utf-8
 """This file contains a widget with a textfield and a button, extended by a list of buttons to update constants nodes
 with a new value or predefined one in fish"""
+import sys
+
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QDoubleSpinBox)
 
 from model import UIWidget, UIPage, Filter
@@ -47,8 +49,12 @@ class ButtonsWithValueSubmit(UIWidget):
         layout = QHBoxLayout(widget)
         layoutSubmitOwnValue = QVBoxLayout(widget)
         valuefield = QDoubleSpinBox(widget)
-        if self._filter_type != FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
-            valuefield.setMaximum(self._maximum)
+        if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
+            valuefield.setMaximum(sys.float_info.max)
+            valuefield.setMinimum(-sys.float_info.max)
+            valuefield.setDecimals(20)
+        else:
+            valuefield.setMaximum(self._button_list._maximum)
             valuefield.setDecimals(0)
         submitButton = QPushButton("Send Value", widget)
         def pressed_button():
