@@ -144,8 +144,11 @@ class NetworkManager(QtCore.QObject):
         """Processes incoming data."""
         msg_bytes = self._socket.readAll()
         while len(msg_bytes) > 0:
-            msg_type = varint.decode_bytes(msg_bytes[0])
-            msg_len = varint.decode_bytes(msg_bytes[1:])
+            try:
+                msg_type = varint.decode_bytes(msg_bytes[0])
+                msg_len = varint.decode_bytes(msg_bytes[1:])
+            except EOFError:
+                self.disconnect()
             start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
             msg = msg_bytes[start: start + msg_len]
             msg_bytes = msg_bytes[start + msg_len:]

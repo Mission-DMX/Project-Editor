@@ -367,7 +367,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def _cue_play_pressed_restart_changed(self):
         self._timeline_container.cue.restart_on_another_play_press = \
-            self._current_cue_another_play_pressed_checkbox.checkState()
+            self._current_cue_another_play_pressed_checkbox.checkState().Checked
 
     def _transition_type_changed(self, text):
         self._timeline_container.transition_type = text
