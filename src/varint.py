@@ -58,5 +58,6 @@ def _read_one(stream):
     """
     bytes_ = stream.read(1)
     if bytes_ == b'':
+        # TODO save showfile backup and exit
         raise EOFError("Unexpected EOF while reading bytes")
     return ord(bytes_)

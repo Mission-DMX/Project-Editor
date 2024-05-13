@@ -189,7 +189,7 @@ class Scene:
 
     def append_filter(self, f: Filter):
         if f.scene and f.scene != self:
-            raise Exception("This filter is already added to a scene other than this one")
+            raise Exception("This filter ({}) is already added to a scene other than this one".format(f.filter_id))
         if f.scene == self and f in self.filters:
             return
         f.filter_id = self.ensure_name_uniqueness(f.filter_id)
