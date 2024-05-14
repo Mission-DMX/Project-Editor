@@ -14,6 +14,8 @@ class BankSetTabWidget(QWidget):
 
         layout = QVBoxLayout()
         self._tool_bar = QToolBar()
+        self._tool_bar.addAction(QIcon.fromTheme("system-software-update"), "Refresh bankset on fish",
+                                 lambda: self._bankset.update() if self._bankset is not None else False)
         self._tool_bar.addAction(QIcon.fromTheme("document-new"), "Add Bank", lambda: self._add_bank())
         self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Column to current Bank", lambda: self._add_column())
         self._new_column_type_cbox = QComboBox()
