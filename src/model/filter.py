@@ -216,7 +216,9 @@ class Filter:
     def copy(self, new_scene: "Scene" = None, new_id: str = None) -> "Filter":
         from .virtual_filters.vfilter_factory import construct_virtual_filter_instance
         if self.is_virtual_filter:
-            f = construct_virtual_filter_instance(new_scene, self._filter_type, new_id, pos=self._pos)
+            f = construct_virtual_filter_instance(new_scene if new_scene else self.scene,
+                                                  self._filter_type, new_id if new_id else self._filter_id,
+                                                  pos=self._pos)
             f.filter_configurations.update(self.filter_configurations.copy())
         else:
             f = Filter(new_scene if new_scene else self.scene, self._filter_id if not new_id else new_id,
