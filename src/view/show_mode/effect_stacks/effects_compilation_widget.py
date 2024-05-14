@@ -13,7 +13,7 @@ from model.virtual_filters.effects_stacks.ChaningEffectDummy import ChainingEffe
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
-
+from random import uniform
 from logging import getLogger
 logger = getLogger(__file__)
 
@@ -51,6 +51,7 @@ class EffectCompilationWidget(QWidget):
         self._added_fixtures: set[UsedFixture] = set()
         self._painting_active = False
         self._config_button_positions: list[tuple[int, int, QWidget]] = []
+        self._delete_button_positions: list[tuple[int, int, Effect, str]] = []
         self._active_config_widget: QWidget | None = None
         self.update()
 
@@ -85,6 +86,7 @@ class EffectCompilationWidget(QWidget):
             p.fillRect(0, 0, w, h, color_dark_gray)
             self._slot_counter.clear()
             self._config_button_positions.clear()
+            self._delete_button_positions.clear()
 
             if len(self._filter.sockets) > 0:
                 y = 15
@@ -132,18 +134,32 @@ class EffectCompilationWidget(QWidget):
         p.drawText(x, y + 10, effect_name)
         socket_height = max(socket_height, fm.height() + 10)
 
+        # draw effect delete button
+        y += 25
+        gray_color = QBrush(QColor.fromRgb(0x30, 0x30, 0x30))
+        p.setBrush(gray_color)
+        p.drawRoundedRect(x, y, 20, 20, 3.0, 3.0)
+        p.setBrush(light_gray_color)
+        p.drawLine(x+5, y+5, x+15, y+5)
+        p.drawLine(x+7, y+15, x+12, y+15)
+        p.drawLine(x+7, y+5, x+7, y+15)
+        p.drawLine(x + 12, y + 5, x + 12, y + 15)
+        p.drawLine(x+10, y+8, x+10, y+12)
+        self._delete_button_positions.append((x, y, effect, "slot_name"))  # TODO figure out how to delete this effect
+
         # draw effect config button
         config_widget = effect.get_configuration_widget()
         if config_widget is not None:
-            y += 25
-            p.setBrush(QBrush(QColor.fromRgb(0x30, 0x30, 0x30) if config_widget != self._active_config_widget else
-                              QColor.fromRgb(0, 0xff, 0xff)))
+            x += 25
+            p.setBrush(QBrush(QColor.fromRgb(0, 0xff, 0xff)) if config_widget == self._active_config_widget else
+                       gray_color)
             p.drawRoundedRect(x, y, 20, 20, 3.0, 3.0)
             p.setBrush(light_gray_color)
             p.drawLine(x + 5, y + 10, x + 15, y + 10)
             p.drawLine(x + 10, y + 5, x + 10, y + 15)
             self._config_button_positions.append((x, y, config_widget))
             y += 5
+            x -= 25
         x -= 10
 
         # recursively render all effects attached to slots
@@ -168,6 +184,18 @@ class EffectCompilationWidget(QWidget):
                 old_x = x
                 x -= 10
                 x, y = self._render_slot(x, y, False, e, p)
+                # FIXME
+                """
+                old_brush = p.brush()
+                p.setBrush(QBrush(QColor.fromRgb(
+                    max(0, min(255, int(uniform(0, 255)))),
+                    max(0, min(255, int(uniform(0, 255)))),
+                    max(0, min(255, int(uniform(0, 255)))),
+                    128
+                )))
+                p.drawRect(x, y, old_x - x, y - old_y)
+                p.setBrush(old_brush)
+                """
                 p.drawLine(old_x - 3, old_y - 3, old_x - 3, y)
             else:
                 # render insertion hint for empty slots
