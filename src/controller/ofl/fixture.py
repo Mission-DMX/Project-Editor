@@ -127,7 +127,11 @@ class UsedFixture:
 
         for f in self.channels:
             # TODO looking at the fixture data this might work well for led based color changers.
-            # Yet, we need to support color wheels as well.
+            #  Yet, we need to support color wheels as well. One option would be to check for the "capability": {
+            #         "type": "ColorIntensity",
+            #         "color": "Red"
+            #       }
+            #  Data of a fixture channel.
             if not isinstance(f.fixture_channel, str):
                 continue
             found_color_hints: int = 0
