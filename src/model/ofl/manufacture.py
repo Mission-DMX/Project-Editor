@@ -6,7 +6,7 @@ from typing import TypedDict, cast
 
 from typing_extensions import NotRequired
 
-from controller.ofl.fixture import load_fixture, Fixture
+from model.ofl.fixture import load_fixture, Fixture
 
 
 class Manufacture(TypedDict):

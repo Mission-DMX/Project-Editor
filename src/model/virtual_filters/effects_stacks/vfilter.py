@@ -2,7 +2,7 @@
 
 """This file provides the v-filter implementation of the effects stack system"""
 
-from controller.ofl.fixture import ColorSupport
+from model.ofl.fixture import ColorSupport
 from model import Filter, Scene
 from model.filter import VirtualFilter, FilterTypeEnumeration
 from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter

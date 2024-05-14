@@ -11,7 +11,7 @@ import xmlschema
 import proto.UniverseControl_pb2 as Proto
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
-from controller.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
+from model.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from controller.utils.process_notifications import get_process_notifier
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn

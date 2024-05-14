@@ -12,7 +12,7 @@ from controller.file.transmitting_to_fish import transmit_to_fish
 from model import Scene, BoardConfiguration, UIPage
 from model.control_desk import BankSet
 from model.scene import FilterPage
-from controller.ofl.fixture import UsedFixture
+from model.ofl.fixture import UsedFixture
 
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene

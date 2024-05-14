@@ -5,7 +5,7 @@ import re
 
 from PySide6 import QtWidgets, QtGui, QtCore
 from dataclasses import dataclass
-from controller.ofl.fixture import Fixture, UsedFixture, make_used_fixture
+from model.ofl.fixture import Fixture, UsedFixture, make_used_fixture
 
 
 @dataclass

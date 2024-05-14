@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QTreeWidget
 
 from proto.UniverseControl_pb2 import Universe as pbUniverse
 
-from controller.ofl.fixture import UsedFixture
+from model.ofl.fixture import UsedFixture
 from model import BoardConfiguration
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 

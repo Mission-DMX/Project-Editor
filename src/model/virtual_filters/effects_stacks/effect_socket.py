@@ -10,7 +10,7 @@ from logging import getLogger
 
 from PySide6.QtWidgets import QWidget
 
-from controller.ofl.fixture import UsedFixture, ColorSupport
+from model.ofl.fixture import UsedFixture, ColorSupport
 from model import Filter
 from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
 from model.virtual_filters.effects_stacks.effect import EffectType, Effect

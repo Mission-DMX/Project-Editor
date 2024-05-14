@@ -6,7 +6,7 @@ from PySide6.QtCore import QEvent, Qt
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QTreeWidgetItem, QVBoxLayout, QSpinBox, QMessageBox, QScrollArea, \
     QSplitter, QStackedWidget
 
-from controller.ofl.fixture import UsedFixture
+from model.ofl.fixture import UsedFixture
 from model import Filter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.effects_stacks.effect import Effect
