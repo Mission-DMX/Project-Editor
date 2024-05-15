@@ -35,6 +35,8 @@ class NetworkManager(QtCore.QObject):
 
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
+    run_mode_changed: QtCore.Signal = QtCore.Signal(int)
+    active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
     def __init__(self, parent: "MainWindow") -> None:
         """Inits the network connection.
@@ -47,6 +49,8 @@ class NetworkManager(QtCore.QObject):
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._message_queue = queue.Queue()
 
+        self._last_run_mode = None
+        self._last_active_scene: int = -1
         self._is_running: bool = False
         self._fish_status: str = ""
         self._server_name = "/tmp/fish.sock"
@@ -199,6 +203,12 @@ class NetworkManager(QtCore.QObject):
         if self._fish_status != new_message:
             self.status_updated.emit(new_message)
             self._fish_status = new_message
+        if msg.current_state != self._last_run_mode:
+            self._last_run_mode = msg.current_state
+            self.run_mode_changed.emit(int(msg.current_state))
+        if msg.current_scene != self._last_active_scene:
+            self._last_active_scene = msg.current_scene
+            self.active_scene_on_fish_changed.emit(msg.current_scene)
 
     def _log_fish(self, msg: proto.RealTimeControl_pb2.long_log_update):
         """

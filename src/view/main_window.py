@@ -2,6 +2,7 @@
 """main Window for the Editor"""
 
 from PySide6 import QtGui, QtWidgets
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QProgressBar
 
 from controller.file.showfile_dialogs import  _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
@@ -23,6 +24,9 @@ from view.show_mode.player.showplayer import ShowPlayerWidget
 
 class MainWindow(QtWidgets.QMainWindow):
     """Main window of the app. All widget are children of its central widget."""
+
+    STATUS_ICON_DIRECT_MODE = QIcon("resources/icons/faders.svg")
+    STATUS_ICON_FILTER_MODE = QIcon("resources/icons/play.svg")
 
     def __init__(self, parent=None) -> None:
         """Inits the MainWindow.
@@ -163,10 +167,27 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
 
+        self._status_runmode = QtWidgets.QLabel()
+        self._fish_connector.run_mode_changed.connect(self._fish_run_mode_changed)
+        status_bar.addWidget(self._status_runmode)
+
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        separator.setLineWidth(3)
+        separator.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        status_bar.addWidget(separator)
+
         self._status_pbar = QProgressBar(parent=status_bar)
         self._status_pbar.setVisible(False)
         self._status_pbar.setMinimumWidth(50)
         status_bar.addWidget(self._status_pbar)
+
+        self._status_current_scene_label = QtWidgets.QLabel("")
+        self._fish_connector.active_scene_on_fish_changed.connect(
+            lambda i: self._status_current_scene_label.setText("[{}] {}".format(
+                i, self._board_configuration.get_scene_by_id(i).human_readable_name if
+                i != -1 and self._board_configuration.get_scene_by_id(i) is not None else "")))
+        status_bar.addWidget(self._status_current_scene_label)
 
         self._label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value
         self._broadcaster.connection_state_updated.connect(self._fish_state_update)
@@ -186,6 +207,14 @@ class MainWindow(QtWidgets.QMainWindow):
         c, m = get_global_process_state()
         self._status_pbar.setVisible(c != m)
         self._status_pbar.setValue(int((c/m)*100))
+
+    def _fish_run_mode_changed(self, new_run_mode: int):
+        if new_run_mode == RunMode.RM_FILTER:
+            self._status_current_scene_label.setVisible(True)
+            self._status_runmode.setPixmap(MainWindow.STATUS_ICON_FILTER_MODE.pixmap(16, 16))
+        else:
+            self._status_current_scene_label.setVisible(False)
+            self._status_runmode.setPixmap(MainWindow.STATUS_ICON_DIRECT_MODE.pixmap(16, 16))
 
     def _fish_state_update(self, connected: bool):
         if connected:
