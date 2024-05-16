@@ -5,14 +5,13 @@ from xml.etree.ElementTree import Element
 from PySide6 import QtCore
 
 from controller.joystick.joystick_enum import JoystickList
-from proto.RealTimeControl_pb2 import RunMode
-from proto.FilterMode_pb2 import update_parameter
-from proto.DirectMode_pb2 import dmx_output
-
 from model.patching_universe import PatchingUniverse
+from proto.DirectMode_pb2 import dmx_output
+from proto.FilterMode_pb2 import update_parameter
+from proto.RealTimeControl_pb2 import RunMode
 
 from .device import Device
-from .scene import Scene, FilterPage
+from .scene import FilterPage, Scene
 from .universe import Universe
 
 
@@ -31,6 +30,7 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
 
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
+
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType)  # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(Scene)
