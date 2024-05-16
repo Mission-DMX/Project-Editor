@@ -39,6 +39,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
+    send_request_dmx_data: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     ################################################################
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
     board_configuration_loaded: QtCore.Signal = QtCore.Signal(str)
