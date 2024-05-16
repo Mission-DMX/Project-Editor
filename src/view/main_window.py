@@ -189,7 +189,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _proccess_status_listener(self):
         c, m = get_global_process_state()
         self._status_pbar.setVisible(c != m)
-        self._status_pbar.setValue(int((c/m)*100))
+        self._status_pbar.setValue(int((c / m) * 100))
 
     def _fish_state_update(self, connected: bool):
         if connected:
