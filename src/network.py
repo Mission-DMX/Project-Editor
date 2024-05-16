@@ -56,6 +56,7 @@ class NetworkManager(QtCore.QObject):
 
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
+        self._broadcaster.send_request_dmx_data.connect(self._react_request_dmx_data)
         self._broadcaster.change_run_mode.connect(self.update_state)
         self._broadcaster.view_to_file_editor.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
@@ -100,7 +101,7 @@ class NetworkManager(QtCore.QObject):
         self._is_running = False
 
     def _send_universe(self, universe: Universe) -> None:
-        """sends the current dmx data of an universes.
+        """sends the current dmx data of a universe.
 
         Args:
             universe: universe to send to fish
@@ -111,6 +112,16 @@ class NetworkManager(QtCore.QObject):
             )
 
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
+
+    def _react_request_dmx_data(self, universe: PatchingUniverse):
+        """send a Request of DMX data of a universe
+
+        Args:
+            universe: universe to send to fish
+        """
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.DirectMode_pb2.request_dmx_data(universe_id=universe.universe_proto.id)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_REQUEST_DMX_DATA)
 
     def _generate_universe(self, universe: PatchingUniverse) -> None:
         """send a new universe to the fish socket"""
