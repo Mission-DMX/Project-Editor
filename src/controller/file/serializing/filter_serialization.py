@@ -2,7 +2,7 @@ from xml.etree import ElementTree
 
 from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 from model import Filter
-from model.filter import VirtualFilter
+from model.filter import VirtualFilter, DataType, FilterTypeEnumeration
 
 
 def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element, for_fish: bool,
@@ -45,7 +45,7 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
             _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
 
-def create_channel_mappings_for_filter_set_for_fish(om: SceneOptimizerModule, scene_element: ElementTree.Element):
+def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizerModule, scene_element: ElementTree.Element):
     """
     This function writes the channel links of the scene to the XML data.
     This method needs to be called *after* every filter object has been placed as only then all required information
@@ -64,16 +64,67 @@ def create_channel_mappings_for_filter_set_for_fish(om: SceneOptimizerModule, sc
     om.wrap_up(scene_element)
     channel_links_to_be_created: list[tuple[Filter, ElementTree.SubElement]] = om.channel_link_list
     override_port_mapping: dict[str, str] = om.channel_override_dict
+    default_nodes: dict[DataType, list] = dict()
+    time_node = None
+    for f_entry in channel_links_to_be_created:
+        if f_entry[0].filter_type == FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT:
+            time_node = f_entry[0].filter_id
+            break
     for f_entry in channel_links_to_be_created:
         filter_ = f_entry[0]
         filter_element = f_entry[1]
         for channel_link in filter_.channel_links.items():
             output_channel_id: str = channel_link[1]
+            if output_channel_id == "":
+                continue
             override_request = override_port_mapping.get(output_channel_id)
             if override_request:
                 output_channel_id = override_request
             input_channel_id = channel_link[0]
             _create_channel_link_element(channel_link=(input_channel_id, output_channel_id), parent=filter_element)
+        if for_fish:
+            for default_val_id, datatype in filter_.in_data_types.items():
+                if not filter_.channel_links.get(default_val_id) or filter_.channel_links[default_val_id] == "":
+                    if default_val_id == 'time':
+                        if not default_nodes.get(datatype):
+                            default_nodes[datatype] = []
+                        if time_node is None:
+                            time_node = 'timedefaultfilter'
+                            default_nodes[datatype].append('time')
+                        _create_channel_link_element(channel_link=(default_val_id, time_node + ':value'), parent=filter_element)
+                    else:
+                        if not default_nodes.get(datatype):
+                            default_nodes[datatype] = []
+                        val = '0'
+                        if datatype == DataType.DT_COLOR:
+                            val = '0,0,0'
+                        default_value = filter_.default_values[default_val_id] if filter_.default_values and default_val_id in filter_.default_values else val
+                        if default_value not in default_nodes[datatype]:
+                            default_nodes[datatype].append(default_value)
+                        _create_channel_link_element(channel_link=(default_val_id, 'const' + str(datatype) + 'val' + default_value + ':value'), parent=filter_element)
+    if for_fish:
+        for datatype, defvalues in default_nodes.items():
+            for default_value in defvalues:
+                type = FilterTypeEnumeration.FILTER_CONSTANT_8BIT
+                if datatype == DataType.DT_16_BIT:
+                    type = FilterTypeEnumeration.FILTER_CONSTANT_16_BIT
+                elif datatype == DataType.DT_DOUBLE:
+                    type = FilterTypeEnumeration.FILTER_CONSTANT_FLOAT
+                elif datatype == DataType.DT_COLOR:
+                    type = FilterTypeEnumeration.FILTER_CONSTANT_COLOR
+                if default_value == 'time':
+                    filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
+                        "id": 'timedefaultfilter',
+                        "type": str(FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT),
+                        "pos": "0,0"
+                    })
+                else:
+                    filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
+                        "id": 'const' + str(datatype) + 'val' + default_value,
+                        "type": str(type),
+                        "pos": "0,0"
+                    })
+                    _create_initial_parameters_element(('value', default_value), filter_element)
 
 
 def _create_channel_link_element(channel_link: tuple[str, str], parent: ElementTree.Element) -> ElementTree.Element:

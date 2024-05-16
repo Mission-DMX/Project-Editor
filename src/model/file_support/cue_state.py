@@ -17,6 +17,7 @@ class CueState():
         self._end_time = datetime.timedelta(seconds=float(20))
         self._paused_time = datetime.timedelta(seconds=float(0))
         self._active_cue = 0
+        self._time_scale = 1
         self._start_time = datetime.datetime.now()
 
     def __str__(self):
@@ -27,7 +28,7 @@ class CueState():
             ret = ("paused at " +
                    self.time_delta_to_str(self._paused_time))
         if self._state == State.PLAY:
-            ret = self.time_delta_to_str(datetime.datetime.now() - self._start_time)
+            ret = self.time_delta_to_str((datetime.datetime.now() - self._start_time) * self._time_scale)
         ret = (ret + " / " +
                self.time_delta_to_str(self._end_time) +
                " in cue " +
@@ -41,6 +42,7 @@ class CueState():
             self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
             self._end_time = datetime.timedelta(seconds=float(values[3]))
             self._active_cue = int(values[1])
+            self._time_scale = float(values[4])
             if values[0] == 'play':
                 self._state = State.PLAY
             elif values[0] == 'pause':

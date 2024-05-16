@@ -308,9 +308,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog.show()
 
     def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False):
-        if channel_name == "time":
+        if channel_name == "time" or channel_name == "time_scale":
             QMessageBox.critical(self._parent_widget, "Failed to add channel",
-                                 "Unfortunately, 'time' is a reserved keyword for this filter.")
+                                 "Unfortunately, 'time' and 'time_scale' is a reserved keyword for this filter.")
             return
         for c_name in self._cues[0].channels:
             if c_name[0] == channel_name:
@@ -402,7 +402,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if self._channels_changed_after_load:
             filter_node.clearTerminals()
             filter_node.addTerminal('time', io='in')
+            filter_node.addTerminal('time_scale', io='in')
             filter_node.filter.in_data_types["time"] = DataType.DT_DOUBLE
+            filter_node.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
             if len(self._cues) > 0:
                 for channel_name, channel_type in self._cues[0].channels:
                     filter_node.addTerminal(channel_name, io='out')
