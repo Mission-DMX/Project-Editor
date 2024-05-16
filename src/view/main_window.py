@@ -14,6 +14,7 @@ from proto.RealTimeControl_pb2 import RunMode
 from Style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
+from view.logging_mode.dmx_data_log import DmxDataLogWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.patch_mode.patch_mode import PatchMode
@@ -69,6 +70,9 @@ class MainWindow(QtWidgets.QMainWindow):
             mode_button = QtGui.QAction(view[0], self._toolbar)
             mode_button.triggered.connect(view[2])
             self._toolbar.addAction(mode_button)
+
+        data_log_window = DmxDataLogWidget(self._broadcaster)
+        self._toolbar.addAction(QtGui.QAction("dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
 
         self.setCentralWidget(self._widgets)
 
