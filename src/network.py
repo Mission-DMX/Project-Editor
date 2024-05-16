@@ -316,7 +316,8 @@ class NetworkManager(QtCore.QObject):
         else:
             print("No Bankset.")
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene.scene_id)
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE, push_direct=push_direct)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE,
+                               push_direct=push_direct)
         if scene.linked_bankset:
             for f in scene.filters:
                 if f.filter_type in [39, 40, 41, 42, 43]:
