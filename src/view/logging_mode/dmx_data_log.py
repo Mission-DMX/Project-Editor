@@ -1,17 +1,17 @@
 # coding=utf-8
 """Widget for displaying DMX current data"""
 
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QTimer
-from PySide6 import QtWidgets, QtCore
-from model.final_globals import FinalGlobals
 
 from model import Broadcaster, PatchingUniverse
+from model.final_globals import FinalGlobals
 from model.patching_channel import PatchingChannel
 from proto.DirectMode_pb2 import dmx_output
 
 
 class DmxDataLogWidget(QtWidgets.QWidget):
-    """ Widget to Log DMX Data"""
+    """Widget to Log DMX Data"""
 
     def __init__(self, broadcaster: Broadcaster):
         super().__init__()
