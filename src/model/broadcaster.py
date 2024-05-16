@@ -7,6 +7,7 @@ from PySide6 import QtCore
 from controller.joystick.joystick_enum import JoystickList
 from proto.RealTimeControl_pb2 import RunMode
 from proto.FilterMode_pb2 import update_parameter
+from proto.DirectMode_pb2 import dmx_output
 
 from model.patching_universe import PatchingUniverse
 
@@ -96,6 +97,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []
     log_message: QtCore.Signal = QtCore.Signal(str)
+    dmx_from_fish: QtCore.Signal = QtCore.Signal(dmx_output)
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:
