@@ -132,7 +132,8 @@ class NetworkManager(QtCore.QObject):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
-    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType, push_direct: bool = True) -> None:
+    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType,
+                          push_direct: bool = True) -> None:
         """send message in correct format to fish"""
         self._enqueue_message(msg, msg_type)
         if push_direct:
