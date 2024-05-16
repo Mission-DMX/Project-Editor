@@ -13,6 +13,7 @@ from Style import Style
 from controller.joystick.joystick_handling import JoystickHandler
 from view.main_window import MainWindow
 from controller.cli.remote_control_port import RemoteCLIServer
+from model.final_globals import FinalGlobals
 
 logger = logging.getLogger("Project-Editor")
 
@@ -36,6 +37,9 @@ def main():
     logging.basicConfig(level="INFO")
 
     app = QtWidgets.QApplication([])
+    width, height = app.primaryScreen().size().toTuple()
+    FinalGlobals.set_screen_width(width)
+    FinalGlobals.set_screen_height(height)
     app.setStyleSheet(Style.APP)
     JoystickHandler()
     widget = MainWindow()
