@@ -191,6 +191,10 @@ class NetworkManager(QtCore.QObject):
                         message: proto.FilterMode_pb2.update_parameter = proto.FilterMode_pb2.update_parameter()
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.update_filter_parameter.emit(message)
+                    case proto.MessageTypes_pb2.MSGT_DMX_OUTPUT:
+                        message: proto.DirectMode_pb2.dmx_output = proto.DirectMode_pb2.dmx_output()
+                        message.ParseFromString(bytes(msg))
+                        self._broadcaster.dmx_from_fish.emit(message)
                     case _:
                         pass
             except:
