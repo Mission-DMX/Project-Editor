@@ -9,11 +9,11 @@ import sys
 
 from PySide6 import QtWidgets
 
-from Style import Style
-from controller.joystick.joystick_handling import JoystickHandler
-from view.main_window import MainWindow
 from controller.cli.remote_control_port import RemoteCLIServer
+from controller.joystick.joystick_handling import JoystickHandler
 from model.final_globals import FinalGlobals
+from Style import Style
+from view.main_window import MainWindow
 
 logger = logging.getLogger("Project-Editor")
 
