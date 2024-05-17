@@ -31,7 +31,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
                 reason: str = tmp[0]
                 causes: str = tmp[1]
                 ex = FishExceptionsDialog(log, reason, causes)
-                ex.show()
+                ex.exec()
                 break
 
     def _level_visible_change(self, level: tuple[str, bool]):
