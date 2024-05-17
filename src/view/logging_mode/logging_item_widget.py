@@ -4,6 +4,7 @@ from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QTreeWidgetItem
 
 from .search import Operation, Search
+from ..dialogs.fish_exception_dialog import FishExceptionsDialog, error_dict
 
 
 class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
