@@ -1,17 +1,16 @@
 # coding=utf-8
 """Definition of a single logging item in logging Widget"""
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QTreeWidgetItem
 
-from .search import Operation, Search
 from ..dialogs.fish_exception_dialog import FishExceptionsDialog, error_dict
+from .search import Operation, Search
 
 
 class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
     """Widget of a single logging item"""
 
-    def __init__(self, parent, message: dict, level: str, visible: bool,
-                 visible_change: QtCore.Signal(str, bool)):
+    def __init__(self, parent, message: dict, level: str, visible: bool, visible_change: QtCore.Signal(str, bool)):
         super().__init__(parent)
         visible_change.connect(self._level_visible_change)
         self._content: dict = message
@@ -24,7 +23,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
             self.addChild(QTreeWidgetItem([key, str(value)]))
 
         message_text = message["message"]
-        for key in error_dict.keys():
+        for key in error_dict:
             if key in message_text:
                 tmp = message_text.split("Logs:\n")[1].split("Reason: ")
                 log: str = tmp[0]
@@ -51,7 +50,8 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
             for entry in search:
                 match entry.operation:
                     case Operation.IS:
-                        if not (entry.items[0] in self._content.keys()
-                                and entry.items[1] in self._content[entry.items[0]]):
+                        if not (
+                            entry.items[0] in self._content.keys() and entry.items[1] in self._content[entry.items[0]]
+                        ):
                             visible = False
         self.setHidden(not visible)
