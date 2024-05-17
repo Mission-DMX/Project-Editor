@@ -1,28 +1,28 @@
 # coding=utf-8
 """Dialogs to display fish exceptions"""
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtGui, QtWidgets
 
-error_dict: dict[str, str] = {"E001": "Fish Error: Filter not implemented in Allocation",
-                              "E002": "Fish Error: Filter not implemented in Construction",
-                              "E003": "Fish Error: Filter configuration exception",
-                              "E004": "Fish Error: Filter scheduling exception",
-                              "E005": "Fish Error: Cyclic or broken dependency while scheduling",
-                              "E006": "Fish Error: Unknown requested output channel"
-                              }
+error_dict: dict[str, str] = {
+    "E001": "Fish Error: Filter not implemented in Allocation",
+    "E002": "Fish Error: Filter not implemented in Construction",
+    "E003": "Fish Error: Filter configuration exception",
+    "E004": "Fish Error: Filter scheduling exception",
+    "E005": "Fish Error: Cyclic or broken dependency while scheduling",
+    "E006": "Fish Error: Unknown requested output channel",
+}
 
 
 class FishExceptionsDialog(QtWidgets.QDialog):
-    """"Dialog to display fish exceptions"""
+    """Dialog to display fish exceptions"""
+
     _open_dialogs: list[QtWidgets.QDialog] = []
 
-    def __init__(self, log: str, reason: str, cause: str, parent=None):
+    def __init__(self, log: str, reason: str, cause: str):
         super().__init__()
         self.setWindowTitle("Fish Error")
         layout = QtWidgets.QHBoxLayout(self)
-        da = HoverTextBrowser(f"""Log:<br>{log}</p>"""
-                              f"""<p>Reason:<br>{reason}</p>"""
-                              f"<p>Cause:<br>{cause}")
+        da = HoverTextBrowser(f"""Log:<br>{log}</p>""" f"""<p>Reason:<br>{reason}</p>""" f"<p>Cause:<br>{cause}")
         layout.addWidget(da)
         self.setLayout(layout)
 
@@ -47,15 +47,16 @@ class HoverTextBrowser(QtWidgets.QTextBrowser):
         cursor = self.textCursor()
         document_text = self.toPlainText()
 
-        for word in error_dict.keys():
+        for word in error_dict:
             start_pos = 0
             while True:
                 start_pos = document_text.find(word, start_pos)
                 if start_pos == -1:
                     break
                 cursor.setPosition(start_pos)
-                cursor.movePosition(QtGui.QTextCursor.MoveOperation.Right, QtGui.QTextCursor.MoveMode.KeepAnchor,
-                                    len(word))
+                cursor.movePosition(
+                    QtGui.QTextCursor.MoveOperation.Right, QtGui.QTextCursor.MoveMode.KeepAnchor, len(word)
+                )
                 text_format = QtGui.QTextCharFormat()
                 text_format.setForeground(QtGui.QColor("blue"))
                 text_format.setFontUnderline(True)
