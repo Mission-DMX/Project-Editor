@@ -23,6 +23,18 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
         for key, value in message.items():
             self.addChild(QTreeWidgetItem([key, str(value)]))
 
+        message_text = message["message"]
+        for key in error_dict.keys():
+            if key in message_text:
+                tmp = message_text.split("Logs:\n")[1].split("Reason: ")
+                log: str = tmp[0]
+                tmp = tmp[1].split("Possible causes: ")
+                reason: str = tmp[0]
+                causes: str = tmp[1]
+                ex = FishExceptionsDialog(log, reason, causes)
+                ex.show()
+                break
+
     def _level_visible_change(self, level: tuple[str, bool]):
         """change the visibility of a logging item by level"""
         if self._level == level[0]:
