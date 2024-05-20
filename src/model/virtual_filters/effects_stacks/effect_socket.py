@@ -107,7 +107,13 @@ class EffectsSocket:
             self._segment_socket = e
             return True
         # TODO implement other slot types
+        e._containing_slot = (self, target_slot.name)
         return False
+
+    def clear_slot(self, slot_name: str):
+        match slot_name:
+            case _:
+                logger.error("Deleting effects from slot name '{}' is not yet implemented.".format(slot_name))
 
     @property
     def is_group(self) -> bool:

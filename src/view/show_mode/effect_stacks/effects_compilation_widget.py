@@ -51,7 +51,7 @@ class EffectCompilationWidget(QWidget):
         self._added_fixtures: set[UsedFixture] = set()
         self._painting_active = False
         self._config_button_positions: list[tuple[int, int, QWidget]] = []
-        self._delete_button_positions: list[tuple[int, int, Effect, str]] = []
+        self._delete_button_positions: list[tuple[int, int, Effect]] = []
         self._active_config_widget: QWidget | None = None
         self.update()
 
@@ -111,6 +111,7 @@ class EffectCompilationWidget(QWidget):
         fm = self.fontMetrics()
         light_blue_brush = QBrush(QColor.fromRgb(0x03, 0x9B, 0xE5))
         light_gray_color = QBrush(QColor.fromRgb(0xaa, 0xaa, 0xaa))
+        red_color = QBrush(QColor.fromRgb(0xff, 0, 0))
         p.setBrush(light_gray_color)
         old_transform = p.transform()
         transform_90deg = QTransform()
@@ -135,17 +136,18 @@ class EffectCompilationWidget(QWidget):
         socket_height = max(socket_height, fm.height() + 10)
 
         # draw effect delete button
+        # FIXME only render this if we're not rendering a dummy
         y += 25
         gray_color = QBrush(QColor.fromRgb(0x30, 0x30, 0x30))
         p.setBrush(gray_color)
         p.drawRoundedRect(x, y, 20, 20, 3.0, 3.0)
-        p.setBrush(light_gray_color)
+        p.setBrush(red_color)
         p.drawLine(x+5, y+5, x+15, y+5)
         p.drawLine(x+7, y+15, x+12, y+15)
         p.drawLine(x+7, y+5, x+7, y+15)
         p.drawLine(x + 12, y + 5, x + 12, y + 15)
         p.drawLine(x+10, y+8, x+10, y+12)
-        self._delete_button_positions.append((x, y, effect, "slot_name"))  # TODO figure out how to delete this effect
+        self._delete_button_positions.append((x, y, effect))
 
         # draw effect config button
         config_widget = effect.get_configuration_widget()
@@ -285,5 +287,23 @@ class EffectCompilationWidget(QWidget):
                 if y < event.y() < y + 25:
                     self._active_config_widget = widget
                     self.active_config_widget_changed.emit(widget)
+                    self.update()
+                    return
+        for x, y, effect in self._delete_button_positions:
+            if x < event.x() < x + 25:
+                if y < event.y() < y + 25:
+                    if self._active_config_widget == effect.get_configuration_widget():
+                        self._active_config_widget = None
+                        self.active_config_widget_changed.emit(None)
+                        # FIXME this does not yet automatically disable the widget.
+                        # TODO test deleting after loading
+                        # TODO fix deleting of top level effects (effect.attach is not called if attached to socket)
+                    if effect.slot_parent is not None:
+                        parent_effect, slot_name = effect.slot_parent
+                        parent_effect.clear_slot(slot_name)
+                    else:
+                        logger.error("The effect '{}' should be deleted but the parent is None. FIXME!".format(
+                            effect.get_human_filter_name()
+                        ))
                     self.update()
                     return

@@ -80,6 +80,7 @@ class Effect(ABC):
         for slot_name in supported_input_types.keys():
             self._inputs[slot_name] = None
         self._parent_filter: "EffectsStack" | None = None
+        self._containing_slot: tuple["Effect", str] | None = None
 
     @abstractmethod
     def get_configuration_widget(self) -> QWidget | None:
@@ -203,6 +204,7 @@ class Effect(ABC):
         if not slot_id in self._inputs.keys():
             raise ValueError("The requested slot id is not present within this filter.")
         self._inputs[slot_id] = e
+        e._containing_slot = (self, slot_id)
         return True
 
     def get_human_slot_name(self, slot_name: str) -> str:
@@ -251,3 +253,12 @@ class Effect(ABC):
         :param data: The representation of the effect as a dictionary.
         """
         raise NotImplementedError("The class did not implement the deserialize method.")
+
+    @property
+    def slot_parent(self) -> tuple["Effect", str] | None:
+        return self._containing_slot
+
+    def clear_slot(self, slot_id: str):
+        if slot_id not in self._inputs.keys():
+            raise ValueError("This filter does not contain an input slot with id {}.".format(slot_id))
+        self._inputs[slot_id] = None
