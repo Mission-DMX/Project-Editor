@@ -5,13 +5,13 @@ from xml.etree.ElementTree import Element
 from PySide6 import QtCore
 
 from controller.joystick.joystick_enum import JoystickList
-from proto.RealTimeControl_pb2 import RunMode
-from proto.FilterMode_pb2 import update_parameter
-
 from model.patching_universe import PatchingUniverse
+from proto.DirectMode_pb2 import dmx_output
+from proto.FilterMode_pb2 import update_parameter
+from proto.RealTimeControl_pb2 import RunMode
 
 from .device import Device
-from .scene import Scene, FilterPage
+from .scene import FilterPage, Scene
 from .universe import Universe
 
 
@@ -30,6 +30,7 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
 
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
+
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType)  # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(Scene)
@@ -39,6 +40,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
+    send_request_dmx_data: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     ################################################################
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
     board_configuration_loaded: QtCore.Signal = QtCore.Signal(str)
@@ -95,6 +97,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []
     log_message: QtCore.Signal = QtCore.Signal(str)
+    dmx_from_fish: QtCore.Signal = QtCore.Signal(dmx_output)
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:
