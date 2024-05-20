@@ -3,6 +3,7 @@ from model.filter import Filter, VirtualFilter, FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from model.virtual_filters.cue_vfilter import CueFilter
+from model.virtual_filters.range_adapters import SixteenBitToFloatRange, EightBitToFloatRange
 
 
 def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id: str, pos: tuple[int] | None = None) -> VirtualFilter:
@@ -28,6 +29,10 @@ def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id:
             # edit the patching and does not have to edit all universe filters by hand. Filling in defaults for channels
             # should also be possible causing the v-filter to instantiate constants.
             pass
+        case FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE:
+            return SixteenBitToFloatRange(scene, filter_id, pos=pos)
+        case FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE:
+            return EightBitToFloatRange(scene, filter_id, pos=pos)
         case _:
             raise ValueError("The requested filter type {} is not yet implemented.".format(filter_type))
     pass

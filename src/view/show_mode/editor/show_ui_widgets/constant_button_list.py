@@ -1,3 +1,5 @@
+import sys
+
 from PySide6.QtWidgets import (QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QListWidget,
                                QLineEdit, QLabel, QDoubleSpinBox)
 
@@ -19,7 +21,11 @@ class ConstantNumberButtonList(UIWidget):
         row_layout2 = QHBoxLayout()
         row_layout2.addWidget(QLabel("Value to set:", widget))
         value_edit = QDoubleSpinBox(widget)
-        if self._maximum != -1:
+        if self._maximum == -1:
+            value_edit.setMaximum(sys.float_info.max)
+            value_edit.setMinimum(sys.float_info.max)
+            value_edit.setDecimals(20)
+        else:
             value_edit.setMaximum(self._maximum)
             value_edit.setDecimals(0)
         row_layout2.addWidget(value_edit)
