@@ -72,7 +72,9 @@ type_to_node: dict[int, str] = {
         FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_FLOAT: AdapterColorToFloatsNode.nodeName,
         FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE: AdapterFloatTo8BitRange.nodeName,
         FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE: AdapterFloatTo16BitRange.nodeName,
-        FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE: AdapterFloatToFloatRange.nodeName,
+        FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE: AdapterFloatToRange.nodeName,
         FilterTypeEnumeration.FILTER_ADAPTER_DUAL_BYTE_TO_16BIT: CombineTwo8BitToSingle16Bit.nodeName,
         FilterTypeEnumeration.FILTER_ADAPTER_8BIT_TO_16BIT: Map8BitTo16Bit.nodeName,
+        FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE: Adapter16BitToRangeFloat.nodeName,
+        FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE: Adapter16BitToRangeFloat.nodeName,
     }

@@ -66,7 +66,9 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(Adapter16bitToFloat, [('Adapters',)])
         self.addNodeType(AdapterFloatTo8BitRange, [('Adapters',)])
         self.addNodeType(AdapterFloatTo16BitRange, [('Adapters',)])
-        self.addNodeType(AdapterFloatToFloatRange, [('Adapters',)])
+        self.addNodeType(AdapterFloatToRange, [('Adapters',)])
+        self.addNodeType(Adapter16BitToRangeFloat, [('Adapters',)])
+        self.addNodeType(Adapter8BitToRangeFloat, [('Adapters',)])
         self.addNodeType(CombineTwo8BitToSingle16Bit, [('Adapters',)])
         self.addNodeType(Map8BitTo16Bit, [('Adapters',)])
 

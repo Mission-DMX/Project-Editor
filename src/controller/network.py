@@ -60,6 +60,7 @@ class NetworkManager(QtCore.QObject):
 
         self._broadcaster.send_universe.connect(self._generate_universe)
         self._broadcaster.send_universe_value.connect(self._send_universe)
+        self._broadcaster.send_request_dmx_data.connect(self._react_request_dmx_data)
         self._broadcaster.change_run_mode.connect(self.update_state)
         self._broadcaster.view_to_file_editor.connect(
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
@@ -104,7 +105,7 @@ class NetworkManager(QtCore.QObject):
         self._is_running = False
 
     def _send_universe(self, universe: Universe) -> None:
-        """sends the current dmx data of an universes.
+        """sends the current dmx data of a universe.
 
         Args:
             universe: universe to send to fish
@@ -116,6 +117,16 @@ class NetworkManager(QtCore.QObject):
 
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
+    def _react_request_dmx_data(self, universe: PatchingUniverse):
+        """send a Request of DMX data of a universe
+
+        Args:
+            universe: universe to send to fish
+        """
+        if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+            msg = proto.DirectMode_pb2.request_dmx_data(universe_id=universe.universe_proto.id)
+            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_REQUEST_DMX_DATA)
+
     def _generate_universe(self, universe: PatchingUniverse) -> None:
         """send a new universe to the fish socket"""
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
@@ -125,7 +136,8 @@ class NetworkManager(QtCore.QObject):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
-    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType, push_direct: bool = True) -> None:
+    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType,
+                          push_direct: bool = True) -> None:
         """send message in correct format to fish"""
         self._enqueue_message(msg, msg_type)
         if push_direct:
@@ -186,6 +198,10 @@ class NetworkManager(QtCore.QObject):
                         message: proto.FilterMode_pb2.update_parameter = proto.FilterMode_pb2.update_parameter()
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.update_filter_parameter.emit(message)
+                    case proto.MessageTypes_pb2.MSGT_DMX_OUTPUT:
+                        message: proto.DirectMode_pb2.dmx_output = proto.DirectMode_pb2.dmx_output()
+                        message.ParseFromString(bytes(msg))
+                        self._broadcaster.dmx_from_fish.emit(message)
                     case _:
                         pass
             except:
@@ -315,7 +331,8 @@ class NetworkManager(QtCore.QObject):
         else:
             print("No Bankset.")
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene.scene_id)
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE, push_direct=push_direct)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE,
+                               push_direct=push_direct)
         if scene.linked_bankset:
             for f in scene.filters:
                 if f.filter_type in [39, 40, 41, 42, 43]:
