@@ -154,8 +154,8 @@ def _create_filter_configuration_element(filter_configuration: tuple[str, str],
     # if check for Universe node: Filter Configuration is saved backwards to display QLineEdit the right way
     key, value = filter_configuration
     return ElementTree.SubElement(parent, "filterConfiguration", attrib={
-        "name": str(key) if "input_" not in key else str(value),
-        "value": str(value) if "input_" not in key else str(key)
+        "name": str(key),
+        "value": str(value)
     })
 
 
