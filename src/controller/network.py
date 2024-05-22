@@ -19,6 +19,7 @@ import proto.UniverseControl_pb2
 import varint
 import x_touch
 from model.broadcaster import Broadcaster
+from model.filter import FilterTypeEnumeration
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
@@ -335,7 +336,12 @@ class NetworkManager(QtCore.QObject):
                                push_direct=push_direct)
         if scene.linked_bankset:
             for f in scene.filters:
-                if f.filter_type in [39, 40, 41, 42, 43]:
+                if f.filter_type in [
+                        FilterTypeEnumeration.FILTER_FADER_RAW,
+                        FilterTypeEnumeration.FILTER_FADER_HSI,
+                        FilterTypeEnumeration.FILTER_FADER_HSIA,
+                        FilterTypeEnumeration.FILTER_FADER_HSIU,
+                        FilterTypeEnumeration.FILTER_FADER_HSIAU]:
                     self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id),
                                                  enque=not push_direct)
 
