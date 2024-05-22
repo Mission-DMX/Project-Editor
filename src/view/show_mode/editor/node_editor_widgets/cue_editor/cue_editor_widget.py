@@ -318,7 +318,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
                                      "Unable to add the requested channel {}. Channel names must be unique within "
                                      "this filter.".format(channel_name))
                 return
-        self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
+        if self._filter_instance.in_preview_mode:
+            self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
         for c in self._cues:
             c.add_channel(channel_name, channel_type)
             for kf in c._frames:
