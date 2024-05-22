@@ -327,6 +327,7 @@ class NetworkManager(QtCore.QObject):
             scene: The scene to be loaded
         """
         if scene.linked_bankset:
+            # Todo: Error while calling with cli
             scene.linked_bankset.activate()
             print("Activated Bankset")
         else:
