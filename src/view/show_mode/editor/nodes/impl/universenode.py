@@ -58,13 +58,27 @@ class UniverseNode(FilterNode):
             return
         input_channel = f"{name}_{next_input + 1}"
         self.filter.filter_configurations[input_channel] = str(next_input)
-        self.filter.in_data_types[input_channel] = DataType.DT_8_BIT
-        term = super().addInput(input_channel, **args)
-        universe_id = int(self._filter.filter_configurations["universe"])
-        universe = self._filter.scene.board_configuration.universe(universe_id)
-        for channel in universe.patching:
-            if next_input == channel.address:
-                term.rename(f"{term.name} : {channel.fixture.short_name}")
+        self.filter.in_data_types[self.nextTerminalName(input_channel)] = DataType.DT_8_BIT
+        # term =(
+        super().addInput(input_channel, **args)
+        # Todo: good idea to rename the device (and maybe the channel) to the terminal,
+        #  but should get updated if the configuration has changed, and error ..?
+        # )
+        # universe_id = int(self._filter.filter_configurations["universe"])
+        # universe = self._filter.scene.board_configuration.universe(universe_id)
+        # for channel in universe.patching:
+        #     print(term)
+        #     print(term.name())
+        #     if next_input == channel.address:
+        #         new_name = f"{term.name()} : {channel.fixture.short_name
+        #                                             if channel.fixture.short_name != '' else channel.fixture.name}"
+        #         self.filter.in_data_types[new_name] = DataType.DT_8_BIT
+        #         term.rename(new_name)
+
+        # print("Universe add input")
+        # # self.super().super().addInput(name="test23")
+        # self.filter.in_data_types["test23"] = DataType.DT_8_BIT
+        # return term
 
     def removeTerminal(self, term):
         if term.isInput():
