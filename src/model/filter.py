@@ -230,6 +230,7 @@ class Filter:
         f._in_data_types = self._in_data_types.copy()
         f._out_data_types = self._out_data_types.copy()
         f._gui_update_keys = self._gui_update_keys.copy()
+        f._default_values = self._default_values.copy()
         if isinstance(f, VirtualFilter):
             f.deserialize()
         return f

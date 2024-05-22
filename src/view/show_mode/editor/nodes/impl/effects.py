@@ -36,6 +36,7 @@ class CueListNode(FilterNode):
         self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]
         self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
+        self.filter.default_values['time_scale'] = '1.0'
 
     def parse_and_add_output_channels(self, mappings: str):
         for channel_dev in mappings.split(';'):

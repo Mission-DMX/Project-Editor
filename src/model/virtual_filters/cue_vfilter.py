@@ -85,4 +85,5 @@ class CueFilter(VirtualFilter):
             f.gui_update_keys.update(self.gui_update_keys)
             f.initial_parameters.update(self.initial_parameters)
             f.in_data_types.update(self.in_data_types)
+            f.default_values.update(self.default_values)
             filter_list.append(f)

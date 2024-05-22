@@ -24,7 +24,7 @@ class ArithmeticMACNode(FilterNode):
         self.filter.in_data_types["summand"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.filter.default_values['factor1'] = '1'
-        self.filter.default_values['factor1'] = '1'
+        self.filter.default_values['factor2'] = '1'
         self.filter.default_values['summand'] = '0'
 
 
