@@ -60,10 +60,6 @@ class ShowCommand(Command):
                 if not scene:
                     self.context.print("ERROR: scene not found.")
                     return False
-
-                self.context.print("ERROR: there was an error, so the command is not supported right now.")
-                return False
-                # Todo: Error while calling with cli
                 self.context.networkmgr.enter_scene(scene, push_direct=False)
                 return True
             case "filtermsg":

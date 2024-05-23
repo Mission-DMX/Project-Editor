@@ -429,11 +429,12 @@ class BankSet:
     def id(self) -> str:
         return self._id
 
-    def activate(self):
+    def activate(self, out_of_thread: bool = False):
         """Calling this method makes this bank set the active one.
         """
         # if BankSet._active_bank_set_id == self.id:
         #    return
+        self._gui_controlled = not out_of_thread
         BankSet._active_bank_set_id = self.id
         BankSet._active_bank_set = self
         text = "Bank: " + self.description
