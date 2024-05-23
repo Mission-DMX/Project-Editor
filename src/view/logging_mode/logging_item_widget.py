@@ -29,7 +29,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
                 log: str = tmp[0]
                 tmp = tmp[1].split("Possible causes: ")
                 reason: str = tmp[0]
-                causes: str = tmp[1]
+                causes: str = tmp[1] if len(tmp) > 1 else "No more info"
                 ex = FishExceptionsDialog(log, reason, causes)
                 ex.exec()
                 break
