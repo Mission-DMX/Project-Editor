@@ -127,7 +127,10 @@ class FilterTypeEnumeration(IntFlag):
 class Filter:
     """Filter for show file"""
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
+    def __init__(self, scene: "Scene", filter_id: str, filter_type: int,
+                 pos: tuple[int, int] | tuple[float, float] | None = None,
+                 filter_configurations: dict[str, str] | None = None,
+                 initial_parameters: dict[str, str] | None = None):
         if pos is None:
             pos = [0.0, 0.0]
         self._scene: "Scene" = scene
@@ -135,8 +138,8 @@ class Filter:
         self._filter_type = int(filter_type)
         self._pos: tuple[float, float] | None = pos
         self._channel_links: dict[str, str] = {}
-        self._initial_parameters: dict[str, str] = {}
-        self._filter_configurations: dict[str, str] = {}
+        self._initial_parameters: dict[str, str] = initial_parameters or dict()
+        self._filter_configurations: dict[str, str] = filter_configurations or dict()
         self._gui_update_keys: dict[str, DataType | list[str]] = {}
         self._in_data_types: dict[str, DataType] = {}
         self._default_values: dict[str, str] = {}
@@ -213,13 +216,23 @@ class Filter:
         return self.filter_type < 0
 
     def copy(self, new_scene: "Scene" = None, new_id: str = None) -> "Filter":
-        f = Filter(new_scene if new_scene else self.scene, self._filter_id if not new_id else new_id, self._filter_type, self._pos)
+        from .virtual_filters.vfilter_factory import construct_virtual_filter_instance
+        if self.is_virtual_filter:
+            f = construct_virtual_filter_instance(new_scene if new_scene else self.scene,
+                                                  self._filter_type, new_id if new_id else self._filter_id,
+                                                  pos=self._pos)
+            f.filter_configurations.update(self.filter_configurations.copy())
+        else:
+            f = Filter(new_scene if new_scene else self.scene, self._filter_id if not new_id else new_id,
+                       self._filter_type, self._pos, self.filter_configurations.copy())
         f._channel_links = self.channel_links.copy()
-        f._initial_parameters = self._initial_parameters.copy()
-        f._filter_configurations = self._filter_configurations.copy()
+        f._initial_parameters = self.initial_parameters.copy()
         f._in_data_types = self._in_data_types.copy()
         f._out_data_types = self._out_data_types.copy()
         f._gui_update_keys = self._gui_update_keys.copy()
+        f._default_values = self._default_values.copy()
+        if isinstance(f, VirtualFilter):
+            f.deserialize()
         return f
 
     def __str__(self):
@@ -263,3 +276,15 @@ class VirtualFilter(Filter, abc.ABC):
         configured channel mappings.
         """
         raise NotImplementedError()
+
+    def deserialize(self):
+        """This method should be called after the filter configuration has been loaded.
+        It might be used to implement the loading of the filter model."""
+        pass
+
+    def serialize(self):
+        """Virtual filter might need to prepare themselves prior to being saved to a show file.
+        For example, they might need to compile some information. This method will be called just prior to generating
+        the filter element within the show file. Afterward the current state of the v-filter needs to be accessible
+        purely by querying the configuration and parameters variables."""
+        pass

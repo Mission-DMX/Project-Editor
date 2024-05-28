@@ -15,6 +15,7 @@ type_to_node: dict[int, str] = {
         FilterTypeEnumeration.VFILTER_POSITION_CONSTANT: PanTiltConstant.nodeName,
         FilterTypeEnumeration.VFILTER_CUES: CueListNode.nodeName,
         FilterTypeEnumeration.VFILTER_AUTOTRACKER: AutoTrackerNode.nodeName,
+        FilterTypeEnumeration.VFILTER_EFFECTSSTACK: EffectsStackNode.nodeName,
         FilterTypeEnumeration.FILTER_CONSTANT_8BIT: Constants8BitNode.nodeName,
         FilterTypeEnumeration.FILTER_CONSTANT_16_BIT: Constants16BitNode.nodeName,
         FilterTypeEnumeration.FILTER_CONSTANT_FLOAT: ConstantsFloatNode.nodeName,

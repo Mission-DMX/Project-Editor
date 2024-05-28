@@ -36,6 +36,7 @@ class CueListNode(FilterNode):
         self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]
         self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
+        self.filter.default_values['time_scale'] = '1.0'
 
     def parse_and_add_output_channels(self, mappings: str):
         for channel_dev in mappings.split(';'):
@@ -151,4 +152,20 @@ class AutoTrackerNode(FilterNode):
                 self.filter.out_data_types[min_brightness_filter_id] = DataType.DT_DOUBLE
 
     def update_node_after_settings_changed(self):
+        self.setup_output_terminals()
+
+
+class EffectsStackNode(FilterNode):
+    nodeName = "EffectsStack"
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK, name=name,
+                         allowAddOutput=True, terminals={})
+        self.setup_output_terminals()
+
+    def setup_output_terminals(self):
+        pass
+
+    def update_node_after_settings_changed(self):
+        super().update_node_after_settings_changed()
         self.setup_output_terminals()

@@ -2,7 +2,7 @@ from logging import getLogger
 
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
 from controller.autotrack.LightController import LightController
-from model.virtual_filters import AutoTrackerFilter
+from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 
 logger = getLogger(__file__)
 

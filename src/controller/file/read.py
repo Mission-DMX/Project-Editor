@@ -11,12 +11,13 @@ import xmlschema
 import proto.UniverseControl_pb2 as Proto
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
-from controller.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
+from model.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from controller.utils.process_notifications import get_process_notifier
 from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
 from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
+from model.filter import VirtualFilter
 from model.scene import FilterPage
-from model.virtual_filters import construct_virtual_filter_instance
+from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
 from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
@@ -342,11 +343,13 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
             case "initialParameters":
                 _parse_initial_parameters(child, filter_)
             case "filterConfiguration":
-                _parse_filter_configuration(child, filter_)
+                _parse_filter_configuration(child, filter_, filter_.filter_configurations)
             case _:
                 logger.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
     filter_ = replace_old_filter_configurations(filter_)
+    if isinstance(filter_, VirtualFilter):
+        filter_.deserialize()
     scene.append_filter(filter_)
 
 
@@ -381,7 +384,7 @@ def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, f
     filter_.initial_parameters[ip_key] = ip_value
 
 
-def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter):
+def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter, fc: dict[str, str]):
     fc_key = ""
     fc_value = ""
     for key, value in filter_configuration_element.attrib.items():
@@ -394,7 +397,7 @@ def _parse_filter_configuration(filter_configuration_element: ElementTree.Elemen
                 logger.warning("Found attribute %s=%s while parsing filter configuration for filter %s",
                                key, value, filter_.filter_id)
 
-    filter_.filter_configurations[fc_key] = fc_value
+    fc[fc_key] = fc_value
 
 
 def _parse_device(device_element: ElementTree.Element, board_configuration: BoardConfiguration):

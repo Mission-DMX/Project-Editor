@@ -2,7 +2,7 @@
 from model import Filter
 from model.patching_channel import PatchingChannel
 from model.scene import FilterPage
-from controller.ofl.fixture import UsedFixture
+from model.ofl.fixture import UsedFixture
 
 
 from logging import getLogger

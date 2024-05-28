@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget
 class NodeEditorFilterConfigWidget(ABC):
     @abstractmethod
     def _get_configuration(self) -> dict[str, str]:
+        """Retreive the filter configuration parameters that should be updated."""
         raise NotImplementedError()
 
     @abstractmethod
@@ -34,7 +35,8 @@ class NodeEditorFilterConfigWidget(ABC):
 
     @abstractmethod
     def _get_parameters(self) -> dict[str, str]:
-        """Return the (initial) filter parameters deduced by the widget"""
+        """Return the (initial) filter parameters deduced by the widget.
+        Only parameters that changed need to be updated here."""
         raise NotImplementedError
 
     @property

@@ -6,7 +6,7 @@ from uuid import uuid4
 import proto.Console_pb2
 from model.color_hsi import ColorHSI
 from model.broadcaster import Broadcaster
-from network import NetworkManager
+from controller.network import NetworkManager
 
 
 def _generate_unique_id() -> str:
@@ -24,6 +24,7 @@ class DeskColumn(ABC):
 
     def __init__(self, uid: str = None):
         self.id = uid if uid else _generate_unique_id()
+        self.bank_set: BankSet | None = None
         self._bottom_display_line_inverted = False
         self._top_display_line_inverted = False
         self._pushed_to_device = False
@@ -428,11 +429,12 @@ class BankSet:
     def id(self) -> str:
         return self._id
 
-    def activate(self):
+    def activate(self, out_of_thread: bool = False):
         """Calling this method makes this bank set the active one.
         """
         # if BankSet._active_bank_set_id == self.id:
         #    return
+        self._gui_controlled = not out_of_thread
         BankSet._active_bank_set_id = self.id
         BankSet._active_bank_set = self
         text = "Bank: " + self.description
@@ -467,6 +469,8 @@ class BankSet:
         bank at first. If all you'd like to do is updating a column: call the update function on that column.
         """
         self.banks.append(bank)  # TODO ein BankSet has no columns attribute
+        for col in bank.columns:
+            col.bank_set = self
         self.update()
 
     def add_column_to_next_bank(self, f: DeskColumn):
@@ -476,6 +480,7 @@ class BankSet:
         if len(self.banks[-1].columns) >= 8:  # TODO query actual bank width
             self.add_bank(FaderBank())
         self.banks[-1].add_column(f)
+        f.bank_set = self
 
     def set_active_bank(self, i: int) -> bool:
         """This method sets the active bank.
@@ -532,13 +537,20 @@ class BankSet:
 
     @staticmethod
     def push_messages_now():
+        """This method pushes outstanding updates to fish. It should only be called within the Qt event loop."""
         BankSet._fish_connector.push_messages()
 
-    def get_column(self, column_id: str) -> DeskColumn:
+    def get_column(self, column_id: str) -> DeskColumn | None:
+        """This method returns the column requested by the provided id or None if it could not be found.
+
+        :param column_id: The id of the column to search for
+        :returns: The column or None.
+        """
         for b in self.banks:
             for c in b.columns:
                 if c.id == column_id:
                     return c
+        return None
 
     def set_active_column(self, column: DeskColumn):
         self.active_column = column

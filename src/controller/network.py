@@ -19,6 +19,7 @@ import proto.UniverseControl_pb2
 import varint
 import x_touch
 from model.broadcaster import Broadcaster
+from model.filter import FilterTypeEnumeration
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
@@ -35,6 +36,8 @@ class NetworkManager(QtCore.QObject):
 
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
+    run_mode_changed: QtCore.Signal = QtCore.Signal(int)
+    active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
     def __init__(self, parent: "MainWindow") -> None:
         """Inits the network connection.
@@ -47,6 +50,8 @@ class NetworkManager(QtCore.QObject):
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._message_queue = queue.Queue()
 
+        self._last_run_mode = None
+        self._last_active_scene: int = -1
         self._is_running: bool = False
         self._fish_status: str = ""
         self._server_name = "/tmp/fish.sock"
@@ -156,8 +161,11 @@ class NetworkManager(QtCore.QObject):
         """Processes incoming data."""
         msg_bytes = self._socket.readAll()
         while len(msg_bytes) > 0:
-            msg_type = varint.decode_bytes(msg_bytes[0])
-            msg_len = varint.decode_bytes(msg_bytes[1:])
+            try:
+                msg_type = varint.decode_bytes(msg_bytes[0])
+                msg_len = varint.decode_bytes(msg_bytes[1:])
+            except EOFError:
+                self.disconnect()
             start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
             msg = msg_bytes[start: start + msg_len]
             msg_bytes = msg_bytes[start + msg_len:]
@@ -199,6 +207,7 @@ class NetworkManager(QtCore.QObject):
                         pass
             except:
                 logger.error("Failed to parse message.", exc_info=True)
+        self.push_messages()
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
         """
@@ -211,6 +220,12 @@ class NetworkManager(QtCore.QObject):
         if self._fish_status != new_message:
             self.status_updated.emit(new_message)
             self._fish_status = new_message
+        if msg.current_state != self._last_run_mode:
+            self._last_run_mode = msg.current_state
+            self.run_mode_changed.emit(int(msg.current_state))
+        if msg.current_scene != self._last_active_scene:
+            self._last_active_scene = msg.current_scene
+            self.active_scene_on_fish_changed.emit(msg.current_scene)
 
     def _log_fish(self, msg: proto.RealTimeControl_pb2.long_log_update):
         """
@@ -290,6 +305,7 @@ class NetworkManager(QtCore.QObject):
         Returns:
             bool: Connected or Not Connected
         """
+        # TODO at shutdown this sometimes causes the interpreter to crash.
         return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
 
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
@@ -311,6 +327,7 @@ class NetworkManager(QtCore.QObject):
             scene: The scene to be loaded
         """
         if scene.linked_bankset:
+            # Todo: Error while calling with cli
             scene.linked_bankset.activate()
             print("Activated Bankset")
         else:
@@ -320,7 +337,12 @@ class NetworkManager(QtCore.QObject):
                                push_direct=push_direct)
         if scene.linked_bankset:
             for f in scene.filters:
-                if f.filter_type in [39, 40, 41, 42, 43]:
+                if f.filter_type in [
+                        FilterTypeEnumeration.FILTER_FADER_RAW,
+                        FilterTypeEnumeration.FILTER_FADER_HSI,
+                        FilterTypeEnumeration.FILTER_FADER_HSIA,
+                        FilterTypeEnumeration.FILTER_FADER_HSIU,
+                        FilterTypeEnumeration.FILTER_FADER_HSIAU]:
                     self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id),
                                                  enque=not push_direct)
 

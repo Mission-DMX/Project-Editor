@@ -14,6 +14,7 @@ from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 
 logger = getLogger(__name__)
@@ -84,6 +85,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return PanTiltConstantWidget(filter_)
     elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):
         return AutotrackerSettingsWidget()
+    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_EFFECTSSTACK):
+        return EffectsStackFilterConfigWidget(filter_)
     else:
         return None
 
@@ -180,10 +183,8 @@ class FilterSettingsDialog(QDialog):
 
     def ok_button_pressed(self):
         if self._special_widget:
-            for k in self._special_widget.configuration.keys():
-                self.filter.filter_configurations[k] = self._special_widget.configuration[k]
-            for k in self._special_widget.parameters.keys():
-                self.filter.initial_parameters[k] = self._special_widget.parameters[k]
+            self.filter.filter_configurations.update(self._special_widget.configuration)
+            self.filter.initial_parameters.update(self._special_widget.parameters)
         self.close()
 
     def closeEvent(self, arg__1: PySide6.QtGui.QCloseEvent) -> None:

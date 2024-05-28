@@ -11,6 +11,7 @@ pylint_protobuf
 requests
 numpy
 ruamel.yaml
+html2text
 # Dependencies for automatic tracking
 opencv-python>=4.8.0
 qimage2ndarray>=1.10

@@ -9,7 +9,7 @@ from threading import Thread
 
 from controller.cli.cli_context import CLIContext
 from model import BoardConfiguration
-from network import NetworkManager
+from controller.network import NetworkManager
 
 logger = Logger(__file__)
 
@@ -195,4 +195,7 @@ class RemoteCLIServer:
             to_be_stopped.append(self._connected_clients[k_addr])
         for c in to_be_stopped:
             c.stop()
-        self._server_thread.join()
+        try:
+            self._server_thread.join()
+        except KeyboardInterrupt:
+            logger.warning("Shutdown of remote control network socket interrupted by keyboard signal.")

@@ -18,7 +18,8 @@ class CueControlUIWidget(UIWidget):
         self._filter = filter_model
         self._cue_state = CueState(self._filter)
         # Todo: remove callback of the signal
-        filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._cue_state.update)
+        if filter_model:
+            filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._cue_state.update)
 
         self._timer = QTimer()
         self._timer.setInterval(50)
@@ -52,7 +53,8 @@ class CueControlUIWidget(UIWidget):
     @property
     def configuration(self) -> dict[str, str]:
         cue_name_config = ";".join(["{}:{}".format(cue[0], cue[1]) for cue in self._cues])
-        self._filter.filter_configurations["cue_names"] = cue_name_config
+        if self._filter:
+            self._filter.filter_configurations["cue_names"] = cue_name_config
         # FIXME we do not need this redundancy. The whole point is to provide the cue editor with the names
         return {"cue_names": cue_name_config}
 

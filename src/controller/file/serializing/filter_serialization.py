@@ -30,6 +30,9 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
         if for_fish:
             if om.filter_was_substituted(filter_):
                 return
+        else:
+            if isinstance(filter_, VirtualFilter):
+                filter_.serialize()
         filter_element = ElementTree.SubElement(parent, "filter", attrib={
             "id": str(filter_.filter_id),
             "type": str(filter_.filter_type),
@@ -151,8 +154,8 @@ def _create_filter_configuration_element(filter_configuration: tuple[str, str],
     # if check for Universe node: Filter Configuration is saved backwards to display QLineEdit the right way
     key, value = filter_configuration
     return ElementTree.SubElement(parent, "filterConfiguration", attrib={
-        "name": str(key) if "input_" not in key else str(value),
-        "value": str(value) if "input_" not in key else str(key)
+        "name": str(key),
+        "value": str(value)
     })
 
 

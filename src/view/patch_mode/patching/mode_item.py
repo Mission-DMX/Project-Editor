@@ -3,7 +3,7 @@
 from PySide6 import QtWidgets
 
 from Style import Style
-from controller.ofl.fixture import Mode
+from model.ofl.fixture import Mode
 
 
 class ModeItem(QtWidgets.QPushButton):

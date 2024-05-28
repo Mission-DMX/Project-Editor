@@ -2,7 +2,7 @@ import logging
 from xml.etree import ElementTree
 
 from model import Filter
-from model.filter import FilterTypeEnumeration
+from model.filter import FilterTypeEnumeration, DataType
 
 logger = logging.Logger(__file__)
 
@@ -51,13 +51,18 @@ class SceneOptimizerModule:
         match f.filter_type:
             # TODO expand this by also reduce constants with the same value
             case FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT:
+                if len(f.out_data_types) == 0:
+                    f.out_data_types["value"] = DataType.DT_DOUBLE
                 if self._global_time_input_filter is not None:
                     self._fill_ch_sub_dict(f, self._global_time_input_filter)
+                    #logger.debug("Substituting time filter {}.".format(f.filter_id))
                     return True
                 else:
                     self._global_time_input_filter = f
                     return False
             case FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS:
+                if len(f.out_data_types) == 0:
+                    f.out_data_types["brightness"] = DataType.DT_16_BIT
                 if self._main_brightness_input_filter is not None:
                     self._fill_ch_sub_dict(f, self._main_brightness_input_filter)
                     return True

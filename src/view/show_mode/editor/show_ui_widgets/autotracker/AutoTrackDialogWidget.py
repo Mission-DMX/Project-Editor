@@ -1,7 +1,7 @@
 from PySide6.QtCore import QTimer, QThread
 from PySide6.QtWidgets import QMainWindow, QMenuBar, QTabWidget, QWidget
 
-from model.virtual_filters import AutoTrackerFilter
+from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab

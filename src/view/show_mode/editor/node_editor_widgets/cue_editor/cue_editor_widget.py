@@ -318,7 +318,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
                                      "Unable to add the requested channel {}. Channel names must be unique within "
                                      "this filter.".format(channel_name))
                 return
-        self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
+        if self._filter_instance.in_preview_mode:
+            self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
         for c in self._cues:
             c.add_channel(channel_name, channel_type)
             for kf in c._frames:
@@ -367,7 +368,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def _cue_play_pressed_restart_changed(self):
         self._timeline_container.cue.restart_on_another_play_press = \
-            self._current_cue_another_play_pressed_checkbox.checkState()
+            self._current_cue_another_play_pressed_checkbox.checkState().Checked
 
     def _transition_type_changed(self, text):
         self._timeline_container.transition_type = text
@@ -412,6 +413,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if self._bankset:
             self._bankset.unlink()
             BankSet.push_messages_now()
+        show_reset_required = False
         if self._broadcaster and self._broadcaster_signals_connected:
             self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
             self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
@@ -419,10 +421,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
             self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
             self._broadcaster_signals_connected = False
+            show_reset_required = True
         if self._filter_instance:
             self._filter_instance.in_preview_mode = False
-            transmit_to_fish(self._filter_instance.scene.board_configuration, False)
-            # TODO switch to scene of filter
+            if show_reset_required:
+                transmit_to_fish(self._filter_instance.scene.board_configuration, False)
+                # TODO switch to scene of filter
         super().parent_closed(filter_node)
 
     def parent_opened(self):

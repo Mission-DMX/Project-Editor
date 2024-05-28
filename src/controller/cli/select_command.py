@@ -36,7 +36,12 @@ class SelectCommand(Command):
     def execute(self, args) -> bool:
         match args.what:
             case "scene":
-                candidate = self.context.show.get_scene_by_id(args.item)
+                try:
+                    scene_id = int(args.item)
+                except:
+                    self.context.print("Selected scene '{}' could not get parsed as integer id.".format(args.item))
+                    return True
+                candidate = self.context.show.get_scene_by_id(scene_id)
                 if candidate is None:
                     self.context.print("No scene with id {} was found.".format(candidate))
                     return False
