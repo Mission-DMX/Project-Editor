@@ -45,7 +45,7 @@ class SettingsDialog(QDialog):
 
     def apply(self):
         self._show.show_name = self.show_file_tb.text()
-        self._show.notes = self.show_notes_tb.text()
+        self._show.notes = self.show_notes_tb.toPlainText()
 
     def ok_button_pressed(self):
         self.apply()
