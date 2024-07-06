@@ -18,6 +18,7 @@ from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_mode.dmx_data_log import DmxDataLogWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
+from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_mode.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
@@ -105,6 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_temperature.emit()
             self._broadcaster.view_leave_console_mode.emit()
         self._about_window = None
+        self._settings_dialog = None
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -138,6 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)),
                 ("Save Showfile", self._save_show),
                 ("Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)),
+                ("Settings", lambda: self._open_show_settings)
             ],
             "Help": [["About", self._open_about_window]]
         }
@@ -281,3 +284,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @property
     def show_configuration(self):
         return self._board_configuration
+
+    def open_show_settings(self):
+        self._settings_dialog = SettingsDialog(self, self._board_configuration)
+        self.show()
