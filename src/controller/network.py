@@ -315,6 +315,7 @@ class NetworkManager(QtCore.QObject):
             xml: xml data to be sent
             goto_default_scene: scene to be loaded
         """
+        #print(ET.tostring(xml, encoding="utf8", method="xml"))
         msg = proto.FilterMode_pb2.load_show_file(
             show_data=ET.tostring(xml, encoding="utf8", method="xml"), goto_default_scene=goto_default_scene
         )
@@ -328,7 +329,7 @@ class NetworkManager(QtCore.QObject):
         """
         if scene.linked_bankset:
             # Todo: Error while calling with cli
-            scene.linked_bankset.activate()
+            scene.linked_bankset.activate(out_of_thread=True)
             print("Activated Bankset")
         else:
             print("No Bankset.")
@@ -338,11 +339,12 @@ class NetworkManager(QtCore.QObject):
         if scene.linked_bankset:
             for f in scene.filters:
                 if f.filter_type in [
-                        FilterTypeEnumeration.FILTER_FADER_RAW,
-                        FilterTypeEnumeration.FILTER_FADER_HSI,
-                        FilterTypeEnumeration.FILTER_FADER_HSIA,
-                        FilterTypeEnumeration.FILTER_FADER_HSIU,
-                        FilterTypeEnumeration.FILTER_FADER_HSIAU]:
+                    FilterTypeEnumeration.FILTER_FADER_RAW,
+                    FilterTypeEnumeration.FILTER_FADER_HSI,
+                    FilterTypeEnumeration.FILTER_FADER_HSIA,
+                    FilterTypeEnumeration.FILTER_FADER_HSIU,
+                    FilterTypeEnumeration.FILTER_FADER_HSIAU
+                ]:
                     self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id),
                                                  enque=not push_direct)
 

@@ -37,6 +37,7 @@ class CueListNode(FilterNode):
         self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
         self.filter.default_values['time_scale'] = '1.0'
+        self.channel_hints["time"] = " [ms]"
 
     def parse_and_add_output_channels(self, mappings: str):
         for channel_dev in mappings.split(';'):
@@ -62,6 +63,8 @@ class ShiftFilterNode(FilterNode):
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
         self.filter.default_values['time'] = '0'
         self.filter.default_values['switch_time'] = '1000'
+        self.channel_hints["switch_time"] = " [ms]"
+        self.channel_hints["time"] = " [ms]"
 
         try:
             if isinstance(model, Scene):
