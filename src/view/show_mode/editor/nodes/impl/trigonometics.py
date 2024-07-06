@@ -27,6 +27,8 @@ class TrigonometricNode(FilterNode):
         self.filter.default_values['factor_inner'] = '0.1'
         self.filter.default_values['phase'] = '0'
         self.filter.default_values['offset'] = '0'
+        self.channel_hints["phase"] = " [deg]"
+        self.channel_hints["value_in"] = " [deg]"
 
 
 class TrigonometricSineNode(TrigonometricNode):
