@@ -48,7 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         from model.ui_configuration import setup_network_manager
 
-        setup_network_manager(self._fish_connector)
+        setup_network_manager(self._fish_connector, self._broadcaster)
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [

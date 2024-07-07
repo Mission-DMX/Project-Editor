@@ -6,16 +6,19 @@ from PySide6.QtWidgets import QWidget
 from controller.network import NetworkManager
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from model.scene import Scene
+    from model import Broadcaster
 
 
 _network_manager_instance: NetworkManager = None
 
 
-def setup_network_manager(nm: NetworkManager):
+def setup_network_manager(nm: NetworkManager, b: "Broadcaster"):
     global _network_manager_instance
     _network_manager_instance = nm
+    b.request_main_brightness_fader_update.connect(nm.set_main_brightness_fader_position)
 
 
 class UIWidget(ABC):
