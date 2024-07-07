@@ -140,7 +140,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)),
                 ("Save Showfile", self._save_show),
                 ("Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)),
-                ("Settings", lambda: self._open_show_settings)
+                ("Settings", self.open_show_settings)
             ],
             "Help": [["About", self._open_about_window]]
         }
@@ -287,4 +287,4 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_show_settings(self):
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
-        self.show()
+        self._settings_dialog.show()
