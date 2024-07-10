@@ -133,14 +133,17 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Connect", self._start_connection, None),
                 ("&Disconnect", self._fish_connector.disconnect, None),
                 ("Change", self._change_server_name, None),
+                ("---", None, None),
                 ("&Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER), None),
                 ("&Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT), None),
+                ("---", None, None),
                 ("Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP), None),
             ],
             "File": [
                 ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
                 ("Save Showfile", self._save_show, "S"),
                 ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
+                ("---", None, None),
                 ("Settings", self.open_show_settings, ",")
             ],
             "Edit": [],
@@ -163,6 +166,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
         """add entries to a menu"""
         for entry in entries:
+            if entry[0] == "---":
+                menu.addSeparator()
+                continue
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
             menu_entry.triggered.connect(entry[1])
             if entry[2] is not None:
