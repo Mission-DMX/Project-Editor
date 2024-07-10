@@ -1,8 +1,9 @@
 # coding=utf-8
 """main Window for the Editor"""
+import platform
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtGui import QIcon, QPixmap, QKeySequence
 from PySide6.QtWidgets import QProgressBar
 
 from controller.file.showfile_dialogs import  _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
@@ -129,20 +130,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(QtWidgets.QMenuBar())
         menus: dict[str, list[tuple[str, callable]]] = {
             "Fish": [
-                ("Connect", self._start_connection),
-                ("Disconnect", self._fish_connector.disconnect),
-                ("Change", self._change_server_name),
-                ("Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)),
-                ("Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)),
-                ("Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)),
+                ("&Connect", self._start_connection, None),
+                ("&Disconnect", self._fish_connector.disconnect, None),
+                ("Change", self._change_server_name, None),
+                ("&Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER), None),
+                ("&Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT), None),
+                ("Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP), None),
             ],
-            "Show": [
-                ("Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)),
-                ("Save Showfile", self._save_show),
-                ("Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)),
-                ("Settings", self.open_show_settings)
+            "File": [
+                ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
+                ("Save Showfile", self._save_show, "S"),
+                ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
+                ("Settings", self.open_show_settings, ",")
             ],
-            "Help": [["About", self._open_about_window]]
+            "Edit": [],
+            "Show": [],
+            "Help": [
+                ("&About", self._open_about_window, None)
+            ]
         }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
@@ -160,6 +165,8 @@ class MainWindow(QtWidgets.QMainWindow):
         for entry in entries:
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
             menu_entry.triggered.connect(entry[1])
+            if entry[2] is not None:
+                menu_entry.setShortcut(QKeySequence(("Cmd+" if platform.system() == "Darwin" else "Ctrl+") + entry[2]))
             menu.addAction(menu_entry)
 
     def _change_server_name(self) -> None:
