@@ -128,7 +128,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[tuple[str, callable]]] = {
+        menus: dict[str, list[tuple[str, None | callable, str | None]]] = {
             "Fish": [
                 ("&Connect", self._start_connection, None),
                 ("&Disconnect", self._fish_connector.disconnect, None),
@@ -146,8 +146,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("---", None, None),
                 ("Settings", self.open_show_settings, ",")
             ],
-            "Edit": [],
-            "Show": [],
+            "Edit": [
+                ("&Undo", None, "Z"),  # TODO implement edit history
+                ("&Redo", None, "Shift+Z")
+            ],
+            "Show": [
+                ("Scene Wizard", None, None)  # TODO link wizard that creates a theater scene based on patched fixtures
+            ],
             "Help": [
                 ("&About", self._open_about_window, None)
             ]
@@ -170,7 +175,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 menu.addSeparator()
                 continue
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
-            menu_entry.triggered.connect(entry[1])
+            if entry[0] is not None:
+                menu_entry.triggered.connect(entry[1])
+            else:
+                menu_entry.setEnabled(False)
             if entry[2] is not None:
                 menu_entry.setShortcut(QKeySequence(("Cmd+" if platform.system() == "Darwin" else "Ctrl+") + entry[2]))
             menu.addAction(menu_entry)
