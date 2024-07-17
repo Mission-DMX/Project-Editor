@@ -2,7 +2,7 @@
 
 """This file provides the universe browser widget."""
 
-from PySide6.QtCore.Qt import CheckState
+from PySide6.QtCore.Qt import Qt
 from PySide6.QtWidgets import QTreeWidget
 
 from proto.UniverseControl_pb2 import Universe as pbUniverse
@@ -63,7 +63,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                     if not is_placeholder and (channel_fixture not in placed_fixtures or last_fixture_object is None):
                         last_fixture_object = AnnotatedTreeWidgetItem(item)
                         if self._show_selection_checkboxes:
-                            last_fixture_object.setCheckState(0, CheckState.Unchecked)
+                            last_fixture_object.setCheckState(0, Qt.CheckState.Unchecked)
                         last_fixture_object.setText(0 + column_offset, "{}/{}".format(universe.id, patching_channel.address + 1))
                         last_fixture_object.setText(1 + column_offset, channel_fixture.name)
                         last_fixture_object.setText(2 + column_offset, str(channel_fixture.mode))
