@@ -79,4 +79,18 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                         channel_item.annotated_data = patching_channel
                 i += 1
 
-    # TODO add method to get selected fixtures
+    def get_selected_fixtures(self) -> list[UsedFixture]:
+        a = []
+        if not self._show_selection_checkboxes:
+            return a
+        for tli_index in range(self.topLevelItemCount()):
+            tli = self.topLevelItem(tli_index)
+            for fixture_item_index in range(tli.childCount()):
+                fixture_item = tli.child(fixture_item_index)
+                if not isinstance(fixture_item, AnnotatedTreeWidgetItem):
+                    raise ValueError("Expected Annotated Tree Widget Item.")
+                if not isinstance(fixture_item.annotated_data, UsedFixture):
+                    raise ValueError("Expected data of TreeWidgetItem to be a fixture.")
+                if fixture_item.checkState(0) == Qt.CheckState.Checked:
+                    a.append(fixture_item.annotated_data)
+        return a
