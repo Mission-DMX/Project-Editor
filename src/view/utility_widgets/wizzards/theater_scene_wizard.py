@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QWizardPage, QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QWizardPage, QLabel, QFormLayout, QLineEdit, QCheckBox
 
 from model import BoardConfiguration
+from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 
 
 class TheaterSceneWizard(QWizard):
@@ -22,9 +23,28 @@ class TheaterSceneWizard(QWizard):
         layout = QVBoxLayout()
         layout.addWidget(self._introduction_label)
         self._introduction_page.setLayout(layout)
-        self._meta_page = QWizardPage()  # TODO Form layout with scene name, if global illumination should be honored,
-        # should there be bank set inputs
+
+        self._meta_page = QWizardPage()
+        layout = QFormLayout()
+        self._scene_name_tb = QLineEdit(self._meta_page)
+        self._scene_name_tb.setToolTip("Enter the human readable name of this scene. The ID will be set automatically.")
+        layout.addRow("Scene name:", self._scene_name_tb)
+        self._honor_global_illumination_cb = QCheckBox("Honor global illumination", self._meta_page)
+        self._honor_global_illumination_cb.setChecked(True)
+        layout.addRow("", self._honor_global_illumination_cb)
+        self._create_ui_widgets_cb = QCheckBox("Create a cue control UI widget", self._meta_page)
+        self._create_ui_widgets_cb.setChecked(True)
+        layout.addRow("", self._create_ui_widgets_cb)
+        self._create_bank_set_controls_cb = QCheckBox("Create Bank Set controls", self._meta_page)
+        layout.addRow("", self._create_bank_set_controls_cb)
+        self._meta_page.setLayout(layout)
+
         self._fixture_page = QWizardPage()  # TODO select the fixtures that should be added
+        layout = QVBoxLayout()
+        self._fixture_selection_browser = UniverseTreeBrowserWidget(show, True)
+        layout.addWidget(self._fixture_selection_browser)
+        self._fixture_page.setLayout(layout)
+
         self._channel_selection_page = QWizardPage()  # TODO page where the user can select the fixture features that
         # should be used, as well as grouping them
         self._channel_setup_page = QWizardPage()  # TODO page where the user can rename each channel and decide if it

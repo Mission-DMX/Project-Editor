@@ -2,6 +2,7 @@
 
 """This file provides the universe browser widget."""
 
+from PySide6.QtCore.Qt import CheckState
 from PySide6.QtWidgets import QTreeWidget
 
 from proto.UniverseControl_pb2 import Universe as pbUniverse
@@ -13,9 +14,10 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 class UniverseTreeBrowserWidget(QTreeWidget):
     """This widget displays a browser for the fixtures within the universes."""
-    def __init__(self, show: BoardConfiguration | None = None):
+    def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False):
         super().__init__()
-        self.setColumnCount(4)
+        self._show_selection_checkboxes = show_selection_checkboxes
+        self.setColumnCount(4 if not show_selection_checkboxes else 5)
         self._show: BoardConfiguration | None = show
         if self._show:
             self.refresh()
@@ -40,10 +42,14 @@ class UniverseTreeBrowserWidget(QTreeWidget):
         if self._show:
             for universe in self._show.universes:
                 item = AnnotatedTreeWidgetItem(self)
-                item.setText(0, str(universe.id))
-                item.setText(1, str(universe.name))
-                item.setText(2, location_to_string(universe.location))
-                item.setText(3, str(universe.description))
+                if self._show_selection_checkboxes:
+                    column_offset = 1
+                else:
+                    column_offset = 0
+                item.setText(0 + column_offset, str(universe.id))
+                item.setText(1 + column_offset, str(universe.name))
+                item.setText(2 + column_offset, location_to_string(universe.location))
+                item.setText(3 + column_offset, str(universe.description))
                 item.setExpanded(True)
                 item.annotated_data = universe
                 self.insertTopLevelItem(i, item)
@@ -56,17 +62,21 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                     last_fixture = channel_fixture
                     if not is_placeholder and (channel_fixture not in placed_fixtures or last_fixture_object is None):
                         last_fixture_object = AnnotatedTreeWidgetItem(item)
-                        last_fixture_object.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
-                        last_fixture_object.setText(1, channel_fixture.name)
-                        last_fixture_object.setText(2, str(channel_fixture.mode))
-                        last_fixture_object.setText(3, channel_fixture.comment)
+                        if self._show_selection_checkboxes:
+                            last_fixture_object.setCheckState(0, CheckState.Unchecked)
+                        last_fixture_object.setText(0 + column_offset, "{}/{}".format(universe.id, patching_channel.address + 1))
+                        last_fixture_object.setText(1 + column_offset, channel_fixture.name)
+                        last_fixture_object.setText(2 + column_offset, str(channel_fixture.mode))
+                        last_fixture_object.setText(3 + column_offset, channel_fixture.comment)
                         last_fixture_object.annotated_data = channel_fixture
                         placed_fixtures.add(channel_fixture)
                     if not is_placeholder:
                         channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
-                        channel_item.setText(0, "{}/{}".format(universe.id, patching_channel.address + 1))
-                        channel_item.setText(1, str(patching_channel.fixture_channel))
-                        channel_item.setText(2, str(channel_fixture.mode))
-                        channel_item.setText(3, channel_fixture.name)
+                        channel_item.setText(0 + column_offset, "{}/{}".format(universe.id, patching_channel.address + 1))
+                        channel_item.setText(1 + column_offset, str(patching_channel.fixture_channel))
+                        channel_item.setText(2 + column_offset, str(channel_fixture.mode))
+                        channel_item.setText(3 + column_offset, channel_fixture.name)
                         channel_item.annotated_data = patching_channel
                 i += 1
+
+    # TODO add method to get selected fixtures
