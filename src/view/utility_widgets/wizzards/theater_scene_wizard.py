@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QWizardPage, QLabel, QFormLayout, QLineEdit, QCheckBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QWizardPage, QLabel, QFormLayout, QLineEdit, QCheckBox, \
+    QHBoxLayout, QListWidget, QPushButton
 
 from model import BoardConfiguration
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
@@ -39,16 +40,41 @@ class TheaterSceneWizard(QWizard):
         layout.addRow("", self._create_bank_set_controls_cb)
         self._meta_page.setLayout(layout)
 
-        self._fixture_page = QWizardPage()  # TODO select the fixtures that should be added
+        self._fixture_page = QWizardPage()
         layout = QVBoxLayout()
         self._fixture_selection_browser = UniverseTreeBrowserWidget(show, True)
         layout.addWidget(self._fixture_selection_browser)
         self._fixture_page.setLayout(layout)
 
-        self._channel_selection_page = QWizardPage()  # TODO page where the user can select the fixture features that
-        # should be used, as well as grouping them
-        self._channel_setup_page = QWizardPage()  # TODO page where the user can rename each channel and decide if it
-        # should be controlled by cue or desk column
+        self._channel_selection_page = QWizardPage()
+        layout = QHBoxLayout()
+        self._fixture_feature_list = QListWidget(self._channel_selection_page)
+        layout.addWidget(self._fixture_feature_list)
+        sec_layout = QVBoxLayout()
+        sec_layout.addStretch()
+        self._channel_selection_page_new_group_button = QPushButton("Add Group", self._channel_selection_page)
+        self._channel_selection_page_new_group_button.setToolTip("Add a new group.")
+        self._channel_selection_page_new_group_button.clicked.connect(self.add_group_to_feature_group_list_pressed)
+        sec_layout.addWidget(self._channel_selection_page_new_group_button)
+        self._channel_selection_page_add_feature_to_group_button = QPushButton(
+            "Add feature", self._channel_selection_page
+        )
+        self._channel_selection_page_add_feature_to_group_button.setToolTip(
+            "Add the selected feature to the selected group."
+        )
+        self._channel_selection_page_add_feature_to_group_button.clicked.connect(
+            self.add_feature_to_feature_group_pressed
+        )
+        sec_layout.addWidget(self._channel_selection_page_add_feature_to_group_button)
+        sec_layout.addStretch()
+        layout.addLayout(sec_layout)
+        self._feature_grouping_list = QListWidget(self._channel_selection_page)
+        layout.addWidget(self._feature_grouping_list)
+        self._channel_selection_page.setLayout(layout)
+
+        self._channel_setup_page = QWizardPage()
+        # TODO page where the user can rename each channel and decide if it
+        #  should be controlled by cue or desk column
         self._cues_page = QWizardPage()  # TODO page where the user can add and name cues and set up their properties
         self._preview_page = QWizardPage()  # TODO final preview and confirmation page
         self.addPage(self._introduction_page)
@@ -59,3 +85,9 @@ class TheaterSceneWizard(QWizard):
         self.addPage(self._cues_page)
         self.addPage(self._preview_page)
         self._show = show
+
+    def add_group_to_feature_group_list_pressed(self):
+        pass  # TODO
+
+    def add_feature_to_feature_group_pressed(self):
+        pass  # TODO
