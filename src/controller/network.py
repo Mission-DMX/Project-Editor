@@ -376,6 +376,15 @@ class NetworkManager(QtCore.QObject):
             return
         self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN)
 
+    def set_main_brightness_fader_position(self, new_position: int, push_direct: bool = True):
+        if not self.is_running:
+            return
+        msg = proto.Console_pb2.fader_position()
+        msg.column_id = 'main'
+        msg.position = int(min(max(0, new_position), 255) * 65536 / 255)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_FADER_POSITION,
+                               push_direct=push_direct)
+
     def send_desk_update_message(self, msg: proto.Console_pb2.desk_update, update_from_gui: bool):
         """send message to update a desk to fish"""
         if not self.is_running:
