@@ -23,6 +23,7 @@ from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_mode.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
+from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -108,6 +109,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_console_mode.emit()
         self._about_window = None
         self._settings_dialog = None
+        self._theatre_scene_setup_wizard = None
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -151,7 +153,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Redo", None, "Shift+Z")
             ],
             "Show": [
-                ("Scene Wizard", None, None)  # TODO link wizard that creates a theater scene based on patched fixtures
+                ("Scene Wizard", self._open_scene_setup_wizard, None)  # TODO link wizard that creates a theater scene based on patched fixtures
             ],
             "Help": [
                 ("&About", self._open_about_window, None)
@@ -303,9 +305,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._about_window.show()
 
     @property
-    def show_configuration(self):
+    def show_configuration(self) -> BoardConfiguration:
         return self._board_configuration
 
     def open_show_settings(self):
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
+
+    def _open_scene_setup_wizard(self):
+        self._theatre_scene_setup_wizard = TheaterSceneWizard(self, self.show_configuration)
+        self._theatre_scene_setup_wizard.show()

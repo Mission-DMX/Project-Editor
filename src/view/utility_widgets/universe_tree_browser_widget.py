@@ -1,8 +1,7 @@
 # coding=utf-8
 
 """This file provides the universe browser widget."""
-
-from PySide6.QtCore.Qt import Qt
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeWidget
 
 from proto.UniverseControl_pb2 import Universe as pbUniverse
