@@ -1,8 +1,9 @@
 # coding=utf-8
 """main Window for the Editor"""
+import platform
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtGui import QIcon, QPixmap, QKeySequence
 from PySide6.QtWidgets import QProgressBar
 
 from controller.file.showfile_dialogs import  _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
@@ -18,6 +19,7 @@ from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_mode.dmx_data_log import DmxDataLogWidget
 from view.logging_mode.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
+from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_mode.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
@@ -47,7 +49,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         from model.ui_configuration import setup_network_manager
 
-        setup_network_manager(self._fish_connector)
+        setup_network_manager(self._fish_connector, self._broadcaster)
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
@@ -105,6 +107,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_temperature.emit()
             self._broadcaster.view_leave_console_mode.emit()
         self._about_window = None
+        self._settings_dialog = None
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -125,21 +128,34 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[tuple[str, callable]]] = {
+        menus: dict[str, list[tuple[str, None | callable, str | None]]] = {
             "Fish": [
-                ("Connect", self._start_connection),
-                ("Disconnect", self._fish_connector.disconnect),
-                ("Change", self._change_server_name),
-                ("Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER)),
-                ("Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT)),
-                ("Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP)),
+                ("&Connect", self._start_connection, None),
+                ("&Disconnect", self._fish_connector.disconnect, None),
+                ("Change", self._change_server_name, None),
+                ("---", None, None),
+                ("&Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER), None),
+                ("&Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT), None),
+                ("---", None, None),
+                ("Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP), None),
+            ],
+            "File": [
+                ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
+                ("Save Showfile", self._save_show, "S"),
+                ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
+                ("---", None, None),
+                ("Settings", self.open_show_settings, ",")
+            ],
+            "Edit": [
+                ("&Undo", None, "Z"),  # TODO implement edit history
+                ("&Redo", None, "Shift+Z")
             ],
             "Show": [
-                ("Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration)),
-                ("Save Showfile", self._save_show),
-                ("Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration)),
+                ("Scene Wizard", None, None)  # TODO link wizard that creates a theater scene based on patched fixtures
             ],
-            "Help": [["About", self._open_about_window]]
+            "Help": [
+                ("&About", self._open_about_window, None)
+            ]
         }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
@@ -155,8 +171,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
         """add entries to a menu"""
         for entry in entries:
+            if entry[0] == "---":
+                menu.addSeparator()
+                continue
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
-            menu_entry.triggered.connect(entry[1])
+            if entry[0] is not None:
+                menu_entry.triggered.connect(entry[1])
+            else:
+                menu_entry.setEnabled(False)
+            if entry[2] is not None:
+                menu_entry.setShortcut(QKeySequence(("Cmd+" if platform.system() == "Darwin" else "Ctrl+") + entry[2]))
             menu.addAction(menu_entry)
 
     def _change_server_name(self) -> None:
@@ -281,3 +305,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @property
     def show_configuration(self):
         return self._board_configuration
+
+    def open_show_settings(self):
+        self._settings_dialog = SettingsDialog(self, self._board_configuration)
+        self._settings_dialog.show()

@@ -42,7 +42,7 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
                 dt = self.node.filter.out_data_types.get(terminal.name())
             else:
                 raise ValueError("Expected terminal to be either input or output")
-            terminal_dt_name = str(dt)
+            terminal_dt_name = str(dt) + (self.node.channel_hints.get(terminal.name()) or "")
             if terminal.isInput():
                 p.drawText(5, y_inp, terminal_dt_name)
                 y_inp += self.terminalOffset() * 4

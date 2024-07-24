@@ -15,6 +15,7 @@ class TimeNode(FilterNode):
             'value': {'io': 'out'}
         })
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+        self.channel_hints["value"] = " [ms]"
 
 
 class TimeSwitchOnDelay8BitNode(FilterNode):

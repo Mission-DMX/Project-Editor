@@ -41,6 +41,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
     send_request_dmx_data: QtCore.Signal = QtCore.Signal(PatchingUniverse)
+    request_main_brightness_fader_update: QtCore.Signal = QtCore.Signal(int)
     ################################################################
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
     board_configuration_loaded: QtCore.Signal = QtCore.Signal(str)

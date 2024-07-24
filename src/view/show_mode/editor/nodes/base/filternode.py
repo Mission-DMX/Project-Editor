@@ -43,6 +43,7 @@ class FilterNode(Node):
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
         self.graphicsItem().xChanged.connect(self.update_filter_pos)
+        self.channel_hints = {}
 
     def graphicsItem(self):
         """Return the GraphicsItem for this node. Subclasses may re-implement
