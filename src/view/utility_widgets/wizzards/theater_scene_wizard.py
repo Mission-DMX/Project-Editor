@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QWizardPage, QLabel, QFormLayout, QLineEdit, QCheckBox, \
-    QHBoxLayout, QListWidget, QPushButton
+    QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea
 
 from model import BoardConfiguration
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
@@ -26,6 +26,7 @@ class TheaterSceneWizard(QWizard):
         self._introduction_page.setLayout(layout)
 
         self._meta_page = QWizardPage()
+        self._meta_page.setTitle("General Setup")
         layout = QFormLayout()
         self._scene_name_tb = QLineEdit(self._meta_page)
         self._scene_name_tb.setToolTip("Enter the human readable name of this scene. The ID will be set automatically.")
@@ -41,12 +42,14 @@ class TheaterSceneWizard(QWizard):
         self._meta_page.setLayout(layout)
 
         self._fixture_page = QWizardPage()
+        self._fixture_page.setTitle("Fixture Selection")
         layout = QVBoxLayout()
         self._fixture_selection_browser = UniverseTreeBrowserWidget(show, True)
         layout.addWidget(self._fixture_selection_browser)
         self._fixture_page.setLayout(layout)
 
         self._channel_selection_page = QWizardPage()
+        self._channel_selection_page.setTitle("Channel Selection")
         layout = QHBoxLayout()
         self._fixture_feature_list = QListWidget(self._channel_selection_page)
         layout.addWidget(self._fixture_feature_list)
@@ -73,8 +76,15 @@ class TheaterSceneWizard(QWizard):
         self._channel_selection_page.setLayout(layout)
 
         self._channel_setup_page = QWizardPage()
-        # TODO page where the user can rename each channel and decide if it
-        #  should be controlled by cue or desk column
+        self._channel_setup_page.setTitle("Channel Setup")
+        self._channel_setup_widgets: list[tuple[QLineEdit, QButtonGroup, QRadioButton, QRadioButton]] = []
+        layout = QHBoxLayout()
+        self._channel_setup_widgets_scroll_area = QScrollArea(self._channel_setup_page)
+        layout.addWidget(self._channel_setup_widgets_scroll_area)
+        self._channel_setup_page.setLayout(layout)
+        layout = QGridLayout()
+        self._channel_setup_widgets_scroll_area.setLayout(layout)
+
         self._cues_page = QWizardPage()  # TODO page where the user can add and name cues and set up their properties
         self._preview_page = QWizardPage()  # TODO final preview and confirmation page
         self.addPage(self._introduction_page)
@@ -85,9 +95,35 @@ class TheaterSceneWizard(QWizard):
         self.addPage(self._cues_page)
         self.addPage(self._preview_page)
         self._show = show
+        self._channels: list[dict[str, str]] = []
 
     def add_group_to_feature_group_list_pressed(self):
         pass  # TODO
 
     def add_feature_to_feature_group_pressed(self):
         pass  # TODO
+
+    def _populate_channel_setup_page(self):
+        page = self._channel_setup_widgets_scroll_area
+        layout = page.layout()
+        for edit, button_group, b1, b2 in self._channel_setup_widgets:
+            layout.removeWidget(edit)
+            layout.removeWidget(b1)
+            layout.removeWidget(b2)
+            layout.removeWidget(button_group)
+        self._channel_setup_widgets.clear()
+        i = 0
+        for c in self._channels:
+            i += 1
+            controlled_by_desk = c.get("desk-controlled") == "true"
+            text_edit = QLineEdit(c.get("name") or str(i), page)
+            layout.addItem(text_edit, i, 0)
+            radio_group = QButtonGroup(page)
+            radio_button_cue = QRadioButton("Cue", page)
+            radio_button_cue.setChecked(not controlled_by_desk)
+            radio_button_desk = QRadioButton("Desk", page)
+            radio_button_desk.setChecked(controlled_by_desk)
+            radio_group.addButton(radio_button_cue)
+            radio_group.addButton(radio_button_desk)
+            layout.addItem(radio_group, i, 1)
+            self._channel_setup_widgets.append((text_edit, radio_group, radio_button_cue, radio_button_desk))
