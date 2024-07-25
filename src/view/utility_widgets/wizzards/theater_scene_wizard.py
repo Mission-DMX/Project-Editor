@@ -1,7 +1,9 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QWizardPage, QLabel, QFormLayout, QLineEdit, QCheckBox, \
     QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea
 
 from model import BoardConfiguration
+from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 
 
@@ -85,7 +87,23 @@ class TheaterSceneWizard(QWizard):
         layout = QGridLayout()
         self._channel_setup_widgets_scroll_area.setLayout(layout)
 
-        self._cues_page = QWizardPage()  # TODO page where the user can add and name cues and set up their properties
+        self._cues_page = QWizardPage()
+        layout = QVBoxLayout()
+        sec_layout = QHBoxLayout()
+        self._cues_page_add_cue_button = QPushButton("Add Cue", self._cues_page)
+        self._cues_page_add_cue_button.setToolTip("Define a new cue that should be added.")
+        self._cues_page_add_cue_button.clicked.connect(self._add_cue_button_pressed)
+        sec_layout.addWidget(self._cues_page_add_cue_button)
+        sec_layout.addStretch()
+        self._cues_page_rm_cue_button = QPushButton("Remove Cue", self._cues_page)
+        self._cues_page_rm_cue_button.setToolTip("Remove the selected cue.")
+        self._cues_page_rm_cue_button.clicked.connect(self._remove_cue_button_pressed)
+        sec_layout.addWidget(self._cues_page_rm_cue_button)
+        layout.addLayout(sec_layout)
+        self._cues_page_cue_list_widget = QListWidget(self._cues_page)
+        layout.addWidget(self._cues_page_cue_list_widget)
+        self._cues_page.setLayout(layout)
+
         self._preview_page = QWizardPage()  # TODO final preview and confirmation page
         self.addPage(self._introduction_page)
         self.addPage(self._meta_page)
@@ -127,3 +145,14 @@ class TheaterSceneWizard(QWizard):
             radio_group.addButton(radio_button_desk)
             layout.addItem(radio_group, i, 1)
             self._channel_setup_widgets.append((text_edit, radio_group, radio_button_cue, radio_button_desk))
+
+    def _add_cue_button_pressed(self):
+        item = AnnotatedListWidgetItem(self._cues_page_cue_list_widget)
+        item.setText("New Cue")
+        item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
+        self._cues_page_cue_list_widget.addItem(item)
+
+    def _remove_cue_button_pressed(self):
+        sitems = self._cues_page_cue_list_widget.selectedItems()
+        for item in sitems:
+            self._cues_page_cue_list_widget.takeItem(self._cues_page_cue_list_widget.row(item))
