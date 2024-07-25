@@ -104,7 +104,11 @@ class TheaterSceneWizard(QWizard):
         layout.addWidget(self._cues_page_cue_list_widget)
         self._cues_page.setLayout(layout)
 
-        self._preview_page = QWizardPage()  # TODO final preview and confirmation page
+        self._preview_page = QWizardPage()
+        layout = QVBoxLayout()
+        self._preview_text_area = QLabel(self._preview_page)
+        layout.addWidget(self._preview_text_area)
+
         self.addPage(self._introduction_page)
         self.addPage(self._meta_page)
         self.addPage(self._fixture_page)
