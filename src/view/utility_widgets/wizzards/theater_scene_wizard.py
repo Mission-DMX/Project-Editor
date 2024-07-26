@@ -1,10 +1,11 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QWizardPage, QLabel, QFormLayout, QLineEdit, QCheckBox, \
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout, QLineEdit, QCheckBox, \
     QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea
 
 from model import BoardConfiguration
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
+from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
 
 
 class TheaterSceneWizard(QWizard):
@@ -13,7 +14,7 @@ class TheaterSceneWizard(QWizard):
         self.setModal(True)
         self.setMinimumSize(600, 300)
         self.setWindowTitle("Theatrical Scene Wizard")
-        self._introduction_page = QWizardPage()
+        self._introduction_page = ComposableWizardPage()
         self._introduction_page.setTitle("Introduction")
         self._introduction_label = QLabel("This wizard guides you through the automatic creation of a scene used for "
                                           "theater productions. You can select a set of fixtures that should be used "
@@ -22,16 +23,20 @@ class TheaterSceneWizard(QWizard):
                                           "would like to control within that scene and this wizard will automatically "
                                           "create the required channels and connections for you.<br />Click next to "
                                           "continue.")
+        self._introduction_page.setFinalPage(False)
         self._introduction_label.setWordWrap(True)
         layout = QVBoxLayout()
         layout.addWidget(self._introduction_label)
         self._introduction_page.setLayout(layout)
 
-        self._meta_page = QWizardPage()
+        self._meta_page = ComposableWizardPage()
         self._meta_page.setTitle("General Setup")
+        self._meta_page.setSubTitle("Enter the general properties of the new scene you want to create.")
+        self._meta_page.setFinalPage(False)
         layout = QFormLayout()
         self._scene_name_tb = QLineEdit(self._meta_page)
         self._scene_name_tb.setToolTip("Enter the human readable name of this scene. The ID will be set automatically.")
+        self._meta_page.registerField("name*", self._scene_name_tb)
         layout.addRow("Scene name:", self._scene_name_tb)
         self._honor_global_illumination_cb = QCheckBox("Honor global illumination", self._meta_page)
         self._honor_global_illumination_cb.setChecked(True)
@@ -43,15 +48,22 @@ class TheaterSceneWizard(QWizard):
         layout.addRow("", self._create_bank_set_controls_cb)
         self._meta_page.setLayout(layout)
 
-        self._fixture_page = QWizardPage()
+        self._fixture_page = ComposableWizardPage()
         self._fixture_page.setTitle("Fixture Selection")
+        self._fixture_page.setSubTitle("Please select the fixtures you'd like to use in your new scene. All other "
+                                       "fixtures fill be ignored. The selection of individual properties of the "
+                                       "fixtures is done at a later stage.")
+        self._fixture_page.setFinalPage(False)
         layout = QVBoxLayout()
         self._fixture_selection_browser = UniverseTreeBrowserWidget(show, True)
         layout.addWidget(self._fixture_selection_browser)
         self._fixture_page.setLayout(layout)
 
-        self._channel_selection_page = QWizardPage()
+        self._channel_selection_page = ComposableWizardPage()
         self._channel_selection_page.setTitle("Channel Selection")
+        self._channel_selection_page.setSubTitle("Please select which features of the selected fixtures you'd like to "
+                                                 "use and assign them to property channels.")
+        self._channel_selection_page.setFinalPage(False)
         layout = QHBoxLayout()
         self._fixture_feature_list = QListWidget(self._channel_selection_page)
         layout.addWidget(self._fixture_feature_list)
@@ -77,8 +89,11 @@ class TheaterSceneWizard(QWizard):
         layout.addWidget(self._feature_grouping_list)
         self._channel_selection_page.setLayout(layout)
 
-        self._channel_setup_page = QWizardPage()
+        self._channel_setup_page = ComposableWizardPage(page_activation_function=self._initialize_channel_setup_page)
         self._channel_setup_page.setTitle("Channel Setup")
+        self._channel_setup_page.setSubTitle("Please assign the names of previous channels and select their "
+                                             "control method.")
+        self._channel_setup_page.setFinalPage(False)
         self._channel_setup_widgets: list[tuple[QLineEdit, QButtonGroup, QRadioButton, QRadioButton]] = []
         layout = QHBoxLayout()
         self._channel_setup_widgets_scroll_area = QScrollArea(self._channel_setup_page)
@@ -87,7 +102,10 @@ class TheaterSceneWizard(QWizard):
         layout = QGridLayout()
         self._channel_setup_widgets_scroll_area.setLayout(layout)
 
-        self._cues_page = QWizardPage()
+        self._cues_page = ComposableWizardPage()
+        self._cues_page.setTitle("Cue setup")
+        self._cues_page.setSubTitle("Please create the cues you'd like to use. Edit names by double clicking them.")
+        self._cues_page.setFinalPage(True)
         layout = QVBoxLayout()
         sec_layout = QHBoxLayout()
         self._cues_page_add_cue_button = QPushButton("Add Cue", self._cues_page)
@@ -104,7 +122,10 @@ class TheaterSceneWizard(QWizard):
         layout.addWidget(self._cues_page_cue_list_widget)
         self._cues_page.setLayout(layout)
 
-        self._preview_page = QWizardPage()
+        self._preview_page = ComposableWizardPage(page_activation_function=self._initialize_preview_page)
+        self._preview_page.setTitle("Preview")
+        self._preview_page.setSubTitle("Please review and confirm the changes that are about to be made.")
+        self._preview_page.setFinalPage(True)
         layout = QVBoxLayout()
         self._preview_text_area = QLabel(self._preview_page)
         layout.addWidget(self._preview_text_area)
@@ -134,6 +155,7 @@ class TheaterSceneWizard(QWizard):
             layout.removeWidget(b2)
             layout.removeWidget(button_group)
         self._channel_setup_widgets.clear()
+        is_creation_of_banksets_enabled = self._create_bank_set_controls_cb.isChecked()
         i = 0
         for c in self._channels:
             i += 1
@@ -145,6 +167,7 @@ class TheaterSceneWizard(QWizard):
             radio_button_cue.setChecked(not controlled_by_desk)
             radio_button_desk = QRadioButton("Desk", page)
             radio_button_desk.setChecked(controlled_by_desk)
+            radio_button_desk.setEnabled(is_creation_of_banksets_enabled)
             radio_group.addButton(radio_button_cue)
             radio_group.addButton(radio_button_desk)
             layout.addItem(radio_group, i, 1)
@@ -160,3 +183,9 @@ class TheaterSceneWizard(QWizard):
         sitems = self._cues_page_cue_list_widget.selectedItems()
         for item in sitems:
             self._cues_page_cue_list_widget.takeItem(self._cues_page_cue_list_widget.row(item))
+
+    def _initialize_channel_setup_page(self, page: ComposableWizardPage):
+        self._populate_channel_setup_page()
+
+    def _initialize_preview_page(self, page: ComposableWizardPage):
+        pass  # TODO fill label with data that is about to be inserted inside the scene
