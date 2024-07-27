@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout
     QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea
 
 from model import BoardConfiguration
+from model.ofl.fixture import ColorSupport
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
@@ -59,7 +60,7 @@ class TheaterSceneWizard(QWizard):
         layout.addWidget(self._fixture_selection_browser)
         self._fixture_page.setLayout(layout)
 
-        self._channel_selection_page = ComposableWizardPage()
+        self._channel_selection_page = ComposableWizardPage(page_activation_function=self._init_channel_selection_page)
         self._channel_selection_page.setTitle("Channel Selection")
         self._channel_selection_page.setSubTitle("Please select which features of the selected fixtures you'd like to "
                                                  "use and assign them to property channels.")
@@ -140,11 +141,41 @@ class TheaterSceneWizard(QWizard):
         self._show = show
         self._channels: list[dict[str, str]] = []
 
+    def _init_channel_selection_page(self, page: ComposableWizardPage):
+        self._fixture_feature_list.clear()
+        selected_fixtures = self._fixture_selection_browser.get_selected_fixtures()
+        for f in selected_fixtures:
+            fcs = f.color_support()
+            for supported_mode, name in [
+                (ColorSupport.HAS_RGB_SUPPORT, "Color"),
+                (ColorSupport.HAS_AMBER_SEGMENT, "Amber"),
+                (ColorSupport.HAS_WHITE_SEGMENT, "White"),
+                (ColorSupport.HAS_UV_SEGMENT, "UV")
+            ]:
+                if fcs & supported_mode > 0:
+                    item = AnnotatedListWidgetItem(self._fixture_feature_list)
+                    item.annotated_data = (f, supported_mode)
+                    item.setText("({}:{}) {}: {}".format(f.parent_universe, f.channels[0].address, f.name, name))
+                    self._fixture_feature_list.addItem(item)
+            remaining_channels = []
+            already_added_channels = (f.uv_segments + f.white_segments + f.green_segments + f.blue_segments +
+                                      f.red_segments + f.amber_segments)
+            for fc in f.channels:
+                if fc not in already_added_channels:
+                    remaining_channels.append(fc)
+            for c in remaining_channels:
+                item = AnnotatedListWidgetItem(self._fixture_feature_list)
+                item.annotated_data = (f, None)
+                item.setText("({}:{}) {}: [undef] {}/".format(f.parent_universe, f.channels[0].address, f.name,
+                                                              c.address, c.fixture_channel))
+                self._fixture_feature_list.addItem(item)
+
     def add_group_to_feature_group_list_pressed(self):
-        pass  # TODO
+        pass  # TODO add group to self.channels and self._feature_grouping_list
 
     def add_feature_to_feature_group_pressed(self):
-        pass  # TODO
+        pass  # TODO add feature from _fixture_feature_list to group in self.channels and update item in
+              #  self._feature_grouping_list
 
     def _populate_channel_setup_page(self):
         page = self._channel_setup_widgets_scroll_area
@@ -185,6 +216,7 @@ class TheaterSceneWizard(QWizard):
             self._cues_page_cue_list_widget.takeItem(self._cues_page_cue_list_widget.row(item))
 
     def _initialize_channel_setup_page(self, page: ComposableWizardPage):
+        # TODO populate self.channels
         self._populate_channel_setup_page()
 
     def _initialize_preview_page(self, page: ComposableWizardPage):
