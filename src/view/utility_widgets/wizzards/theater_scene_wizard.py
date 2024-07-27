@@ -150,6 +150,7 @@ class TheaterSceneWizard(QWizard):
         self._channels: list[dict[str, str]] = []
 
     def _init_channel_selection_page(self, page: ComposableWizardPage):
+        self._feature_grouping_list.clear()
         self._fixture_feature_list.clear()
         selected_fixtures = self._fixture_selection_browser.get_selected_fixtures()
         for f in selected_fixtures:
@@ -183,7 +184,7 @@ class TheaterSceneWizard(QWizard):
         item.setText("New Group")
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
         item.setIcon(_folder_empty_icon)
-        d = {}
+        d = {"name": "New Group", "fixtures": []}
         item.annotated_data = d
         self._channels.append(d)
         self._feature_grouping_list.addItem(item)
@@ -204,7 +205,8 @@ class TheaterSceneWizard(QWizard):
             selected_feature = selected_feature[0]
         else:
             return
-        if not isinstance(selected_feature, AnnotatedListWidgetItem):
+        if (not isinstance(selected_feature, AnnotatedListWidgetItem) or
+            not isinstance(selected_group, AnnotatedListWidgetItem)):
             raise ValueError("Expected Annotated List Widget Item")
         if selected_group:
             first_item_in_group = selected_group.toolTip() == ""
@@ -212,10 +214,17 @@ class TheaterSceneWizard(QWizard):
                                       selected_feature.text())
             if first_item_in_group:
                 selected_group.setIcon(_folder_full_icon)
-            # TODO update d from selected group
+            selected_group.annotated_data["fixtures"].append(selected_feature.annotated_data)
         else:
-            self._feature_grouping_list.addItem(selected_feature)  # TODO convert item type
-            # TODO add to self.channels
+            new_group_item = AnnotatedListWidgetItem(self._feature_grouping_list)
+            new_group_item.setText(selected_feature.text())
+            new_group_item.setToolTip(selected_feature.text())
+            new_group_item.annotated_data = {
+                "name": selected_feature.text(),
+                "fixtures": [selected_feature.annotated_data]
+            }
+            self._feature_grouping_list.addItem(new_group_item)
+            self._channels.append(new_group_item.annotated_data)
         self._fixture_feature_list.takeItem(self._fixture_feature_list.row(selected_feature))
 
     def _populate_channel_setup_page(self):
