@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout, QLineEdit, QCheckBox, \
     QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea
 
@@ -7,6 +8,10 @@ from model.ofl.fixture import ColorSupport
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
+
+
+_folder_empty_icon = QIcon("resources/icons/folder.svg")
+_folder_full_icon = QIcon("resources/icons/folder-full.svg")
 
 
 class TheaterSceneWizard(QWizard):
@@ -67,6 +72,7 @@ class TheaterSceneWizard(QWizard):
         self._channel_selection_page.setFinalPage(False)
         layout = QHBoxLayout()
         self._fixture_feature_list = QListWidget(self._channel_selection_page)
+        self._fixture_feature_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         layout.addWidget(self._fixture_feature_list)
         sec_layout = QVBoxLayout()
         sec_layout.addStretch()
@@ -87,6 +93,8 @@ class TheaterSceneWizard(QWizard):
         sec_layout.addStretch()
         layout.addLayout(sec_layout)
         self._feature_grouping_list = QListWidget(self._channel_selection_page)
+        self._feature_grouping_list.itemChanged.connect(self._feature_grouping_item_changed)
+        self._feature_grouping_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         layout.addWidget(self._feature_grouping_list)
         self._channel_selection_page.setLayout(layout)
 
@@ -171,11 +179,44 @@ class TheaterSceneWizard(QWizard):
                 self._fixture_feature_list.addItem(item)
 
     def add_group_to_feature_group_list_pressed(self):
-        pass  # TODO add group to self.channels and self._feature_grouping_list
+        item = AnnotatedListWidgetItem(self._feature_grouping_list)
+        item.setText("New Group")
+        item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
+        item.setIcon(_folder_empty_icon)
+        d = {}
+        item.annotated_data = d
+        self._channels.append(d)
+        self._feature_grouping_list.addItem(item)
+
+    def _feature_grouping_item_changed(self, item):
+        if not isinstance(item, AnnotatedListWidgetItem):
+            return
+        item.annotated_data["name"] = item.text()
 
     def add_feature_to_feature_group_pressed(self):
-        pass  # TODO add feature from _fixture_feature_list to group in self.channels and update item in
-              #  self._feature_grouping_list
+        selected_group = self._feature_grouping_list.selectedItems()
+        if len(selected_group) > 0:
+            selected_group = selected_group[0]
+        else:
+            selected_group = None
+        selected_feature = self._fixture_feature_list.selectedItems()
+        if len(selected_feature) > 0:
+            selected_feature = selected_feature[0]
+        else:
+            return
+        if not isinstance(selected_feature, AnnotatedListWidgetItem):
+            raise ValueError("Expected Annotated List Widget Item")
+        if selected_group:
+            first_item_in_group = selected_group.toolTip() == ""
+            selected_group.setToolTip((", " if not first_item_in_group else "") + selected_group.toolTip() +
+                                      selected_feature.text())
+            if first_item_in_group:
+                selected_group.setIcon(_folder_full_icon)
+            # TODO update d from selected group
+        else:
+            self._feature_grouping_list.addItem(selected_feature)  # TODO convert item type
+            # TODO add to self.channels
+        self._fixture_feature_list.takeItem(self._fixture_feature_list.row(selected_feature))
 
     def _populate_channel_setup_page(self):
         page = self._channel_setup_widgets_scroll_area
