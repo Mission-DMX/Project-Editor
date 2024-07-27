@@ -14,6 +14,10 @@ _folder_empty_icon = QIcon("resources/icons/folder.svg")
 _folder_full_icon = QIcon("resources/icons/folder-full.svg")
 
 
+def _d_assign(d, v, k):
+    d[v] = k
+
+
 class TheaterSceneWizard(QWizard):
     def __init__(self, parent: QWidget, show: BoardConfiguration):
         super().__init__(parent)
@@ -242,13 +246,16 @@ class TheaterSceneWizard(QWizard):
             i += 1
             controlled_by_desk = c.get("desk-controlled") == "true"
             text_edit = QLineEdit(c.get("name") or str(i), page)
+            text_edit.textChanged.connect(lambda text,d=c: _d_assign(d, "name", text))
             layout.addItem(text_edit, i, 0)
             radio_group = QButtonGroup(page)
             radio_button_cue = QRadioButton("Cue", page)
             radio_button_cue.setChecked(not controlled_by_desk)
+            radio_button_cue.clicked.connect(lambda d=c: _d_assign(d, "desk-controlled", "true"))
             radio_button_desk = QRadioButton("Desk", page)
             radio_button_desk.setChecked(controlled_by_desk)
             radio_button_desk.setEnabled(is_creation_of_banksets_enabled)
+            radio_button_desk.clicked.connect(lambda d=c: _d_assign(d, "desk-controlled", "false"))
             radio_group.addButton(radio_button_cue)
             radio_group.addButton(radio_button_desk)
             layout.addItem(radio_group, i, 1)
@@ -266,8 +273,15 @@ class TheaterSceneWizard(QWizard):
             self._cues_page_cue_list_widget.takeItem(self._cues_page_cue_list_widget.row(item))
 
     def _initialize_channel_setup_page(self, page: ComposableWizardPage):
-        # TODO populate self.channels
         self._populate_channel_setup_page()
 
     def _initialize_preview_page(self, page: ComposableWizardPage):
-        pass  # TODO fill label with data that is about to be inserted inside the scene
+        text = "Channels:<br /><ul>"
+        for c in self._channels:
+            text += ("<li>" + ("[DESK]" if c['desk-controlled'] == "true" else "[CUE]") + c["name"] +
+                     ":" + ", ".join([f[0].name for f in c["fixtures"]]) + "</li>")
+        text += "</ul><br>Cues:<br /><ol>"
+        for item in self._cues_page_cue_list_widget.items():
+            text += '<li>' + item.text() + "</li>"
+        text += "</ol>"
+        self._preview_text_area.setText(text)
