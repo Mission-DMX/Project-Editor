@@ -144,11 +144,16 @@ class Filter:
         self._in_data_types: dict[str, DataType] = {}
         self._default_values: dict[str, str] = {}
         self._out_data_types: dict[str, DataType] = {}
+        self._configuration_supported: bool = True
 
     @property
     def scene(self) -> "Scene":
         """The scene the filter belongs to"""
         return self._scene
+
+    @property
+    def configuration_supported(self) -> bool:
+        return self._configuration_supported
 
     @property
     def filter_id(self) -> str:

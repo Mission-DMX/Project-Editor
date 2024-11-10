@@ -23,6 +23,7 @@ class Debug8BitNode(DebugNode):
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_DEBUG_OUTPUT_8BIT, name=name)
         self.filter.in_data_types["value"] = DataType.DT_8_BIT
+        self.filter._configuration_supported = False
 
 
 class Debug16BitNode(DebugNode):
@@ -34,6 +35,7 @@ class Debug16BitNode(DebugNode):
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_DEBUG_OUTPUT_16BIT, name=name)
         self.filter.in_data_types["value"] = DataType.DT_16_BIT
+        self.filter._configuration_supported = False
 
 
 class DebugFloatNode(DebugNode):
@@ -45,6 +47,7 @@ class DebugFloatNode(DebugNode):
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_DEBUG_OUTPUT_FLOAT, name=name)
         self.filter.in_data_types["value"] = DataType.DT_DOUBLE
+        self.filter._configuration_supported = False
 
 
 class DebugColorNode(DebugNode):
@@ -56,3 +59,4 @@ class DebugColorNode(DebugNode):
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_DEBUG_OUTPUT_COLOR, name=name)
         self.filter.in_data_types["value"] = DataType.DT_COLOR
+        self.filter._configuration_supported = False

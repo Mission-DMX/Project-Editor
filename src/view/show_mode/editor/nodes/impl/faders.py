@@ -170,3 +170,4 @@ class FaderMainBrightness(FilterNode):
                          terminals={'brightness': {'io': 'out'}})
 
         self.filter.out_data_types["brightness"] = DataType.DT_16_BIT
+        self.filter._configuration_supported = False

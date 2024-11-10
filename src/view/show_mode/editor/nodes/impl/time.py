@@ -16,6 +16,7 @@ class TimeNode(FilterNode):
         })
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.channel_hints["value"] = " [ms]"
+        self.filter._configuration_supported = False
 
 
 class TimeSwitchOnDelay8BitNode(FilterNode):

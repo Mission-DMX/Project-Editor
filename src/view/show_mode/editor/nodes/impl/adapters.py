@@ -19,6 +19,7 @@ class Adapter16BitTo8BitNode(FilterNode):
         self.filter.in_data_types["value"] = DataType.DT_16_BIT
         self.filter.out_data_types["value_lower"] = DataType.DT_8_BIT
         self.filter.out_data_types["value_upper"] = DataType.DT_8_BIT
+        self.filter._configuration_supported = False
 
 
 class Adapter16BitToBoolNode(FilterNode):
@@ -34,6 +35,7 @@ class Adapter16BitToBoolNode(FilterNode):
         })
         self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
         self.filter.out_data_types["value"] = DataType.DT_BOOL
+        self.filter._configuration_supported = False
 
 
 class Adapter16bitToFloat(FilterNode):
@@ -47,6 +49,7 @@ class Adapter16bitToFloat(FilterNode):
 
         self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+        self.filter._configuration_supported = False
 
 
 class Adapter8bitToFloat(FilterNode):
@@ -60,6 +63,7 @@ class Adapter8bitToFloat(FilterNode):
 
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+        self.filter._configuration_supported = False
 
 
 class AdapterColorToRGBNode(FilterNode):
@@ -77,6 +81,7 @@ class AdapterColorToRGBNode(FilterNode):
         self.filter.out_data_types["r"] = DataType.DT_8_BIT
         self.filter.out_data_types["g"] = DataType.DT_8_BIT
         self.filter.out_data_types["b"] = DataType.DT_8_BIT
+        self.filter._configuration_supported = False
 
 
 class AdapterColorToRGBWNode(FilterNode):
@@ -96,6 +101,7 @@ class AdapterColorToRGBWNode(FilterNode):
         self.filter.out_data_types["g"] = DataType.DT_8_BIT
         self.filter.out_data_types["b"] = DataType.DT_8_BIT
         self.filter.out_data_types["w"] = DataType.DT_8_BIT
+        self.filter._configuration_supported = False
 
 
 class AdapterColorToRGBWANode(FilterNode):
@@ -117,6 +123,7 @@ class AdapterColorToRGBWANode(FilterNode):
         self.filter.out_data_types["b"] = DataType.DT_8_BIT
         self.filter.out_data_types["w"] = DataType.DT_8_BIT
         self.filter.out_data_types["a"] = DataType.DT_8_BIT
+        self.filter._configuration_supported = False
 
 
 class AdapterFloatToColorNode(FilterNode):
@@ -135,6 +142,7 @@ class AdapterFloatToColorNode(FilterNode):
         self.filter.in_data_types["i"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_COLOR
         self.filter.default_values['i'] = '1'
+        self.filter._configuration_supported = False
 
 
 class AdapterColorToFloatsNode(FilterNode):
@@ -152,6 +160,7 @@ class AdapterColorToFloatsNode(FilterNode):
         self.filter.out_data_types["h"] = DataType.DT_DOUBLE
         self.filter.out_data_types["s"] = DataType.DT_DOUBLE
         self.filter.out_data_types["i"] = DataType.DT_DOUBLE
+        self.filter._configuration_supported = False
 
 class AdapterFloatToRange(FilterNode):
     """Filter maps a range of float to another range of specific type (template)"""
@@ -255,6 +264,7 @@ class CombineTwo8BitToSingle16Bit(FilterNode):
         self.filter.in_data_types["lower"] = DataType.DT_8_BIT
         self.filter.in_data_types["upper"] = DataType.DT_8_BIT
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
+        self.filter._configuration_supported = False
 
 class Map8BitTo16Bit(FilterNode):
     """Filter that maps an 8bit value to a 16bit one."""
@@ -267,3 +277,4 @@ class Map8BitTo16Bit(FilterNode):
         })
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
+        self.filter._configuration_supported = False

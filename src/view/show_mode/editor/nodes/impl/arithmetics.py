@@ -26,6 +26,7 @@ class ArithmeticMACNode(FilterNode):
         self.filter.default_values['factor1'] = '1'
         self.filter.default_values['factor2'] = '1'
         self.filter.default_values['summand'] = '0'
+        self.filter._configuration_supported = False
 
 
 class ArithmeticFloatTo16BitNode(FilterNode):
@@ -39,6 +40,7 @@ class ArithmeticFloatTo16BitNode(FilterNode):
         })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
+        self.filter._configuration_supported = False
 
 
 class ArithmeticFloatTo8BitNode(FilterNode):
@@ -52,6 +54,7 @@ class ArithmeticFloatTo8BitNode(FilterNode):
         })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_8_BIT
+        self.filter._configuration_supported = False
 
 
 class ArithmeticRoundNode(FilterNode):
@@ -65,6 +68,7 @@ class ArithmeticRoundNode(FilterNode):
         })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+        self.filter._configuration_supported = False
 
 
 class ArithmeticLogarithmNode(FilterNode):
@@ -81,6 +85,7 @@ class ArithmeticLogarithmNode(FilterNode):
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.filter.default_values['value_in'] = '1'
+        self.filter._configuration_supported = False
 
 
 class ArithmeticExponentialNode(FilterNode):
@@ -96,6 +101,7 @@ class ArithmeticExponentialNode(FilterNode):
         })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
+        self.filter._configuration_supported = False
 
 
 class ArithmeticMinimumNode(FilterNode):
@@ -115,6 +121,7 @@ class ArithmeticMinimumNode(FilterNode):
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.filter.default_values['param1'] = '1'
         self.filter.default_values['param2'] = '1'
+        self.filter._configuration_supported = False
 
 
 class ArithmeticMaximumNode(FilterNode):
@@ -134,3 +141,4 @@ class ArithmeticMaximumNode(FilterNode):
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.filter.default_values['param1'] = '1'
         self.filter.default_values['param2'] = '1'
+        self.filter._configuration_supported = False

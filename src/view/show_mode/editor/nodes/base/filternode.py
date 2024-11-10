@@ -38,7 +38,7 @@ class FilterNode(Node):
 
         super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
 
-        self.fsi = FilterSettingsItem(self, self.graphicsItem())
+        self.fsi = FilterSettingsItem(self, self.graphicsItem(), self._filter) if self._filter.configuration_supported else None
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)

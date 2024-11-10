@@ -28,13 +28,15 @@ class FilterSettingsItem(QGraphicsSvgItem):
     """
     _open_dialogs: list[QDialog] = []
 
-    def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem):
+    def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem, filter: Filter):
         super().__init__("resources/icons/settings.svg", parent)
         self.dialog = None
         self.filter_node = filter_node
         self.on_update = lambda: None
         self.setScale(0.2)
         self.moveBy(parent.boundingRect().width() / 2, parent.boundingRect().height() - 20)
+        self._filter = filter
+        self._mb_updated: bool = False
 
     def focusOutEvent(self, ev):
         """
@@ -60,10 +62,22 @@ class FilterSettingsItem(QGraphicsSvgItem):
 
     def mousePressEvent(self, ev):
         """Handle left mouse button click by opening filter settings dialog"""
+        if not self._filter.configuration_supported:
+            return
         if ev.button() == Qt.MouseButton.LeftButton:
+            # TODO make sure that we're opening it in the same dialog, fixed to a screen unless settings request
+            #  otherwise
             if self.dialog is None:
                 self.dialog = FilterSettingsDialog(self.filter_node)
             self.dialog.show()
+
+    def paint(self, painter, option, widget=...):
+        if not self._filter.configuration_supported:
+            if not self._mb_updated:
+                self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
+                self._mb_updated = True
+        else:
+            super().paint(painter, option, widget)
 
 
 def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfigWidget | None:

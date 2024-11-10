@@ -29,6 +29,7 @@ class TrigonometricNode(FilterNode):
         self.filter.default_values['offset'] = '0'
         self.channel_hints["phase"] = " [deg]"
         self.channel_hints["value_in"] = " [deg]"
+        self.filter._configuration_supported = False
 
 
 class TrigonometricSineNode(TrigonometricNode):
