@@ -71,6 +71,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(Adapter8BitToRangeFloat, [('Adapters',)])
         self.addNodeType(CombineTwo8BitToSingle16Bit, [('Adapters',)])
         self.addNodeType(Map8BitTo16Bit, [('Adapters',)])
+        self.addNodeType(ColorBrightnessMixinNode, [('Adapters',)])
 
     def _register_arithmetic_nodes(self):
         """Registers all the arithmetics nodes."""

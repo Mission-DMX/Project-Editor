@@ -77,6 +77,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
                 self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
                 self._mb_updated = True
         else:
+            # TODO draw a round rect around borders
             super().paint(painter, option, widget)
 
 

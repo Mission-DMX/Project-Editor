@@ -14,7 +14,8 @@ if TYPE_CHECKING:
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
-from model.virtual_filters.range_adapters import SixteenBitToFloatRange, EightBitToFloatRange
+from model.virtual_filters.range_adapters import SixteenBitToFloatRange, EightBitToFloatRange, \
+    ColorGlobalBrightnessMixinVFilter
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from model.virtual_filters.cue_vfilter import CueFilter
 
@@ -55,6 +56,8 @@ def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_i
             return SixteenBitToFloatRange(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE:
             return EightBitToFloatRange(scene, filter_id, pos=pos)
+        case FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN:
+            return ColorGlobalBrightnessMixinVFilter(scene, filter_id, pos=pos)
         case _:
             raise ValueError("The requested filter type {} is not yet implemented.".format(filter_type))
     pass
