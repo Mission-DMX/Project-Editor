@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QWidget, QHBoxLayout, QTabWidget, QFormLayout, \
-    QLineEdit, QTextEdit, QSpinBox
+    QLineEdit, QTextEdit, QSpinBox, QCheckBox
 
 from typing import TYPE_CHECKING
 
@@ -25,6 +25,7 @@ class SettingsDialog(QDialog):
         general_layout.addRow("Notes: ", self.show_notes_tb)
         self._general_settings_tab.setLayout(general_layout)
         self._category_tab_bar.addTab(self._general_settings_tab, "General")
+
         self._play_tab = QWidget(self._category_tab_bar)
         play_layout = QFormLayout()
         self._default_main_brightness_tb = QSpinBox(self._play_tab)
@@ -35,6 +36,17 @@ class SettingsDialog(QDialog):
         play_layout.addRow("Default Main Brightness", self._default_main_brightness_tb)
         self._play_tab.setLayout(play_layout)
         self._category_tab_bar.addTab(self._play_tab, "Play")
+
+        self._editor_tab = QWidget(self._category_tab_bar)
+        editor_layout = QFormLayout()
+        self._brightness_mixin_enbled_cb = QCheckBox("Enable if no global dimmer", self._editor_tab)
+        self._brightness_mixin_enbled_cb.setToolTip("If this is checked, a fixture that is added will automatically "
+                                                    "connected to color brightness mixins, if no global dimmer is "
+                                                    "present.")
+        self._brightness_mixin_enbled_cb.setChecked(True)
+        editor_layout.addRow("Brightness Mixins", self._brightness_mixin_enbled_cb)
+        self._editor_tab.setLayout(editor_layout)
+        self._category_tab_bar.addTab(self._editor_tab, "Editor")
 
         self.buttonBox = QDialogButtonBox(exit_buttons)
         self.buttonBox.accepted.connect(self.ok_button_pressed)
@@ -58,6 +70,7 @@ class SettingsDialog(QDialog):
         self._show = new_show
         self.show_file_tb.setText(new_show.show_name)
         self.show_notes_tb.setText(new_show.notes)
+        self._brightness_mixin_enbled_cb.setChecked(not (new_show.ui_hints.get("color-mixin-auto-add-disabled") == "true"))
         try:
             self._default_main_brightness_tb.setValue(int(new_show.ui_hints.get('default_main_brightness') or '255'))
         except ValueError:
@@ -67,6 +80,7 @@ class SettingsDialog(QDialog):
         self._show.show_name = self.show_file_tb.text()
         self._show.notes = self.show_notes_tb.toPlainText()
         self._show.ui_hints['default_main_brightness'] = str(self._default_main_brightness_tb.value())
+        self._show.ui_hints["color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
 
     def ok_button_pressed(self):
         self.apply()
