@@ -18,6 +18,11 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from view.show_mode.editor.nodes.base.filternode import FilterNode
+
+
 class ExternalChannelDefinition:
     """In case we're in preview mode we need to instantiate filters for the preview based on this information.
 
@@ -401,15 +406,19 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def parent_closed(self, filter_node: "FilterNode"):
         self._timeline_container.clear_display()
         if self._channels_changed_after_load:
-            filter_node.clearTerminals()
-            filter_node.addTerminal('time', io='in')
-            filter_node.addTerminal('time_scale', io='in')
-            filter_node.filter.in_data_types["time"] = DataType.DT_DOUBLE
-            filter_node.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
+            added_channels = []
             if len(self._cues) > 0:
                 for channel_name, channel_type in self._cues[0].channels:
-                    filter_node.addTerminal(channel_name, io='out')
-                    filter_node.filter.out_data_types[channel_name] = channel_type
+                    if channel_name not in filter_node.outputs():
+                        filter_node.addTerminal(channel_name, io='out')
+                        filter_node.filter.out_data_types[channel_name] = channel_type
+                    added_channels.append(channel_name)
+            terms_to_remove = []
+            for name, term in filter_node.terminals.items():
+                if name in filter_node.outputs() and name not in added_channels:
+                    terms_to_remove.append(name)
+            for name in terms_to_remove:
+                filter_node.removeTerminal(name)
         if self._bankset:
             self._bankset.unlink()
             BankSet.push_messages_now()

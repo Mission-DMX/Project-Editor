@@ -40,13 +40,16 @@ class CueListNode(FilterNode):
         self.channel_hints["time"] = " [ms]"
 
     def parse_and_add_output_channels(self, mappings: str):
+        output_list = []
         for channel_dev in mappings.split(';'):
             if channel_dev:
                 splitted_channel_dev = channel_dev.split(':')
                 if len(splitted_channel_dev) > 1:
                     channel_name = splitted_channel_dev[0]
                     channel_type = DataType.from_filter_str(splitted_channel_dev[1])
-                    self.addOutput(channel_name)
+                    if channel_name not in self.outputs():
+                        self.addOutput(channel_name)
+                    output_list.append(channel_name)
                     self.filter.out_data_types[channel_name] = channel_type
 
 

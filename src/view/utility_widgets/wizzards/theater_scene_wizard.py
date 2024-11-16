@@ -1,3 +1,5 @@
+import logging
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout, QLineEdit, QCheckBox, \
@@ -12,6 +14,7 @@ from view.utility_widgets.wizzards._composable_wizard_page import ComposableWiza
 
 _folder_empty_icon = QIcon("resources/icons/folder.svg")
 _folder_full_icon = QIcon("resources/icons/folder-full.svg")
+logger = logging.getLogger(__file__)
 
 
 def _d_assign(d, v, k):
@@ -61,7 +64,7 @@ class TheaterSceneWizard(QWizard):
         self._fixture_page = ComposableWizardPage()
         self._fixture_page.setTitle("Fixture Selection")
         self._fixture_page.setSubTitle("Please select the fixtures you'd like to use in your new scene. All other "
-                                       "fixtures fill be ignored. The selection of individual properties of the "
+                                       "fixtures will be ignored. The selection of individual properties of the "
                                        "fixtures is done at a later stage.")
         self._fixture_page.setFinalPage(False)
         layout = QVBoxLayout()
@@ -195,6 +198,9 @@ class TheaterSceneWizard(QWizard):
 
     def _feature_grouping_item_changed(self, item):
         if not isinstance(item, AnnotatedListWidgetItem):
+            return
+        if item.annotated_data is None:
+            logger.error("Expected item to contain annotated data")
             return
         item.annotated_data["name"] = item.text()
 
