@@ -5,6 +5,10 @@ from enum import Enum
 from model import DataType, ColorHSI
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from view.show_mode.editor.node_editor_widgets.cue_editor.cue_editor_widget import ExternalChannelDefinition
+
 
 class EndAction(Enum):
     HOLD = 0
@@ -283,8 +287,32 @@ class Cue:
         else:
             dt = t
         self._channel_definitions.append((name, dt))
+        for kf in self._frames:
+            match dt:
+                case DataType.DT_COLOR:
+                    kf_s = StateColor("edg")
+                case DataType.DT_8_BIT:
+                    kf_s = StateEightBit("edg")
+                case DataType.DT_DOUBLE:
+                    kf_s = StateDouble("edg")
+                case DataType.DT_16_BIT:
+                    kf_s = StateSixteenBit("edg")
+                case _:
+                    kf_s = StateEightBit("edg")
+            kf._states.append(kf_s)
 
     def insert_frame(self, f: KeyFrame):
         """Add a frame to the cue"""
         self._frames.append(f)
 
+    def remove_channel(self, c: "ExternalChannelDefinition"):
+        target_index = -1
+        for i in range(len(self._channel_definitions)):
+            if self._channel_definitions[i][0] == c.name:
+                self._channel_definitions.pop(i)
+                target_index = i
+                break
+        if target_index == -1:
+            return
+        for f in self._frames:
+            f._states.pop(target_index)

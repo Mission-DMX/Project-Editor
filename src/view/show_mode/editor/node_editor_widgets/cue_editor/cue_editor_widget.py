@@ -9,6 +9,7 @@ from model import DataType, Filter
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, DeskColumn
 from model.virtual_filters.cue_vfilter import CueFilter
+from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, \
     StateDouble, \
@@ -225,11 +226,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._toolbar_add_channel_action.setStatusTip("Add a new channel to the filter")
         self._toolbar_add_channel_action.triggered.connect(self._add_channel_button_pressed)
         toolbar.addAction(self._toolbar_add_channel_action)
-        toolbar_remove_channel_action = QAction("Remove Channel", self._parent_widget)
-        toolbar_remove_channel_action.setStatusTip("Removes a channel from the filter")
-        toolbar_remove_channel_action.setEnabled(False)
-        toolbar_remove_channel_action.triggered.connect(self._remove_channel_button_pressed)
-        toolbar.addAction(toolbar_remove_channel_action)
+        self._toolbar_remove_channel_action = QAction("Remove Channel", self._parent_widget)
+        self._toolbar_remove_channel_action.setStatusTip("Removes a channel from the filter")
+        self._toolbar_remove_channel_action.setEnabled(False)
+        self._toolbar_remove_channel_action.triggered.connect(self._remove_channel_button_pressed)
+        toolbar.addAction(self._toolbar_remove_channel_action)
         toolbar.addSeparator()
         transition_type_select_widget = QComboBox(self._parent_widget)
         transition_type_select_widget.addItems(["lin", "edg", "sig", "e_i", "e_o"])
@@ -327,23 +328,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
         for c in self._cues:
             c.add_channel(channel_name, channel_type)
-            for kf in c._frames:
-                match channel_type:
-                    case DataType.DT_COLOR:
-                        kf_s = StateColor("edg")
-                    case DataType.DT_8_BIT:
-                        kf_s = StateEightBit("edg")
-                    case DataType.DT_DOUBLE:
-                        kf_s = StateDouble("edg")
-                    case DataType.DT_16_BIT:
-                        kf_s = StateSixteenBit("edg")
-                    case _:
-                        kf_s = StateEightBit("edg")
-                kf._states.append(kf_s)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
         if not is_part_of_mass_update:
             self._channels_changed_after_load = True
+        self._toolbar_remove_channel_action.setEnabled(True)
 
     def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
         if not self._bankset:
@@ -362,9 +351,26 @@ class CueEditor(NodeEditorFilterConfigWidget):
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
         all cues.
         """
-        # TODO implement
-        self._channels_changed_after_load = True
-        pass
+        self._input_dialog = SelectionDialog("Remove Channels", "Please select Channels to remove.",
+                                             [c.name for c in self.channels], self._parent_widget)
+        self._input_dialog.accepted.connect(self._remove_channels_button_pressed_final)
+        self._input_dialog.show()
+
+    def _remove_channels_button_pressed_final(self):
+        if not isinstance(self._input_dialog, SelectionDialog):
+            return
+        selected_channels = self._input_dialog.selected_items
+        channels_to_remove = []
+        for c in self.channels:
+            if c.name in selected_channels:
+                channels_to_remove.append(c)
+                self._timeline_container.remove_channel(c.name)
+        for c in channels_to_remove:
+            for cue in self._cues:
+                cue.remove_channel(c)
+        if len(channels_to_remove) > 0:
+            self._channels_changed_after_load = True
+        self._toolbar_remove_channel_action.setEnabled(len(self._cues) > 0 and len(self._cues[0].channels) > 0)
 
     def _cue_end_action_changed(self):
         action = EndAction(self._current_cue_end_action_select_widget.currentIndex())

@@ -159,6 +159,10 @@ class TimelineContentWidget(QWidget):
             self._channels.append(c)
         self.compute_resize()
 
+    def remove_channel(self, i):
+        self._channels.pop(i)
+        self.compute_resize()
+
     def insert_frame(self, f: KeyFrame):
         self.frames.append(f)
         self._last_clicked_kf_state = None

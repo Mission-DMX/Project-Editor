@@ -22,6 +22,17 @@ class TimelineChannelLabel(QWidget):
         self._types.append(channel_type)
         self._update()
 
+    def remove_label(self, c_name: str):
+        found_i = -1
+        for i in range(len(self._names)):
+            if self._names[i] == c_name:
+                self._names.pop(i)
+                self._types.pop(i)
+                found_i = i
+                break
+        self._update()
+        return found_i
+
     def clear_labels(self):
         self._names.clear()
         self._types.clear()

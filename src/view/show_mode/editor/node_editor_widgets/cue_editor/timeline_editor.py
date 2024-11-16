@@ -51,6 +51,11 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.add_channels([channel_type])
         pass
 
+    def remove_channel(self, c_name: str):
+        i = self._channel_label.remove_label(c_name)
+        if i != -1:
+            self._keyframes_panel.remove_channel(i)
+
     def clear_channels(self):
         """Removes all channels from the widget"""
         # TODO clear all labels from self._channel_labels_panel_layout
