@@ -80,3 +80,7 @@ class PatchingChannel(QtCore.QObject):
     def fixture_channel_id(self) -> int:
         """ id form the fixture channel """
         return self._fixture_channel
+
+    def __str__(self):
+        parent_universe = self._fixture.parent_universe if self._fixture else -1
+        return "{}/{}: {}".format(parent_universe, self._address, self.fixture_channel)

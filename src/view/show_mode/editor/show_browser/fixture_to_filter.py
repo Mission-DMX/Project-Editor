@@ -1,5 +1,6 @@
 # coding=utf-8
 from model import Filter
+from model.filter import FilterTypeEnumeration
 from model.patching_channel import PatchingChannel
 from model.scene import FilterPage
 from model.ofl.fixture import UsedFixture
@@ -58,6 +59,10 @@ def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage
 def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, universe_filter: Filter, x: float, name: str):
     c = fixture.channels
     i = 0
+
+    color_inputs = []
+    global_dimmer_found: bool = False
+
     for c_i in range(len(c)):
         try:
             if not c[c_i].fixture_channel:
@@ -69,10 +74,11 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                                       filter_id=adapter_name,
                                       filter_type=8,
                                       pos=(int(x), int(2*len(c) + i * 5)))
+                fp.parent_scene.append_filter(split_filter)
+                adapter_name = split_filter.filter_id
                 universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":value_lower"
                 universe_filter.channel_links[_sanitize_name(c[c_i-1].fixture_channel)] = adapter_name + ":value_upper"
                 fp.filters.append(split_filter)
-                fp.parent_scene.append_filter(split_filter)
                 i += 1
             elif c[c_i].fixture_channel.startswith("Red"):
                 if c[c_i + 1].fixture_channel.startswith("Green") and c[c_i + 2].fixture_channel.startswith("Blue"):
@@ -82,6 +88,9 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                                              filter_id=adapter_name,
                                              filter_type=16,
                                              pos=(x, float(10 * len(c) + i * 5)))
+                        color_inputs.append(rgbw_filter)
+                        fp.parent_scene.append_filter(rgbw_filter)
+                        adapter_name = rgbw_filter.filter_id
                         universe_filter.channel_links[
                             _sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":r"
                         universe_filter.channel_links[
@@ -91,13 +100,15 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         universe_filter.channel_links[
                             _sanitize_name(c[c_i + 3].fixture_channel)] = adapter_name + ":w"
                         fp.filters.append(rgbw_filter)
-                        fp.parent_scene.append_filter(rgbw_filter)
                     else:
                         adapter_name = _sanitize_name("color2rgb_{}_{}".format(i, name))
                         rgb_filter = Filter(scene=fp.parent_scene,
                                             filter_id=adapter_name,
                                             filter_type=15,
                                             pos=(x, float(10 * len(c) + i * 5)))
+                        fp.parent_scene.append_filter(rgb_filter)
+                        adapter_name = rgb_filter.filter_id
+                        color_inputs.append(rgb_filter)
                         universe_filter.channel_links[
                             _sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":r"
                         universe_filter.channel_links[
@@ -105,7 +116,6 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         universe_filter.channel_links[
                             _sanitize_name(c[c_i + 2].fixture_channel)] = adapter_name + ":b"
                         fp.filters.append(rgb_filter)
-                        fp.parent_scene.append_filter(rgb_filter)
                 i += 1
             elif c[c_i].fixture_channel == "Dimmer":
                 dimmer_name = _sanitize_name("dimmer_{}_{}".format(i, name))
@@ -113,21 +123,32 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                                               filter_id=dimmer_name,
                                               filter_type=49,
                                               pos=(x, float(10 * len(c) + i * 5)))
+                global_dimmer_found = True
                 fp.filters.append(global_dimmer_filter)
                 fp.parent_scene.append_filter(global_dimmer_filter)
+                dimmer_name = global_dimmer_filter.filter_id
                 x += 10
                 adapter_name = _sanitize_name("dimmer2byte_{}_{}".format(i, name))
                 dimmer_to_byte_filter = Filter(scene=fp.parent_scene,
                                                filter_id=adapter_name,
                                                filter_type=8,
                                                pos=(x, float(10 * len(c) + i * 5)))
+                fp.parent_scene.append_filter(dimmer_to_byte_filter)
+                adapter_name = dimmer_to_byte_filter.filter_id
                 dimmer_to_byte_filter.channel_links["value"] = dimmer_name + ":brightness"
                 universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":value_upper"
                 fp.filters.append(dimmer_to_byte_filter)
-                fp.parent_scene.append_filter(dimmer_to_byte_filter)
                 i += 1
         except IndexError:
             continue
         if i > 0:
             pos = universe_filter.pos
             universe_filter.pos = (x + 11, pos[1])
+    if not global_dimmer_found and str(fp.parent_scene.board_configuration.ui_hints.get('color-mixin-auto-add-disabled')).lower() != 'true':
+        for color_input_filter in color_inputs:
+            brightness_mixin_filter = Filter(scene=fp.parent_scene, filter_id=color_input_filter.filter_id + "__brightness_mixin",
+                                             filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
+                                             pos=(color_input_filter.pos[0] - 25, color_input_filter.pos[1]))
+            fp.filters.append(brightness_mixin_filter)
+            fp.parent_scene.append_filter(brightness_mixin_filter)
+            color_input_filter.channel_links['value'] = brightness_mixin_filter.filter_id + ":out"

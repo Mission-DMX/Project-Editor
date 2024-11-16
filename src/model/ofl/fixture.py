@@ -106,7 +106,7 @@ class UsedFixture:
         self.comment: str = comment
         self.mode: Mode = mode
         self.parent_universe: int = parent_universe
-        self.channels: list["PatchingChannel"] = []
+        self._channels: list["PatchingChannel"] = []
         self.fixture_file: str = fixture_file
         self.mode_index: int = mode_index
 
@@ -169,6 +169,11 @@ class UsedFixture:
         return UsedFixture(self.name, self.short_name, self.categories,
                            self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe)
         # we do not need to copy the segment data as it is deduced from the channels data
+
+    @property
+    def channels(self) -> list["PatchingChannel"]:
+        self._channels.sort(key=lambda x: x.address)
+        return self._channels
 
     def color_support(self) -> ColorSupport:
         found_color = ColorSupport.NO_COLOR_SUPPORT

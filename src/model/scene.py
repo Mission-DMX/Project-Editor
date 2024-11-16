@@ -90,7 +90,7 @@ class Scene:
 
     @property
     def filters(self) -> list[Filter]:
-        """The filters of the scene"""
+        """The filters of the scene. Warning: do not use this to call append on it. Use scene.append_filter instead."""
         return self._filters
 
     @property

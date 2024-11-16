@@ -70,7 +70,7 @@ class SettingsDialog(QDialog):
         self._show = new_show
         self.show_file_tb.setText(new_show.show_name)
         self.show_notes_tb.setText(new_show.notes)
-        self._brightness_mixin_enbled_cb.setChecked(not (new_show.ui_hints.get("color-mixin-auto-add-disabled") == "true"))
+        self._brightness_mixin_enbled_cb.setChecked(str(new_show.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true")
         try:
             self._default_main_brightness_tb.setValue(int(new_show.ui_hints.get('default_main_brightness') or '255'))
         except ValueError:
