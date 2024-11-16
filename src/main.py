@@ -37,6 +37,13 @@ def main():
     logging.basicConfig(level="INFO")
 
     app = QtWidgets.QApplication([])
+    app.setApplicationName("mission-dmx-editor")
+    app.setApplicationDisplayName("Mission DMX")
+    app.setOrganizationName("missionDMX")
+    app.setOrganizationDomain("technikradio.org")
+    app.setDesktopSettingsAware(True)
+    # app.setWindowIcon(QIcon("resources/app-icon.png"))
+
     width, height = app.primaryScreen().size().toTuple()
     FinalGlobals.set_screen_width(width)
     FinalGlobals.set_screen_height(height)

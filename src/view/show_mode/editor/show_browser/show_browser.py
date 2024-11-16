@@ -6,7 +6,8 @@ from typing import List
 
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QIcon, QAction
-from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu, QInputDialog
+from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu, \
+    QInputDialog, QDialogButtonBox, QMessageBox
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import Scene, BoardConfiguration, UIPage
@@ -198,14 +199,14 @@ class ShowBrowser:
 
         menu = QMenu(self._scene_browsing_tree)
         menu.move(self._scene_browsing_tree.mapToGlobal(point))
-        scenes_delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", menu)
-        scenes_delete_action.triggered.connect(lambda: self._delete_scenes_from_context_menu(selected_items))
-        scenes_delete_action.setEnabled(has_scenes)
-        menu.addAction(scenes_delete_action)
         scenes_rename_action = QAction("Rename", menu)
         scenes_rename_action.triggered.connect(lambda: self._rename_scene_from_context_menu(selected_items))
         scenes_rename_action.setEnabled(has_scenes or has_filter_pages)
         menu.addAction(scenes_rename_action)
+        scenes_delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", menu)
+        scenes_delete_action.triggered.connect(lambda: self._delete_scenes_from_context_menu(selected_items))
+        scenes_delete_action.setEnabled(has_scenes)
+        menu.addAction(scenes_delete_action)
         menu.addSeparator()
         copy_scene_action = QAction("Duplicate Scene" if len(selected_items) == 1 else "Duplicate Scenes", menu)
         copy_scene_action.triggered.connect(lambda: self._duplicate_scene(selected_items))
@@ -222,7 +223,20 @@ class ShowBrowser:
         menu.show()
 
     def _delete_scenes_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
-        # TODO show confirmation dialog
+        self._input_dialog = QMessageBox()
+        self._input_dialog.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel)
+        self._input_dialog.setDefaultButton(QMessageBox.StandardButton.Cancel)
+        self._input_dialog.accepted.connect(lambda i=items: self._delete_scenes_from_context_menu_accepted(i))
+        self._input_dialog.rejected.connect(lambda: self._input_dialog.close())
+        self._input_dialog.setIcon(QMessageBox.Icon.Warning)
+        self._input_dialog.setWindowTitle("Are you sure?")
+        self._input_dialog.setText("Do you really want to delete the scene {}?".format(", ".join(["'{}'".format(item.text(1)) for item in items])))
+        self._input_dialog.show()
+
+    def _delete_scenes_from_context_menu_accepted(self, items: List[AnnotatedTreeWidgetItem]):
+        if self._input_dialog:
+            self._input_dialog.close()
+            self._input_dialog = None
         for si in items:
             if isinstance(si, AnnotatedTreeWidgetItem):
                 if isinstance(si.annotated_data, Scene):
