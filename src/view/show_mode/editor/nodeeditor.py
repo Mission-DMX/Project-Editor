@@ -73,7 +73,11 @@ class NodeEditorWidget(QWidget):
                     continue
                 remote_name = output_channel.split(':')[0]
                 remote_term = output_channel.split(':')[1]
-                remote_node = self._flowchart.nodes()[remote_name]
+                fc_nodes = self._flowchart.nodes()
+                remote_node = fc_nodes.get(remote_name)
+                if remote_node is None:
+                    logger.error("{} not in flowchart nodes. Is it an external one? Skipping.".format(remote_name))
+                    continue
                 if not isinstance(remote_node, FilterNode):
                     logger.warning("Trying to connect node %s to non-FilterNode %s", name, remote_name)
                 remote_term = remote_node.outputs().get(remote_term)
