@@ -234,6 +234,7 @@ class Cue:
         self._channel_definitions: list[tuple[str, DataType]] = []
         self.restart_on_another_play_press: bool = False
         self.index_in_editor = 0
+        self.name: str = ""
 
     @property
     def duration(self) -> float:
@@ -286,6 +287,12 @@ class Cue:
             dt = DataType.from_filter_str(t)
         else:
             dt = t
+        for cd in self._channel_definitions:
+            if cd[0] == name:
+                if cd[1] == dt:
+                    return
+                else:
+                    raise ValueError("This channel name already exists with a different data type.")
         self._channel_definitions.append((name, dt))
         for kf in self._frames:
             match dt:
@@ -305,10 +312,14 @@ class Cue:
         """Add a frame to the cue"""
         self._frames.append(f)
 
-    def remove_channel(self, c: "ExternalChannelDefinition"):
+    def remove_channel(self, c: "ExternalChannelDefinition | tuple[str, DataType]"):
         target_index = -1
+        if isinstance(c, tuple):
+            name = c[0]
+        else:
+            name = c.name
         for i in range(len(self._channel_definitions)):
-            if self._channel_definitions[i][0] == c.name:
+            if self._channel_definitions[i][0] == name:
                 self._channel_definitions.pop(i)
                 target_index = i
                 break

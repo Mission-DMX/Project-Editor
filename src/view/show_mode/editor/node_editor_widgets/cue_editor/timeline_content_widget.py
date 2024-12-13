@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget
 
 from model import DataType
 from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
-from view.show_mode.editor.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit, \
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import KeyFrame, StateColor, StateEightBit, \
     StateSixteenBit, \
     StateDouble, State
 from view.show_mode.editor.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog

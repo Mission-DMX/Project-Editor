@@ -11,11 +11,10 @@ from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, DeskColu
 from model.virtual_filters.cue_vfilter import CueFilter
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.cue import Cue, EndAction, StateColor, StateEightBit, \
-    StateDouble, \
-    StateSixteenBit
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
+from .model.cue_filter_model import CueFilterModel
 from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 
@@ -51,60 +50,27 @@ class CueEditor(NodeEditorFilterConfigWidget):
         return self._parent_widget
 
     def _load_configuration(self, parameters: dict[str, str]):
-        self._global_restart_on_end = parameters.get("end_handling") == "start_again"
-        mapping_str = parameters.get("mapping")
-        cuelist_definition_str = parameters.get("cuelist")
-        cue_names = parameters.get("cue_names")
-        if cue_names:
-            cue_names = cue_names.split(';')
-        else:
-            cue_names = []
-        tmp_dict = {}
-        for e in cue_names:
-            e = e.split(':')
-            tmp_dict[int(e[1])] = e[0]
-        cue_names = tmp_dict
-        if cuelist_definition_str:
-            cue_definitions = cuelist_definition_str.split("$")
-        else:
-            return
-        for i in range(len(cue_definitions)):
-            self.add_cue(Cue(), name=cue_names.get(i))
-        if mapping_str:
-            for channel_dev in mapping_str.split(';'):
-                splitted_channel_dev = channel_dev.split(':')
-                self._add_channel(splitted_channel_dev[0], DataType.from_filter_str(splitted_channel_dev[1]),
-                                  is_part_of_mass_update=True)
-        for i in range(len(cue_definitions)):
-            self._cues[i].from_string_definition(cue_definitions[i])
-            self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 1).setText(self._cues[i].duration_formatted)
-            self._cue_list_widget.item(self._cues[i].index_in_editor - 1, 2).setText(str(self._cues[i].end_action))
-            #self._default_cue_combo_box.addItem("Cue {}".format(i))
-        if len(self._cues) > 0:
+        self._model.load_from_configuration(parameters)
+
+        for c in self._model.cues:
+            self.add_cue(c, name=c.name)
+            self._cue_list_widget.item(c.index_in_editor - 1, 1).setText(c.duration_formatted)
+            self._cue_list_widget.item(c.index_in_editor - 1, 2).setText(str(c.end_action))
+
+        for name, dt in self._model.channels:
+            self._add_channel(name, dt, is_part_of_mass_update=True)
+
+        if len(self._model.cues) > 0:
             self.select_cue(0)
             self._default_cue_combo_box.setEnabled(True)
-        if parameters.get("default_cue"):
-            try:
-                di = int(parameters.get("default_cue")) + 1
-            except:
-                di = 0
-            self._default_cue_combo_box.setCurrentIndex(di)
+        self._default_cue_combo_box.setCurrentIndex(self._model.default_cue)
         if self._bankset:
             self._bankset.update()
             BankSet.push_messages_now()
 
     def _get_configuration(self) -> dict[str, str]:
-        if len(self._cues) > 0:
-            mapping_str = ";".join(["{}:{}".format(t[0], t[1].format_for_filters()) for t in self._cues[0].channels])
-        else:
-            mapping_str = ""
-        d = {
-            "end_handling": "start_again" if self._global_restart_on_end else "hold",
-            "mapping": mapping_str,
-            "cuelist": "$".join([c.format_cue() for c in self._cues]),
-            "default_cue": self._default_cue_combo_box.currentIndex() - 1
-        }
-        return d
+        self._model.default_cue = self._default_cue_combo_box.currentIndex() - 1
+        return self._model.get_as_configuration()
 
     def __init__(self, parent: QWidget = None, f: Filter | None = None):
         super().__init__()
@@ -168,8 +134,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog: QDialog = None
 
         self._set_zoom_label_text()
-        self._global_restart_on_end: bool = False
-        self._cues: list[Cue] = []
+        self._model = CueFilterModel()
         self._bs_to_channel_mapping: dict[str, DeskColumn] = {}
         self._filter_instance = f if isinstance(f, CueFilter) else None
         self._last_selected_cue = -1
@@ -260,21 +225,21 @@ class CueEditor(NodeEditorFilterConfigWidget):
         end_action_item = QTableWidgetItem(1)
         end_action_item.setText(str(cue.end_action))
         self._cue_list_widget.setItem(target_row, 2, end_action_item)
-        if len(self._cues) > 0:
-            for c in self._cues[0].channels:
+        if len(self._model.cues) > 0:
+            for c in self._model.cues[0].channels:
                 cue.add_channel(c[0], c[1])
         cue.index_in_editor = target_row + 1
-        self._cues.append(cue)
+        self._model.append_cue(cue)
         self._default_cue_combo_box.addItem("Cue {}".format(cue_name))
         self._default_cue_combo_box.setEnabled(True)
         return target_row
 
     def select_cue(self, cue_index: int, from_manual_input: bool = False):
-        if cue_index < 0 or cue_index >= len(self._cues):
+        if cue_index < 0 or cue_index >= len(self._model.cues):
             return
-        if 0 <= self._last_selected_cue < len(self._cues):
-            self._cues[self._last_selected_cue] = self._timeline_container.cue
-        c = self._cues[cue_index]
+        if 0 <= self._last_selected_cue < len(self._model.cues):
+            self._model.cues[self._last_selected_cue] = self._timeline_container.cue
+        c = self._model.cues[cue_index]
         self._timeline_container.cue = c
         self._current_cue_end_action_select_widget.setCurrentIndex(c.end_action.value)
         self._current_cue_another_play_pressed_checkbox.setChecked(c.restart_on_another_play_press)
@@ -318,16 +283,15 @@ class CueEditor(NodeEditorFilterConfigWidget):
             QMessageBox.critical(self._parent_widget, "Failed to add channel",
                                  "Unfortunately, 'time' and 'time_scale' is a reserved keyword for this filter.")
             return
-        for c_name in self._cues[0].channels:
-            if c_name[0] == channel_name:
-                QMessageBox.critical(self._parent_widget, "Failed to add channel",
-                                     "Unable to add the requested channel {}. Channel names must be unique within "
-                                     "this filter.".format(channel_name))
-                return
+        try:
+            self._model.add_channel(channel_name, channel_type)
+        except ValueError as e:
+            QMessageBox.critical(self._parent_widget, "Failed to add channel",
+                                 "Unable to add the requested channel {}. Channel names must be unique within "
+                                 "this filter.<br/>Detailed message: {}".format(channel_name, str(e)))
+            return
         if self._filter_instance.in_preview_mode:
             self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
-        for c in self._cues:
-            c.add_channel(channel_name, channel_type)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
         if not is_part_of_mass_update:
@@ -352,7 +316,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         all cues.
         """
         self._input_dialog = SelectionDialog("Remove Channels", "Please select Channels to remove.",
-                                             [c.name for c in self.channels], self._parent_widget)
+                                             [c[0] for c in self._model.channels], self._parent_widget)
         self._input_dialog.accepted.connect(self._remove_channels_button_pressed_final)
         self._input_dialog.show()
 
@@ -361,16 +325,15 @@ class CueEditor(NodeEditorFilterConfigWidget):
             return
         selected_channels = self._input_dialog.selected_items
         channels_to_remove = []
-        for c in self.channels:
-            if c.name in selected_channels:
+        for c in self._model.channels:
+            if c[0] in selected_channels:
                 channels_to_remove.append(c)
-                self._timeline_container.remove_channel(c.name)
+                self._timeline_container.remove_channel(c[0])
         for c in channels_to_remove:
-            for cue in self._cues:
-                cue.remove_channel(c)
+            self._model.remove_channel(c)
         if len(channels_to_remove) > 0:
             self._channels_changed_after_load = True
-        self._toolbar_remove_channel_action.setEnabled(len(self._cues) > 0 and len(self._cues[0].channels) > 0)
+        self._toolbar_remove_channel_action.setEnabled(len(self._model.cues) > 0 and len(self._model.channels) > 0)
 
     def _cue_end_action_changed(self):
         action = EndAction(self._current_cue_end_action_select_widget.currentIndex())
@@ -413,8 +376,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._timeline_container.clear_display()
         if self._channels_changed_after_load:
             added_channels = []
-            if len(self._cues) > 0:
-                for channel_name, channel_type in self._cues[0].channels:
+            if len(self._model.cues) > 0:
+                for channel_name, channel_type in self._model.cues[0].channels:
                     if channel_name not in filter_node.outputs():
                         filter_node.addTerminal(channel_name, io='out')
                         filter_node.filter.out_data_types[channel_name] = channel_type
@@ -451,9 +414,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def channels(self) -> list[ExternalChannelDefinition]:
         channel_list = []
         # it should be sufficient to only check the fist cue as all cues should have the same channels
-        if len(self._cues) == 0:
+        if len(self._model.cues) == 0:
             return channel_list
-        for name, c_type in self._cues[0].channels:
+        for name, c_type in self._model.cues[0].channels:
             channel_list.append(ExternalChannelDefinition(c_type, name,
                                                           self._bs_to_channel_mapping.get(name), self._bankset))
         return channel_list
