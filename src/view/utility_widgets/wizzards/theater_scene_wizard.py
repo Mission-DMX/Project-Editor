@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout
 from model import BoardConfiguration
 from model.ofl.fixture import ColorSupport
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+from view.utility_widgets.button_container import ButtonContainer
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
 
@@ -216,7 +217,7 @@ class TheaterSceneWizard(QWizard):
         else:
             return
         if (not isinstance(selected_feature, AnnotatedListWidgetItem) or
-            not isinstance(selected_group, AnnotatedListWidgetItem)):
+                (not isinstance(selected_group, AnnotatedListWidgetItem) and selected_group is not None)):
             raise ValueError("Expected Annotated List Widget Item")
         if selected_group:
             first_item_in_group = selected_group.toolTip() == ""
@@ -225,6 +226,7 @@ class TheaterSceneWizard(QWizard):
             if first_item_in_group:
                 selected_group.setIcon(_folder_full_icon)
             selected_group.annotated_data["fixtures"].append(selected_feature.annotated_data)
+            selected_group.setToolTip("Content: " + ",".join(["{}/{}: {}".format(i[0].parent_universe, str(i[0].first_channel), i[0].color_support()) for i in selected_group.annotated_data["fixtures"]]))
         else:
             new_group_item = AnnotatedListWidgetItem(self._feature_grouping_list)
             new_group_item.setText(selected_feature.text())
@@ -253,19 +255,19 @@ class TheaterSceneWizard(QWizard):
             controlled_by_desk = c.get("desk-controlled") == "true"
             text_edit = QLineEdit(c.get("name") or str(i), page)
             text_edit.textChanged.connect(lambda text,d=c: _d_assign(d, "name", text))
-            layout.addItem(text_edit, i, 0)
-            radio_group = QButtonGroup(page)
+            layout.addWidget(text_edit, i, 0)
+            button_container = ButtonContainer(page)
             radio_button_cue = QRadioButton("Cue", page)
             radio_button_cue.setChecked(not controlled_by_desk)
-            radio_button_cue.clicked.connect(lambda d=c: _d_assign(d, "desk-controlled", "true"))
+            radio_button_cue.clicked.connect(lambda checked=False,d=c: _d_assign(d, "desk-controlled", "true"))
             radio_button_desk = QRadioButton("Desk", page)
             radio_button_desk.setChecked(controlled_by_desk)
             radio_button_desk.setEnabled(is_creation_of_banksets_enabled)
-            radio_button_desk.clicked.connect(lambda d=c: _d_assign(d, "desk-controlled", "false"))
-            radio_group.addButton(radio_button_cue)
-            radio_group.addButton(radio_button_desk)
-            layout.addItem(radio_group, i, 1)
-            self._channel_setup_widgets.append((text_edit, radio_group, radio_button_cue, radio_button_desk))
+            radio_button_desk.clicked.connect(lambda checked=False,d=c: _d_assign(d, "desk-controlled", "false"))
+            button_container.add_button(radio_button_cue)
+            button_container.add_button(radio_button_desk)
+            layout.addWidget(button_container, i, 1)
+            self._channel_setup_widgets.append((text_edit, button_container, radio_button_cue, radio_button_desk))
 
     def _add_cue_button_pressed(self):
         item = AnnotatedListWidgetItem(self._cues_page_cue_list_widget)
@@ -284,10 +286,14 @@ class TheaterSceneWizard(QWizard):
     def _initialize_preview_page(self, page: ComposableWizardPage):
         text = "Channels:<br /><ul>"
         for c in self._channels:
-            text += ("<li>" + ("[DESK]" if c['desk-controlled'] == "true" else "[CUE]") + c["name"] +
-                     ":" + ", ".join([f[0].name for f in c["fixtures"]]) + "</li>")
+            text += ("<li>" + ("[DESK]" if c.get('desk-controlled') == "true" else "[CUE]") + c.get("name") +
+                     ":" + ", ".join([f[0].name for f in c.get("fixtures")]) + "</li>")
         text += "</ul><br>Cues:<br /><ol>"
-        for item in self._cues_page_cue_list_widget.items():
+        for item_c in range(self._cues_page_cue_list_widget.count()):
+            item = self._cues_page_cue_list_widget.item(item_c)
             text += '<li>' + item.text() + "</li>"
         text += "</ol>"
         self._preview_text_area.setText(text)
+
+    def _commit_changes(self):
+        pass  # TODO

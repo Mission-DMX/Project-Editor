@@ -78,6 +78,22 @@ class ColorSupport(IntFlag):
     HAS_AMBER_SEGMENT = 8
     HAS_UV_SEGMENT = 16
 
+    def __str__(self):
+        if self == ColorSupport.NO_COLOR_SUPPORT:
+                return "No Color Support"
+        s = []
+        if self and ColorSupport.COLD_AND_WARM_WHITE > 0:
+            s.append("CW/WW")
+        if self and ColorSupport.HAS_RGB_SUPPORT > 0:
+            s.append("RGB")
+        if self and ColorSupport.HAS_WHITE_SEGMENT > 0:
+            s.append("W")
+        if self and ColorSupport.HAS_AMBER_SEGMENT > 0:
+            s.append("A")
+        if self and ColorSupport.HAS_UV_SEGMENT > 0:
+            s.append("U")
+        return "+".join(s)
+
 
 def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
@@ -194,6 +210,16 @@ class UsedFixture:
         if has_white:
             found_color += ColorSupport.HAS_WHITE_SEGMENT
         return found_color
+
+    @property
+    def first_channel(self) -> int:
+        i = 513
+        for c in self.channels:
+            if c.address < i:
+                i = c.address
+        if i == 513:
+            i = -1
+        return i
 
 
 def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int) -> UsedFixture:
