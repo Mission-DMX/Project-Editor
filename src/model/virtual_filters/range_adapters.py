@@ -95,7 +95,7 @@ class EightBitToFloatRange(VirtualFilter):
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
 
     def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
-        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, pos=pos)
+        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, pos=pos)
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if virtual_port_id == "out":
