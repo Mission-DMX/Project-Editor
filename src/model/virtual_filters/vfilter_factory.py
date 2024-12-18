@@ -20,7 +20,8 @@ from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from model.virtual_filters.cue_vfilter import CueFilter
 
 
-def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_id: str, pos: tuple[int] | None = None) -> "VirtualFilter":
+def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_id: str,
+                                      pos: tuple[int, int] | tuple[float, float] | None = None) -> "VirtualFilter":
     """
     This method constructs instances of v-filter based on the provided model for the restoring of show files.
 

@@ -7,6 +7,9 @@ from model.ofl.fixture import UsedFixture
 
 
 from logging import getLogger
+
+from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
+
 logger = getLogger(__file__)
 
 _additional_filter_depth = 100.0
@@ -176,9 +179,12 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
             universe_filter.pos = (x + 11, pos[1])
     if not global_dimmer_found and str(fp.parent_scene.board_configuration.ui_hints.get('color-mixin-auto-add-disabled')).lower() != 'true':
         for color_input_filter in color_inputs:
-            brightness_mixin_filter = Filter(scene=fp.parent_scene, filter_id=color_input_filter.filter_id + "__brightness_mixin",
-                                             filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
-                                             pos=(color_input_filter.pos[0] - _additional_filter_depth, color_input_filter.pos[1]))
+            brightness_mixin_filter = construct_virtual_filter_instance(
+                scene=fp.parent_scene,
+                filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
+                filter_id=color_input_filter.filter_id + "__brightness_mixin",
+                pos=(color_input_filter.pos[0] - _additional_filter_depth, color_input_filter.pos[1])
+            )
             fp.filters.append(brightness_mixin_filter)
             added_depth = max(added_depth, 2 * _additional_filter_depth)
             fp.parent_scene.append_filter(brightness_mixin_filter)
