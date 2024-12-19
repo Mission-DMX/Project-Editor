@@ -5,8 +5,12 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout, QLineEdit, QCheckBox, \
     QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea
 
-from model import BoardConfiguration
+from controller.utils.process_notifications import get_process_notifier
+from model import BoardConfiguration, Scene
+from model.filter import FilterTypeEnumeration, Filter, DataType
 from model.ofl.fixture import ColorSupport
+from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.utility_widgets.button_container import ButtonContainer
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
@@ -139,7 +143,8 @@ class TheaterSceneWizard(QWizard):
         layout.addWidget(self._cues_page_cue_list_widget)
         self._cues_page.setLayout(layout)
 
-        self._preview_page = ComposableWizardPage(page_activation_function=self._initialize_preview_page)
+        self._preview_page = ComposableWizardPage(page_activation_function=self._initialize_preview_page,
+                                                  check_completeness_function=self._commit_changes)
         self._preview_page.setTitle("Preview")
         self._preview_page.setSubTitle("Please review and confirm the changes that are about to be made.")
         self._preview_page.setFinalPage(True)
@@ -162,6 +167,7 @@ class TheaterSceneWizard(QWizard):
         self._fixture_feature_list.clear()
         selected_fixtures = self._fixture_selection_browser.get_selected_fixtures()
         for f in selected_fixtures:
+            # Map color channels
             fcs = f.color_support()
             for supported_mode, name in [
                 (ColorSupport.HAS_RGB_SUPPORT, "Color"),
@@ -174,9 +180,20 @@ class TheaterSceneWizard(QWizard):
                     item.annotated_data = (f, supported_mode)
                     item.setText("({}:{}) {}: {}".format(f.parent_universe, f.channels[0].address, f.name, name))
                     self._fixture_feature_list.addItem(item)
+
+            # Map position Channels
+            for type in [("Pan", f.pan_channels), ("Tilt", f.tilt_channels), ("Animation Speed", f.animation_speed_channels)]:
+                mode = type[0]
+                for channel in type[1]:
+                    item = AnnotatedListWidgetItem(self._fixture_feature_list)
+                    item.annotated_data = (f, mode)
+                    item.setText("({}:{}) {}: {}".format(f.parent_universe, f.channels[0].address, f.name, mode))
+                    self._fixture_feature_list.addItem(item)
+
             remaining_channels = []
             already_added_channels = (f.uv_segments + f.white_segments + f.green_segments + f.blue_segments +
-                                      f.red_segments + f.amber_segments)
+                                      f.red_segments + f.amber_segments + f.pan_channels + f.tilt_channels +
+                                      f.animation_speed_channels)
             for fc in f.channels:
                 if fc not in already_added_channels:
                     remaining_channels.append(fc)
@@ -295,5 +312,57 @@ class TheaterSceneWizard(QWizard):
         text += "</ol>"
         self._preview_text_area.setText(text)
 
-    def _commit_changes(self):
-        pass  # TODO
+    def _commit_changes(self, page: ComposableWizardPage):
+        pn = get_process_notifier("Create Scene", 4)
+        for c in self._channels:
+            selected_data_type = DataType.DT_8_BIT
+            color_found = False
+            illumination_found = False
+            position_found = False
+            for f in c.get("fixtures"):
+                if isinstance(f[1], DataType):
+                    if f[1] & ColorSupport.HAS_RGB_SUPPORT > 0:
+                        color_found = True
+                    if f[1] & ColorSupport.HAS_WHITE_SEGMENT > 0:
+                        illumination_found = True
+                if isinstance(f[1], str):
+                    if f[1] == "Pan" or f[1] == "Tilt":
+                        position_found = True
+            if color_found and not position_found:
+                selected_data_type = DataType.DT_COLOR
+            elif position_found:
+                selected_data_type = DataType.DT_16_BIT
+            # TODO the above only gives us the fixtures that should be linked to this channel as well as its name.
+            #  We need to find a way to deduce the data type.
+            c["data-type"] = selected_data_type
+
+        pn.current_step_number += 1
+        scene = Scene(len(self._show.scenes), self._scene_name_tb.text(), self._show)
+        pn.current_step_number += 1
+        self._generate_cue_filter(scene)
+        pn.current_step_number += 1
+        # TODO generate output filters
+        pn.current_step_number += 1
+        self._show.broadcaster.scene_created.emit(scene)
+        pn.close()
+        return True
+
+    def _generate_cue_filter(self, scene: Scene):
+        time_filter = Filter(filter_id="Time_Input", filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT,
+                             scene=scene, pos=(-10, 0))
+        scene.append_filter(time_filter)
+
+        cue_filter = construct_virtual_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_CUES,
+            filter_id="SceneCueFilter",
+            pos=(0, 0)
+        )
+        cue_filter.channel_links['time'] = time_filter.filter_id + ":value"
+        cue_model = CueFilterModel()
+        for c in self._channels:
+            if c.get("desk-controlled") != "true":
+                cue_model.add_channel(c.get("name"), DataType.from_filter_str(c["data-type"]))
+        scene.append_filter(cue_filter)
+        # TODO
+        pass

@@ -82,15 +82,15 @@ class ColorSupport(IntFlag):
         if self == ColorSupport.NO_COLOR_SUPPORT:
                 return "No Color Support"
         s = []
-        if self and ColorSupport.COLD_AND_WARM_WHITE > 0:
+        if (self & ColorSupport.COLD_AND_WARM_WHITE) > 0:
             s.append("CW/WW")
-        if self and ColorSupport.HAS_RGB_SUPPORT > 0:
+        if (self & ColorSupport.HAS_RGB_SUPPORT) > 0:
             s.append("RGB")
-        if self and ColorSupport.HAS_WHITE_SEGMENT > 0:
+        if (self & ColorSupport.HAS_WHITE_SEGMENT) > 0:
             s.append("W")
-        if self and ColorSupport.HAS_AMBER_SEGMENT > 0:
+        if (self & ColorSupport.HAS_AMBER_SEGMENT) > 0:
             s.append("A")
-        if self and ColorSupport.HAS_UV_SEGMENT > 0:
+        if (self & ColorSupport.HAS_UV_SEGMENT) > 0:
             s.append("U")
         return "+".join(s)
 
@@ -132,6 +132,11 @@ class UsedFixture:
         self.white_segments: list["PatchingChannel"] = []
         self.amber_segments: list["PatchingChannel"] = []
         self.uv_segments: list["PatchingChannel"] = []
+
+        self.position_channels: list["PatchingChannel"] = []
+        self.pan_channels: list["PatchingChannel"] = []
+        self.tilt_channels: list["PatchingChannel"] = []
+        self.animation_speed_channels: list["PatchingChannel"] = []
 
     def update_segments(self):
         self.red_segments.clear()
@@ -177,6 +182,31 @@ class UsedFixture:
         # TODO discussion: integration of fixture groups would be most straight forward if they would be represented as
         #  an inheritance of UsedFixture, representing their individual lamps as segments of the group. This way we
         #  would not need to implement special cases everywhere where this information is accessed.
+
+    def find_position_channels(self):
+        self.position_channels.clear()
+        self.pan_channels.clear()
+        self.tilt_channels.clear()
+        self.animation_speed_channels.clear()
+        for f in self.channels:
+            channel_name = f.fixture_channel.lower()
+            if "pan" in channel_name:
+                self.position_channels.append(f)
+                if "speed" in channel_name:
+                    self.animation_speed_channels.append(f)
+                    continue
+                else:
+                    self.pan_channels.append(f)
+            if "tilt" in channel_name:
+                self.position_channels.append(f)
+                if "speed" in channel_name:
+                    self.animation_speed_channels.append(f)
+                    continue
+                else:
+                    self.tilt_channels.append(f)
+            if "rotation" in channel_name:
+                # This will also catch lense and gobo rotations
+                self.position_channels.append(f)
 
     def copy(self):
         """
