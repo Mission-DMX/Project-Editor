@@ -6,7 +6,7 @@ from model.broadcaster import Broadcaster
 
 
 class SignalLoging(logging.Handler):
-    """logging_mode Handler"""
+    """logging_view Handler"""
 
     def __init__(self) -> None:
         super().__init__()

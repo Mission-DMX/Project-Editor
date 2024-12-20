@@ -3,8 +3,7 @@ from model import Filter
 from model.filter import FilterTypeEnumeration
 from model.patching_channel import PatchingChannel
 from model.scene import FilterPage
-from model.ofl.fixture import UsedFixture
-
+from model.ofl.fixture import UsedFixture, ColorSupport
 
 from logging import getLogger
 
@@ -25,7 +24,8 @@ def _sanitize_name(input: str | dict) -> str:
     return input.replace(" ", "_").replace("/", "_").replace("\\", "_")
 
 
-def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage) -> bool:
+def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage,
+                                   output_map: dict[ColorSupport|str|PatchingChannel, str] | None = None) -> bool:
     channels: list[PatchingChannel] = fixture.channels
     if len(channels) == 0:
         return False
@@ -65,14 +65,15 @@ def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage
     filter_page.filters.append(filter)
 
     added_depth = _check_and_add_auxiliary_filters(fixture, filter_page, filter, avg_x, max_y,
-                                                   name, already_added_filters)
+                                                   name, already_added_filters, output_map)
     for f in already_added_filters:
         f.pos = (f.pos[0] + added_depth, f.pos[1])
     return True
 
 
 def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, universe_filter: Filter, x: float, y: float,
-                                     name: str, already_added_filters: list[Filter]):
+                                     name: str, already_added_filters: list[Filter],
+                                     output_map: dict[ColorSupport|str|PatchingChannel, str] | None = None):
     c = fixture.channels
     i = 0
 
@@ -104,6 +105,8 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":value_lower"
                 universe_filter.channel_links[_sanitize_name(c[c_i-1].fixture_channel)] = adapter_name + ":value_upper"
                 fp.filters.append(split_filter)
+                if output_map is not None:
+                    output_map[c[c_i]] = split_filter.filter_id + ":value"
                 already_added_filters.append(split_filter)
                 i += 1
             elif c[c_i].fixture_channel.startswith("Red"):
@@ -146,6 +149,8 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                             _sanitize_name(c[c_i + 2].fixture_channel)] = adapter_name + ":b"
                         fp.filters.append(rgb_filter)
                         already_added_filters.append(rgb_filter)
+                    if output_map is not None:
+                        output_map[c[c_i]] = adapter_name + ":value"
                 i += 1
             elif c[c_i].fixture_channel == "Dimmer":
                 dimmer_name = _sanitize_name("dimmer_{}_{}".format(i, name))

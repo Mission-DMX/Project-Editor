@@ -12,9 +12,9 @@ from model.broadcaster import Broadcaster
 from model.ofl.fixture import Fixture
 from model.ofl.manufacture import generate_manufacturers, Manufacture
 from view.dialogs.patching_dialog import PatchingDialog
-from view.patch_mode.patching.fixture_item import FixtureItem
-from view.patch_mode.patching.manufacturer_item import ManufacturerItem
-from view.patch_mode.patching.mode_item import ModeItem
+from view.patch_view.patching.fixture_item import FixtureItem
+from view.patch_view.patching.manufacturer_item import ManufacturerItem
+from view.patch_view.patching.mode_item import ModeItem
 from layouts.flow_layout import FlowLayout
 
 

@@ -8,10 +8,14 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene
 from model.filter import FilterTypeEnumeration, Filter, DataType
-from model.ofl.fixture import ColorSupport
+from model.ofl.fixture import ColorSupport, UsedFixture
+from model.patching_channel import PatchingChannel
+from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+from view.show_mode.editor.show_browser.fixture_to_filter import place_fixture_filters_in_scene
 from view.utility_widgets.button_container import ButtonContainer
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
@@ -199,7 +203,7 @@ class TheaterSceneWizard(QWizard):
                     remaining_channels.append(fc)
             for c in remaining_channels:
                 item = AnnotatedListWidgetItem(self._fixture_feature_list)
-                item.annotated_data = (f, None)
+                item.annotated_data = (f, c)
                 item.setText("({}:{}) {}: [undef] {}/".format(f.parent_universe, f.channels[0].address, f.name,
                                                               c.address, c.fixture_channel))
                 self._fixture_feature_list.addItem(item)
@@ -312,8 +316,7 @@ class TheaterSceneWizard(QWizard):
         text += "</ol>"
         self._preview_text_area.setText(text)
 
-    def _commit_changes(self, page: ComposableWizardPage):
-        pn = get_process_notifier("Create Scene", 4)
+    def _guess_cue_channel_data_types(self):
         for c in self._channels:
             selected_data_type = DataType.DT_8_BIT
             color_found = False
@@ -328,6 +331,9 @@ class TheaterSceneWizard(QWizard):
                 if isinstance(f[1], str):
                     if f[1] == "Pan" or f[1] == "Tilt":
                         position_found = True
+                if isinstance(f[1], PatchingChannel):
+                    # Unknown Feature
+                    pass
             if color_found and not position_found:
                 selected_data_type = DataType.DT_COLOR
             elif position_found:
@@ -336,12 +342,19 @@ class TheaterSceneWizard(QWizard):
             #  We need to find a way to deduce the data type.
             c["data-type"] = selected_data_type
 
+    def _commit_changes(self, page: ComposableWizardPage):
+        pn = get_process_notifier("Create Scene", 4)
+        # TODO this below should be part of the cue/desk selection page
+        self._guess_cue_channel_data_types()
+
         pn.current_step_number += 1
         scene = Scene(len(self._show.scenes), self._scene_name_tb.text(), self._show)
         pn.current_step_number += 1
         self._generate_cue_filter(scene)
         pn.current_step_number += 1
-        # TODO generate output filters
+        output_map = dict()
+        self._generate_output_filters(scene, output_map)
+        # TODO link output filters
         pn.current_step_number += 1
         self._show.broadcaster.scene_created.emit(scene)
         pn.close()
@@ -351,6 +364,7 @@ class TheaterSceneWizard(QWizard):
         time_filter = Filter(filter_id="Time_Input", filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT,
                              scene=scene, pos=(-10, 0))
         scene.append_filter(time_filter)
+        scene.pages[0].filters.append(time_filter)
 
         cue_filter = construct_virtual_filter_instance(
             scene=scene,
@@ -364,5 +378,23 @@ class TheaterSceneWizard(QWizard):
             if c.get("desk-controlled") != "true":
                 cue_model.add_channel(c.get("name"), DataType.from_filter_str(c["data-type"]))
         scene.append_filter(cue_filter)
-        # TODO
+        scene.pages[0].filters.append(cue_filter)
+        for cue_request_index in range(self._cues_page_cue_list_widget.count()):
+            c = Cue()
+            c.name = self._cues_page_cue_list_widget.item(cue_request_index).text()
+            cue_model.append_cue(c)
+        cue_filter.filter_configurations.update(cue_model.get_as_configuration())
+        pass
+
+    def _generate_output_filters(self, scene: Scene, output_map: dict):
+        placed_fixtures: list[UsedFixture] = []
+        fp = scene.pages[0]
+        for c in self._channels:
+            f = c["fixture"][0]
+            if f not in placed_fixtures:
+                placed_fixtures.append(f)
+                if not place_fixture_filters_in_scene(f, fp, output_map=output_map):
+                    logger.error("Failed to place output filters for fixture {} in scene with id {}."
+                                 .format(f, scene.scene_id)
+                    )
         pass

@@ -16,11 +16,11 @@ from proto.RealTimeControl_pb2 import RunMode
 from Style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
-from view.logging_mode.dmx_data_log import DmxDataLogWidget
-from view.logging_mode.logging_widget import LoggingWidget
+from view.logging_view.dmx_data_log import DmxDataLogWidget
+from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.settings.settings_dialog import SettingsDialog
-from view.patch_mode.patch_mode import PatchMode
+from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard

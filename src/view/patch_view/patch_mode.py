@@ -5,8 +5,8 @@ from PySide6 import QtWidgets, QtGui
 
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
-from view.patch_mode.patch_plan.patch_plan_selector import PatchPlanSelector
-from view.patch_mode.patching.patching_select import PatchingSelect
+from view.patch_view.patch_plan.patch_plan_selector import PatchPlanSelector
+from view.patch_view.patching.patching_select import PatchingSelect
 
 
 class PatchMode(QtWidgets.QStackedWidget):

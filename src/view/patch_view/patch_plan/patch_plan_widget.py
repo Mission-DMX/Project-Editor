@@ -3,7 +3,7 @@
 from PySide6 import QtCore, QtWidgets
 
 from model.patching_universe import PatchingUniverse
-from view.patch_mode.patch_plan.patch_plan_item import PatchItem
+from view.patch_view.patch_plan.patch_plan_item import PatchItem
 from layouts.flow_layout import FlowLayout
 
 

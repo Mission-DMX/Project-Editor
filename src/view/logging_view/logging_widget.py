@@ -1,5 +1,5 @@
 # coding=utf-8
-"""widget for logging_mode"""
+"""widget for logging_view"""
 import json
 import logging
 from typing import List
@@ -16,7 +16,7 @@ from .search import Operation, Search
 
 
 class LoggingWidget(QtWidgets.QTabWidget):
-    """widget for logging_mode"""
+    """widget for logging_view"""
     _loging_level_changed: QtCore.Signal = QtCore.Signal(tuple)
 
     def __init__(self, parent=None) -> None:

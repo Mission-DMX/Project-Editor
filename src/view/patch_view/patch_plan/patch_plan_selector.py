@@ -7,10 +7,10 @@ from PySide6 import QtGui, QtWidgets
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse
 from view.dialogs.universe_dialog import UniverseDialog
-from view.patch_mode.patch_plan.patch_plan_widget import PatchPlanWidget
+from view.patch_view.patch_plan.patch_plan_widget import PatchPlanWidget
 
 if TYPE_CHECKING:
-    from view.patch_mode.patch_mode import PatchMode
+    from view.patch_view.patch_mode import PatchMode
 
 
 class PatchPlanSelector(QtWidgets.QTabWidget):
