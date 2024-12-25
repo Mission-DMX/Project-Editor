@@ -343,24 +343,39 @@ class TheaterSceneWizard(QWizard):
             c["data-type"] = selected_data_type
 
     def _commit_changes(self, page: ComposableWizardPage):
-        pn = get_process_notifier("Create Scene", 4)
+        pn = get_process_notifier("Create Scene", 6)
         # TODO this below should be part of the cue/desk selection page
         self._guess_cue_channel_data_types()
-
+        # TODO introduce wizard page where the user can manipulate the guessed channel mappings
         pn.current_step_number += 1
         scene = Scene(len(self._show.scenes), self._scene_name_tb.text(), self._show)
         pn.current_step_number += 1
-        self._generate_cue_filter(scene)
+        cue_link_map = self._generate_cue_filter(scene)
         pn.current_step_number += 1
-        output_map = dict()
-        self._generate_output_filters(scene, output_map)
-        # TODO link output filters
+        bankset_link_map = self._generate_bank_set(scene)
+        pn.current_step_number += 1
+        output_map = self._generate_output_filters(scene)
+        pn.current_step_number += 1
+        self._link_output_filters(bankset_link_map, cue_link_map, output_map, scene)
         pn.current_step_number += 1
         self._show.broadcaster.scene_created.emit(scene)
         pn.close()
         return True
 
-    def _generate_cue_filter(self, scene: Scene):
+    def _link_output_filters(self, bankset_link_map, cue_link_map, output_map, scene):
+        for c in self._channels:
+            for fd in c["fixtures"]:
+                fixture = fd[0]
+                if not isinstance(fixture, UsedFixture):
+                    logger.critical("Entry was supposed to be Fixture")
+                for patching_channel in fixture.channels:
+                    output_filter_to_connect: str = output_map.get(patching_channel).split(":")[0]
+                    filter_channel_to_connect: str = output_map.get(patching_channel).split(":")[1]
+                    selected_source_map = bankset_link_map if c.get('desk-controlled') == "true" else cue_link_map
+                    scene.get_filter_by_id(output_filter_to_connect).channel_links[
+                        filter_channel_to_connect] = selected_source_map.get(patching_channel)
+
+    def _generate_cue_filter(self, scene: Scene) -> dict[PatchingChannel, str]:
         time_filter = Filter(filter_id="Time_Input", filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT,
                              scene=scene, pos=(-10, 0))
         scene.append_filter(time_filter)
@@ -374,9 +389,12 @@ class TheaterSceneWizard(QWizard):
         )
         cue_filter.channel_links['time'] = time_filter.filter_id + ":value"
         cue_model = CueFilterModel()
+        link_map: dict[PatchingChannel, str] = dict()
         for c in self._channels:
             if c.get("desk-controlled") != "true":
                 cue_model.add_channel(c.get("name"), DataType.from_filter_str(c["data-type"]))
+                # TODO query associated channels here and insert them into the link map like this:
+                #  link_map[associated_channel] = "SceneCueFilter:{}".format(c.get("name"))
         scene.append_filter(cue_filter)
         scene.pages[0].filters.append(cue_filter)
         for cue_request_index in range(self._cues_page_cue_list_widget.count()):
@@ -384,10 +402,11 @@ class TheaterSceneWizard(QWizard):
             c.name = self._cues_page_cue_list_widget.item(cue_request_index).text()
             cue_model.append_cue(c)
         cue_filter.filter_configurations.update(cue_model.get_as_configuration())
-        pass
+        return link_map
 
-    def _generate_output_filters(self, scene: Scene, output_map: dict):
+    def _generate_output_filters(self, scene: Scene) -> dict:
         placed_fixtures: list[UsedFixture] = []
+        output_map = dict()
         fp = scene.pages[0]
         for c in self._channels:
             f = c["fixture"][0]
@@ -397,4 +416,7 @@ class TheaterSceneWizard(QWizard):
                     logger.error("Failed to place output filters for fixture {} in scene with id {}."
                                  .format(f, scene.scene_id)
                     )
-        pass
+        return output_map
+
+    def _generate_bank_set(self, scene: Scene) -> dict[PatchingChannel, str]:
+        return dict()  # TODO
