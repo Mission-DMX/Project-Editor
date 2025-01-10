@@ -3,7 +3,7 @@ import logging
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout, QLineEdit, QCheckBox, \
-    QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea
+    QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea, QComboBox
 
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene
@@ -271,6 +271,7 @@ class TheaterSceneWizard(QWizard):
         self._channel_setup_widgets.clear()
         is_creation_of_banksets_enabled = self._create_bank_set_controls_cb.isChecked()
         i = 0
+        self._guess_cue_channel_data_types()
         for c in self._channels:
             i += 1
             controlled_by_desk = c.get("desk-controlled") == "true"
@@ -288,6 +289,22 @@ class TheaterSceneWizard(QWizard):
             button_container.add_button(radio_button_cue)
             button_container.add_button(radio_button_desk)
             layout.addWidget(button_container, i, 1)
+            data_type_combo_box = QComboBox(page)
+            data_type_combo_box.addItems([dt.format_for_filters() for dt in [
+                DataType.DT_COLOR, DataType.DT_8_BIT, DataType.DT_16_BIT, DataType.DT_DOUBLE
+            ]])
+            item_index = 0
+            match c.get("data-type"):
+                case DataType.DT_DOUBLE:
+                    item_index = 3
+                case DataType.DT_16_BIT:
+                    item_index = 2
+                case DataType.DT_8_BIT:
+                    item_index = 1
+                case DataType.DT_COLOR:
+                    item_index = 0
+            data_type_combo_box.setCurrentIndex(item_index)
+            layout.addWidget(data_type_combo_box, i, 2)
             self._channel_setup_widgets.append((text_edit, button_container, radio_button_cue, radio_button_desk))
 
     def _add_cue_button_pressed(self):
@@ -318,6 +335,8 @@ class TheaterSceneWizard(QWizard):
 
     def _guess_cue_channel_data_types(self):
         for c in self._channels:
+            if c.get("data-type") is not None:
+                continue
             selected_data_type = DataType.DT_8_BIT
             color_found = False
             illumination_found = False
