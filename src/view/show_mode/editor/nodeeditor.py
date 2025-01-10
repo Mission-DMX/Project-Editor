@@ -69,7 +69,7 @@ class NodeEditorWidget(QWidget):
                                name, str(type(node)), str(FilterNode.__class__))
                 continue
             for input_channel, output_channel in node.filter.channel_links.items():
-                if output_channel == "":
+                if not isinstance(output_channel, str) or len(output_channel) == 0:
                     continue
                 remote_name = output_channel.split(':')[0]
                 remote_term = output_channel.split(':')[1]

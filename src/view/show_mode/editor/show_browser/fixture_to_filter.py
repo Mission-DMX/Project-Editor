@@ -24,8 +24,10 @@ def _sanitize_name(input: str | dict) -> str:
     return input.replace(" ", "_").replace("/", "_").replace("\\", "_")
 
 
-def place_fixture_filters_in_scene(fixture: UsedFixture, filter_page: FilterPage,
+def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, ColorSupport], filter_page: FilterPage,
                                    output_map: dict[ColorSupport|str|PatchingChannel, str] | None = None) -> bool:
+    if isinstance(fixture, tuple):
+        fixture = fixture[0]
     channels: list[PatchingChannel] = fixture.channels
     if len(channels) == 0:
         return False
