@@ -75,6 +75,11 @@ class ColorHSI:
         rr, rg, rb = colorsys.hls_to_rgb((self._hue % 360) / 360.0, self._intensity, self._saturation)
         return int(rr * 255), int(rg * 255), int(rb * 255)
 
+    @classmethod
+    def from_rgb(cls, r: float, g: float, b: float):
+        h, s, i = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+        return ColorHSI(h, s, i)
+
     def to_qt_color(self) -> QColor:
         """return color in qt color format"""
         return QColor.fromHslF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)

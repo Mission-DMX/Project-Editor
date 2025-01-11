@@ -22,3 +22,4 @@ onnxruntime-openvino
 pyjoystick
 # pySDL2
 # pysdl2-dll
+pyopengl
