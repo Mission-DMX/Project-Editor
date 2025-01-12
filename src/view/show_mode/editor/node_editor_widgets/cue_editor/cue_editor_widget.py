@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
     QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QAbstractItemView, \
-    QMessageBox, QDialog, QMenu
+    QMessageBox, QDialog, QMenu, QInputDialog
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import DataType, Filter
@@ -216,6 +216,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def _table_context_popup(self, pos):
         self._input_dialog = QMenu()
+        self._input_dialog.addAction("Rename Cue", self._rename_selected_cue)
         self._input_dialog.addAction(QIcon.fromTheme("edit-paste"), "Duplicate", self._duplicate_cue_clicked)
         self._input_dialog.addAction(QIcon.fromTheme("go-up"), "Move Up", self._move_cue_up_clicked)
         self._input_dialog.addAction(QIcon.fromTheme("go-down"), "Move Down", self._move_cue_down_clicked)
@@ -268,13 +269,44 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._model.cues[index] = old_cue
             self._swap_table_rows(index + 1, index)
 
+    def _rename_selected_cue(self):
+        self._input_dialog = []
+        for index in self._indices_from_table_selection(ascending_order=False):
+            id = QInputDialog(self._cue_list_widget)
+            original_cue_name = self._model.cues[index].name
+            id.setLabelText("New name for Cue #{} ({})".format(index + 1, original_cue_name))
+            id.setTextValue(original_cue_name)
+            id.setModal(True)
+            id.accepted.connect(lambda d=id,i=index: self._change_cue_name(i, d))
+            id.show()
+            self._input_dialog.append(id)
+
+    def _change_cue_name(self, index: int, new_name: str | QInputDialog):
+        if isinstance(new_name, QInputDialog):
+            d: QInputDialog | None = new_name
+            new_name = new_name.textValue()
+        else:
+            d = None
+        self._model.cues[index].name = new_name
+        self._cue_list_widget.item(index, 0).setText("{} '{}'".format(index + 1, new_name))
+        if isinstance(self._input_dialog, list) and d is not None:
+            self._input_dialog.remove(d)
+            d.deleteLater()
+            if len(self._input_dialog) == 0:
+                if isinstance(self._parent_widget, QDialog):
+                    self._parent_widget.activateWindow()
+
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
         target_row = self._cue_list_widget.rowCount()
         self._cue_list_widget.setRowCount(target_row + 1)
         num_item = QTableWidgetItem(1)
+        if name is None and cue.name is not None:
+            name = cue.name
         cue_name = "{} '{}'".format(target_row + 1, name)
+        if not cue.name and name is not None:
+            cue.name = cue_name
         num_item.setText(cue_name)
-        # TODO connect name changing property here
+        num_item.setFlags(num_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         self._cue_list_widget.setItem(target_row, 0, num_item)
         duration_item = QTableWidgetItem(1)
         duration_item.setText(cue.duration_formatted)
