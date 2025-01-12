@@ -219,10 +219,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog.addAction(QIcon.fromTheme("edit-paste"), "Duplicate", self._duplicate_cue_clicked)
         self._input_dialog.addAction(QIcon.fromTheme("go-up"), "Move Up", self._move_cue_up_clicked)
         self._input_dialog.addAction(QIcon.fromTheme("go-down"), "Move Down", self._move_cue_down_clicked)
+        self._input_dialog.setEnabled(len(self._model.cues) > 0)
         pos = self._cue_list_widget.mapToGlobal(pos)
         self._input_dialog.popup(pos, None)
 
-    def _duplicate_cue_clicked(self):
+    def _indices_from_table_selection(self, ascending_order: bool = True) -> list[int]:
         selected_items = self._cue_list_widget.selectedItems()
         processed_indices = []
         for item in selected_items:
@@ -230,14 +231,42 @@ class CueEditor(NodeEditorFilterConfigWidget):
             if index in processed_indices:
                 continue
             processed_indices.append(index)
+        processed_indices.sort(reverse=not ascending_order)
+        return processed_indices
+
+    def _duplicate_cue_clicked(self):
+        for index in self._indices_from_table_selection():
             new_cue = self._model.cues[index].copy()
             self.add_cue(new_cue, new_cue.name)
 
+    def _swap_table_rows(self, i1: int, i2: int):
+        row1: list[tuple[QTableWidgetItem, int]] = []
+        row2: list[tuple[QTableWidgetItem, int]] = []
+        for column_index in range(self._cue_list_widget.columnCount()):
+            row1.append((self._cue_list_widget.takeItem(i1, column_index), column_index))
+            row2.append((self._cue_list_widget.takeItem(i2, column_index), column_index))
+        for item in row1:
+            self._cue_list_widget.setItem(i2, item[1], item[0])
+        for item in row2:
+            self._cue_list_widget.setItem(i1, item[1], item[0])
+
     def _move_cue_up_clicked(self):
-        pass
+        for index in self._indices_from_table_selection():
+            if index == 0:
+                continue
+            old_cue = self._model.cues[index - 1]
+            self._model.cues[index - 1] = self._model.cues[index]
+            self._model.cues[index] = old_cue
+            self._swap_table_rows(index - 1, index)
 
     def _move_cue_down_clicked(self):
-        pass
+        for index in self._indices_from_table_selection():
+            if index >= self._cue_list_widget.rowCount() - 1:
+                continue
+            old_cue = self._model.cues[index + 1]
+            self._model.cues[index + 1] = self._model.cues[index]
+            self._model.cues[index] = old_cue
+            self._swap_table_rows(index + 1, index)
 
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
         target_row = self._cue_list_widget.rowCount()
