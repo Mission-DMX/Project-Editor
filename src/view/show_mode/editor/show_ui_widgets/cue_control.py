@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInpu
 
 from model import UIWidget, UIPage, Filter
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
 
 from model.file_support.cue_state import CueState
 
@@ -35,11 +36,15 @@ class CueControlUIWidget(UIWidget):
                 self._cues.append(new_item)
 
         if filter_model:
+            # TODO refactor this to use cue model entirely
             cuelist_str = filter_model.filter_configurations.get("cuelist")
             if cuelist_str:
-                cuelist_count = cuelist_str.count("$") + 1
+                cuelist = cuelist_str.split("$")
+                cuelist_count = len(cuelist)
                 while len(self._cues) < cuelist_count:
-                    cf = ("", len(self._cues))
+                    c = Cue()
+                    c.from_string_definition(cuelist[len(self._cues)])
+                    cf = (c.name, len(self._cues))
                     self._cues.append(cf)
                 while len(self._cues) > cuelist_count:
                     self._cues.pop(-1)

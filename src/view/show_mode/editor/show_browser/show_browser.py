@@ -34,6 +34,7 @@ class ShowBrowser:
     _uipage_icon = QIcon("resources/icons/uipage.svg")
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget):
+        self._recently_created_scene = None
         self._widget = QWidget(parent)
         self._widget.setMaximumWidth(450)
         self._widget.setMinimumWidth(250)
@@ -138,6 +139,9 @@ class ShowBrowser:
                 i += 1
 
     def _add_scene_to_scene_browser(self, s: Scene):
+        if self._recently_created_scene == s:
+            return
+        self._recently_created_scene = s
         def add_filter_page(parent_item: AnnotatedTreeWidgetItem, fp: FilterPage):
             filter_page_item = AnnotatedTreeWidgetItem(parent_item)
             filter_page_item.setText(0, fp.name)
@@ -171,6 +175,7 @@ class ShowBrowser:
         self._scene_browsing_tree.insertTopLevelItem(self._scene_browsing_tree.topLevelItemCount(), item)
 
     def _refresh_scene_browser(self):
+        self._recently_created_scene = None
         self._scene_browsing_tree.clear()
         if self._show:
             for scene in self._show.scenes:

@@ -300,7 +300,8 @@ class Cue:
         end_handling_str = self.end_action.get_filter_format_str()
         restart_beh_str = "restart" if self.restart_on_another_play_press else "do_nothing"
         frames_str_list = [f.format_filter_str() for f in self._frames]
-        return "{}#{}#{}".format("|".join(frames_str_list), end_handling_str, restart_beh_str)
+        return "{}#{}#{}#{}".format("|".join(frames_str_list), end_handling_str, restart_beh_str,
+                                 self.name.replace('#', ''))
 
     def from_string_definition(self, definition: str):
         primary_tokens = definition.split("#")
@@ -312,6 +313,8 @@ class Cue:
             self.end_action = EndAction.from_format_str(primary_tokens[1])
         if len(primary_tokens) > 2:
             self.restart_on_another_play_press = primary_tokens[2] == "restart"
+        if len(primary_tokens) > 3:
+            self.name = primary_tokens[3]
 
     def add_channel(self, name: str, t: str | DataType):
         """Add a channel name to list of names"""
