@@ -53,7 +53,7 @@ class EndAction(Enum):
 class State(ABC):
 
     def __init__(self, transition_type: str):
-        self._transition_type = transition_type
+        self._transition_type: str = transition_type
 
     @property
     def transition(self):
@@ -68,20 +68,30 @@ class State(ABC):
     @abstractmethod
     def encode(self) -> str:
         """This method returns the state encodes in the filter format"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def decode(self, content: str):
         """This method decodes the state configuration from a filter config string."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def get_data_type(self) -> DataType:
         """This method needs to return the filter data type."""
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    @abstractmethod
+    def copy(self) -> "State":
+        """This method needs to return a copy of the state"""
+        raise NotImplementedError()
 
 
 class StateEightBit(State):
+
+    def copy(self) -> "State":
+        s = StateEightBit(self._transition_type)
+        s._value = self._value
+        return s
 
     def __init__(self, transition_type: str):
         super().__init__(transition_type)
@@ -108,6 +118,11 @@ class StateEightBit(State):
 
 
 class StateSixteenBit(State):
+    def copy(self) -> "State":
+        s = StateSixteenBit(self._transition_type)
+        s._value = self._value
+        return s
+
     def __init__(self, transition_type: str):
         super().__init__(transition_type)
         self._value = 0
@@ -133,6 +148,11 @@ class StateSixteenBit(State):
 
 
 class StateDouble(State):
+    def copy(self) -> "State":
+        s = StateDouble(self._transition_type)
+        s._value = self._value
+        return s
+
     def __init__(self, transition_type: str):
         super().__init__(transition_type)
         self._value = 0.0
@@ -150,6 +170,11 @@ class StateDouble(State):
 
 
 class StateColor(State):
+    def copy(self) -> "State":
+        s = StateColor(self._transition_type)
+        s._value = self._value.copy()
+        return s
+
     def __init__(self, transition_type: str):
         super().__init__(transition_type)
         self._value = ColorHSI(180.0, 0.0, 0.0)
@@ -225,6 +250,13 @@ class KeyFrame:
     def delete_from_parent_cue(self):
         """This method deletes the frame from the parent."""
         self._parent._frames.remove(self)
+
+    def copy(self, new_parent: "Cue") -> "KeyFrame":
+        kf = KeyFrame(new_parent)
+        kf.timestamp = self.timestamp
+        for s in self._states:
+            kf._states.append(s.copy())
+        return kf
 
 
 class Cue:
@@ -327,3 +359,14 @@ class Cue:
             return
         for f in self._frames:
             f._states.pop(target_index)
+
+    def copy(self) -> "Cue":
+        c = Cue()
+        c.end_action = self.end_action
+        for kf in self._frames:
+            c._frames.append(kf.copy(c))
+        for cd in self._channel_definitions:
+            c._channel_definitions.append((cd[0], cd[1]))
+        c.name = "{} (copy)".format(self.name)
+        c.restart_on_another_play_press = self.restart_on_another_play_press
+        return c

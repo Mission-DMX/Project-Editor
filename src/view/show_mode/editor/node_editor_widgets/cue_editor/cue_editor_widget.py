@@ -2,7 +2,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
     QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QAbstractItemView, \
-    QMessageBox, QDialog
+    QMessageBox, QDialog, QMenu
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import DataType, Filter
@@ -86,6 +86,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._cue_list_widget.verticalHeader().hide()
         self._cue_list_widget.itemSelectionChanged.connect(self._cue_list_selection_changed)
         self._cue_list_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self._cue_list_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._cue_list_widget.customContextMenuRequested.connect(self._table_context_popup)
         cue_list_and_current_settings_container_layout.addWidget(self._cue_list_widget)
         cue_settings_container = QWidget(parent=self._parent_widget)
         cue_settings_container_layout = QFormLayout()
@@ -212,18 +214,46 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def _set_zoom_label_text(self):
         self._zoom_label.setText(self._timeline_container.format_zoom())
 
+    def _table_context_popup(self, pos):
+        self._input_dialog = QMenu()
+        self._input_dialog.addAction(QIcon.fromTheme("edit-paste"), "Duplicate", self._duplicate_cue_clicked)
+        self._input_dialog.addAction(QIcon.fromTheme("go-up"), "Move Up", self._move_cue_up_clicked)
+        self._input_dialog.addAction(QIcon.fromTheme("go-down"), "Move Down", self._move_cue_down_clicked)
+        pos = self._cue_list_widget.mapToGlobal(pos)
+        self._input_dialog.popup(pos, None)
+
+    def _duplicate_cue_clicked(self):
+        selected_items = self._cue_list_widget.selectedItems()
+        processed_indices = []
+        for item in selected_items:
+            index = item.row()
+            if index in processed_indices:
+                continue
+            processed_indices.append(index)
+            new_cue = self._model.cues[index].copy()
+            self.add_cue(new_cue, new_cue.name)
+
+    def _move_cue_up_clicked(self):
+        pass
+
+    def _move_cue_down_clicked(self):
+        pass
+
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
         target_row = self._cue_list_widget.rowCount()
         self._cue_list_widget.setRowCount(target_row + 1)
         num_item = QTableWidgetItem(1)
         cue_name = "{} '{}'".format(target_row + 1, name)
         num_item.setText(cue_name)
+        # TODO connect name changing property here
         self._cue_list_widget.setItem(target_row, 0, num_item)
         duration_item = QTableWidgetItem(1)
         duration_item.setText(cue.duration_formatted)
+        duration_item.setFlags(duration_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         self._cue_list_widget.setItem(target_row, 1, duration_item)
         end_action_item = QTableWidgetItem(1)
         end_action_item.setText(str(cue.end_action))
+        end_action_item.setFlags(end_action_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         self._cue_list_widget.setItem(target_row, 2, end_action_item)
         if len(self._model.cues) > 0:
             for c in self._model.cues[0].channels:
