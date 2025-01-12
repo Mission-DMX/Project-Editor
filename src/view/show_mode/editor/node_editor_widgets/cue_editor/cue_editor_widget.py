@@ -102,7 +102,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
 
         self._zoom_label: QLabel | None = None
-        self.setup_zoom_panel(cue_settings_container, cue_settings_container_layout)
+        self._setup_zoom_panel(cue_settings_container, cue_settings_container_layout)
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
 
@@ -115,7 +115,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         cue_list_and_current_settings_container.setMaximumHeight(350)
         top_layout.addWidget(cue_list_and_current_settings_container)
 
-        self.configure_toolbar(top_layout)
+        self._configure_toolbar(top_layout)
 
         v_scroll_area = QScrollArea()
         v_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
@@ -168,7 +168,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             transmit_to_fish(self._filter_instance.scene.board_configuration, False)
             # TODO switch to scene of filter
 
-    def setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
+    def _setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
         zoom_panel = QWidget(cue_settings_container)
         zoom_panel_layout = QHBoxLayout()
         zoom_panel.setLayout(zoom_panel_layout)
@@ -182,7 +182,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         zoom_panel_layout.addWidget(decrease_zoom_button)
         cue_settings_container_layout.addRow("Zoom", zoom_panel)
 
-    def configure_toolbar(self, top_layout):
+    def _configure_toolbar(self, top_layout):
         toolbar = QToolBar(parent=self._parent_widget)
         toolbar_add_cue_action = QAction("Add Cue", self._parent_widget)
         toolbar_add_cue_action.setStatusTip("Add a new cue to the stack")
