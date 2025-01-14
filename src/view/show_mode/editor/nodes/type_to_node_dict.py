@@ -10,8 +10,10 @@ from view.show_mode.editor.nodes.impl.faders import *
 from view.show_mode.editor.nodes.impl.effects import *
 from view.show_mode.editor.nodes.impl.universenode import UniverseNode
 from view.show_mode.editor.nodes.impl.scripting import *
+from view.show_mode.editor.nodes.import_node import ImportNode
 
 type_to_node: dict[int, str] = {
+        FilterTypeEnumeration.VFILTER_IMPORT: ImportNode.nodeName,
         FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN: ColorBrightnessMixinNode.nodeName,
         FilterTypeEnumeration.VFILTER_POSITION_CONSTANT: PanTiltConstant.nodeName,
         FilterTypeEnumeration.VFILTER_CUES: CueListNode.nodeName,

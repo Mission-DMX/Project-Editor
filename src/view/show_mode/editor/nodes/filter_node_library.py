@@ -13,6 +13,7 @@ from view.show_mode.editor.nodes.impl.universenode import *
 from view.show_mode.editor.nodes.impl.debug import *
 from view.show_mode.editor.nodes.impl.time import *
 from view.show_mode.editor.nodes.impl.waves import *
+from view.show_mode.editor.nodes.import_node import ImportNode
 
 
 class FilterNodeLibrary(NodeLibrary):
@@ -33,7 +34,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_fader_nodes()
         self._register_effect_nodes()
         self._register_scripting_nodes()
-        self.addNodeType(ImportNode, [])
+        self.addNodeType(ImportNode, [("")])
 
     def _register_constants_nodes(self):
         """Registers all the constants nodes."""

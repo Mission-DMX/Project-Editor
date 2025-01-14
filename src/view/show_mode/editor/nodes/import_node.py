@@ -1,8 +1,10 @@
 from model.filter import FilterTypeEnumeration, Filter, DataType
-from view.show_mode.editor.nodes import FilterNode
+from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class ImportNode(FilterNode):
+
+    nodeName = "filter_import_node"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_IMPORT, name=name,
@@ -23,7 +25,7 @@ class ImportNode(FilterNode):
                     self.removeTerminal(port_name_to_remove)
                     self.filter.out_data_types.pop(port_name_to_remove)
                 for port_name_to_add, port_dt_to_add in target_ports - current_ports:
-                    self.addOutput(port_dt_to_add)
+                    self.addOutput(port_name_to_add)
                     self.filter.out_data_types[port_name_to_add] = port_dt_to_add
 
     def update_node_after_settings_changed(self):
