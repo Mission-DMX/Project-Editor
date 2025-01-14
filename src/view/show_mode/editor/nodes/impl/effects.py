@@ -48,6 +48,7 @@ class CueListNode(FilterNode):
                     channel_name = splitted_channel_dev[0]
                     channel_type = DataType.from_filter_str(splitted_channel_dev[1])
                     if channel_name not in self.outputs():
+                        # TODO also check data type compatibility here
                         self.addOutput(channel_name)
                     output_list.append(channel_name)
                     self.filter.out_data_types[channel_name] = channel_type

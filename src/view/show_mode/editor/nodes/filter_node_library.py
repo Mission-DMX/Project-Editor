@@ -33,6 +33,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_fader_nodes()
         self._register_effect_nodes()
         self._register_scripting_nodes()
+        self.addNodeType(ImportNode, [])
 
     def _register_constants_nodes(self):
         """Registers all the constants nodes."""

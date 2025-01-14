@@ -7,6 +7,8 @@ show file.
 
 from typing import TYPE_CHECKING
 
+from model.virtual_filters.import_vfilter import ImportVFilter
+
 if TYPE_CHECKING:
     from model import Scene
     from model.filter import VirtualFilter
@@ -59,6 +61,8 @@ def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_i
             return EightBitToFloatRange(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN:
             return ColorGlobalBrightnessMixinVFilter(scene, filter_id, pos=pos)
+        case FilterTypeEnumeration.VFILTER_IMPORT:
+            return ImportVFilter(scene, filter_id, pos=pos)
         case _:
             raise ValueError("The requested filter type {} is not yet implemented.".format(filter_type))
     pass
