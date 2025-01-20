@@ -10,6 +10,10 @@ if TYPE_CHECKING:
     from view.show_mode.editor.node_editor_widgets.cue_editor.cue_editor_widget import ExternalChannelDefinition
 
 
+from logging import getLogger
+logger = getLogger(__file__)
+
+
 class EndAction(Enum):
     HOLD = 0
     START_AGAIN = 1
@@ -225,6 +229,8 @@ class KeyFrame:
         for state_dev in parts[1].split('&'):
             state_dev_parts = state_dev.split('@')
             if i >= len(channel_data_types):
+                if i == 0 and len(channel_data_types) == 0:
+                    return None
                 raise ArgumentError("There are more elements in the key frame than channel data types")
             dt = channel_data_types[i][1]
             match dt:
@@ -308,7 +314,11 @@ class Cue:
         frame_definitions = primary_tokens[0].split("|")
         for frame_dev in frame_definitions:
             if frame_dev:
-                self._frames.append(KeyFrame.from_format_str(frame_dev, self._channel_definitions, self))
+                frame_pt = KeyFrame.from_format_str(frame_dev, self._channel_definitions, self)
+                if frame_pt is None:
+                    logger.error("Got empty Keyframe while parsing.")
+                else:
+                    self._frames.append(frame_pt)
         if len(primary_tokens) > 1:
             self.end_action = EndAction.from_format_str(primary_tokens[1])
         if len(primary_tokens) > 2:
