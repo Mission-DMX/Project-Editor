@@ -8,6 +8,7 @@ import pathlib
 import sys
 
 from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 
 from controller.cli.remote_control_port import RemoteCLIServer
 from controller.joystick.joystick_handling import JoystickHandler
@@ -37,6 +38,7 @@ def main():
     logging.basicConfig(level="INFO")
 
     app = QtWidgets.QApplication([])
+    app.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
     width, height = app.primaryScreen().size().toTuple()
     FinalGlobals.set_screen_width(width)
     FinalGlobals.set_screen_height(height)

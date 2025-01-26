@@ -10,7 +10,7 @@ from PySide6.QtGui import QOpenGLFunctions, QSurfaceFormat
 
 from OpenGL import GL
 
-from model import ColorHSI
+from model.color_hsi import ColorHSI
 
 _COLOR_SELECTION_SURFACE_FRAG_SHADER = QOpenGLShader(QOpenGLShader.Fragment)
 _COLOR_SELECTION_SURFACE_FRAG_SHADER.compileSourceFile(os.path.dirname(__file__) + "/color_selection_surface_frag_shader.glsl")
@@ -18,7 +18,7 @@ _SIMPLE_VERT_SHADER = QOpenGLShader(QOpenGLShader.Vertex)
 _SIMPLE_VERT_SHADER.compileSourceFile(os.path.dirname(__file__) + "/simple_vert_shader.glsl")
 
 
-class ColorPickerWidget(QOpenGLWidget, QOpenGLFunctions):
+class ColorPickerWidget(QOpenGLWidget):
 
     color_changed: Signal = Signal(ColorHSI)
     END_Z_CLIPPING_DISTANCE = 30
@@ -38,11 +38,16 @@ class ColorPickerWidget(QOpenGLWidget, QOpenGLFunctions):
             1, 1,
             1, 0
         ], dtype=np.float32)
-        self.context().aboutToBeDestroyed.connect(self._cleanup_gl)
 
     def initializeGL(self):
         super().initializeGL()
-        self.initializeOpenGLFunctions()
+        context = self.context()
+        if context is not None:
+            context.aboutToBeDestroyed.connect(self._cleanup_gl)
+        else:
+            raise Exception("There must be an OpenGL context by now.")
+        f = context.functions()
+        f.initializeOpenGLFunctions()
 
         format = QSurfaceFormat()
         format.setDepthBufferSize(24)
@@ -97,21 +102,25 @@ class ColorPickerWidget(QOpenGLWidget, QOpenGLFunctions):
         t = self.height()
         f = self.END_Z_CLIPPING_DISTANCE
         n = self.BEGIN_Z_CLIPPING_DISTANCE
-        projection_matrix = np.array([
-            1 / r, 0, 0, 0,
-            0, 1 / t, 0, 0,
-            0, 0, -2 / (f - n), -(f + n) / (f - n),
-            0, 0, 0, 1
-        ], dtype=np.float32)
-        self.glUniform1fv(vert_projection_matricies, projection_matrix.size, projection_matrix)
+        projection_matrix = [
+            1.0 / r, 0.0, 0.0, 0.0,
+            0.0, 1.0 / t, 0.0, 0.0,
+            0.0, 0.0, -2.0 / (f - n), -(f + n) / (f - n),
+            0.0, 0.0, 0.0, 1.0
+        ]
+        f = self.context().functions()
+        count = len(projection_matrix)
+        #f.glUniform1fv(vert_projection_matricies, count, projection_matrix)
+        self._gl_program.setUniformValueArray(vert_projection_matricies, projection_matrix, count)
 
     def paintGL(self):
         super().paintGL()
-        self.glClear(GL.GL_COLOR_BUFFER_BIT)
+        f = self.context().functions()
+        f.glClear(GL.GL_COLOR_BUFFER_BIT)
         # TODO theoretically we somehow need to call self.glUseProgram(self._gl_program) here.
         #  But how do we get the pointer from our program?
         self._gl_program.bind()
-        self.glDrawArrays(GL.GL_QUADS, 0, int(self._selection_diagram_coordinates.size / 2))
+        f.glDrawArrays(GL.GL_QUADS, 0, int(self._selection_diagram_coordinates.size / 2))
         self._gl_program.release()
 
     def resizeGL(self, w, h):
@@ -126,7 +135,8 @@ class ColorPickerWidget(QOpenGLWidget, QOpenGLFunctions):
         :param a: The alpha value of the new background color, ranging from 0 to 255
         """
         self.makeCurrent()
-        self.glClearColor(r / 255, g / 255, b / 255, a / 255)
+        f = self.context().functions()
+        f.glClearColor(r / 255, g / 255, b / 255, a / 255)
         self.update()
 
     @property
