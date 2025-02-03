@@ -187,7 +187,7 @@ class Scene:
             name_to_try = name_to_try + str(int(name_appendix) + 1)
         return name_to_try
 
-    def append_filter(self, f: Filter):
+    def append_filter(self, f: Filter, filter_page_index: int = -1):
         if f.scene and f.scene != self:
             raise Exception("This filter ({}) is already added to a scene other than this one".format(f.filter_id))
         if f.scene == self and f in self.filters:
@@ -195,6 +195,9 @@ class Scene:
         f.filter_id = self.ensure_name_uniqueness(f.filter_id)
         self._filters.append(f)
         self._filter_index[f.filter_id] = f
+        if filter_page_index != -1:
+            if filter_page_index < len(self.pages):
+                self._filter_pages[filter_page_index].filters.append(f)
 
     def remove_filter(self, f: Filter):
         self._filters.remove(f)

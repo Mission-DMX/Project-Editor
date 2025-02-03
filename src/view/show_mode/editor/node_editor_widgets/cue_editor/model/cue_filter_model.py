@@ -29,6 +29,8 @@ class CueFilterModel:
     def append_cue(self, c: Cue):
         if c not in self.cues:
             self.cues.append(c)
+        for channel in self.channels:
+            c.add_channel(channel[0], channel[1])
 
     def add_channel(self, name: str, dt: DataType):
         for cd in self.channels:

@@ -386,7 +386,7 @@ class TheaterSceneWizard(QWizard):
         pn.close()
         return True
 
-    def _link_output_filters(self, bankset_link_map, cue_link_map, output_map, scene):
+    def _link_output_filters(self, bankset_link_map, cue_link_map: dict[PatchingChannel | str, str], output_map, scene):
         for c in self._channels:
             for fd in c["fixtures"]:
                 fixture = fd[0]
@@ -401,14 +401,17 @@ class TheaterSceneWizard(QWizard):
                     output_filter_to_connect: str = output_channel_id[0]
                     filter_channel_to_connect: str = output_channel_id[1]
                     selected_source_map = bankset_link_map if c.get('desk-controlled') == "true" else cue_link_map
-                    scene.get_filter_by_id(output_filter_to_connect).channel_links[
-                        filter_channel_to_connect] = selected_source_map.get(patching_channel)
+                    # TODO this makes only sense in case of 8bit channels. We need to deal with color conversion
+                    #  filters as well
+                    selected_channel = selected_source_map.get(patching_channel)
+                    if selected_channel:
+                        scene.get_filter_by_id(output_filter_to_connect).channel_links[
+                            filter_channel_to_connect] = selected_channel
 
-    def _generate_cue_filter(self, scene: Scene) -> dict[PatchingChannel, str]:
+    def _generate_cue_filter(self, scene: Scene) -> dict[PatchingChannel | str, str]:
         time_filter = Filter(filter_id="Time_Input", filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT,
                              scene=scene, pos=(-10, 0))
-        scene.append_filter(time_filter)
-        scene.pages[0].filters.append(time_filter)
+        scene.append_filter(time_filter, filter_page_index=0)
 
         cue_filter = construct_virtual_filter_instance(
             scene=scene,
@@ -418,14 +421,37 @@ class TheaterSceneWizard(QWizard):
         )
         cue_filter.channel_links['time'] = time_filter.filter_id + ":value"
         cue_model = CueFilterModel()
-        link_map: dict[PatchingChannel, str] = dict()
+        link_map: dict[PatchingChannel | str, str] = dict()
         for c in self._channels:
             if c.get("desk-controlled") != "true":
-                cue_model.add_channel(c.get("name"), DataType.from_filter_str(c["data-type"]))
-                # TODO query associated channels here and insert them into the link map like this:
-                #  link_map[associated_channel] = "SceneCueFilter:{}".format(c.get("name"))
-        scene.append_filter(cue_filter)
-        scene.pages[0].filters.append(cue_filter)
+                associated_channel = c.get("name").replace(" ", "_").replace(":", "")
+                fixture_channels: list[PatchingChannel | str] = []
+                associated_fixtures = c.get("fixtures") or []
+                match c.get("data-type"):
+                    case DataType.DT_8_BIT:
+                        # TODO find fixture channel closest associated with name
+                        pass
+                    case DataType.DT_16_BIT:
+                        # TODO find 16bit to 8 bit filter with closest association
+                        for f in associated_fixtures:
+                            for p in f[0].position_channels:
+                                fixture_channels.append(p)
+                        pass
+                    case DataType.DT_DOUBLE | DataType.DT_BOOL:
+                        # TODO figure out what to do in this case
+                        pass
+                    case DataType.DT_COLOR:
+                        for f in associated_fixtures:
+                            if f[1] == ColorSupport.NO_COLOR_SUPPORT:
+                                continue
+                            proto = f[0].red_segments + f[0].green_segments + f[0].blue_segments
+                            for p in proto:
+                                fixture_channels.append(p)
+                        pass
+                cue_model.add_channel(associated_channel, DataType.from_filter_str(c["data-type"]))
+                for pc in fixture_channels:
+                    link_map[pc] = "{}:{}".format(cue_filter.filter_id, associated_channel)
+        scene.append_filter(cue_filter, filter_page_index=0)
         for cue_request_index in range(self._cues_page_cue_list_widget.count()):
             c = Cue()
             c.name = self._cues_page_cue_list_widget.item(cue_request_index).text()

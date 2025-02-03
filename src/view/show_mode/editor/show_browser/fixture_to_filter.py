@@ -196,6 +196,13 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
             added_depth = max(added_depth, 2 * _additional_filter_depth)
             fp.parent_scene.append_filter(brightness_mixin_filter)
             color_input_filter.channel_links['value'] = brightness_mixin_filter.filter_id + ":out"
+            if output_map is not None:
+                update_list = []
+                for k, v in output_map.items():
+                    if v == color_input_filter.filter_id + ":value":
+                        update_list.append((k, brightness_mixin_filter.filter_id + ":color_in"))
+                for k, v in update_list:
+                    output_map[k] = v
             already_added_filters.append(brightness_mixin_filter)
 
     return added_depth

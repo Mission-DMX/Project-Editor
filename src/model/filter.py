@@ -36,6 +36,8 @@ class DataType(IntFlag):
 
     @staticmethod
     def from_filter_str(type_definition_string: str):
+        if isinstance(type_definition_string, DataType):
+            return type_definition_string
         match type_definition_string:
             case "8bit":
                 return DataType.DT_8_BIT
