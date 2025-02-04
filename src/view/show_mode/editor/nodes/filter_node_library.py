@@ -4,6 +4,7 @@ from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
 from view.show_mode.editor.nodes.impl.adapters import *
 from view.show_mode.editor.nodes.impl.arithmetics import *
+from view.show_mode.editor.nodes.impl.color_manip_nodes import *
 from view.show_mode.editor.nodes.impl.constants import *
 from view.show_mode.editor.nodes.impl.effects import *
 from view.show_mode.editor.nodes.impl.faders import *
@@ -30,6 +31,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_arithmetic_nodes()
         self._register_trigonometric_nodes()
         self._register_wave_nodes()
+        self._register_color_manip_nodes()
         self._register_time_nodes()
         self._register_fader_nodes()
         self._register_effect_nodes()
@@ -133,3 +135,6 @@ class FilterNodeLibrary(NodeLibrary):
 
     def _register_scripting_nodes(self):
         self.addNodeType(LuaFilterNode, [('Script',)])
+
+    def _register_color_manip_nodes(self):
+        self.addNodeType(ColorMixerNode, [('Color Manip',)])
