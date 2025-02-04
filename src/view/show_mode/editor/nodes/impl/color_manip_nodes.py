@@ -14,7 +14,12 @@ class ColorMixerNode(FilterNode):
 
     def setup_input_terminals(self):
         required_inputs = set()
-        for i in range(int(self.filter.filter_configurations.get("input_count") or "0")):
+        try:
+            requested_input_count = int(self.filter.filter_configurations.get("input_count") or "0")
+        except ValueError:
+            requested_input_count = 0
+            self.filter.filter_configurations["input_count"] = "0"
+        for i in range(requested_input_count):
             required_inputs.add(str(i))
         existing_inputs = set()
         for k in self.inputs().keys():
