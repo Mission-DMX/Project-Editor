@@ -22,6 +22,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
 
+from logging import getLogger
+logger = getLogger(__file__)
+
 
 class ExternalChannelDefinition:
     """In case we're in preview mode we need to instantiate filters for the preview based on this information.
@@ -145,6 +148,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
         if self._filter_instance:
             self._filter_instance.associated_editor_widget = self
+        else:
+            logger.error("Cue editor widget received invalid filter: {}.".format(f))
 
     def _link_bankset(self):
         self._broadcaster = Broadcaster()
@@ -381,8 +386,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
                                  "Unable to add the requested channel {}. Channel names must be unique within "
                                  "this filter.<br/>Detailed message: {}".format(channel_name, str(e)))
             return
-        if self._filter_instance.in_preview_mode:
-            self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
+        if self._filter_instance is not None:
+            if self._filter_instance.in_preview_mode:
+                self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
         if not is_part_of_mass_update:

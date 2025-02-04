@@ -306,6 +306,8 @@ class Cue:
         end_handling_str = self.end_action.get_filter_format_str()
         restart_beh_str = "restart" if self.restart_on_another_play_press else "do_nothing"
         frames_str_list = [f.format_filter_str() for f in self._frames]
+        if self.name is None or self.name == "":
+            self.name = "No Name"
         return "{}#{}#{}#{}".format("|".join(frames_str_list), end_handling_str, restart_beh_str,
                                  self.name.replace('#', ''))
 
