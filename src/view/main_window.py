@@ -109,6 +109,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._about_window = None
         self._settings_dialog = None
 
+        self.setWindowIcon(QPixmap("resources/logo.png"))
+
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
             if self._widgets.currentIndex() == 3:
