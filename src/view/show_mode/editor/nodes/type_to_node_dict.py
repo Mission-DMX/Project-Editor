@@ -1,5 +1,5 @@
 """Module containing and exporting all available filter nodes"""
-from view.show_mode.editor.nodes.impl.color_manip_nodes import ColorMixerNode
+from view.show_mode.editor.nodes.impl.color_manip_nodes import *
 from view.show_mode.editor.nodes.impl.constants import *
 from view.show_mode.editor.nodes.impl.debug import *
 from view.show_mode.editor.nodes.impl.adapters import *
@@ -14,6 +14,7 @@ from view.show_mode.editor.nodes.impl.scripting import *
 from view.show_mode.editor.nodes.import_node import ImportNode
 
 type_to_node: dict[int, str] = {
+        FilterTypeEnumeration.VFILTER_COLOR_MIXER: ColorMixerVFilterNode.nodeName,
         FilterTypeEnumeration.VFILTER_IMPORT: ImportNode.nodeName,
         FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN: ColorBrightnessMixinNode.nodeName,
         FilterTypeEnumeration.VFILTER_POSITION_CONSTANT: PanTiltConstant.nodeName,
@@ -81,5 +82,7 @@ type_to_node: dict[int, str] = {
         FilterTypeEnumeration.FILTER_ADAPTER_8BIT_TO_16BIT: Map8BitTo16Bit.nodeName,
         FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE: Adapter16BitToRangeFloat.nodeName,
         FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE: Adapter8BitToRangeFloat.nodeName,
-        FilterTypeEnumeration.FILTER_COLOR_MIXER: ColorMixerNode.nodeName,
+        FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV: ColorMixerHSVNode.nodeName,
+        FilterTypeEnumeration.FILTER_COLOR_MIXER_ADDITIVE_RGB: ColorMixerAdditiveRGBNode.nodeName,
+        FilterTypeEnumeration.FILTER_COLOR_MIXER_NORMATVE_RGB: ColorMixerNormativeRGBNode.nodeName,
     }

@@ -137,4 +137,4 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(LuaFilterNode, [('Script',)])
 
     def _register_color_manip_nodes(self):
-        self.addNodeType(ColorMixerNode, [('Color Manip',)])
+        self.addNodeType(ColorMixerVFilterNode, [('Color Manip',)])

@@ -8,7 +8,7 @@ class ImportVFilter(VirtualFilter):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_IMPORT, pos=pos)
         if "target" not in self.filter_configurations.keys():
             self.filter_configurations["target"] = ""
-        if "target" not in self.filter_configurations.keys():
+        if "rename_dict" not in self.filter_configurations.keys():
             self.filter_configurations["rename_dict"] = ""
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:

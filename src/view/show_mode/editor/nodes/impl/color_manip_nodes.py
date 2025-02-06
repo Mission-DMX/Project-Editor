@@ -1,11 +1,12 @@
+from controller.utils.yaml import yaml_load
 from model.filter import FilterTypeEnumeration, DataType
 from view.show_mode.editor.nodes import FilterNode
 
 
 class ColorMixerNode(FilterNode):
-    nodeName = "Color Mixer"
-    def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER, name=name)
+
+    def __init__(self, model, name, filter_type):
+        super().__init__(model=model, filter_type=filter_type, name=name)
         self.addOutput("value")
         self.filter.out_data_types["value"] = DataType.DT_COLOR
         if not self.filter.filter_configurations.get("input_count"):
@@ -35,3 +36,33 @@ class ColorMixerNode(FilterNode):
 
     def update_node_after_settings_changed(self):
         self.setup_input_terminals()
+
+
+class ColorMixerHSVNode(ColorMixerNode):
+
+    nodeName = "Color Mixer HSV"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
+
+
+class ColorMixerAdditiveRGBNode(ColorMixerNode):
+    nodeName = "Color Mixer Additive RGB"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
+
+
+class ColorMixerNormativeRGBNode(ColorMixerNode):
+    nodeName = "Color Mixer Normative RGB"
+
+    def __init__(self, model, name):
+        super().__init__(model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
+
+
+class ColorMixerVFilterNode(ColorMixerNode):
+    nodeName = "Color Mixer"
+    help_data = yaml_load("resources/data/color_mixing.yml")
+
+    def __init__(self, model, name):
+        super().__init__(model, name, filter_type=FilterTypeEnumeration.VFILTER_COLOR_MIXER)
