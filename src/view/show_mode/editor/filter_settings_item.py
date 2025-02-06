@@ -11,6 +11,7 @@ from model import Universe
 from model.filter import FilterTypeEnumeration, Filter
 from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
+from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
@@ -105,6 +106,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return EffectsStackFilterConfigWidget(filter_)
     elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_IMPORT):
         return ImportVFilterSettingsWidget(filter_)
+    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
+        return ColorMixingSetupWidget(filter_)
     else:
         return None
 

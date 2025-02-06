@@ -1,4 +1,3 @@
-from controller.utils.yaml import yaml_load
 from model.filter import FilterTypeEnumeration, DataType
 from view.show_mode.editor.nodes import FilterNode
 
@@ -62,7 +61,6 @@ class ColorMixerNormativeRGBNode(ColorMixerNode):
 
 class ColorMixerVFilterNode(ColorMixerNode):
     nodeName = "Color Mixer"
-    help_data = yaml_load("resources/data/color_mixing.yml")
 
     def __init__(self, model, name):
         super().__init__(model, name, filter_type=FilterTypeEnumeration.VFILTER_COLOR_MIXER)
