@@ -50,10 +50,14 @@ class FilterNodeLibrary(NodeLibrary):
     def _register_debug_nodes(self):
         """Registers all the debugs nodes."""
         # Add Node -> Debug sub menu
-        self.addNodeType(Debug8BitNode, [('Debug',)])
-        self.addNodeType(Debug16BitNode, [('Debug',)])
-        self.addNodeType(DebugFloatNode, [('Debug',)])
-        self.addNodeType(DebugColorNode, [('Debug',)])
+        self.addNodeType(Debug8BitNode, [('Debug', 'Fish-Log',)])
+        self.addNodeType(Debug16BitNode, [('Debug', 'Fish-Log',)])
+        self.addNodeType(DebugFloatNode, [('Debug', 'Fish-Log',)])
+        self.addNodeType(DebugColorNode, [('Debug', 'Fish-Log',)])
+        self.addNodeType(DebugRemote8BitNode, [('Debug',)])
+        self.addNodeType(DebugRemote16BitNode, [('Debug',)])
+        self.addNodeType(DebugRemoteFloatNode, [('Debug',)])
+        self.addNodeType(DebugRemoteColorNode, [('Debug',)])
 
     def _register_adapters_nodes(self):
         """Registers all the constants nodes."""

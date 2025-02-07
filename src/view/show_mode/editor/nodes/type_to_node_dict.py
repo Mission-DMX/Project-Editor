@@ -88,4 +88,8 @@ type_to_node: dict[int, str] = {
         FilterTypeEnumeration.FILTER_SUM_8BIT: Sum8BitNode.nodeName,
         FilterTypeEnumeration.FILTER_SUM_16BIT: Sum16BitNode.nodeName,
         FilterTypeEnumeration.FILTER_SUM_FLOAT: SumFloatNode.nodeName,
+        FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT: DebugRemote8BitNode.nodeName,
+        FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT: DebugRemote16BitNode.nodeName,
+        FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT: DebugRemoteFloatNode.nodeName,
+        FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL: DebugRemoteColorNode.nodeName,
     }
