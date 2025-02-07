@@ -85,4 +85,7 @@ type_to_node: dict[int, str] = {
         FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV: ColorMixerHSVNode.nodeName,
         FilterTypeEnumeration.FILTER_COLOR_MIXER_ADDITIVE_RGB: ColorMixerAdditiveRGBNode.nodeName,
         FilterTypeEnumeration.FILTER_COLOR_MIXER_NORMATVE_RGB: ColorMixerNormativeRGBNode.nodeName,
+        FilterTypeEnumeration.FILTER_SUM_8BIT: Sum8BitNode.nodeName,
+        FilterTypeEnumeration.FILTER_SUM_16BIT: Sum16BitNode.nodeName,
+        FilterTypeEnumeration.FILTER_SUM_FLOAT: SumFloatNode.nodeName,
     }

@@ -88,6 +88,9 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ArithmeticExponentialNode, [('Arithmetics',)])
         self.addNodeType(ArithmeticMinimumNode, [('Arithmetics',)])
         self.addNodeType(ArithmeticMaximumNode, [('Arithmetics',)])
+        self.addNodeType(Sum8BitNode, [('Arithmetics',)])
+        self.addNodeType(Sum16BitNode, [('Arithmetics',)])
+        self.addNodeType(SumFloatNode, [('Arithmetics',)])
 
     def _register_trigonometric_nodes(self):
         self.addNodeType(TrigonometricSineNode, [('Trigonometrics',)])

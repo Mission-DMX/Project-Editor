@@ -2,6 +2,7 @@
 """Basic arithmetic filter nodes"""
 from model import DataType
 from model.filter import FilterTypeEnumeration
+from view.show_mode.editor.nodes.base.aggregating_filter_node import AggregatingFilterNode
 
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -142,3 +143,24 @@ class ArithmeticMaximumNode(FilterNode):
         self.filter.default_values['param1'] = '1'
         self.filter.default_values['param2'] = '1'
         self.filter._configuration_supported = False
+
+
+class Sum8BitNode(AggregatingFilterNode):
+    nodeName = "8Bit Sum"
+
+    def __init__(self, model, name):
+        super().__init__(DataType.DT_8_BIT, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_8BIT)
+
+
+class Sum16BitNode(AggregatingFilterNode):
+    nodeName = "16Bit Sum"
+
+    def __init__(self, model, name):
+        super().__init__(DataType.DT_16_BIT, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_16BIT)
+
+
+class SumFloatNode(AggregatingFilterNode):
+    nodeName = "Float Sum"
+
+    def __init__(self, model, name):
+        super().__init__(DataType.DT_DOUBLE, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_FLOAT)
