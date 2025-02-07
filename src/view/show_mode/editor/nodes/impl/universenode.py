@@ -49,6 +49,7 @@ class UniverseNode(FilterNode):
         except:
             self.filter.filter_configurations["input_1"] = "0"
             self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
+            self.filter.default_values["input_1"] = "0"
             self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
 
     def addInput(self, name="input", **args):
@@ -58,7 +59,9 @@ class UniverseNode(FilterNode):
             return
         input_channel = f"{name}_{next_input + 1}"
         self.filter.filter_configurations[input_channel] = str(next_input)
-        self.filter.in_data_types[self.nextTerminalName(input_channel)] = DataType.DT_8_BIT
+        in_term_name = self.nextTerminalName(input_channel)
+        self.filter.in_data_types[in_term_name] = DataType.DT_8_BIT
+        self.filter.default_values[in_term_name] = "0"
         # term =(
         super().addInput(input_channel, **args)
         # Todo: good idea to rename the device (and maybe the channel) to the terminal,
