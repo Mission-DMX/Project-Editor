@@ -20,7 +20,6 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 
 from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .model.cue_filter_model import CueFilterModel
-from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
