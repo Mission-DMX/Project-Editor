@@ -1,9 +1,8 @@
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout
 
-from Style import Style
 from model.control_desk import *
-from controller.network import NetworkManager
+from Style import Style
 from view.show_mode.node_editor_widgets import ColumnSelect
 
 if __name__ == "__main__":
