@@ -7,7 +7,6 @@ from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidg
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \
     PanTiltConstantContentWidget
 
-
 # from view.show_mode.editor.nodes import FilterNode
 
 

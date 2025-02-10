@@ -2,8 +2,8 @@
 """Widget of a Manufacturer"""
 from PySide6 import QtWidgets
 
-from Style import Style
 from model.ofl.manufacture import Manufacture
+from Style import Style
 
 
 class ManufacturerItem(QtWidgets.QPushButton):

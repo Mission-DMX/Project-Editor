@@ -2,8 +2,8 @@
 """Widget of a Fixture"""
 from PySide6 import QtWidgets
 
-from Style import Style
 from model.ofl.fixture import Fixture
+from Style import Style
 
 
 class FixtureItem(QtWidgets.QPushButton):

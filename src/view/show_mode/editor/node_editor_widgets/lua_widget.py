@@ -2,8 +2,9 @@
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QListWidget, QTextEdit, QToolBar, QVBoxLayout, QWidget
 
 from model import DataType
-from .node_editor_widget import NodeEditorFilterConfigWidget
+
 from ..show_browser.annotated_item import AnnotatedListWidgetItem
+from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):

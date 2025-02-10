@@ -7,11 +7,11 @@ import zipfile
 import requests
 from PySide6 import QtWidgets
 
-from Style import Style
 from layouts.flow_layout import FlowLayout
 from model.broadcaster import Broadcaster
 from model.ofl.fixture import Fixture
 from model.ofl.manufacture import Manufacture, generate_manufacturers
+from Style import Style
 from view.dialogs.patching_dialog import PatchingDialog
 from view.patch_view.patching.fixture_item import FixtureItem
 from view.patch_view.patching.manufacturer_item import ManufacturerItem

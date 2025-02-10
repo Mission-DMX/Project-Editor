@@ -10,6 +10,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QCompleter
 
 from model.broadcaster import Broadcaster
+
 from .logging_item_widget import LoggingItemWidget
 from .search import Operation, Search
 

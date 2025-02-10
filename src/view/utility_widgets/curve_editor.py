@@ -6,10 +6,10 @@ from math import pi
 from typing import TYPE_CHECKING
 
 import numpy
+from pyqtgraph import PlotWidget, mkPen
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (QCheckBox, QDoubleSpinBox, QFormLayout, QLabel, QRadioButton, QTabWidget, QVBoxLayout,
                                QWidget)
-from pyqtgraph import PlotWidget, mkPen
 
 from model.curve_configuration import BaseCurve, CurveConfiguration
 

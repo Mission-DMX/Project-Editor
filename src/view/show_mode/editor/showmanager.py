@@ -13,6 +13,7 @@ from model.board_configuration import BoardConfiguration, Broadcaster, Scene
 from model.scene import FilterPage
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
+
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
 from .editor_tab_widgets.scene_ui_page_editor_widget import SceneUIPageEditorWidget

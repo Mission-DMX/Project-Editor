@@ -1,10 +1,11 @@
 # encoding=utf-8
 """Extended Flowchart to handle creating nodes from file"""
-from PySide6.QtGui import QBrush, QColor
 from pyqtgraph.flowchart import Flowchart
+from PySide6.QtGui import QBrush, QColor
 
 from model import Filter, Scene
 from model.scene import FilterPage
+
 from .nodes.base.filternode import FilterNode
 
 

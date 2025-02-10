@@ -6,8 +6,8 @@ from typing import List
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (QInputDialog, QMenu, QMessageBox, QTabWidget, QToolBar, QTreeWidget,
-                               QTreeWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QInputDialog, QMenu, QMessageBox, QTabWidget, QToolBar, QTreeWidget, QTreeWidgetItem,
+                               QVBoxLayout, QWidget)
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import BoardConfiguration, Scene, UIPage
@@ -16,9 +16,10 @@ from model.ofl.fixture import UsedFixture
 from model.scene import FilterPage
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
+
+from ..editing_utils import add_scene_to_show
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
-from ..editing_utils import add_scene_to_show
 
 
 class ShowBrowser:

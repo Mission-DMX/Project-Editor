@@ -2,8 +2,8 @@
 """Widget of a Mode"""
 from PySide6 import QtWidgets
 
-from Style import Style
 from model.ofl.fixture import Mode
+from Style import Style
 
 
 class ModeItem(QtWidgets.QPushButton):

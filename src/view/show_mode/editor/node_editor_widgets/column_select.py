@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QWidget
 
 from model import Filter
 from view.utility_widgets.fader_column_selector import FaderColumnSelectorWidget
+
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 

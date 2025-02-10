@@ -1,7 +1,7 @@
 # coding=utf-8
+from pyqtgraph.flowchart.Node import NodeGraphicsItem
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter
-from pyqtgraph.flowchart.Node import NodeGraphicsItem
 
 from model import DataType
 

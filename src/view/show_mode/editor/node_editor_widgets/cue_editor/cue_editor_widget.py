@@ -17,6 +17,8 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog i
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
+
+from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .model.cue_filter_model import CueFilterModel
 from ..node_editor_widget import NodeEditorFilterConfigWidget
 
