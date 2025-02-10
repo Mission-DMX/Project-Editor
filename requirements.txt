@@ -1,7 +1,7 @@
 # Base dependencies
 black
 flake8
-PySide6==6.6.3.1
+PySide6
 pyqtgraph>=0.13.6
 protobuf
 xmlschema
@@ -18,5 +18,5 @@ qimage2ndarray>=1.10
 aiortc>=1.5
 qasync>=0.26
 onnxruntime-gpu>=1.16.1
-onnxruntime-openvino
+#onnxruntime-openvino
 pyjoystick
