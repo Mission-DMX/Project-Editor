@@ -4,26 +4,24 @@
 
 from typing import List
 
-from PySide6.QtCore import Qt, QPoint
-from PySide6.QtGui import QIcon, QAction
-from PySide6.QtWidgets import QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget, QVBoxLayout, QToolBar, QMenu, \
-    QInputDialog, QDialogButtonBox, QMessageBox
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (QInputDialog, QMenu, QMessageBox, QTabWidget, QToolBar, QTreeWidget,
+                               QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from controller.file.transmitting_to_fish import transmit_to_fish
-from model import Scene, BoardConfiguration, UIPage
+from model import BoardConfiguration, Scene, UIPage
 from model.control_desk import BankSet
-from model.scene import FilterPage
 from model.ofl.fixture import UsedFixture
-
+from model.scene import FilterPage
+from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
+from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
-from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from ..editing_utils import add_scene_to_show
-from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 
 
 class ShowBrowser:
-
     """This class provides a navigation bar / browser for the complete show."""
 
     _filter_icon = QIcon("resources/icons/filter.svg")
@@ -142,6 +140,7 @@ class ShowBrowser:
         if self._recently_created_scene == s:
             return
         self._recently_created_scene = s
+
         def add_filter_page(parent_item: AnnotatedTreeWidgetItem, fp: FilterPage):
             filter_page_item = AnnotatedTreeWidgetItem(parent_item)
             filter_page_item.setText(0, fp.name)
@@ -149,6 +148,7 @@ class ShowBrowser:
             filter_page_item.annotated_data = fp
             for fp_child in fp.child_pages:
                 add_filter_page(filter_page_item, fp_child)
+
         item = AnnotatedTreeWidgetItem(self._scene_browsing_tree)
         item.setText(0, str(s.scene_id))
         item.setText(1, str(s.human_readable_name))
@@ -236,7 +236,8 @@ class ShowBrowser:
         self._input_dialog.rejected.connect(lambda: self._input_dialog.close())
         self._input_dialog.setIcon(QMessageBox.Icon.Warning)
         self._input_dialog.setWindowTitle("Are you sure?")
-        self._input_dialog.setText("Do you really want to delete the scene {}?".format(", ".join(["'{}'".format(item.text(1)) for item in items])))
+        self._input_dialog.setText("Do you really want to delete the scene {}?".format(
+            ", ".join(["'{}'".format(item.text(1)) for item in items])))
         self._input_dialog.show()
 
     def _delete_scenes_from_context_menu_accepted(self, items: List[AnnotatedTreeWidgetItem]):
@@ -258,6 +259,7 @@ class ShowBrowser:
             else:
                 scene.name = text
             c._refresh_scene_browser()
+
         for si in items:
             if isinstance(si, AnnotatedTreeWidgetItem):
                 if isinstance(si.annotated_data, Scene):
@@ -331,6 +333,7 @@ class ShowBrowser:
                 scene.child_pages.append(fp)
                 fp.name = text
             c._refresh_scene_browser()
+
         for item in selected_items:
             if not isinstance(item, AnnotatedTreeWidgetItem):
                 continue

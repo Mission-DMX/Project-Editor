@@ -3,9 +3,9 @@
 with a new value or predefined one in fish"""
 import sys
 
-from PySide6.QtWidgets import (QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QDoubleSpinBox)
+from PySide6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
-from model import UIWidget, UIPage, Filter
+from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 

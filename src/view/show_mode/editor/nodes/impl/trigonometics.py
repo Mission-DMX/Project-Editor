@@ -2,12 +2,12 @@
 """Trigonometric filter nodes"""
 from model import DataType
 from model.filter import FilterTypeEnumeration
-
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class TrigonometricNode(FilterNode):
     """Basic node class for sin, cos and tan"""
+
     def __init__(self, model, filter_type: int, name: str):
         super().__init__(model, filter_type, name, terminals={
             'value_in': {'io': 'in'},

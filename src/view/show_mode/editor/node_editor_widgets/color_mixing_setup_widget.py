@@ -1,5 +1,6 @@
-from PySide6.QtGui import QPaintEvent, QPainter, QColor, QBrush
-from PySide6.QtWidgets import QWidget, QSpinBox, QComboBox, QVBoxLayout, QHBoxLayout
+# coding=utf-8
+from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QSpinBox, QVBoxLayout, QWidget
 
 from controller.utils.yaml import yaml_load
 from model import Filter
@@ -9,8 +10,8 @@ from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidg
 class _ColorHelpWidget(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent=parent)
-        self.setMinimumWidth(30*4)
-        self.setMinimumHeight(25*4)
+        self.setMinimumWidth(30 * 4)
+        self.setMinimumHeight(25 * 4)
         self._data: list[dict] = []
 
     def set_help_content(self, d: list[dict]):
@@ -34,8 +35,8 @@ class _ColorHelpWidget(QWidget):
             for cinput in example.get("inputs"):
                 if x > 0:
                     painter.drawText(x - 6, y + 17, "+")
-                painter.drawRect(x+4, y+4, 17, 17)
-                painter.fillRect(x+5, y+5, 15, 15, QColor.fromRgb(cinput["r"], cinput["g"], cinput["b"]))
+                painter.drawRect(x + 4, y + 4, 17, 17)
+                painter.fillRect(x + 5, y + 5, 15, 15, QColor.fromRgb(cinput["r"], cinput["g"], cinput["b"]))
                 x += 30
             painter.drawText(x - 6, y + 17, "=")
             painter.drawRect(x + 4, y + 4, 17, 17)

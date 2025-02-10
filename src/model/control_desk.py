@@ -4,9 +4,9 @@ from abc import ABC, abstractmethod
 from uuid import uuid4
 
 import proto.Console_pb2
-from model.color_hsi import ColorHSI
-from model.broadcaster import Broadcaster
 from controller.network import NetworkManager
+from model.broadcaster import Broadcaster
+from model.color_hsi import ColorHSI
 
 
 def _generate_unique_id() -> str:

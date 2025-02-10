@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt
 
 from model import ColorHSI
 from model.broadcaster import Broadcaster
-from model.control_desk import ColorDeskColumn, BankSet
+from model.control_desk import BankSet, ColorDeskColumn
 from view.dialogs.temperature_dialog import TemperatureDialog
 
 

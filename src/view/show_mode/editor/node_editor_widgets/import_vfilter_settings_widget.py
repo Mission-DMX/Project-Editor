@@ -1,6 +1,7 @@
+# coding=utf-8
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QHBoxLayout, QTableWidget, QTableWidgetItem, \
-    QCheckBox
+from PySide6.QtWidgets import (QCheckBox, QHBoxLayout, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem,
+                               QWidget)
 
 from model import Filter
 from model.scene import FilterPage
@@ -138,7 +139,8 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             self._enabled_cb_dict[channel_name] = cb
             self._rename_table_widget.setCellWidget(i, 0, cb)
             orig_name_item = QTableWidgetItem(channel_name)
-            orig_name_item.setFlags(orig_name_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+            orig_name_item.setFlags(
+                orig_name_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             self._rename_table_widget.setItem(i, 1, orig_name_item)
             new_name_item = QTableWidgetItem(new_name if new_name is not None and new_name != "" else channel_name)
             new_name_item.setFlags(new_name_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)

@@ -1,13 +1,12 @@
+# coding=utf-8
 from logging import getLogger
 from typing import TYPE_CHECKING
 
 from controller.autotrack.LightController import LightController
 
-
 if TYPE_CHECKING:
-    from view.show_mode.editor.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
     from model.virtual_filters import AutoTrackerFilter
-
+    from view.show_mode.editor.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
 
 logger = getLogger(__file__)
 
@@ -43,7 +42,8 @@ class VFilterLightController(LightController):
         self._request_update()
 
     def set_color(self, color):
-        logger.error("Someone wanted to set the moving head color to '{}'. This however is not supported.".format(color))
+        logger.error(
+            "Someone wanted to set the moving head color to '{}'. This however is not supported.".format(color))
         pass
 
     def _request_update(self):

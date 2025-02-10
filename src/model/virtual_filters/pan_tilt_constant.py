@@ -1,8 +1,9 @@
+# coding=utf-8
 from PySide6.QtCore import QTimer
 
 from controller.joystick.joystick_enum import JoystickList
-from model import Scene, Broadcaster
-from model.filter import VirtualFilter, Filter, DataType, FilterTypeEnumeration
+from model import Broadcaster, Scene
+from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 
 
 class PanTiltConstantFilter(VirtualFilter):
@@ -16,8 +17,8 @@ class PanTiltConstantFilter(VirtualFilter):
         self._tilt_delta = 0.0
         self._joystick = JoystickList.NoJoystick
         self._broadcaster = Broadcaster()
-        self._broadcaster.joystick_selected_event.connect(lambda joystick: self.set_joystick(JoystickList.NoJoystick if joystick == self._joystick else self._joystick))
-
+        self._broadcaster.joystick_selected_event.connect(lambda joystick: self.set_joystick(
+            JoystickList.NoJoystick if joystick == self._joystick else self._joystick))
 
         # Todo: maybe use timer in broadcaster
         self._timer = QTimer()
@@ -50,7 +51,8 @@ class PanTiltConstantFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
             scene=self.scene
         )
-        filter._initial_parameters = {'value': str(int((self.tilt if tilt else self.pan) * 65535))} # Todo: inverse Tilt?
+        filter._initial_parameters = {
+            'value': str(int((self.tilt if tilt else self.pan) * 65535))}  # Todo: inverse Tilt?
         filter._filter_configurations = {}
         filter._in_data_types = {}
         filter._out_data_types = {'value': DataType.DT_16_BIT}
@@ -114,9 +116,9 @@ class PanTiltConstantFilter(VirtualFilter):
         if self._joystick != JoystickList.NoJoystick:
             if joystick == self._joystick or self._joystick == JoystickList.EveryJoystick:
                 if tilt:
-                        self._tilt_delta = delta
+                    self._tilt_delta = delta
                 else:
-                        self._pan_delta = delta
+                    self._pan_delta = delta
 
     @property
     def sixteen_bit_available(self):

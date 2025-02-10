@@ -3,7 +3,7 @@
 implementation of flow Layout for Python 3.12
 from https://doc.qt.io/qtforpython-6/examples/example_widgets_layouts_flowlayout.html
 """
-from PySide6.QtCore import QMargins, QRect, QSize, Qt, QPoint
+from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
 from PySide6.QtWidgets import QLayout, QSizePolicy
 
 

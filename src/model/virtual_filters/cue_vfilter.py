@@ -1,14 +1,15 @@
 # coding=utf-8
 """This file contains the switching vFilter implementation for the cue filter."""
-from model import Filter, Scene
-from model.filter import VirtualFilter, FilterTypeEnumeration, DataType
-
 from typing import TYPE_CHECKING
+
+from model import Filter, Scene
+from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
+
 if TYPE_CHECKING:
     from view.show_mode.editor.node_editor_widgets import CueEditor
 
-
 from logging import getLogger
+
 logger = getLogger(__file__)
 
 
@@ -40,7 +41,8 @@ class CueFilter(VirtualFilter):
             for channel in self.associated_editor_widget.channels:
                 fader_filter_id = "{}__{}".format(self.filter_id, channel.name)
                 if channel.fader is None:
-                    logger.error("The preview is enabled but no logger was assigned for channel '{}'.".format(channel.name))
+                    logger.error(
+                        "The preview is enabled but no logger was assigned for channel '{}'.".format(channel.name))
                     fader_filter = Filter(self.scene, fader_filter_id,
                                           filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR
                                           if channel.data_type == DataType.DT_COLOR

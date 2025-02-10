@@ -2,14 +2,13 @@
 """Starts a listener for the joystick"""
 
 import pyjoystick
-from pyjoystick.sdl2 import run_event_loop, Key
+from pyjoystick.sdl2 import Key, run_event_loop
 
 from controller.joystick.joystick_enum import JoystickList
 from model import Broadcaster
 
 
 class JoystickHandler:
-
     joystickMap = {}
 
     @staticmethod
@@ -24,7 +23,7 @@ class JoystickHandler:
                     tilt = True
                 case 2:
                     joystick = JoystickList.Gamepad_Right
-                    key.value = key.value * 2 - 1 # Todo: check if my gamepad only for my laptop is broken
+                    key.value = key.value * 2 - 1  # Todo: check if my gamepad only for my laptop is broken
                     if 0.2 > key.value > -0.4:
                         key.value = 0
                 case 3:

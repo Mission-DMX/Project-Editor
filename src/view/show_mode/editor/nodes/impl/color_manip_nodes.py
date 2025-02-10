@@ -1,9 +1,9 @@
-from model.filter import FilterTypeEnumeration, DataType
+# coding=utf-8
+from model.filter import DataType, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.aggregating_filter_node import AggregatingFilterNode
 
 
 class ColorMixerHSVNode(AggregatingFilterNode):
-
     nodeName = "Color Mixer HSV"
 
     def __init__(self, model, name):

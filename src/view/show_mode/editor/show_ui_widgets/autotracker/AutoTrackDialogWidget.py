@@ -1,16 +1,16 @@
-from PySide6.QtCore import QTimer, QThread
-from PySide6.QtWidgets import QMainWindow, QMenuBar, QTabWidget, QWidget
+# coding=utf-8
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QTabWidget
 
+from controller.autotrack.Helpers.InstanceManager import InstanceManager
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
+from view.show_mode.editor.show_ui_widgets.autotracker.CropTab import CropTab
 from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
-from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab
-from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
-from view.show_mode.editor.show_ui_widgets.autotracker.CropTab import CropTab
-from view.show_mode.editor.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
-from controller.autotrack.Helpers.InstanceManager import InstanceManager
-#from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
+# from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.editor.show_ui_widgets.autotracker.LightSetupTab import LightSetupTab
+from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
+from view.show_mode.editor.show_ui_widgets.autotracker.SourcesTab import SourcesTab
 
 
 class AutoTrackDialogWidget(QTabWidget):

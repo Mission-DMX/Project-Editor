@@ -1,11 +1,11 @@
+# coding=utf-8
 from logging import getLogger
 
 from PySide6.QtWidgets import QWidget
 
-from model import UIWidget, UIPage
+from model import UIPage, UIWidget
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
-from view.show_mode.editor.show_ui_widgets.autotracker.SettingsTab import SettingsTab
 from view.show_mode.editor.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
 
 logger = getLogger(__file__)
@@ -24,8 +24,9 @@ class AutoTrackerUIWidget(UIWidget):
         self._associated_filter: AutoTrackerFilter = associated_filter
         self._tracker_player_widget = AutoTrackDialogWidget(associated_filter)
         self._tracker_player_widget.instance.settings.lights.set_ui_widget(self)
-        #self._tracker_configuration_widget = SettingsTab("", self._tracker_player_widget.instance)
-        self._tracker_configuration_widget = AutoTrackDialogWidget(associated_filter, self._tracker_player_widget.instance)
+        # self._tracker_configuration_widget = SettingsTab("", self._tracker_player_widget.instance)
+        self._tracker_configuration_widget = AutoTrackDialogWidget(associated_filter,
+                                                                   self._tracker_player_widget.instance)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         filter_updates = []

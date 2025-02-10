@@ -1,21 +1,20 @@
+# coding=utf-8
 import PySide6
 from PySide6 import QtGui
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath, QPaintEvent
+from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
 from model import DataType
-from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import KeyFrame, StateColor, StateEightBit, \
-    StateSixteenBit, \
-    StateDouble, State
+from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, set_seven_seg_display_content
 from view.show_mode.editor.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (KeyFrame, State, StateColor, StateDouble,
+                                                                            StateEightBit, StateSixteenBit)
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
 from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
 
 class TimelineContentWidget(QWidget):
-
     size_changed = Signal(QPoint)
 
     def __init__(self, parent: QWidget = None):

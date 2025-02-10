@@ -1,10 +1,11 @@
+# coding=utf-8
 from logging import getLogger
 
 from model import Scene
-from model.filter import VirtualFilter, Filter, DataType, FilterTypeEnumeration
-
+from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 
 logger = getLogger(__file__)
+
 
 class SixteenBitToFloatRange(VirtualFilter):
 
@@ -118,9 +119,9 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             normalize_from_16bit = True
         conv_filter_id = "{}__input_converter".format(self.filter_id)
         conv_filter = Filter(filter_id=conv_filter_id,
-                                 filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT if normalize_from_16bit else FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT ,
-                                 pos=self.pos,
-                                 scene=self.scene)
+                             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT if normalize_from_16bit else FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
+                             pos=self.pos,
+                             scene=self.scene)
         conv_filter.channel_links['value_in'] = brightness_input
         filter_list.append(conv_filter)
         brightness_input = conv_filter_id + ":value"
@@ -141,7 +142,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
             scene=self.scene
         )
-        filter_const_norm.initial_parameters['value'] = str(1/2**16) if normalize_from_16bit else str(1/255)
+        filter_const_norm.initial_parameters['value'] = str(1 / 2 ** 16) if normalize_from_16bit else str(1 / 255)
         filter_list.append(filter_const_norm)
         filter_const_norm_id += ":value"
         brightness_normalization_filter_id = "{}_brightness_normalization".format(self.filter_id)

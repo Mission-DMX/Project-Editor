@@ -1,11 +1,12 @@
-from PySide6.QtCore import Qt, QPoint
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QScrollArea
+# coding=utf-8
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QWidget
 
 from model import DataType
-from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
+from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, set_seven_seg_display_content
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_label import TimelineChannelLabel
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, KeyFrame, StateEightBit, StateSixteenBit, \
-    StateDouble, StateColor
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (Cue, KeyFrame, StateColor, StateDouble,
+                                                                            StateEightBit, StateSixteenBit)
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_content_widget import TimelineContentWidget
 
 
@@ -131,7 +132,7 @@ class TimelineContainer(QWidget):
 
     def format_zoom(self) -> str:
         return "{0:0>3} Sec/Pixel".format(int(self._keyframes_panel._time_zoom * 10000) / 10000)
-    
+
     @staticmethod
     def clear_display():
         set_seven_seg_display_content(" " * 12, True)
@@ -142,4 +143,3 @@ class TimelineContainer(QWidget):
             self._channel_label.update()
         self.setMinimumHeight(max(self.height(), self.minimumHeight(),
                                   self._channel_label.height(), self._channel_label.minimumHeight()))
-

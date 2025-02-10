@@ -1,13 +1,16 @@
+# coding=utf-8
+from typing import TYPE_CHECKING
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QScrollArea, QHBoxLayout, QTableWidget, \
-    QTableWidgetItem, QFormLayout, QComboBox, QCheckBox, QPushButton, QLabel, QAbstractItemView, \
-    QMessageBox, QDialog, QMenu, QInputDialog
+from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog,
+                               QLabel, QMenu, QMessageBox, QPushButton, QScrollArea, QTableWidget, QTableWidgetItem,
+                               QToolBar, QVBoxLayout, QWidget)
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import DataType, Filter
 from model.broadcaster import Broadcaster
-from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, DeskColumn
+from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from model.virtual_filters.cue_vfilter import CueFilter
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
@@ -17,12 +20,11 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 from .model.cue_filter_model import CueFilterModel
 from ..node_editor_widget import NodeEditorFilterConfigWidget
 
-
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 from logging import getLogger
+
 logger = getLogger(__file__)
 
 
@@ -32,6 +34,7 @@ class ExternalChannelDefinition:
     As I didn't want to write a tuple of the channel name, its type as well as fader source, this class provides them
     in a named fashion.
     """
+
     def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet):
         self.data_type = data_type
         self.name = name
@@ -282,7 +285,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             id.setLabelText("New name for Cue #{} ({})".format(index + 1, original_cue_name))
             id.setTextValue(original_cue_name)
             id.setModal(True)
-            id.accepted.connect(lambda d=id,i=index: self._change_cue_name(i, d))
+            id.accepted.connect(lambda d=id, i=index: self._change_cue_name(i, d))
             id.show()
             self._input_dialog.append(id)
 

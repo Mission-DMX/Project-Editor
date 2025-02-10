@@ -1,8 +1,8 @@
 # coding=utf-8
 """A scene can have multiple pages"""
-from PySide6.QtWidgets import QWidget, QMenu, QGridLayout, QPushButton, QDialog, QVBoxLayout, QLabel
-from PySide6.QtCore import Qt, QPoint, Signal, QSize
-from PySide6.QtGui import QMouseEvent, QAction
+from PySide6.QtCore import QPoint, QSize, Qt, Signal
+from PySide6.QtGui import QAction, QMouseEvent
+from PySide6.QtWidgets import QDialog, QGridLayout, QLabel, QMenu, QPushButton, QVBoxLayout, QWidget
 
 from model import Filter, UIPage, UIWidget
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
@@ -152,7 +152,7 @@ class SceneUIPageEditorWidget(QWidget):
         auto_track_action = QAction("Auto Tracker", self)
         auto_track_action.triggered.connect(lambda checked=False, filter__=None: self._add_generic_widget(
             AutoTrackerUIWidget("", self._ui_page), pos)
-        )
+                                            )
         menu.addAction(auto_track_action)
         menu.popup(self.mapToGlobal(pos))
 
@@ -176,9 +176,7 @@ class SceneUIPageEditorWidget(QWidget):
         widget.move(pos)
         self._ui_page.append_widget(config_widget)
 
-
     @property
     def ui_page(self) -> UIPage:
         """The scene the page represents"""
         return self._ui_page
-

@@ -1,7 +1,8 @@
+# coding=utf-8
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QToolBar, QListWidget, QColorDialog
+from PySide6.QtWidgets import QColorDialog, QHBoxLayout, QListWidget, QPushButton, QToolBar, QVBoxLayout, QWidget
 
-from model import UIWidget, Filter, UIPage, ColorHSI
+from model import ColorHSI, Filter, UIPage, UIWidget
 
 
 class ColorSelectionUIWidget(UIWidget):
@@ -114,6 +115,7 @@ class ColorSelectionUIWidget(UIWidget):
             d = QColorDialog(w)
             d.colorSelected.connect(_add_preset)
             d.show()
+
         add_action.triggered.connect(open_dialog)
         return w
 
@@ -126,4 +128,3 @@ class ColorSelectionUIWidget(UIWidget):
 
     def _set_preset(self, i: int, color: QColor):
         self._presets[i] = ColorHSI.from_qt_color(color)
-

@@ -1,11 +1,11 @@
+# coding=utf-8
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QInputDialog, QLabel
+from PySide6.QtWidgets import QInputDialog, QLabel, QListWidget, QToolBar, QVBoxLayout, QWidget
 
-from model import UIWidget, UIPage, Filter
-from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
-
+from model import Filter, UIPage, UIWidget
 from model.file_support.cue_state import CueState
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
+from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 
 class CueControlUIWidget(UIWidget):

@@ -2,10 +2,9 @@
 """This file contains adapters between different effect output types that can be instantiated."""
 from typing import TYPE_CHECKING
 
-from model.filter import FilterTypeEnumeration
-
 from model import Filter
-from model.virtual_filters.effects_stacks.effect import EffectType, Effect
+from model.filter import FilterTypeEnumeration
+from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
 def emplace_with_adapter(input_effect: "Effect", target_type: "EffectType",

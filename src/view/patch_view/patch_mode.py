@@ -1,7 +1,7 @@
 # coding=utf-8
 """Patching Mode"""
 
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtWidgets
 
 from model.broadcaster import Broadcaster
 from model.patching_universe import PatchingUniverse

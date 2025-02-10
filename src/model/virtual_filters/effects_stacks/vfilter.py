@@ -2,19 +2,19 @@
 
 """This file provides the v-filter implementation of the effects stack system"""
 
-from model.ofl.fixture import ColorSupport
+from logging import getLogger
+
 from model import Filter, Scene
-from model.filter import VirtualFilter, FilterTypeEnumeration
+from model.filter import FilterTypeEnumeration, VirtualFilter
+from model.ofl.fixture import ColorSupport
 from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
-from logging import getLogger
 logger = getLogger(__file__)
 
 
 class EffectsStack(VirtualFilter):
-
     """The v-filter providing the effects stack. This filter provides a system enabling one to assign stackable effects
     to fixtures, groups of fixtures or configurable output ports."""
 
@@ -84,7 +84,7 @@ class EffectsStack(VirtualFilter):
                                 zero_constant_float_required = True
                                 filter_list.append(multiply_filter_i)
                                 combination_filter = Filter(self.scene, seg_split_filter_name + "_combine",
-                                                            18, self.pos) # TODO rename
+                                                            18, self.pos)  # TODO rename
                                 combination_filter.channel_links["h"] = seg_split_filter_name + ":h"
                                 combination_filter.channel_links["s"] = seg_split_filter_name + ":s"
                                 combination_filter.channel_links["i"] = seg_split_filter_name + "_multiply:value"
@@ -98,11 +98,14 @@ class EffectsStack(VirtualFilter):
                     adapter_filters = []
                     for i in range(len(output_dict["color"])):
                         if color_support_of_target == ColorSupport.HAS_RGB_SUPPORT:
-                            adapter_filter = Filter(self.scene, color_adapter_name_base, 15, self.pos) # TODO rename type
+                            adapter_filter = Filter(self.scene, color_adapter_name_base, 15,
+                                                    self.pos)  # TODO rename type
                         elif color_support_of_target == ColorSupport.HAS_RGB_SUPPORT | ColorSupport.HAS_WHITE_SEGMENT:
-                            adapter_filter = Filter(self.scene, color_adapter_name_base, 16, self.pos)  # TODO rename type
+                            adapter_filter = Filter(self.scene, color_adapter_name_base, 16,
+                                                    self.pos)  # TODO rename type
                         elif color_support_of_target == ColorSupport.HAS_RGB_SUPPORT | ColorSupport.HAS_WHITE_SEGMENT | ColorSupport.HAS_AMBER_SEGMENT:
-                            adapter_filter = Filter(self.scene, color_adapter_name_base, 17, self.pos)  # TODO rename type
+                            adapter_filter = Filter(self.scene, color_adapter_name_base, 17,
+                                                    self.pos)  # TODO rename type
                         # TODO advance adapter selection to further combinations
 
                         filter_list.append(adapter_filter)
@@ -112,9 +115,9 @@ class EffectsStack(VirtualFilter):
                     # TODO handle uv
                     # TODO handle main brightness control
                     for segment_channel_name, segment_list in [
-                            ("r", socket_target.red_segments), ("g", socket_target.green_segments),
-                            ("b", socket_target.blue_segments), ("w", socket_target.white_segments),
-                            ("a", socket_target.amber_segments)]:
+                        ("r", socket_target.red_segments), ("g", socket_target.green_segments),
+                        ("b", socket_target.blue_segments), ("w", socket_target.white_segments),
+                        ("a", socket_target.amber_segments)]:
                         i = 0
                         for segment in segment_list:
                             universe_filter.filter_configurations[str(segment.address)] = str(segment.address)
@@ -171,4 +174,3 @@ class EffectsStack(VirtualFilter):
                 self.sockets.append(s)
 
     # TODO implement optional output ports of effect stack vfilter
-

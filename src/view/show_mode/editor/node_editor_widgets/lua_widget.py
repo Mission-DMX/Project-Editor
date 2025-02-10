@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QTextEdit, QVBoxLayout, QListWidget, QToolBar, QComboBox, QLineEdit
+# coding=utf-8
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QListWidget, QTextEdit, QToolBar, QVBoxLayout, QWidget
 
 from model import DataType
 from .node_editor_widget import NodeEditorFilterConfigWidget

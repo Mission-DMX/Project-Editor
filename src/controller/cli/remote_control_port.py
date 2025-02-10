@@ -8,14 +8,15 @@ from socket import socket
 from threading import Thread
 
 from controller.cli.cli_context import CLIContext
-from model import BoardConfiguration
 from controller.network import NetworkManager
+from model import BoardConfiguration
 
 logger = Logger(__file__)
 
 
 class SocketStreamReader:
     """This class is used to split the input TCP stream into separate lines."""
+
     def __init__(self, sock: socket):
         """Initialize the stream reader
         
@@ -98,6 +99,7 @@ class SocketStreamReader:
 
 class Connection:
     """This class handles a remote CLI connection."""
+
     def __init__(self, client: socket, address: str, connection_map: dict, show: BoardConfiguration,
                  networkmgr: "NetworkManager"):
         """This constructor takes over the connection.
@@ -148,7 +150,7 @@ class Connection:
 
 class RemoteCLIServer:
     """This class handles the control port. Only IPv6 connections are supported."""
-    
+
     def __init__(self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::", port: int = 2929):
         """Construct the handler and opens a port.
         

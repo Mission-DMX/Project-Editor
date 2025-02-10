@@ -1,9 +1,9 @@
-from model.filter import FilterTypeEnumeration, Filter, DataType
+# coding=utf-8
+from model.filter import DataType, Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class ImportNode(FilterNode):
-
     nodeName = "Filter Import"
 
     def __init__(self, model, name):

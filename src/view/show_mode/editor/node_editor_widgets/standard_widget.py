@@ -2,12 +2,13 @@
 """TODO"""
 from logging import getLogger
 
-from PySide6.QtWidgets import QWidget, QLineEdit, QLabel, QFormLayout
+from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, QWidget
 
 from model import Filter
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 logger = getLogger(__name__)
+
 
 class StandardWidget(NodeEditorFilterConfigWidget):
 

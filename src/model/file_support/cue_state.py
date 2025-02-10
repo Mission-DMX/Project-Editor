@@ -1,6 +1,7 @@
 # coding=utf-8
 import datetime
 from enum import Enum
+
 from proto.FilterMode_pb2 import update_parameter
 
 

@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QButtonGroup
+# coding=utf-8
+from PySide6.QtWidgets import QButtonGroup, QHBoxLayout, QWidget
 
 
 class ButtonContainer(QWidget):

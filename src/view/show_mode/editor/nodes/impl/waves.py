@@ -2,6 +2,7 @@
 """Wave forming filter nodes"""
 from model import DataType
 from model.filter import FilterTypeEnumeration
+
 from .trigonometics import TrigonometricNode
 
 _WaveNode = TrigonometricNode

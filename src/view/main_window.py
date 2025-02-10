@@ -3,17 +3,17 @@
 import platform
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QIcon, QPixmap, QKeySequence
+from PySide6.QtGui import QIcon, QKeySequence
 from PySide6.QtWidgets import QProgressBar
 
-from controller.file.showfile_dialogs import  _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
+from Style import Style
+from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
+from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
-from controller.network import NetworkManager
 from proto.RealTimeControl_pb2 import RunMode
-from Style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.dmx_data_log import DmxDataLogWidget
@@ -153,7 +153,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Redo", None, "Shift+Z")
             ],
             "Show": [
-                ("Scene Wizard", self._open_scene_setup_wizard, None)  # TODO link wizard that creates a theater scene based on patched fixtures
+                ("Scene Wizard", self._open_scene_setup_wizard, None)
+                # TODO link wizard that creates a theater scene based on patched fixtures
             ],
             "Help": [
                 ("&About", self._open_about_window, None)

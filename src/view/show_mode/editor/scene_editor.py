@@ -1,6 +1,6 @@
 # coding=utf-8
 """Widget containing a nodeeditor for one scene."""
-from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QGridLayout, QDialog
+from PySide6.QtWidgets import QDialog, QGridLayout, QTabBar, QTabWidget, QWidget
 
 from model import Scene
 from model.scene import FilterPage

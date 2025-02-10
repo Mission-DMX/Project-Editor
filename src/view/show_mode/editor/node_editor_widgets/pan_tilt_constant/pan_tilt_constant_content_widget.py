@@ -1,6 +1,7 @@
+# coding=utf-8
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QPainter, QColor, QPixmap, QMouseEvent
-from PySide6.QtWidgets import QLabel, QWidget, QSizePolicy
+from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap
+from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 from qasync import QtGui
 
 from controller.joystick.joystick_enum import JoystickList
@@ -13,7 +14,7 @@ class PanTiltConstantContentWidget(QLabel):
         super().__init__(parent=parent)
         self.setMinimumWidth(800)
         self.setMinimumHeight(400)
-        self._dragged = False   #  for detecting drag and drop
+        self._dragged = False  # for detecting drag and drop
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.prange = 1
         self.trange = 1
@@ -36,12 +37,12 @@ class PanTiltConstantContentWidget(QLabel):
         painter.fillRect(0, 0, w, h, QColor.fromRgb(0xF9, 0xF9, 0xF9))
         painter.setPen(QColor.fromRgb(0xC0, 0xC0, 0xC0))
         p = 0.0
-        while (p<= self.prange):
+        while (p <= self.prange):
             pabs = p * w / self.prange
             painter.drawLine(pabs, 0, pabs, h)
             p += self.prange / 16
         t = 0.0
-        while (t<= self.trange):
+        while (t <= self.trange):
             tabs = t * h / self.trange
             painter.drawLine(0, tabs, w, tabs)
             t += self.trange / 6
@@ -50,7 +51,7 @@ class PanTiltConstantContentWidget(QLabel):
         pointsize = 10
         pabs = self._filter.pan * w / self.prange
         tabs = self._filter.tilt * h / self.trange
-        painter.drawEllipse(pabs-pointsize/2, tabs-pointsize/2, pointsize, pointsize)
+        painter.drawEllipse(pabs - pointsize / 2, tabs - pointsize / 2, pointsize, pointsize)
 
         painter.end()
         self.setPixmap(canvas)

@@ -6,13 +6,13 @@ from view.show_mode.editor.nodes.impl.adapters import *
 from view.show_mode.editor.nodes.impl.arithmetics import *
 from view.show_mode.editor.nodes.impl.color_manip_nodes import *
 from view.show_mode.editor.nodes.impl.constants import *
+from view.show_mode.editor.nodes.impl.debug import *
 from view.show_mode.editor.nodes.impl.effects import *
 from view.show_mode.editor.nodes.impl.faders import *
 from view.show_mode.editor.nodes.impl.scripting import *
+from view.show_mode.editor.nodes.impl.time import *
 from view.show_mode.editor.nodes.impl.trigonometics import *
 from view.show_mode.editor.nodes.impl.universenode import *
-from view.show_mode.editor.nodes.impl.debug import *
-from view.show_mode.editor.nodes.impl.time import *
 from view.show_mode.editor.nodes.impl.waves import *
 from view.show_mode.editor.nodes.import_node import ImportNode
 

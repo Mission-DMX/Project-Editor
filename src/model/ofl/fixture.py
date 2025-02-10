@@ -2,9 +2,9 @@
 """Fixture Definitions from OFL """
 import json
 from enum import Enum, IntFlag
-from typing import TypedDict, NotRequired, TYPE_CHECKING
-
 from logging import getLogger
+from typing import TYPE_CHECKING, NotRequired, TypedDict
+
 logger = getLogger(__file__)
 
 if TYPE_CHECKING:
@@ -80,7 +80,7 @@ class ColorSupport(IntFlag):
 
     def __str__(self):
         if self == ColorSupport.NO_COLOR_SUPPORT:
-                return "No Color Support"
+            return "No Color Support"
         s = []
         if (self & ColorSupport.COLD_AND_WARM_WHITE) > 0:
             s.append("CW/WW")
@@ -100,7 +100,8 @@ def load_fixture(file) -> Fixture:
     f = open(file)
     ob: json = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
-                   categories=ob["categories"] if "categories" in ob else [], modes=ob["modes"] if "modes" in ob else [], fileName=file.split("/fixtures/")[1])
+                   categories=ob["categories"] if "categories" in ob else [],
+                   modes=ob["modes"] if "modes" in ob else [], fileName=file.split("/fixtures/")[1])
 
 
 def try_load(ob: json, name: object) -> str:

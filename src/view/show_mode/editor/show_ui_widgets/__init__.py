@@ -1,7 +1,8 @@
-from model import Filter, UIWidget, UIPage
+# coding=utf-8
+from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
-from view.show_mode.editor.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
 from view.show_mode.editor.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
+from view.show_mode.editor.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
 from view.show_mode.editor.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.editor.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
 

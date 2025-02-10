@@ -1,6 +1,7 @@
+# coding=utf-8
 from typing import Callable
 
-from PySide6.QtWidgets import QWizardPage, QWidget
+from PySide6.QtWidgets import QWidget, QWizardPage
 
 
 class ComposableWizardPage(QWizardPage):

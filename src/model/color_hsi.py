@@ -2,8 +2,8 @@
 """Color in HSI Form"""
 import colorsys
 
-from PySide6.QtGui import QColor
 from pydantic import confloat
+from PySide6.QtGui import QColor
 
 
 class ColorHSI:

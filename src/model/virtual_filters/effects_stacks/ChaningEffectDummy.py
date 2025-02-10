@@ -1,7 +1,8 @@
+# coding=utf-8
 from PySide6.QtWidgets import QWidget
 
 from model import Filter
-from model.virtual_filters.effects_stacks.effect import EffectType, Effect
+from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
 class ChainingEffectDummy(Effect):

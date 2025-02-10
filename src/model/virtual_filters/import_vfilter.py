@@ -1,5 +1,6 @@
+# coding=utf-8
 from model import Filter
-from model.filter import VirtualFilter, FilterTypeEnumeration
+from model.filter import FilterTypeEnumeration, VirtualFilter
 
 
 class ImportVFilter(VirtualFilter):

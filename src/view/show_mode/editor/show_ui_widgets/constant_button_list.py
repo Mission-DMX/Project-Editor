@@ -1,9 +1,10 @@
+# coding=utf-8
 import sys
 
-from PySide6.QtWidgets import (QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QListWidget,
-                               QLineEdit, QLabel, QDoubleSpinBox)
+from PySide6.QtWidgets import (QDoubleSpinBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QPushButton, QVBoxLayout,
+                               QWidget)
 
-from model import UIWidget, UIPage, Filter
+from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 
 
@@ -59,6 +60,7 @@ class ConstantNumberButtonList(UIWidget):
                 wl.addWidget(conf_button)
                 self._configuration_widget.setLayout(wl)
                 self._configuration_widget.parent().update_size()
+
         add_button.clicked.connect(add_action)
         return widget
 
@@ -72,8 +74,11 @@ class ConstantNumberButtonList(UIWidget):
         else:
             self._value = int(value_str)
         self._filter_type = filter_model.filter_type
-        self._value = float(filter_model.initial_parameters["value"]) if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(filter_model.initial_parameters["value"])
-        self._maximum = 255 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT else -1 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else (2**16)-1
+        self._value = float(filter_model.initial_parameters[
+                                "value"]) if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(
+            filter_model.initial_parameters["value"])
+        self._maximum = 255 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT else -1 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else (
+                                                                                                                                                                                                          2 ** 16) - 1
 
     def _set_value(self, new_value: int | float):
         self._value = new_value
@@ -130,4 +135,3 @@ class ConstantNumberButtonList(UIWidget):
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
         self._configuration_widget.setLayout(layout)
-

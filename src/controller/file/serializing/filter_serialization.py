@@ -1,8 +1,9 @@
+# coding=utf-8
 from xml.etree import ElementTree
 
 from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 from model import Filter
-from model.filter import VirtualFilter, DataType, FilterTypeEnumeration
+from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
 
 def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element, for_fish: bool,
@@ -48,7 +49,8 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
             _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
 
-def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizerModule, scene_element: ElementTree.Element):
+def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizerModule,
+                                                    scene_element: ElementTree.Element):
     """
     This function writes the channel links of the scene to the XML data.
     This method needs to be called *after* every filter object has been placed as only then all required information
@@ -94,17 +96,21 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizer
                         if time_node is None:
                             time_node = 'timedefaultfilter'
                             default_nodes[datatype].append('time')
-                        _create_channel_link_element(channel_link=(default_val_id, time_node + ':value'), parent=filter_element)
+                        _create_channel_link_element(channel_link=(default_val_id, time_node + ':value'),
+                                                     parent=filter_element)
                     else:
                         if not default_nodes.get(datatype):
                             default_nodes[datatype] = []
                         val = '0'
                         if datatype == DataType.DT_COLOR:
                             val = '0,0,0'
-                        default_value = filter_.default_values[default_val_id] if filter_.default_values and default_val_id in filter_.default_values else val
+                        default_value = filter_.default_values[
+                            default_val_id] if filter_.default_values and default_val_id in filter_.default_values else val
                         if default_value not in default_nodes[datatype]:
                             default_nodes[datatype].append(default_value)
-                        _create_channel_link_element(channel_link=(default_val_id, 'const' + str(datatype) + 'val' + default_value + ':value'), parent=filter_element)
+                        _create_channel_link_element(
+                            channel_link=(default_val_id, 'const' + str(datatype) + 'val' + default_value + ':value'),
+                            parent=filter_element)
     if for_fish:
         for datatype, defvalues in default_nodes.items():
             for default_value in defvalues:

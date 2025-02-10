@@ -1,5 +1,6 @@
-from PySide6.QtGui import QStandardItemModel, QStandardItem, Qt
-from PySide6.QtWidgets import QDialog, QWidget, QLabel, QFormLayout, QListView, QDialogButtonBox
+# coding=utf-8
+from PySide6.QtGui import QStandardItem, QStandardItemModel, Qt
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QListView, QWidget
 
 
 class SelectionDialog(QDialog):

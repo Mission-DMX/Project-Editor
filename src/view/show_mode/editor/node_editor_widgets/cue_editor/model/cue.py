@@ -1,16 +1,17 @@
+# coding=utf-8
 from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from model import DataType, ColorHSI
+from model import ColorHSI, DataType
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from view.show_mode.editor.node_editor_widgets.cue_editor.cue_editor_widget import ExternalChannelDefinition
-
+    pass
 
 from logging import getLogger
+
 logger = getLogger(__file__)
 
 
@@ -309,7 +310,7 @@ class Cue:
         if self.name is None or self.name == "":
             self.name = "No Name"
         return "{}#{}#{}#{}".format("|".join(frames_str_list), end_handling_str, restart_beh_str,
-                                 self.name.replace('#', ''))
+                                    self.name.replace('#', ''))
 
     def from_string_definition(self, definition: str):
         primary_tokens = definition.split("#")

@@ -1,8 +1,8 @@
 # coding=utf-8
 """Filter module"""
 import abc
+from enum import IntFlag, auto
 from typing import TYPE_CHECKING
-from enum import IntFlag, auto, Enum
 
 if TYPE_CHECKING:
     from . import Scene
@@ -266,6 +266,7 @@ class VirtualFilter(Filter, abc.ABC):
     instantiate_filters method will be called in order to provide a representation that fish can understand in the event
     that the show will be serialized for fish.
     """
+
     def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, filter_type, pos)
 

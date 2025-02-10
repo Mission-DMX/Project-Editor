@@ -1,8 +1,9 @@
+# coding=utf-8
 import logging
 from xml.etree import ElementTree
 
 from model import Filter
-from model.filter import FilterTypeEnumeration, DataType
+from model.filter import DataType, FilterTypeEnumeration
 
 logger = logging.Logger(__file__)
 
@@ -55,7 +56,7 @@ class SceneOptimizerModule:
                     f.out_data_types["value"] = DataType.DT_DOUBLE
                 if self._global_time_input_filter is not None:
                     self._fill_ch_sub_dict(f, self._global_time_input_filter)
-                    #logger.debug("Substituting time filter {}.".format(f.filter_id))
+                    # logger.debug("Substituting time filter {}.".format(f.filter_id))
                     return True
                 else:
                     self._global_time_input_filter = f

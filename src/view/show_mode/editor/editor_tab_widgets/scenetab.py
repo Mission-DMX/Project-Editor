@@ -1,7 +1,7 @@
 # coding=utf-8
 """Widget containing a nodeeditor for one scene."""
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QWidget, QTabWidget, QPushButton, QGridLayout, QVBoxLayout, QToolBar
+from PySide6.QtWidgets import QToolBar, QVBoxLayout, QWidget
 
 from model import Scene
 from model.scene import FilterPage
@@ -24,8 +24,8 @@ class SceneTabWidget(QWidget):
         self._node_editor_widget = NodeEditorWidget(scene, self)
         self._layout.addWidget(self._node_editor_widget)
         self.setLayout(self._layout)
-        #self._scene_ui_editor_widget = SceneUIManagerWidget(scene, self)
-        #self.addTab(self._scene_ui_editor_widget, "Scene UI Editor")
+        # self._scene_ui_editor_widget = SceneUIManagerWidget(scene, self)
+        # self.addTab(self._scene_ui_editor_widget, "Scene UI Editor")
 
     @property
     def scene(self) -> Scene:

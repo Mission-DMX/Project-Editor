@@ -1,5 +1,5 @@
 # coding=utf-8
-from PySide6.QtWidgets import QWidget, QFileDialog
+from PySide6.QtWidgets import QFileDialog, QWidget
 
 from controller.file.read import read_document
 from controller.file.write import write_document

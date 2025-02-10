@@ -2,12 +2,12 @@
 """Debug filter nodes"""
 from model import DataType
 from model.filter import FilterTypeEnumeration
-
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class DebugNode(FilterNode):
     """Basic debug node"""
+
     def __init__(self, model, name, filter_type):
         super().__init__(model, filter_type, name, terminals={
             'value': {'io': 'in'}

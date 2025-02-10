@@ -1,16 +1,14 @@
 # coding=utf-8
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
 
 from controller.network import NetworkManager
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from model.scene import Scene
     from model import Broadcaster
-
+    from model.scene import Scene
 
 _network_manager_instance: NetworkManager = None
 
@@ -256,14 +254,14 @@ class ShowUI:
                 page_list.append(p)
         return page_list
 
-    #@staticmethod
-    #@property
-    #def network_connection() -> NetworkManager:
+    # @staticmethod
+    # @property
+    # def network_connection() -> NetworkManager:
     #    """Get the linked network manager"""
     #    return ShowUI._fish_connector
 
-    #@staticmethod
-    #@network_connection.setter
-    #def network_connection(self, fish_connector: NetworkManager):
+    # @staticmethod
+    # @network_connection.setter
+    # def network_connection(self, fish_connector: NetworkManager):
     #    """Set the linked network manager"""
     #    ShowUI._fish_connector = fish_connector

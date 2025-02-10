@@ -2,7 +2,6 @@
 """Constants filter nodes"""
 from model import DataType
 from model.filter import FilterTypeEnumeration
-
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -79,7 +78,8 @@ class PanTiltConstant(FilterNode):
     nodeName = 'PanTilt_filter'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, name=name, terminals={}, allowAddOutput=True)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, name=name,
+                         terminals={}, allowAddOutput=True)
         try:
             self.filter.initial_parameters["pan"] = model.initial_parameters["pan"]
         except:
@@ -133,6 +133,6 @@ class PanTiltConstant(FilterNode):
                     self.addOutput("tilt16bit")
 
     def outputs_changed(self, eight_bit: bool, sixteen_bit: bool):
-        self.filter.filter_configurations["outputs"] =\
-                                'both' if eight_bit and sixteen_bit else '8bit' if eight_bit else '16bit'
+        self.filter.filter_configurations["outputs"] = \
+            'both' if eight_bit and sixteen_bit else '8bit' if eight_bit else '16bit'
         self.setup_output_terminals()

@@ -4,10 +4,10 @@
 
 from abc import ABC
 
-from PySide6.QtWidgets import QWidget, QLabel
+from PySide6.QtWidgets import QWidget
 
 from model import Filter
-from model.curve_configuration import CurveConfiguration, BaseCurve
+from model.curve_configuration import BaseCurve, CurveConfiguration
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
@@ -133,10 +133,10 @@ class FunctionEffect(GenericEffect):
                     acc_filter = Filter(self.get_scene(), new_acc_filter_id,
                                         FilterTypeEnumeration.FILTER_ARITHMETICS_MAC, self.get_position())
                     filter_list.append(acc_filter)
-                    acc_filter.channel_links['factor1'] = one_const.filter_id + ":value"\
+                    acc_filter.channel_links['factor1'] = one_const.filter_id + ":value" \
                         if wc.append_features_using_addition else latest_acc_filter_id + ":value"
                     acc_filter.channel_links['factor2'] = curve_filter_id + ":value"
-                    acc_filter.channel_links['summand'] = latest_acc_filter_id + ":value"\
+                    acc_filter.channel_links['summand'] = latest_acc_filter_id + ":value" \
                         if wc.append_features_using_addition else zero_const.filter_id + ":value"
                     latest_acc_filter_id = new_acc_filter_id
                 filter_list.append(f_filter)

@@ -4,8 +4,7 @@
 
 from typing import TYPE_CHECKING
 
-from model.control_desk import DeskColumn, ColorDeskColumn
-from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
+from model.control_desk import ColorDeskColumn, DeskColumn
 from view.utility_widgets.fader_column_selector import FaderColumnSelectorWidget
 
 if TYPE_CHECKING:

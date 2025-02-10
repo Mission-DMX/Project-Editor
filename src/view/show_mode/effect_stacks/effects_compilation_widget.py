@@ -2,24 +2,23 @@
 
 """This file contains the widget to stack the effects."""
 
-from PySide6 import QtGui, QtCore
+from logging import getLogger
+
+from PySide6 import QtCore, QtGui
 from PySide6.QtCore import QRect, Signal
-from PySide6.QtGui import QPainter, QColor, QBrush, QTransform, QPaintEvent, QFontMetrics, QMouseEvent
-from PySide6.QtWidgets import QWidget, QSizePolicy
+from PySide6.QtGui import QBrush, QColor, QFontMetrics, QMouseEvent, QPainter, QPaintEvent, QTransform
+from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from model.ofl.fixture import UsedFixture
-from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.effects_stacks.ChaningEffectDummy import ChainingEffectDummy
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
+from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
-from random import uniform
-from logging import getLogger
 logger = getLogger(__file__)
 
 
 class EffectCompilationWidget(QWidget):
-
     """This widget renders the stacked effects editor."""
 
     effect_added = Signal(Effect)
@@ -142,11 +141,11 @@ class EffectCompilationWidget(QWidget):
         p.setBrush(gray_color)
         p.drawRoundedRect(x, y, 20, 20, 3.0, 3.0)
         p.setBrush(red_color)
-        p.drawLine(x+5, y+5, x+15, y+5)
-        p.drawLine(x+7, y+15, x+12, y+15)
-        p.drawLine(x+7, y+5, x+7, y+15)
+        p.drawLine(x + 5, y + 5, x + 15, y + 5)
+        p.drawLine(x + 7, y + 15, x + 12, y + 15)
+        p.drawLine(x + 7, y + 5, x + 7, y + 15)
         p.drawLine(x + 12, y + 5, x + 12, y + 15)
-        p.drawLine(x+10, y+8, x+10, y+12)
+        p.drawLine(x + 10, y + 8, x + 10, y + 12)
         self._delete_button_positions.append((x, y, effect))
 
         # draw effect config button

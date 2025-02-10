@@ -6,12 +6,12 @@ This file contains the fundamental building blocks for effects.
 
 from abc import ABC, abstractmethod
 from enum import IntFlag
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
 
 from model import Filter, Scene
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
@@ -178,7 +178,8 @@ class Effect(ABC):
     def can_convert_slot(cls, candidate: EffectType, target: EffectType) -> bool:
         if candidate == target:
             return True
-        if candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY, EffectType.GOBO_SELECTION, EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]:
+        if candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY, EffectType.GOBO_SELECTION,
+                                                                 EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]:
             return True
         # TODO add more capabilities once adapters are implemented
         return False

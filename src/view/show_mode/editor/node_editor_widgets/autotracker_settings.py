@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QWidget, QGridLayout, QSpinBox, QLabel
+# coding=utf-8
+from PySide6.QtWidgets import QGridLayout, QLabel, QSpinBox, QWidget
 
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 

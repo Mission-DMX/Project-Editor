@@ -7,17 +7,17 @@ An effect socket provides the inputs for a selected fixture. It is therefore the
 
 import json
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
 
-from model.ofl.fixture import UsedFixture, ColorSupport
 from model import Filter
-from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
-from model.virtual_filters.effects_stacks.effect import EffectType, Effect
+from model.ofl.fixture import ColorSupport, UsedFixture
+from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
+from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
 from model.virtual_filters.effects_stacks.effects.segment_effects import SegmentEffect
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
@@ -25,7 +25,6 @@ logger = getLogger(__file__)
 
 
 class _EffectDummy_Socket(Effect):
-
     """The purpose of this class is to provide an Effect if required during rendering"""
 
     def serialize(self) -> dict:

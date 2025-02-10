@@ -11,11 +11,11 @@ import xmlschema
 import proto.UniverseControl_pb2 as Proto
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
-from model.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from controller.utils.process_notifications import get_process_notifier
-from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
-from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
+from model import BoardConfiguration, ColorHSI, Filter, PatchingUniverse, Scene, UIPage, Universe
+from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 from model.filter import VirtualFilter
+from model.ofl.fixture import UsedFixture, load_fixture, make_used_fixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from proto.Console_pb2 import lcd_color

@@ -3,7 +3,7 @@
 from PySide6.QtGui import QBrush, QColor
 from pyqtgraph.flowchart import Flowchart
 
-from model import Scene, Filter
+from model import Filter, Scene
 from model.scene import FilterPage
 from .nodes.base.filternode import FilterNode
 

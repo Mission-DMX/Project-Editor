@@ -1,7 +1,8 @@
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QWidget, QHBoxLayout, QTabWidget, QFormLayout, \
-    QLineEdit, QTextEdit, QSpinBox, QCheckBox
-
+# coding=utf-8
 from typing import TYPE_CHECKING
+
+from PySide6.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QSpinBox,
+                               QTabWidget, QTextEdit, QVBoxLayout, QWidget)
 
 if TYPE_CHECKING:
     from model import BoardConfiguration
@@ -70,7 +71,8 @@ class SettingsDialog(QDialog):
         self._show = new_show
         self.show_file_tb.setText(new_show.show_name)
         self.show_notes_tb.setText(new_show.notes)
-        self._brightness_mixin_enbled_cb.setChecked(str(new_show.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true")
+        self._brightness_mixin_enbled_cb.setChecked(
+            str(new_show.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true")
         try:
             self._default_main_brightness_tb.setValue(int(new_show.ui_hints.get('default_main_brightness') or '255'))
         except ValueError:
@@ -80,7 +82,8 @@ class SettingsDialog(QDialog):
         self._show.show_name = self.show_file_tb.text()
         self._show.notes = self.show_notes_tb.toPlainText()
         self._show.ui_hints['default_main_brightness'] = str(self._default_main_brightness_tb.value())
-        self._show.ui_hints["color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
+        self._show.ui_hints[
+            "color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
 
     def ok_button_pressed(self):
         self.apply()
@@ -88,5 +91,3 @@ class SettingsDialog(QDialog):
 
     def cancle_button_pressed(self):
         self.reject()
-
-

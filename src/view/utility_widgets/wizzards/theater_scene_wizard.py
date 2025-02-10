@@ -1,16 +1,17 @@
+# coding=utf-8
 import logging
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QWizard, QLabel, QFormLayout, QLineEdit, QCheckBox, \
-    QHBoxLayout, QListWidget, QPushButton, QGridLayout, QButtonGroup, QRadioButton, QScrollArea, QComboBox
+from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
+                               QLineEdit, QListWidget, QPushButton, QRadioButton, QScrollArea, QVBoxLayout, QWidget,
+                               QWizard)
 
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene
-from model.filter import FilterTypeEnumeration, Filter, DataType
+from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.patching_channel import PatchingChannel
-from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
@@ -19,7 +20,6 @@ from view.show_mode.editor.show_browser.fixture_to_filter import place_fixture_f
 from view.utility_widgets.button_container import ButtonContainer
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
-
 
 _folder_empty_icon = QIcon("resources/icons/folder.svg")
 _folder_full_icon = QIcon("resources/icons/folder-full.svg")
@@ -187,7 +187,8 @@ class TheaterSceneWizard(QWizard):
                     self._fixture_feature_list.addItem(item)
 
             # Map position Channels
-            for type in [("Pan", f.pan_channels), ("Tilt", f.tilt_channels), ("Animation Speed", f.animation_speed_channels)]:
+            for type in [("Pan", f.pan_channels), ("Tilt", f.tilt_channels),
+                         ("Animation Speed", f.animation_speed_channels)]:
                 mode = type[0]
                 for channel in type[1]:
                     item = AnnotatedListWidgetItem(self._fixture_feature_list)
@@ -248,7 +249,9 @@ class TheaterSceneWizard(QWizard):
             if first_item_in_group:
                 selected_group.setIcon(_folder_full_icon)
             selected_group.annotated_data["fixtures"].append(selected_feature.annotated_data)
-            selected_group.setToolTip("Content: " + ",".join(["{}/{}: {}".format(i[0].parent_universe, str(i[0].first_channel), i[0].color_support()) for i in selected_group.annotated_data["fixtures"]]))
+            selected_group.setToolTip("Content: " + ",".join(
+                ["{}/{}: {}".format(i[0].parent_universe, str(i[0].first_channel), i[0].color_support()) for i in
+                 selected_group.annotated_data["fixtures"]]))
         else:
             new_group_item = AnnotatedListWidgetItem(self._feature_grouping_list)
             new_group_item.setText(selected_feature.text())
@@ -277,16 +280,16 @@ class TheaterSceneWizard(QWizard):
             i += 1
             controlled_by_desk = c.get("desk-controlled") == "true"
             text_edit = QLineEdit(c.get("name") or str(i), page)
-            text_edit.textChanged.connect(lambda text,d=c: _d_assign(d, "name", text))
+            text_edit.textChanged.connect(lambda text, d=c: _d_assign(d, "name", text))
             layout.addWidget(text_edit, i, 0)
             button_container = ButtonContainer(page)
             radio_button_cue = QRadioButton("Cue", page)
             radio_button_cue.setChecked(not controlled_by_desk)
-            radio_button_cue.clicked.connect(lambda checked=False,d=c: _d_assign(d, "desk-controlled", "true"))
+            radio_button_cue.clicked.connect(lambda checked=False, d=c: _d_assign(d, "desk-controlled", "true"))
             radio_button_desk = QRadioButton("Desk", page)
             radio_button_desk.setChecked(controlled_by_desk)
             radio_button_desk.setEnabled(is_creation_of_banksets_enabled)
-            radio_button_desk.clicked.connect(lambda checked=False,d=c: _d_assign(d, "desk-controlled", "false"))
+            radio_button_desk.clicked.connect(lambda checked=False, d=c: _d_assign(d, "desk-controlled", "false"))
             button_container.add_button(radio_button_cue)
             button_container.add_button(radio_button_desk)
             layout.addWidget(button_container, i, 1)
@@ -470,7 +473,7 @@ class TheaterSceneWizard(QWizard):
                     if not place_fixture_filters_in_scene(f, fp, output_map=output_map):
                         logger.error("Failed to place output filters for fixture {} in scene with id {}."
                                      .format(f, scene.scene_id)
-                        )
+                                     )
         return output_map
 
     def _generate_bank_set(self, scene: Scene) -> dict[PatchingChannel, str]:

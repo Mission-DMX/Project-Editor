@@ -1,20 +1,18 @@
 # coding=utf-8
 """This file contains a widget that allows the editing and visualization of parameters of a trigonometric curve."""
 
-import numpy
+from logging import getLogger
 from math import pi
-from PySide6.QtGui import QPalette
-
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget, QDoubleSpinBox, QLabel, QRadioButton, QFormLayout, \
-    QCheckBox
-
 from typing import TYPE_CHECKING
 
+import numpy
+from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import (QCheckBox, QDoubleSpinBox, QFormLayout, QLabel, QRadioButton, QTabWidget, QVBoxLayout,
+                               QWidget)
 from pyqtgraph import PlotWidget, mkPen
 
-from model.curve_configuration import CurveConfiguration, BaseCurve
+from model.curve_configuration import BaseCurve, CurveConfiguration
 
-from logging import getLogger
 logger = getLogger(__file__)
 
 if TYPE_CHECKING:
@@ -46,20 +44,23 @@ class _WaveRenderer(PlotWidget):
         features = self._curve_configuration.selected_features
         if features & BaseCurve.SIN:
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SIN] + numpy.multiply(
-                numpy.sin(numpy.multiply(numpy.add(x, base_phase), 2*pi/360.0*self._curve_configuration.frequencies[BaseCurve.SIN])),
+                numpy.sin(numpy.multiply(numpy.add(x, base_phase),
+                                         2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.SIN])),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SIN]
             ))
             # TODO implement sin config
         if features & BaseCurve.COS:
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.COS] + numpy.multiply(
-                numpy.cos(numpy.multiply(numpy.add(x, base_phase), 2*pi/360.0*self._curve_configuration.frequencies[BaseCurve.COS])),
+                numpy.cos(numpy.multiply(numpy.add(x, base_phase),
+                                         2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.COS])),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.COS]
             ))
             # TODO implement cos config
         if features & BaseCurve.TAN:
             # TODO tan config
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TAN] + numpy.multiply(
-                numpy.tan(numpy.multiply(numpy.add(x, base_phase), 2*pi/360.0*self._curve_configuration.frequencies[BaseCurve.TAN])),
+                numpy.tan(numpy.multiply(numpy.add(x, base_phase),
+                                         2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.TAN])),
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TAN]
             ))
         if features & BaseCurve.ARC_SIN:
@@ -87,7 +88,7 @@ class _WaveRenderer(PlotWidget):
             pulse_width = 180
             ya = numpy.zeros(steps, dtype=numpy.float32)
             for i in range(int(base_phase * steps / pulse_width), steps, pulse_width):
-                ya[i:i+pulse_width] = 1.0
+                ya[i:i + pulse_width] = 1.0
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.RECT] + numpy.multiply(
                 ya, base_amplitude * self._curve_configuration.amplitudes[BaseCurve.RECT]
             ))
@@ -97,14 +98,15 @@ class _WaveRenderer(PlotWidget):
             ya = numpy.zeros(steps, dtype=numpy.float32)
             signal = numpy.mod(numpy.add(y, base_phase), pulse_width)
             for i in range(0, steps, pulse_width * 2):
-                ya[i:i+pulse_width] = signal[i:i+pulse_width]
-                ya[i+pulse_width+1:i+pulse_width*2] = numpy.subtract(1, signal[i+pulse_width+1:i+pulse_width*2])
+                ya[i:i + pulse_width] = signal[i:i + pulse_width]
+                ya[i + pulse_width + 1:i + pulse_width * 2] = numpy.subtract(1, signal[
+                                                                                i + pulse_width + 1:i + pulse_width * 2])
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TRIANGLE] + numpy.multiply(
                 ya,
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TRIANGLE]
             ))
         try:
-            self.setYRange(numpy.max(y)*1.5, numpy.min(y) * 1.5)
+            self.setYRange(numpy.max(y) * 1.5, numpy.min(y) * 1.5)
         except Exception as e:
             logger.exception(e)
         self._data_line.setData(x, y)
@@ -151,7 +153,7 @@ class CurveEditorWidget(QWidget):
         self._amplitude_dials: dict[str, QDoubleSpinBox] = {}
         self._offset_dials: dict[str, QDoubleSpinBox] = {}
 
-        for curve_name in [str(BaseCurve(2**c).name) for c in range(9)]:
+        for curve_name in [str(BaseCurve(2 ** c).name) for c in range(9)]:
             curve_widget = QWidget(self._function_property_container)
             c_layout = QFormLayout()
             self._enabled_checkboxes[curve_name] = QCheckBox(curve_widget)

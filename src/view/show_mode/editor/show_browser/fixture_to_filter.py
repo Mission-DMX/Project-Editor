@@ -1,12 +1,11 @@
 # coding=utf-8
-from model import Filter
-from model.filter import FilterTypeEnumeration
-from model.patching_channel import PatchingChannel
-from model.scene import FilterPage
-from model.ofl.fixture import UsedFixture, ColorSupport
-
 from logging import getLogger
 
+from model import Filter
+from model.filter import FilterTypeEnumeration
+from model.ofl.fixture import ColorSupport, UsedFixture
+from model.patching_channel import PatchingChannel
+from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 
 logger = getLogger(__file__)
@@ -25,7 +24,7 @@ def _sanitize_name(input: str | dict) -> str:
 
 
 def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, ColorSupport], filter_page: FilterPage,
-                                   output_map: dict[ColorSupport|str|PatchingChannel, str] | None = None) -> bool:
+                                   output_map: dict[ColorSupport | str | PatchingChannel, str] | None = None) -> bool:
     if isinstance(fixture, tuple):
         fixture = fixture[0]
     channels: list[PatchingChannel] = fixture.channels
@@ -40,7 +39,8 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
 
     for filter in filter_page.filters:
         filter_position_x = filter.pos[0] or 0
-        if filter.filter_type not in [FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, FilterTypeEnumeration.VFILTER_UNIVERSE]:
+        if filter.filter_type not in [FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
+                                      FilterTypeEnumeration.VFILTER_UNIVERSE]:
             avg_x = filter_position_x
             avg_count += 1
         max_y = max(max_y, filter.pos[1] or 0)
@@ -49,7 +49,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
     filter = Filter(
         filter_id="universe-output_{}".format(_sanitize_name(name)),
         filter_type=11,
-        pos=(avg_x, max_y + (_filter_channel_height * len(channels))/2),
+        pos=(avg_x, max_y + (_filter_channel_height * len(channels)) / 2),
         scene=scene
     )
 
@@ -75,7 +75,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
 
 def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, universe_filter: Filter, x: float, y: float,
                                      name: str, already_added_filters: list[Filter],
-                                     output_map: dict[ColorSupport|str|PatchingChannel, str] | None = None):
+                                     output_map: dict[ColorSupport | str | PatchingChannel, str] | None = None):
     c = fixture.channels
     i = 0
 
@@ -94,8 +94,8 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
         try:
             if not c[c_i].fixture_channel:
                 continue
-            if ((c[c_i].fixture_channel.lower() == "pan fine" and c[c_i-1].fixture_channel.lower() == "pan") or
-                    (c[c_i].fixture_channel.lower() == "tilt fine" and c[c_i-1].fixture_channel.lower() == "tilt")):
+            if ((c[c_i].fixture_channel.lower() == "pan fine" and c[c_i - 1].fixture_channel.lower() == "pan") or
+                    (c[c_i].fixture_channel.lower() == "tilt fine" and c[c_i - 1].fixture_channel.lower() == "tilt")):
                 adapter_name = _sanitize_name("pos2channel_{}_{}".format(i, name))
                 split_filter = Filter(scene=fp.parent_scene,
                                       filter_id=adapter_name,
@@ -105,7 +105,8 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 fp.parent_scene.append_filter(split_filter)
                 adapter_name = split_filter.filter_id
                 universe_filter.channel_links[_sanitize_name(c[c_i].fixture_channel)] = adapter_name + ":value_lower"
-                universe_filter.channel_links[_sanitize_name(c[c_i-1].fixture_channel)] = adapter_name + ":value_upper"
+                universe_filter.channel_links[
+                    _sanitize_name(c[c_i - 1].fixture_channel)] = adapter_name + ":value_upper"
                 fp.filters.append(split_filter)
                 if output_map is not None:
                     output_map[c[c_i]] = split_filter.filter_id + ":value"
@@ -184,7 +185,8 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
         if i > 0:
             pos = universe_filter.pos
             universe_filter.pos = (x + 11, pos[1])
-    if not global_dimmer_found and str(fp.parent_scene.board_configuration.ui_hints.get('color-mixin-auto-add-disabled')).lower() != 'true':
+    if not global_dimmer_found and str(
+            fp.parent_scene.board_configuration.ui_hints.get('color-mixin-auto-add-disabled')).lower() != 'true':
         for color_input_filter in color_inputs:
             brightness_mixin_filter = construct_virtual_filter_instance(
                 scene=fp.parent_scene,

@@ -4,13 +4,12 @@ import json
 import logging
 from typing import List
 
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QCompleter
 
 from model.broadcaster import Broadcaster
-
 from .logging_item_widget import LoggingItemWidget
 from .search import Operation, Search
 
@@ -32,14 +31,17 @@ class LoggingWidget(QtWidgets.QTabWidget):
                             changed=(
                                 lambda: self._loging_level_changed.emit(("INFO", self._levels["INFO"].isChecked())))),
             "WARNING": QAction("WARNING", level_menu, checkable=True, checked=True,
-                            changed=(
-                                lambda: self._loging_level_changed.emit(("WARNING", self._levels["WARNING"].isChecked())))),
+                               changed=(
+                                   lambda: self._loging_level_changed.emit(
+                                       ("WARNING", self._levels["WARNING"].isChecked())))),
             "ERROR": QAction("Error", level_menu, checkable=True, checked=True,
                              changed=(
-                                 lambda: self._loging_level_changed.emit(("ERROR", self._levels["ERROR"].isChecked())))),
+                                 lambda: self._loging_level_changed.emit(
+                                     ("ERROR", self._levels["ERROR"].isChecked())))),
             "CRITICAL": QAction("Critical", level_menu, checkable=True, checked=True,
-                             changed=(
-                                 lambda: self._loging_level_changed.emit(("CRITICAL", self._levels["CRITICAL"].isChecked()))))
+                                changed=(
+                                    lambda: self._loging_level_changed.emit(
+                                        ("CRITICAL", self._levels["CRITICAL"].isChecked()))))
         }
         level_menu.addAction(QAction("all", level_menu, triggered=(lambda: self.all_log_levels(True))))
         for key, value in self._levels.items():

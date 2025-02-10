@@ -4,15 +4,15 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeWidget
 
-from proto.UniverseControl_pb2 import Universe as pbUniverse
-
-from model.ofl.fixture import UsedFixture
 from model import BoardConfiguration
+from model.ofl.fixture import UsedFixture
+from proto.UniverseControl_pb2 import Universe as pbUniverse
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 
 class UniverseTreeBrowserWidget(QTreeWidget):
     """This widget displays a browser for the fixtures within the universes."""
+
     def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False):
         super().__init__()
         self._show_selection_checkboxes = show_selection_checkboxes
@@ -63,7 +63,8 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                         last_fixture_object = AnnotatedTreeWidgetItem(item)
                         if self._show_selection_checkboxes:
                             last_fixture_object.setCheckState(0, Qt.CheckState.Unchecked)
-                        last_fixture_object.setText(0 + column_offset, "{}/{}".format(universe.id, patching_channel.address + 1))
+                        last_fixture_object.setText(0 + column_offset,
+                                                    "{}/{}".format(universe.id, patching_channel.address + 1))
                         last_fixture_object.setText(1 + column_offset, channel_fixture.name)
                         last_fixture_object.setText(2 + column_offset, str(channel_fixture.mode))
                         last_fixture_object.setText(3 + column_offset, channel_fixture.comment)
@@ -71,7 +72,8 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                         placed_fixtures.add(channel_fixture)
                     if not is_placeholder:
                         channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
-                        channel_item.setText(0 + column_offset, "{}/{}".format(universe.id, patching_channel.address + 1))
+                        channel_item.setText(0 + column_offset,
+                                             "{}/{}".format(universe.id, patching_channel.address + 1))
                         channel_item.setText(1 + column_offset, str(patching_channel.fixture_channel))
                         channel_item.setText(2 + column_offset, str(channel_fixture.mode))
                         channel_item.setText(3 + column_offset, channel_fixture.name)

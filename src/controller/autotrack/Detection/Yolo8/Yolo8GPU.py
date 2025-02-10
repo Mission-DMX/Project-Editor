@@ -1,10 +1,12 @@
 # coding=utf-8
+import logging
 import time
+
 import cv2
 import numpy as np
-from controller.autotrack.Detection.Detector import Detector
-import logging
 import onnxruntime as rt
+
+from controller.autotrack.Detection.Detector import Detector
 
 
 class Yolo8GPU(Detector):

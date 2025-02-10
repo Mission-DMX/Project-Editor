@@ -1,18 +1,14 @@
+# coding=utf-8
 import asyncio
+
+from PySide6.QtWidgets import QCheckBox, QGridLayout, QLabel, QLayout
 
 from controller.autotrack.Detection.VideoProcessor import draw_boxes, process
 from controller.autotrack.Detection.Yolo8.Yolo8GPU import Yolo8GPU
-from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from PySide6.QtWidgets import (
-    QGridLayout,
-    QLayout,
-    QLabel,
-    QCheckBox,
-)
-
 from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
+from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 
 
 class DetectionTab(GuiTab):

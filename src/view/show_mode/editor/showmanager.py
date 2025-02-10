@@ -5,19 +5,17 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
-from PySide6.QtWidgets import QWidget, QTabWidget, QTabBar, QInputDialog, QSplitter
 from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QInputDialog, QSplitter, QTabBar, QTabWidget, QWidget
 
 from controller.file.transmitting_to_fish import transmit_to_fish
-
-from model.board_configuration import BoardConfiguration, Scene, Broadcaster
+from model.board_configuration import BoardConfiguration, Broadcaster, Scene
 from model.scene import FilterPage
-from .editing_utils import add_scene_to_show
-
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
+from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
+from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
 from .editor_tab_widgets.scene_ui_page_editor_widget import SceneUIPageEditorWidget
-from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
 from .show_browser.show_browser import ShowBrowser
 
 
@@ -48,16 +46,16 @@ class ShowEditorWidget(QSplitter):
 
         # Toolbar for io/network actions
         self._toolbar: list[QAction] = []
-        #save_show_file_button = QAction("Save Show")
-        #load_show_file_button = QAction("Load Show")
+        # save_show_file_button = QAction("Save Show")
+        # load_show_file_button = QAction("Load Show")
 
-        #save_show_file_button.triggered.connect(lambda: show_save_showfile_dialog(self.parent(),
+        # save_show_file_button.triggered.connect(lambda: show_save_showfile_dialog(self.parent(),
         #                                                                          self._board_configuration))
-        #load_show_file_button.triggered.connect(lambda: show_load_showfile_dialog(self.parent(),
+        # load_show_file_button.triggered.connect(lambda: show_load_showfile_dialog(self.parent(),
         #                                                                          self._board_configuration))
 
-        #self._toolbar.append(save_show_file_button)
-        #self._toolbar.append(load_show_file_button)
+        # self._toolbar.append(save_show_file_button)
+        # self._toolbar.append(load_show_file_button)
 
         self._show_browser = ShowBrowser(parent, board_configuration, self._open_page_tab_widget)
 

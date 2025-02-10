@@ -1,4 +1,6 @@
+# coding=utf-8
 from logging import getLogger
+
 import ruamel.yaml as yaml
 
 logger = getLogger(__file__)

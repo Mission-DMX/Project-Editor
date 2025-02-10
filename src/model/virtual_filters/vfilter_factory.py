@@ -16,11 +16,11 @@ if TYPE_CHECKING:
 
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
-from model.virtual_filters.effects_stacks.vfilter import EffectsStack
-from model.virtual_filters.range_adapters import SixteenBitToFloatRange, EightBitToFloatRange, \
-    ColorGlobalBrightnessMixinVFilter
-from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from model.virtual_filters.cue_vfilter import CueFilter
+from model.virtual_filters.effects_stacks.vfilter import EffectsStack
+from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
+from model.virtual_filters.range_adapters import (ColorGlobalBrightnessMixinVFilter, EightBitToFloatRange,
+                                                  SixteenBitToFloatRange)
 
 
 def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_id: str,

@@ -1,6 +1,6 @@
 # coding=utf-8
 """Scene module"""
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .filter import Filter
 
@@ -211,6 +211,7 @@ class Scene:
                 pass
             for pc in p.child_pages:
                 remove_filter_from_page(pc)
+
         for p in self.pages:
             remove_filter_from_page(p)
 

@@ -2,7 +2,7 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QWidget
 
-from model.control_desk import BankSet, RawDeskColumn, FaderBank
+from model.control_desk import BankSet, FaderBank, RawDeskColumn
 
 
 class ConsoleFaderBankSelectorWidget(QComboBox):

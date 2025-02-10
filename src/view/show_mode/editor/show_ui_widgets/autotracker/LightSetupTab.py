@@ -2,21 +2,13 @@
 import asyncio
 import threading
 
-import cv2
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QWidget,
-    QGridLayout,
-    QLayout,
-    QLabel,
-    QSlider,
-    QPushButton,
-)
+from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QPushButton, QSlider
 
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
-from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
-from controller.autotrack.Helpers.ImageHelper import cv2qim, draw_overlay
+from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
+from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 
 
 class LightSetupTab(GuiTab):

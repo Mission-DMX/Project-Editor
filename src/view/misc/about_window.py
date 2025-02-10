@@ -4,10 +4,9 @@
 
 from logging import getLogger
 
+from html2text import html2text
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
-
-from html2text import html2text
 
 logger = getLogger(__file__)
 

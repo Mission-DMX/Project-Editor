@@ -3,21 +3,20 @@
 """This file provides the main control widget for the filter stacking v-filter."""
 
 from PySide6.QtCore import QEvent, Qt
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QTreeWidgetItem, QVBoxLayout, QSpinBox, QMessageBox, QScrollArea, \
-    QSplitter, QStackedWidget
+from PySide6.QtWidgets import (QHBoxLayout, QMessageBox, QScrollArea, QSpinBox, QSplitter, QStackedWidget,
+                               QTreeWidgetItem, QVBoxLayout, QWidget)
 
-from model.ofl.fixture import UsedFixture
 from model import Filter
-from model.virtual_filters.effects_stacks.vfilter import EffectsStack
+from model.ofl.fixture import UsedFixture
 from model.virtual_filters.effects_stacks.effect import Effect
+from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
-from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.show_mode.effect_stacks.effects_compilation_widget import EffectCompilationWidget
 from view.show_mode.effect_stacks.effects_list import EffectsListWidget
+from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 
 
 class EffectsStackEditor(QWidget):
-
     """This configuration widget provides an editor enabling the user to compose effect onto sockets."""
 
     def __init__(self, f: Filter, parent: QWidget | None):

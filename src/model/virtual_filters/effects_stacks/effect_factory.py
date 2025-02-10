@@ -2,12 +2,13 @@
 
 """This file contains an effect factory for obtaining effects in the context of restoring a show file state."""
 
+from typing import TYPE_CHECKING
+
 from model.virtual_filters.effects_stacks.effect import Effect
 from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
 from model.virtual_filters.effects_stacks.effects.fader_input_effects import ColorInputEffect
 from model.virtual_filters.effects_stacks.effects.generic_effects import FunctionEffect
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 

@@ -1,25 +1,13 @@
 # coding=utf-8
-import cv2
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import (
-    QWidget,
-    QLabel,
-    QVBoxLayout,
-    QLayout,
-    QPushButton,
-    QFileDialog,
-    QDialog,
-    QComboBox,
-)
+from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLayout, QPushButton, QVBoxLayout
 
-from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
-from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
-from controller.autotrack.ImageOptimizer.ImagePipeline import ImagePipeline
 from controller.autotrack.Helpers.ImageHelper import cv2qim
+from controller.autotrack.Helpers.InstanceManager import InstanceManager
+from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
 from controller.autotrack.Sources.CameraLoader import CameraLoader
 from controller.autotrack.Sources.FileLoader import FileLoader
-from controller.autotrack.Helpers.InstanceManager import InstanceManager
 from controller.autotrack.Sources.FrameManager import FrameManager
+from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
 
 
 class SourcesTab(GuiTab):

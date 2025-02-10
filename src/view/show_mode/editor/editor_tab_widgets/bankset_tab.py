@@ -1,10 +1,11 @@
+# coding=utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QToolBar, QListWidget, QListWidgetItem, QHBoxLayout, QLineEdit, \
-    QCheckBox, QGroupBox, QLabel, QComboBox, QDoubleSpinBox, QSpinBox
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
+                               QListWidget, QListWidgetItem, QSpinBox, QToolBar, QVBoxLayout, QWidget)
 
 from model import ColorHSI
-from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
+from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 
 
 class BankSetTabWidget(QWidget):

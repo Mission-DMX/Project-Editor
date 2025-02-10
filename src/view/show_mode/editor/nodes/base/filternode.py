@@ -2,13 +2,11 @@
 """Basic filter node"""
 from logging import getLogger
 
-from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
+from pyqtgraph.flowchart.Flowchart import Node, Terminal
 
-
-from model import Scene, Filter
+from model import Filter, Scene
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
-
 from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
 
@@ -38,7 +36,8 @@ class FilterNode(Node):
 
         super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
 
-        self.fsi = FilterSettingsItem(self, self.graphicsItem(), self._filter) if self._filter.configuration_supported else None
+        self.fsi = FilterSettingsItem(self, self.graphicsItem(),
+                                      self._filter) if self._filter.configuration_supported else None
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
