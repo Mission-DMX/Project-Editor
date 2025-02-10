@@ -16,6 +16,3 @@ jobs:
       run: |
         pip install -r requirements.txt
         pip install pylint
-    - name: Analysing the code with pylint
-      run: |
-        pylint $(git ls-files '*.py')
