@@ -13,10 +13,10 @@ numpy
 ruamel.yaml
 html2text
 # Dependencies for automatic tracking
-#opencv-python>=4.8.0
-#qimage2ndarray>=1.10
-#aiortc>=1.5
-#qasync>=0.26
+opencv-python>=4.8.0
+qimage2ndarray>=1.10
+aiortc>=1.5
+qasync>=0.26
 onnxruntime-gpu>=1.16.1
 #onnxruntime-openvino
 pyjoystick
