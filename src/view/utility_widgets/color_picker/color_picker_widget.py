@@ -110,8 +110,10 @@ class ColorPickerWidget(QOpenGLWidget):
         ]
         f = self.context().functions()
         count = len(projection_matrix)
+        # It should be possible to use QOpenGLExtraFunctions::glProgramUniform() with programId() as a workaround.
         #f.glUniform1fv(vert_projection_matricies, count, projection_matrix)
-        self._gl_program.setUniformValueArray(vert_projection_matricies, projection_matrix, count)
+        f.glUniformMatrix4fv(vert_projection_matricies, 1, 0, projection_matrix)
+        #self._gl_program.setUniformValueArray(vert_projection_matricies, projection_matrix, count)
 
     def paintGL(self):
         super().paintGL()
