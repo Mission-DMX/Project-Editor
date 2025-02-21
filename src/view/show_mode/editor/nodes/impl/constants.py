@@ -77,13 +77,13 @@ class Constants16BitNode(TextPreviewRendererMixin):
     def update_node_after_settings_changed(self):
         try:
             self.filter.initial_parameters["value"] = str(
-                max(min(int(self.filter.initial_parameters["value"]), 255), 0))
+                max(min(int(self.filter.initial_parameters["value"]), 65565), 0))
         except ValueError as e:
             logger.error("Error while checking entered value", e)
             self.filter.initial_parameters["value"] = "0"
 
 
-class ConstantsFloatNode(FilterNode):
+class ConstantsFloatNode(TextPreviewRendererMixin):
     """Filter to represent a float/double value."""
     nodeName = 'Float_filter'
 
@@ -99,8 +99,13 @@ class ConstantsFloatNode(FilterNode):
         self.filter.gui_update_keys["value"] = DataType.DT_DOUBLE
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
-    def _draw_preview(self, p: QPainter):
-        pass  # TODO
+    def update_node_after_settings_changed(self):
+        try:
+            self.filter.initial_parameters["value"] = str(
+                float(self.filter.initial_parameters["value"]))
+        except ValueError as e:
+            logger.error("Error while checking entered value", e)
+            self.filter.initial_parameters["value"] = "0.0"
 
 
 class ConstantsColorNode(FilterNode):
