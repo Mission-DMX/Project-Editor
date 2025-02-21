@@ -1,13 +1,40 @@
 # coding=utf-8
 """Constants filter nodes"""
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter, QFontMetrics, QBrush, QColor
 
 from model import DataType
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
-class Constants8BitNode(FilterNode):
+from logging import getLogger
+logger = getLogger(__file__)
+
+
+class TextPreviewRendererMixin(FilterNode):
+    _text_brush = QBrush(QColor(30, 30, 30, 255))
+    _value_box_brush = QBrush(QColor(128, 128, 128, 150))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.graphicsItem().additional_rendering_method = self._draw_preview
+
+    def _draw_preview(self, p: QPainter):
+        value_str = str(self.filter.initial_parameters.get("value"))
+        fm: QFontMetrics = p.fontMetrics()
+        sheight = fm.height()
+        slen = fm.horizontalAdvance(value_str)
+        br = self.graphicsItem().boundingRect()
+        p.scale(1.0, 1.0)
+        y = (br.height() - sheight - 12) / 0.25
+        x = ((br.width() / 2) / 0.25) - (slen / 2) - 10
+        p.setBrush(TextPreviewRendererMixin._value_box_brush)
+        p.drawRect(x, y, slen + 6, sheight + 6)
+        p.setBrush(TextPreviewRendererMixin._text_brush)
+        p.drawText(x + 3, y + sheight, value_str)
+
+
+class Constants8BitNode(TextPreviewRendererMixin):
     """Filter to represent an 8 bit value."""
     nodeName = '8_bit_filter'
 
@@ -22,13 +49,16 @@ class Constants8BitNode(FilterNode):
             self.filter.initial_parameters["value"] = "0"
         self.filter.out_data_types["value"] = DataType.DT_8_BIT
         self.filter.gui_update_keys["value"] = DataType.DT_8_BIT
-        self.graphicsItem().additional_rendering_method = self._draw_preview
 
-    def _draw_preview(self, p: QPainter):
-        pass  # TODO
+    def update_node_after_settings_changed(self):
+        try:
+            self.filter.initial_parameters["value"] = str(max(min(int(self.filter.initial_parameters["value"]), 255), 0))
+        except ValueError as e:
+            logger.error("Error while checking entered value", e)
+            self.filter.initial_parameters["value"] = "0"
 
 
-class Constants16BitNode(FilterNode):
+class Constants16BitNode(TextPreviewRendererMixin):
     """Filter to represent a 16 bit value."""
     nodeName = '16_bit_filter'
 
@@ -43,10 +73,14 @@ class Constants16BitNode(FilterNode):
             self.filter.initial_parameters["value"] = "0"
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["value"] = DataType.DT_16_BIT
-        self.graphicsItem().additional_rendering_method = self._draw_preview
 
-    def _draw_preview(self, p: QPainter):
-        pass  # TODO
+    def update_node_after_settings_changed(self):
+        try:
+            self.filter.initial_parameters["value"] = str(
+                max(min(int(self.filter.initial_parameters["value"]), 255), 0))
+        except ValueError as e:
+            logger.error("Error while checking entered value", e)
+            self.filter.initial_parameters["value"] = "0"
 
 
 class ConstantsFloatNode(FilterNode):

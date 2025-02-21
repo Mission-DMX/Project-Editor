@@ -55,5 +55,6 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
                 y_outp += self.terminalOffset() * 4
         additional_rendering_method = self.additional_rendering_method
         if additional_rendering_method is not None:
+            p.setBrush(FilterNodeGraphicsItem._data_type_brush)
             additional_rendering_method(p)
         p.restore()

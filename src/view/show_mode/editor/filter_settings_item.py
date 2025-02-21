@@ -37,7 +37,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
         self.filter_node = filter_node
         self.on_update = lambda: None
         self.setScale(0.2)
-        self.moveBy(parent.boundingRect().width() / 2, parent.boundingRect().height() - 20)
+        self.moveBy(parent.boundingRect().width() / 2 - 6, parent.boundingRect().height() - 20)
         self._filter = filter
         self._mb_updated: bool = False
 
