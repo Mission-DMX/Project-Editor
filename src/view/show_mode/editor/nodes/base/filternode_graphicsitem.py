@@ -1,4 +1,6 @@
 # coding=utf-8
+from typing import Callable
+
 from pyqtgraph.flowchart.Node import NodeGraphicsItem
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter
@@ -18,6 +20,7 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
         self.setTerminalOffset(self.terminalOffset() + 7)
         from view.show_mode.editor.nodes.type_to_node_dict import type_to_node
         self._node_type_string = type_to_node[self.node.filter.filter_type]
+        self.additional_rendering_method: Callable[[QPainter], None] | None = None
 
     def paint(self, p: QPainter, *args):
         super().paint(p, *args)
@@ -50,4 +53,7 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
             else:
                 p.drawText(node_width * 4 - 8 * len(terminal_dt_name), y_outp, terminal_dt_name)
                 y_outp += self.terminalOffset() * 4
+        additional_rendering_method = self.additional_rendering_method
+        if additional_rendering_method is not None:
+            additional_rendering_method(p)
         p.restore()

@@ -1,5 +1,7 @@
 # coding=utf-8
 """Constants filter nodes"""
+from PySide6.QtGui import QPainter
+
 from model import DataType
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -20,6 +22,10 @@ class Constants8BitNode(FilterNode):
             self.filter.initial_parameters["value"] = "0"
         self.filter.out_data_types["value"] = DataType.DT_8_BIT
         self.filter.gui_update_keys["value"] = DataType.DT_8_BIT
+        self.graphicsItem().additional_rendering_method = self._draw_preview
+
+    def _draw_preview(self, p: QPainter):
+        pass  # TODO
 
 
 class Constants16BitNode(FilterNode):
@@ -37,6 +43,10 @@ class Constants16BitNode(FilterNode):
             self.filter.initial_parameters["value"] = "0"
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["value"] = DataType.DT_16_BIT
+        self.graphicsItem().additional_rendering_method = self._draw_preview
+
+    def _draw_preview(self, p: QPainter):
+        pass  # TODO
 
 
 class ConstantsFloatNode(FilterNode):
@@ -53,6 +63,10 @@ class ConstantsFloatNode(FilterNode):
             self.filter.initial_parameters["value"] = "0.0"
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.filter.gui_update_keys["value"] = DataType.DT_DOUBLE
+        self.graphicsItem().additional_rendering_method = self._draw_preview
+
+    def _draw_preview(self, p: QPainter):
+        pass  # TODO
 
 
 class ConstantsColorNode(FilterNode):
@@ -71,6 +85,10 @@ class ConstantsColorNode(FilterNode):
             self.filter.initial_parameters["value"] = "0,0,0"
         self.filter.out_data_types["value"] = DataType.DT_COLOR
         self.filter.gui_update_keys["value"] = DataType.DT_COLOR
+        self.graphicsItem().additional_rendering_method = self._draw_preview
+
+    def _draw_preview(self, p: QPainter):
+        pass  # TODO
 
 
 class PanTiltConstant(FilterNode):
@@ -99,6 +117,10 @@ class PanTiltConstant(FilterNode):
             self.filter.filter_configurations["outputs"] = "16bit"
         self.setup_output_terminals()
         self.filter.gui_update_keys["pan"] = DataType.DT_DOUBLE
+        self.graphicsItem().additional_rendering_method = self._draw_preview
+
+    def _draw_preview(self, p: QPainter):
+        pass  # TODO
 
     def setup_output_terminals(self):
         existing_output_keys = [k for k in self.outputs().keys()]

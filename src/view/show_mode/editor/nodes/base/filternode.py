@@ -6,6 +6,7 @@ from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
 
 from model import Filter, Scene
+from model.filter import FilterTypeEnumeration
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
@@ -44,7 +45,7 @@ class FilterNode(Node):
         self.graphicsItem().xChanged.connect(self.update_filter_pos)
         self.channel_hints = {}
 
-    def graphicsItem(self):
+    def graphicsItem(self) -> FilterNodeGraphicsItem:
         """Return the GraphicsItem for this node. Subclasses may re-implement
         this method to customize their appearance in the flowchart."""
         if self._graphicsItem is None:
