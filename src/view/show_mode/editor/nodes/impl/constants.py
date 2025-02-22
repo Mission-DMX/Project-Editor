@@ -126,7 +126,7 @@ class ConstantsColorNode(FilterNode):
         self.filter.out_data_types["value"] = DataType.DT_COLOR
         self.filter.gui_update_keys["value"] = DataType.DT_COLOR
         self.graphicsItem().additional_rendering_method = self._draw_preview
-        self._color_brush = QBrush(QColor(0,0,0,0))
+        self._color_brush = QBrush(ColorHSI.from_filter_str(self.filter.initial_parameters["value"]).to_qt_color())
 
     def _draw_preview(self, p: QPainter):
         p.setBrush(ConstantsColorNode._value_box_brush)
