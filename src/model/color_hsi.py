@@ -33,6 +33,8 @@ class ColorHSI:
         if not filter_format or filter_format.count(",") < 2:
             return ColorHSI(128.0, 0.5, 1.0)
         parts = filter_format.split(",")
+        if len(parts) < 3:
+            raise ValueError("Expected HSI format: hue,saturation,intensity")
         hue = float(parts[0]) % 360.0
         saturation = float(parts[1])
         if saturation < 0:

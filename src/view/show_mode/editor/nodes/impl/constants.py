@@ -2,7 +2,7 @@
 """Constants filter nodes"""
 from PySide6.QtGui import QPainter, QFontMetrics, QBrush, QColor
 
-from model import DataType
+from model import DataType, ColorHSI
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -113,6 +113,7 @@ class ConstantsColorNode(FilterNode):
     TODO specify color format
     """
     nodeName = 'Color_filter'
+    _value_box_brush = QBrush(QColor(128, 128, 128, 150))
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name, terminals={
@@ -125,9 +126,24 @@ class ConstantsColorNode(FilterNode):
         self.filter.out_data_types["value"] = DataType.DT_COLOR
         self.filter.gui_update_keys["value"] = DataType.DT_COLOR
         self.graphicsItem().additional_rendering_method = self._draw_preview
+        self._color_brush = QBrush(QColor(0,0,0,0))
 
     def _draw_preview(self, p: QPainter):
-        pass  # TODO
+        p.setBrush(ConstantsColorNode._value_box_brush)
+        br = self.graphicsItem().boundingRect()
+        p.scale(1.0, 1.0)
+        y = (br.height() - 26 - 12) / 0.25
+        x = (br.width() / 2 - 13) / 0.25
+        p.drawRect(x, y, 20 + 6, 20 + 6)
+        p.setBrush(self._color_brush)
+        p.drawRect(x + 3, y + 3, 20, 20)
+
+    def update_node_after_settings_changed(self):
+        try:
+            self._color_brush = QBrush(ColorHSI.from_filter_str(self.filter.initial_parameters["value"]).to_qt_color())
+        except ValueError as e:
+            logger.error("Error while checking entered value", e)
+            self.filter.initial_parameters["value"] = "0,0,0"
 
 
 class PanTiltConstant(FilterNode):
