@@ -11,9 +11,11 @@ from logging import getLogger
 logger = getLogger(__file__)
 
 
+_text_brush = QBrush(QColor(30, 30, 30, 255))
+_value_box_brush = QBrush(QColor(128, 128, 128, 150))
+
+
 class TextPreviewRendererMixin(FilterNode):
-    _text_brush = QBrush(QColor(30, 30, 30, 255))
-    _value_box_brush = QBrush(QColor(128, 128, 128, 150))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -28,9 +30,9 @@ class TextPreviewRendererMixin(FilterNode):
         p.scale(1.0, 1.0)
         y = (br.height() - sheight - 12) / 0.25
         x = ((br.width() / 2) / 0.25) - (slen / 2) - 10
-        p.setBrush(TextPreviewRendererMixin._value_box_brush)
+        p.setBrush(_value_box_brush)
         p.drawRect(x, y, slen + 6, sheight + 6)
-        p.setBrush(TextPreviewRendererMixin._text_brush)
+        p.setBrush(_text_brush)
         p.drawText(x + 3, y + sheight, value_str)
 
 
@@ -113,7 +115,6 @@ class ConstantsColorNode(FilterNode):
     TODO specify color format
     """
     nodeName = 'Color_filter'
-    _value_box_brush = QBrush(QColor(128, 128, 128, 150))
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name, terminals={
@@ -129,7 +130,7 @@ class ConstantsColorNode(FilterNode):
         self._color_brush = QBrush(ColorHSI.from_filter_str(self.filter.initial_parameters["value"]).to_qt_color())
 
     def _draw_preview(self, p: QPainter):
-        p.setBrush(ConstantsColorNode._value_box_brush)
+        p.setBrush(_value_box_brush)
         br = self.graphicsItem().boundingRect()
         p.scale(1.0, 1.0)
         y = (br.height() - 26 - 12) / 0.25
@@ -175,7 +176,20 @@ class PanTiltConstant(FilterNode):
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
     def _draw_preview(self, p: QPainter):
-        pass  # TODO
+        value_pan_str = "Pan: " + str(self.filter.initial_parameters.get("pan"))
+        value_tilt_str = "Tilt: " + str(self.filter.initial_parameters.get("tilt"))
+        fm: QFontMetrics = p.fontMetrics()
+        sheight = fm.height() * 2 + 6
+        slen = max(fm.horizontalAdvance(value_pan_str), fm.horizontalAdvance(value_tilt_str))
+        br = self.graphicsItem().boundingRect()
+        p.scale(1.0, 1.0)
+        y = (br.height() - sheight - 12) / 0.25
+        x = (br.width() / 10)
+        p.setBrush(_value_box_brush)
+        p.drawRect(x, y, slen + 6, sheight + 6)
+        p.setBrush(_text_brush)
+        p.drawText(x + 3, y + fm.height() + 3, value_pan_str)
+        p.drawText(x + 3, y + sheight, value_tilt_str)
 
     def setup_output_terminals(self):
         existing_output_keys = [k for k in self.outputs().keys()]
