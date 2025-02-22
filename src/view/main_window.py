@@ -166,10 +166,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.menuBar().addAction(menu.menuAction())
 
     def _start_connection(self):  # TODO rework to signals
-        self._fish_connector.start()
-        from model.control_desk import commit_all_bank_sets
-
-        commit_all_bank_sets()
+        self._fish_connector.start(True)
 
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
         """add entries to a menu"""

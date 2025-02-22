@@ -91,13 +91,19 @@ class NetworkManager(QtCore.QObject):
         """
         self._server_name = name
 
-    def start(self) -> None:
+    def start(self, active : bool = False) -> None:
         """establish connection with current fish socket"""
         if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             logger.info("connect local socket to Server: %s", self._server_name)
             self._socket.connectToServer(self._server_name)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
                 self._is_running = True
+            else:
+                return
+            from model.control_desk import commit_all_bank_sets
+            commit_all_bank_sets()
+            if active:
+                self.push_messages()
 
     def disconnect(self) -> None:
         """disconnect from fish socket"""
