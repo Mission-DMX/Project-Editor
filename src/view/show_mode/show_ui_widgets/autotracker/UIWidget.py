@@ -5,8 +5,8 @@ from PySide6.QtWidgets import QWidget
 
 from model import UIPage, UIWidget
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
-from view.show_mode.editor.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
-from view.show_mode.editor.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
+from view.show_mode.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
+from view.show_mode.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
 
 logger = getLogger(__file__)
 

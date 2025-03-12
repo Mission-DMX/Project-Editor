@@ -7,7 +7,7 @@ from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
 from controller.autotrack.Sources.CameraLoader import CameraLoader
 from controller.autotrack.Sources.FileLoader import FileLoader
 from controller.autotrack.Sources.FrameManager import FrameManager
-from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
 
 
 class SourcesTab(GuiTab):

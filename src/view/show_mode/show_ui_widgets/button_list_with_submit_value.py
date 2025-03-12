@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLay
 
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
-from view.show_mode.editor.show_ui_widgets.constant_button_list import ConstantNumberButtonList
+from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 
 
 class ButtonsWithValueSubmit(UIWidget):

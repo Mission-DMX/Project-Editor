@@ -8,7 +8,7 @@ from controller.autotrack.Detection.Yolo8.Yolo8GPU import Yolo8GPU
 from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
 from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
-from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
 
 
 class DetectionTab(GuiTab):

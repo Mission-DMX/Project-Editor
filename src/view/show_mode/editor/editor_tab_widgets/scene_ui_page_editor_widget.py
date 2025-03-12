@@ -6,8 +6,8 @@ from PySide6.QtWidgets import QDialog, QGridLayout, QLabel, QMenu, QPushButton, 
 
 from model import Filter, UIPage, UIWidget
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
-from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
-from view.show_mode.editor.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
+from view.show_mode.show_ui_widgets import filter_to_ui_widget
+from view.show_mode.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
 
 
 class UIWidgetHolder(QWidget):
