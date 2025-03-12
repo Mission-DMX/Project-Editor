@@ -65,9 +65,11 @@ class ConstantNumberButtonList(UIWidget):
         return widget
 
     def __init__(self, fid: str, parent: "UIPage", filter_model: Filter, configuration: dict[str, str]):
-        super().__init__(fid, parent, configuration)
+        super().__init__(parent, configuration)
+        self.associated_filters["constant"] = fid
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
+        self._model = filter_model
         value_str = filter_model.initial_parameters["value"]
         if '.' in value_str:
             self._value = float(value_str)
@@ -100,7 +102,7 @@ class ConstantNumberButtonList(UIWidget):
         return self._configuration_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = ConstantNumberButtonList(self.filter_id, self.parent)
+        w = ConstantNumberButtonList(self.associated_filters["constant"], self.parent, self._model.copy(), self.configuration.copy())
         super().copy_base(w)
         return w
 

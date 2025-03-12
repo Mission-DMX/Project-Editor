@@ -8,7 +8,8 @@ from model import ColorHSI, Filter, UIPage, UIWidget
 class ColorSelectionUIWidget(UIWidget):
 
     def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
-        super().__init__(fid, parent, configuration)
+        super().__init__(parent, configuration)
+        self.associated_filters["constant"] = fid
         if filter_model:
             self._value = ColorHSI.from_filter_str(filter_model.initial_parameters.get("value"))
         else:
@@ -64,7 +65,7 @@ class ColorSelectionUIWidget(UIWidget):
             transmit_button.clicked.connect(lambda _i=i: self.push_value(self._presets[_i]))
             column_layout.addWidget(transmit_button)
             layout.addLayout(column_layout)
-        self._presets = color_presets
+        self._presets: list[ColorHSI] = color_presets
         w.setLayout(layout)
         return w
 

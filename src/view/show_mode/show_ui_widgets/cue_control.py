@@ -11,7 +11,8 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 class CueControlUIWidget(UIWidget):
 
     def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
-        super().__init__(fid, parent, configuration)
+        super().__init__(parent, configuration)
+        self.associated_filters["cue_filter"] = fid
         self._statuslabel = QLabel()
         self._cues: list[tuple[str, int]] = []
         self._command_chain: list[tuple[str, str]] = []
@@ -129,7 +130,7 @@ class CueControlUIWidget(UIWidget):
         return self._config_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = CueControlUIWidget(self.filter_id, self.parent, None, self.configuration)
+        w = CueControlUIWidget(self.associated_filters["cue_filter"], self.parent, None, self.configuration)
         super().copy_base(w)
         return w
 
