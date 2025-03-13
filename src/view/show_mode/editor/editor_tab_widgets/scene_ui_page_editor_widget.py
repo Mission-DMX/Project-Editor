@@ -1,12 +1,15 @@
 # coding=utf-8
 """A scene can have multiple pages"""
+from typing import Type
+
 from PySide6.QtCore import QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QAction, QMouseEvent
 from PySide6.QtWidgets import QDialog, QGridLayout, QLabel, QMenu, QPushButton, QVBoxLayout, QWidget
 
 from model import Filter, UIPage, UIWidget
+from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
-from view.show_mode.show_ui_widgets import filter_to_ui_widget
+from view.show_mode.show_ui_widgets import filter_to_ui_widget, WIDGET_LIBRARY
 from view.show_mode.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
 
 
@@ -17,7 +20,7 @@ class UIWidgetHolder(QWidget):
 
     def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True):
         super().__init__(parent)
-        self._model = child
+        self._model: UIWidget = child
         if instance_for_editor:
             self._child = child.get_configuration_widget(self)
         else:
@@ -97,6 +100,10 @@ class UIWidgetHolder(QWidget):
         """The widget the holder is holding"""
         return self._child
 
+    @property
+    def widget(self) -> UIWidget:
+        return self._model
+
     def move(self, new_pos: QPoint):
         super().move(new_pos)
         self._model.position = (new_pos.x(), new_pos.y())
@@ -138,6 +145,7 @@ class SceneUIPageEditorWidget(QWidget):
 
     def _widget_selection_menu(self, pos: QPoint):
         menu = QMenu(self)
+        """
         added_filters = 0
         for filter_ in self.ui_page.scene.filters:
             if len(filter_.gui_update_keys.keys()) < 1:
@@ -156,6 +164,11 @@ class SceneUIPageEditorWidget(QWidget):
             AutoTrackerUIWidget("", self._ui_page), pos)
                                             )
         menu.addAction(auto_track_action)
+        """
+        for wid, widget_def in WIDGET_LIBRARY:
+            action = QAction(widget_def[0], menu)
+            action.triggered.connect(lambda checked=False, widget=widget_def: self._add_generic_widget(widget, pos))
+            menu.addAction(action)
         menu.popup(self.mapToGlobal(pos))
 
     def _add_filter_widget(self, filter_: Filter, pos: QPoint):
@@ -169,14 +182,18 @@ class SceneUIPageEditorWidget(QWidget):
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
         self._add_generic_widget(config_widget, pos)
 
-    def _add_generic_widget(self, config_widget: UIWidget, pos: QPoint):
-        widget = UIWidgetHolder(config_widget, self)
-        # widget.holding.parameters = filter_.initial_parameters
-        # widget.holding.configuration = filter_.filter_configurations
-        self._widgets.append(widget)
-        widget.closing.connect(lambda: self._widgets.remove(widget))
-        widget.move(pos)
+    def _add_generic_widget(self, widget_def: tuple[str, Type[UIWidget], list[FilterTypeEnumeration], int], pos: QPoint):
+        # TODO query filters
+        config_widget = widget_def[1](self._ui_page)
+        widget_holder = UIWidgetHolder(config_widget, self)
+        self._widgets.append(widget_holder)
+        widget_holder.closing.connect(lambda: self._remove_widget_holder(widget_holder))
+        widget_holder.move(pos)
         self._ui_page.append_widget(config_widget)
+
+    def _remove_widget_holder(self, wh: UIWidgetHolder):
+        self._widgets.remove(wh)
+        self._ui_page.remove_widget(wh.widget)
 
     @property
     def ui_page(self) -> UIPage:

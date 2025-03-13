@@ -204,6 +204,9 @@ class UIPage:
     def push_update(self):
         """This method indicates that updates to the running filters should be sent."""
 
+    def remove_widget(self, widget: UIWidget):
+        self._widgets.remove(widget)
+
 
 class ShowUI:
     """This class contains all pages of the show
