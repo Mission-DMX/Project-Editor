@@ -130,6 +130,8 @@ class SceneUIPageEditorWidget(QWidget):
             self._widgets.append(widget)
             widget.closing.connect(lambda: self._widgets.remove(widget))
 
+    # TODO add other add method (for example x-touch button opening the dialog in the middle of the editor
+
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() is Qt.MouseButton.RightButton:
             self._widget_selection_menu(event.pos())
