@@ -14,11 +14,11 @@ The widget library contains information about widgets, provided by their slug. T
 out of the human readable name, the type required to instantiate a requested widget, the supported filter types (that
 should be selected for construction) and a number indicating how many filters should be selected.
 """
-WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[FilterTypeEnumeration], int]] = {
-    "autotracker": ("Auto Tracker", AutoTrackerUIWidget, [FilterTypeEnumeration.VFILTER_POSITION_CONSTANT], 1),
-    "buttonarray": ("Button Array", ButtonsWithValueSubmit, [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT], 1),
-    "colorpicker": ("Color Picker", ColorSelectionUIWidget, [FilterTypeEnumeration.FILTER_CONSTANT_COLOR], 1),
-    "cuecontrol": ("Cue Control", CueControlUIWidget, [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES], 1)
+WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]]] = {
+    "autotracker": ("Auto Tracker", AutoTrackerUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
+    "buttonarray": ("Button Array", ButtonsWithValueSubmit, [[FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
+    "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
+    "cuecontrol": ("Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]])
 }
 
 def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None,

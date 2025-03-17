@@ -67,11 +67,14 @@ class SceneUIPageEditorWidget(QWidget):
             pos: The position at which the widget should be placed
         """
         # TODO replace with filter.gui_update_keys to ui widget / Change function to construct one from the keys
+        # FIXME we should use this method to provide a context menu to nodes, enabling them to place widgets without
+        #  relesecting them.
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
         self._add_generic_widget(config_widget, pos)
 
-    def _add_generic_widget(self, widget_def: tuple[str, Type[UIWidget], list[FilterTypeEnumeration], int], pos: QPoint):
-        # TODO query filters
+    def _add_generic_widget(self, widget_def: tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]], pos: QPoint):
+        # TODO query filters using filter selection dialog (used from import vfilter), passing the remaining query list
+        #  recursively
         config_widget = widget_def[1](self._ui_page)
         widget_holder = UIWidgetHolder(config_widget, self)
         self._widgets.append(widget_holder)
