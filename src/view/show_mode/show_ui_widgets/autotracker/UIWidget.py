@@ -4,9 +4,12 @@ from logging import getLogger
 from PySide6.QtWidgets import QWidget
 
 from model import UIPage, UIWidget
-from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
 from view.show_mode.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 
 logger = getLogger(__file__)
 
@@ -16,6 +19,7 @@ class AutoTrackerUIWidget(UIWidget):
     def __init__(self, fid: str, parent_page: "UIPage", configuration: dict[str, str] = None):
         super().__init__(fid, parent_page, configuration)
         associated_filter = parent_page.scene.get_filter_by_id(fid)
+        from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
         if associated_filter:
             if not isinstance(associated_filter, AutoTrackerFilter):
                 raise ValueError("Expected AutoTrackerFilter.")

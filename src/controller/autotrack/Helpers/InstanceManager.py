@@ -1,7 +1,10 @@
 from controller.autotrack.Helpers.AutoTrackerSettings import AutoTrackerSettings
 from controller.autotrack.ImageOptimizer.ImagePipeline import ImagePipeline
 from controller.autotrack.Sources.Loader import Loader
-from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 
 
 class InstanceManager:
@@ -16,12 +19,12 @@ class InstanceManager:
     """
 
     # TODO refactor to Properties
-    def __init__(self, f: AutoTrackerFilter):
+    def __init__(self, f: "AutoTrackerFilter"):
         self.loader = None
         self.preview_pipeline: ImagePipeline | None = None
         self.processing_pipeline: ImagePipeline | None = None
         self._settings = AutoTrackerSettings(f)
-        self.filter: AutoTrackerFilter = f
+        self.filter: "AutoTrackerFilter" = f
         for setting, value in f.filter_configurations.items():
             self._settings.settings[setting] = value
 
