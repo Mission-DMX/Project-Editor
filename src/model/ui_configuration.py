@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QWidget
 from controller.network import NetworkManager
 
 if TYPE_CHECKING:
-    from model import Broadcaster
+    from model import Broadcaster, Filter
     from model.scene import Scene
 
 _network_manager_instance: NetworkManager = None
@@ -64,6 +64,9 @@ class UIWidget(ABC):
             A fully set up QWidget instance
         """
         raise NotImplementedError()
+
+    def set_filter(self, f: "Filter", i: int):
+        pass
 
     @property
     def filter_ids(self) -> list[str]:

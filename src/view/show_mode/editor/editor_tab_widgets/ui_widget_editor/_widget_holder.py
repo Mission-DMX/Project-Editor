@@ -21,7 +21,7 @@ class UIWidgetHolder(QWidget):
             self._child.setEnabled(True)
             self._child.setVisible(True)
         self._child.setParent(self)
-        self._label = QLabel(child.filter_id, self)
+        self._label = QLabel(str(child), self)
         self.update_size()
         if instance_for_editor:
             self._close_button = QPushButton("X", self)

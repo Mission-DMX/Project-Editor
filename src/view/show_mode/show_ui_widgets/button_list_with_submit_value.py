@@ -18,12 +18,16 @@ class ButtonsWithValueSubmit(UIWidget):
     def get_config_dialog_widget(self, parent) -> QWidget:
         return self._button_list.get_config_dialog_widget(parent)
 
-    def __init__(self, fid: str, parent: "UIPage", filter_model: Filter, configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
         super().__init__(parent, configuration)
-        self._filter_type = filter_model.filter_type
+        self._filter_type = None
         self._player_widget: QWidget | None = None
-        self.associated_filters["constant"] = fid
-        self._button_list = ConstantNumberButtonList(fid, self.parent, filter_model, configuration)
+        self._button_list = ConstantNumberButtonList(self.parent, configuration)
+
+    def set_filter(self, f: Filter, i: int):
+        self._filter_type = f.filter_type
+        self._button_list.set_filter(f, i)
+        self.associated_filters["constant"] = f.filter_id
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._button_list.generate_update_content()
@@ -39,9 +43,8 @@ class ButtonsWithValueSubmit(UIWidget):
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         fid = self.associated_filters.get("constant")
-        w = ButtonsWithValueSubmit(fid, self.parent,
-                                   Filter(None, fid, self._filter_type, None, None),
-                                   self.configuration.copy())
+        w = ButtonsWithValueSubmit(self.parent, self.configuration.copy())
+        w.set_filter(Filter(None, fid, self._filter_type, None, None), 0)
         super().copy_base(w)
         return w
 
@@ -72,3 +75,6 @@ class ButtonsWithValueSubmit(UIWidget):
         buttons = self._button_list.get_player_widget(parent)
         layout.addWidget(buttons)
         self._player_widget.setLayout(layout)
+
+    def __str__(self):
+        return str(self.configuration.get("constant"))

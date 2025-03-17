@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QGridLayout, QMenu, QWidget
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
+from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.widget_setup_dialog import WidgetSetupDialog
 from view.show_mode.show_ui_widgets import filter_to_ui_widget, WIDGET_LIBRARY
 
 
@@ -24,6 +25,7 @@ class SceneUIPageEditorWidget(QWidget):
             widget = UIWidgetHolder(uiw, self)
             self._widgets.append(widget)
             widget.closing.connect(lambda: self._widgets.remove(widget))
+        self._widget_setup_dialog: WidgetSetupDialog | None = None
 
     # TODO add other add method (for example x-touch button opening the dialog in the middle of the editor
 
@@ -53,9 +55,9 @@ class SceneUIPageEditorWidget(QWidget):
                                             )
         menu.addAction(auto_track_action)
         """
-        for wid, widget_def in WIDGET_LIBRARY:
+        for wid, widget_def in WIDGET_LIBRARY.items():
             action = QAction(widget_def[0], menu)
-            action.triggered.connect(lambda checked=False, widget=widget_def: self._add_generic_widget(widget, pos))
+            action.triggered.connect(lambda checked=False, widget=widget_def: self._inst_generic_widget(widget, pos))
             menu.addAction(action)
         menu.popup(self.mapToGlobal(pos))
 
@@ -72,15 +74,22 @@ class SceneUIPageEditorWidget(QWidget):
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
         self._add_generic_widget(config_widget, pos)
 
-    def _add_generic_widget(self, widget_def: tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]], pos: QPoint):
-        # TODO query filters using filter selection dialog (used from import vfilter), passing the remaining query list
-        #  recursively
-        config_widget = widget_def[1](self._ui_page)
+    def _inst_generic_widget(self, widget_def: tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]], pos: QPoint):
+        key = widget_def[0]
+        config_widget = widget_def[1](self._ui_page, dict())
+        key_filters = widget_def[2]
+        if len(key_filters) == 0:
+            self._add_generic_widget(config_widget, pos)
+        else:
+            self._widget_setup_dialog = WidgetSetupDialog(self, key_filters, self._add_generic_widget, pos, self._ui_page, config_widget)
+
+    def _add_generic_widget(self, config_widget: UIWidget, pos: QPoint):
         widget_holder = UIWidgetHolder(config_widget, self)
         self._widgets.append(widget_holder)
         widget_holder.closing.connect(lambda: self._remove_widget_holder(widget_holder))
         widget_holder.move(pos)
         self._ui_page.append_widget(config_widget)
+        self._widget_setup_dialog = None
 
     def _remove_widget_holder(self, wh: UIWidgetHolder):
         self._widgets.remove(wh)

@@ -48,7 +48,7 @@ class FilterSelectionWidget(QTreeWidget):
 
         def is_filter_addable(filter_to_add: Filter) -> bool:
             if len(self._allowed_filter_types) > 0:
-                if filter_to_add not in self._allowed_filter_types:
+                if filter_to_add.filter_type not in self._allowed_filter_types:
                     return False
             return True
 
