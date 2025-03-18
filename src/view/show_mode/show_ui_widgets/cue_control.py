@@ -134,8 +134,9 @@ class CueControlUIWidget(UIWidget):
         return self._config_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = CueControlUIWidget(self.associated_filters["cue_filter"], self.parent, None, self.configuration)
+        w = CueControlUIWidget(new_parent, self.configuration)
         super().copy_base(w)
+        w.set_filter(self._filter, 0)
         return w
 
     def get_config_dialog_widget(self, parent: QWidget) -> QWidget:

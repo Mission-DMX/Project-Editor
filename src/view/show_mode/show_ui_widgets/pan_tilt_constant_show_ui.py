@@ -10,14 +10,19 @@ from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_consta
 
 class PanTiltConstantControlUIWidget(UIWidget):
 
-    def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
+    def __init__(self, parent: UIPage, configuration: dict[str, str]):
         super().__init__(parent, configuration)
-        self.associated_filters["pan_tilt_vfilter_fid"] = fid
         self._command_chain: list[tuple[str, str]] = []  # ??
-        if not isinstance(filter_model, PanTiltConstantFilter):
-            print("the filter has to be a PanTiltConstantFilter")
-        self._filter = filter_model
+        self._filter = None
         self._player_widget = None
+
+    def set_filter(self, f: "Filter", i: int):
+        if not f:
+            return
+        self.associated_filters["pan_tilt_vfilter_fid"] = f.filter_id
+        if not isinstance(f, PanTiltConstantFilter):
+            print("the filter has to be a PanTiltConstantFilter")
+        self._filter = f
         self._filter.register_observer(self, self.insert_action)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
@@ -51,7 +56,8 @@ class PanTiltConstantControlUIWidget(UIWidget):
         return self._player_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = PanTiltConstantControlUIWidget(self.associated_filters["pan_tilt_vfilter_fid"], self.parent, None, self.configuration)
+        w = PanTiltConstantControlUIWidget(self.parent, self.configuration)
+        w.set_filter(self._filter, 0)
         super().copy_base(w)
         return w
 

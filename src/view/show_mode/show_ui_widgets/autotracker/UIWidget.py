@@ -17,7 +17,7 @@ logger = getLogger(__file__)
 
 class AutoTrackerUIWidget(UIWidget):
 
-    def __init__(self, fid: str, parent_page: "UIPage", configuration: dict[str, str] = None):
+    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] = None):
         super().__init__(parent_page, configuration)
         self._finished_initializing: bool = False
 
@@ -63,8 +63,9 @@ class AutoTrackerUIWidget(UIWidget):
         return self._tracker_configuration_widget
 
     def copy(self, new_parent: UIPage) -> UIWidget:
-        return AutoTrackerUIWidget(self._associated_filter.filter_id, new_parent,
-                                   self._tracker_player_widget.instance.settings.as_dict())
+        w = AutoTrackerUIWidget(new_parent, self._tracker_player_widget.instance.settings.as_dict())
+        w.set_filter(self._associated_filter, 0)
+        return w
 
     def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
         return self._tracker_player_widget

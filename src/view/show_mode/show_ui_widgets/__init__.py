@@ -18,7 +18,8 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "autotracker": ("Auto Tracker", AutoTrackerUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]]),
     "buttonarray": ("Button Array", ButtonsWithValueSubmit, [[FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
     "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
-    "cuecontrol": ("Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]])
+    "cuecontrol": ("Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]]),
+    "pantiltconstant": ("Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]])
     # TODO add text area widget
     # TODO add direct inputs
     # TODO add fader update widgets
