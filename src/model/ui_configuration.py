@@ -75,7 +75,7 @@ class UIWidget(ABC):
         """Get the id of the linked filter"""
         l: list[str | None] = [None] * len(self._associated_filters)
         i = 0
-        for k, v in self._associated_filters.values():
+        for k, v in self._associated_filters.items():
             try:
                 ik = int(k)
             except ValueError:
@@ -88,6 +88,8 @@ class UIWidget(ABC):
                         l[j] = v
                         break
             i += 1
+        while None in l:
+            l.remove(None)
         return l
 
     @property

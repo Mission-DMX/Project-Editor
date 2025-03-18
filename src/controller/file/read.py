@@ -284,9 +284,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
         w: int = 0
         h: int = 0
         fids = []
-        variante: str = ""
         conf: dict[str, str] = {}
-        widget_cdef = WIDGET_LIBRARY.get(widget_def.text)
         for k, v in widget_def.attrib.items():
             match k:
                 case "posX":
@@ -300,7 +298,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
                 case "filterID":
                     fids = str(v).split(":")
                 case "variante":
-                    variante = str(v)
+                    widget_cdef = WIDGET_LIBRARY.get(str(v))
                 case _:
                     logger.error("Unexpected attribute '{}':'{}' in ui widget definition.".format(k, v))
         for config_entry in widget_def:
@@ -318,7 +316,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
             filters.append(corresponding_filter)
         if widget_cdef is None:
             logger.warning("Opening legacy show file. Attempting to match scene UI widget by used filter.")
-            ui_widget = filter_to_ui_widget(filters[0], page, conf, variante)
+            ui_widget = filter_to_ui_widget(filters[0], page, conf)
         else:
             ui_widget = widget_cdef[1](page, conf)
         i = 0

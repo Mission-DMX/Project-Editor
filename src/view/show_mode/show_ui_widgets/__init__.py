@@ -28,14 +28,14 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
 
 
 def get_widget_key(w: UIWidget) -> str | None:
-    for k, v in WIDGET_LIBRARY:
+    for k, v in WIDGET_LIBRARY.items():
         if isinstance(w, v[1]):
             return k
     return None
 
 
-def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None,
-                        variante: str = "") -> UIWidget:
+def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage",
+                        configuration: dict[str, str] | None = None) -> UIWidget:
     selected_configuration = configuration if configuration else dict()
     match filter_.filter_type:
         case 0 | 1 | 2:

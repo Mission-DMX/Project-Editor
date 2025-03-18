@@ -8,7 +8,6 @@ from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 from controller.utils.process_notifications import ProcessNotifier
 from model import Scene, UIPage
 from model.scene import FilterPage
-from view.show_mode.show_ui_widgets import get_widget_key
 
 
 def _add_filter_page_to_element(scene_element: ElementTree.Element, page: FilterPage, parent_page: FilterPage | None):
@@ -27,6 +26,7 @@ def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage)
     page_element = ElementTree.SubElement(scene_element, "uipage", attrib={
         'title': ""
     })
+    from view.show_mode.show_ui_widgets import get_widget_key
     for widget in ui_page.widgets:
         widget_element = ElementTree.SubElement(page_element, "widget", attrib={
             'posX': str(widget.position[0]),
@@ -34,9 +34,8 @@ def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage)
             'sizeW': str(widget.size[0]),
             'sizeH': str(widget.size[1]),
             'filterID': ":".join(widget.filter_ids),
-            'variante': str(widget.get_variante())
+            'variante': str(get_widget_key(widget) or "")
         })
-        widget_element.text = get_widget_key(widget)
         for k, v in widget.configuration.items():
             config_element = ElementTree.SubElement(widget_element, "configurationEntry", attrib={
                 'name': str(k),
