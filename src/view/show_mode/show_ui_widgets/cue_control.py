@@ -10,18 +10,14 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 
 class CueControlUIWidget(UIWidget):
 
-    def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
+    def __init__(self, parent: UIPage, configuration: dict[str, str] | None = None):
         super().__init__(parent, configuration)
-        self.associated_filters["cue_filter"] = fid
         self._statuslabel = QLabel()
         self._cues: list[tuple[str, int]] = []
         self._command_chain: list[tuple[str, str]] = []
 
-        self._filter = filter_model
+        self._filter = None
         self._cue_state = CueState(self._filter)
-        # Todo: remove callback of the signal
-        if filter_model:
-            filter_model.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._cue_state.update)
 
         self._timer = QTimer()
         self._timer.setInterval(50)
@@ -36,25 +32,33 @@ class CueControlUIWidget(UIWidget):
                 new_item = (name, id)
                 self._cues.append(new_item)
 
-        if filter_model:
-            # TODO refactor this to use cue model entirely
-            cuelist_str = filter_model.filter_configurations.get("cuelist")
-            if cuelist_str:
-                cuelist = cuelist_str.split("$")
-                cuelist_count = len(cuelist)
-                while len(self._cues) < cuelist_count:
-                    c = Cue()
-                    c.from_string_definition(cuelist[len(self._cues)])
-                    cf = (c.name, len(self._cues))
-                    self._cues.append(cf)
-                while len(self._cues) > cuelist_count:
-                    self._cues.pop(-1)
         self._player_cue_list_widget: QListWidget | None = None
         self._config_cue_list_widget: QListWidget | None = None
         self._player_widget: QWidget | None = None
         self._config_widget: QWidget | None = None
         self._input_dialog: QInputDialog | None = None
         self._dialog_widget: QWidget | None = None
+
+    def set_filter(self, f: "Filter", i: int):
+        if not f:
+            return
+        self.associated_filters["cue_filter"] = f.filter_id
+        self._filter = f
+        # Todo: remove callback of the signal
+        f.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._cue_state.update)
+
+        # TODO refactor this to use cue model entirely
+        cuelist_str = f.filter_configurations.get("cuelist")
+        if cuelist_str:
+            cuelist = cuelist_str.split("$")
+            cuelist_count = len(cuelist)
+            while len(self._cues) < cuelist_count:
+                c = Cue()
+                c.from_string_definition(cuelist[len(self._cues)])
+                cf = (c.name, len(self._cues))
+                self._cues.append(cf)
+            while len(self._cues) > cuelist_count:
+                self._cues.pop(-1)
 
     @property
     def configuration(self) -> dict[str, str]:

@@ -15,10 +15,14 @@ out of the human readable name, the type required to instantiate a requested wid
 should be selected for construction) and a number indicating how many filters should be selected.
 """
 WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]]] = {
-    "autotracker": ("Auto Tracker", AutoTrackerUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
+    "autotracker": ("Auto Tracker", AutoTrackerUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]]),
     "buttonarray": ("Button Array", ButtonsWithValueSubmit, [[FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
     "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
     "cuecontrol": ("Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]])
+    # TODO add text area widget
+    # TODO add direct inputs
+    # TODO add fader update widgets
+    # TODO add debug output widgets
 }
 
 def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None,

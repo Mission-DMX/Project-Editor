@@ -22,7 +22,7 @@ def setup_network_manager(nm: NetworkManager, b: "Broadcaster"):
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
-    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] = None):
+    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] | None = None):
         """ Set up the basic components of a widget.
 
         Arguments:
