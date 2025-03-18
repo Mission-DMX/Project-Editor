@@ -26,6 +26,14 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     # TODO add debug output widgets
 }
 
+
+def get_widget_key(w: UIWidget) -> str | None:
+    for k, v in WIDGET_LIBRARY:
+        if isinstance(w, v[1]):
+            return k
+    return None
+
+
 def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None,
                         variante: str = "") -> UIWidget:
     selected_configuration = configuration if configuration else dict()
@@ -33,18 +41,18 @@ def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage", configuration: d
         case 0 | 1 | 2:
             # number constants
             # TODO add choice for direct input
-            return ButtonsWithValueSubmit(filter_.filter_id, parent_page, filter_, selected_configuration)
+            return ButtonsWithValueSubmit(parent_page, selected_configuration)
         case 3:
             # color constant
-            return ColorSelectionUIWidget(filter_.filter_id, parent_page, filter_, selected_configuration)
+            return ColorSelectionUIWidget(parent_page, selected_configuration)
         # case 39 | 40 | 41 | 42 | 43:
         #    # Faders: Update Color
         #    return None
         case FilterTypeEnumeration.FILTER_TYPE_CUES | FilterTypeEnumeration.VFILTER_CUES:
             # Cue Editor: play, pause, cue select, etc.
-            return CueControlUIWidget(filter_.filter_id, parent_page, filter_, selected_configuration)
+            return CueControlUIWidget(parent_page, selected_configuration)
         case FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
             # Constant pan tilt
-            return PanTiltConstantControlUIWidget(filter_.filter_id, parent_page, filter_, selected_configuration)
+            return PanTiltConstantControlUIWidget(parent_page, selected_configuration)
         case _:
             return None

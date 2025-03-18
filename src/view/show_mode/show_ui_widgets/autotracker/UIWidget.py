@@ -22,6 +22,7 @@ class AutoTrackerUIWidget(UIWidget):
         self._finished_initializing: bool = False
 
     def set_filter(self, associated_filter: "Filter", i: int):
+        super().set_filter(associated_filter, i)
         if not associated_filter:
             return
         from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter

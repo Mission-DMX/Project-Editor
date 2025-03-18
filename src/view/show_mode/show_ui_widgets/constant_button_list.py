@@ -80,6 +80,7 @@ class ConstantNumberButtonList(UIWidget):
     def set_filter(self, f: Filter, i: int):
         if f is None:
             return
+        super().set_filter(f, i)
         self._model = f
         value_str = f.initial_parameters["value"]
         self.associated_filters["constant"] = f.filter_id

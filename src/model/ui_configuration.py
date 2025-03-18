@@ -66,12 +66,29 @@ class UIWidget(ABC):
         raise NotImplementedError()
 
     def set_filter(self, f: "Filter", i: int):
-        pass
+        if not f:
+            return
+        self.associated_filters[str(i)] = f.filter_id
 
     @property
     def filter_ids(self) -> list[str]:
         """Get the id of the linked filter"""
-        return list(self._associated_filters.values())
+        l: list[str | None] = [None] * len(self._associated_filters)
+        i = 0
+        for k, v in self._associated_filters.values():
+            try:
+                ik = int(k)
+            except ValueError:
+                ik = i
+            if l[ik] is not None:
+                l[ik] = v
+            else:
+                for j in range(len(l)):
+                    if l[j] is None:
+                        l[j] = v
+                        break
+            i += 1
+        return l
 
     @property
     def associated_filters(self) -> dict[str, str]:

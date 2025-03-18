@@ -42,6 +42,7 @@ class CueControlUIWidget(UIWidget):
     def set_filter(self, f: "Filter", i: int):
         if not f:
             return
+        super().set_filter(f, i)
         self.associated_filters["cue_filter"] = f.filter_id
         self._filter = f
         # Todo: remove callback of the signal

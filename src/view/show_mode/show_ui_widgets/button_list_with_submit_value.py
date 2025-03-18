@@ -25,6 +25,7 @@ class ButtonsWithValueSubmit(UIWidget):
         self._button_list = ConstantNumberButtonList(self.parent, configuration)
 
     def set_filter(self, f: Filter, i: int):
+        super().set_filter(f, i)
         self._filter_type = f.filter_type
         self._button_list.set_filter(f, i)
         self.associated_filters["constant"] = f.filter_id

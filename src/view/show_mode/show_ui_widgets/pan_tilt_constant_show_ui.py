@@ -19,6 +19,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
     def set_filter(self, f: "Filter", i: int):
         if not f:
             return
+        super().set_filter(f, i)
         self.associated_filters["pan_tilt_vfilter_fid"] = f.filter_id
         if not isinstance(f, PanTiltConstantFilter):
             print("the filter has to be a PanTiltConstantFilter")

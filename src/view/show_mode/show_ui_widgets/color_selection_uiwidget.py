@@ -23,6 +23,7 @@ class ColorSelectionUIWidget(UIWidget):
     def set_filter(self, f: "Filter", i: int):
         if not f:
             return
+        super().set_filter(f, i)
         self._filter = f
         self.associated_filters["constant"] = f.filter_id
         self._value = ColorHSI.from_filter_str(f.initial_parameters.get("value"))
