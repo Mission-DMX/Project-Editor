@@ -1,4 +1,3 @@
-# TODO add text ui widget
 from PySide6.QtWidgets import QWidget, QLabel, QTextEdit
 from markdown import markdown
 
