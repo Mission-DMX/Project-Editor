@@ -8,6 +8,7 @@ from view.show_mode.show_ui_widgets.button_list_with_submit_value import Buttons
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
+from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
 
 """
 The widget library contains information about widgets, provided by their slug. The infomration that is stored consists
@@ -19,8 +20,8 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "buttonarray": ("Button Array", ButtonsWithValueSubmit, [[FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
     "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
     "cuecontrol": ("Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]]),
-    "pantiltconstant": ("Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]])
-    # TODO add text area widget
+    "pantiltconstant": ("Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
+    "label": ("Text Label", ShowLabelUIWidget, [])
     # TODO add direct inputs
     # TODO add fader update widgets
     # TODO add debug output widgets
