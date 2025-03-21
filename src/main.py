@@ -50,11 +50,19 @@ if __name__ == "__main__":
             queue_handler.listener.start()
             atexit.register(queue_handler.listener.stop)
 
+    def setup_asyncio():
+        # Warning: while this change is important, the feature is yet a technical preview in pyside6.6 and the
+        #  API may change. The functionality however will stay in place.
+        import asyncio
+        from PySide6.QtAsyncio import QAsyncioEventLoopPolicy
+        asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
+
 
     def main(app: QApplication):
         """Startup"""
         setup_logging()
         logging.basicConfig(level="INFO")
+        setup_asyncio()
 
         app.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
 
