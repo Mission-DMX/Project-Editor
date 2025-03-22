@@ -7,12 +7,10 @@ from model import ColorHSI, Filter, UIPage, UIWidget
 
 class ColorSelectionUIWidget(UIWidget):
 
-    def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
-        super().__init__(fid, parent, configuration)
-        if filter_model:
-            self._value = ColorHSI.from_filter_str(filter_model.initial_parameters.get("value"))
-        else:
-            self._value = ColorHSI.from_filter_str("")
+    def __init__(self, parent: UIPage, configuration: dict[str, str]):
+        super().__init__(parent, configuration)
+
+        self._value = ColorHSI.from_filter_str("")
         if not self.configuration.get("number_of_presets"):
             self.configuration["number_of_presets"] = "0"
         if not self.configuration.get("stored_presets"):
@@ -20,6 +18,15 @@ class ColorSelectionUIWidget(UIWidget):
         self._presets: list[ColorHSI] = []
         self._player_widget: QWidget | None = None
         self._config_widget: QWidget | None = None
+        self._filter = None
+
+    def set_filter(self, f: "Filter", i: int):
+        if not f:
+            return
+        super().set_filter(f, i)
+        self._filter = f
+        self.associated_filters["constant"] = f.filter_id
+        self._value = ColorHSI.from_filter_str(f.initial_parameters.get("value"))
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", self._value.format_for_filter())]
@@ -64,7 +71,7 @@ class ColorSelectionUIWidget(UIWidget):
             transmit_button.clicked.connect(lambda _i=i: self.push_value(self._presets[_i]))
             column_layout.addWidget(transmit_button)
             layout.addLayout(column_layout)
-        self._presets = color_presets
+        self._presets: list[ColorHSI] = color_presets
         w.setLayout(layout)
         return w
 
@@ -80,8 +87,9 @@ class ColorSelectionUIWidget(UIWidget):
         return self._config_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = ColorSelectionUIWidget(self.filter_id, new_parent, None, self.configuration)
+        w = ColorSelectionUIWidget(new_parent, self.configuration)
         self.copy_base(w)
+        w.set_filter(self._filter, 0)
         w._value = self._value.copy()
         return w
 

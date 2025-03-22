@@ -1,7 +1,7 @@
 # coding=utf-8
 from model import Filter, Scene
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
-from view.show_mode.editor.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
+from view.show_mode.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
 
 
 class _MHControlInstance:

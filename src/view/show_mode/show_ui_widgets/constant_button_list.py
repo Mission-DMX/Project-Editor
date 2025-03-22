@@ -64,21 +64,32 @@ class ConstantNumberButtonList(UIWidget):
         add_button.clicked.connect(add_action)
         return widget
 
-    def __init__(self, fid: str, parent: "UIPage", filter_model: Filter, configuration: dict[str, str]):
-        super().__init__(fid, parent, configuration)
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+        super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
-        value_str = filter_model.initial_parameters["value"]
+        self._model = None
+        value_str = "0"
         if '.' in value_str:
             self._value = float(value_str)
         else:
             self._value = int(value_str)
-        self._filter_type = filter_model.filter_type
-        self._value = float(filter_model.initial_parameters[
-                                "value"]) if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(
-            filter_model.initial_parameters["value"])
-        self._maximum = 255 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT else -1 if filter_model.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else (
-                                                                                                                                                                                                          2 ** 16) - 1
+        self._filter_type = None
+        self._value = 0
+
+    def set_filter(self, f: Filter, i: int):
+        if f is None:
+            return
+        super().set_filter(f, i)
+        self._model = f
+        value_str = f.initial_parameters["value"]
+        self.associated_filters["constant"] = f.filter_id
+        self._filter_type = f.filter_type
+        self._value = float(
+            f.initial_parameters["value"]) if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else \
+            int(f.initial_parameters["value"])
+        self._maximum = 255 if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT \
+            else -1 if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else (2 ** 16) - 1
 
     def _set_value(self, new_value: int | float):
         self._value = new_value
@@ -100,7 +111,8 @@ class ConstantNumberButtonList(UIWidget):
         return self._configuration_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = ConstantNumberButtonList(self.filter_id, self.parent)
+        w = ConstantNumberButtonList(self.parent, self.configuration.copy())
+        w.set_filter(self._model, 0)
         super().copy_base(w)
         return w
 
@@ -135,3 +147,6 @@ class ConstantNumberButtonList(UIWidget):
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
         self._configuration_widget.setLayout(layout)
+
+    def __str__(self):
+        return str(self._model.filter_id if self._model else "Error: No Filter configured.")

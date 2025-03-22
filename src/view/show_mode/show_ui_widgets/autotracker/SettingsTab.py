@@ -2,7 +2,7 @@
 from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QLineEdit, QPushButton
 
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
 
 
 class SettingsTab(GuiTab):

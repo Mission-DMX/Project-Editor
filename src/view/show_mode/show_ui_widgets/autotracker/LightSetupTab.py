@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QPushButton, QSlider
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
 from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from view.show_mode.editor.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
 
 
 class LightSetupTab(GuiTab):

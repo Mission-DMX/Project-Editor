@@ -26,14 +26,15 @@ def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage)
     page_element = ElementTree.SubElement(scene_element, "uipage", attrib={
         'title': ""
     })
+    from view.show_mode.show_ui_widgets import get_widget_key
     for widget in ui_page.widgets:
         widget_element = ElementTree.SubElement(page_element, "widget", attrib={
             'posX': str(widget.position[0]),
             'posY': str(widget.position[1]),
             'sizeW': str(widget.size[0]),
             'sizeH': str(widget.size[1]),
-            'filterID': str(widget.filter_id),
-            'variante': str(widget.get_variante())
+            'filterID': ":".join(widget.filter_ids),
+            'variante': str(get_widget_key(widget) or "")
         })
         for k, v in widget.configuration.items():
             config_element = ElementTree.SubElement(widget_element, "configurationEntry", attrib={

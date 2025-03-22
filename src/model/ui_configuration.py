@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QWidget
 from controller.network import NetworkManager
 
 if TYPE_CHECKING:
-    from model import Broadcaster
+    from model import Broadcaster, Filter
     from model.scene import Scene
 
 _network_manager_instance: NetworkManager = None
@@ -22,7 +22,7 @@ def setup_network_manager(nm: NetworkManager, b: "Broadcaster"):
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
-    def __init__(self, fid: str, parent_page: "UIPage", configuration: dict[str, str] = None):
+    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] | None = None):
         """ Set up the basic components of a widget.
 
         Arguments:
@@ -30,7 +30,7 @@ class UIWidget(ABC):
         """
         self._position: tuple[int, int] = (0, 0)
         self._size: tuple[int, int] = (0, 0)
-        self._filter_id: str = fid
+        self._associated_filters: dict[str, str] = {}
         if isinstance(configuration, dict):
             self._configuration: dict[str, str] = configuration.copy()
         else:
@@ -65,16 +65,43 @@ class UIWidget(ABC):
         """
         raise NotImplementedError()
 
+    def set_filter(self, f: "Filter", i: int):
+        if not f:
+            return
+        self.associated_filters[str(i)] = f.filter_id
+
     @property
-    def filter_id(self) -> str:
+    def filter_ids(self) -> list[str]:
         """Get the id of the linked filter"""
-        return self._filter_id
+        l: list[str | None] = [None] * len(self._associated_filters)
+        i = 0
+        for k, v in self._associated_filters.items():
+            try:
+                ik = int(k)
+            except ValueError:
+                ik = i
+            if l[ik] is not None:
+                l[ik] = v
+            else:
+                for j in range(len(l)):
+                    if l[j] is None:
+                        l[j] = v
+                        break
+            i += 1
+        while None in l:
+            l.remove(None)
+        return l
+
+    @property
+    def associated_filters(self) -> dict[str, str]:
+        return self._associated_filters
 
     def notify_id_rename(self, old_id: str, new_id: str):
         """This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
         in order to implement special behaviour"""
-        if self._filter_id == old_id:
-            self._filter_id = new_id
+        for slot in self._associated_filters.keys():
+            if self._associated_filters[slot] == old_id:
+                self._associated_filters[slot] = new_id
 
     @property
     def parent(self) -> "UIPage":
@@ -198,6 +225,9 @@ class UIPage:
 
     def push_update(self):
         """This method indicates that updates to the running filters should be sent."""
+
+    def remove_widget(self, widget: UIWidget):
+        self._widgets.remove(widget)
 
 
 class ShowUI:

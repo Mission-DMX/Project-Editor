@@ -20,7 +20,7 @@ from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
-from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
+from view.show_mode.show_ui_widgets import filter_to_ui_widget, WIDGET_LIBRARY
 
 logger = getLogger(__name__)
 
@@ -283,8 +283,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
         posY: int = 0
         w: int = 0
         h: int = 0
-        fid: str = ""
-        variante: str = ""
+        fids = []
         conf: dict[str, str] = {}
         for k, v in widget_def.attrib.items():
             match k:
@@ -297,9 +296,9 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
                 case "sizeH":
                     h = int(v)
                 case "filterID":
-                    fid = str(v)
+                    fids = str(v).split(":")
                 case "variante":
-                    variante = str(v)
+                    widget_cdef = WIDGET_LIBRARY.get(str(v))
                 case _:
                     logger.error("Unexpected attribute '{}':'{}' in ui widget definition.".format(k, v))
         for config_entry in widget_def:
@@ -307,12 +306,23 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
                 logger.error("Found unexpected child '{}' in ui widget definition.".format(config_entry.tag))
                 continue
             conf[str(config_entry.attrib['name'])] = str(config_entry.attrib['value'])
-        corresponding_filter = scene.get_filter_by_id(fid)
-        if not corresponding_filter:
-            logger.error("Did not load ui widget for filter with id '{}' from scene '{}' as it does not exist."
-                         .format(fid, scene))
-            continue
-        ui_widget = filter_to_ui_widget(corresponding_filter, page, conf, variante)
+        filters = []
+        for fid in fids:
+            corresponding_filter = scene.get_filter_by_id(fid)
+            if not corresponding_filter:
+                logger.error("Did not load filter for ui widget with id '{}' from scene '{}' as it does not exist."
+                             .format(fid, scene))
+                continue
+            filters.append(corresponding_filter)
+        if widget_cdef is None:
+            logger.warning("Opening legacy show file. Attempting to match scene UI widget by used filter.")
+            ui_widget = filter_to_ui_widget(filters[0], page, conf)
+        else:
+            ui_widget = widget_cdef[1](page, conf)
+        i = 0
+        for f in filters:
+            ui_widget.set_filter(f, i)
+            i += 1
         ui_widget.position = (posX, posY)
         ui_widget.size = (w, h)
         page.append_widget(ui_widget)

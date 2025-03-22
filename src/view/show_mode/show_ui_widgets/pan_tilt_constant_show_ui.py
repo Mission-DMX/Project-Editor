@@ -10,13 +10,20 @@ from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_consta
 
 class PanTiltConstantControlUIWidget(UIWidget):
 
-    def __init__(self, fid: str, parent: UIPage, filter_model: Filter | None, configuration: dict[str, str]):
-        super().__init__(fid, parent, configuration)
+    def __init__(self, parent: UIPage, configuration: dict[str, str]):
+        super().__init__(parent, configuration)
         self._command_chain: list[tuple[str, str]] = []  # ??
-        if not isinstance(filter_model, PanTiltConstantFilter):
-            print("the filter has to be a PanTiltConstantFilter")
-        self._filter = filter_model
+        self._filter = None
         self._player_widget = None
+
+    def set_filter(self, f: "Filter", i: int):
+        if not f:
+            return
+        super().set_filter(f, i)
+        self.associated_filters["pan_tilt_vfilter_fid"] = f.filter_id
+        if not isinstance(f, PanTiltConstantFilter):
+            print("the filter has to be a PanTiltConstantFilter")
+        self._filter = f
         self._filter.register_observer(self, self.insert_action)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
@@ -50,7 +57,8 @@ class PanTiltConstantControlUIWidget(UIWidget):
         return self._player_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
-        w = PanTiltConstantControlUIWidget(self.filter_id, self.parent, None, self.configuration)
+        w = PanTiltConstantControlUIWidget(self.parent, self.configuration)
+        w.set_filter(self._filter, 0)
         super().copy_base(w)
         return w
 
@@ -58,10 +66,12 @@ class PanTiltConstantControlUIWidget(UIWidget):
         return QLabel()
 
     def insert_action(self):
-        command = ("{}_16bit_pan:value".format(self._filter_id), str(int(self._filter.pan * 65535)))
+        # TODO add support for separated constants
+        combined_fid = self.associated_filters["pan_tilt_vfilter_fid"]
+        command = ("{}_16bit_pan:value".format(combined_fid), str(int(self._filter.pan * 65535)))
         self._command_chain.append(command)
         command = (
-            "{}_16bit_tilt:value".format(self._filter_id), str(int(self._filter.tilt * 65535)))  # Todo: inverse Tilt?
+            "{}_16bit_tilt:value".format(combined_fid), str(int(self._filter.tilt * 65535)))  # Todo: inverse Tilt?
         self._command_chain.append(command)
         self.push_update()
         self._command_chain.clear()

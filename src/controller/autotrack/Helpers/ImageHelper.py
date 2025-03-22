@@ -4,6 +4,8 @@ import numpy as np
 import qimage2ndarray
 from PySide6.QtGui import QPixmap
 
+from controller.utils.yaml import yaml_load
+
 
 def cv2qim(frame):
     """
@@ -53,7 +55,7 @@ def draw_bounding_box(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
         x_plus_w (int): X-coordinate of the bottom-right corner of the bounding box.
         y_plus_h (int): Y-coordinate of the bottom-right corner of the bounding box.
     """
-    CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]
+    CLASSES = yaml_load("coco128.yaml")["names"]
     colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
     label = f"{CLASSES[class_id]} ({confidence:.2f})"
     color = colors[class_id]
