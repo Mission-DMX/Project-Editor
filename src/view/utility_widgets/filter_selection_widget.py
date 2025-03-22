@@ -1,8 +1,9 @@
+# coding=utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeWidget, QWidget
 
 from model import Scene
-from model.filter import FilterTypeEnumeration, Filter
+from model.filter import Filter, FilterTypeEnumeration
 from model.scene import FilterPage
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 

@@ -1,5 +1,6 @@
 # coding=utf-8
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
 
@@ -7,7 +8,6 @@ from model import UIPage, UIWidget
 from view.show_mode.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
 from view.show_mode.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model import Filter
     from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter

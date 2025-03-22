@@ -20,7 +20,7 @@ from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
-from view.show_mode.show_ui_widgets import filter_to_ui_widget, WIDGET_LIBRARY
+from view.show_mode.show_ui_widgets import WIDGET_LIBRARY, filter_to_ui_widget
 
 logger = getLogger(__name__)
 

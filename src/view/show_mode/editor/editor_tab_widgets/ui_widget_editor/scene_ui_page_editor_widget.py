@@ -10,7 +10,7 @@ from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.widget_setup_dialog import WidgetSetupDialog
-from view.show_mode.show_ui_widgets import filter_to_ui_widget, WIDGET_LIBRARY
+from view.show_mode.show_ui_widgets import WIDGET_LIBRARY, filter_to_ui_widget
 
 
 class SceneUIPageEditorWidget(QWidget):

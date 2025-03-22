@@ -1,7 +1,8 @@
+# coding=utf-8
 from typing import Callable
 
 from PySide6.QtCore import QPoint
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QStackedLayout, QPushButton
+from PySide6.QtWidgets import QDialog, QPushButton, QStackedLayout, QVBoxLayout, QWidget
 
 from model import UIPage, UIWidget
 from model.filter import FilterTypeEnumeration

@@ -1,9 +1,9 @@
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
 from controller.autotrack.LightController import LightController
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 

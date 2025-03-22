@@ -1,13 +1,13 @@
 # coding=utf-8
 """Constants filter nodes"""
-from PySide6.QtGui import QPainter, QFontMetrics, QBrush, QColor
+from logging import getLogger
 
-from model import DataType, ColorHSI
+from PySide6.QtGui import QBrush, QColor, QFontMetrics, QPainter
+
+from model import ColorHSI, DataType
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
-
-from logging import getLogger
 logger = getLogger(__file__)
 
 

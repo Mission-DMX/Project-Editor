@@ -1,6 +1,6 @@
-from PySide6.QtCore import Signal, QPoint, QSize, Qt
+from PySide6.QtCore import QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QMouseEvent
-from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QDialog, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from model import UIWidget
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget

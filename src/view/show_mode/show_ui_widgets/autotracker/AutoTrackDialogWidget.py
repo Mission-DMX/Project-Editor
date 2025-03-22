@@ -1,4 +1,6 @@
 # coding=utf-8
+from typing import TYPE_CHECKING
+
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QTabWidget
 
@@ -11,7 +13,6 @@ from view.show_mode.show_ui_widgets.autotracker.LightSetupTab import LightSetupT
 from view.show_mode.show_ui_widgets.autotracker.SettingsTab import SettingsTab
 from view.show_mode.show_ui_widgets.autotracker.SourcesTab import SourcesTab
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 

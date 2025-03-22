@@ -1,8 +1,10 @@
+# coding=utf-8
+from typing import TYPE_CHECKING
+
 from controller.autotrack.Helpers.AutoTrackerSettings import AutoTrackerSettings
 from controller.autotrack.ImageOptimizer.ImagePipeline import ImagePipeline
 from controller.autotrack.Sources.Loader import Loader
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 

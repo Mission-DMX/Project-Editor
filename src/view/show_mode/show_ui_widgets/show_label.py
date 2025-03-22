@@ -1,9 +1,11 @@
-from PySide6.QtWidgets import QWidget, QLabel, QTextEdit
+# coding=utf-8
+from typing import TYPE_CHECKING
+
 from markdown import markdown
+from PySide6.QtWidgets import QLabel, QTextEdit, QWidget
 
 from model import UIWidget
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model import UIPage
 
