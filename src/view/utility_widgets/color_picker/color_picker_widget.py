@@ -6,7 +6,7 @@ from PySide6.QtOpenGL import QOpenGLFramebufferObject, QOpenGLBuffer, QOpenGLSha
     QOpenGLVertexArrayObject
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QOpenGLFunctions, QSurfaceFormat
+from PySide6.QtGui import QOpenGLFunctions, QSurfaceFormat, QOpenGLExtraFunctions
 
 from OpenGL import GL
 
@@ -77,7 +77,7 @@ class ColorPickerWidget(QOpenGLWidget):
         self._gl_program.bindAttributeLocation("position", 0)
         self._gl_program.bindAttributeLocation("texture_coordinate", 1)
         if not self._gl_program.link():
-            raise RuntimeError("Failed to link shaders.")
+            raise RuntimeError("Failed to link shaders. Log={}".format(self._gl_program.log()))
         self._gl_program.bind()
         self._recalculate_projection()
 
