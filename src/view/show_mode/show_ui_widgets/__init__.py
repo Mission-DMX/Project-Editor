@@ -1,4 +1,5 @@
 # coding=utf-8
+# SPDX-License-Identifier: GPL-3.0-or-later
 from typing import Type
 
 from model import Filter, UIPage, UIWidget
@@ -7,6 +8,7 @@ from view.show_mode.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWid
 from view.show_mode.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
+from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
 from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
 
@@ -21,10 +23,11 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
     "cuecontrol": ("Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]]),
     "pantiltconstant": ("Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
-    "label": ("Text Label", ShowLabelUIWidget, [])
+    "label": ("Text Label", ShowLabelUIWidget, []),
     # TODO add direct inputs
     # TODO add fader update widgets
-    # TODO add debug output widgets
+    "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]])
+    # TODO add remaining debug output widgets
 }
 
 
