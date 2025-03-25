@@ -195,33 +195,50 @@ class ColorDebugVizWidget(_DebugVizWidget):
                 hsi_value = param.parameter_value.split(",")
                 self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
             except ValueError:
-                logger.error("Unable to parse color '{}' from filter '{}:{}'.".
-                             format(param.parameter_value, param.filter_id, param.parameter_key))
+                logger.error(f"Unable to parse color '{param.parameter_value}' from filter '{param.filter_id}:"
+                             f"{param.parameter_key}'.")
 
 
 class _NumberLabel(QWidget):
     def __init__(self, *args, **kwargs):
-        """Default color is black"""
+        """Default number is 0, default mode is without illumination display"""
         super().__init__(*args, **kwargs)
         self.mode: str = ""
-        self.number: int | float = 0
+        self._number: float = 0.0
+        self._text: str = "0"
 
     def paintEvent(self, event: QPaintEvent, /):
         """Redraw the widget"""
         painter = QPainter(self)
         painter.drawRect(0, 0, self.width(), self.height())
         if self.mode == "Illumination":
-            painter.fillRect(1, 1, self.width() - 2, self.height() - 2,
-                             QColor.fromRgbF(1.0, 1.0, 0, self.number / 255))
-        text = str(self.number)
-        if text.endswith(".0"):
-            text = text[:-2]
+            alpha = self._number / 255.0
+            indicator_color = QColor.fromRgbF(1.0, 1.0, 0, alpha)
+            painter.fillRect(1, 1, self.width() - 2, self.height() - 2, indicator_color)
         fm = painter.fontMetrics()
         painter.drawText(
-            int(self.width() / 2 - fm.horizontalAdvance(text) / 2),
-            int(self.height() / 2 - fm.height() / 2), text)
+            int(self.width() / 2 - fm.horizontalAdvance(self._text) / 2),
+            int(self.height() / 2 - fm.height() / 2), self._text)
         painter.end()
 
+    @property
+    def number(self) -> float:
+        return self._number
+
+    @number.setter
+    def number(self, new_number: int | float):
+        if new_number == self._number:
+            return
+        text = f"{new_number:.5f}"
+        while text[-1] == '0' and '.' in text:
+            text = text[:-1]
+        if text[-1] == '.':
+            text = text[:-1]
+        if text == self._text:
+            return
+        self._text = text
+        self._number = new_number
+        self.update()
 
 
 class NumberDebugVizWidget(_DebugVizWidget):
@@ -236,7 +253,6 @@ class NumberDebugVizWidget(_DebugVizWidget):
             self._show_widget = _NumberLabel(parent)
             self._dimensions_changed()
         return self._show_widget
-
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         c = NumberDebugVizWidget(new_parent, self.configuration.copy())
@@ -258,5 +274,5 @@ class NumberDebugVizWidget(_DebugVizWidget):
             try:
                 self._show_widget.number = float(param.parameter_value)
             except ValueError:
-                logger.error("Unexpected number received from filter '{}:{}': {}".
-                             format(param.filter_id, param.parameter_key, param.parameter_value))
+                logger.error(f"Unexpected number received from filter '{param.filter_id}:{param.parameter_key}': "
+                             f"{param.parameter_value}")
