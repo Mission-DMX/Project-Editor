@@ -28,3 +28,4 @@ class PatchPlanWidget(QtWidgets.QScrollArea):
 
         self.setWidgetResizable(True)
         self.setWidget(container)
+        self.universe = universe

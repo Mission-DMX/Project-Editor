@@ -71,7 +71,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         A BoardConfiguration instance parsed from the provided file.
     """
 
-    pn = get_process_notifier("Load Showfile", 4)
+    pn = get_process_notifier("Load Showfile", 5)
 
     try:
         pn.current_step_description = "Load file from disk."
@@ -87,6 +87,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         return False
 
     board_configuration.broadcaster.clear_board_configuration.emit()
+    pn.current_step_number += 1
     tree = ElementTree.parse(file_name)
     root = tree.getroot()
 

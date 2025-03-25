@@ -31,6 +31,7 @@ class ProcessNotifier:
     def current_step_number(self, new_pos: int):
         self._current_step_number = new_pos
         get_progress_changed_signal().emit()
+        QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
 
     @property
     def current_step_description(self) -> str:

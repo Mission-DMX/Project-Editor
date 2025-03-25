@@ -1,5 +1,6 @@
 # coding=utf-8
 """selector for Patching witch holds all Patching Universes"""
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6 import QtGui, QtWidgets
@@ -13,6 +14,9 @@ if TYPE_CHECKING:
     from view.patch_view.patch_mode import PatchMode
 
 
+logger = getLogger(__file__)
+
+
 class PatchPlanSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
 
@@ -20,6 +24,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
         self._broadcaster.add_universe.connect(self._add_universe)
+        self._broadcaster.delete_universe.connect(self._remove_universe)
         self._patch_planes: list[PatchPlanWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self.addTab(QtWidgets.QWidget(), "+")
@@ -56,9 +61,21 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
             self._broadcaster.send_universe.emit(self._broadcaster.patching_universes[index])
 
     def _add_universe(self, universe: PatchingUniverse):
+        index = self.tabBar().count() - 1
         patch_plan = PatchPlanWidget(universe, parent=self)
         self._patch_planes.append(patch_plan)
-        self.insertTab(self.tabBar().count() - 1, patch_plan, str(universe.universe_proto.id))
+        self.insertTab(index, patch_plan, str(universe.universe_proto.id))
+
+    def _remove_universe(self, universe: PatchingUniverse):
+        to_remove = []
+        for ppu in self._patch_planes:
+            if ppu.universe.universe_proto.id == universe.universe_proto.id:
+                to_remove.append(ppu)
+        for tr in to_remove:
+            index = self.indexOf(tr)
+            self.removeTab(index)
+            logger.info(f"Removing patching tab {index}")
+            self._patch_planes.remove(tr)
 
     def _tab_clicked(self, scene_index: int) -> None:
         if scene_index == self.tabBar().count() - 1:

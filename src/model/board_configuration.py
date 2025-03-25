@@ -1,5 +1,7 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
+from PySide6 import QtGui, QtCore
+
 from .broadcaster import Broadcaster
 from .device import Device
 from .patching_universe import PatchingUniverse
@@ -38,9 +40,16 @@ class BoardConfiguration:
             self._broadcaster.delete_universe.emit(universe)
         for device in self._devices:
             self._broadcaster.delete_device.emit(device)
+        QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
+        self.scenes.clear()
+        self._universes.clear()
+        self._devices.clear()
         self._show_name = ""
         self._default_active_scene = 0
-        self._notes = 0
+        self._notes = ""
+        self._scenes_index = dict()
+        self._ui_hints = dict()
+        self._show_file_path = ""
 
     def _add_scene(self, scene: Scene):
         """Adds a scene to the list of scenes.
