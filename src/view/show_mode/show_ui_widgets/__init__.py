@@ -26,7 +26,7 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "label": ("Text Label", ShowLabelUIWidget, []),
     # TODO add direct inputs
     # TODO add fader update widgets
-    "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]])
+    "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]]),
     "debug_number": ("Number Output", NumberDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT]])
 }
 
