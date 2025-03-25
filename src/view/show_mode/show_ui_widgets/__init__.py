@@ -8,7 +8,7 @@ from view.show_mode.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWid
 from view.show_mode.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
-from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget
+from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
 from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
 
@@ -27,7 +27,7 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     # TODO add direct inputs
     # TODO add fader update widgets
     "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]])
-    # TODO add remaining debug output widgets
+    "debug_number": ("Number Output", NumberDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT]])
 }
 
 

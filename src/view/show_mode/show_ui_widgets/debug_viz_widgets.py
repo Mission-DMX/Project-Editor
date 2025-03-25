@@ -1,6 +1,7 @@
 # coding=utf-8
 # SPDX-License-Identifier: GPL-3.0-or-later
 from abc import ABC
+from logging import getLogger
 from typing import Callable, TYPE_CHECKING
 
 from PySide6.QtCore import Signal
@@ -13,6 +14,8 @@ from proto.FilterMode_pb2 import update_parameter
 if TYPE_CHECKING:
     from model import UIPage
 
+
+logger = getLogger(__file__)
 
 class _DebugVizWidget(UIWidget, ABC):
 
@@ -93,7 +96,8 @@ class _DebugVizWidget(UIWidget, ABC):
         presentation_mode_box = QComboBox()
         if self.presentation_mode is not None:
             presentation_mode_box.addItems(self.presentation_mode)
-            # TODO load correct mode from config and set it
+            presentation_mode_box.setCurrentText(self.configuration.get("mode") or self.presentation_mode[0])
+            presentation_mode_box.currentTextChanged.connect(self._mode_conf_changed)
         else:
             presentation_mode_box.setEnabled(False)
         layout.addRow("Presentation Mode: ", presentation_mode_box)
@@ -113,6 +117,12 @@ class _DebugVizWidget(UIWidget, ABC):
         self._placeholder_widget = w
         return w
 
+    def _mode_conf_changed(self, new_mode_str: str):
+        """Change the configured mode and call dimensions changed callback if any."""
+        self.configuration["mode"] = new_mode_str
+        if self.configured_dimensions_changed_callback is not None:
+            self.configured_dimensions_changed_callback()
+
 
 class _ColorLabel(QWidget):
 
@@ -122,6 +132,7 @@ class _ColorLabel(QWidget):
         """Default color is black"""
         super().__init__(*args, **kwargs)
         self._last_color: tuple[float, float, float] = (0.0, 0.0, 0.0)
+        self._last_color_processed: QColor = QColor()
 
     def set_hsi(self, h: float, s: float, i: float):
         """
@@ -133,15 +144,16 @@ class _ColorLabel(QWidget):
         if self._last_color == (h, s, i):
             return
         self._last_color = (h, s, i)
+        self._last_color_processed = ColorHSI(h, s, i).to_qt_color()
         self.update()
 
     def paintEvent(self, event: QPaintEvent, /):
         """Redraw the widget"""
         painter = QPainter(self)
-        c = self._last_color
+        c = self._last_color_processed
         r = event.rect()
         painter.drawRect(r.x(), r.y(), r.width(), r.height())
-        painter.fillRect(r.x(), r.y(), r.width(), r.height(), ColorHSI(c[0], c[1], c[2]).to_qt_color())
+        painter.fillRect(r.x() + 1, r.y() + 1, r.width() - 2, r.height() - 2, c)
         painter.end()
 
 
@@ -180,8 +192,71 @@ class ColorDebugVizWidget(_DebugVizWidget):
             return
         if param.filter_id == self.filter_ids[0]:
             try:
-                print(param.parameter_value)
                 hsi_value = param.parameter_value.split(",")
                 self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
             except ValueError:
-                pass
+                logger.error("Unable to parse color '{}' from filter '{}:{}'.".
+                             format(param.parameter_value, param.filter_id, param.parameter_key))
+
+
+class _NumberLabel(QWidget):
+    def __init__(self, *args, **kwargs):
+        """Default color is black"""
+        super().__init__(*args, **kwargs)
+        self.mode: str = ""
+        self.number: int | float = 0
+
+    def paintEvent(self, event: QPaintEvent, /):
+        """Redraw the widget"""
+        painter = QPainter(self)
+        painter.drawRect(0, 0, self.width(), self.height())
+        if self.mode == "Illumination":
+            painter.fillRect(1, 1, self.width() - 2, self.height() - 2,
+                             QColor.fromRgbF(1.0, 1.0, 0, self.number / 255))
+        text = str(self.number)
+        if text.endswith(".0"):
+            text = text[:-2]
+        fm = painter.fontMetrics()
+        painter.drawText(
+            int(self.width() / 2 - fm.horizontalAdvance(text) / 2),
+            int(self.height() / 2 - fm.height() / 2), text)
+        painter.end()
+
+
+
+class NumberDebugVizWidget(_DebugVizWidget):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+        super().__init__(parent, configuration, ["Plain", "Illumination"])
+        self._show_widget: _NumberLabel | None = None
+        self.configured_dimensions_changed_callback = self._dimensions_changed
+        parent.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._recv_update)
+
+    def get_player_widget(self, parent: QWidget | None) -> QWidget:
+        if self._show_widget is None:
+            self._show_widget = _NumberLabel(parent)
+            self._dimensions_changed()
+        return self._show_widget
+
+
+    def copy(self, new_parent: "UIPage") -> "UIWidget":
+        c = NumberDebugVizWidget(new_parent, self.configuration.copy())
+        super().copy_base(c)
+        return c
+
+    def _dimensions_changed(self):
+        if self._show_widget is None:
+            return
+        self._show_widget.setFixedWidth(self.configured_width)
+        self._show_widget.setFixedHeight(self.configured_height)
+        self._show_widget.mode = self.configuration.get("mode") or "Plain"
+
+    def _recv_update(self, param: update_parameter):
+        """Checks for correct filter and updates the displayed number"""
+        if self._show_widget is None:
+            return
+        if param.filter_id == self.filter_ids[0]:
+            try:
+                self._show_widget.number = float(param.parameter_value)
+            except ValueError:
+                logger.error("Unexpected number received from filter '{}:{}': {}".
+                             format(param.filter_id, param.parameter_key, param.parameter_value))
