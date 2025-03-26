@@ -46,7 +46,8 @@ class CueControlUIWidget(UIWidget):
         self.associated_filters["cue_filter"] = f.filter_id
         self._filter = f
         # Todo: remove callback of the signal
-        f.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._cue_state.update)
+        f.scene.board_configuration.register_filter_update_callback(
+            f.scene.scene_id, f.filter_id, self._cue_state.update)
 
         # TODO refactor this to use cue model entirely
         cuelist_str = f.filter_configurations.get("cuelist")

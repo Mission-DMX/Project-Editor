@@ -36,6 +36,12 @@ class _DebugVizWidget(UIWidget, ABC):
             configuration["width"] = "100"
         self.presentation_mode = presentation_mode
 
+    def __del__(self):
+        if self._config_widget is not None:
+            self._config_widget.deleteLater()
+        if self._placeholder_widget is not None:
+            self._placeholder_widget.deleteLater()
+
     def generate_update_content(self) -> list[tuple[str, str]]:
         # As we only consume values, we do not need to generate updates
         return []
@@ -162,7 +168,6 @@ class ColorDebugVizWidget(_DebugVizWidget):
         super().__init__(parent, configuration)
         self.configured_dimensions_changed_callback = self._dimensions_changed
         self._show_widget: _ColorLabel | None = None
-        parent.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._recv_update)
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._show_widget is None:
@@ -174,6 +179,16 @@ class ColorDebugVizWidget(_DebugVizWidget):
         w.setFixedWidth(self.configured_width)
         w.setFixedHeight(self.configured_height)
         self._show_widget = w
+        self.parent.scene.board_configuration.register_filter_update_callback(
+            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
+        self._show_widget.destroyed.connect(self._delete_callback)
+
+    def _delete_callback(self):
+        if self._show_widget is not None:
+            self.parent.scene.board_configuration.remove_filter_update_callback(
+                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
+            )
+            self._show_widget.deleteLater()
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         c = ColorDebugVizWidget(new_parent, self.configuration.copy())
@@ -190,7 +205,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
         """Checks for correct filter and updates the displayed color"""
         if self._show_widget is None:
             return
-        if param.filter_id == self.filter_ids[0]:
+        else:
             try:
                 hsi_value = param.parameter_value.split(",")
                 self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
@@ -246,12 +261,14 @@ class NumberDebugVizWidget(_DebugVizWidget):
         super().__init__(parent, configuration, ["Plain", "Illumination"])
         self._show_widget: _NumberLabel | None = None
         self.configured_dimensions_changed_callback = self._dimensions_changed
-        parent.scene.board_configuration.broadcaster.update_filter_parameter.connect(self._recv_update)
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._show_widget is None:
             self._show_widget = _NumberLabel(parent)
             self._dimensions_changed()
+            self.parent.scene.board_configuration.register_filter_update_callback(
+                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
+            self._show_widget.destroyed.connect(self._delete_callback)
         return self._show_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
@@ -270,9 +287,14 @@ class NumberDebugVizWidget(_DebugVizWidget):
         """Checks for correct filter and updates the displayed number"""
         if self._show_widget is None:
             return
-        if param.filter_id == self.filter_ids[0]:
+        else:
             try:
                 self._show_widget.number = float(param.parameter_value)
             except ValueError:
                 logger.error(f"Unexpected number received from filter '{param.filter_id}:{param.parameter_key}': "
                              f"{param.parameter_value}")
+
+    def _delete_callback(self):
+        if self._show_widget is not None:
+            self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
+            self._show_widget.deleteLater()
