@@ -38,19 +38,18 @@ class CueState():
         return ret
 
     def update(self, param: update_parameter):
-        if self._filter.filter_id == param.filter_id:
-            values = param.parameter_value.split(";")
-            self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
-            self._end_time = datetime.timedelta(seconds=float(values[3]))
-            self._active_cue = int(values[1])
-            self._time_scale = float(values[4])
-            if values[0] == 'play':
-                self._state = State.PLAY
-            elif values[0] == 'pause':
-                self._paused_time = datetime.timedelta(seconds=float(values[2]))
-                self._state = State.PAUSE
-            elif values[0] == 'stop':
-                self._state = State.STOP
+        values = param.parameter_value.split(";")
+        self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
+        self._end_time = datetime.timedelta(seconds=float(values[3]))
+        self._active_cue = int(values[1])
+        self._time_scale = float(values[4])
+        if values[0] == 'play':
+            self._state = State.PLAY
+        elif values[0] == 'pause':
+            self._paused_time = datetime.timedelta(seconds=float(values[2]))
+            self._state = State.PAUSE
+        elif values[0] == 'stop':
+            self._state = State.STOP
 
     def time_delta_to_str(self, delta: datetime.timedelta):
         ret = ""
