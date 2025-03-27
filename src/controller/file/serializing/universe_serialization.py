@@ -58,6 +58,12 @@ def _create_ftdi_location_element(ftdi_location: UniverseControl_pb2.Universe.US
 
 
 def _create_patching_element(patching: list[PatchingChannel], parent: ElementTree.Element, assemble_for_fish: bool):
+    """
+    Add patching information to the show file XML structure.
+    :param parent: The parent element to add to
+    :param patching: The patching data to add
+    :param assemble_for_fish: Should this information be omitted?
+    """
     patching_element = ElementTree.SubElement(parent, "patching")
     if assemble_for_fish:
         return

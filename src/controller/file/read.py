@@ -26,6 +26,11 @@ logger = getLogger(__name__)
 
 
 def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str, BankSet]):
+    """
+    Parse and add a bank set to the show file.
+    :param child: The XML element to examine
+    :param loaded_banksets: The list to add the bankset to.
+    """
     _id = child.attrib.get('id')
     bs: BankSet = BankSet(gui_controlled=True, id=_id)
     for bank_element in child:
@@ -118,8 +123,6 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         match child.tag:
             case "scene":
                 scene_defs_to_be_parsed.append(child)
-            case "device":
-                _parse_device(child, board_configuration)
             case "universe":
                 _parse_universe(child, board_configuration)
             case "uihint":
@@ -153,6 +156,11 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
 
 def lcd_color_from_string(display_color: str) -> lcd_color:
+    """
+    Convert the string representation of the LCD backlight color to the enum.
+    :param display_color: The string representation
+    :returns: The enum representation
+    """
     match display_color:
         case 'white':
             return lcd_color.white
@@ -175,12 +183,19 @@ def lcd_color_from_string(display_color: str) -> lcd_color:
 
 
 def _clean_tags(element: ElementTree.Element, prefix: str):
+    """This method recursively cleans up immediate XML tag prefixes."""
     for child in element:
         child.tag = child.tag.replace(prefix, '')
         _clean_tags(child, prefix)
 
 
 def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instantiated_pages: list[FilterPage]):
+    """
+    Load a filter page from the XML representation.
+    :param element: The XML element to load the data from
+    :param parent_scene: The scene to add the page to
+    :param instantiated_pages: The list of all loaded filter pages, where this element is appended to
+    """
     f = FilterPage(parent_scene)
     for key, value in element.attrib.items():
         match key:
@@ -214,11 +229,18 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
             else:
                 logger.error("Didn't find filter '{}' in scene '{}'.".format(child.text,
                                                                              parent_scene.human_readable_name))
+        # TODO load comments
     return True
 
 
 def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardConfiguration,
                  loaded_banksets: dict[str, BankSet]):
+    """
+    Load a scene from the show file data structure.
+    :param scene_element: The XML element to use
+    :param board_configuration: The show configuration object to insert the scene into.
+    :param loaded_banksets: A list of bank sets that are associated with the scene.
+    """
     human_readable_name = ""
     scene_id = 0
     for key, value in scene_element.attrib.items():
@@ -272,6 +294,11 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
 
 
 def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
+    """
+    Load a UI page (the ones that contain the widgets) from the XML data.
+    :param page_def: The XML data structure
+    :param scene: The scene to add it to.
+    """
     page = UIPage(scene)
     for k, v in page_def.attrib.items():
         match k:
@@ -331,6 +358,11 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
 
 
 def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
+    """
+    Load a filter from the XML definition.
+    :param filter_element: THe XML data to load the filter from
+    :param scene: The scene to append the filter to
+    """
     filter_id = ""
     filter_type = 0
     pos = (0.0, 0.0)
@@ -370,6 +402,11 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
 
 
 def _parse_channel_link(initial_parameters_element: ElementTree.Element, filter_: Filter):
+    """
+    Load a connection between two filters.
+    :param initial_parameters_element: The XML element describing the connection.
+    :param filter_: The parent filter (whose input this is) to attach the connection to.
+    """
     cl_key = ""
     cl_value = ""
     for key, value in initial_parameters_element.attrib.items():
@@ -385,6 +422,11 @@ def _parse_channel_link(initial_parameters_element: ElementTree.Element, filter_
 
 
 def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, filter_: Filter):
+    """
+    Load the parameters of a filter.
+    :param initial_parameters_element: The XML definition to load the parameters from
+    :param filter_: The filter whose parameters these are.
+    """
     ip_key = ""
     ip_value = ""
     for key, value in initial_parameters_element.attrib.items():
@@ -401,6 +443,12 @@ def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, f
 
 
 def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter, fc: dict[str, str]):
+    """
+    Load the configuration of a filter.
+    :param filter_configuration_element: The XML data to load the configuration from
+    :param filter_: The filter which the configuration belongs to
+    :param fc: The existing configuration to append to
+    """
     fc_key = ""
     fc_value = ""
     for key, value in filter_configuration_element.attrib.items():
@@ -416,11 +464,12 @@ def _parse_filter_configuration(filter_configuration_element: ElementTree.Elemen
     fc[fc_key] = fc_value
 
 
-def _parse_device(device_element: ElementTree.Element, board_configuration: BoardConfiguration):
-    """TODO Implement"""
-
-
 def _parse_universe(universe_element: ElementTree.Element, board_configuration: BoardConfiguration):
+    """
+    Load a universe description from XML data.
+    :param universe_element: The XML data to use.
+    :param board_configuration: The show to register the universe with.
+    """
     universe_id = None
     name = ""
     description = ""
@@ -485,10 +534,20 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
 
 
 def _parse_physical_location(location_element: ElementTree.Element) -> int:
+    """
+    Parse a universe definition for one attached directly to the IO mainboard.
+    :param location_element: The XML data to load from
+    :returns: The location
+    """
     return int(location_element.text)
 
 
 def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Universe.ArtNet:
+    """
+    Parse a universe definition of an ArtNet stage box.
+    :param location_element: The XML data to load from
+    :returns: An ArtNet universe location
+    """
     device_universe_id = 0
     ip_address = ""
     udp_port = 0
@@ -507,6 +566,11 @@ def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Unive
 
 
 def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Universe.USBConfig:
+    """
+    Load a universe location definition of an USB DMX adapter.
+    :param location_element: The XML data to load from
+    :returns: THe loaded connection details
+    """
     product_id = 0
     vendor_id = 0
     device_name = ""
@@ -531,6 +595,12 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Univers
 
 
 def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> list[tuple[int, UsedFixture]]:
+    """
+    Load patching information from XML data.
+    :param location_element: The XML data to load from
+    :param universe_id: The id of the universe which this fixture belongs to.
+    :returns: The loaded fixtures
+    """
     fixtures_path = '/var/cache/missionDMX/fixtures'
     used_fixtures: list[tuple[int, UsedFixture]] = []
     for child in location_element:
@@ -538,11 +608,16 @@ def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> 
                                          int(child.attrib['mode']), universe_id)
 
         used_fixtures.append((int(child.attrib['start']), used_fixture))
-
+    # TODO load fixture name from file
     return used_fixtures
 
 
 def _parse_ui_hint(ui_hint_element: ElementTree.Element, board_configuration: BoardConfiguration):
+    """
+    Load general configuration data.
+    :param ui_hint_element: The XML representation to load from
+    :param board_configuration: THe show file to apply the settings on.
+    """
     ui_hint_key = ""
     ui_hint_value = ""
     for key, value in ui_hint_element.attrib.items():

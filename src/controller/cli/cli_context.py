@@ -20,6 +20,12 @@ class CLIContext:
     """Context of the Client"""
 
     def __init__(self, show: "BoardConfiguration", networkmgr: "NetworkManager", exit_available: bool = False):
+        """
+        Initialize a new CLI context.
+        :param show: The current active show configuration
+        :param networkmgr: The active network manager, user for communication with fish
+        :param exit_available: Should the exit command (close the connection) be available or not?
+        """
         self.commands = [
             ListCommand(self),
             SelectCommand(self),

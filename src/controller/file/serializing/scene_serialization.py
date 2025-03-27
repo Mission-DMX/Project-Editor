@@ -11,6 +11,12 @@ from model.scene import FilterPage
 
 
 def _add_filter_page_to_element(scene_element: ElementTree.Element, page: FilterPage, parent_page: FilterPage | None):
+    """
+    This function writes the filter pages of a scene or parent page.
+    :param scene_element: The XML element to write to
+    :param page: The filter page to serialize
+    :param parent_page: This needs to be the parent page of the one to serialize (if any, otherwise pass None)
+    """
     item = ElementTree.SubElement(scene_element, "filterpage", attrib={
         'name': page.name,
         'parent': parent_page.name if parent_page else ''
@@ -23,6 +29,11 @@ def _add_filter_page_to_element(scene_element: ElementTree.Element, page: Filter
 
 
 def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage):
+    """
+    Add a UI page (the widgets one) to an existing scene element.
+    :param scene_element: The parent scene XML element
+    :param ui_page: The UI page to add
+    """
     page_element = ElementTree.SubElement(scene_element, "uipage", attrib={
         'title': ""
     })

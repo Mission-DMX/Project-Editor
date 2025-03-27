@@ -96,6 +96,10 @@ class SceneOptimizerModule:
                 substitution_filter.filter_id, output_channel_name)
 
     def _emplace_universe_filters(self, scene_element: ElementTree.Element):
+        """
+        This method places the replacement for the aggregated universe output filters.
+        :param scene_element: The scene to place the new filter into.
+        """
         for universe, channel_list in self._universe_filter_dict.items():
             filter_config_parameters = {'universe': universe}
             channel_mappings = dict()
@@ -123,4 +127,6 @@ class SceneOptimizerModule:
         pass
 
     def wrap_up(self, scene_element: ElementTree.Element):
+        """This method needs to be called in order to apply the optimization steps that have been staged.
+        :param scene_element: The scene XML element to write to."""
         self._emplace_universe_filters(scene_element)
