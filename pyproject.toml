@@ -53,4 +53,4 @@ load-plugins = "pylint_protobuf"
 max-line-length = 120
 
 [tool.pylint]
-ignore-paths = ['test', 'src/controller/autotrack']
+ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/']
