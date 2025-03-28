@@ -12,6 +12,7 @@ requests
 numpy
 ruamel.yaml
 html2text
+setuptools
 # Dependencies for automatic tracking
 opencv-python>=4.8.0
 qimage2ndarray>=1.10
