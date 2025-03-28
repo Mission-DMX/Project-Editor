@@ -27,12 +27,10 @@ class Command(ABC):
         Arguments:
         parser -- An argparse like parser
         """
-        pass
 
     @abstractmethod
     def execute(self, args) -> bool:
         """execute a Command"""
-        pass
 
     @property
     def name(self) -> str:
@@ -43,8 +41,8 @@ class Command(ABC):
         """
         if self._name:
             return self._name
-        else:
-            return "Unnamed Command"
+
+        return "Unnamed Command"
 
     @property
     def help(self) -> str:

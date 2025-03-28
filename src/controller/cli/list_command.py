@@ -18,7 +18,7 @@ class ListCommand(Command):
             case "scenes":
                 self.context.print(" ID | Description")
                 for scene in self.context.show.scenes:
-                    self.context.print("{} | {}".format(scene.scene_id, scene.human_readable_name))
+                    self.context.print(f"{scene.scene_id} | {scene.human_readable_name}")
                 return True
             case "filters":
                 if self.context.selected_scene is None:
@@ -26,7 +26,7 @@ class ListCommand(Command):
                     return False
                 self.context.print("Filter ID - Filter Type")
                 for f in self.context.selected_scene.filters:
-                    self.context.print("{} - {}".format(f.filter_id, f.filter_type))
+                    self.context.print(f"{f.filter_id} - {f.filter_type}")
                 return True
             case "columns":
                 if self.context.selected_bank is None:
@@ -36,8 +36,8 @@ class ListCommand(Command):
                 for bank in self.context.selected_bank.banks:
                     self.context.print("==================================")
                     for c in bank.columns:
-                        self.context.print("{} - {}".format("Color" if isinstance(c, ColorDeskColumn) else "Number",
-                                                            c.display_name))
+                        self.context.print(
+                            f"{"Color" if isinstance(c, ColorDeskColumn) else "Number"} - {c.display_name}")
             case "bank_sets":
                 self.context.print(" Bank Set ID                         | Description ")
                 self.context.print("===================================================")
@@ -48,7 +48,7 @@ class ListCommand(Command):
                     self.print_bank_set_entry(self.context.selected_bank, selected_bank_set_id)
                 return True
             case _:
-                self.context.print("ERROR: The requested container '{}' was not found.".format(args.section))
+                self.context.print(f"ERROR: The requested container '{args.section}' was not found.")
                 return False
 
     def print_bank_set_entry(self, bs, selected_bank_set_id):

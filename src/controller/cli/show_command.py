@@ -7,16 +7,17 @@ This file contains a command implementation to control show files, including the
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from controller.cli.cli_context import CLIContext
-    from argparse import ArgumentParser
 from controller.cli.command import Command
 from controller.file.read import read_document
 from controller.file.transmitting_to_fish import transmit_to_fish
 
+if TYPE_CHECKING:
+    from argparse import ArgumentParser
+
+    from controller.cli.cli_context import CLIContext
+
 
 class ShowCommand(Command):
-
     """
     Control the loadding, saving and transmitting of a show file. Furthermore, this command selection enables the
     control over a running show on fish.
@@ -68,4 +69,3 @@ class ShowCommand(Command):
                                                                 enque=True)
                 return True
         return False
-

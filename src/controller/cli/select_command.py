@@ -39,14 +39,14 @@ class SelectCommand(Command):
                 try:
                     scene_id = int(args.item)
                 except:
-                    self.context.print("Selected scene '{}' could not get parsed as integer id.".format(args.item))
+                    self.context.print(f"Selected scene '{args.item}' could not get parsed as integer id.")
                     return True
                 candidate = self.context.show.get_scene_by_id(scene_id)
                 if candidate is None:
-                    self.context.print("No scene with id {} was found.".format(candidate))
+                    self.context.print(f"No scene with id {candidate} was found.")
                     return False
                 self.context.selected_scene = candidate
-                self.context.print("Selected scene '{}'.".format(candidate.human_readable_name))
+                self.context.print(f"Selected scene '{candidate.human_readable_name}'.")
                 return True
             case "column":
                 self.context.print("ERROR: Not yet implemented.")
@@ -56,8 +56,8 @@ class SelectCommand(Command):
                 if found_bank_set:
                     self.context.selected_bank = found_bank_set
                     return True
-                else:
-                    self.context.print(f"ERROR: the requested bank set '{args.item}' was not found")
+
+                self.context.print(f"ERROR: the requested bank set '{args.item}' was not found")
             case _:
                 self.context.print(
                     f"ERROR: The resource '{args.what}' cannot be selected. Type 'help select' to obtain a list.")

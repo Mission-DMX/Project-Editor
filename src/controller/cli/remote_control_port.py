@@ -163,7 +163,7 @@ class RemoteCLIServer:
         self._bind_port = port
         self._stopped = False
         self._server_socket: socket = None
-        self._connected_clients = dict()
+        self._connected_clients = {}
         self._show = show
         self._network_manager = netmgr
         self._server_thread.start()
