@@ -6,7 +6,7 @@ smooth in vec2 cord_size;
 
 bool is_visible(vec2 position) {
     // TODO
-    return true;
+    return mod(position.x, 2) == 0;
 }
 
 bool is_cursor_overlap(vec2 position, vec2 cp) {
@@ -16,7 +16,7 @@ bool is_cursor_overlap(vec2 position, vec2 cp) {
 
 vec4 calculate_position_color(vec2 position) {
     // TODO calcluate color based on coordinate
-    return vec4(0.5, 0.5, 0.5, 1.0);
+    return vec4(1.0, 0.5, 1.0, 1.0);
 }
 
 void main() {

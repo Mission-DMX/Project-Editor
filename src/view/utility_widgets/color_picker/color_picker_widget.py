@@ -1,21 +1,18 @@
 import os.path
+from logging import getLogger
 
 import numpy as np
+from OpenGL import GL
 from PySide6.QtCore import Signal
-from PySide6.QtOpenGL import QOpenGLFramebufferObject, QOpenGLBuffer, QOpenGLShaderProgram, QOpenGLShader, \
-    QOpenGLVertexArrayObject
+from PySide6.QtGui import QOpenGLExtraFunctions, QOpenGLFunctions, QSurfaceFormat
+from PySide6.QtOpenGL import (QOpenGLBuffer, QOpenGLFramebufferObject, QOpenGLShader, QOpenGLShaderProgram,
+                              QOpenGLVertexArrayObject)
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QOpenGLFunctions, QSurfaceFormat, QOpenGLExtraFunctions
-
-from OpenGL import GL
 
 from model.color_hsi import ColorHSI
 
-_COLOR_SELECTION_SURFACE_FRAG_SHADER = QOpenGLShader(QOpenGLShader.Fragment)
-_COLOR_SELECTION_SURFACE_FRAG_SHADER.compileSourceFile(os.path.dirname(__file__) + "/color_selection_surface_frag_shader.glsl")
-_SIMPLE_VERT_SHADER = QOpenGLShader(QOpenGLShader.Vertex)
-_SIMPLE_VERT_SHADER.compileSourceFile(os.path.dirname(__file__) + "/simple_vert_shader.glsl")
+logger = getLogger(__file__)
 
 
 class ColorPickerWidget(QOpenGLWidget):
@@ -23,6 +20,9 @@ class ColorPickerWidget(QOpenGLWidget):
     color_changed: Signal = Signal(ColorHSI)
     END_Z_CLIPPING_DISTANCE = 30
     BEGIN_Z_CLIPPING_DISTANCE = 0
+
+    _COLOR_SELECTION_SURFACE_FRAG_SHADER: QOpenGLShader | None = None
+    _SIMPLE_VERT_SHADER: QOpenGLShader | None = None
 
     def __init__(self, parent: QWidget | None):
         super().__init__(parent)
@@ -32,12 +32,16 @@ class ColorPickerWidget(QOpenGLWidget):
         self._r: float = 0
         self._g: float = 0
         self._b: float = 0
+        frame_scale = 100
         self._selection_diagram_coordinates = np.array([
-            0, 1,
+            0, 1 * frame_scale,
             0, 0,
-            1, 1,
-            1, 0
+            1 * frame_scale, 1 * frame_scale,
+            1 * frame_scale, 0
         ], dtype=np.float32)
+
+        self.setMinimumHeight(100)
+        self.setMinimumWidth(150)
 
     def initializeGL(self):
         super().initializeGL()
@@ -48,13 +52,6 @@ class ColorPickerWidget(QOpenGLWidget):
             raise Exception("There must be an OpenGL context by now.")
         f = context.functions()
         f.initializeOpenGLFunctions()
-
-        format = QSurfaceFormat()
-        format.setDepthBufferSize(24)
-        format.setStencilBufferSize(8)
-        format.setVersion(4, 1)  # 4.1 is still supported on mac os and new enough for GLSL
-        format.setProfile(QSurfaceFormat.CoreProfile)
-        self.setFormat(format)
 
         self._gl_program = QOpenGLShaderProgram()
         self._gl_program.create()
@@ -72,13 +69,30 @@ class ColorPickerWidget(QOpenGLWidget):
 
         # TODO repeat for controls interface
 
-        self._gl_program.addShader(_COLOR_SELECTION_SURFACE_FRAG_SHADER)
-        self._gl_program.addShader(_SIMPLE_VERT_SHADER)
+        if ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER is None:
+            shader_source = os.path.dirname(__file__) + "/color_selection_surface_frag_shader.glsl"
+            ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER = QOpenGLShader(QOpenGLShader.ShaderTypeBit.Fragment)
+            if not ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER.compileSourceFile(shader_source):
+                logger.error("Failed to compile fragment shader.\nSource file: %s\nLog: %s\n",
+                             ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER.log(), shader_source)
+
+        if ColorPickerWidget._SIMPLE_VERT_SHADER is None:
+            ColorPickerWidget._SIMPLE_VERT_SHADER = QOpenGLShader(QOpenGLShader.ShaderTypeBit.Vertex)
+            shader_source = os.path.dirname(__file__) + "/simple_vert_shader.glsl"
+            if not ColorPickerWidget._SIMPLE_VERT_SHADER.compileSourceFile(shader_source):
+                logger.error("Failed to compile vertex shader.\nSource File: %s\nLog: %s\n",
+                             ColorPickerWidget._SIMPLE_VERT_SHADER.log(), shader_source)
+
+        self._gl_program.addShader(ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER)
+        self._gl_program.addShader(ColorPickerWidget._SIMPLE_VERT_SHADER)
         self._gl_program.bindAttributeLocation("position", 0)
         self._gl_program.bindAttributeLocation("texture_coordinate", 1)
         if not self._gl_program.link():
             raise RuntimeError("Failed to link shaders. Log={}".format(self._gl_program.log()))
+        else:
+            logger.debug("Successfully linked GL program")
         self._gl_program.bind()
+        self.setBackgroundColor(5, 5, 5, 255)
         self._recalculate_projection()
 
     def _cleanup_gl(self):
@@ -97,6 +111,7 @@ class ColorPickerWidget(QOpenGLWidget):
         This calculates and sets an orthogonal projection matrix as described in
         https://songho.ca/opengl/gl_projectionmatrix.html.
         """
+        self.makeCurrent()
         vert_projection_matricies = self._gl_program.uniformLocation("projection_matrices")
         r = self.width()
         t = self.height()
@@ -109,11 +124,8 @@ class ColorPickerWidget(QOpenGLWidget):
             0.0, 0.0, 0.0, 1.0
         ]
         f = self.context().functions()
-        count = len(projection_matrix)
-        # It should be possible to use QOpenGLExtraFunctions::glProgramUniform() with programId() as a workaround.
-        #f.glUniform1fv(vert_projection_matricies, count, projection_matrix)
         f.glUniformMatrix4fv(vert_projection_matricies, 1, 0, projection_matrix)
-        #self._gl_program.setUniformValueArray(vert_projection_matricies, projection_matrix, count)
+        self.doneCurrent()
 
     def paintGL(self):
         super().paintGL()

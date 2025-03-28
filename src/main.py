@@ -1,8 +1,11 @@
 # coding=utf-8
 """GUI and control elements for the software."""
+from view.utility_widgets.color_picker import opengl_context_init
 
 if __name__ == "__main__":
+    from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QSplashScreen
+    QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
     app = QApplication([])
     from PySide6.QtGui import QPixmap
 
@@ -18,7 +21,6 @@ if __name__ == "__main__":
         except:
             pass
     from PySide6.QtGui import QColor
-    from PySide6.QtCore import Qt
     splashscreen.showMessage(version_string, alignment=Qt.AlignmentFlag.AlignCenter, color=QColor.fromRgb(125, 125, 125))
     app.processEvents()
 
@@ -54,6 +56,7 @@ if __name__ == "__main__":
         # Warning: while this change is important, the feature is yet a technical preview in pyside6.6 and the
         #  API may change. The functionality however will stay in place.
         import asyncio
+
         from PySide6.QtAsyncio import QAsyncioEventLoopPolicy
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
@@ -62,9 +65,8 @@ if __name__ == "__main__":
         """Startup"""
         setup_logging()
         logging.basicConfig(level="INFO")
+        opengl_context_init()
         setup_asyncio()
-
-        app.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
 
         width, height = app.primaryScreen().size().toTuple()
         FinalGlobals.set_screen_width(width)
