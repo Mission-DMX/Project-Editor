@@ -51,3 +51,6 @@ load-plugins = "pylint_protobuf"
 
 [tool.pylint.FORMAT]
 max-line-length = 120
+
+[tool.pylint]
+ignore-paths = ['test', 'autotrack']
