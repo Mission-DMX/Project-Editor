@@ -4,10 +4,10 @@
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QTimer
 
+import proto.DirectMode_pb2
 from model import Broadcaster, PatchingUniverse
 from model.final_globals import FinalGlobals
 from model.patching_channel import PatchingChannel
-from proto.DirectMode_pb2 import dmx_output
 
 
 class DmxDataLogWidget(QtWidgets.QWidget):
@@ -67,7 +67,7 @@ class DmxDataLogWidget(QtWidgets.QWidget):
         self._widgets.addTab(tab, str(len(self._universes)))
         self._universes.append((patching_universe, universe))
 
-    def react_dmx_data(self, dmx: dmx_output):
+    def react_dmx_data(self, dmx: proto.DirectMode_pb2.dmx_output):
         """react on dmx data signal from fish"""
         for index, item in enumerate(dmx.channel_data[1:]):
             self._universes[dmx.universe_id - 1][1][index].update_value(str(item))

@@ -4,9 +4,9 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeWidget
 
+import proto.UniverseControl_pb2
 from model import BoardConfiguration
 from model.ofl.fixture import UsedFixture
-from proto.UniverseControl_pb2 import Universe as pbUniverse
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 
@@ -27,9 +27,9 @@ class UniverseTreeBrowserWidget(QTreeWidget):
     def refresh(self):
 
         def location_to_string(location):
-            if isinstance(location, pbUniverse.ArtNet):
+            if isinstance(location, proto.UniverseControl_pb2.Universe.ArtNet):
                 return "{}:{}/{}".format(location.ip_address, location.port, location.universe_on_device)
-            elif isinstance(location, pbUniverse.USBConfig):
+            elif isinstance(location, proto.UniverseControl_pb2.Universe.USBConfig):
                 return "USB:{}".format(location.serial)
             elif isinstance(location, int):
                 return "local/{}".format(location)

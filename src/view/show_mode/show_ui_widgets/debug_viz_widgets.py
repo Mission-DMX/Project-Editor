@@ -4,21 +4,19 @@ from abc import ABC
 from logging import getLogger
 from typing import TYPE_CHECKING, Callable
 
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent
+from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
 
+import proto.FilterMode_pb2
 from model import ColorHSI, UIWidget
-from proto.FilterMode_pb2 import update_parameter
 
 if TYPE_CHECKING:
     from model import UIPage
 
-
 logger = getLogger(__file__)
 
-class _DebugVizWidget(UIWidget, ABC):
 
+class _DebugVizWidget(UIWidget, ABC):
     """This class is the foundation for widgets that display the state of remote debug nodes"""
 
     def __init__(self, parent: "UIPage", configuration: dict[str, str], presentation_mode: list[str] | None = None):
@@ -131,7 +129,6 @@ class _DebugVizWidget(UIWidget, ABC):
 
 
 class _ColorLabel(QWidget):
-
     """A label for displaying colors"""
 
     def __init__(self, *args, **kwargs):
@@ -201,7 +198,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
         self._show_widget.setFixedWidth(self.configured_width)
         self._show_widget.setFixedHeight(self.configured_height)
 
-    def _recv_update(self, param: update_parameter):
+    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter):
         """Checks for correct filter and updates the displayed color"""
         if self._show_widget is None:
             return
@@ -283,7 +280,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
         self._show_widget.setFixedHeight(self.configured_height)
         self._show_widget.mode = self.configuration.get("mode") or "Plain"
 
-    def _recv_update(self, param: update_parameter):
+    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter):
         """Checks for correct filter and updates the displayed number"""
         if self._show_widget is None:
             return
@@ -296,5 +293,6 @@ class NumberDebugVizWidget(_DebugVizWidget):
 
     def _delete_callback(self):
         if self._show_widget is not None:
-            self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
+            self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id,
+                                                                                self.filter_ids[0], self._recv_update)
             self._show_widget.deleteLater()

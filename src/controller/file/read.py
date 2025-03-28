@@ -8,7 +8,8 @@ from xml.etree import ElementTree
 
 import xmlschema
 
-import proto.UniverseControl_pb2 as Proto
+import proto.Console_pb2
+import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
 from controller.utils.process_notifications import get_process_notifier
@@ -18,7 +19,6 @@ from model.filter import VirtualFilter
 from model.ofl.fixture import UsedFixture, load_fixture, make_used_fixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
-from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
 from view.show_mode.show_ui_widgets import WIDGET_LIBRARY, filter_to_ui_widget
 
@@ -155,7 +155,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     return True
 
 
-def lcd_color_from_string(display_color: str) -> lcd_color:
+def lcd_color_from_string(display_color: str) -> proto.Console_pb2.lcd_color:
     """
     Convert the string representation of the LCD backlight color to the enum.
     :param display_color: The string representation
@@ -163,23 +163,23 @@ def lcd_color_from_string(display_color: str) -> lcd_color:
     """
     match display_color:
         case 'white':
-            return lcd_color.white
+            return proto.Console_pb2.lcd_color.white
         case 'red':
-            return lcd_color.red
+            return proto.Console_pb2.lcd_color.red
         case 'blue':
-            return lcd_color.blue
+            return proto.Console_pb2.lcd_color.blue
         case 'cyan':
-            return lcd_color.cyan
+            return proto.Console_pb2.lcd_color.cyan
         case 'black':
-            return lcd_color.black
+            return proto.Console_pb2.lcd_color.black
         case 'green':
-            return lcd_color.green
+            return proto.Console_pb2.lcd_color.green
         case 'magenta':
-            return lcd_color.magenta
+            return proto.Console_pb2.lcd_color.magenta
         case 'yellow':
-            return lcd_color.yellow
+            return proto.Console_pb2.lcd_color.yellow
         case _:
-            return lcd_color.white
+            return proto.Console_pb2.lcd_color.white
 
 
 def _clean_tags(element: ElementTree.Element, prefix: str):
@@ -489,8 +489,8 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
         logger.error("Could not parse universe element, id attribute is missing")
 
     physical: int | None = None
-    artnet: Proto.Universe.ArtNet | None = None
-    ftdi: Proto.Universe.ArtNet | None = None
+    artnet: proto.UniverseControl_pb2.Universe.ArtNet | None = None
+    ftdi: proto.UniverseControl_pb2.Universe.ArtNet | None = None
     patching = None
 
     for child in universe_element:
@@ -511,10 +511,10 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     if physical is None and artnet is None and ftdi is None:
         logger.warning("Could not parse any location for universe %s", universe_id)
 
-    universe_proto = Proto.Universe(id=universe_id,
-                                    physical_location=physical,
-                                    remote_location=artnet,
-                                    ftdi_dongle=ftdi)
+    universe_proto = proto.UniverseControl_pb2.Universe(id=universe_id,
+                                                        physical_location=physical,
+                                                        remote_location=artnet,
+                                                        ftdi_dongle=ftdi)
     patching_universe = PatchingUniverse(universe_proto)
     universe = Universe(patching_universe)
     universe.name = name
@@ -542,7 +542,7 @@ def _parse_physical_location(location_element: ElementTree.Element) -> int:
     return int(location_element.text)
 
 
-def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Universe.ArtNet:
+def _parse_artnet_location(location_element: ElementTree.Element) -> proto.UniverseControl_pb2.Universe.ArtNet:
     """
     Parse a universe definition of an ArtNet stage box.
     :param location_element: The XML data to load from
@@ -562,10 +562,11 @@ def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Unive
             case _:
                 logger.warning("Found attribute %s=%s while parsing artnet location", key, value)
 
-    return Proto.Universe.ArtNet(ip_address=ip_address, port=udp_port, universe_on_device=device_universe_id)
+    return proto.UniverseControl_pb2.Universe.ArtNet(ip_address=ip_address, port=udp_port,
+                                                     universe_on_device=device_universe_id)
 
 
-def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Universe.USBConfig:
+def _parse_ftdi_location(location_element: ElementTree.Element) -> proto.UniverseControl_pb2.Universe.USBConfig:
     """
     Load a universe location definition of an USB DMX adapter.
     :param location_element: The XML data to load from
@@ -588,10 +589,10 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Univers
             case _:
                 logger.warning("Found attribute %s=%s while parsing ftdi location", key, value)
 
-    return Proto.Universe.USBConfig(product_id=product_id,
-                                    vendor_id=vendor_id,
-                                    device_name=device_name,
-                                    serial=serial_identifier)
+    return proto.UniverseControl_pb2.Universe.USBConfig(product_id=product_id,
+                                                        vendor_id=vendor_id,
+                                                        device_name=device_name,
+                                                        serial=serial_identifier)
 
 
 def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> list[tuple[int, UsedFixture]]:

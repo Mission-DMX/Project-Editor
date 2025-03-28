@@ -6,13 +6,13 @@ from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QIcon, QKeySequence
 from PySide6.QtWidgets import QProgressBar
 
+import proto.RealTimeControl_pb2
 from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
 from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
-from proto.RealTimeControl_pb2 import RunMode
 from style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
@@ -136,10 +136,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Disconnect", self._fish_connector.disconnect, None),
                 ("Change", self._change_server_name, None),
                 ("---", None, None),
-                ("&Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER), None),
-                ("&Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT), None),
+                ("&Filter Mode",
+                 lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_FILTER), None),
+                ("&Direct Mode",
+                 lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_DIRECT), None),
                 ("---", None, None),
-                ("Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP), None),
+                ("Stop", lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_STOP),
+                 None),
             ],
             "File": [
                 ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
@@ -237,7 +240,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._status_pbar.setValue(int((c / m) * 100))
 
     def _fish_run_mode_changed(self, new_run_mode: int):
-        if new_run_mode == RunMode.RM_FILTER:
+        if new_run_mode == proto.RealTimeControl_pb2.RunMode.RM_FILTER:
             self._status_current_scene_label.setVisible(True)
             self._status_runmode.setPixmap(MainWindow.STATUS_ICON_FILTER_MODE.pixmap(16, 16))
         else:

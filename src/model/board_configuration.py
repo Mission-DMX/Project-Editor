@@ -4,8 +4,7 @@ from typing import Callable
 
 from PySide6 import QtCore, QtGui
 
-from proto.FilterMode_pb2 import update_parameter
-
+import proto.FilterMode_pb2
 from .broadcaster import Broadcaster
 from .device import Device
 from .patching_universe import PatchingUniverse
@@ -203,7 +202,7 @@ class BoardConfiguration:
                 return scene
         return None
 
-    def _distribute_filter_update_message(self, param: update_parameter):
+    def _distribute_filter_update_message(self, param: proto.FilterMode_pb2.update_parameter):
         """Find listeners to incoming filter update message and distribute it to them."""
         candidate_list = self._filter_update_msg_register.get((param.scene_id, param.filter_id))
         if candidate_list is not None:
