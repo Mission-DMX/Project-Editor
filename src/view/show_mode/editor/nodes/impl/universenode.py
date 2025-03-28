@@ -19,12 +19,14 @@ class UniverseNode(FilterNode):
 
     def __init__(self, model, name):
         if isinstance(model, Filter):
-            super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name, terminals={
-                input_link: {'io': 'in'} for input_link, _ in model.channel_links.items()},
+            super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
+                             terminals={
+                                 input_link: {'io': 'in'} for input_link, _ in model.channel_links.items()},
                              allowAddInput=True)
         else:
-            super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name, terminals={
-                "input_1": {'io': 'in'}},
+            super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
+                             terminals={
+                                 "input_1": {'io': 'in'}},
                              allowAddInput=True)
 
         try:
@@ -44,8 +46,8 @@ class UniverseNode(FilterNode):
                         else:
                             t: Terminal = self.terminals[key]
                             if not t.isInput():
-                                logger.error("Universe output filter '{}' has corrupted terminal '{}'."
-                                             .format(self.name(), input_channel))
+                                logger.error("Universe output filter '%s' has corrupted terminal '%s'."
+                                             , self.name(), input_channel)
         except:
             self.filter.filter_configurations["input_1"] = "0"
             self.filter.in_data_types["input_1"] = DataType.DT_8_BIT

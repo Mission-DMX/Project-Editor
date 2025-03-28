@@ -35,7 +35,7 @@ class PatchMode(QtWidgets.QStackedWidget):
         try:
             self._broadcaster.patching_universes.remove(universe)
         except ValueError:
-            logger.error(f"Unable to remove universe {universe.name}")
+            logger.error("Unable to remove universe %s", universe.name)
 
     def _connection_changed(self, connected):
         """connection to fish is changed"""

@@ -17,9 +17,8 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog i
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
-
-from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .model.cue_filter_model import CueFilterModel
+from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -153,7 +152,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if self._filter_instance:
             self._filter_instance.associated_editor_widget = self
         else:
-            logger.error("Cue editor widget received invalid filter: {}.".format(f))
+            logger.error("Cue editor widget received invalid filter: %s.", f)
 
     def _link_bankset(self):
         self._broadcaster = Broadcaster()

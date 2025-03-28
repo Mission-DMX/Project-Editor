@@ -18,6 +18,6 @@ def yaml_load(file_path: str) -> dict:
         try:
             d = yaml.YAML(typ='safe').load(f.read())
         except Exception as e:
-            logger.error("Failed to parse YAML file {}.".format(file_path), e)
+            logger.error("Failed to parse YAML file %s. %s", file_path, e)
             d = dict()
     return d

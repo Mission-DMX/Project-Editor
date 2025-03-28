@@ -301,8 +301,8 @@ class EffectCompilationWidget(QWidget):
                         parent_effect, slot_name = effect.slot_parent
                         parent_effect.clear_slot(slot_name)
                     else:
-                        logger.error("The effect '{}' should be deleted but the parent is None. FIXME!".format(
-                            effect.get_human_filter_name()
-                        ))
-                    self.update()
+                        logger.error("The effect '%s' should be deleted but the parent is None. FIXME!",
+                                     effect.get_human_filter_name()
+                                     )
+                        self.update()
                     return

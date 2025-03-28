@@ -42,7 +42,7 @@ class CueFilter(VirtualFilter):
                 fader_filter_id = "{}__{}".format(self.filter_id, channel.name)
                 if channel.fader is None:
                     logger.error(
-                        "The preview is enabled but no logger was assigned for channel '{}'.".format(channel.name))
+                        "The preview is enabled but no logger was assigned for channel '%s'.", channel.name)
                     fader_filter = Filter(self.scene, fader_filter_id,
                                           filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR
                                           if channel.data_type == DataType.DT_COLOR

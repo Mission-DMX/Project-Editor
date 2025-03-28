@@ -46,7 +46,7 @@ class AutoTrackerUIWidget(UIWidget):
         lc = self._tracker_player_widget.instance.settings.lights
         # TODO handle case of VFILTER_POSITION_CONSTANT
         if not isinstance(lc, VFilterLightController):
-            logger.error("Expected VFilterLightController. Got {} instead.".format(type(lc)))
+            logger.error("Expected VFilterLightController. Got %s instead.", type(lc))
         for tracker_id in range(self._associated_filter.number_of_concurrent_trackers):
             pan_filter_id = self._associated_filter.get_pan_filter_id(tracker_id)
             tilt_filter_id = self._associated_filter.get_tilt_filter_id(tracker_id)

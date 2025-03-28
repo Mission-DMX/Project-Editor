@@ -207,8 +207,8 @@ class ColorDebugVizWidget(_DebugVizWidget):
                 hsi_value = param.parameter_value.split(",")
                 self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
             except ValueError:
-                logger.error(f"Unable to parse color '{param.parameter_value}' from filter '{param.filter_id}:"
-                             f"{param.parameter_key}'.")
+                logger.error("Unable to parse color '%s' from filter '%s:%s'.", param.parameter_value,
+                             param.filter_id, param.parameter_key)
 
 
 class _NumberLabel(QWidget):
@@ -288,8 +288,8 @@ class NumberDebugVizWidget(_DebugVizWidget):
             try:
                 self._show_widget.number = float(param.parameter_value)
             except ValueError:
-                logger.error(f"Unexpected number received from filter '{param.filter_id}:{param.parameter_key}': "
-                             f"{param.parameter_value}")
+                logger.error("Unexpected number received from filter '%s:%s': %s", param.filter_id,
+                             param.parameter_key, param.parameter_value)
 
     def _delete_callback(self):
         if self._show_widget is not None:

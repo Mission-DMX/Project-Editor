@@ -471,8 +471,8 @@ class TheaterSceneWizard(QWizard):
                 if f not in placed_fixtures:
                     placed_fixtures.append(f)
                     if not place_fixture_filters_in_scene(f, fp, output_map=output_map):
-                        logger.error("Failed to place output filters for fixture {} in scene with id {}."
-                                     .format(f, scene.scene_id)
+                        logger.error("Failed to place output filters for fixture %s in scene with id %s.", f,
+                                     scene.scene_id
                                      )
         return output_map
 

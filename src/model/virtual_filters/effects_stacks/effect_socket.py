@@ -112,7 +112,7 @@ class EffectsSocket:
     def clear_slot(self, slot_name: str):
         match slot_name:
             case _:
-                logger.error("Deleting effects from slot name '{}' is not yet implemented.".format(slot_name))
+                logger.error("Deleting effects from slot name '%s' is not yet implemented.", slot_name)
 
     @property
     def is_group(self) -> bool:

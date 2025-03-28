@@ -36,7 +36,7 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
     for bank_element in child:
         bank = FaderBank()
         if bank_element.tag != 'bank':
-            logger.error("Unexpected element '{}' while parsing bank".format(bank_element.tag))
+            logger.error("Unexpected element '%s' while parsing bank",bank_element.tag)
             continue
         for column_element in bank_element:
             if column_element.tag == 'hslcolumn':
@@ -56,7 +56,7 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
                 col.fader_position = int(column_element.attrib['fader_position'])
                 col.encoder_position = int(column_element.attrib['encoder_position'])
             else:
-                logger.error("Unsupported bank column type '{}'.".format(column_element.tag))
+                logger.error("Unsupported bank column type '%s'.", column_element.tag)
                 continue
             bank.add_column(col)
         bs.add_bank(bank)
@@ -86,7 +86,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         schema.validate(file_name)
         pn.current_step_number += 1
     except Exception as error:
-        logger.error("Error while validating show file: {}".format(error))
+        logger.error("Error while validating show file: %s", error)
         ExceptionsDialog(error).exec()
         pn.close()
         return False
@@ -221,14 +221,14 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
                     key, value, parent_scene.human_readable_name)
     for child in element:
         if child.tag != "filterid":
-            logger.error("Found unknown tag '{}' in filter page.".format(child.tag))
+            logger.error("Found unknown tag '%s' in filter page.", child.tag)
         else:
             filter = parent_scene.get_filter_by_id(child.text)
             if filter:
                 f.filters.append(filter)
             else:
-                logger.error("Didn't find filter '{}' in scene '{}'.".format(child.text,
-                                                                             parent_scene.human_readable_name))
+                logger.error(f"Didn't find filter '%s' in scene '%s'.", child.text,
+                             parent_scene.human_readable_name)
         # TODO load comments
     return True
 
@@ -305,7 +305,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
             case 'title':
                 page.title = str(v)
             case _:
-                logger.error("Unexpected attribute '{}':'{}' in ui page definition.".format(k, v))
+                logger.error("Unexpected attribute '%s':'%s' in ui page definition.", k, v)
     for widget_def in page_def:
         posX: int = 0
         posY: int = 0
@@ -328,18 +328,19 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
                 case "variante":
                     widget_cdef = WIDGET_LIBRARY.get(str(v))
                 case _:
-                    logger.error("Unexpected attribute '{}':'{}' in ui widget definition.".format(k, v))
+                    logger.error("Unexpected attribute '%s':'%s' in ui widget definition.", k, v)
         for config_entry in widget_def:
             if config_entry.tag != "configurationEntry":
-                logger.error("Found unexpected child '{}' in ui widget definition.".format(config_entry.tag))
+                logger.error("Found unexpected child '%s' in ui widget definition.", config_entry.tag)
                 continue
             conf[str(config_entry.attrib['name'])] = str(config_entry.attrib['value'])
         filters = []
         for fid in fids:
             corresponding_filter = scene.get_filter_by_id(fid)
             if not corresponding_filter:
-                logger.error("Did not load filter for ui widget with id '{}' from scene '{}' as it does not exist."
-                             .format(fid, scene))
+                logger.error("Did not load filter for ui widget with id '%s' from scene '%s' as it does not exist.",
+                             fid, scene
+                             )
                 continue
             filters.append(corresponding_filter)
         if widget_cdef is None:

@@ -13,7 +13,6 @@ from view.patch_view.patch_plan.patch_plan_widget import PatchPlanWidget
 if TYPE_CHECKING:
     from view.patch_view.patch_mode import PatchMode
 
-
 logger = getLogger(__file__)
 
 
@@ -74,7 +73,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         for tr in to_remove:
             index = self.indexOf(tr)
             self.removeTab(index)
-            logger.info(f"Removing patching tab {index}")
+            logger.info("Removing patching tab %s", index)
             self._patch_planes.remove(tr)
 
     def _tab_clicked(self, scene_index: int) -> None:

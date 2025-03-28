@@ -2,11 +2,10 @@
 """Basic filter node"""
 from logging import getLogger
 
-from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
+from pyqtgraph.flowchart.Flowchart import Node, Terminal
 
 from model import Filter, Scene
-from model.filter import FilterTypeEnumeration
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
@@ -66,8 +65,9 @@ class FilterNode(Node):
             return
 
         if not isinstance(remote_node, FilterNode):
-            logger.warning("Tried to non-FilterNode nodes. Forced disconnection. Got type: " + str(type(remote_node)) +
-                           " and expected: " + str(FilterNode.__class__) + " instance.")
+            logger.warning(
+                "Tried to non-FilterNode nodes. Forced disconnection. Got type: %s and expected: %s instance.",
+                str(type(remote_node)), str(FilterNode.__class__))
             localTerm.disconnectFrom(remoteTerm)
             return
 
@@ -78,8 +78,9 @@ class FilterNode(Node):
                 return
             self.filter.channel_links[localTerm.name()] = remote_node.name() + ":" + remoteTerm.name()
         except KeyError as e:
-            logger.error(str(e) + " Possible key candidates are: " + ", ".join(self.filter.in_data_types.keys()) +
-                         "\nRemote options are: " + ", ".join(remote_node.filter.out_data_types.keys()))
+            logger.error("%s Possible key candidates are: %s\nRemote options are: %s", str(e),
+                         ", ".join(self.filter.in_data_types.keys()),
+                         ", ".join(remote_node.filter.out_data_types.keys()))
 
     def disconnected(self, localTerm, remoteTerm):
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.

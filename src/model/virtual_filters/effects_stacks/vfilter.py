@@ -54,7 +54,7 @@ class EffectsStack(VirtualFilter):
                     if not isinstance(output_dict["color"], list):
                         output_dict["color"] = [output_dict["color"]]
                     if len(output_dict["color"]) == 0:
-                        logger.error("Color Effect '{}' did not produce any output.".format(color_effect))
+                        logger.error("Color Effect '%s' did not produce any output.", color_effect)
                     if socket.has_segmentation_support:
                         segmentation_effect = socket.get_socket_by_type(EffectType.ENABLED_SEGMENTS)
                         if segmentation_effect:
@@ -166,7 +166,7 @@ class EffectsStack(VirtualFilter):
                 uf = self.scene.board_configuration.universes[universe - 1].patching[channel].fixture
                 if uf is None:
                     logger.warning(
-                        "There is no fixture associated with the address {}/{}".format(universe, channel + 1)
+                        "There is no fixture associated with the address %s/%s", universe, channel + 1
                     )
                     continue
                 s = EffectsSocket(uf)

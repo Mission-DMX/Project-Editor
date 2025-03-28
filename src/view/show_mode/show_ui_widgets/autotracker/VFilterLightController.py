@@ -43,7 +43,7 @@ class VFilterLightController(LightController):
 
     def set_color(self, color):
         logger.error(
-            "Someone wanted to set the moving head color to '{}'. This however is not supported.".format(color))
+            "Someone wanted to set the moving head color to '%s'. This however is not supported.", color)
         pass
 
     def _request_update(self):

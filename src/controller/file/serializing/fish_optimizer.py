@@ -15,12 +15,12 @@ class SceneOptimizerModule:
 
     def __init__(self, replacing_enabled: bool):
         self._replacing_enabled = replacing_enabled
-        self.channel_override_dict: dict[str, str] = dict()
+        self.channel_override_dict: dict[str, str] = {}
         self.channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []
         self._global_time_input_filter: Filter | None = None
         self._main_brightness_input_filter: Filter | None = None
-        self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = dict()
-        self._first_universe_filter_id: dict[str, str] = dict()
+        self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = {}
+        self._first_universe_filter_id: dict[str, str] = {}
 
     def _substitute_universe_filter(self, f: Filter):
         """
@@ -89,8 +89,9 @@ class SceneOptimizerModule:
             raise ValueError("Cannot substitute virtual filters.")
         if f.scene != substitution_filter.scene:
             raise ValueError("Cannot substitute a filter with one from another scene.")
-        logger.debug("Substituted filter {} with {} in scene {}.".format(
-            f.filter_id, substitution_filter.filter_id, f.scene.scene_id))
+        logger.debug(
+            f"Substituted filter %s with %s in scene %s.", f.filter_id, substitution_filter.filter_id,
+            f.scene.scene_id)
         for output_channel_name in f.out_data_types.keys():
             self.channel_override_dict["{}:{}".format(f.filter_id, output_channel_name)] = "{}:{}".format(
                 substitution_filter.filter_id, output_channel_name)
