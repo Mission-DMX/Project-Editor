@@ -5,7 +5,7 @@ from PySide6 import QtCore, QtWidgets
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet
 from model.universe import Universe
-from Style import Style
+from style import Style
 from view.console_mode.console_channel_widget import ChannelWidget
 
 

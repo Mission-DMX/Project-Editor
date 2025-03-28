@@ -3,7 +3,7 @@
 from PySide6 import QtWidgets
 
 from model.ofl.manufacture import Manufacture
-from Style import Style
+from style import Style
 
 
 class ManufacturerItem(QtWidgets.QPushButton):

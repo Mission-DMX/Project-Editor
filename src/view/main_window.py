@@ -13,7 +13,7 @@ from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
 from proto.RealTimeControl_pb2 import RunMode
-from Style import Style
+from style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.dmx_data_log import DmxDataLogWidget

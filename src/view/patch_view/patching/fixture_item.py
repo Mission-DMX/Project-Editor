@@ -3,7 +3,7 @@
 from PySide6 import QtWidgets
 
 from model.ofl.fixture import Fixture
-from Style import Style
+from style import Style
 
 
 class FixtureItem(QtWidgets.QPushButton):
