@@ -140,6 +140,10 @@ class NetworkManager(QtCore.QObject):
             self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
     def _msg_to_x_touch(self, msg: proto.Console_pb2.button_state_change):
+        """
+        Push a button control message to the x-touch.
+        :param msg: The button state change to propagate
+        """
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
@@ -161,6 +165,10 @@ class NetworkManager(QtCore.QObject):
                 logger.error("not Connected with fish server")
 
     def _enqueue_message(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
+        """
+        Push a message to the send queue.
+        :param msg: The message to enqueue
+        :param msg_type: The type of the message to enqueue"""
         self._message_queue.put(tuple([msg, msg_type]))
 
     def _on_ready_read(self) -> None:
@@ -250,6 +258,10 @@ class NetworkManager(QtCore.QObject):
                 logger.warning(msg.what)
 
     def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
+        """
+        Handle incomming button events.
+        :param msg: The raw message to handle
+        """
         if msg.new_state == proto.Console_pb2.ButtonState.BS_BUTTON_PRESSED:
             match msg.button:
                 case proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH:
@@ -288,6 +300,10 @@ class NetworkManager(QtCore.QObject):
                     pass
 
     def _handle_desk_update(self, msg: proto.Console_pb2.desk_update):
+        """
+        Process incoming fader state changes.
+        :param msg: The message to process
+        """
         # TODO handle update of selected column
         if msg.jogwheel_change_since_last_update < 0:
             for _ in range(msg.jogwheel_change_since_last_update * -1):

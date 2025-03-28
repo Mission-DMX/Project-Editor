@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from abc import ABC
 from logging import getLogger
-from typing import Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QPaintEvent, QPainter, QBrush, QColor
-from PySide6.QtWidgets import QFormLayout, QSpinBox, QWidget, QLabel, QHBoxLayout, QComboBox
+from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent
+from PySide6.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
 
-from model import UIWidget, ColorHSI
+from model import ColorHSI, UIWidget
 from proto.FilterMode_pb2 import update_parameter
 
 if TYPE_CHECKING:

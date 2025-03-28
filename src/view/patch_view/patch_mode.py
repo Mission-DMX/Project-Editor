@@ -9,7 +9,6 @@ from model.patching_universe import PatchingUniverse
 from view.patch_view.patch_plan.patch_plan_selector import PatchPlanSelector
 from view.patch_view.patching.patching_select import PatchingSelect
 
-
 logger = getLogger(__file__)
 
 

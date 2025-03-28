@@ -2,9 +2,10 @@
 """Provides data structures with accessors and modifiers for DMX"""
 from typing import Callable
 
-from PySide6 import QtGui, QtCore
+from PySide6 import QtCore, QtGui
 
 from proto.FilterMode_pb2 import update_parameter
+
 from .broadcaster import Broadcaster
 from .device import Device
 from .patching_universe import PatchingUniverse

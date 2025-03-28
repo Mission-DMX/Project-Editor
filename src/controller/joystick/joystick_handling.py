@@ -13,6 +13,8 @@ class JoystickHandler:
 
     @staticmethod
     def reformat(key):
+        """Rename the input keys.
+        :param key: The input event to rename"""
         if key.keytype == Key.AXIS:
             tilt = False
             match key.number:
@@ -34,6 +36,7 @@ class JoystickHandler:
             (Broadcaster()).handle_joystick_event.emit(joystick, key.value, tilt)
 
     def __new__(cls):
+        """Connect a joystick and setup the key bindings"""
         mngr = pyjoystick.ThreadEventManager(event_loop=run_event_loop,
                                              handle_key_event=lambda key: cls.reformat(key)
                                              )
