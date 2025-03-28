@@ -10,6 +10,7 @@ import proto.FilterMode_pb2
 import proto.RealTimeControl_pb2
 from controller.joystick.joystick_enum import JoystickList
 from model.patching_universe import PatchingUniverse
+
 from .device import Device
 from .scene import FilterPage, Scene
 from .universe import Universe
