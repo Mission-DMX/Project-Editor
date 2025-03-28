@@ -77,14 +77,14 @@ class BankSetCommand(Command):
                     return False
                 bank_index = 0
                 self.context.print(
-                    "The selected bank set contains {} banks.".format(len(self.context.selected_bank.banks)))
+                    f"The selected bank set contains {len(self.context.selected_bank.banks)} banks.")
                 for bank in self.context.selected_bank.banks:
                     column_index = 0
                     for column in bank.columns:
                         col_type_str = "???"
-                        if type(column) is ColorDeskColumn:
+                        if isinstance(column, ColorDeskColumn):
                             col_type_str = "HSI"
-                        if type(column) is RawDeskColumn:
+                        if isinstance(column, RawDeskColumn):
                             col_type_str = "RAW"
                         self.context.print(
                             str(bank_index) + "/" + str(column_index) + " " + col_type_str + " " + column.display_name)
@@ -94,10 +94,10 @@ class BankSetCommand(Command):
                 if not self.context.selected_bank:
                     self.context.print("ERROR: No bank set selected. Create or select one first.")
                     return False
-                else:
-                    self.context.selected_bank.activate()
+
+                self.context.selected_bank.activate()
             case _:
                 self.context.print(
-                    "ERROR: The subcommand '{}' is not known. Type 'help bank_set' to obtain a list.".format(args.what))
+                    f"ERROR: The subcommand '{args.what}' is not known. Type 'help bank_set' to obtain a list.")
                 return False
         return True
