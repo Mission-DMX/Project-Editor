@@ -4,7 +4,7 @@ flake8
 PySide6
 pyqtgraph>=0.13.6
 protobuf
-xmlschema
+xmlschema>=3.4.5
 pydantic
 pylint
 pylint_protobuf

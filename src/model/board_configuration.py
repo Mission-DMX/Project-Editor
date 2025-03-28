@@ -41,6 +41,7 @@ class BoardConfiguration:
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
     def _clear(self):
+        """This method resets the show data prior to loading a new one."""
         for scene in self._scenes:
             self._broadcaster.delete_scene.emit(scene)
         for universe in self._universes:
@@ -186,6 +187,8 @@ class BoardConfiguration:
 
     @file_path.setter
     def file_path(self, new_path: str):
+        """Update the show file path.
+        :param new_path: The location to save the show file to"""
         self._show_file_path = new_path
         self._broadcaster.show_file_path_changed.emit(new_path)
 
@@ -201,6 +204,7 @@ class BoardConfiguration:
         return None
 
     def _distribute_filter_update_message(self, param: update_parameter):
+        """Find listeners to incoming filter update message and distribute it to them."""
         candidate_list = self._filter_update_msg_register.get((param.scene_id, param.filter_id))
         if candidate_list is not None:
             for c in candidate_list:

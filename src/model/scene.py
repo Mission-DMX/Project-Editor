@@ -128,6 +128,7 @@ class Scene:
         return str(self._scene_id)
 
     def ensure_bankset(self) -> bool:
+        """This method makes sure that the bank set associated with this scene gets applied to fish."""
         if self._associated_bankset is None:
             from .control_desk import BankSet
             self._associated_bankset = BankSet(description="Bankset associated with scene {}.".format(self._scene_id),
@@ -188,6 +189,11 @@ class Scene:
         return name_to_try
 
     def append_filter(self, f: Filter, filter_page_index: int = -1):
+        """
+        Insert a filter in the scene.
+        :param f: The filter to add
+        :param filter_page_index: The index of the filter page to add it to. -1 indicates that this step should be skipped.
+        """
         if f.scene and f.scene != self:
             raise Exception("This filter ({}) is already added to a scene other than this one".format(f.filter_id))
         if f.scene == self and f in self.filters:
@@ -200,6 +206,7 @@ class Scene:
                 self._filter_pages[filter_page_index].filters.append(f)
 
     def remove_filter(self, f: Filter):
+        """Delete a filter."""
         self._filters.remove(f)
         if self._filter_index.get(f.filter_id):
             self._filter_index.pop(f.filter_id)
@@ -216,6 +223,11 @@ class Scene:
             remove_filter_from_page(p)
 
     def notify_about_filter_rename_action(self, sender: Filter, old_id: str):
+        """
+        This method checks connections of a filter which should be renamed and updates them accordingly.
+        :param sender: The filter that was renamed
+        :param old_id: The id which this filter was known as before.
+        """
         if self._filter_index.get(old_id):
             self._filter_index.pop(old_id)
         self._filter_index[sender.filter_id] = sender
