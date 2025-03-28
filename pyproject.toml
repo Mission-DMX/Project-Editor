@@ -54,3 +54,4 @@ max-line-length = 120
 
 [tool.pylint]
 ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/']
+source-roots = ["src"]
