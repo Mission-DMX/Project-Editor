@@ -2,28 +2,28 @@
 import logging
 from xml.etree import ElementTree
 
-import proto.Console_pb2 as pConsole
+import proto.Console_pb2 
 from model import Scene
 from model.control_desk import ColorDeskColumn, RawDeskColumn
 
 
-def lcd_color_to_string(display_color: pConsole.lcd_color) -> str:
+def lcd_color_to_string(display_color: proto.Console_pb2.lcd_color) -> str:
     match display_color:
-        case pConsole.lcd_color.white:
+        case proto.Console_pb2.lcd_color.white:
             return 'white'
-        case pConsole.lcd_color.red:
+        case proto.Console_pb2.lcd_color.red:
             return 'red'
-        case pConsole.lcd_color.blue:
+        case proto.Console_pb2.lcd_color.blue:
             return 'blue'
-        case pConsole.lcd_color.cyan:
+        case proto.Console_pb2.lcd_color.cyan:
             return 'cyan'
-        case pConsole.lcd_color.black:
+        case proto.Console_pb2.lcd_color.black:
             return 'black'
-        case pConsole.lcd_color.green:
+        case proto.Console_pb2.lcd_color.green:
             return 'green'
-        case pConsole.lcd_color.magenta:
+        case proto.Console_pb2.lcd_color.magenta:
             return 'magenta'
-        case pConsole.lcd_color.yellow:
+        case proto.Console_pb2.lcd_color.yellow:
             return 'yellow'
         case _:
             return 'white'
