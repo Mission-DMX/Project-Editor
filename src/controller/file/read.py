@@ -8,7 +8,7 @@ from xml.etree import ElementTree
 
 import xmlschema
 
-import proto.UniverseControl_pb2 as Proto
+import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
 from controller.utils.process_notifications import get_process_notifier
@@ -489,8 +489,8 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
         logger.error("Could not parse universe element, id attribute is missing")
 
     physical: int | None = None
-    artnet: Proto.Universe.ArtNet | None = None
-    ftdi: Proto.Universe.ArtNet | None = None
+    artnet: proto.UniverseControl_pb2.Universe.ArtNet | None = None
+    ftdi: proto.UniverseControl_pb2.Universe.ArtNet | None = None
     patching = None
 
     for child in universe_element:
@@ -511,7 +511,7 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     if physical is None and artnet is None and ftdi is None:
         logger.warning("Could not parse any location for universe %s", universe_id)
 
-    universe_proto = Proto.Universe(id=universe_id,
+    universe_proto = proto.UniverseControl_pb2.Universe(id=universe_id,
                                     physical_location=physical,
                                     remote_location=artnet,
                                     ftdi_dongle=ftdi)
@@ -542,7 +542,7 @@ def _parse_physical_location(location_element: ElementTree.Element) -> int:
     return int(location_element.text)
 
 
-def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Universe.ArtNet:
+def _parse_artnet_location(location_element: ElementTree.Element) -> proto.UniverseControl_pb2.Universe.ArtNet:
     """
     Parse a universe definition of an ArtNet stage box.
     :param location_element: The XML data to load from
@@ -562,10 +562,10 @@ def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Unive
             case _:
                 logger.warning("Found attribute %s=%s while parsing artnet location", key, value)
 
-    return Proto.Universe.ArtNet(ip_address=ip_address, port=udp_port, universe_on_device=device_universe_id)
+    return proto.UniverseControl_pb2.Universe.ArtNet(ip_address=ip_address, port=udp_port, universe_on_device=device_universe_id)
 
 
-def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Universe.USBConfig:
+def _parse_ftdi_location(location_element: ElementTree.Element) -> proto.UniverseControl_pb2.Universe.USBConfig:
     """
     Load a universe location definition of an USB DMX adapter.
     :param location_element: The XML data to load from
@@ -588,7 +588,7 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Univers
             case _:
                 logger.warning("Found attribute %s=%s while parsing ftdi location", key, value)
 
-    return Proto.Universe.USBConfig(product_id=product_id,
+    return proto.UniverseControl_pb2.Universe.USBConfig(product_id=product_id,
                                     vendor_id=vendor_id,
                                     device_name=device_name,
                                     serial=serial_identifier)
