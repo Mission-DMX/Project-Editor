@@ -10,7 +10,7 @@ class ChainingEffectDummy(Effect):
     """The purpose of this class is to provide an Effect if required during rendering"""
 
     def serialize(self) -> dict:
-        return dict()
+        return {}
 
     def deserialize(self, data: dict[str, str]):
         pass

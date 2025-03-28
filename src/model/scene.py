@@ -192,10 +192,11 @@ class Scene:
         """
         Insert a filter in the scene.
         :param f: The filter to add
-        :param filter_page_index: The index of the filter page to add it to. -1 indicates that this step should be skipped.
+        :param filter_page_index: The index of the filter page to add it to.
+                                  -1 indicates that this step should be skipped.
         """
         if f.scene and f.scene != self:
-            raise Exception("This filter ({}) is already added to a scene other than this one".format(f.filter_id))
+            raise Exception(f"This filter ({f.filter_id}) is already added to a scene other than this one")
         if f.scene == self and f in self.filters:
             return
         f.filter_id = self.ensure_name_uniqueness(f.filter_id)

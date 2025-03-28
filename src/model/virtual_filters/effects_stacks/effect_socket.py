@@ -99,10 +99,12 @@ class EffectsSocket:
     def place_effect(self, e: Effect, target_slot: EffectType) -> bool:
         if not Effect.can_convert_slot(e.get_output_slot_type(), target_slot):
             return False
+
         if target_slot == EffectType.COLOR and self.has_color_property:
             self._color_socket = e
             return True
-        elif target_slot == EffectType.ENABLED_SEGMENTS and self.has_segmentation_support:
+
+        if target_slot == EffectType.ENABLED_SEGMENTS and self.has_segmentation_support:
             self._segment_socket = e
             return True
         # TODO implement other slot types

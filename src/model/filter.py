@@ -1,4 +1,5 @@
 # coding=utf-8
+# pylint: disable=implicit-flag-alias
 """Filter module"""
 import abc
 from enum import IntFlag, auto
@@ -20,14 +21,17 @@ class DataType(IntFlag):
         """This method returns the data type representation commonly used by the fish filters for configuration."""
         if self.value == DataType.DT_8_BIT.value:
             return "8bit"
-        elif self.value == DataType.DT_16_BIT.value:
+
+        if self.value == DataType.DT_16_BIT.value:
             return "16bit"
-        elif self.value == DataType.DT_DOUBLE.value:
+
+        if self.value == DataType.DT_DOUBLE.value:
             return "float"
-        elif self.value == DataType.DT_COLOR.value:
+
+        if self.value == DataType.DT_COLOR.value:
             return "color"
-        else:
-            return "8bit"  # bools are 8 bit
+
+        return "8bit"  # bools are 8 bit
 
     @staticmethod
     def names() -> list[str]:
@@ -153,8 +157,8 @@ class Filter:
         self._filter_type = int(filter_type)
         self._pos: tuple[float, float] | None = pos
         self._channel_links: dict[str, str] = {}
-        self._initial_parameters: dict[str, str] = initial_parameters or dict()
-        self._filter_configurations: dict[str, str] = filter_configurations or dict()
+        self._initial_parameters: dict[str, str] = initial_parameters or {}
+        self._filter_configurations: dict[str, str] = filter_configurations or {}
         self._gui_update_keys: dict[str, DataType | list[str]] = {}
         self._in_data_types: dict[str, DataType] = {}
         self._default_values: dict[str, str] = {}
@@ -256,7 +260,7 @@ class Filter:
         return f
 
     def __str__(self):
-        return "Filter '{}' from scene '{}'".format(self._filter_id, self.scene)
+        return f"Filter '{self._filter_id}' from scene '{self.scene}'"
 
 
 class VirtualFilter(Filter, abc.ABC):

@@ -36,7 +36,7 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
     for bank_element in child:
         bank = FaderBank()
         if bank_element.tag != 'bank':
-            logger.error("Unexpected element '%s' while parsing bank",bank_element.tag)
+            logger.error("Unexpected element '%s' while parsing bank", bank_element.tag)
             continue
         for column_element in bank_element:
             if column_element.tag == 'hslcolumn':
@@ -63,7 +63,6 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
     if child.attrib.get('linked_by_default') == 'true':
         bs.link()
     loaded_banksets[bs.id] = bs
-    pass
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration) -> bool:
@@ -80,9 +79,8 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     try:
         pn.current_step_description = "Load file from disk."
-        schema_file = open("resources/ShowFileSchema.xsd", 'r')
-
-        schema = xmlschema.XMLSchema(schema_file)
+        with open("resources/ShowFileSchema.xsd", 'r', encoding="UTF-8") as schema_file:
+            schema = xmlschema.XMLSchema(schema_file)
         schema.validate(file_name)
         pn.current_step_number += 1
     except Exception as error:
@@ -147,7 +145,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         fader_value = int(board_configuration.ui_hints.get('default_main_brightness') or '255')
         board_configuration.broadcaster.request_main_brightness_fader_update.emit(fader_value)
     except ValueError as e:
-        logger.error("Unable to parse main brightness setting: ", e)
+        logger.error("Unable to parse main brightness setting: %s", e)
 
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name
@@ -210,8 +208,8 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
                             break
                     if not parent_page:
                         return False
-                    else:
-                        parent_page.child_pages.append(f)
+
+                    parent_page.child_pages.append(f)
                 else:
                     parent_scene.insert_filterpage(f)
                 instantiated_pages.append(f)
@@ -227,7 +225,7 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
             if filter:
                 f.filters.append(filter)
             else:
-                logger.error(f"Didn't find filter '%s' in scene '%s'.", child.text,
+                logger.error("Didn't find filter '%s' in scene '%s'.", child.text,
                              parent_scene.human_readable_name)
         # TODO load comments
     return True
@@ -307,8 +305,8 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
             case _:
                 logger.error("Unexpected attribute '%s':'%s' in ui page definition.", k, v)
     for widget_def in page_def:
-        posX: int = 0
-        posY: int = 0
+        pos_x: int = 0
+        pos_y: int = 0
         w: int = 0
         h: int = 0
         fids = []
@@ -316,9 +314,9 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
         for k, v in widget_def.attrib.items():
             match k:
                 case "posX":
-                    posX = int(v)
+                    pos_x = int(v)
                 case "posY":
-                    posY = int(v)
+                    pos_y = int(v)
                 case "sizeW":
                     w = int(v)
                 case "sizeH":
@@ -352,7 +350,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
         for f in filters:
             ui_widget.set_filter(f, i)
             i += 1
-        ui_widget.position = (posX, posY)
+        ui_widget.position = (pos_x, pos_y)
         ui_widget.size = (w, h)
         page.append_widget(ui_widget)
     scene.ui_pages.append(page)

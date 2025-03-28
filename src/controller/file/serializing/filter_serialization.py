@@ -17,9 +17,9 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
     # TODO check that no optimizations are performed if not fish
     if for_fish and filter_.is_virtual_filter:
         if not isinstance(filter_, VirtualFilter):
-            raise RuntimeError("This filter instance was supposed to be a virtual filter. SID: '{}' FID: '{}'".format(
-                filter_.scene.scene_id, filter_.filter_id
-            ))
+            raise RuntimeError(
+                "This filter instance was supposed to be a virtual filter."
+                f" SID: '{filter_.scene.scene_id}' FID: '{filter_.filter_id}'")
         ifl: list[Filter] = []
         filter_.instantiate_filters(ifl)
         for instantiated_filter in ifl:
@@ -69,7 +69,7 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizer
     om.wrap_up(scene_element)
     channel_links_to_be_created: list[tuple[Filter, ElementTree.SubElement]] = om.channel_link_list
     override_port_mapping: dict[str, str] = om.channel_override_dict
-    default_nodes: dict[DataType, list] = dict()
+    default_nodes: dict[DataType, list] = {}
     time_node = None
     for f_entry in channel_links_to_be_created:
         if f_entry[0].filter_type == FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT:

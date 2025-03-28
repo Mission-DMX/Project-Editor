@@ -25,7 +25,8 @@ class CueState():
         ret = ""
         if self._state == State.STOP:
             return "stopped"
-        elif self._state == State.PAUSE:
+
+        if self._state == State.PAUSE:
             ret = ("paused at " +
                    self.time_delta_to_str(self._paused_time))
         if self._state == State.PLAY:

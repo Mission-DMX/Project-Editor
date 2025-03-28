@@ -97,8 +97,8 @@ class ColorSupport(IntFlag):
 
 def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
-    f = open(file)
-    ob: json = json.load(f)
+    with open(file, "r", encoding='UTF-8') as f:
+        ob: json = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
                    categories=ob["categories"] if "categories" in ob else [],
                    modes=ob["modes"] if "modes" in ob else [], fileName=file.split("/fixtures/")[1])
@@ -196,15 +196,15 @@ class UsedFixture:
                 if "speed" in channel_name:
                     self.animation_speed_channels.append(f)
                     continue
-                else:
-                    self.pan_channels.append(f)
+
+                self.pan_channels.append(f)
             if "tilt" in channel_name:
                 self.position_channels.append(f)
                 if "speed" in channel_name:
                     self.animation_speed_channels.append(f)
                     continue
-                else:
-                    self.tilt_channels.append(f)
+
+                self.tilt_channels.append(f)
             if "rotation" in channel_name:
                 # This will also catch lense and gobo rotations
                 self.position_channels.append(f)
@@ -246,8 +246,7 @@ class UsedFixture:
     def first_channel(self) -> int:
         i = 513
         for c in self.channels:
-            if c.address < i:
-                i = c.address
+            i = min(i, c.address)
         if i == 513:
             i = -1
         return i

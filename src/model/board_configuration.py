@@ -21,7 +21,7 @@ class BoardConfiguration:
         self._default_active_scene: int = default_active_scene
         self._notes: str = notes
         self._scenes: list[Scene] = []
-        self._scenes_index: dict[int, int] = dict()
+        self._scenes_index: dict[int, int] = {}
         self._devices: list[Device] = []
         self._universes: list[Universe] = []
         self._ui_hints: dict[str, str] = {}
@@ -55,8 +55,8 @@ class BoardConfiguration:
         self._show_name = ""
         self._default_active_scene = 0
         self._notes = ""
-        self._scenes_index = dict()
-        self._ui_hints = dict()
+        self._scenes_index = {}
+        self._ui_hints = {}
         self._show_file_path = ""
         self._filter_update_msg_register.clear()
 
@@ -110,7 +110,6 @@ class BoardConfiguration:
             device: The device to be removed.
         """
         pass
-
     def universe(self, universe_id: int) -> Universe | None:
         """Tries to find universe by id.
 

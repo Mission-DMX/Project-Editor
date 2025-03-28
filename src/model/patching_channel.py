@@ -85,4 +85,4 @@ class PatchingChannel(QtCore.QObject):
 
     def __str__(self):
         parent_universe = self._fixture.parent_universe if self._fixture else -1
-        return "{}/{}: {}".format(parent_universe, self._address, self.fixture_channel)
+        return f"{parent_universe}/{self._address}: {self.fixture_channel}"

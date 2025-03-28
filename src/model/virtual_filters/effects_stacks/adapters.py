@@ -1,14 +1,13 @@
 # coding=utf-8
 """This file contains adapters between different effect output types that can be instantiated."""
-from typing import TYPE_CHECKING
 
 from model import Filter
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
-def emplace_with_adapter(input_effect: "Effect", target_type: "EffectType",
-                         filter_list: list["Filter"], name_prefix: str) -> dict[str, str | list[str]]:
+def emplace_with_adapter(input_effect: Effect, target_type: EffectType,
+                         filter_list: list[Filter], name_prefix: str) -> dict[str, str | list[str]]:
     """This method instantiates the given effect and instantiates required adapter filters if required.
     If the provided type and the desired type are already compatible, this method returns the input_dict as-is.
 

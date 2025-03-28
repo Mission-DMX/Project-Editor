@@ -34,7 +34,7 @@ class UIWidget(ABC):
         if isinstance(configuration, dict):
             self._configuration: dict[str, str] = configuration.copy()
         else:
-            self._configuration = dict()
+            self._configuration = {}
         self._parent = parent_page
 
     @abstractmethod

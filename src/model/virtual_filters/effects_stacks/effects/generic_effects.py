@@ -73,7 +73,7 @@ class FunctionEffect(GenericEffect):
             base_phase_filter = emplace_with_adapter(phase_input, EffectType.GENERIC_NUMBER,
                                                      filter_list, prefix + "_base_phase__")["x"]
         else:
-            base_phase_filter = Filter(self.get_scene(), "{}_base_phase".format(prefix),
+            base_phase_filter = Filter(self.get_scene(), f"{prefix}_base_phase",
                                        FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
                                        filter_configurations={}, initial_parameters={
                     "value": str(wc.base_phase)
@@ -105,7 +105,7 @@ class FunctionEffect(GenericEffect):
                 f_filter = Filter(self.get_scene(), curve_filter_id, c_filter_type, self.get_position(),
                                   initial_parameters={}, filter_configurations={})
                 f_filter.channel_links['value_in'] = value_input_filter
-                amplitude_filter = Filter(self.get_scene(), "{}_{}_amplitude".format(prefix, curve.name),
+                amplitude_filter = Filter(self.get_scene(), f"{prefix}_{curve.name}_amplitude",
                                           FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
                                           filter_configurations={}, initial_parameters={
                         "value": str(wc.base_amplitude * wc.amplitudes[curve])
@@ -114,14 +114,14 @@ class FunctionEffect(GenericEffect):
                 f_filter.channel_links['factor_outer'] = amplitude_filter.filter_id + ":value"
                 if curve not in [BaseCurve.ARC_SIN, BaseCurve.ARC_COS, BaseCurve.ARC_TAN]:
                     f_filter.channel_links['phase'] = base_phase_filter
-                    frequency_filter = Filter(self.get_scene(), "{}_{}_frequency".format(prefix, curve.name),
+                    frequency_filter = Filter(self.get_scene(), f"{prefix}_{curve.name}_frequency",
                                               FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
                                               filter_configurations={}, initial_parameters={
                             'value': str(wc.frequencies[curve])
                         })
                     filter_list.append(frequency_filter)
                     f_filter.channel_links['factor_inner'] = frequency_filter.filter_id + ":value"
-                    offset_filter = Filter(self.get_scene(), "{}_{}_offset".format(prefix, curve.name),
+                    offset_filter = Filter(self.get_scene(), f"{prefix}_{curve.name}_offset",
                                            FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
                                            initial_parameters={'value': str(wc.offsets[curve])})
                     filter_list.append(offset_filter)

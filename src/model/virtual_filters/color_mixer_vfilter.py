@@ -23,7 +23,7 @@ class ColorMixerVFilter(VirtualFilter):
         mixer_filter = Filter(scene=self.scene, filter_id=self.filter_id, filter_type=f_type, pos=self.pos,
                               filter_configurations=self.filter_configurations.copy(),
                               initial_parameters={
-                                  "reduce_saturation_on_far_angles": "true"} if method == "hsv_red_sat" else dict())
+                                  "reduce_saturation_on_far_angles": "true"} if method == "hsv_red_sat" else {})
         for k, v in self.channel_links.items():
             mixer_filter.channel_links[k] = v
         filter_list.append(mixer_filter)

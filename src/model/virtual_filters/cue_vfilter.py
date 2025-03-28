@@ -1,5 +1,6 @@
 # coding=utf-8
 """This file contains the switching vFilter implementation for the cue filter."""
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model import Filter, Scene
@@ -7,8 +8,6 @@ from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
 if TYPE_CHECKING:
     from view.show_mode.editor.node_editor_widgets import CueEditor
-
-from logging import getLogger
 
 logger = getLogger(__file__)
 
@@ -30,16 +29,16 @@ class CueFilter(VirtualFilter):
         if self.in_preview_mode:
             # query the corresponding output channels from the fader filters
             return self._channel_mapping.get(virtual_port_id)
-        else:
-            # just return the output ports as-is
-            return "{}:{}".format(self.filter_id, virtual_port_id)
+
+        # just return the output ports as-is
+        return f"{self.filter_id}:{virtual_port_id}"
 
     def instantiate_filters(self, filter_list: list[Filter]):
         if self.in_preview_mode:
             if self.associated_editor_widget is None:
                 raise RuntimeError("The preview mode has been enabled but no editor was assigned. This is a bug.")
             for channel in self.associated_editor_widget.channels:
-                fader_filter_id = "{}__{}".format(self.filter_id, channel.name)
+                fader_filter_id = f"{self.filter_id}__{channel.name}"
                 if channel.fader is None:
                     logger.error(
                         "The preview is enabled but no logger was assigned for channel '%s'.", channel.name)
@@ -61,7 +60,7 @@ class CueFilter(VirtualFilter):
                 fader_filter.filter_configurations["ignore_main_brightness_control"] = "true"
 
                 if channel.data_type == DataType.DT_8_BIT:
-                    adapter_filter_name = "{}__ADAPTER__{}".format(self.filter_id, channel.name)
+                    adapter_filter_name = f"{self.filter_id}__ADAPTER__{channel.name}"
                     adapter_filter = Filter(self.scene, adapter_filter_name,
                                             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
                                             pos=self.pos)
@@ -69,7 +68,7 @@ class CueFilter(VirtualFilter):
                     fader_filter_id = adapter_filter_name + ":value_upper"
                     filter_list.append(adapter_filter)
                 elif channel.data_type in [DataType.DT_BOOL, DataType.DT_DOUBLE]:
-                    adapter_filter_name = "{}__ADAPTER__{}".format(self.filter_id, channel.name)
+                    adapter_filter_name = f"{self.filter_id}__ADAPTER__{channel.name}"
                     adapter_filter = Filter(self.scene, adapter_filter_name,
                                             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL
                                             if channel.data_type == DataType.DT_BOOL else

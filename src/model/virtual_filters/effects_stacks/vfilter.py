@@ -30,25 +30,22 @@ class EffectsStack(VirtualFilter):
     def instantiate_filters(self, filter_list: list[Filter]):
         for socket in self.sockets:
             socket_target = socket.target
-            universe_filter: Filter = Filter(self.scene, "{}__universeoutput__{}_{}".format(
-                self.filter_id, socket_target.parent_universe, socket_target.channels[0].address),
+            universe_filter: Filter = Filter(self.scene,
+                                             f"{self.filter_id}__universeoutput__{socket_target.parent_universe}"
+                                             f"_{socket_target.channels[0].address}",
                                              FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT)
             universe_filter.filter_configurations["universe"] = str(socket_target.parent_universe)
             filter_list.append(universe_filter)
 
-            zero_constant_name = "{}__blank_color_slot_constant__{}_{}".format(
-                self.filter_id, socket_target.parent_universe, socket_target.__hash__()
-            )
+            zero_constant_name = (f"{self.filter_id}__blank_color_slot_constant__"
+                                  f"{socket_target.parent_universe}_{socket_target.__hash__()}")
             zero_constant_8bit_required: bool = False
             zero_constant_float_required: bool = False
             if socket.has_color_property:
                 color_effect = socket.get_socket_by_type(EffectType.COLOR)
                 if color_effect is not None:
-                    filter_prefix = "{}__coloreffect_{}_{}".format(
-                        self.filter_id,
-                        socket_target.parent_universe,
-                        socket_target.channels[0].address
-                    )
+                    filter_prefix = (f"{self.filter_id}__coloreffect_{socket_target.parent_universe}_"
+                                     f"{socket_target.channels[0].address}")
                     output_dict = emplace_with_adapter(color_effect, EffectType.COLOR, filter_list, filter_prefix)
 
                     if not isinstance(output_dict["color"], list):
@@ -58,11 +55,8 @@ class EffectsStack(VirtualFilter):
                     if socket.has_segmentation_support:
                         segmentation_effect = socket.get_socket_by_type(EffectType.ENABLED_SEGMENTS)
                         if segmentation_effect:
-                            filter_prefix = "{}__segmentation_{}_{}".format(
-                                self.filter_id,
-                                socket_target.parent_universe,
-                                socket_target.channels[0].address
-                            )
+                            filter_prefix = (f"{self.filter_id}__segmentation_{socket_target.parent_universe}_"
+                                             f"{socket_target.channels[0].address}")
                             segmentation_outputs = emplace_with_adapter(segmentation_effect,
                                                                         EffectType.ENABLED_SEGMENTS,
                                                                         filter_list, filter_prefix)
@@ -103,7 +97,8 @@ class EffectsStack(VirtualFilter):
                         elif color_support_of_target == ColorSupport.HAS_RGB_SUPPORT | ColorSupport.HAS_WHITE_SEGMENT:
                             adapter_filter = Filter(self.scene, color_adapter_name_base, 16,
                                                     self.pos)  # TODO rename type
-                        elif color_support_of_target == ColorSupport.HAS_RGB_SUPPORT | ColorSupport.HAS_WHITE_SEGMENT | ColorSupport.HAS_AMBER_SEGMENT:
+                        elif (color_support_of_target == ColorSupport.HAS_RGB_SUPPORT |
+                              ColorSupport.HAS_WHITE_SEGMENT | ColorSupport.HAS_AMBER_SEGMENT):
                             adapter_filter = Filter(self.scene, color_adapter_name_base, 17,
                                                     self.pos)  # TODO rename type
                         # TODO advance adapter selection to further combinations

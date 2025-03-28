@@ -43,5 +43,3 @@ def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     # except IOError:
     #    print(f"Could not save {file_name}")
     #    return False
-
-

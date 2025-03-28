@@ -34,9 +34,8 @@ def effect_from_deserialization(effect_description: dict[str, str], f: "EffectsS
             e = ColorWheelEffect()
         # TODO implement __copysymbol__
         case _:
-            raise ValueError("The effect type '{}' cannot be instantiated. Have you forgotten to implement it?".format(
-                effect_type
-            ))
+            raise ValueError(
+                f"The effect type '{effect_type}' cannot be instantiated. Have you forgotten to implement it?")
     e.set_parent_filter(f)
     e.deserialize(effect_description)
     return e

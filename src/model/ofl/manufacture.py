@@ -19,8 +19,8 @@ class Manufacture(TypedDict):
 
 def generate_manufacturers(fixture_directory: os.path) -> list[tuple[Manufacture, list[Fixture]]]:
     """generate all Manufactures"""
-    f = open(os.path.join(fixture_directory, 'manufacturers.json'))
-    ob: json = json.load(f)
+    with open(os.path.join(fixture_directory, "manufactures.json"), "r", encoding='UTF-8') as f:
+        ob: json = json.load(f)
     iter_manufactures = iter(ob)
     next(iter_manufactures)
     manufactures: list[tuple[Manufacture, list[Fixture]]] = []
