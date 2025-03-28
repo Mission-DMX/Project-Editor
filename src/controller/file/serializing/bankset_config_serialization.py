@@ -2,7 +2,7 @@
 import logging
 from xml.etree import ElementTree
 
-import proto.Console_pb2 
+import proto.Console_pb2
 from model import Scene
 from model.control_desk import ColorDeskColumn, RawDeskColumn
 

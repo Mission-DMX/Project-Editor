@@ -2,12 +2,13 @@
 """Module containing node editor"""
 from logging import getLogger
 
-from PySide6.QtWidgets import QGridLayout, QWidget
 from pyqtgraph.flowchart.Flowchart import Flowchart, Terminal
+from PySide6.QtWidgets import QGridLayout, QWidget
 
 from model import Scene
 from model.scene import FilterPage
 from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
+
 from .filter_flowchart import FilterFlowchart
 from .nodes.base.filternode import FilterNode
 from .nodes.type_to_node_dict import type_to_node
