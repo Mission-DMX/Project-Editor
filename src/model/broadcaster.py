@@ -1,15 +1,15 @@
 # coding=utf-8
 """connector for Signals"""
+
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
 
+import proto.DirectMode_pb2
+import proto.FilterMode_pb2
+import proto.RealTimeControl_pb2
 from controller.joystick.joystick_enum import JoystickList
 from model.patching_universe import PatchingUniverse
-from proto.DirectMode_pb2 import dmx_output
-from proto.FilterMode_pb2 import update_parameter
-from proto.RealTimeControl_pb2 import RunMode
-
 from .device import Device
 from .scene import FilterPage, Scene
 from .universe import Universe
@@ -32,7 +32,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
 
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
-    change_run_mode: QtCore.Signal = QtCore.Signal(RunMode.ValueType)  # TODO Remove
+    change_run_mode: QtCore.Signal = QtCore.Signal(proto.RealTimeControl_pb2.RunMode.ValueType)  # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(Scene)
     load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
     show_file_loaded: QtCore.Signal = QtCore.Signal()
@@ -93,12 +93,12 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     handle_joystick_event: QtCore.Signal = QtCore.Signal(JoystickList, float, bool)
     joystick_selected_event: QtCore.Signal = QtCore.Signal(JoystickList)
     #################################################################
-    update_filter_parameter: QtCore.Signal = QtCore.Signal(update_parameter)
+    update_filter_parameter: QtCore.Signal = QtCore.Signal(proto.FilterMode_pb2.update_parameter)
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []
     log_message: QtCore.Signal = QtCore.Signal(str)
-    dmx_from_fish: QtCore.Signal = QtCore.Signal(dmx_output)
+    dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:

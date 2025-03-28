@@ -2,7 +2,7 @@
 import datetime
 from enum import Enum
 
-from proto.FilterMode_pb2 import update_parameter
+import proto.FilterMode_pb2
 
 
 class State(Enum):
@@ -37,7 +37,7 @@ class CueState():
                )
         return ret
 
-    def update(self, param: update_parameter):
+    def update(self, param: proto.FilterMode_pb2.update_parameter):
         values = param.parameter_value.split(";")
         self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
         self._end_time = datetime.timedelta(seconds=float(values[3]))

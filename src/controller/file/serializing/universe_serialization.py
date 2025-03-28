@@ -1,8 +1,10 @@
+# coding=utf-8
+
 from xml.etree import ElementTree
 
+import proto.UniverseControl_pb2
 from model import Universe
 from model.patching_channel import PatchingChannel
-from proto import UniverseControl_pb2
 
 
 def _create_universe_element(universe: Universe, parent: ElementTree.Element) -> ElementTree.Element:
@@ -29,7 +31,7 @@ def _create_physical_location_element(physical: int, parent: ElementTree.Element
     return physical_location
 
 
-def _create_artnet_location_element(artnet_location: UniverseControl_pb2.Universe.ArtNet,
+def _create_artnet_location_element(artnet_location: proto.UniverseControl_pb2.Universe.ArtNet,
                                     parent: ElementTree.Element) -> ElementTree.Element:
     """Creates an xml element of type artnet_location.
 
@@ -42,7 +44,7 @@ def _create_artnet_location_element(artnet_location: UniverseControl_pb2.Univers
     })
 
 
-def _create_ftdi_location_element(ftdi_location: UniverseControl_pb2.Universe.USBConfig,
+def _create_ftdi_location_element(ftdi_location: proto.UniverseControl_pb2.Universe.USBConfig,
                                   parent: ElementTree.Element) -> ElementTree.Element:
     """Creates a xml element of type ftdi_location.
 
