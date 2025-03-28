@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from typing import Type
 
+from sdl2.ext.compat import deprecated
+
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
@@ -32,14 +34,21 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
 
 
 def get_widget_key(w: UIWidget) -> str | None:
+    """
+    This method searches the WIDGET_LIBRARY for the key of the provided widget.
+    :param w: The widgets whose key to look up.
+    :returns: The found key or None.
+    """
     for k, v in WIDGET_LIBRARY.items():
         if isinstance(w, v[1]):
             return k
     return None
 
 
+@deprecated
 def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage",
                         configuration: dict[str, str] | None = None) -> UIWidget:
+    """Deprecated? We used to construct widgets this way but the WIDGET_LIBRARY method should be used instead now."""
     selected_configuration = configuration if configuration else dict()
     match filter_.filter_type:
         case 0 | 1 | 2:
