@@ -40,8 +40,9 @@ class ColorPickerWidget(QOpenGLWidget):
             1 * frame_scale, 0
         ], dtype=np.float32)
 
-        self.setMinimumHeight(100)
-        self.setMinimumWidth(150)
+        self.setMinimumHeight(800)
+        self.setMinimumWidth(600)
+        # FIXME due to yet unknown reasons we cannot set the dimensions after the constructor finished.
 
     def initializeGL(self):
         super().initializeGL()
@@ -75,6 +76,8 @@ class ColorPickerWidget(QOpenGLWidget):
             if not ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER.compileSourceFile(shader_source):
                 logger.error("Failed to compile fragment shader.\nSource file: %s\nLog: %s\n",
                              ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER.log(), shader_source)
+            else:
+                logger.debug("Successfully compiled fragment shader from %s.", shader_source)
 
         if ColorPickerWidget._SIMPLE_VERT_SHADER is None:
             ColorPickerWidget._SIMPLE_VERT_SHADER = QOpenGLShader(QOpenGLShader.ShaderTypeBit.Vertex)
@@ -82,6 +85,8 @@ class ColorPickerWidget(QOpenGLWidget):
             if not ColorPickerWidget._SIMPLE_VERT_SHADER.compileSourceFile(shader_source):
                 logger.error("Failed to compile vertex shader.\nSource File: %s\nLog: %s\n",
                              ColorPickerWidget._SIMPLE_VERT_SHADER.log(), shader_source)
+            else:
+                logger.debug("Successfully compiled vertex shader from %s.", shader_source)
 
         self._gl_program.addShader(ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER)
         self._gl_program.addShader(ColorPickerWidget._SIMPLE_VERT_SHADER)
@@ -93,6 +98,7 @@ class ColorPickerWidget(QOpenGLWidget):
             logger.debug("Successfully linked GL program")
         self._gl_program.bind()
         self.setBackgroundColor(5, 5, 5, 255)
+        self.set_cursor_position((10, 10), (self.width(), self.height()))
         self._recalculate_projection()
 
     def _cleanup_gl(self):
@@ -112,19 +118,36 @@ class ColorPickerWidget(QOpenGLWidget):
         https://songho.ca/opengl/gl_projectionmatrix.html.
         """
         self.makeCurrent()
-        vert_projection_matricies = self._gl_program.uniformLocation("projection_matrices")
+        vert_projection_matrix = self._gl_program.uniformLocation("projectionMatrix")
+        vert_model_matrix = self._gl_program.uniformLocation("modelMatrix")
         r = self.width()
         t = self.height()
         f = self.END_Z_CLIPPING_DISTANCE
         n = self.BEGIN_Z_CLIPPING_DISTANCE
-        projection_matrix = [
+        projection_matrix = np.array([
             1.0 / r, 0.0, 0.0, 0.0,
             0.0, 1.0 / t, 0.0, 0.0,
             0.0, 0.0, -2.0 / (f - n), -(f + n) / (f - n),
             0.0, 0.0, 0.0, 1.0
-        ]
+        ], dtype=np.float32)
+        model_matrix = np.array([
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        ], dtype=np.float32)
         f = self.context().functions()
-        f.glUniformMatrix4fv(vert_projection_matricies, 1, 0, projection_matrix)
+        f.glUniformMatrix4fv(vert_projection_matrix, 1, 0, projection_matrix)
+        f.glUniformMatrix4fv(vert_model_matrix, 1, 0, model_matrix)
+        self.doneCurrent()
+
+    def set_cursor_position(self, cursor: tuple[int, int], cord_size: tuple[int, int]):
+        self.makeCurrent()
+        cursor_url = self._gl_program.uniformLocation("in_cursor_position")
+        cord_size_url = self._gl_program.uniformLocation("in_cord_size")
+        f = self.context().functions()
+        f.glUniform2i(cursor_url, cursor[0], cursor[1])
+        f.glUniform2i(cord_size_url, cord_size[0], cord_size[1])
         self.doneCurrent()
 
     def paintGL(self):
