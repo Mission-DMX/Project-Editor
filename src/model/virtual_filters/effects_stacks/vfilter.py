@@ -63,10 +63,9 @@ class EffectsStack(VirtualFilter):
                             i = 0
                             for segment_number, segment_out_port in segmentation_outputs.items():
                                 color_index = i % len(output_dict["color"])
-                                seg_split_filter_name = "{}__universeoutput__segmentsplitter_{}_{}__{}".format(
-                                    self.filter_id, socket_target.parent_universe,
-                                    socket_target.channels[0].address, segment_number
-                                )
+                                seg_split_filter_name = (f"{self.filter_id}__universeoutput__segmentsplitter_"
+                                                         f"{socket_target.parent_universe}_"
+                                                         f"{socket_target.channels[0].address}__{segment_number}")
                                 split_filter = Filter(self.scene, seg_split_filter_name, 53, self.pos)  # TODO rename
                                 split_filter.channel_links["input"] = output_dict["color"][color_index]
                                 filter_list.append(split_filter)
@@ -86,7 +85,7 @@ class EffectsStack(VirtualFilter):
                                 output_dict["color"][color_index] = seg_split_filter_name + "_combine:value"
                                 i += 1
 
-                    color_adapter_name_base = "{}__color_adapter_property".format(filter_prefix)
+                    color_adapter_name_base = f"{filter_prefix}__color_adapter_property"
                     color_support_of_target = socket_target.color_support()
 
                     adapter_filters = []
@@ -116,8 +115,8 @@ class EffectsStack(VirtualFilter):
                         i = 0
                         for segment in segment_list:
                             universe_filter.filter_configurations[str(segment.address)] = str(segment.address)
-                            universe_filter.channel_links[str(segment.address)] = "{}:{}".format(
-                                adapter_filters[i % len(adapter_filters)].filter_id, segment_channel_name)
+                            universe_filter.channel_links[str(segment.address)] =\
+                                f"{adapter_filters[i % len(adapter_filters)].filter_id}:{segment_channel_name}"
                             i += 1
                 else:
                     for segment_list in [socket_target.red_segments, socket_target.green_segments,
@@ -144,8 +143,8 @@ class EffectsStack(VirtualFilter):
         d = self.filter_configurations
         d.clear()
         for s in self.sockets:
-            name = "{}{}/{}".format('g' if s.is_group else 'f', s.target.parent_universe,
-                                    s.target.channels[0].address)  # TODO Encode start addresses in case of group
+            name = (f"{'g' if s.is_group else 'f'}{ s.target.parent_univers}/"
+                    f"{ s.target.channels[0].address}")  # TODO Encode start addresses in case of group
             d[name] = s.serialize()
 
     def deserialize(self):
@@ -154,18 +153,19 @@ class EffectsStack(VirtualFilter):
             is_group = k.startswith('g')
             if is_group:
                 raise NotImplementedError("Deserialization of groups is not yet implemented.")
-            else:
-                universe, channel = k[1:].split('/')
-                universe = int(universe)
-                channel = int(channel)
-                uf = self.scene.board_configuration.universes[universe - 1].patching[channel].fixture
-                if uf is None:
-                    logger.warning(
-                        "There is no fixture associated with the address %s/%s", universe, channel + 1
-                    )
-                    continue
-                s = EffectsSocket(uf)
-                s.deserialize(v, self)
-                self.sockets.append(s)
+
+
+            universe, channel = k[1:].split('/')
+            universe = int(universe)
+            channel = int(channel)
+            uf = self.scene.board_configuration.universes[universe - 1].patching[channel].fixture
+            if uf is None:
+                logger.warning(
+                    "There is no fixture associated with the address %s/%s", universe, channel + 1
+                )
+                continue
+            s = EffectsSocket(uf)
+            s.deserialize(v, self)
+            self.sockets.append(s)
 
     # TODO implement optional output ports of effect stack vfilter

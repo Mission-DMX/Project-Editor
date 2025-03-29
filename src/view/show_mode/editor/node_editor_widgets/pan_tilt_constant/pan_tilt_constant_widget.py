@@ -7,7 +7,10 @@ from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidg
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \
     PanTiltConstantContentWidget
 
-# from view.show_mode.editor.nodes import FilterNode
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from view.show_mode.editor.nodes import FilterNode
+    from view.show_mode.editor.nodes import FilterNode
 
 
 class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
@@ -69,12 +72,12 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
                 'tilt': self._filter.tilt}
 
     def parent_closed(self, filter_node: "FilterNode"):
-        if self._filter.joystick == JoystickList.EveryJoystick:
-            self._filter.joystick = JoystickList.NoJoystick
+        if self._filter.joystick == JoystickList.EVERY_JOYSTICK:
+            self._filter.joystick = JoystickList.NO_JOYSTICK
         filter_node.outputs_changed(self.cB8Bit.isChecked(), self.cB16Bit.isChecked())
 
     def parent_opened(self):
-        if self._filter.joystick == JoystickList.NoJoystick:
-            self._filter.joystick = JoystickList.EveryJoystick
+        if self._filter.joystick == JoystickList.NO_JOYSTICK:
+            self._filter.joystick = JoystickList.EVERY_JOYSTICK
         self.cB8Bit.setChecked(self._filter.eight_bit_available)
         self.cB16Bit.setChecked(self._filter.sixteen_bit_available)

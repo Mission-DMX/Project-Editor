@@ -5,7 +5,6 @@ from enum import Enum
 from PySide6.QtCore import QEnum
 
 
-@QEnum
 class JoystickList(Enum):
     """Joysticks available"""
     NO_JOYSTICK = 1

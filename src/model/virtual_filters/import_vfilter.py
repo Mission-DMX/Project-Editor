@@ -27,7 +27,7 @@ class ImportVFilter(VirtualFilter):
                         return None
                     virtual_port_id = v
                     break
-        return "{}:{}".format(target_filter_id, virtual_port_id)
+        return f"{target_filter_id}:{virtual_port_id}"
 
     def instantiate_filters(self, filter_list: list[Filter]):
         # Nothing to do here as were simply forwarding the filter.

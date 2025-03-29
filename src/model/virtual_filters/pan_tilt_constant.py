@@ -15,10 +15,10 @@ class PanTiltConstantFilter(VirtualFilter):
         self._filter_configurations = {}
         self._pan_delta = 0.0
         self._tilt_delta = 0.0
-        self._joystick = JoystickList.NoJoystick
+        self._joystick = JoystickList.NO_JOYSTICK
         self._broadcaster = Broadcaster()
         self._broadcaster.joystick_selected_event.connect(lambda joystick: self.set_joystick(
-            JoystickList.NoJoystick if joystick == self._joystick else self._joystick))
+            JoystickList.NO_JOYSTICK if joystick == self._joystick else self._joystick))
 
         # Todo: maybe use timer in broadcaster
         self._timer = QTimer()
@@ -29,13 +29,13 @@ class PanTiltConstantFilter(VirtualFilter):
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
             case 'pan8bit':
-                return "{}_8bit_pan:value_upper".format(self.filter_id)
+                return f"{self.filter_id}_8bit_pan:value_upper"
             case 'tilt8bit':
-                return "{}_8bit_tilt:value_upper".format(self.filter_id)
+                return "{self.filter_id}_8bit_tilt:value_upper"
             case 'pan16bit':
-                return "{}_16bit_pan:value".format(self.filter_id)
+                return "{self.filter_id}_16bit_pan:value"
             case 'tilt16bit':
-                return "{}_16bit_tilt:value".format(self.filter_id)
+                return "{self.filter_id}_16bit_tilt:value"
         return None
 
     def instantiate_filters(self, filter_list: list[Filter]):
@@ -47,7 +47,7 @@ class PanTiltConstantFilter(VirtualFilter):
 
     def instantiate_16bit_constant_filter(self, filter_list: list[Filter], tilt: bool):
         filter = Filter(
-            filter_id="{}_16bit_{}".format(self.filter_id, 'tilt' if tilt else 'pan'),
+            filter_id=f"{self.filter_id}_16bit_{'tilt' if tilt else 'pan'}",
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
             scene=self.scene
         )
@@ -63,8 +63,7 @@ class PanTiltConstantFilter(VirtualFilter):
 
     def instantiate_16bit_to_8bit_conversion_filter(self, filter_list: list[Filter], tilt: bool):
         filter = Filter(
-            filter_id="{}_8bit_{}".format(self.filter_id,
-                                          'tilt' if tilt else 'pan'),
+            filter_id=f"{self.filter_id}_8bit_{'tilt' if tilt else 'pan'}",
             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
             scene=self.scene
         )
@@ -75,7 +74,7 @@ class PanTiltConstantFilter(VirtualFilter):
                                   'value_upper': DataType.DT_8_BIT}
         filter._gui_update_keys = {}
         filter._in_data_types = {}
-        filter._channel_links = {'value': "{}_16bit_{}:value".format(self.filter_id, 'tilt' if tilt else 'pan')}
+        filter._channel_links = {'value': f"{self.filter_id}_16bit_{ 'tilt' if tilt else 'pan'}:value"}
         filter_list.append(filter)
 
     @property
@@ -113,8 +112,8 @@ class PanTiltConstantFilter(VirtualFilter):
         self._tilt_delta = tilt_delta
 
     def set_delta(self, delta: float, joystick: JoystickList, tilt: bool):
-        if self._joystick != JoystickList.NoJoystick:
-            if joystick == self._joystick or self._joystick == JoystickList.EveryJoystick:
+        if self._joystick != JoystickList.NO_JOYSTICK:
+            if joystick == self._joystick or self._joystick == JoystickList.EVERY_JOYSTICK:
                 if tilt:
                     self._tilt_delta = delta
                 else:
@@ -147,9 +146,9 @@ class PanTiltConstantFilter(VirtualFilter):
     @joystick.setter
     def joystick(self, joystick):
         if joystick != self._joystick:
-            if joystick == JoystickList.NoJoystick:
+            if joystick == JoystickList.NO_JOYSTICK:
                 self._timer.stop()
-            elif self._joystick == JoystickList.NoJoystick:
+            elif self._joystick == JoystickList.NO_JOYSTICK:
                 self._timer.start()
                 self._pan_delta = 0.0
                 self._tilt_delta = 0.0
