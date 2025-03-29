@@ -38,19 +38,19 @@ class ConstantNumberButtonList(UIWidget):
         if bc:
             for entry in bc.split(';'):
                 name, value = entry.split(':')
-                list_widget.addItem("{} -> {}".format(name, value))
+                list_widget.addItem(f"{name} -> {value}")
         layout.addWidget(list_widget)
         widget.setLayout(layout)
 
         def add_action():
             if not self.configuration.get("buttons"):
                 self.configuration["buttons"] = ""
-            self.configuration["buttons"] += "{}{}:{}".format(
-                ';' if len(self.configuration["buttons"]) else '',
-                name_edit.text().replace(';', '').replace(':', ''),
-                int(value_edit.value()) if self._maximum != -1 else value_edit.value()
-            )
-            list_widget.addItem("{} -> {}".format(name_edit.text(), value_edit.value()))
+            self.configuration["buttons"] += \
+                (f"{';' if len(self.configuration["buttons"]) else ''}"
+                 f"{name_edit.text().replace(';', '').replace(':', '')}:"
+                 f"{int(value_edit.value()) if self._maximum != -1 else value_edit.value()}")
+
+            list_widget.addItem(f"{name_edit.text()} -> {value_edit.value()}")
             if self._configuration_widget:
                 conf_button = QPushButton(name_edit.text(), self._configuration_widget)
                 conf_button.setEnabled(False)

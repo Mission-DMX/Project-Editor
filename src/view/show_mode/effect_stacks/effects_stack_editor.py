@@ -24,7 +24,7 @@ class EffectsStackEditor(QWidget):
         if not isinstance(f, EffectsStack):
             raise ValueError("This filter is supposed to be an instance of the EffectsStack virtual filter.")
         self._filter = f
-        self._config_widget_dict: dict[QWidget, int] = dict()
+        self._config_widget_dict: dict[QWidget, int] = {}
         self.setMinimumWidth(800)
         self.setMinimumHeight(600)
         global_layout = QHBoxLayout()

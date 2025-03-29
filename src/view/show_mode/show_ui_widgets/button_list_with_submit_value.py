@@ -15,6 +15,7 @@ class ButtonsWithValueSubmit(UIWidget):
     Provides a textfield with a submit button to update a value (of a constant node),
     provides also (from ConstantNumberButtonList) a button list to send pre-defined values
     """
+
     def get_config_dialog_widget(self, parent) -> QWidget:
         return self._button_list.get_config_dialog_widget(parent)
 
@@ -55,7 +56,7 @@ class ButtonsWithValueSubmit(UIWidget):
         self._player_widget.setMinimumWidth(50)
         self._player_widget.setMinimumHeight(30)
         layout = QHBoxLayout(widget)
-        layoutSubmitOwnValue = QVBoxLayout(widget)
+        layout_submit_own_value = QVBoxLayout(widget)
         valuefield = QDoubleSpinBox(widget)
         if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
             valuefield.setMaximum(sys.float_info.max)
@@ -64,15 +65,17 @@ class ButtonsWithValueSubmit(UIWidget):
         else:
             valuefield.setMaximum(self._button_list._maximum)
             valuefield.setDecimals(0)
-        submitButton = QPushButton("Send Value", widget)
+        submit_button = QPushButton("Send Value", widget)
+
         def pressed_button():
-            value = valuefield.value() if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(valuefield.value())
+            value = valuefield.value() if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(
+                valuefield.value())
             self._button_list._set_value(value)
 
-        submitButton.clicked.connect(pressed_button)
-        layoutSubmitOwnValue.addWidget(valuefield)
-        layoutSubmitOwnValue.addWidget(submitButton)
-        layout.addLayout(layoutSubmitOwnValue)
+        submit_button.clicked.connect(pressed_button)
+        layout_submit_own_value.addWidget(valuefield)
+        layout_submit_own_value.addWidget(submit_button)
+        layout.addLayout(layout_submit_own_value)
         buttons = self._button_list.get_player_widget(parent)
         layout.addWidget(buttons)
         self._player_widget.setLayout(layout)

@@ -28,13 +28,13 @@ class UniverseTreeBrowserWidget(QTreeWidget):
 
         def location_to_string(location):
             if isinstance(location, proto.UniverseControl_pb2.Universe.ArtNet):
-                return "{}:{}/{}".format(location.ip_address, location.port, location.universe_on_device)
-            elif isinstance(location, proto.UniverseControl_pb2.Universe.USBConfig):
-                return "USB:{}".format(location.serial)
-            elif isinstance(location, int):
-                return "local/{}".format(location)
-            else:
-                return str(location)
+                return f"{location.ip_address}:{location.port}/{location.universe_on_device}"
+            if isinstance(location, proto.UniverseControl_pb2.Universe.USBConfig):
+                return f"USB:{location.serial}"
+            if isinstance(location, int):
+                return f"local/{location}"
+
+            return str(location)
 
         self.clear()
         i = 0
@@ -64,7 +64,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                         if self._show_selection_checkboxes:
                             last_fixture_object.setCheckState(0, Qt.CheckState.Unchecked)
                         last_fixture_object.setText(0 + column_offset,
-                                                    "{}/{}".format(universe.id, patching_channel.address + 1))
+                                                    f"{universe.id}/{patching_channel.address + 1}")
                         last_fixture_object.setText(1 + column_offset, channel_fixture.name)
                         last_fixture_object.setText(2 + column_offset, str(channel_fixture.mode))
                         last_fixture_object.setText(3 + column_offset, channel_fixture.comment)
@@ -73,7 +73,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                     if not is_placeholder:
                         channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
                         channel_item.setText(0 + column_offset,
-                                             "{}/{}".format(universe.id, patching_channel.address + 1))
+                                             f"{universe.id}/{patching_channel.address + 1}")
                         channel_item.setText(1 + column_offset, str(patching_channel.fixture_channel))
                         channel_item.setText(2 + column_offset, str(channel_fixture.mode))
                         channel_item.setText(3 + column_offset, channel_fixture.name)

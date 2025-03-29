@@ -113,7 +113,7 @@ class PanTiltConstantFilter(VirtualFilter):
 
     def set_delta(self, delta: float, joystick: JoystickList, tilt: bool):
         if self._joystick != JoystickList.NO_JOYSTICK:
-            if joystick == self._joystick or self._joystick == JoystickList.EVERY_JOYSTICK:
+            if self._joystick in (joystick, JoystickList.EVERY_JOYSTICK):
                 if tilt:
                     self._tilt_delta = delta
                 else:

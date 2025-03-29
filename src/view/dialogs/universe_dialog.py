@@ -11,7 +11,7 @@ class UniverseDialog(QtWidgets.QDialog):
     def __init__(self, patching_universe_or_id: proto.UniverseControl_pb2.Universe | int,
                  parent: object = None) -> None:
         super().__init__(parent)
-        if type(patching_universe_or_id) is int:
+        if isinstance(patching_universe_or_id, int):
             patching_proto: proto.UniverseControl_pb2.Universe = proto.UniverseControl_pb2.Universe(
                 id=patching_universe_or_id,
                 remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
@@ -19,12 +19,12 @@ class UniverseDialog(QtWidgets.QDialog):
                     port=6454,
                     universe_on_device=patching_universe_or_id
                 )
-                #ftdi_dongle=proto.UniverseControl_pb2.Universe.USBConfig(
+                # ftdi_dongle=proto.UniverseControl_pb2.Universe.USBConfig(
                 #    vendor_id=0x0403,
                 #    product_id=0x6001,
                 #    serial="",
                 #    device_name=""
-                #)
+                # )
             )
         else:
             patching_proto: proto.UniverseControl_pb2.Universe = patching_universe_or_id

@@ -75,7 +75,8 @@ class PanTiltConstantContentWidget(QLabel):
     def update_pan_tilt(self, event: QMouseEvent):
         self._filter.pan_delta = 0.0
         self._filter.tilt_delta = 0.0
-        if self._dragged and event.x() <= self.width() and event.y() <= self.height() and event.x() >= 0 and event.y() >= 0:
+        if (self._dragged and event.x() <= self.width() and
+                event.y() <= self.height() and event.x() >= 0 and event.y() >= 0):
             self._filter.pan = event.pos().x() * self.prange / self.width()
             self._filter.tilt = event.pos().y() * self.trange / self.height()
 

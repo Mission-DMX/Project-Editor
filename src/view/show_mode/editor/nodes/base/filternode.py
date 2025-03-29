@@ -119,7 +119,7 @@ class FilterNode(Node):
                 # FIXME the name is not always present
                 prefix, suffix = filter.channel_links[input_key].split(":")
                 if prefix == old_name:
-                    filter.channel_links[input_key] = "{}:{}".format(name, suffix)
+                    filter.channel_links[input_key] = f"{name}:{suffix}"
         return super().rename(name)
 
     def update_filter_pos(self):

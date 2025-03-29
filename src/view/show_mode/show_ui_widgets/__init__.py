@@ -20,16 +20,23 @@ out of the human readable name, the type required to instantiate a requested wid
 should be selected for construction) and a number indicating how many filters should be selected.
 """
 WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]]] = {
-    "autotracker": ("Auto Tracker", AutoTrackerUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]]),
-    "buttonarray": ("Button Array", ButtonsWithValueSubmit, [[FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
+    "autotracker": ("Auto Tracker", AutoTrackerUIWidget,
+                    [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]]),
+    "buttonarray": ("Button Array", ButtonsWithValueSubmit, [
+        [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+         FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
     "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
-    "cuecontrol": ("Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]]),
-    "pantiltconstant": ("Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
+    "cuecontrol": (
+    "Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]]),
+    "pantiltconstant": (
+    "Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
     "label": ("Text Label", ShowLabelUIWidget, []),
     # TODO add direct inputs
     # TODO add fader update widgets
     "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]]),
-    "debug_number": ("Number Output", NumberDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT]])
+    "debug_number": ("Number Output", NumberDebugVizWidget, [
+        [FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT,
+         FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT]])
 }
 
 
@@ -49,7 +56,7 @@ def get_widget_key(w: UIWidget) -> str | None:
 def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage",
                         configuration: dict[str, str] | None = None) -> UIWidget:
     """Deprecated? We used to construct widgets this way but the WIDGET_LIBRARY method should be used instead now."""
-    selected_configuration = configuration if configuration else dict()
+    selected_configuration = configuration if configuration else {}
     match filter_.filter_type:
         case 0 | 1 | 2:
             # number constants

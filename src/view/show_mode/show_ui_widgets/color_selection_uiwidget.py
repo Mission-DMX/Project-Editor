@@ -108,8 +108,8 @@ class ColorSelectionUIWidget(UIWidget):
             c: ColorHSI = ColorHSI.from_qt_color(c_template)
             self._presets.append(c)
             self.configuration["number_of_presets"] = str(int(self.configuration["number_of_presets"]) + 1)
-            self.configuration["stored_presets"] += "{}{}".format(";" if self.configuration["stored_presets"] else '',
-                                                                  c.format_for_filter())
+            self.configuration[
+                "stored_presets"] += f"{";" if self.configuration["stored_presets"] else ''}{c.format_for_filter()}"
             preset_list.addItem(c.format_for_filter())
             # TODO add buttons to existing widgets in a smarter way
             if self._player_widget:

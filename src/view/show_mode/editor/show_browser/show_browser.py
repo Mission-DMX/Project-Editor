@@ -167,7 +167,7 @@ class ShowBrowser:
         for ui_page in s.ui_pages:
             i += 1
             uipage_item = AnnotatedTreeWidgetItem(item)
-            uipage_item.setText(0, "UI Page {} '{}'".format(i, ui_page.title))
+            uipage_item.setText(0, f"UI Page {i} '{ui_page.title}'")
             uipage_item.setIcon(0, ShowBrowser._uipage_icon)
             uipage_item.setText(1, str(len(ui_page.widgets)) + " widgets")
             uipage_item.annotated_data = ui_page
@@ -237,8 +237,8 @@ class ShowBrowser:
         self._input_dialog.rejected.connect(lambda: self._input_dialog.close())
         self._input_dialog.setIcon(QMessageBox.Icon.Warning)
         self._input_dialog.setWindowTitle("Are you sure?")
-        self._input_dialog.setText("Do you really want to delete the scene {}?".format(
-            ", ".join(["'{}'".format(item.text(1)) for item in items])))
+        self._input_dialog.setText(
+            f"Do you really want to delete the scene {", ".join([f"'{item.text(1)}'" for item in items])}?")
         self._input_dialog.show()
 
     def _delete_scenes_from_context_menu_accepted(self, items: List[AnnotatedTreeWidgetItem]):
@@ -319,7 +319,7 @@ class ShowBrowser:
             if not isinstance(item.annotated_data, Scene):
                 continue
             sc = item.annotated_data.copy(item.annotated_data.board_configuration.scenes)
-            sc.human_readable_name = "Copy ({}) of Scene '{}'".format(i, sc.human_readable_name)
+            sc.human_readable_name = f"Copy ({i}) of Scene '{sc.human_readable_name}'"
             self._show.scenes.append(sc)
             self._add_scene_to_scene_browser(sc)
 
@@ -338,7 +338,7 @@ class ShowBrowser:
         for item in selected_items:
             if not isinstance(item, AnnotatedTreeWidgetItem):
                 continue
-            if isinstance(item.annotated_data, Scene) or isinstance(item.annotated_data, FilterPage):
+            if  isinstance(item.annotated_data, (FilterPage, Scene)) :
                 parent_to_append_to = item.annotated_data
                 self._input_dialog = QInputDialog(self.widget)
                 self._input_dialog.setInputMode(QInputDialog.TextInput)

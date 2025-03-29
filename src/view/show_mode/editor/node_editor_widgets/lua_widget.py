@@ -49,7 +49,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         for channel_name, channel_props in self._channels.items():
             is_input: bool = channel_props[0]
             dt: DataType = channel_props[1]
-            description = "{}:{}".format(channel_name, dt.format_for_filters())
+            description = f"{channel_name}:{dt.format_for_filters()}"
             if is_input:
                 in_maps.append(description)
             else:

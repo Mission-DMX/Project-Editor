@@ -69,7 +69,7 @@ class SourcesTab(GuiTab):
 
         dlg = WebcamSelector()
         dlg.exec_()
-        selected_index = dlg.comboBox.currentIndex()
+        selected_index = dlg.combo_box.currentIndex()
         print(selected_index)
         loader = CameraLoader(selected_index)
         self.instance.set_loader(loader)
@@ -144,17 +144,17 @@ class WebcamSelector(QDialog):
         self.setMinimumWidth(300)
 
         self.label = QLabel("Select a webcam:")
-        self.comboBox = QComboBox(self)
-        self.startButton = QPushButton("Start", self)
+        self.combo_box = QComboBox(self)
+        self.start_button = QPushButton("Start", self)
 
         layout = QVBoxLayout()
         layout.addWidget(self.label)
-        layout.addWidget(self.comboBox)
-        layout.addWidget(self.startButton)
-        self.startButton.clicked.connect(self.accept)
+        layout.addWidget(self.combo_box)
+        layout.addWidget(self.start_button)
+        self.start_button.clicked.connect(self.accept)
         self.setLayout(layout)
 
-        self.startButton.clicked.connect(self.start_webcam)
+        self.start_button.clicked.connect(self.start_webcam)
 
         self.populate_webcams()
 
@@ -163,9 +163,9 @@ class WebcamSelector(QDialog):
         # num_webcams = len([i for i in range(10) if cv2.VideoCapture(i).isOpened()])
         num_webcams = 5
         for i in range(num_webcams):
-            self.comboBox.addItem(f"Webcam {i}")
+            self.combo_box.addItem(f"Webcam {i}")
 
     def start_webcam(self):
-        selected_index = self.comboBox.currentIndex()
+        selected_index = self.combo_box.currentIndex()
         if selected_index >= 0:
             print(f"selected webcam {selected_index}")

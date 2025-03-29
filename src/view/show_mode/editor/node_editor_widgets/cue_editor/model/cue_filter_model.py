@@ -13,17 +13,13 @@ class CueFilterModel:
         if parameters is not None:
             self.load_from_configuration(parameters)
 
-    def get_as_configuration(self) -> dict[str,str]:
+    def get_as_configuration(self) -> dict[str, str]:
         if len(self.cues) > 0:
-            mapping_str = ";".join(["{}:{}".format(t[0], t[1].format_for_filters()) for t in self.cues[0].channels])
+            mapping_str = ";".join([f"{t[0]}:{t[1].format_for_filters()}" for t in self.cues[0].channels])
         else:
             mapping_str = ""
-        d = {
-            "end_handling": "start_again" if self.global_restart_on_end else "hold",
-            "mapping": mapping_str,
-            "cuelist": "$".join([c.format_cue() for c in self.cues]),
-            "default_cue": self.default_cue
-        }
+        d = {"end_handling": "start_again" if self.global_restart_on_end else "hold", "mapping": mapping_str,
+             "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": self.default_cue}
         return d
 
     def append_cue(self, c: Cue):
@@ -84,4 +80,3 @@ class CueFilterModel:
                 self.default_cue = int(parameters.get("default_cue")) + 1
             except:
                 self.default_cue = 0
-

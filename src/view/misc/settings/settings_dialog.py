@@ -49,14 +49,14 @@ class SettingsDialog(QDialog):
         self._editor_tab.setLayout(editor_layout)
         self._category_tab_bar.addTab(self._editor_tab, "Editor")
 
-        self.buttonBox = QDialogButtonBox(exit_buttons)
-        self.buttonBox.accepted.connect(self.ok_button_pressed)
-        self.buttonBox.rejected.connect(self.cancle_button_pressed)
-        self.buttonBox.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(self.apply)
+        self.button_box = QDialogButtonBox(exit_buttons)
+        self.button_box.accepted.connect(self.ok_button_pressed)
+        self.button_box.rejected.connect(self.cancle_button_pressed)
+        self.button_box.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(self.apply)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self._category_tab_bar)
-        self.layout.addWidget(self.buttonBox)
+        self.layout.addWidget(self.button_box)
         self.setLayout(self.layout)
         self.show_file = show
         self.setModal(True)

@@ -91,7 +91,7 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
         pass
 
     def _get_parameters(self) -> dict[str, str]:
-        return dict()
+        return {}
 
     def _selected_method_changed(self, new_method: str):
         self._color_help_widget.set_help_content(ColorMixingSetupWidget._help_data.get(new_method))

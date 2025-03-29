@@ -55,7 +55,7 @@ class SceneUIPageEditorWidget(QWidget):
                                             )
         menu.addAction(auto_track_action)
         """
-        for wid, widget_def in WIDGET_LIBRARY.items():
+        for _, widget_def in WIDGET_LIBRARY.items():
             action = QAction(widget_def[0], menu)
             action.triggered.connect(lambda checked=False, widget=widget_def: self._inst_generic_widget(widget, pos))
             menu.addAction(action)
@@ -74,14 +74,15 @@ class SceneUIPageEditorWidget(QWidget):
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
         self._add_generic_widget(config_widget, pos)
 
-    def _inst_generic_widget(self, widget_def: tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]], pos: QPoint):
-        key = widget_def[0]
-        config_widget = widget_def[1](self._ui_page, dict())
+    def _inst_generic_widget(self, widget_def: tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]],
+                             pos: QPoint):
+        config_widget = widget_def[1](self._ui_page, {})
         key_filters = widget_def[2]
         if len(key_filters) == 0:
             self._add_generic_widget(config_widget, pos)
         else:
-            self._widget_setup_dialog = WidgetSetupDialog(self, key_filters, self._add_generic_widget, pos, self._ui_page, config_widget)
+            self._widget_setup_dialog = WidgetSetupDialog(self, key_filters, self._add_generic_widget, pos,
+                                                          self._ui_page, config_widget)
 
     def _add_generic_widget(self, config_widget: UIWidget, pos: QPoint):
         widget_holder = UIWidgetHolder(config_widget, self)

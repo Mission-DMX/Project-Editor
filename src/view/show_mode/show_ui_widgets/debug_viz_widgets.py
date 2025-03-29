@@ -202,13 +202,13 @@ class ColorDebugVizWidget(_DebugVizWidget):
         """Checks for correct filter and updates the displayed color"""
         if self._show_widget is None:
             return
-        else:
-            try:
-                hsi_value = param.parameter_value.split(",")
-                self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
-            except ValueError:
-                logger.error("Unable to parse color '%s' from filter '%s:%s'.", param.parameter_value,
-                             param.filter_id, param.parameter_key)
+
+        try:
+            hsi_value = param.parameter_value.split(",")
+            self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
+        except ValueError:
+            logger.error("Unable to parse color '%s' from filter '%s:%s'.", param.parameter_value,
+                         param.filter_id, param.parameter_key)
 
 
 class _NumberLabel(QWidget):
@@ -284,12 +284,12 @@ class NumberDebugVizWidget(_DebugVizWidget):
         """Checks for correct filter and updates the displayed number"""
         if self._show_widget is None:
             return
-        else:
-            try:
-                self._show_widget.number = float(param.parameter_value)
-            except ValueError:
-                logger.error("Unexpected number received from filter '%s:%s': %s", param.filter_id,
-                             param.parameter_key, param.parameter_value)
+
+        try:
+            self._show_widget.number = float(param.parameter_value)
+        except ValueError:
+            logger.error("Unexpected number received from filter '%s:%s': %s", param.filter_id,
+                         param.parameter_key, param.parameter_value)
 
     def _delete_callback(self):
         if self._show_widget is not None:

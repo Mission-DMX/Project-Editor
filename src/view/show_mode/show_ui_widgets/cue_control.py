@@ -64,7 +64,7 @@ class CueControlUIWidget(UIWidget):
 
     @property
     def configuration(self) -> dict[str, str]:
-        cue_name_config = ";".join(["{}:{}".format(cue[0], cue[1]) for cue in self._cues])
+        cue_name_config = ";".join([f"{cue[0]}:{cue[1]}" for cue in self._cues])
         if self._filter:
             self._filter.filter_configurations["cue_names"] = cue_name_config
         # FIXME we do not need this redundancy. The whole point is to provide the cue editor with the names
@@ -161,7 +161,7 @@ class CueControlUIWidget(UIWidget):
             return
         self._input_dialog = QInputDialog(self._dialog_widget)
         self._input_dialog.setWindowTitle("Enter new cue name")
-        self._input_dialog.setLabelText("Set name of cue {}:".format(item.annotated_data.annotated_data[1]))
+        self._input_dialog.setLabelText(f"Set name of cue {item.annotated_data.annotated_data[1]}:")
         self._input_dialog.setTextValue("")
         self._input_dialog.accepted.connect(lambda: self._set_name(item, self._input_dialog.textValue()))
         self._input_dialog.open()

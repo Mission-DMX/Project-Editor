@@ -56,7 +56,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         manufacturer_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
-        reset_button.setStyleSheet(Style.PATCH + f"background-color: white;")
+        reset_button.setStyleSheet(Style.PATCH + "background-color: white;")
         reset_button.clicked.connect(self.reset)
         manufacturer_layout.addWidget(reset_button)
         for fixture in manufacturer[1]:
@@ -75,7 +75,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         fixture_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
-        reset_button.setStyleSheet(Style.PATCH + f"background-color: white;")
+        reset_button.setStyleSheet(Style.PATCH + "background-color: white;")
         reset_button.clicked.connect(self.reset)
         fixture_layout.addWidget(reset_button)
         for index, mode in enumerate(fixture['modes']):

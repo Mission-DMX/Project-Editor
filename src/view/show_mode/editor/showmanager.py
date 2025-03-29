@@ -110,18 +110,18 @@ class ShowEditorWidget(QSplitter):
                         self._open_page_tab_widget.setCurrentIndex(tab_index)
                         return tab
             return None
-        else:
-            # Each scene is represented by its own editor
-            self._opened_pages.add(page)
-            scene_tab = SceneTabWidget(page)
-            # Move +/- buttons one to the right and insert new tab for the scene
-            self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab,
-                                                 page.parent_scene.human_readable_name + "/" + page.name)
-            # When loading scene from a file, set displayed tab to first loaded scene
-            if (self._open_page_tab_widget.count() == 2 or
-                    self._board_configuration.default_active_scene == page.parent_scene.scene_id):
-                self._open_page_tab_widget.setCurrentWidget(scene_tab)
-            return scene_tab
+
+        # Each scene is represented by its own editor
+        self._opened_pages.add(page)
+        scene_tab = SceneTabWidget(page)
+        # Move +/- buttons one to the right and insert new tab for the scene
+        self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab,
+                                             page.parent_scene.human_readable_name + "/" + page.name)
+        # When loading scene from a file, set displayed tab to first loaded scene
+        if (self._open_page_tab_widget.count() == 2 or
+                self._board_configuration.default_active_scene == page.parent_scene.scene_id):
+            self._open_page_tab_widget.setCurrentWidget(scene_tab)
+        return scene_tab
 
     def _add_bankset_tab(self, data: dict):
         bankset = data["bankset"]
@@ -133,16 +133,15 @@ class ShowEditorWidget(QSplitter):
                         self._open_page_tab_widget.setCurrentIndex(tab_index)
                         return tab
             return None
-        else:
-            self._opened_banksets.add(bankset)
-            tab = BankSetTabWidget(self._open_page_tab_widget, bankset)
-            self._open_page_tab_widget.insertTab(
-                self._open_page_tab_widget.tabBar().count() - 1,
-                tab,
-                bankset.description
-            )
-            self._open_page_tab_widget.setCurrentWidget(tab)
-        pass
+
+        self._opened_banksets.add(bankset)
+        tab = BankSetTabWidget(self._open_page_tab_widget, bankset)
+        self._open_page_tab_widget.insertTab(
+            self._open_page_tab_widget.tabBar().count() - 1,
+            tab,
+            bankset.description
+        )
+        self._open_page_tab_widget.setCurrentWidget(tab)
 
     def _add_uipage_tab(self, data: dict):
         uipage = data["uipage"]
@@ -154,15 +153,15 @@ class ShowEditorWidget(QSplitter):
                         self._open_page_tab_widget.setCurrentIndex(tab_index)
                         return tab
             return None
-        else:
-            self._opened_uieditors.add(uipage)
-            tab = SceneUIPageEditorWidget(uipage, self._open_page_tab_widget)
-            self._open_page_tab_widget.insertTab(
-                self._open_page_tab_widget.tabBar().count() - 1,
-                tab,
-                uipage.scene.human_readable_name + "/UI Page"  # TODO query index
-            )
-            self._open_page_tab_widget.setCurrentWidget(tab)
+
+        self._opened_uieditors.add(uipage)
+        tab = SceneUIPageEditorWidget(uipage, self._open_page_tab_widget)
+        self._open_page_tab_widget.insertTab(
+            self._open_page_tab_widget.tabBar().count() - 1,
+            tab,
+            uipage.scene.human_readable_name + "/UI Page"  # TODO query index
+        )
+        self._open_page_tab_widget.setCurrentWidget(tab)
 
     def _remove_tab(self, scene_or_index: Scene | int):
         """Removes the tab corresponding to the scene or index.

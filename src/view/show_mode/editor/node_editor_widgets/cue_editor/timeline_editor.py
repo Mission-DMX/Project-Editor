@@ -50,7 +50,6 @@ class TimelineContainer(QWidget):
     def add_channel(self, channel_type: DataType, name: str):
         self._channel_label.add_label(name, channel_type.format_for_filters())
         self._keyframes_panel.add_channels([channel_type])
-        pass
 
     def remove_channel(self, c_name: str):
         i = self._channel_label.remove_label(c_name)
@@ -131,7 +130,7 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.insert_frame(f)
 
     def format_zoom(self) -> str:
-        return "{0:0>3} Sec/Pixel".format(int(self._keyframes_panel._time_zoom * 10000) / 10000)
+        return f"{int(self._keyframes_panel._time_zoom * 10000) / 10000:0>3} Sec/Pixel"
 
     @staticmethod
     def clear_display():

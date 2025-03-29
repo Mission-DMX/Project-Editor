@@ -62,8 +62,7 @@ class NodeEditorWidget(QWidget):
                     node_type=type_to_node[filter_candidate.filter_type], is_from_different_page=True
                 )
         if len(still_missing_filters) > 0:
-            raise Exception("Missing filters '{}' in scene '{}'.".
-                            format(still_missing_filters, self._page.parent_scene))
+            raise Exception(f"Missing filters '{still_missing_filters}' in scene '{self._page.parent_scene}'.")
         for name, node in self._flowchart.nodes().items():
             if not isinstance(node, FilterNode):
                 logger.warning("Trying to connect non-FilterNode %s. Got type: %s. Expected: %s",

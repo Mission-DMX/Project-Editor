@@ -19,7 +19,7 @@ def read_entire_file_as_str(file_path: str) -> str:
     :returns: The content of the loaded file or a hint that something went wrong.
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r',encoding='UTF-8') as f:
             text = f.read()
     except IOError as e:
         text = "Unknown Debug"
@@ -40,7 +40,7 @@ class AboutWindow(QMessageBox):
         super().__init__(
             QMessageBox.Icon.Information,
             "<b>About</b>",
-            "<i>MissionDMX</i> - Version {}".format(VERSION_STR),
+            f"<i>MissionDMX</i> - Version {VERSION_STR}",
             parent=parent)
         self.setStandardButtons(QMessageBox.StandardButton.Close)
         self.setInformativeText('<br>The Manual for this software can be found by clicking the help button or by '

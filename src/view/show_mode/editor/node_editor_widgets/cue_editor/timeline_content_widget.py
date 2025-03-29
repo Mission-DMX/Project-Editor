@@ -55,7 +55,7 @@ class TimelineContentWidget(QWidget):
         # render transitions
         i = 0
         channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
-        for c in self._channels:
+        for _ in self._channels:
             if (i % 2) == 0:
                 painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
                                  channel_background_color)
@@ -97,7 +97,7 @@ class TimelineContentWidget(QWidget):
                         painter.drawText(x + 15, y + 21, str(int(s.color.intensity * 100)) + "%")
                     elif isinstance(s, StateDouble):
                         selected_brush = marker_brush
-                        painter.drawText(x + 15, y + 21, "{:10.4f}".format(s._value))
+                        painter.drawText(x + 15, y + 21, f"{s._value:10.4f}")
                     else:
                         selected_brush = marker_brush
                         painter.drawText(x + 15, y + 21, str(s._value))

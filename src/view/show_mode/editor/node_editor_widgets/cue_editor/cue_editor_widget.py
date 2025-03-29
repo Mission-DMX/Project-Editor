@@ -20,11 +20,10 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 
 from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .model.cue_filter_model import CueFilterModel
+from logging import getLogger
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
-
-from logging import getLogger
 
 logger = getLogger(__file__)
 
@@ -47,7 +46,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def _get_parameters(self) -> dict[str, str]:
         # TODO implement
-        return dict()
+        return {}
 
     def _load_parameters(self, conf: dict[str, str]):
         # TODO implement
@@ -283,7 +282,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         for index in self._indices_from_table_selection(ascending_order=False):
             id = QInputDialog(self._cue_list_widget)
             original_cue_name = self._model.cues[index].name
-            id.setLabelText("New name for Cue #{} ({})".format(index + 1, original_cue_name))
+            id.setLabelText(f"New name for Cue #{index + 1} ({original_cue_name})")
             id.setTextValue(original_cue_name)
             id.setModal(True)
             id.accepted.connect(lambda d=id, i=index: self._change_cue_name(i, d))
@@ -297,7 +296,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         else:
             d = None
         self._model.cues[index].name = new_name
-        self._cue_list_widget.item(index, 0).setText("{} '{}'".format(index + 1, new_name))
+        self._cue_list_widget.item(index, 0).setText(f"{index +1 } '{new_name}'")
         if isinstance(self._input_dialog, list) and d is not None:
             self._input_dialog.remove(d)
             d.deleteLater()
@@ -311,7 +310,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         num_item = QTableWidgetItem(1)
         if name is None and cue.name is not None:
             name = cue.name
-        cue_name = "{} '{}'".format(target_row + 1, name)
+        cue_name = f"{target_row + 1} '{name}'"
         if not cue.name and name is not None:
             cue.name = cue_name
         num_item.setText(cue_name)
@@ -330,7 +329,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
                 cue.add_channel(c[0], c[1])
         cue.index_in_editor = target_row + 1
         self._model.append_cue(cue)
-        self._default_cue_combo_box.addItem("Cue {}".format(cue_name))
+        self._default_cue_combo_box.addItem(f"Cue {cue_name}")
         self._default_cue_combo_box.setEnabled(True)
         return target_row
 
@@ -379,7 +378,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog.show()
 
     def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False):
-        if channel_name == "time" or channel_name == "time_scale":
+        if channel_name in ('time', 'time_scale'):
             QMessageBox.critical(self._parent_widget, "Failed to add channel",
                                  "Unfortunately, 'time' and 'time_scale' is a reserved keyword for this filter.")
             return
@@ -387,8 +386,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._model.add_channel(channel_name, channel_type)
         except ValueError as e:
             QMessageBox.critical(self._parent_widget, "Failed to add channel",
-                                 "Unable to add the requested channel {}. Channel names must be unique within "
-                                 "this filter.<br/>Detailed message: {}".format(channel_name, str(e)))
+                                 f"Unable to add the requested channel {channel_name}. Channel names must be unique within "
+                                 f"this filter.<br/>Detailed message: {str(e)}")
             return
         if self._filter_instance is not None:
             if self._filter_instance.in_preview_mode:
@@ -484,7 +483,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
                         filter_node.filter.out_data_types[channel_name] = channel_type
                     added_channels.append(channel_name)
             terms_to_remove = []
-            for name, term in filter_node.terminals.items():
+            for name, _ in filter_node.terminals.items():
                 if name in filter_node.outputs() and name not in added_channels:
                     terms_to_remove.append(name)
             for name in terms_to_remove:

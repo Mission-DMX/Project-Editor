@@ -32,7 +32,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
         return False
 
     scene = filter_page.parent_scene
-    name = "{}-{} {}".format(fixture.parent_universe, channels[0].address + 1, fixture.name)
+    name = f"{fixture.parent_universe}-{channels[0].address + 1} {fixture.name}"
     avg_x = 0.0
     avg_count = 0
     max_y = 0.0
@@ -47,7 +47,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
     avg_x /= max(avg_count, 1)
 
     filter = Filter(
-        filter_id="universe-output_{}".format(_sanitize_name(name)),
+        filter_id=f"universe-output_{_sanitize_name(name)}",
         filter_type=11,
         pos=(avg_x, max_y + (_filter_channel_height * len(channels)) / 2),
         scene=scene
@@ -96,7 +96,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 continue
             if ((c[c_i].fixture_channel.lower() == "pan fine" and c[c_i - 1].fixture_channel.lower() == "pan") or
                     (c[c_i].fixture_channel.lower() == "tilt fine" and c[c_i - 1].fixture_channel.lower() == "tilt")):
-                adapter_name = _sanitize_name("pos2channel_{}_{}".format(i, name))
+                adapter_name = _sanitize_name(f"pos2channel_{i}_{name}")
                 split_filter = Filter(scene=fp.parent_scene,
                                       filter_id=adapter_name,
                                       filter_type=8,
@@ -115,7 +115,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
             elif c[c_i].fixture_channel.startswith("Red"):
                 if c[c_i + 1].fixture_channel.startswith("Green") and c[c_i + 2].fixture_channel.startswith("Blue"):
                     if len(c) > c_i + 3 and c[c_i + 3].fixture_channel == "White":
-                        adapter_name = _sanitize_name("color2rgbw_{}_{}".format(i, name))
+                        adapter_name = _sanitize_name("color2rgbw_{i}_{name}")
                         rgbw_filter = Filter(scene=fp.parent_scene,
                                              filter_id=adapter_name,
                                              filter_type=16,
@@ -135,7 +135,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         fp.filters.append(rgbw_filter)
                         already_added_filters.append(rgbw_filter)
                     else:
-                        adapter_name = _sanitize_name("color2rgb_{}_{}".format(i, name))
+                        adapter_name = _sanitize_name(f"color2rgb_{i}_{name}")
                         rgb_filter = Filter(scene=fp.parent_scene,
                                             filter_id=adapter_name,
                                             filter_type=15,
@@ -156,7 +156,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         output_map[c[c_i]] = adapter_name + ":value"
                 i += 1
             elif c[c_i].fixture_channel == "Dimmer":
-                dimmer_name = _sanitize_name("dimmer_{}_{}".format(i, name))
+                dimmer_name = _sanitize_name(f"dimmer_{i}_{name}")
                 global_dimmer_filter = Filter(scene=fp.parent_scene,
                                               filter_id=dimmer_name,
                                               filter_type=49,
@@ -168,7 +168,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 already_added_filters.append(global_dimmer_filter)
                 dimmer_name = global_dimmer_filter.filter_id
                 x += 10
-                adapter_name = _sanitize_name("dimmer2byte_{}_{}".format(i, name))
+                adapter_name = _sanitize_name(f"dimmer2byte_{i}_{name}")
                 dimmer_to_byte_filter = Filter(scene=fp.parent_scene,
                                                filter_id=adapter_name,
                                                filter_type=8,

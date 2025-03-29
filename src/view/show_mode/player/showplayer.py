@@ -79,8 +79,7 @@ class ShowPlayerWidget(QWidget):
             column, row = self._index_to_position(index)
             height = row * scene_widget.height + 5
             last_height = scene_widget.height
-            if height > max_height:
-                max_height = height
+            max_height = max(max_height, height)
             last_width = column * scene_widget.width + 5
             scene_widget.move(last_width, height)
             last_width += scene_widget.width

@@ -234,7 +234,7 @@ class EffectCompilationWidget(QWidget):
         y += 15
 
         if s.has_color_property:
-            x, y = self._render_slot(self.width(), y, True, s.get_socket_or_dummy(EffectType.COLOR), p)
+            _, y = self._render_slot(self.width(), y, True, s.get_socket_or_dummy(EffectType.COLOR), p)
 
         socket_name = s.target.name
         socket_name_width = fm.horizontalAdvance(socket_name)

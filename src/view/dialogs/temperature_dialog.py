@@ -48,8 +48,8 @@ def _calculate_red(temperature: float) -> float:
 def _calculate_green(temperature: float) -> float:
     if temperature <= 60:
         return _col_check(99.4708025861 * np.log(temperature) - 161.1195681661)
-    else:
-        return _col_check(288.1221695283 * pow(temperature - 60, -0.0755148492))
+
+    return _col_check(288.1221695283 * pow(temperature - 60, -0.0755148492))
 
 
 def _calculate_blue(temperature: float) -> float:

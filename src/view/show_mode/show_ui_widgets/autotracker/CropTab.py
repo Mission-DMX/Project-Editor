@@ -70,7 +70,7 @@ class CropTab(GuiTab):
         """
         Handle changes in the crop sliders.
         """
-        h, w, c = self.background_frame.shape
+        h, w, _ = self.background_frame.shape
         img = draw_overlay(
             self.background_frame,
             0,
@@ -121,7 +121,7 @@ class CropTab(GuiTab):
             return
         self.background_frame = frame
         self.image_label.setPixmap(cv2qim(frame))
-        h, w, c = frame.shape
+        h, w, _ = frame.shape
         self.show_sliders(h, w)
 
     def tab_deactivated(self):

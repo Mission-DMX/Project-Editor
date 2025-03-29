@@ -32,8 +32,8 @@ class SceneTabWidget(QWidget):
         """The scene the tab represents"""
         if isinstance(self._scene, Scene):
             return self._scene
-        else:
-            return self._scene.parent_scene
+
+        return self._scene.parent_scene
 
     @property
     def filter_page(self):

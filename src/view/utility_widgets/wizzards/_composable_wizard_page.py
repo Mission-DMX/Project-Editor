@@ -25,5 +25,5 @@ class ComposableWizardPage(QWizardPage):
     def isComplete(self) -> bool:
         if self._completeness_function is not None:
             return self._completeness_function(self)
-        else:
-            return super().isComplete()
+
+        return super().isComplete()

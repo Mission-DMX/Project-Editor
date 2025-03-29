@@ -182,7 +182,7 @@ class _BankEditWidget(QWidget):
             column_layout.addWidget(QLabel("Secondary position"))
             self._raw_encoder_spin_boxes.append(QSpinBox(column_widget))
             self._raw_encoder_spin_boxes[i].setMinimum(0)
-            self._raw_encoder_spin_boxes[i].setMaximum(2**16-1)
+            self._raw_encoder_spin_boxes[i].setMaximum(2 ** 16 - 1)
             self._raw_encoder_spin_boxes[i].valueChanged.connect(
                 lambda new_value, ci=i: self._raw_encoder_value_changed(ci, new_value)
             )
@@ -311,7 +311,8 @@ class _BankEditWidget(QWidget):
     def _bottom_inverted_changed(self, index: int, checked: bool):
         if self._bank:
             if len(self._bank.columns) > index:
-                self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[index].isChecked()
+                self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[
+                    index].isChecked()
 
     def _raw_encoder_value_changed(self, index: int, new_value: int):
         if self._bank:

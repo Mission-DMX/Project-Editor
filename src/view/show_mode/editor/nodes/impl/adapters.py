@@ -306,10 +306,10 @@ class ColorBrightnessMixinNode(FilterNode):
     def __init__(self, model: Filter | Scene, name: str):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
                          name=name, terminals={
-                            "out": {"io": "out"},
-                            "color_in": {"io": "in"},
-                            "brightness": {"io": "in"},
-                            }
+                "out": {"io": "out"},
+                "color_in": {"io": "in"},
+                "brightness": {"io": "in"},
+            }
                          )
         self.filter.out_data_types["out"] = DataType.DT_COLOR
         self.filter.in_data_types['color_in'] = DataType.DT_COLOR

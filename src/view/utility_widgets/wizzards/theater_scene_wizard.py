@@ -183,7 +183,7 @@ class TheaterSceneWizard(QWizard):
                 if fcs & supported_mode > 0:
                     item = AnnotatedListWidgetItem(self._fixture_feature_list)
                     item.annotated_data = (f, supported_mode)
-                    item.setText("({}:{}) {}: {}".format(f.parent_universe, f.channels[0].address, f.name, name))
+                    item.setText(f"({f.parent_universe}:{f.channels[0].address}) {f.name}: {name}")
                     self._fixture_feature_list.addItem(item)
 
             # Map position Channels
@@ -193,7 +193,7 @@ class TheaterSceneWizard(QWizard):
                 for channel in type[1]:
                     item = AnnotatedListWidgetItem(self._fixture_feature_list)
                     item.annotated_data = (f, mode)
-                    item.setText("({}:{}) {}: {}".format(f.parent_universe, f.channels[0].address, f.name, mode))
+                    item.setText(f"({f.parent_universe}:{f.channels[0].address}) {f.name}: {mode}")
                     self._fixture_feature_list.addItem(item)
 
             remaining_channels = []
@@ -206,8 +206,8 @@ class TheaterSceneWizard(QWizard):
             for c in remaining_channels:
                 item = AnnotatedListWidgetItem(self._fixture_feature_list)
                 item.annotated_data = (f, c)
-                item.setText("({}:{}) {}: [undef] {}/".format(f.parent_universe, f.channels[0].address, f.name,
-                                                              c.address, c.fixture_channel))
+                item.setText(
+                    f"({f.parent_universe}:{f.channels[0].address}) {f.name}: [undef] {c.address} {c.fixture_channel}/")
                 self._fixture_feature_list.addItem(item)
 
     def add_group_to_feature_group_list_pressed(self):
@@ -250,7 +250,7 @@ class TheaterSceneWizard(QWizard):
                 selected_group.setIcon(_folder_full_icon)
             selected_group.annotated_data["fixtures"].append(selected_feature.annotated_data)
             selected_group.setToolTip("Content: " + ",".join(
-                ["{}/{}: {}".format(i[0].parent_universe, str(i[0].first_channel), i[0].color_support()) for i in
+                [f"{i[0].parent_universe}/{str(i[0].first_channel)}: {i[0].color_support()}" for i in
                  selected_group.annotated_data["fixtures"]]))
         else:
             new_group_item = AnnotatedListWidgetItem(self._feature_grouping_list)
@@ -348,7 +348,6 @@ class TheaterSceneWizard(QWizard):
                 continue
             selected_data_type = DataType.DT_8_BIT
             color_found = False
-            illumination_found = False
             position_found = False
             for f in c.get("fixtures"):
                 if isinstance(f[1], DataType):
@@ -424,7 +423,7 @@ class TheaterSceneWizard(QWizard):
         )
         cue_filter.channel_links['time'] = time_filter.filter_id + ":value"
         cue_model = CueFilterModel()
-        link_map: dict[PatchingChannel | str, str] = dict()
+        link_map: dict[PatchingChannel | str, str] = {}
         for c in self._channels:
             if c.get("desk-controlled") != "true":
                 associated_channel = c.get("name").replace(" ", "_").replace(":", "")
@@ -439,7 +438,7 @@ class TheaterSceneWizard(QWizard):
                         for f in associated_fixtures:
                             for p in f[0].position_channels:
                                 fixture_channels.append(p)
-                        pass
+
                     case DataType.DT_DOUBLE | DataType.DT_BOOL:
                         # TODO figure out what to do in this case
                         pass
@@ -450,10 +449,10 @@ class TheaterSceneWizard(QWizard):
                             proto = f[0].red_segments + f[0].green_segments + f[0].blue_segments
                             for p in proto:
                                 fixture_channels.append(p)
-                        pass
+
                 cue_model.add_channel(associated_channel, DataType.from_filter_str(c["data-type"]))
                 for pc in fixture_channels:
-                    link_map[pc] = "{}:{}".format(cue_filter.filter_id, associated_channel)
+                    link_map[pc] = f"{cue_filter.filter_id}:{associated_channel}"
         scene.append_filter(cue_filter, filter_page_index=0)
         for cue_request_index in range(self._cues_page_cue_list_widget.count()):
             c = Cue()
@@ -464,7 +463,7 @@ class TheaterSceneWizard(QWizard):
 
     def _generate_output_filters(self, scene: Scene) -> dict:
         placed_fixtures: list[UsedFixture] = []
-        output_map = dict()
+        output_map = {}
         fp = scene.pages[0]
         for c in self._channels:
             for f in c["fixtures"]:
@@ -477,4 +476,4 @@ class TheaterSceneWizard(QWizard):
         return output_map
 
     def _generate_bank_set(self, scene: Scene) -> dict[PatchingChannel, str]:
-        return dict()  # TODO
+        return {}  # TODO

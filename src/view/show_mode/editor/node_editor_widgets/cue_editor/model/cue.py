@@ -6,11 +6,10 @@ from typing import TYPE_CHECKING
 
 from model import ColorHSI, DataType
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
+from logging import getLogger
 
 if TYPE_CHECKING:
     pass
-
-from logging import getLogger
 
 logger = getLogger(__file__)
 
@@ -23,12 +22,12 @@ class EndAction(Enum):
     def __str__(self):
         if self.value == EndAction.HOLD.value:
             return "Hold current values"
-        elif self.value == EndAction.NEXT.value:
+        if self.value == EndAction.NEXT.value:
             return "Jump to next cue"
-        elif self.value == EndAction.START_AGAIN.value:
+        if self.value == EndAction.START_AGAIN.value:
             return "Restart cue"
-        else:
-            return "Unknown action"
+
+        return "Unknown action"
 
     @staticmethod
     def formatted_value_list() -> list[str]:
@@ -67,7 +66,7 @@ class State(ABC):
     @transition.setter
     def transition(self, new_value: str):
         if new_value not in ["edg", "lin", "sig", "e_i", "e_o"]:
-            raise ArgumentError("Unsupported transition type: {}".format(new_value))
+            raise ArgumentError(f"Unsupported transition type: {new_value}")
         self._transition_type = new_value
 
     @abstractmethod
@@ -107,7 +106,7 @@ class StateEightBit(State):
             self._value = 0
         elif self._value > 255:
             self._value = 255
-        return "{}@{}".format(int(self._value), self._transition_type)
+        return f"{int(self._value)}@{self._transition_type}"
 
     def decode(self, content: str):
         c_arr = content.split("@")
@@ -137,7 +136,7 @@ class StateSixteenBit(State):
             self._value = 0
         elif self._value > 65535:
             self._value = 65535
-        return "{}@{}".format(int(self._value), self._transition_type)
+        return f"{int(self._value)}@{self._transition_type}"
 
     def decode(self, content: str):
         c_arr = content.split("@")
@@ -163,7 +162,7 @@ class StateDouble(State):
         self._value = 0.0
 
     def encode(self) -> str:
-        return "{}@{}".format(float(self._value), self._transition_type)
+        return f"{float(self._value)}@{self._transition_type}"
 
     def decode(self, content: str):
         c_arr = content.split("@")
@@ -185,7 +184,7 @@ class StateColor(State):
         self._value = ColorHSI(180.0, 0.0, 0.0)
 
     def encode(self) -> str:
-        return "{}@{}".format(self._value.format_for_filter(), self._transition_type)
+        return f"{self._value.format_for_filter()}@{self._transition_type}"
 
     def decode(self, content: str):
         c_arr = content.split("@")
@@ -217,7 +216,7 @@ class KeyFrame:
         return l
 
     def format_filter_str(self) -> str:
-        return "{}:{}".format(self.timestamp, "&".join([s.encode() for s in self._states]))
+        return f"{self.timestamp}:{"&".join([s.encode() for s in self._states])}"
 
     @staticmethod
     def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: "Cue"):
@@ -244,7 +243,7 @@ class KeyFrame:
                 case DataType.DT_DOUBLE:
                     s_entry = StateDouble(state_dev_parts[1])
                 case _:
-                    raise ArgumentError("Unsupported filter data type: {}".format(state_dev_parts[1]))
+                    raise ArgumentError(f"Unsupported filter data type: {state_dev_parts[1]}")
             s_entry.decode(state_dev)
             f._states.append(s_entry)
             i += 1
@@ -280,8 +279,7 @@ class Cue:
         """Computes the length of the cue"""
         latest_timestamp = 0.0
         for f in self._frames:
-            if f.timestamp > latest_timestamp:
-                latest_timestamp = f.timestamp
+            latest_timestamp = max(latest_timestamp, f.timestamp)
         return latest_timestamp
 
     @property
@@ -294,8 +292,8 @@ class Cue:
         """Returns the keyframe data types"""
         if len(self._frames) == 0:
             return []
-        else:
-            return self._frames[0].get_data_types()
+
+        return self._frames[0].get_data_types()
 
     @property
     def channels(self) -> list[tuple[str, DataType]]:
@@ -309,8 +307,8 @@ class Cue:
         frames_str_list = [f.format_filter_str() for f in self._frames]
         if self.name is None or self.name == "":
             self.name = "No Name"
-        return "{}#{}#{}#{}".format("|".join(frames_str_list), end_handling_str, restart_beh_str,
-                                    self.name.replace('#', ''))
+        return (f"{"|".join(frames_str_list)}#{end_handling_str}#"
+                f"{restart_beh_str}#{self.name.replace('#', '')}")
 
     def from_string_definition(self, definition: str):
         primary_tokens = definition.split("#")
@@ -339,8 +337,8 @@ class Cue:
             if cd[0] == name:
                 if cd[1] == dt:
                     return
-                else:
-                    raise ValueError("This channel name already exists with a different data type.")
+
+                raise ValueError("This channel name already exists with a different data type.")
         self._channel_definitions.append((name, dt))
         for kf in self._frames:
             match dt:
@@ -383,6 +381,6 @@ class Cue:
             c._frames.append(kf.copy(c))
         for cd in self._channel_definitions:
             c._channel_definitions.append((cd[0], cd[1]))
-        c.name = "{} (copy)".format(self.name)
+        c.name = f"{self.name} (copy)"
         c.restart_on_another_play_press = self.restart_on_another_play_press
         return c

@@ -18,23 +18,23 @@ class ColumnDialog(QtWidgets.QDialog):
         self.setWindowTitle(f"Change Column {column.id}")
         self.setAttribute(Qt.WA_DeleteOnClose)
         self._column = column
-        self.colorD = QtWidgets.QColorDialog()
-        self.colorD.currentColorChanged.connect(self._select_color)
-        self.temperaturD = TemperatureDialog(self._column)
+        self.color_d = QtWidgets.QColorDialog()
+        self.color_d.currentColorChanged.connect(self._select_color)
+        self.temperature_d = TemperatureDialog(self._column)
 
         # self.colorD.finished.connect(self._select_color)
         # color_label = QtWidgets.QLabel(column.color.format_for_filter())
         color_picker = QtWidgets.QPushButton("pick Color")
         color_picker.clicked.connect(lambda: self._broadcaster.view_to_color.emit())
-        self.colorD.finished.connect(lambda: self._broadcaster.view_leave_color.emit())
+        self.color_d.finished.connect(lambda: self._broadcaster.view_leave_color.emit())
 
-        temperatur_picker = QtWidgets.QPushButton("pick Temperature")
-        temperatur_picker.clicked.connect(lambda: self._broadcaster.view_to_temperature.emit())
-        self.temperaturD.finished.connect(lambda: self._broadcaster.view_leave_temperature.emit())
+        temperature_picker = QtWidgets.QPushButton("pick Temperature")
+        temperature_picker.clicked.connect(lambda: self._broadcaster.view_to_temperature.emit())
+        self.temperature_d.finished.connect(lambda: self._broadcaster.view_leave_temperature.emit())
 
         color_layout = QtWidgets.QVBoxLayout()
         color_layout.addWidget(color_picker)
-        color_layout.addWidget(temperatur_picker)
+        color_layout.addWidget(temperature_picker)
 
         color_widget = QtWidgets.QWidget()
         color_widget.setLayout(color_layout)
@@ -51,27 +51,27 @@ class ColumnDialog(QtWidgets.QDialog):
         self._broadcaster.view_to_temperature.connect(self._to_temperature)
 
     def _select_color(self):
-        color = self.colorD.currentColor()
+        color = self.color_d.currentColor()
         self._column.color = ColorHSI(color.hue(), color.hslSaturationF(), color.toHsl().lightnessF())
         BankSet.push_messages_now()
 
     def _to_color(self):
-        self.temperaturD.close()
-        if not self.colorD.isVisible():
-            self.colorD.show()
+        self.temperature_d.close()
+        if not self.color_d.isVisible():
+            self.color_d.show()
         else:
-            self.colorD.close()
+            self.color_d.close()
 
     def _to_temperature(self):
-        self.colorD.close()
-        if not self.temperaturD.isVisible():
-            self.temperaturD.show()
+        self.color_d.close()
+        if not self.temperature_d.isVisible():
+            self.temperature_d.show()
         else:
-            self.temperaturD.close()
+            self.temperature_d.close()
 
     def _reject(self) -> None:
-        self.colorD.close()
-        self.temperaturD.close()
-        del self.colorD
-        del self.temperaturD
+        self.color_d.close()
+        self.temperature_d.close()
+        del self.color_d
+        del self.temperature_d
         self.reject()

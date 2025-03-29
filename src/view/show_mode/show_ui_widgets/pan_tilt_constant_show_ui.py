@@ -42,11 +42,11 @@ class PanTiltConstantControlUIWidget(UIWidget):
         pan_tilt = PanTiltConstantContentWidget(self._filter, w)
         layout.addWidget(pan_tilt)
 
-        self._choosenJoystick = QComboBox()
-        self._choosenJoystick.addItems(JoystickHandler.joystickMap.keys())
-        self._choosenJoystick.currentTextChanged.connect(
+        self._chosen_joystick = QComboBox()
+        self._chosen_joystick.addItems(JoystickHandler.joystickMap.keys())
+        self._chosen_joystick.currentTextChanged.connect(
             lambda x: self._filter.set_joystick(JoystickHandler.joystickMap[x]))
-        layout.addWidget(self._choosenJoystick)
+        layout.addWidget(self._chosen_joystick)
 
         w.setLayout(layout)
         return w
@@ -68,10 +68,10 @@ class PanTiltConstantControlUIWidget(UIWidget):
     def insert_action(self):
         # TODO add support for separated constants
         combined_fid = self.associated_filters["pan_tilt_vfilter_fid"]
-        command = ("{}_16bit_pan:value".format(combined_fid), str(int(self._filter.pan * 65535)))
+        command = (f"{combined_fid}_16bit_pan:value", str(int(self._filter.pan * 65535)))
         self._command_chain.append(command)
         command = (
-            "{}_16bit_tilt:value".format(combined_fid), str(int(self._filter.tilt * 65535)))  # Todo: inverse Tilt?
+            f"{combined_fid}_16bit_tilt:value", str(int(self._filter.tilt * 65535)))  # Todo: inverse Tilt?
         self._command_chain.append(command)
         self.push_update()
         self._command_chain.clear()

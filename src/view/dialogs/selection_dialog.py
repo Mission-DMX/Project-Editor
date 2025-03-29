@@ -8,15 +8,15 @@ class SelectionDialog(QDialog):
         super().__init__(parent)
         form = QFormLayout(self)
         form.addRow(QLabel(message))
-        self.listView = QListView(self)
-        form.addRow(self.listView)
-        model = QStandardItemModel(self.listView)
+        self.list_view = QListView(self)
+        form.addRow(self.list_view)
+        model = QStandardItemModel(self.list_view)
         self.setWindowTitle(title)
         for item_name in items:
             item = QStandardItem(item_name)
             item.setCheckable(True)
             model.appendRow(item)
-        self.listView.setModel(model)
+        self.list_view.setModel(model)
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
                                       Qt.Orientation.Horizontal, self)
         form.addRow(button_box)
@@ -26,7 +26,7 @@ class SelectionDialog(QDialog):
     @property
     def selected_items(self) -> list[str]:
         selected = []
-        model = self.listView.model()
+        model = self.list_view.model()
         i = 0
         while model.item(i):
             if model.item(i).checkState() == Qt.CheckState.Checked:

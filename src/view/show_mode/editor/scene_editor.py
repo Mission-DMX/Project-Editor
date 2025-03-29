@@ -73,5 +73,5 @@ class SceneUIManagerWidget(QTabWidget):
         """The scene managed by the scene manager"""
         if isinstance(self._scene, Scene):
             return self._scene
-        else:
-            return self._scene.parent_scene
+
+        return self._scene.parent_scene

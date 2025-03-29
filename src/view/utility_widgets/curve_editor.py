@@ -99,8 +99,9 @@ class _WaveRenderer(PlotWidget):
             signal = numpy.mod(numpy.add(y, base_phase), pulse_width)
             for i in range(0, steps, pulse_width * 2):
                 ya[i:i + pulse_width] = signal[i:i + pulse_width]
-                ya[i + pulse_width + 1:i + pulse_width * 2] = numpy.subtract(1, signal[
-                                                                                i + pulse_width + 1:i + pulse_width * 2])
+                ya[i + pulse_width + 1:i + pulse_width * 2] = numpy.subtract(1,
+                                                                             signal[
+                                                                             i + pulse_width + 1:i + pulse_width * 2])
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TRIANGLE] + numpy.multiply(
                 ya,
                 base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TRIANGLE]

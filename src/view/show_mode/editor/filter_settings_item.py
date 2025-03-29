@@ -95,22 +95,22 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
     """
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
-    elif filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
+    if filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
         return CueEditor(f=filter_)
-    elif filter_.filter_type == 50:
+    if filter_.filter_type == 50:
         return LuaScriptConfigWidget()
-    elif filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
         return PanTiltConstantWidget(filter_)
-    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):
         return AutotrackerSettingsWidget()
-    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_EFFECTSSTACK):
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_EFFECTSSTACK):
         return EffectsStackFilterConfigWidget(filter_)
-    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_IMPORT):
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_IMPORT):
         return ImportVFilterSettingsWidget(filter_)
-    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
         return ColorMixingSetupWidget(filter_)
-    else:
-        return None
+
+    return None
 
 
 class FilterSettingsDialog(QDialog):
