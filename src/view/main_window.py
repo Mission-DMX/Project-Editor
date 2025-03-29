@@ -14,6 +14,7 @@ from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
 from style import Style
+from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.dmx_data_log import DmxDataLogWidget
@@ -67,6 +68,11 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             ("Patch", MainWidget(PatchMode(self), self), self._broadcaster.view_to_patch_menu.emit),
             ("Debug", debug_console, lambda: self._to_widget(4)),
+            (
+                "Actions",
+                MainWidget(CombinedActionSetupWidget(self), self),
+                self._broadcaster.view_to_action_config.emit
+            ),
         ]
 
         # select Views
@@ -95,6 +101,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster.view_to_color.connect(self._is_column_dialog)
         self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
         self._broadcaster.save_button_pressed.connect(self._save_show)
+        self._broadcaster.view_to_action_config.connect(lambda: self._to_widget(5))
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -125,6 +132,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     self._broadcaster.view_leave_show_player.emit()
                 case 3:
                     self._broadcaster.view_leave_patch_menu.emit()
+                case 4:
+                    self._broadcaster.view_leave_action_config.emit()
             self._widgets.setCurrentIndex(index)
 
     def _setup_menubar(self) -> None:
