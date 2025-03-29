@@ -2,11 +2,10 @@ import UniverseControl_pb2 as _UniverseControl_pb2
 import DirectMode_pb2 as _DirectMode_pb2
 import FilterMode_pb2 as _FilterMode_pb2
 import Console_pb2 as _Console_pb2
-from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 
 from UniverseControl_pb2 import Universe
 from UniverseControl_pb2 import universes_list
@@ -117,7 +116,7 @@ BTN_OUTPUTS: _Console_pb2.ButtonCode
 BTN_PAN_EDITSHOW: _Console_pb2.ButtonCode
 BTN_PLAY_RUNCUE: _Console_pb2.ButtonCode
 BTN_PLUGIN_PATCH: _Console_pb2.ButtonCode
-BTN_READOFF_GOTO: _Console_pb2.ButtonCode
+BTN_READOFF_MOVEWINDOW: _Console_pb2.ButtonCode
 BTN_REC_RECFRAME: _Console_pb2.ButtonCode
 BTN_REPLACE_TEMPERATURE: _Console_pb2.ButtonCode
 BTN_REV_LASTCUE: _Console_pb2.ButtonCode
@@ -134,7 +133,7 @@ BTN_TRIM: _Console_pb2.ButtonCode
 BTN_UNDO_UNDO: _Console_pb2.ButtonCode
 BTN_UP_UP: _Console_pb2.ButtonCode
 BTN_USER: _Console_pb2.ButtonCode
-BTN_WRITE_MOVEWINDOW: _Console_pb2.ButtonCode
+BTN_WRITE: _Console_pb2.ButtonCode
 DESCRIPTOR: _descriptor.FileDescriptor
 FADERTOUCH_CH1: _Console_pb2.ButtonCode
 FADERTOUCH_CH2: _Console_pb2.ButtonCode
@@ -190,30 +189,6 @@ class long_log_update(_message.Message):
     time_stamp: int
     what: str
     def __init__(self, level: _Optional[_Union[LogLevel, str]] = ..., time_stamp: _Optional[int] = ..., what: _Optional[str] = ...) -> None: ...
-
-class state_list(_message.Message):
-    __slots__ = ["specific_states", "unspecific_states"]
-    class UnspecificStatesEntry(_message.Message):
-        __slots__ = ["key", "value"]
-        KEY_FIELD_NUMBER: _ClassVar[int]
-        VALUE_FIELD_NUMBER: _ClassVar[int]
-        key: str
-        value: str
-        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
-    class kvs(_message.Message):
-        __slots__ = ["k", "scene_id", "v"]
-        K_FIELD_NUMBER: _ClassVar[int]
-        SCENE_ID_FIELD_NUMBER: _ClassVar[int]
-        V_FIELD_NUMBER: _ClassVar[int]
-        k: str
-        scene_id: int
-        v: str
-        def __init__(self, k: _Optional[str] = ..., v: _Optional[str] = ..., scene_id: _Optional[int] = ...) -> None: ...
-    SPECIFIC_STATES_FIELD_NUMBER: _ClassVar[int]
-    UNSPECIFIC_STATES_FIELD_NUMBER: _ClassVar[int]
-    specific_states: _containers.RepeatedCompositeFieldContainer[state_list.kvs]
-    unspecific_states: _containers.ScalarMap[str, str]
-    def __init__(self, unspecific_states: _Optional[_Mapping[str, str]] = ..., specific_states: _Optional[_Iterable[_Union[state_list.kvs, _Mapping]]] = ...) -> None: ...
 
 class update_state(_message.Message):
     __slots__ = ["new_state"]
