@@ -5,10 +5,8 @@ from logging import getLogger
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
 
-
-from model import Scene, Filter
+from model import Filter, Scene
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
-
 from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
 
@@ -38,14 +36,15 @@ class FilterNode(Node):
 
         super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
 
-        self.fsi = FilterSettingsItem(self, self.graphicsItem())
+        self.fsi = FilterSettingsItem(self, self.graphicsItem(),
+                                      self._filter) if self._filter.configuration_supported else None
         font: QFont = self.graphicsItem().nameItem.font()
         font.setPixelSize(12)
         self.graphicsItem().nameItem.setFont(font)
         self.graphicsItem().xChanged.connect(self.update_filter_pos)
         self.channel_hints = {}
 
-    def graphicsItem(self):
+    def graphicsItem(self) -> FilterNodeGraphicsItem:
         """Return the GraphicsItem for this node. Subclasses may re-implement
         this method to customize their appearance in the flowchart."""
         if self._graphicsItem is None:
@@ -66,8 +65,9 @@ class FilterNode(Node):
             return
 
         if not isinstance(remote_node, FilterNode):
-            logger.warning("Tried to non-FilterNode nodes. Forced disconnection. Got type: " + str(type(remote_node)) +
-                           " and expected: " + str(FilterNode.__class__) + " instance.")
+            logger.warning(
+                "Tried to non-FilterNode nodes. Forced disconnection. Got type: %s and expected: %s instance.",
+                str(type(remote_node)), str(FilterNode.__class__))
             localTerm.disconnectFrom(remoteTerm)
             return
 
@@ -78,8 +78,9 @@ class FilterNode(Node):
                 return
             self.filter.channel_links[localTerm.name()] = remote_node.name() + ":" + remoteTerm.name()
         except KeyError as e:
-            logger.error(str(e) + " Possible key candidates are: " + ", ".join(self.filter.in_data_types.keys()) +
-                         "\nRemote options are: " + ", ".join(remote_node.filter.out_data_types.keys()))
+            logger.error("%s Possible key candidates are: %s\nRemote options are: %s", str(e),
+                         ", ".join(self.filter.in_data_types.keys()),
+                         ", ".join(remote_node.filter.out_data_types.keys()))
 
     def disconnected(self, localTerm, remoteTerm):
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.
@@ -118,7 +119,7 @@ class FilterNode(Node):
                 # FIXME the name is not always present
                 prefix, suffix = filter.channel_links[input_key].split(":")
                 if prefix == old_name:
-                    filter.channel_links[input_key] = "{}:{}".format(name, suffix)
+                    filter.channel_links[input_key] = f"{name}:{suffix}"
         return super().rename(name)
 
     def update_filter_pos(self):

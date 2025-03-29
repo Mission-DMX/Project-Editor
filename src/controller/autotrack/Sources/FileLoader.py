@@ -1,7 +1,9 @@
 # coding=utf-8
-import cv2
-import time
 import os
+import time
+
+import cv2
+
 from controller.autotrack.Sources.Loader import Loader
 
 

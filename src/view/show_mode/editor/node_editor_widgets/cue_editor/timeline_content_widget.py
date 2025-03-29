@@ -1,21 +1,20 @@
+# coding=utf-8
 import PySide6
 from PySide6 import QtGui
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QPainter, QColor, QBrush, QPainterPath, QPaintEvent
+from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
 from model import DataType
-from model.control_desk import set_seven_seg_display_content, BankSet, ColorDeskColumn, RawDeskColumn
-from view.show_mode.editor.node_editor_widgets.cue_editor.cue import KeyFrame, StateColor, StateEightBit, \
-    StateSixteenBit, \
-    StateDouble, State
+from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, set_seven_seg_display_content
 from view.show_mode.editor.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (KeyFrame, State, StateColor, StateDouble,
+                                                                            StateEightBit, StateSixteenBit)
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
 from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
 
 class TimelineContentWidget(QWidget):
-
     size_changed = Signal(QPoint)
 
     def __init__(self, parent: QWidget = None):
@@ -56,7 +55,7 @@ class TimelineContentWidget(QWidget):
         # render transitions
         i = 0
         channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
-        for c in self._channels:
+        for _ in self._channels:
             if (i % 2) == 0:
                 painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
                                  channel_background_color)
@@ -98,7 +97,7 @@ class TimelineContentWidget(QWidget):
                         painter.drawText(x + 15, y + 21, str(int(s.color.intensity * 100)) + "%")
                     elif isinstance(s, StateDouble):
                         selected_brush = marker_brush
-                        painter.drawText(x + 15, y + 21, "{:10.4f}".format(s._value))
+                        painter.drawText(x + 15, y + 21, f"{s._value:10.4f}")
                     else:
                         selected_brush = marker_brush
                         painter.drawText(x + 15, y + 21, str(s._value))
@@ -157,6 +156,10 @@ class TimelineContentWidget(QWidget):
     def add_channels(self, channels: list[DataType]):
         for c in channels:
             self._channels.append(c)
+        self.compute_resize()
+
+    def remove_channel(self, i):
+        self._channels.pop(i)
         self.compute_resize()
 
     def insert_frame(self, f: KeyFrame):

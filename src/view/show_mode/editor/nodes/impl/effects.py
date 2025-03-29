@@ -40,13 +40,17 @@ class CueListNode(FilterNode):
         self.channel_hints["time"] = " [ms]"
 
     def parse_and_add_output_channels(self, mappings: str):
+        output_list = []
         for channel_dev in mappings.split(';'):
             if channel_dev:
                 splitted_channel_dev = channel_dev.split(':')
                 if len(splitted_channel_dev) > 1:
                     channel_name = splitted_channel_dev[0]
                     channel_type = DataType.from_filter_str(splitted_channel_dev[1])
-                    self.addOutput(channel_name)
+                    if channel_name not in self.outputs():
+                        # TODO also check data type compatibility here
+                        self.addOutput(channel_name)
+                    output_list.append(channel_name)
                     self.filter.out_data_types[channel_name] = channel_type
 
 
@@ -76,7 +80,8 @@ class ShiftFilterNode(FilterNode):
                 else:
                     self.filter.filter_configurations["nr_outputs"] = "0"
             else:
-                self.filter.filter_configurations["nr_outputs"] = str(int(model.filter_configurations.get("nr_outputs")))
+                self.filter.filter_configurations["nr_outputs"] = str(
+                    int(model.filter_configurations.get("nr_outputs")))
         except ValueError:
             self.filter.filter_configurations["nr_outputs"] = "0"
 
@@ -134,7 +139,8 @@ class AutoTrackerNode(FilterNode):
     nodeName = "AutoTracker"
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER, name=name, allowAddOutput=True, terminals={})
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER, name=name,
+                         allowAddOutput=True, terminals={})
         self.setup_output_terminals()
 
     def setup_output_terminals(self):
@@ -147,11 +153,11 @@ class AutoTrackerNode(FilterNode):
             for i in range(int(len(self.terminals) / 3), trackers, 1):
                 min_brightness_filter_id: str = f.get_min_brightness_filter_id(i)
                 self.addOutput(min_brightness_filter_id)
-                self.addOutput("Tracker{}_Pan".format(i))
-                self.addOutput("Tracker{}_Tilt".format(i))
+                self.addOutput(f"Tracker{i}_Pan")
+                self.addOutput(f"Tracker{i}_Tilt")
                 associated_dt = f.get_data_type_of_tracker(i)
-                self.filter.out_data_types["Tracker{}_Pan".format(i)] = associated_dt
-                self.filter.out_data_types["Tracker{}_Tilt".format(i)] = associated_dt
+                self.filter.out_data_types[f"Tracker{i}_Pan"] = associated_dt
+                self.filter.out_data_types[f"Tracker{i}_Tilt"] = associated_dt
                 self.filter.out_data_types[min_brightness_filter_id] = DataType.DT_DOUBLE
 
     def update_node_after_settings_changed(self):

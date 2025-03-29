@@ -1,10 +1,10 @@
 # coding=utf-8
 """dialog for change of Temperature"""
 import numpy as np
-from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from model import ColorHSI
-from model.control_desk import ColorDeskColumn, BankSet
+from model.control_desk import BankSet, ColorDeskColumn
 
 
 class TemperatureDialog(QtWidgets.QDialog):
@@ -48,8 +48,8 @@ def _calculate_red(temperature: float) -> float:
 def _calculate_green(temperature: float) -> float:
     if temperature <= 60:
         return _col_check(99.4708025861 * np.log(temperature) - 161.1195681661)
-    else:
-        return _col_check(288.1221695283 * pow(temperature - 60, -0.0755148492))
+
+    return _col_check(288.1221695283 * pow(temperature - 60, -0.0755148492))
 
 
 def _calculate_blue(temperature: float) -> float:

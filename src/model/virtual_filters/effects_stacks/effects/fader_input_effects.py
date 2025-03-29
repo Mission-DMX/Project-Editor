@@ -15,7 +15,7 @@ from view.show_mode.effect_stacks.configuration_widgets.fader_selection_configur
 class ColorInputEffect(ColorEffect):
 
     def __init__(self):
-        super().__init__(dict())
+        super().__init__({})
         self._fader: ColorDeskColumn | None = None
         self._ids_for_lazy_eval: tuple[str, str] = ("", "")
 

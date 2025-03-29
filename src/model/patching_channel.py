@@ -40,12 +40,14 @@ class PatchingChannel(QtCore.QObject):
             try:
                 self._fixture.channels.remove(self)
                 self._fixture.update_segments()
+                self._fixture.find_position_channels()
             except ValueError:
                 pass
         self._fixture = fixture
         if self._fixture:
             self._fixture.channels.append(self)
             self._fixture.update_segments()
+            self._fixture.find_position_channels()
         self.updated_fixture.emit()
 
     @property
@@ -80,3 +82,7 @@ class PatchingChannel(QtCore.QObject):
     def fixture_channel_id(self) -> int:
         """ id form the fixture channel """
         return self._fixture_channel
+
+    def __str__(self):
+        parent_universe = self._fixture.parent_universe if self._fixture else -1
+        return f"{parent_universe}/{self._address}: {self.fixture_channel}"

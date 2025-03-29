@@ -1,8 +1,9 @@
+# coding=utf-8
 import logging
 from xml.etree import ElementTree
 
 from model import Filter
-from model.filter import FilterTypeEnumeration, DataType
+from model.filter import DataType, FilterTypeEnumeration
 
 logger = logging.Logger(__file__)
 
@@ -14,12 +15,12 @@ class SceneOptimizerModule:
 
     def __init__(self, replacing_enabled: bool):
         self._replacing_enabled = replacing_enabled
-        self.channel_override_dict: dict[str, str] = dict()
+        self.channel_override_dict: dict[str, str] = {}
         self.channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []
         self._global_time_input_filter: Filter | None = None
         self._main_brightness_input_filter: Filter | None = None
-        self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = dict()
-        self._first_universe_filter_id: dict[str, str] = dict()
+        self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = {}
+        self._first_universe_filter_id: dict[str, str] = {}
 
     def _substitute_universe_filter(self, f: Filter):
         """
@@ -55,20 +56,20 @@ class SceneOptimizerModule:
                     f.out_data_types["value"] = DataType.DT_DOUBLE
                 if self._global_time_input_filter is not None:
                     self._fill_ch_sub_dict(f, self._global_time_input_filter)
-                    #logger.debug("Substituting time filter {}.".format(f.filter_id))
+                    # logger.debug("Substituting time filter {}.".format(f.filter_id))
                     return True
-                else:
-                    self._global_time_input_filter = f
-                    return False
+
+                self._global_time_input_filter = f
+                return False
             case FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS:
                 if len(f.out_data_types) == 0:
                     f.out_data_types["brightness"] = DataType.DT_16_BIT
                 if self._main_brightness_input_filter is not None:
                     self._fill_ch_sub_dict(f, self._main_brightness_input_filter)
                     return True
-                else:
-                    self._main_brightness_input_filter = f
-                    return False
+
+                self._main_brightness_input_filter = f
+                return False
             case FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT:
                 self._substitute_universe_filter(f)
                 return True
@@ -88,16 +89,21 @@ class SceneOptimizerModule:
             raise ValueError("Cannot substitute virtual filters.")
         if f.scene != substitution_filter.scene:
             raise ValueError("Cannot substitute a filter with one from another scene.")
-        logger.debug("Substituted filter {} with {} in scene {}.".format(
-            f.filter_id, substitution_filter.filter_id, f.scene.scene_id))
+        logger.debug(
+            "Substituted filter %s with %s in scene %s.", f.filter_id, substitution_filter.filter_id,
+            f.scene.scene_id)
         for output_channel_name in f.out_data_types.keys():
-            self.channel_override_dict["{}:{}".format(f.filter_id, output_channel_name)] = "{}:{}".format(
-                substitution_filter.filter_id, output_channel_name)
+            self.channel_override_dict[
+                f"{f.filter_id}:{output_channel_name}"] = f"{substitution_filter.filter_id}:{output_channel_name}"
 
     def _emplace_universe_filters(self, scene_element: ElementTree.Element):
+        """
+        This method places the replacement for the aggregated universe output filters.
+        :param scene_element: The scene to place the new filter into.
+        """
         for universe, channel_list in self._universe_filter_dict.items():
             filter_config_parameters = {'universe': universe}
-            channel_mappings = dict()
+            channel_mappings = {}
             for channel_mapping in channel_list:
                 filter_input_channel, universe_channel, foreign_filter_output_channel = channel_mapping
                 filter_config_parameters[filter_input_channel] = str(int(universe_channel) - 1)
@@ -119,7 +125,8 @@ class SceneOptimizerModule:
                     "input_channel_id": str(input_ch),
                     "output_channel_id": str(output_ch)
                 })
-        pass
 
     def wrap_up(self, scene_element: ElementTree.Element):
+        """This method needs to be called in order to apply the optimization steps that have been staged.
+        :param scene_element: The scene XML element to write to."""
         self._emplace_universe_filters(scene_element)

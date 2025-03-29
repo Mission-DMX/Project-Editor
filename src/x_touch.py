@@ -1,9 +1,13 @@
 # coding=utf-8
 """All messages send to the x-touch"""
+from typing import TYPE_CHECKING
 
 import proto.Console_pb2
 import proto.MessageTypes_pb2
-from model.broadcaster import Broadcaster
+
+if TYPE_CHECKING:
+    from model.broadcaster import Broadcaster
+
 
 VIEW_PATCH_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
@@ -62,7 +66,7 @@ SAVE_BUTTON_DEACTIVATE_MSG: proto.Console_pb2.button_state_change = proto.Consol
 class XTouchMessages:
     """messages to the XTouch"""
 
-    def __init__(self, broadcaster: Broadcaster, send: callable) -> None:
+    def __init__(self, broadcaster: "Broadcaster", send: callable) -> None:
         self._broadcaster = broadcaster
 
         # listen on updates

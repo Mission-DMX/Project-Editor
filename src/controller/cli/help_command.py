@@ -41,7 +41,7 @@ class HelpCommand(Command):
             case "showctl":
                 self.context.print("Manage the general show file and execution on fish")
             case _:
-                self.context.print("ERROR: The requested help topic '{}' is unknown.".format(args.topic))
+                self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tselect\tlist\tpatch\tbank_set\tshowctl")
                 return False

@@ -4,15 +4,17 @@ from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
 from view.show_mode.editor.nodes.impl.adapters import *
 from view.show_mode.editor.nodes.impl.arithmetics import *
+from view.show_mode.editor.nodes.impl.color_manip_nodes import *
 from view.show_mode.editor.nodes.impl.constants import *
+from view.show_mode.editor.nodes.impl.debug import *
 from view.show_mode.editor.nodes.impl.effects import *
 from view.show_mode.editor.nodes.impl.faders import *
 from view.show_mode.editor.nodes.impl.scripting import *
+from view.show_mode.editor.nodes.impl.time import *
 from view.show_mode.editor.nodes.impl.trigonometics import *
 from view.show_mode.editor.nodes.impl.universenode import *
-from view.show_mode.editor.nodes.impl.debug import *
-from view.show_mode.editor.nodes.impl.time import *
 from view.show_mode.editor.nodes.impl.waves import *
+from view.show_mode.editor.nodes.import_node import ImportNode
 
 
 class FilterNodeLibrary(NodeLibrary):
@@ -29,10 +31,12 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_arithmetic_nodes()
         self._register_trigonometric_nodes()
         self._register_wave_nodes()
+        self._register_color_manip_nodes()
         self._register_time_nodes()
         self._register_fader_nodes()
         self._register_effect_nodes()
         self._register_scripting_nodes()
+        self.addNodeType(ImportNode, [("")])
 
     def _register_constants_nodes(self):
         """Registers all the constants nodes."""
@@ -46,10 +50,14 @@ class FilterNodeLibrary(NodeLibrary):
     def _register_debug_nodes(self):
         """Registers all the debugs nodes."""
         # Add Node -> Debug sub menu
-        self.addNodeType(Debug8BitNode, [('Debug',)])
-        self.addNodeType(Debug16BitNode, [('Debug',)])
-        self.addNodeType(DebugFloatNode, [('Debug',)])
-        self.addNodeType(DebugColorNode, [('Debug',)])
+        self.addNodeType(Debug8BitNode, [('Debug', 'Fish-Log',)])
+        self.addNodeType(Debug16BitNode, [('Debug', 'Fish-Log',)])
+        self.addNodeType(DebugFloatNode, [('Debug', 'Fish-Log',)])
+        self.addNodeType(DebugColorNode, [('Debug', 'Fish-Log',)])
+        self.addNodeType(DebugRemote8BitNode, [('Debug',)])
+        self.addNodeType(DebugRemote16BitNode, [('Debug',)])
+        self.addNodeType(DebugRemoteFloatNode, [('Debug',)])
+        self.addNodeType(DebugRemoteColorNode, [('Debug',)])
 
     def _register_adapters_nodes(self):
         """Registers all the constants nodes."""
@@ -71,6 +79,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(Adapter8BitToRangeFloat, [('Adapters',)])
         self.addNodeType(CombineTwo8BitToSingle16Bit, [('Adapters',)])
         self.addNodeType(Map8BitTo16Bit, [('Adapters',)])
+        self.addNodeType(ColorBrightnessMixinNode, [('Adapters',)])
 
     def _register_arithmetic_nodes(self):
         """Registers all the arithmetics nodes."""
@@ -83,6 +92,9 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ArithmeticExponentialNode, [('Arithmetics',)])
         self.addNodeType(ArithmeticMinimumNode, [('Arithmetics',)])
         self.addNodeType(ArithmeticMaximumNode, [('Arithmetics',)])
+        self.addNodeType(Sum8BitNode, [('Arithmetics',)])
+        self.addNodeType(Sum16BitNode, [('Arithmetics',)])
+        self.addNodeType(SumFloatNode, [('Arithmetics',)])
 
     def _register_trigonometric_nodes(self):
         self.addNodeType(TrigonometricSineNode, [('Trigonometrics',)])
@@ -130,3 +142,6 @@ class FilterNodeLibrary(NodeLibrary):
 
     def _register_scripting_nodes(self):
         self.addNodeType(LuaFilterNode, [('Script',)])
+
+    def _register_color_manip_nodes(self):
+        self.addNodeType(ColorMixerVFilterNode, [('Color Manip',)])

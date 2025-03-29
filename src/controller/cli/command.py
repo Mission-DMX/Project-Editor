@@ -1,11 +1,7 @@
 # coding=utf-8
 """Client Commands"""
 from abc import ABC, abstractmethod
-
-
 from typing import TYPE_CHECKING
-
-from PySide6.QtCore import QObject
 
 if TYPE_CHECKING:
     from .cli_context import CLIContext
@@ -15,6 +11,11 @@ class Command(ABC):
     """Client Commands"""
 
     def __init__(self, cli_context: "CLIContext", name: str):
+        """
+        Create a new command.
+        :param cli_context: The context where the command should be registered with
+        :param name: The name of the command
+        """
         self.context = cli_context
         self._name = name
         self._help_text = ""
@@ -26,12 +27,10 @@ class Command(ABC):
         Arguments:
         parser -- An argparse like parser
         """
-        pass
 
     @abstractmethod
     def execute(self, args) -> bool:
         """execute a Command"""
-        pass
 
     @property
     def name(self) -> str:
@@ -42,8 +41,8 @@ class Command(ABC):
         """
         if self._name:
             return self._name
-        else:
-            return "Unnamed Command"
+
+        return "Unnamed Command"
 
     @property
     def help(self) -> str:

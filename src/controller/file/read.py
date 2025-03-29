@@ -8,30 +8,35 @@ from xml.etree import ElementTree
 
 import xmlschema
 
-import proto.UniverseControl_pb2 as Proto
+import proto.Console_pb2
+import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
-from model.ofl.fixture import load_fixture, UsedFixture, make_used_fixture
 from controller.utils.process_notifications import get_process_notifier
-from model import Filter, Scene, Universe, BoardConfiguration, PatchingUniverse, UIPage, ColorHSI
-from model.control_desk import BankSet, FaderBank, ColorDeskColumn, RawDeskColumn
+from model import BoardConfiguration, ColorHSI, Filter, PatchingUniverse, Scene, UIPage, Universe
+from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 from model.filter import VirtualFilter
+from model.ofl.fixture import UsedFixture, load_fixture, make_used_fixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
-from proto.Console_pb2 import lcd_color
 from view.dialogs import ExceptionsDialog
-from view.show_mode.editor.show_ui_widgets import filter_to_ui_widget
+from view.show_mode.show_ui_widgets import WIDGET_LIBRARY, filter_to_ui_widget
 
 logger = getLogger(__name__)
 
 
 def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str, BankSet]):
+    """
+    Parse and add a bank set to the show file.
+    :param child: The XML element to examine
+    :param loaded_banksets: The list to add the bankset to.
+    """
     _id = child.attrib.get('id')
     bs: BankSet = BankSet(gui_controlled=True, id=_id)
     for bank_element in child:
         bank = FaderBank()
         if bank_element.tag != 'bank':
-            logger.error("Unexpected element '{}' while parsing bank".format(bank_element.tag))
+            logger.error("Unexpected element '%s' while parsing bank", bank_element.tag)
             continue
         for column_element in bank_element:
             if column_element.tag == 'hslcolumn':
@@ -51,14 +56,13 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
                 col.fader_position = int(column_element.attrib['fader_position'])
                 col.encoder_position = int(column_element.attrib['encoder_position'])
             else:
-                logger.error("Unsupported bank column type '{}'.".format(column_element.tag))
+                logger.error("Unsupported bank column type '%s'.", column_element.tag)
                 continue
             bank.add_column(col)
         bs.add_bank(bank)
     if child.attrib.get('linked_by_default') == 'true':
         bs.link()
     loaded_banksets[bs.id] = bs
-    pass
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration) -> bool:
@@ -71,22 +75,22 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         A BoardConfiguration instance parsed from the provided file.
     """
 
-    pn = get_process_notifier("Load Showfile", 4)
+    pn = get_process_notifier("Load Showfile", 5)
 
     try:
         pn.current_step_description = "Load file from disk."
-        schema_file = open("resources/ShowFileSchema.xsd", 'r')
-
-        schema = xmlschema.XMLSchema(schema_file)
+        with open("resources/ShowFileSchema.xsd", 'r', encoding="UTF-8") as schema_file:
+            schema = xmlschema.XMLSchema(schema_file)
         schema.validate(file_name)
         pn.current_step_number += 1
     except Exception as error:
-        logger.error("Error while validating show file: {}".format(error))
+        logger.error("Error while validating show file: %s", error)
         ExceptionsDialog(error).exec()
         pn.close()
         return False
 
     board_configuration.broadcaster.clear_board_configuration.emit()
+    pn.current_step_number += 1
     tree = ElementTree.parse(file_name)
     root = tree.getroot()
 
@@ -117,8 +121,6 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         match child.tag:
             case "scene":
                 scene_defs_to_be_parsed.append(child)
-            case "device":
-                _parse_device(child, board_configuration)
             case "universe":
                 _parse_universe(child, board_configuration)
             case "uihint":
@@ -143,7 +145,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         fader_value = int(board_configuration.ui_hints.get('default_main_brightness') or '255')
         board_configuration.broadcaster.request_main_brightness_fader_update.emit(fader_value)
     except ValueError as e:
-        logger.error("Unable to parse main brightness setting: ", e)
+        logger.error("Unable to parse main brightness setting: %s", e)
 
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name
@@ -151,35 +153,47 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     return True
 
 
-def lcd_color_from_string(display_color: str) -> lcd_color:
+def lcd_color_from_string(display_color: str) -> proto.Console_pb2.lcd_color:
+    """
+    Convert the string representation of the LCD backlight color to the enum.
+    :param display_color: The string representation
+    :returns: The enum representation
+    """
     match display_color:
         case 'white':
-            return lcd_color.white
+            return proto.Console_pb2.lcd_color.white
         case 'red':
-            return lcd_color.red
+            return proto.Console_pb2.lcd_color.red
         case 'blue':
-            return lcd_color.blue
+            return proto.Console_pb2.lcd_color.blue
         case 'cyan':
-            return lcd_color.cyan
+            return proto.Console_pb2.lcd_color.cyan
         case 'black':
-            return lcd_color.black
+            return proto.Console_pb2.lcd_color.black
         case 'green':
-            return lcd_color.green
+            return proto.Console_pb2.lcd_color.green
         case 'magenta':
-            return lcd_color.magenta
+            return proto.Console_pb2.lcd_color.magenta
         case 'yellow':
-            return lcd_color.yellow
+            return proto.Console_pb2.lcd_color.yellow
         case _:
-            return lcd_color.white
+            return proto.Console_pb2.lcd_color.white
 
 
 def _clean_tags(element: ElementTree.Element, prefix: str):
+    """This method recursively cleans up immediate XML tag prefixes."""
     for child in element:
         child.tag = child.tag.replace(prefix, '')
         _clean_tags(child, prefix)
 
 
 def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instantiated_pages: list[FilterPage]):
+    """
+    Load a filter page from the XML representation.
+    :param element: The XML element to load the data from
+    :param parent_scene: The scene to add the page to
+    :param instantiated_pages: The list of all loaded filter pages, where this element is appended to
+    """
     f = FilterPage(parent_scene)
     for key, value in element.attrib.items():
         match key:
@@ -194,8 +208,8 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
                             break
                     if not parent_page:
                         return False
-                    else:
-                        parent_page.child_pages.append(f)
+
+                    parent_page.child_pages.append(f)
                 else:
                     parent_scene.insert_filterpage(f)
                 instantiated_pages.append(f)
@@ -205,19 +219,26 @@ def _parse_filter_page(element: ElementTree.Element, parent_scene: Scene, instan
                     key, value, parent_scene.human_readable_name)
     for child in element:
         if child.tag != "filterid":
-            logger.error("Found unknown tag '{}' in filter page.".format(child.tag))
+            logger.error("Found unknown tag '%s' in filter page.", child.tag)
         else:
             filter = parent_scene.get_filter_by_id(child.text)
             if filter:
                 f.filters.append(filter)
             else:
-                logger.error("Didn't find filter '{}' in scene '{}'.".format(child.text,
-                                                                             parent_scene.human_readable_name))
+                logger.error("Didn't find filter '%s' in scene '%s'.", child.text,
+                             parent_scene.human_readable_name)
+        # TODO load comments
     return True
 
 
 def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardConfiguration,
                  loaded_banksets: dict[str, BankSet]):
+    """
+    Load a scene from the show file data structure.
+    :param scene_element: The XML element to use
+    :param board_configuration: The show configuration object to insert the scene into.
+    :param loaded_banksets: A list of bank sets that are associated with the scene.
+    """
     human_readable_name = ""
     scene_id = 0
     for key, value in scene_element.attrib.items():
@@ -271,55 +292,76 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
 
 
 def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
+    """
+    Load a UI page (the ones that contain the widgets) from the XML data.
+    :param page_def: The XML data structure
+    :param scene: The scene to add it to.
+    """
     page = UIPage(scene)
     for k, v in page_def.attrib.items():
         match k:
             case 'title':
                 page.title = str(v)
             case _:
-                logger.error("Unexpected attribute '{}':'{}' in ui page definition.".format(k, v))
+                logger.error("Unexpected attribute '%s':'%s' in ui page definition.", k, v)
     for widget_def in page_def:
-        posX: int = 0
-        posY: int = 0
+        pos_x: int = 0
+        pos_y: int = 0
         w: int = 0
         h: int = 0
-        fid: str = ""
-        variante: str = ""
+        fids = []
         conf: dict[str, str] = {}
         for k, v in widget_def.attrib.items():
             match k:
                 case "posX":
-                    posX = int(v)
+                    pos_x = int(v)
                 case "posY":
-                    posY = int(v)
+                    pos_y = int(v)
                 case "sizeW":
                     w = int(v)
                 case "sizeH":
                     h = int(v)
                 case "filterID":
-                    fid = str(v)
+                    fids = str(v).split(":")
                 case "variante":
-                    variante = str(v)
+                    widget_cdef = WIDGET_LIBRARY.get(str(v))
                 case _:
-                    logger.error("Unexpected attribute '{}':'{}' in ui widget definition.".format(k, v))
+                    logger.error("Unexpected attribute '%s':'%s' in ui widget definition.", k, v)
         for config_entry in widget_def:
             if config_entry.tag != "configurationEntry":
-                logger.error("Found unexpected child '{}' in ui widget definition.".format(config_entry.tag))
+                logger.error("Found unexpected child '%s' in ui widget definition.", config_entry.tag)
                 continue
             conf[str(config_entry.attrib['name'])] = str(config_entry.attrib['value'])
-        corresponding_filter = scene.get_filter_by_id(fid)
-        if not corresponding_filter:
-            logger.error("Did not load ui widget for filter with id '{}' from scene '{}' as it does not exist."
-                         .format(fid, scene))
-            continue
-        ui_widget = filter_to_ui_widget(corresponding_filter, page, conf, variante)
-        ui_widget.position = (posX, posY)
+        filters = []
+        for fid in fids:
+            corresponding_filter = scene.get_filter_by_id(fid)
+            if not corresponding_filter:
+                logger.error("Did not load filter for ui widget with id '%s' from scene '%s' as it does not exist.",
+                             fid, scene
+                             )
+                continue
+            filters.append(corresponding_filter)
+        if widget_cdef is None:
+            logger.warning("Opening legacy show file. Attempting to match scene UI widget by used filter.")
+            ui_widget = filter_to_ui_widget(filters[0], page, conf)
+        else:
+            ui_widget = widget_cdef[1](page, conf)
+        i = 0
+        for f in filters:
+            ui_widget.set_filter(f, i)
+            i += 1
+        ui_widget.position = (pos_x, pos_y)
         ui_widget.size = (w, h)
         page.append_widget(ui_widget)
     scene.ui_pages.append(page)
 
 
 def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
+    """
+    Load a filter from the XML definition.
+    :param filter_element: THe XML data to load the filter from
+    :param scene: The scene to append the filter to
+    """
     filter_id = ""
     filter_type = 0
     pos = (0.0, 0.0)
@@ -359,6 +401,11 @@ def _parse_filter(filter_element: ElementTree.Element, scene: Scene):
 
 
 def _parse_channel_link(initial_parameters_element: ElementTree.Element, filter_: Filter):
+    """
+    Load a connection between two filters.
+    :param initial_parameters_element: The XML element describing the connection.
+    :param filter_: The parent filter (whose input this is) to attach the connection to.
+    """
     cl_key = ""
     cl_value = ""
     for key, value in initial_parameters_element.attrib.items():
@@ -374,6 +421,11 @@ def _parse_channel_link(initial_parameters_element: ElementTree.Element, filter_
 
 
 def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, filter_: Filter):
+    """
+    Load the parameters of a filter.
+    :param initial_parameters_element: The XML definition to load the parameters from
+    :param filter_: The filter whose parameters these are.
+    """
     ip_key = ""
     ip_value = ""
     for key, value in initial_parameters_element.attrib.items():
@@ -390,6 +442,12 @@ def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, f
 
 
 def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter, fc: dict[str, str]):
+    """
+    Load the configuration of a filter.
+    :param filter_configuration_element: The XML data to load the configuration from
+    :param filter_: The filter which the configuration belongs to
+    :param fc: The existing configuration to append to
+    """
     fc_key = ""
     fc_value = ""
     for key, value in filter_configuration_element.attrib.items():
@@ -405,11 +463,12 @@ def _parse_filter_configuration(filter_configuration_element: ElementTree.Elemen
     fc[fc_key] = fc_value
 
 
-def _parse_device(device_element: ElementTree.Element, board_configuration: BoardConfiguration):
-    """TODO Implement"""
-
-
 def _parse_universe(universe_element: ElementTree.Element, board_configuration: BoardConfiguration):
+    """
+    Load a universe description from XML data.
+    :param universe_element: The XML data to use.
+    :param board_configuration: The show to register the universe with.
+    """
     universe_id = None
     name = ""
     description = ""
@@ -429,8 +488,8 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
         logger.error("Could not parse universe element, id attribute is missing")
 
     physical: int | None = None
-    artnet: Proto.Universe.ArtNet | None = None
-    ftdi: Proto.Universe.ArtNet | None = None
+    artnet: proto.UniverseControl_pb2.Universe.ArtNet | None = None
+    ftdi: proto.UniverseControl_pb2.Universe.ArtNet | None = None
     patching = None
 
     for child in universe_element:
@@ -451,10 +510,10 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     if physical is None and artnet is None and ftdi is None:
         logger.warning("Could not parse any location for universe %s", universe_id)
 
-    universe_proto = Proto.Universe(id=universe_id,
-                                    physical_location=physical,
-                                    remote_location=artnet,
-                                    ftdi_dongle=ftdi)
+    universe_proto = proto.UniverseControl_pb2.Universe(id=universe_id,
+                                                        physical_location=physical,
+                                                        remote_location=artnet,
+                                                        ftdi_dongle=ftdi)
     patching_universe = PatchingUniverse(universe_proto)
     universe = Universe(patching_universe)
     universe.name = name
@@ -474,10 +533,20 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
 
 
 def _parse_physical_location(location_element: ElementTree.Element) -> int:
+    """
+    Parse a universe definition for one attached directly to the IO mainboard.
+    :param location_element: The XML data to load from
+    :returns: The location
+    """
     return int(location_element.text)
 
 
-def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Universe.ArtNet:
+def _parse_artnet_location(location_element: ElementTree.Element) -> proto.UniverseControl_pb2.Universe.ArtNet:
+    """
+    Parse a universe definition of an ArtNet stage box.
+    :param location_element: The XML data to load from
+    :returns: An ArtNet universe location
+    """
     device_universe_id = 0
     ip_address = ""
     udp_port = 0
@@ -492,10 +561,16 @@ def _parse_artnet_location(location_element: ElementTree.Element) -> Proto.Unive
             case _:
                 logger.warning("Found attribute %s=%s while parsing artnet location", key, value)
 
-    return Proto.Universe.ArtNet(ip_address=ip_address, port=udp_port, universe_on_device=device_universe_id)
+    return proto.UniverseControl_pb2.Universe.ArtNet(ip_address=ip_address, port=udp_port,
+                                                     universe_on_device=device_universe_id)
 
 
-def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Universe.USBConfig:
+def _parse_ftdi_location(location_element: ElementTree.Element) -> proto.UniverseControl_pb2.Universe.USBConfig:
+    """
+    Load a universe location definition of an USB DMX adapter.
+    :param location_element: The XML data to load from
+    :returns: THe loaded connection details
+    """
     product_id = 0
     vendor_id = 0
     device_name = ""
@@ -513,13 +588,19 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> Proto.Univers
             case _:
                 logger.warning("Found attribute %s=%s while parsing ftdi location", key, value)
 
-    return Proto.Universe.USBConfig(product_id=product_id,
-                                    vendor_id=vendor_id,
-                                    device_name=device_name,
-                                    serial=serial_identifier)
+    return proto.UniverseControl_pb2.Universe.USBConfig(product_id=product_id,
+                                                        vendor_id=vendor_id,
+                                                        device_name=device_name,
+                                                        serial=serial_identifier)
 
 
 def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> list[tuple[int, UsedFixture]]:
+    """
+    Load patching information from XML data.
+    :param location_element: The XML data to load from
+    :param universe_id: The id of the universe which this fixture belongs to.
+    :returns: The loaded fixtures
+    """
     fixtures_path = '/var/cache/missionDMX/fixtures'
     used_fixtures: list[tuple[int, UsedFixture]] = []
     for child in location_element:
@@ -527,11 +608,16 @@ def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> 
                                          int(child.attrib['mode']), universe_id)
 
         used_fixtures.append((int(child.attrib['start']), used_fixture))
-
+    # TODO load fixture name from file
     return used_fixtures
 
 
 def _parse_ui_hint(ui_hint_element: ElementTree.Element, board_configuration: BoardConfiguration):
+    """
+    Load general configuration data.
+    :param ui_hint_element: The XML representation to load from
+    :param board_configuration: THe show file to apply the settings on.
+    """
     ui_hint_key = ""
     ui_hint_value = ""
     for key, value in ui_hint_element.attrib.items():

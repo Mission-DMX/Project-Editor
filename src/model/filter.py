@@ -1,8 +1,9 @@
 # coding=utf-8
+# pylint: disable=implicit-flag-alias
 """Filter module"""
 import abc
+from enum import IntFlag, auto
 from typing import TYPE_CHECKING
-from enum import IntFlag, auto, Enum
 
 if TYPE_CHECKING:
     from . import Scene
@@ -20,14 +21,17 @@ class DataType(IntFlag):
         """This method returns the data type representation commonly used by the fish filters for configuration."""
         if self.value == DataType.DT_8_BIT.value:
             return "8bit"
-        elif self.value == DataType.DT_16_BIT.value:
+
+        if self.value == DataType.DT_16_BIT.value:
             return "16bit"
-        elif self.value == DataType.DT_DOUBLE.value:
+
+        if self.value == DataType.DT_DOUBLE.value:
             return "float"
-        elif self.value == DataType.DT_COLOR.value:
+
+        if self.value == DataType.DT_COLOR.value:
             return "color"
-        else:
-            return "8bit"  # bools are 8 bit
+
+        return "8bit"  # bools are 8 bit
 
     @staticmethod
     def names() -> list[str]:
@@ -36,6 +40,8 @@ class DataType(IntFlag):
 
     @staticmethod
     def from_filter_str(type_definition_string: str):
+        if isinstance(type_definition_string, DataType):
+            return type_definition_string
         match type_definition_string:
             case "8bit":
                 return DataType.DT_8_BIT
@@ -55,6 +61,9 @@ class DataType(IntFlag):
 
 
 class FilterTypeEnumeration(IntFlag):
+    VFILTER_COLOR_MIXER = -11
+    VFILTER_IMPORT = -10
+    VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN = -9
     VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE = -8
     VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE = -7
     VFILTER_COMBINED_FILTER_PRESET = -6
@@ -122,6 +131,16 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE = 56
     FILTER_ADAPTER_DUAL_BYTE_TO_16BIT = 57
     FILTER_ADAPTER_8BIT_TO_16BIT = 58
+    FILTER_COLOR_MIXER_HSV = 59
+    FILTER_COLOR_MIXER_ADDITIVE_RGB = 60
+    FILTER_COLOR_MIXER_NORMATVE_RGB = 61
+    FILTER_SUM_8BIT = 62
+    FILTER_SUM_16BIT = 63
+    FILTER_SUM_FLOAT = 64
+    FILTER_REMOTE_DEBUG_8BIT = 65
+    FILTER_REMOTE_DEBUG_16BIT = 66
+    FILTER_REMOTE_DEBUG_FLOAT = 67
+    FILTER_REMOTE_DEBUG_PIXEL = 68
 
 
 class Filter:
@@ -138,17 +157,22 @@ class Filter:
         self._filter_type = int(filter_type)
         self._pos: tuple[float, float] | None = pos
         self._channel_links: dict[str, str] = {}
-        self._initial_parameters: dict[str, str] = initial_parameters or dict()
-        self._filter_configurations: dict[str, str] = filter_configurations or dict()
+        self._initial_parameters: dict[str, str] = initial_parameters or {}
+        self._filter_configurations: dict[str, str] = filter_configurations or {}
         self._gui_update_keys: dict[str, DataType | list[str]] = {}
         self._in_data_types: dict[str, DataType] = {}
         self._default_values: dict[str, str] = {}
         self._out_data_types: dict[str, DataType] = {}
+        self._configuration_supported: bool = True
 
     @property
     def scene(self) -> "Scene":
         """The scene the filter belongs to"""
         return self._scene
+
+    @property
+    def configuration_supported(self) -> bool:
+        return self._configuration_supported
 
     @property
     def filter_id(self) -> str:
@@ -236,7 +260,7 @@ class Filter:
         return f
 
     def __str__(self):
-        return "Filter '{}' from scene '{}'".format(self._filter_id, self.scene)
+        return f"Filter '{self._filter_id}' from scene '{self.scene}'"
 
 
 class VirtualFilter(Filter, abc.ABC):
@@ -246,6 +270,7 @@ class VirtualFilter(Filter, abc.ABC):
     instantiate_filters method will be called in order to provide a representation that fish can understand in the event
     that the show will be serialized for fish.
     """
+
     def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, filter_type, pos)
 

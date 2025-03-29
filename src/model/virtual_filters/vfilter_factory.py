@@ -7,19 +7,23 @@ show file.
 
 from typing import TYPE_CHECKING
 
+from model.filter import FilterTypeEnumeration
+from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
+from model.virtual_filters.color_mixer_vfilter import ColorMixerVFilter
+from model.virtual_filters.cue_vfilter import CueFilter
+from model.virtual_filters.effects_stacks.vfilter import EffectsStack
+from model.virtual_filters.import_vfilter import ImportVFilter
+from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
+from model.virtual_filters.range_adapters import (ColorGlobalBrightnessMixinVFilter, EightBitToFloatRange,
+                                                  SixteenBitToFloatRange)
+
 if TYPE_CHECKING:
     from model import Scene
     from model.filter import VirtualFilter
 
-from model.filter import FilterTypeEnumeration
-from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
-from model.virtual_filters.effects_stacks.vfilter import EffectsStack
-from model.virtual_filters.range_adapters import SixteenBitToFloatRange, EightBitToFloatRange
-from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
-from model.virtual_filters.cue_vfilter import CueFilter
 
-
-def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_id: str, pos: tuple[int] | None = None) -> "VirtualFilter":
+def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_id: str,
+                                      pos: tuple[int, int] | tuple[float, float] | None = None) -> "VirtualFilter":
     """
     This method constructs instances of v-filter based on the provided model for the restoring of show files.
 
@@ -40,7 +44,6 @@ def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_i
 
         case FilterTypeEnumeration.VFILTER_CUES:
             return CueFilter(scene, filter_id, pos=pos)
-            pass
         case FilterTypeEnumeration.VFILTER_EFFECTSSTACK:
             # TODO implement effects stack virtual filter (as described in issue #87)
             return EffectsStack(scene, filter_id, pos=pos)
@@ -55,6 +58,12 @@ def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_i
             return SixteenBitToFloatRange(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE:
             return EightBitToFloatRange(scene, filter_id, pos=pos)
+        case FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN:
+            return ColorGlobalBrightnessMixinVFilter(scene, filter_id, pos=pos)
+        case FilterTypeEnumeration.VFILTER_IMPORT:
+            return ImportVFilter(scene, filter_id, pos=pos)
+        case FilterTypeEnumeration.VFILTER_COLOR_MIXER:
+            return ColorMixerVFilter(scene, filter_id, pos=pos)
         case _:
-            raise ValueError("The requested filter type {} is not yet implemented.".format(filter_type))
+            raise ValueError(f"The requested filter type {filter_type} is not yet implemented.")
     pass

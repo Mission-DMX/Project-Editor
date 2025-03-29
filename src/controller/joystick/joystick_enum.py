@@ -5,11 +5,10 @@ from enum import Enum
 from PySide6.QtCore import QEnum
 
 
-@QEnum
 class JoystickList(Enum):
     """Joysticks available"""
-    NoJoystick = 1
-    EveryJoystick = 2
-    Gamepad_Left = 3
-    Gamepad_Right = 4
-    Joystick = 5
+    NO_JOYSTICK = 1
+    EVERY_JOYSTICK = 2
+    GAMEPAD_LEFT = 3
+    GAMEPAD_RIGHT = 4
+    JOYSTICK = 5

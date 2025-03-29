@@ -1,6 +1,6 @@
 # coding=utf-8
 """Scene widget for scene player"""
-from PySide6.QtWidgets import QWidget, QPushButton
+from PySide6.QtWidgets import QPushButton, QWidget
 
 from model import Scene
 
@@ -21,7 +21,7 @@ class SceneSwitchButton(QPushButton):
 
     def _clicked(self):
         """Handles behaviour when scene button was clicked"""
-        #transmit_to_fish(self._scene.board_configuration)
+        # transmit_to_fish(self._scene.board_configuration)
         self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene)
 
     @property

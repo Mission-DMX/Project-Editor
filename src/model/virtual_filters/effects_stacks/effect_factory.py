@@ -2,12 +2,13 @@
 
 """This file contains an effect factory for obtaining effects in the context of restoring a show file state."""
 
+from typing import TYPE_CHECKING
+
 from model.virtual_filters.effects_stacks.effect import Effect
 from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
 from model.virtual_filters.effects_stacks.effects.fader_input_effects import ColorInputEffect
 from model.virtual_filters.effects_stacks.effects.generic_effects import FunctionEffect
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
@@ -33,9 +34,8 @@ def effect_from_deserialization(effect_description: dict[str, str], f: "EffectsS
             e = ColorWheelEffect()
         # TODO implement __copysymbol__
         case _:
-            raise ValueError("The effect type '{}' cannot be instantiated. Have you forgotten to implement it?".format(
-                effect_type
-            ))
+            raise ValueError(
+                f"The effect type '{effect_type}' cannot be instantiated. Have you forgotten to implement it?")
     e.set_parent_filter(f)
     e.deserialize(effect_description)
     return e

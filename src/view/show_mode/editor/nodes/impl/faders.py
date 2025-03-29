@@ -1,9 +1,8 @@
 # coding=utf-8
 """Column fader filter nodes"""
 from model import DataType
-from model.control_desk import BankSet, BanksetIDUpdateListener
+from model.control_desk import BankSet
 from model.filter import FilterTypeEnumeration
-
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -38,7 +37,8 @@ class FaderRawNode(FilterNode):
                     self._bankset_model = bs
                     break
             if not self._bankset_model:
-                column_candidate = self.filter.scene.linked_bankset.get_column(self.filter.filter_configurations.get("column_id"))
+                column_candidate = self.filter.scene.linked_bankset.get_column(
+                    self.filter.filter_configurations.get("column_id"))
                 if column_candidate:
                     self.filter.filter_configurations["set_id"] = self.filter.scene.linked_bankset.id
                     self._bankset_model = self.filter.scene.linked_bankset
@@ -74,7 +74,8 @@ class FaderHSINode(FilterNode):
         except:
             self.filter.filter_configurations["column_id"] = ""
         try:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations["ignore_main_brightness_control"]
+            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
+                "ignore_main_brightness_control"]
         except:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
@@ -99,7 +100,8 @@ class FaderHSIANode(FilterNode):
         except:
             self.filter.filter_configurations["column_id"] = ""
         try:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations["ignore_main_brightness_control"]
+            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
+                "ignore_main_brightness_control"]
         except:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
@@ -125,7 +127,8 @@ class FaderHSIUNode(FilterNode):
         except:
             self.filter.filter_configurations["column_id"] = ""
         try:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations["ignore_main_brightness_control"]
+            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
+                "ignore_main_brightness_control"]
         except:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
@@ -152,7 +155,8 @@ class FaderHSIAUNode(FilterNode):
         except:
             self.filter.filter_configurations["column_id"] = ""
         try:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations["ignore_main_brightness_control"]
+            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
+                "ignore_main_brightness_control"]
         except:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
@@ -170,3 +174,4 @@ class FaderMainBrightness(FilterNode):
                          terminals={'brightness': {'io': 'out'}})
 
         self.filter.out_data_types["brightness"] = DataType.DT_16_BIT
+        self.filter._configuration_supported = False

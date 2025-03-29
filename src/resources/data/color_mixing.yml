@@ -1,0 +1,193 @@
+---
+hsv:
+- inputs:
+  - r: 127
+    g: 127
+    b: 0
+  - r: 215
+    g: 0
+    b: 39
+  output:
+    r: 179
+    g: 75
+    b: 0
+- inputs:
+  - r: 127
+    g: 127
+    b: 0
+  - r: 0
+    g: 0
+    b: 255
+  output:
+    r: 0
+    g: 170
+    b: 85
+- inputs:
+  - r: 42
+    g: 42
+    b: 170
+  - r: 85
+    g: 85
+    b: 85
+  output:
+    r: 95
+    g: 63
+    b: 95
+- inputs:
+  - r: 255
+    g: 0
+    b: 0
+  - r: 0
+    g: 255
+    b: 0
+  - r: 0
+    g: 0
+    b: 255
+  output:
+    r: 0
+    g: 170
+    b: 85
+hsv_red_sat:
+- inputs:
+  - r: 127
+    g: 127
+    b: 0
+  - r: 215
+    g: 0
+    b: 39
+  output:
+    r: 169
+    g: 76
+    b: 8
+- inputs:
+  - r: 127
+    g: 127
+    b: 0
+  - r: 0
+    g: 0
+    b: 255
+  output:
+    r: 0
+    g: 170
+    b: 85
+- inputs:
+  - r: 42
+    g: 42
+    b: 170
+  - r: 85
+    g: 85
+    b: 85
+  output:
+    r: 95
+    g: 63
+    b: 95
+- inputs:
+  - r: 255
+    g: 0
+    b: 0
+  - r: 0
+    g: 255
+    b: 0
+  - r: 0
+    g: 0
+    b: 255
+  output:
+    r: 0
+    g: 170
+    b: 85
+additive_rgb:
+- inputs:
+  - r: 127
+    g: 127
+    b: 0
+  - r: 215
+    g: 0
+    b: 39
+  output:
+    r: 255
+    g: 127
+    b: 39
+- inputs:
+  - r: 127
+    g: 127
+    b: 0
+  - r: 0
+    g: 0
+    b: 255
+  output:
+    r: 127
+    g: 127
+    b: 255
+- inputs:
+  - r: 42
+    g: 42
+    b: 170
+  - r: 85
+    g: 85
+    b: 85
+  output:
+    r: 127
+    g: 127
+    b: 255
+- inputs:
+  - r: 255
+    g: 0
+    b: 0
+  - r: 0
+    g: 255
+    b: 0
+  - r: 0
+    g: 0
+    b: 255
+  output:
+    r: 255
+    g: 255
+    b: 255
+normative_rgb:
+- inputs:
+  - r: 127
+    g: 127
+    b: 0
+  - r: 215
+    g: 0
+    b: 39
+  output:
+    r: 0
+    g: 0
+    b: 0
+- inputs:
+  - r: 127
+    g: 127
+    b: 0
+  - r: 0
+    g: 0
+    b: 255
+  output:
+    r: 0
+    g: 0
+    b: 0
+- inputs:
+  - r: 42
+    g: 42
+    b: 170
+  - r: 85
+    g: 85
+    b: 85
+  output:
+    r: 104
+    g: 104
+    b: 208
+- inputs:
+  - r: 255
+    g: 0
+    b: 0
+  - r: 0
+    g: 255
+    b: 0
+  - r: 0
+    g: 0
+    b: 255
+  output:
+    r: 0
+    g: 0
+    b: 0

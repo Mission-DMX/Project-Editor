@@ -2,7 +2,6 @@
 """Filter nodes related to time"""
 from model import DataType
 from model.filter import FilterTypeEnumeration
-
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -16,6 +15,7 @@ class TimeNode(FilterNode):
         })
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.channel_hints["value"] = " [ms]"
+        self.filter._configuration_supported = False
 
 
 class TimeSwitchOnDelay8BitNode(FilterNode):
@@ -23,11 +23,12 @@ class TimeSwitchOnDelay8BitNode(FilterNode):
     nodeName = 'Switch on delay - 8 bit'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_8BIT, name=name, terminals={
-            'value_in': {'io': 'in'},
-            'time': {'io': 'in'},
-            'value': {'io': 'out'}
-        })
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_8BIT, name=name,
+                         terminals={
+                             'value_in': {'io': 'in'},
+                             'time': {'io': 'in'},
+                             'value': {'io': 'out'}
+                         })
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
         except:
@@ -43,11 +44,12 @@ class TimeSwitchOnDelay16BitNode(FilterNode):
     nodeName = 'Switch on delay - 16 bit'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_16BIT, name=name, terminals={
-            'value_in': {'io': 'in'},
-            'time': {'io': 'in'},
-            'value': {'io': 'out'}
-        })
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_16BIT, name=name,
+                         terminals={
+                             'value_in': {'io': 'in'},
+                             'time': {'io': 'in'},
+                             'value': {'io': 'out'}
+                         })
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
         except:
@@ -63,11 +65,12 @@ class TimeSwitchOnDelayFloatNode(FilterNode):
     nodeName = 'Switch on delay - float'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_FLOAT, name=name, terminals={
-            'value_in': {'io': 'in'},
-            'time': {'io': 'in'},
-            'value': {'io': 'out'}
-        })
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_FLOAT, name=name,
+                         terminals={
+                             'value_in': {'io': 'in'},
+                             'time': {'io': 'in'},
+                             'value': {'io': 'out'}
+                         })
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
         except:
@@ -83,11 +86,12 @@ class TimeSwitchOffDelay8BitNode(FilterNode):
     nodeName = 'Switch off delay - 8 bit'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_8BIT, name=name, terminals={
-            'value_in': {'io': 'in'},
-            'time': {'io': 'in'},
-            'value': {'io': 'out'}
-        })
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_8BIT, name=name,
+                         terminals={
+                             'value_in': {'io': 'in'},
+                             'time': {'io': 'in'},
+                             'value': {'io': 'out'}
+                         })
 
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
@@ -104,11 +108,12 @@ class TimeSwitchOffDelay16BitNode(FilterNode):
     nodeName = 'Switch off delay - 16 bit'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_16BIT, name=name, terminals={
-            'value_in': {'io': 'in'},
-            'time': {'io': 'in'},
-            'value': {'io': 'out'}
-        })
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_16BIT, name=name,
+                         terminals={
+                             'value_in': {'io': 'in'},
+                             'time': {'io': 'in'},
+                             'value': {'io': 'out'}
+                         })
 
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
@@ -125,11 +130,12 @@ class TimeSwitchOffDelayFloatNode(FilterNode):
     nodeName = 'Switch off delay - float'
 
     def __init__(self, model, name):
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_FLOAT, name=name, terminals={
-            'value_in': {'io': 'in'},
-            'time': {'io': 'in'},
-            'value': {'io': 'out'}
-        })
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_FLOAT, name=name,
+                         terminals={
+                             'value_in': {'io': 'in'},
+                             'time': {'io': 'in'},
+                             'value': {'io': 'out'}
+                         })
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
         except:

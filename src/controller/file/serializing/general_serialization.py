@@ -1,15 +1,18 @@
+# coding=utf-8
 from xml.etree import ElementTree
 
 from controller.file.serializing.scene_serialization import generate_scene_xml_description
 from controller.file.serializing.ui_settings_serialization import _create_ui_hint_element
-from controller.file.serializing.universe_serialization import _create_universe_element, \
-    _create_artnet_location_element, _create_ftdi_location_element, _create_physical_location_element, \
-    _create_patching_element
+from controller.file.serializing.universe_serialization import (_create_artnet_location_element,
+                                                                _create_ftdi_location_element, _create_patching_element,
+                                                                _create_physical_location_element,
+                                                                _create_universe_element)
 from controller.utils.process_notifications import ProcessNotifier
 from model import BoardConfiguration
 
 
-def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier, assemble_for_fish_loading: bool = False) -> ElementTree.Element:
+def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
+               assemble_for_fish_loading: bool = False) -> ElementTree.Element:
     """Creates a xml element from the given board configuration.
 
     Args:

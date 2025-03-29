@@ -1,6 +1,5 @@
 # coding=utf-8
 """GUI and control elements for the software."""
-from view.utility_widgets.color_picker import opengl_context_init
 
 if __name__ == "__main__":
     from PySide6.QtCore import Qt
@@ -13,6 +12,13 @@ if __name__ == "__main__":
     splashscreen.show()
     splashscreen.raise_()
     app.processEvents()
+    app.setApplicationName("mission-dmx-editor")
+    app.setApplicationDisplayName("Mission DMX")
+    app.setOrganizationName("missionDMX")
+    app.setOrganizationDomain("technikradio.org")
+    app.setDesktopSettingsAware(True)
+    from PySide6.QtGui import QIcon
+    app.setWindowIcon(QIcon("resources/app-icon.png"))
 
     version_string = "Error reading version."
     with open("resources/version.txt", "r") as f:
@@ -34,8 +40,9 @@ if __name__ == "__main__":
     from controller.cli.remote_control_port import RemoteCLIServer
     from controller.joystick.joystick_handling import JoystickHandler
     from model.final_globals import FinalGlobals
-    from Style import Style
+    from style import Style
     from view.main_window import MainWindow
+    from view.utility_widgets.color_picker import opengl_context_init
 
     logger = logging.getLogger("Project-Editor")
 

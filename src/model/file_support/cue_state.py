@@ -1,7 +1,8 @@
 # coding=utf-8
 import datetime
 from enum import Enum
-from proto.FilterMode_pb2 import update_parameter
+
+import proto.FilterMode_pb2
 
 
 class State(Enum):
@@ -24,7 +25,8 @@ class CueState():
         ret = ""
         if self._state == State.STOP:
             return "stopped"
-        elif self._state == State.PAUSE:
+
+        if self._state == State.PAUSE:
             ret = ("paused at " +
                    self.time_delta_to_str(self._paused_time))
         if self._state == State.PLAY:
@@ -36,20 +38,19 @@ class CueState():
                )
         return ret
 
-    def update(self, param: update_parameter):
-        if self._filter.filter_id == param.filter_id:
-            values = param.parameter_value.split(";")
-            self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
-            self._end_time = datetime.timedelta(seconds=float(values[3]))
-            self._active_cue = int(values[1])
-            self._time_scale = float(values[4])
-            if values[0] == 'play':
-                self._state = State.PLAY
-            elif values[0] == 'pause':
-                self._paused_time = datetime.timedelta(seconds=float(values[2]))
-                self._state = State.PAUSE
-            elif values[0] == 'stop':
-                self._state = State.STOP
+    def update(self, param: proto.FilterMode_pb2.update_parameter):
+        values = param.parameter_value.split(";")
+        self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
+        self._end_time = datetime.timedelta(seconds=float(values[3]))
+        self._active_cue = int(values[1])
+        self._time_scale = float(values[4])
+        if values[0] == 'play':
+            self._state = State.PLAY
+        elif values[0] == 'pause':
+            self._paused_time = datetime.timedelta(seconds=float(values[2]))
+            self._state = State.PAUSE
+        elif values[0] == 'stop':
+            self._state = State.STOP
 
     def time_delta_to_str(self, delta: datetime.timedelta):
         ret = ""

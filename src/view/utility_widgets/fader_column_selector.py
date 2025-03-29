@@ -5,9 +5,9 @@
 from typing import Type
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QCheckBox, QTreeWidgetItem
+from PySide6.QtWidgets import QCheckBox, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 
-from model.control_desk import DeskColumn, BankSet, RawDeskColumn, ColorDeskColumn
+from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 

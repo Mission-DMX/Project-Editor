@@ -4,10 +4,9 @@
 
 from logging import getLogger
 
+from html2text import html2text
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
-
-from html2text import html2text
 
 logger = getLogger(__file__)
 
@@ -20,11 +19,11 @@ def read_entire_file_as_str(file_path: str) -> str:
     :returns: The content of the loaded file or a hint that something went wrong.
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r',encoding='UTF-8') as f:
             text = f.read()
     except IOError as e:
         text = "Unknown Debug"
-        logger.error("Unable to load file string from {}.".format(file_path), e)
+        logger.error("Unable to load file string from %s. %s", file_path, e)
     return text
 
 
@@ -36,11 +35,12 @@ class AboutWindow(QMessageBox):
     """
     This window displays the credits.
     """
+
     def __init__(self, parent):
         super().__init__(
             QMessageBox.Icon.Information,
             "<b>About</b>",
-            "<i>MissionDMX</i> - Version {}".format(VERSION_STR),
+            f"<i>MissionDMX</i> - Version {VERSION_STR}",
             parent=parent)
         self.setStandardButtons(QMessageBox.StandardButton.Close)
         self.setInformativeText('<br>The Manual for this software can be found by clicking the help button or by '

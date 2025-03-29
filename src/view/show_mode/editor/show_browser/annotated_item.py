@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QTreeWidgetItem, QListWidgetItem
+# coding=utf-8
+from PySide6.QtWidgets import QListWidgetItem, QTreeWidgetItem
 
 
 class AnnotatedTreeWidgetItem(QTreeWidgetItem):

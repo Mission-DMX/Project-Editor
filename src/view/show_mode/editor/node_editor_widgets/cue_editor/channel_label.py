@@ -1,7 +1,6 @@
-import PySide6
+# coding=utf-8
 from PySide6 import QtGui
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPainter, QColor, QPaintEvent
+from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
 from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
@@ -22,13 +21,24 @@ class TimelineChannelLabel(QWidget):
         self._types.append(channel_type)
         self._update()
 
+    def remove_label(self, c_name: str):
+        found_i = -1
+        for i in range(len(self._names)):
+            if self._names[i] == c_name:
+                self._names.pop(i)
+                self._types.pop(i)
+                found_i = i
+                break
+        self._update()
+        return found_i
+
     def clear_labels(self):
         self._names.clear()
         self._types.clear()
         self._update()
 
     def _update(self):
-        required_height = 2*20 + CHANNEL_DISPLAY_HEIGHT * len(self._names) + self.sb_offset
+        required_height = 2 * 20 + CHANNEL_DISPLAY_HEIGHT * len(self._names) + self.sb_offset
         self.setMinimumHeight(required_height)
         self.update()
 

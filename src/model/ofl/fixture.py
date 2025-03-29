@@ -2,9 +2,9 @@
 """Fixture Definitions from OFL """
 import json
 from enum import Enum, IntFlag
-from typing import TypedDict, NotRequired, TYPE_CHECKING
-
 from logging import getLogger
+from typing import TYPE_CHECKING, NotRequired, TypedDict
+
 logger = getLogger(__file__)
 
 if TYPE_CHECKING:
@@ -78,13 +78,30 @@ class ColorSupport(IntFlag):
     HAS_AMBER_SEGMENT = 8
     HAS_UV_SEGMENT = 16
 
+    def __str__(self):
+        if self == ColorSupport.NO_COLOR_SUPPORT:
+            return "No Color Support"
+        s = []
+        if (self & ColorSupport.COLD_AND_WARM_WHITE) > 0:
+            s.append("CW/WW")
+        if (self & ColorSupport.HAS_RGB_SUPPORT) > 0:
+            s.append("RGB")
+        if (self & ColorSupport.HAS_WHITE_SEGMENT) > 0:
+            s.append("W")
+        if (self & ColorSupport.HAS_AMBER_SEGMENT) > 0:
+            s.append("A")
+        if (self & ColorSupport.HAS_UV_SEGMENT) > 0:
+            s.append("U")
+        return "+".join(s)
+
 
 def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
-    f = open(file)
-    ob: json = json.load(f)
+    with open(file, "r", encoding='UTF-8') as f:
+        ob: json = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
-                   categories=ob["categories"] if "categories" in ob else [], modes=ob["modes"] if "modes" in ob else [], fileName=file.split("/fixtures/")[1])
+                   categories=ob["categories"] if "categories" in ob else [],
+                   modes=ob["modes"] if "modes" in ob else [], fileName=file.split("/fixtures/")[1])
 
 
 def try_load(ob: json, name: object) -> str:
@@ -106,7 +123,7 @@ class UsedFixture:
         self.comment: str = comment
         self.mode: Mode = mode
         self.parent_universe: int = parent_universe
-        self.channels: list["PatchingChannel"] = []
+        self._channels: list["PatchingChannel"] = []
         self.fixture_file: str = fixture_file
         self.mode_index: int = mode_index
 
@@ -116,6 +133,11 @@ class UsedFixture:
         self.white_segments: list["PatchingChannel"] = []
         self.amber_segments: list["PatchingChannel"] = []
         self.uv_segments: list["PatchingChannel"] = []
+
+        self.position_channels: list["PatchingChannel"] = []
+        self.pan_channels: list["PatchingChannel"] = []
+        self.tilt_channels: list["PatchingChannel"] = []
+        self.animation_speed_channels: list["PatchingChannel"] = []
 
     def update_segments(self):
         self.red_segments.clear()
@@ -162,6 +184,31 @@ class UsedFixture:
         #  an inheritance of UsedFixture, representing their individual lamps as segments of the group. This way we
         #  would not need to implement special cases everywhere where this information is accessed.
 
+    def find_position_channels(self):
+        self.position_channels.clear()
+        self.pan_channels.clear()
+        self.tilt_channels.clear()
+        self.animation_speed_channels.clear()
+        for f in self.channels:
+            channel_name = f.fixture_channel.lower()
+            if "pan" in channel_name:
+                self.position_channels.append(f)
+                if "speed" in channel_name:
+                    self.animation_speed_channels.append(f)
+                    continue
+
+                self.pan_channels.append(f)
+            if "tilt" in channel_name:
+                self.position_channels.append(f)
+                if "speed" in channel_name:
+                    self.animation_speed_channels.append(f)
+                    continue
+
+                self.tilt_channels.append(f)
+            if "rotation" in channel_name:
+                # This will also catch lense and gobo rotations
+                self.position_channels.append(f)
+
     def copy(self):
         """
         This method clones the used fixture entry, except for the occupied channels
@@ -169,6 +216,11 @@ class UsedFixture:
         return UsedFixture(self.name, self.short_name, self.categories,
                            self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe)
         # we do not need to copy the segment data as it is deduced from the channels data
+
+    @property
+    def channels(self) -> list["PatchingChannel"]:
+        self._channels.sort(key=lambda x: x.address)
+        return self._channels
 
     def color_support(self) -> ColorSupport:
         found_color = ColorSupport.NO_COLOR_SUPPORT
@@ -189,6 +241,15 @@ class UsedFixture:
         if has_white:
             found_color += ColorSupport.HAS_WHITE_SEGMENT
         return found_color
+
+    @property
+    def first_channel(self) -> int:
+        i = 513
+        for c in self.channels:
+            i = min(i, c.address)
+        if i == 513:
+            i = -1
+        return i
 
 
 def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int) -> UsedFixture:

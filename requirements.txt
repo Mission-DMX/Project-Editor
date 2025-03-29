@@ -4,7 +4,7 @@ flake8
 PySide6>=6.8.3
 pyqtgraph>=0.13.6
 protobuf
-xmlschema
+xmlschema>=3.4.5
 pydantic
 pylint
 pylint_protobuf
@@ -12,14 +12,13 @@ requests
 numpy
 ruamel.yaml
 html2text
+setuptools
 # Dependencies for automatic tracking
 opencv-python>=4.8.0
 qimage2ndarray>=1.10
 aiortc>=1.5
 qasync>=0.26
 onnxruntime-gpu>=1.16.1
-onnxruntime-openvino
+#onnxruntime-openvino
 pyjoystick
-# pySDL2
-# pysdl2-dll
-pyopengl
+markdown

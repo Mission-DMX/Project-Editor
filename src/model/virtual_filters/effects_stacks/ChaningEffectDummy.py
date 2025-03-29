@@ -1,7 +1,8 @@
+# coding=utf-8
 from PySide6.QtWidgets import QWidget
 
 from model import Filter
-from model.virtual_filters.effects_stacks.effect import EffectType, Effect
+from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
 class ChainingEffectDummy(Effect):
@@ -9,7 +10,7 @@ class ChainingEffectDummy(Effect):
     """The purpose of this class is to provide an Effect if required during rendering"""
 
     def serialize(self) -> dict:
-        return dict()
+        return {}
 
     def deserialize(self, data: dict[str, str]):
         pass

@@ -1,8 +1,11 @@
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
 from controller.autotrack.LightController import LightController
-from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
+
+if TYPE_CHECKING:
+    from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 
 logger = getLogger(__file__)
 
@@ -20,13 +23,13 @@ class AutoTrackerSettings:
         - `crop`: Get or set the crop settings as a tuple (x1, x2, y1, y2).
     """
 
-    def __init__(self, f: AutoTrackerFilter):
+    def __init__(self, f: "AutoTrackerFilter"):
         """
         Initialize the `Settings` class with default values.
         """
         self._crop: tuple[int, int, int, int] = (0, 0, 0, 0)
         self._lights: LightController = f.light_controller
-        self._filter: AutoTrackerFilter = f
+        self._filter: "AutoTrackerFilter" = f
         self.settings = {
             "confidence_threshold": "0.25",
             "Setting2": "",
