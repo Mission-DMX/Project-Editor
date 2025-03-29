@@ -1,11 +1,14 @@
 # coding=utf-8
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 from pyqtgraph.flowchart.Node import NodeGraphicsItem
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter
 
 from model import DataType
+
+if TYPE_CHECKING:
+    from view.show_mode.editor.nodes import FilterNode
 
 
 class FilterNodeGraphicsItem(NodeGraphicsItem):
@@ -14,12 +17,11 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
     _node_type_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 128))
     _data_type_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
 
-    def __init__(self, node):
+    def __init__(self, node: "FilterNode"):
         super().__init__(node)
         self.setTitleOffset(self.titleOffset() + 10)
         self.setTerminalOffset(self.terminalOffset() + 7)
-        from view.show_mode.editor.nodes.type_to_node_dict import type_to_node
-        self._node_type_string = type_to_node[self.node.filter.filter_type]
+        self._node_type_string = self.node.nodeName
         self.additional_rendering_method: Callable[[QPainter], None] | None = None
 
     def paint(self, p: QPainter, *args):
