@@ -1,5 +1,5 @@
 # coding=utf-8
-from typing import Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from pyqtgraph.flowchart.Node import NodeGraphicsItem
 from PySide6 import QtGui
