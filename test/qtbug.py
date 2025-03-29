@@ -1,18 +1,14 @@
 import os
 
+import numpy as np
+from OpenGL import GL
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
-from PySide6.QtOpenGL import QOpenGLShader, QOpenGLShaderProgram, QOpenGLBuffer
-from PySide6.QtWidgets import QVBoxLayout
-
-from Style import Style
-
-from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from PySide6.QtGui import QOpenGLFunctions, QSurfaceFormat
-
-from OpenGL import GL
-import numpy as np
-
+from PySide6.QtOpenGL import QOpenGLBuffer, QOpenGLShader, QOpenGLShaderProgram
+from PySide6.QtOpenGLWidgets import QOpenGLWidget
+from PySide6.QtWidgets import QVBoxLayout
+from Style import Style
 
 FRAG_SHADER = QOpenGLShader(QOpenGLShader.Fragment)
 FRAG_SHADER.compileSourceCode("""
