@@ -51,3 +51,8 @@ load-plugins = "pylint_protobuf"
 
 [tool.pylint.FORMAT]
 max-line-length = 120
+
+[tool.pylint]
+ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/']
+generated-members = ['proto/']
+source-roots = ["src"]

@@ -3,26 +3,27 @@
 import platform
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QIcon, QPixmap, QKeySequence
+from PySide6.QtGui import QIcon, QKeySequence
 from PySide6.QtWidgets import QProgressBar
 
-from controller.file.showfile_dialogs import  _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
+import proto.RealTimeControl_pb2
+from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
+from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
-from controller.network import NetworkManager
-from proto.RealTimeControl_pb2 import RunMode
-from Style import Style
+from style import Style
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
-from view.logging_mode.dmx_data_log import DmxDataLogWidget
-from view.logging_mode.logging_widget import LoggingWidget
+from view.logging_view.dmx_data_log import DmxDataLogWidget
+from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.settings.settings_dialog import SettingsDialog
-from view.patch_mode.patch_mode import PatchMode
+from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
+from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -108,6 +109,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_console_mode.emit()
         self._about_window = None
         self._settings_dialog = None
+        self._theatre_scene_setup_wizard = None
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -134,10 +136,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Disconnect", self._fish_connector.disconnect, None),
                 ("Change", self._change_server_name, None),
                 ("---", None, None),
-                ("&Filter Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_FILTER), None),
-                ("&Direct Mode", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_DIRECT), None),
+                ("&Filter Mode",
+                 lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_FILTER), None),
+                ("&Direct Mode",
+                 lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_DIRECT), None),
                 ("---", None, None),
-                ("Stop", lambda: self._broadcaster.change_run_mode.emit(RunMode.RM_STOP), None),
+                ("Stop", lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_STOP),
+                 None),
             ],
             "File": [
                 ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
@@ -151,7 +156,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Redo", None, "Shift+Z")
             ],
             "Show": [
-                ("Scene Wizard", None, None)  # TODO link wizard that creates a theater scene based on patched fixtures
+                ("Scene Wizard", self._open_scene_setup_wizard, None)
+                # TODO link wizard that creates a theater scene based on patched fixtures
             ],
             "Help": [
                 ("&About", self._open_about_window, None)
@@ -163,10 +169,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.menuBar().addAction(menu.menuAction())
 
     def _start_connection(self):  # TODO rework to signals
-        self._fish_connector.start()
-        from model.control_desk import commit_all_bank_sets
-
-        commit_all_bank_sets()
+        self._fish_connector.start(True)
 
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
         """add entries to a menu"""
@@ -237,7 +240,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._status_pbar.setValue(int((c / m) * 100))
 
     def _fish_run_mode_changed(self, new_run_mode: int):
-        if new_run_mode == RunMode.RM_FILTER:
+        if new_run_mode == proto.RealTimeControl_pb2.RunMode.RM_FILTER:
             self._status_current_scene_label.setVisible(True)
             self._status_runmode.setPixmap(MainWindow.STATUS_ICON_FILTER_MODE.pixmap(16, 16))
         else:
@@ -303,9 +306,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._about_window.show()
 
     @property
-    def show_configuration(self):
+    def show_configuration(self) -> BoardConfiguration:
         return self._board_configuration
 
     def open_show_settings(self):
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
+
+    def _open_scene_setup_wizard(self):
+        self._theatre_scene_setup_wizard = TheaterSceneWizard(self, self.show_configuration)
+        self._theatre_scene_setup_wizard.show()

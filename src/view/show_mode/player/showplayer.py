@@ -1,8 +1,9 @@
 # coding=utf-8
 """Show player to remote control fish show mode"""
-from PySide6.QtWidgets import QWidget, QGridLayout
+from PySide6.QtWidgets import QWidget
 
 from model import BoardConfiguration, Scene
+
 from .sceneswitchbutton import SceneSwitchButton
 from .ui_player_widget import UIPlayerWidget
 
@@ -78,14 +79,13 @@ class ShowPlayerWidget(QWidget):
             column, row = self._index_to_position(index)
             height = row * scene_widget.height + 5
             last_height = scene_widget.height
-            if height > max_height:
-                max_height = height
+            max_height = max(max_height, height)
             last_width = column * scene_widget.width + 5
             scene_widget.move(last_width, height)
             last_width += scene_widget.width
             index += 1
         max_height += last_height
-        #self._ui_container.move(0, max_height + 5)
+        # self._ui_container.move(0, max_height + 5)
         self._ui_container.move(last_width + 5, 5)
         uipage_container_width = self.width() - 10 - last_width
         uipage_container_height = self.height() - 10 - max_height

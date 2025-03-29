@@ -4,22 +4,22 @@
 This file provides the column input filter settings widget.
 """
 
-from PySide6.QtWidgets import QWidget, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QCheckBox
+from PySide6.QtWidgets import QWidget
 
 from model import Filter
-from model.control_desk import BankSet, RawDeskColumn, ColorDeskColumn
 from view.utility_widgets.fader_column_selector import FaderColumnSelectorWidget
+
 from .node_editor_widget import NodeEditorFilterConfigWidget
-from ..show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 
 class ColumnSelect(NodeEditorFilterConfigWidget):
     """This class is an adapter to configure the column select filter with the column selection widget."""
+
     def _load_parameters(self, parameters: dict[str, str]):
-        return dict()
+        return {}
 
     def _get_parameters(self) -> dict[str, str]:
-        return dict()
+        return {}
 
     def get_widget(self) -> QWidget:
         return self._widget
@@ -39,7 +39,7 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
 
     def _get_configuration(self) -> dict[str, str]:
         if not self._widget.selected_item:
-            return dict()
+            return {}
         column = self._widget.selected_item.annotated_data
         data = {
             "column_id": column.id,

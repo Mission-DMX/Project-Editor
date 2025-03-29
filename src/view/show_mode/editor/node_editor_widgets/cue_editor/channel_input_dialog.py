@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QDialog, QFormLayout, QPushButton, QWidget, QComboBox, QLineEdit
+# coding=utf-8
+from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLineEdit, QPushButton, QWidget
 
 from model import DataType
 

@@ -4,9 +4,9 @@ from abc import ABC, abstractmethod
 from uuid import uuid4
 
 import proto.Console_pb2
-from model.color_hsi import ColorHSI
-from model.broadcaster import Broadcaster
 from controller.network import NetworkManager
+from model.broadcaster import Broadcaster
+from model.color_hsi import ColorHSI
 
 
 def _generate_unique_id() -> str:
@@ -59,7 +59,6 @@ class DeskColumn(ABC):
         Returns:
         The corresponding protobuf message
         """
-        pass
 
     @abstractmethod
     def update_from_message(self, message: proto.Console_pb2.fader_column):
@@ -191,10 +190,8 @@ class RawDeskColumn(DeskColumn):
         if self._fader_position == position:
             return
         self._fader_position = position
-        if self._fader_position < 0:
-            self._fader_position = 0
-        if self._fader_position > 65535:
-            self._fader_position = 65535
+        self._fader_position = max(self._fader_position, 0)
+        self._fader_position = min(self._fader_position, 65535)
         self.update()
 
     @property
@@ -393,9 +390,9 @@ class BankSet:
         bank_set_size = len(self.banks)
         if bank_set_size < 1:
             return False
-        if self.active_bank > bank_set_size - 1:
-            self.active_bank = bank_set_size - 1
+        self.active_bank = min(self.active_bank, bank_set_size - 1)
         old_set_id: str = self.id
+
         if self.is_linked:
             # new_id = _generate_unique_id()
             new_id = old_set_id
@@ -517,8 +514,8 @@ class BankSet:
             if linked_bank.id == self.id:
                 found_index = i
                 break
-            else:
-                i += 1
+
+            i += 1
         if found_index != -1:
             BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
             BankSet._linked_bank_sets.pop(found_index)
@@ -563,8 +560,8 @@ class BankSet:
             for c in b.columns:
                 if i == index:
                     return c
-                else:
-                    i += 1
+
+                i += 1
 
     @staticmethod
     def handle_column_update_message(message: proto.Console_pb2.fader_column):

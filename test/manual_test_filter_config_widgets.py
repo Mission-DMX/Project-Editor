@@ -1,14 +1,19 @@
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout
 
-from Style import Style
 from model.control_desk import *
-from controller.network import NetworkManager
+from style import Style
 from view.show_mode.node_editor_widgets import ColumnSelect
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     app.setStyleSheet(Style.APP)
+    app.setApplicationName("mission-dmx-editor")
+    app.setApplicationDisplayName("Mission DMX")
+    app.setOrganizationName("missionDMX")
+    app.setOrganizationDomain("technikradio.org")
+    app.setDesktopSettingsAware(True)
+    # app.setWindowIcon(QIcon("resources/app-icon.png"))
     window = QMainWindow()
     set_network_manager(NetworkManager(broadcaster=Broadcaster(), parent=window))
     for bs_desc in ["Test Set 1", "Test Set 2"]:

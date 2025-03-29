@@ -4,12 +4,12 @@
 Usage: The key indicates the category of the effect and the list all containing effects."""
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon, QPaintEvent, QPainter, QBrush, QColor
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSpacerItem, QSizePolicy, \
-    QScrollArea, QLineEdit, QCompleter
+from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPaintEvent
+from PySide6.QtWidgets import (QCompleter, QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
+                               QSpacerItem, QVBoxLayout, QWidget)
 
-from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
 from model.virtual_filters.effects_stacks.effect import Effect
+from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
 from model.virtual_filters.effects_stacks.effects.fader_input_effects import ColorInputEffect
 from model.virtual_filters.effects_stacks.effects.generic_effects import FunctionEffect
 
@@ -20,6 +20,8 @@ EFFECT_LIST = {
 }
 
 PRESET_LIST: list[tuple[str, str]] = []
+
+
 # TODO implement a way to load user defined presets. A preset is a tuple of a name and a string that reassembles the
 #  filter configuration to be loaded. It will call the effect factory in case of instantiation and loads that one inside
 #  the slot instead of a fresh filter object. The json file containing the presets should first be loaded from the
@@ -29,6 +31,7 @@ PRESET_LIST: list[tuple[str, str]] = []
 
 class _EffectSeparator(QWidget):
     """This widget provides a separator between effect categories."""
+
     def __init__(self, parent: QWidget, text: str):
         super().__init__(parent=parent)
         self._children: list[QWidget] = []

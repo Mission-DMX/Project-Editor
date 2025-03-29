@@ -14,7 +14,7 @@ class ExceptionsDialog(QDialog):
         error_msg = QLabel(str(exception), self)
         layout.addRow("Error", error_msg)
         self.setLayout(layout)
-    
+
     def open(self):
         """Opens dialog and automatically keeps it open"""
         self._open_dialogs.append(self)

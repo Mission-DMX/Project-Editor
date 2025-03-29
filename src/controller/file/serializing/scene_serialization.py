@@ -1,16 +1,22 @@
+# coding=utf-8
 from xml.etree import ElementTree
 
 from controller.file.serializing.bankset_config_serialization import _create_scene_bankset
-from controller.file.serializing.filter_serialization import _create_filter_element_for_fish, \
-    create_channel_mappings_for_filter_set_for_fish
+from controller.file.serializing.filter_serialization import (_create_filter_element_for_fish,
+                                                              create_channel_mappings_for_filter_set_for_fish)
 from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 from controller.utils.process_notifications import ProcessNotifier
-
-from model import UIPage, Scene, Filter
+from model import Scene, UIPage
 from model.scene import FilterPage
 
 
 def _add_filter_page_to_element(scene_element: ElementTree.Element, page: FilterPage, parent_page: FilterPage | None):
+    """
+    This function writes the filter pages of a scene or parent page.
+    :param scene_element: The XML element to write to
+    :param page: The filter page to serialize
+    :param parent_page: This needs to be the parent page of the one to serialize (if any, otherwise pass None)
+    """
     item = ElementTree.SubElement(scene_element, "filterpage", attrib={
         'name': page.name,
         'parent': parent_page.name if parent_page else ''
@@ -23,17 +29,23 @@ def _add_filter_page_to_element(scene_element: ElementTree.Element, page: Filter
 
 
 def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage):
+    """
+    Add a UI page (the widgets one) to an existing scene element.
+    :param scene_element: The parent scene XML element
+    :param ui_page: The UI page to add
+    """
     page_element = ElementTree.SubElement(scene_element, "uipage", attrib={
         'title': ""
     })
+    from view.show_mode.show_ui_widgets import get_widget_key
     for widget in ui_page.widgets:
         widget_element = ElementTree.SubElement(page_element, "widget", attrib={
             'posX': str(widget.position[0]),
             'posY': str(widget.position[1]),
             'sizeW': str(widget.size[0]),
             'sizeH': str(widget.size[1]),
-            'filterID': str(widget.filter_id),
-            'variante': str(widget.get_variante())
+            'filterID': ":".join(widget.filter_ids),
+            'variante': str(get_widget_key(widget) or "")
         })
         for k, v in widget.configuration.items():
             config_element = ElementTree.SubElement(widget_element, "configurationEntry", attrib={
@@ -56,7 +68,8 @@ def generate_scene_xml_description(assemble_for_fish_loading, root, scene, pn: P
     pn.total_step_count += len(scene.filters)
     om = SceneOptimizerModule(assemble_for_fish_loading)
     for filter_ in scene.filters:
-        _create_filter_element_for_fish(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading, om=om)
+        _create_filter_element_for_fish(filter_=filter_, parent=scene_element, for_fish=assemble_for_fish_loading,
+                                        om=om)
         pn.current_step_number += 1
     create_channel_mappings_for_filter_set_for_fish(assemble_for_fish_loading, om, scene_element)
     if not assemble_for_fish_loading:
@@ -74,7 +87,7 @@ def _create_scene_element(scene: Scene, parent: ElementTree.Element) -> ElementT
       ...
     </scene>
     """
-    se =  ElementTree.SubElement(parent, "scene", attrib={
+    se = ElementTree.SubElement(parent, "scene", attrib={
         "id": str(scene.scene_id),
         "human_readable_name": str(scene.human_readable_name)
     })

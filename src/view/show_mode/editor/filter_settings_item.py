@@ -4,18 +4,21 @@ from logging import getLogger
 
 import PySide6
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLineEdit, QLabel, QPushButton, QGraphicsItem, QDialog, QFormLayout, QVBoxLayout
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
+from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLineEdit, QPushButton, QVBoxLayout
 
 from model import Universe
-from model.filter import FilterTypeEnumeration, Filter
+from model.filter import Filter, FilterTypeEnumeration
+from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
+from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
+from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
+
 from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
+from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
 from .node_editor_widgets.column_select import ColumnSelect
-from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
+from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
-from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
-from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 
 logger = getLogger(__name__)
 
@@ -28,13 +31,15 @@ class FilterSettingsItem(QGraphicsSvgItem):
     """
     _open_dialogs: list[QDialog] = []
 
-    def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem):
+    def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem, filter: Filter):
         super().__init__("resources/icons/settings.svg", parent)
         self.dialog = None
         self.filter_node = filter_node
         self.on_update = lambda: None
         self.setScale(0.2)
-        self.moveBy(parent.boundingRect().width() / 2, parent.boundingRect().height() - 20)
+        self.moveBy(parent.boundingRect().width() / 2 - 6, parent.boundingRect().height() - 20)
+        self._filter = filter
+        self._mb_updated: bool = False
 
     def focusOutEvent(self, ev):
         """
@@ -60,10 +65,23 @@ class FilterSettingsItem(QGraphicsSvgItem):
 
     def mousePressEvent(self, ev):
         """Handle left mouse button click by opening filter settings dialog"""
+        if not self._filter.configuration_supported:
+            return
         if ev.button() == Qt.MouseButton.LeftButton:
+            # TODO make sure that we're opening it in the same dialog, fixed to a screen unless settings request
+            #  otherwise
             if self.dialog is None:
                 self.dialog = FilterSettingsDialog(self.filter_node)
             self.dialog.show()
+
+    def paint(self, painter, option, widget=...):
+        if not self._filter.configuration_supported:
+            if not self._mb_updated:
+                self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
+                self._mb_updated = True
+        else:
+            # TODO draw a round rect around borders
+            super().paint(painter, option, widget)
 
 
 def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfigWidget | None:
@@ -77,18 +95,22 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
     """
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
-    elif filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
+    if filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
         return CueEditor(f=filter_)
-    elif filter_.filter_type == 50:
+    if filter_.filter_type == 50:
         return LuaScriptConfigWidget()
-    elif filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
         return PanTiltConstantWidget(filter_)
-    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_AUTOTRACKER):
         return AutotrackerSettingsWidget()
-    elif filter_.filter_type == int(FilterTypeEnumeration.VFILTER_EFFECTSSTACK):
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_EFFECTSSTACK):
         return EffectsStackFilterConfigWidget(filter_)
-    else:
-        return None
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_IMPORT):
+        return ImportVFilterSettingsWidget(filter_)
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
+        return ColorMixingSetupWidget(filter_)
+
+    return None
 
 
 class FilterSettingsDialog(QDialog):

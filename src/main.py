@@ -12,7 +12,7 @@ from PySide6 import QtWidgets
 from controller.cli.remote_control_port import RemoteCLIServer
 from controller.joystick.joystick_handling import JoystickHandler
 from model.final_globals import FinalGlobals
-from Style import Style
+from style import Style
 from view.main_window import MainWindow
 
 logger = logging.getLogger("Project-Editor")
@@ -37,6 +37,13 @@ def main():
     logging.basicConfig(level="INFO")
 
     app = QtWidgets.QApplication([])
+    app.setApplicationName("mission-dmx-editor")
+    app.setApplicationDisplayName("Mission DMX")
+    app.setOrganizationName("missionDMX")
+    app.setOrganizationDomain("technikradio.org")
+    app.setDesktopSettingsAware(True)
+    # app.setWindowIcon(QIcon("resources/app-icon.png"))
+
     width, height = app.primaryScreen().size().toTuple()
     FinalGlobals.set_screen_width(width)
     FinalGlobals.set_screen_height(height)

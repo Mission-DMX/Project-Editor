@@ -1,5 +1,5 @@
 # coding=utf-8
-from PySide6.QtWidgets import QWidget, QFileDialog
+from PySide6.QtWidgets import QFileDialog, QWidget
 
 from controller.file.read import read_document
 from controller.file.write import write_document
@@ -43,8 +43,18 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration):
 
 
 def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration):
+    """
+    Open the save file dialog if required and save the file.
+    :param parent: The parent of the show file
+    :param show_data: The show content to be saved
+    """
     _select_file(parent, _save_show_file, True, show_data)
 
 
 def show_load_showfile_dialog(parent: QWidget, show_data: BoardConfiguration):
+    """
+    Display the open file dialog to open a show file and load it if one was successfully selected.
+    :param parent: The parent widget of the dialog
+    :param show_data: The show file configuration to load the data into.
+    """
     _select_file(parent, _load_show_file, False, show_data)

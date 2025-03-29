@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QWidget, QGridLayout, QSpinBox, QLabel
+# coding=utf-8
+from PySide6.QtWidgets import QGridLayout, QLabel, QSpinBox, QWidget
 
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 
@@ -18,7 +19,7 @@ class AutotrackerSettingsWidget(NodeEditorFilterConfigWidget):
         layout.addWidget(QLabel("Other settings need to be configured from the player widget for now."), 1, 0)
 
     def _get_configuration(self) -> dict[str, str]:
-        return dict()
+        return {}
 
     def _load_configuration(self, conf: dict[str, str]):
         pass
@@ -30,5 +31,4 @@ class AutotrackerSettingsWidget(NodeEditorFilterConfigWidget):
         pass
 
     def _get_parameters(self) -> dict[str, str]:
-        return dict()
-
+        return {}

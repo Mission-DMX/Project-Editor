@@ -1,9 +1,12 @@
 # coding=utf-8
+import logging
 import time
+
 import cv2
 import numpy as np
+
 from controller.autotrack.Detection.Detector import Detector
-import logging
+
 
 class Yolo8(Detector):
     """

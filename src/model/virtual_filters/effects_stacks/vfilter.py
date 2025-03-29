@@ -2,19 +2,19 @@
 
 """This file provides the v-filter implementation of the effects stack system"""
 
-from model.ofl.fixture import ColorSupport
+from logging import getLogger
+
 from model import Filter, Scene
-from model.filter import VirtualFilter, FilterTypeEnumeration
+from model.filter import FilterTypeEnumeration, VirtualFilter
+from model.ofl.fixture import ColorSupport
 from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
-from logging import getLogger
 logger = getLogger(__file__)
 
 
 class EffectsStack(VirtualFilter):
-
     """The v-filter providing the effects stack. This filter provides a system enabling one to assign stackable effects
     to fixtures, groups of fixtures or configurable output ports."""
 
@@ -30,49 +30,42 @@ class EffectsStack(VirtualFilter):
     def instantiate_filters(self, filter_list: list[Filter]):
         for socket in self.sockets:
             socket_target = socket.target
-            universe_filter: Filter = Filter(self.scene, "{}__universeoutput__{}_{}".format(
-                self.filter_id, socket_target.parent_universe, socket_target.channels[0].address),
+            universe_filter: Filter = Filter(self.scene,
+                                             f"{self.filter_id}__universeoutput__{socket_target.parent_universe}"
+                                             f"_{socket_target.channels[0].address}",
                                              FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT)
             universe_filter.filter_configurations["universe"] = str(socket_target.parent_universe)
             filter_list.append(universe_filter)
 
-            zero_constant_name = "{}__blank_color_slot_constant__{}_{}".format(
-                self.filter_id, socket_target.parent_universe, socket_target.__hash__()
-            )
+            zero_constant_name = (f"{self.filter_id}__blank_color_slot_constant__"
+                                  f"{socket_target.parent_universe}_{socket_target.__hash__()}")
             zero_constant_8bit_required: bool = False
             zero_constant_float_required: bool = False
             if socket.has_color_property:
                 color_effect = socket.get_socket_by_type(EffectType.COLOR)
                 if color_effect is not None:
-                    filter_prefix = "{}__coloreffect_{}_{}".format(
-                        self.filter_id,
-                        socket_target.parent_universe,
-                        socket_target.channels[0].address
-                    )
+                    filter_prefix = (f"{self.filter_id}__coloreffect_{socket_target.parent_universe}_"
+                                     f"{socket_target.channels[0].address}")
                     output_dict = emplace_with_adapter(color_effect, EffectType.COLOR, filter_list, filter_prefix)
 
                     if not isinstance(output_dict["color"], list):
                         output_dict["color"] = [output_dict["color"]]
                     if len(output_dict["color"]) == 0:
-                        logger.error("Color Effect '{}' did not produce any output.".format(color_effect))
+                        logger.error("Color Effect '%s' did not produce any output.", color_effect)
                     if socket.has_segmentation_support:
                         segmentation_effect = socket.get_socket_by_type(EffectType.ENABLED_SEGMENTS)
                         if segmentation_effect:
-                            filter_prefix = "{}__segmentation_{}_{}".format(
-                                self.filter_id,
-                                socket_target.parent_universe,
-                                socket_target.channels[0].address
-                            )
+                            filter_prefix = (f"{self.filter_id}__segmentation_{socket_target.parent_universe}_"
+                                             f"{socket_target.channels[0].address}")
                             segmentation_outputs = emplace_with_adapter(segmentation_effect,
                                                                         EffectType.ENABLED_SEGMENTS,
                                                                         filter_list, filter_prefix)
                             i = 0
                             for segment_number, segment_out_port in segmentation_outputs.items():
                                 color_index = i % len(output_dict["color"])
-                                seg_split_filter_name = "{}__universeoutput__segmentsplitter_{}_{}__{}".format(
-                                    self.filter_id, socket_target.parent_universe,
-                                    socket_target.channels[0].address, segment_number
-                                )
+                                seg_split_filter_name = (f"{self.filter_id}__universeoutput__segmentsplitter_"
+                                                         f"{socket_target.parent_universe}_"
+                                                         f"{socket_target.channels[0].address}__{segment_number}")
                                 split_filter = Filter(self.scene, seg_split_filter_name, 53, self.pos)  # TODO rename
                                 split_filter.channel_links["input"] = output_dict["color"][color_index]
                                 filter_list.append(split_filter)
@@ -84,7 +77,7 @@ class EffectsStack(VirtualFilter):
                                 zero_constant_float_required = True
                                 filter_list.append(multiply_filter_i)
                                 combination_filter = Filter(self.scene, seg_split_filter_name + "_combine",
-                                                            18, self.pos) # TODO rename
+                                                            18, self.pos)  # TODO rename
                                 combination_filter.channel_links["h"] = seg_split_filter_name + ":h"
                                 combination_filter.channel_links["s"] = seg_split_filter_name + ":s"
                                 combination_filter.channel_links["i"] = seg_split_filter_name + "_multiply:value"
@@ -92,17 +85,21 @@ class EffectsStack(VirtualFilter):
                                 output_dict["color"][color_index] = seg_split_filter_name + "_combine:value"
                                 i += 1
 
-                    color_adapter_name_base = "{}__color_adapter_property".format(filter_prefix)
+                    color_adapter_name_base = f"{filter_prefix}__color_adapter_property"
                     color_support_of_target = socket_target.color_support()
 
                     adapter_filters = []
                     for i in range(len(output_dict["color"])):
                         if color_support_of_target == ColorSupport.HAS_RGB_SUPPORT:
-                            adapter_filter = Filter(self.scene, color_adapter_name_base, 15, self.pos) # TODO rename type
+                            adapter_filter = Filter(self.scene, color_adapter_name_base, 15,
+                                                    self.pos)  # TODO rename type
                         elif color_support_of_target == ColorSupport.HAS_RGB_SUPPORT | ColorSupport.HAS_WHITE_SEGMENT:
-                            adapter_filter = Filter(self.scene, color_adapter_name_base, 16, self.pos)  # TODO rename type
-                        elif color_support_of_target == ColorSupport.HAS_RGB_SUPPORT | ColorSupport.HAS_WHITE_SEGMENT | ColorSupport.HAS_AMBER_SEGMENT:
-                            adapter_filter = Filter(self.scene, color_adapter_name_base, 17, self.pos)  # TODO rename type
+                            adapter_filter = Filter(self.scene, color_adapter_name_base, 16,
+                                                    self.pos)  # TODO rename type
+                        elif (color_support_of_target == ColorSupport.HAS_RGB_SUPPORT |
+                              ColorSupport.HAS_WHITE_SEGMENT | ColorSupport.HAS_AMBER_SEGMENT):
+                            adapter_filter = Filter(self.scene, color_adapter_name_base, 17,
+                                                    self.pos)  # TODO rename type
                         # TODO advance adapter selection to further combinations
 
                         filter_list.append(adapter_filter)
@@ -112,14 +109,14 @@ class EffectsStack(VirtualFilter):
                     # TODO handle uv
                     # TODO handle main brightness control
                     for segment_channel_name, segment_list in [
-                            ("r", socket_target.red_segments), ("g", socket_target.green_segments),
-                            ("b", socket_target.blue_segments), ("w", socket_target.white_segments),
-                            ("a", socket_target.amber_segments)]:
+                        ("r", socket_target.red_segments), ("g", socket_target.green_segments),
+                        ("b", socket_target.blue_segments), ("w", socket_target.white_segments),
+                        ("a", socket_target.amber_segments)]:
                         i = 0
                         for segment in segment_list:
                             universe_filter.filter_configurations[str(segment.address)] = str(segment.address)
-                            universe_filter.channel_links[str(segment.address)] = "{}:{}".format(
-                                adapter_filters[i % len(adapter_filters)].filter_id, segment_channel_name)
+                            universe_filter.channel_links[str(segment.address)] =\
+                                f"{adapter_filters[i % len(adapter_filters)].filter_id}:{segment_channel_name}"
                             i += 1
                 else:
                     for segment_list in [socket_target.red_segments, socket_target.green_segments,
@@ -146,8 +143,8 @@ class EffectsStack(VirtualFilter):
         d = self.filter_configurations
         d.clear()
         for s in self.sockets:
-            name = "{}{}/{}".format('g' if s.is_group else 'f', s.target.parent_universe,
-                                    s.target.channels[0].address)  # TODO Encode start addresses in case of group
+            name = (f"{'g' if s.is_group else 'f'}{ s.target.parent_univers}/"
+                    f"{ s.target.channels[0].address}")  # TODO Encode start addresses in case of group
             d[name] = s.serialize()
 
     def deserialize(self):
@@ -156,19 +153,19 @@ class EffectsStack(VirtualFilter):
             is_group = k.startswith('g')
             if is_group:
                 raise NotImplementedError("Deserialization of groups is not yet implemented.")
-            else:
-                universe, channel = k[1:].split('/')
-                universe = int(universe)
-                channel = int(channel)
-                uf = self.scene.board_configuration.universes[universe - 1].patching[channel].fixture
-                if uf is None:
-                    logger.warning(
-                        "There is no fixture associated with the address {}/{}".format(universe, channel + 1)
-                    )
-                    continue
-                s = EffectsSocket(uf)
-                s.deserialize(v, self)
-                self.sockets.append(s)
+
+
+            universe, channel = k[1:].split('/')
+            universe = int(universe)
+            channel = int(channel)
+            uf = self.scene.board_configuration.universes[universe - 1].patching[channel].fixture
+            if uf is None:
+                logger.warning(
+                    "There is no fixture associated with the address %s/%s", universe, channel + 1
+                )
+                continue
+            s = EffectsSocket(uf)
+            s.deserialize(v, self)
+            self.sockets.append(s)
 
     # TODO implement optional output ports of effect stack vfilter
-

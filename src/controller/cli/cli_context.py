@@ -2,31 +2,36 @@
 """Context of the Client"""
 import argparse
 import traceback
+from typing import TYPE_CHECKING
 
 from controller.cli.bankset_command import BankSetCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
 from controller.cli.select_command import SelectCommand
-
-from typing import TYPE_CHECKING
-
 from controller.cli.show_command import ShowCommand
 
 if TYPE_CHECKING:
-    from model import BoardConfiguration, Scene
-    from model.control_desk import DeskColumn, BankSet
     from controller.network import NetworkManager
+    from model import BoardConfiguration, Scene
+    from model.control_desk import BankSet, DeskColumn
 
 
 class CLIContext:
     """Context of the Client"""
+
     def __init__(self, show: "BoardConfiguration", networkmgr: "NetworkManager", exit_available: bool = False):
+        """
+        Initialize a new CLI context.
+        :param show: The current active show configuration
+        :param networkmgr: The active network manager, user for communication with fish
+        :param exit_available: Should the exit command (close the connection) be available or not?
+        """
         self.commands = [
-                ListCommand(self),
-                SelectCommand(self),
-                BankSetCommand(self),
-                ShowCommand(self),
-                HelpCommand(self)
+            ListCommand(self),
+            SelectCommand(self),
+            BankSetCommand(self),
+            ShowCommand(self),
+            HelpCommand(self)
         ]
         self.selected_bank: "BankSet" | None = None
         self.selected_column: "DeskColumn" | None = None

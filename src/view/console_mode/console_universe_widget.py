@@ -5,7 +5,7 @@ from PySide6 import QtCore, QtWidgets
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet
 from model.universe import Universe
-from Style import Style
+from style import Style
 from view.console_mode.console_channel_widget import ChannelWidget
 
 
@@ -43,8 +43,8 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         # to switch the active one. For now it is not an issue as we only feature one universe for the theatre play.
         # In future it will be an issue as we intend to use the console as a default for scenes and a scene might use
         # multiple universes.
-        self._bank_set = BankSet(gui_controlled=True, description="Console mode Bankset for universe {}."
-                                 .format(universe.description))
+        self._bank_set = BankSet(gui_controlled=True,
+                                 description=f"Console mode Bankset for universe {universe.description}.")
         self._bank_set.activate()
         self._bank_set_control_elements = []
 
@@ -53,11 +53,11 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             channel_widget = ChannelWidget(channel, patching_chanel, bank_set=self._bank_set,
                                            bank_set_control_list=self._bank_set_control_elements)
             universe_widget.layout().addWidget(channel_widget)
-            # if last != "Empty" and patching_chanel.fixture_channel == "none":
+
             if patching_chanel.fixture.name != "Empty" and patching_chanel.fixture_channel_id() == len(
                     patching_chanel.fixture.mode['channels']) - 1:
                 universe_widget.layout().addWidget(QtWidgets.QLabel(patching_chanel.fixture.name))
-            last = patching_chanel.fixture.name
+
             channel.updated.connect(
                 lambda *args, send_universe=universe: self._broadcaster.send_universe_value.emit(send_universe))
 
@@ -74,9 +74,9 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
 
     def _translate_scroll_position(self, absolute_position):
         # FIXME scrollbars are always strange and clearly more rules apply here
-        max = self.horizontalScrollBar().maximum()
+        maximum = self.horizontalScrollBar().maximum()
         widget_width = self._universe_widget.width()
-        return (absolute_position / widget_width) * max
+        return (absolute_position / widget_width) * maximum
 
     def _decrease_scroll(self):
         if self._translate_scroll_position(self._scroll_position - 25) < self.horizontalScrollBar().minimum():

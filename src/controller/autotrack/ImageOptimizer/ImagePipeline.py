@@ -1,11 +1,8 @@
+# coding=utf-8
 from numpy import ndarray
 
 import controller.autotrack.Detection.VideoProcessor
-from controller.autotrack.ImageOptimizer.BasicOptimizer import (
-    ResizeOptimizer,
-    CropOptimizer,
-    GrayScaleOptimizer,
-)
+from controller.autotrack.ImageOptimizer.BasicOptimizer import GrayScaleOptimizer
 
 
 class ImagePipeline:

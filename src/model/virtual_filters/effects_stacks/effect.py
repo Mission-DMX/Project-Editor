@@ -1,17 +1,17 @@
 # coding=utf-8
-
+# pylint: disable=implicit-flag-alias
 """
 This file contains the fundamental building blocks for effects.
 """
 
 from abc import ABC, abstractmethod
 from enum import IntFlag
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
 
 from model import Filter, Scene
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
@@ -35,16 +35,16 @@ class EffectType(IntFlag):
     Zoom / Focus -- Provides a (list of) tuple(s) of numbers between 0 and 1 indicating the zoom and focus of a fixture.
     Generic number -- A generic number usable for misc purposes.
     """
-    COLOR = 0,
-    LIGHT_INTENSITY = 1,
-    ENABLED_SEGMENTS = 2,
-    PAN_TILT_COORDINATES = 3,
-    POSITION_3D = 4,
-    SPEED = 5,
-    SHUTTER_STROBE = 6,
-    GOBO_SELECTION = 7,
-    ZOOM_FOCUS = 8,
-    GENERIC_NUMBER = 9,
+    COLOR = 0
+    LIGHT_INTENSITY = 1
+    ENABLED_SEGMENTS = 2
+    PAN_TILT_COORDINATES = 3
+    POSITION_3D = 4
+    SPEED = 5
+    SHUTTER_STROBE = 6
+    GOBO_SELECTION = 7
+    ZOOM_FOCUS = 8
+    GENERIC_NUMBER = 9
 
     @property
     def human_readable_name(self) -> str:
@@ -76,7 +76,7 @@ class Effect(ABC):
     def __init__(self, supported_input_types: dict[str, list[EffectType]]):
         super().__init__()
         self._supported_inputs = supported_input_types
-        self._inputs: dict[str, "Effect" | None] = dict()
+        self._inputs: dict[str, "Effect" or None] = {}
         for slot_name in supported_input_types.keys():
             self._inputs[slot_name] = None
         self._parent_filter: "EffectsStack" | None = None
@@ -123,7 +123,8 @@ class Effect(ABC):
         slot is not occupied and needs to emplace reasonable defaults in that case.
         The implementer of this method is responsible for calling into the emplace_filter methods of subsequently
         placed filters. This method needs to return a dictionary describing the output ports of the emplaced filters
-        that are relevant for using the output. The layout of this dictionary is the following: {"output-name": "filter_id:channel"}
+        that are relevant for using the output.
+        The layout of this dictionary is the following: {"output-name": "filter_id:channel"}
 
         Based on the effect output types, the following outputs(-names) need to be provided:
 
@@ -178,7 +179,8 @@ class Effect(ABC):
     def can_convert_slot(cls, candidate: EffectType, target: EffectType) -> bool:
         if candidate == target:
             return True
-        if candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY, EffectType.GOBO_SELECTION, EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]:
+        if candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY, EffectType.GOBO_SELECTION,
+                                                                 EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]:
             return True
         # TODO add more capabilities once adapters are implemented
         return False
@@ -239,11 +241,11 @@ class Effect(ABC):
     @abstractmethod
     def serialize(self) -> dict:
         """This method needs to return a dictionary, containing at least the 'type' key indicating the effect.
-        The purpose of this method is to generate a restorable state while saving the show file. An implementing function
-        is responsible to call the serialization of its inputs on its own.
+        The purpose of this method is to generate a restorable state while saving the show file.
+        An implementing function is responsible to call the serialization of its inputs on its own.
 
         :returns: A dictionary describing the effect."""
-        return dict()
+        return {}
 
     @abstractmethod
     def deserialize(self, data: dict[str, str]):
@@ -260,5 +262,5 @@ class Effect(ABC):
 
     def clear_slot(self, slot_id: str):
         if slot_id not in self._inputs.keys():
-            raise ValueError("This filter does not contain an input slot with id {}.".format(slot_id))
+            raise ValueError(f"This filter does not contain an input slot with id {slot_id}.")
         self._inputs[slot_id] = None

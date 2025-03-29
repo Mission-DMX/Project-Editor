@@ -1,6 +1,6 @@
 # coding=utf-8
 import numpy as np
-from PySide6.QtCore import Slot, QThread, Signal
+from PySide6.QtCore import QThread, Signal, Slot
 
 
 class FrameManager(QThread):

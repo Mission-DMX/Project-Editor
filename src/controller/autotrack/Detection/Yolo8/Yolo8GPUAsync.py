@@ -1,11 +1,12 @@
 # coding=utf-8
+import logging
 import threading
 import time
+
 import cv2
 import numpy as np
-from Detection.Detector import Detector
-import logging
 import onnxruntime as rt
+from Detection.Detector import Detector
 
 
 class Yolo8GPUAsync(Detector):

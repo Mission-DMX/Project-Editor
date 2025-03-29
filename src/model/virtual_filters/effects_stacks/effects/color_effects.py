@@ -2,7 +2,7 @@
 
 """This file contains the effects of type color."""
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any
 
 from PySide6.QtWidgets import QWidget
@@ -74,12 +74,13 @@ class ColorWheelEffect(ColorEffect):
         else:
             hue_effect_range_factor_name = prefix + "__range_const_min"
             filter_list.append(Filter(self.get_scene(), hue_effect_range_factor_name,
-                               FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
-                               initial_parameters={"value": "360.0"}))
+                                      FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
+                                      initial_parameters={"value": "360.0"}))
             hue_effect_range_factor_channel = hue_effect_range_factor_name + ":value"
 
         saturation_input_filter_name = prefix + "__saturation"
-        filter_list.append(Filter(self.get_scene(), saturation_input_filter_name, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+        filter_list.append(Filter(self.get_scene(), saturation_input_filter_name,
+                                  FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
                                   initial_parameters={"value": "1.0"}))
 
         # TODO implement filter that iterates between the hue boundries using the speed as a fraction for the time input
@@ -93,8 +94,9 @@ class ColorWheelEffect(ColorEffect):
 
         if self._inputs["segments"] is None:
             brightness_channel_names = prefix + "__brightness_const"
-            filter_list.append(Filter(self.get_scene(), brightness_channel_names, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-                                      initial_parameters={"value": "1.0"}))
+            filter_list.append(
+                Filter(self.get_scene(), brightness_channel_names, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                       initial_parameters={"value": "1.0"}))
             brightness_channel_names = {'0': brightness_channel_names + ":value"}
         else:
             brightness_channel_names = emplace_with_adapter(
@@ -119,7 +121,7 @@ class ColorWheelEffect(ColorEffect):
                 brightness_channel_names = {'0': bg_mapping_filter.filter_id + ':value'}
 
         for frag_index in range(max(self.fragment_number, 1)):
-            time_fraction_filter_name = prefix + "__time_fraction_{}".format(frag_index)
+            time_fraction_filter_name = f"{prefix}__time_fraction_{frag_index}"
             time_fraction_filter = Filter(self.get_scene(), time_fraction_filter_name,
                                           FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, self.get_position())
             phase_filter_name = prefix + "__phase"
@@ -135,8 +137,9 @@ class ColorWheelEffect(ColorEffect):
 
             brightness_channel_instance = brightness_channel_names[str(frag_index % len(brightness_channel_names))]
 
-            color_conv_filter_name = prefix + "__color_conv_{}".format(frag_index)
-            color_conv_filter = Filter(self.get_scene(), color_conv_filter_name, FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR)
+            color_conv_filter_name = f"{prefix}__color_conv_{frag_index}"
+            color_conv_filter = Filter(self.get_scene(), color_conv_filter_name,
+                                       FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR)
             filter_list.append(color_conv_filter)
             color_conv_filter.channel_links["h"] = time_fraction_filter_name + ":value"
             color_conv_filter.channel_links["s"] = saturation_input_filter_name + ":value"

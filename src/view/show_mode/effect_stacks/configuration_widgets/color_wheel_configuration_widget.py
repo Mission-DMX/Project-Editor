@@ -2,16 +2,15 @@
 
 """This file contains the configuration widget for the color wheel effect."""
 
-from PySide6.QtWidgets import QWidget, QFormLayout, QSpinBox, QDoubleSpinBox
-
 from typing import TYPE_CHECKING
+
+from PySide6.QtWidgets import QDoubleSpinBox, QFormLayout, QSpinBox, QWidget
 
 if TYPE_CHECKING:
     from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
 
 
 class ColorWheelConfigurationWidget(QWidget):
-
     """This widget enables the user to set up the defaults of the color wheel effect settings."""
 
     def __init__(self, f: "ColorWheelEffect"):

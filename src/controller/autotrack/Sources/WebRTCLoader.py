@@ -1,6 +1,6 @@
 # coding=utf-8
-from aiortc import VideoStreamTrack
 from aiortc.contrib.media import MediaPlayer
+
 from controller.autotrack.Sources.Loader import Loader
 
 

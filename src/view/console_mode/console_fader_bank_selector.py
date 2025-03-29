@@ -2,14 +2,16 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QWidget
 
-from model.control_desk import BankSet, RawDeskColumn, FaderBank
+from model.control_desk import BankSet, FaderBank, RawDeskColumn
 
 
 class ConsoleFaderBankSelectorWidget(QComboBox):
     fader_value_changed = Signal(int)
 
-    def __init__(self, bank_set: BankSet, display_text: str, parent: QWidget = None, bank_set_control_list=[]):
+    def __init__(self, bank_set: BankSet, display_text: str, parent: QWidget = None, bank_set_control_list=None):
         super().__init__(parent)
+        if bank_set_control_list is None:
+            bank_set_control_list = []
         self._bank_set = bank_set
         self.setEditable(False)
         self.insertItem(0, "None")

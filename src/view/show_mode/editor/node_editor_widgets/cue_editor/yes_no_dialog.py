@@ -1,5 +1,5 @@
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QDialog, QWidget, QFormLayout, QLabel, QPushButton
+# coding=utf-8
+from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QPushButton, QWidget
 
 
 class YesNoDialog(QDialog):

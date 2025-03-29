@@ -5,7 +5,7 @@ from PySide6 import QtCore, QtWidgets
 from model.channel import Channel
 from model.control_desk import BankSet
 from model.patching_channel import PatchingChannel
-from Style import Style
+from style import Style
 from view.console_mode.console_fader_bank_selector import ConsoleFaderBankSelectorWidget
 
 

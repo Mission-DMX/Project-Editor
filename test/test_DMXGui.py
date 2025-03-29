@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from model.channel import Channel
-from src.Style import Style
+from src.style import Style
 from view.console_mode.console_channel_widget import ChannelWidget
 
 

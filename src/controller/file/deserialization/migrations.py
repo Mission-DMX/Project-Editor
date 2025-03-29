@@ -1,11 +1,13 @@
+# coding=utf-8
 """
 This file contains methods to migrate a loading show file to a newer version
 """
 
+from logging import getLogger
+
 from model import Filter
 from model.filter import FilterTypeEnumeration
 
-from logging import getLogger
 logger = getLogger(__file__)
 
 

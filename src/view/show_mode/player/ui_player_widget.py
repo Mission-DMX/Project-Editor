@@ -1,7 +1,8 @@
-from PySide6.QtWidgets import QWidget, QGridLayout
+# coding=utf-8
+from PySide6.QtWidgets import QGridLayout, QWidget
 
 from model import Scene
-from view.show_mode.editor.editor_tab_widgets.scene_ui_page_editor_widget import UIWidgetHolder
+from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import UIWidgetHolder
 
 
 class UIPlayerWidget(QWidget):

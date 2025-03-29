@@ -1,5 +1,11 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
+from typing import Callable
+
+from PySide6 import QtCore, QtGui
+
+import proto.FilterMode_pb2
+
 from .broadcaster import Broadcaster
 from .device import Device
 from .patching_universe import PatchingUniverse
@@ -15,7 +21,7 @@ class BoardConfiguration:
         self._default_active_scene: int = default_active_scene
         self._notes: str = notes
         self._scenes: list[Scene] = []
-        self._scenes_index: dict[int, int] = dict()
+        self._scenes_index: dict[int, int] = {}
         self._devices: list[Device] = []
         self._universes: list[Universe] = []
         self._ui_hints: dict[str, str] = {}
@@ -31,16 +37,28 @@ class BoardConfiguration:
         self._broadcaster.device_created.connect(self._add_device)
         self._broadcaster.delete_device.connect(self._delete_device)
 
+        self._filter_update_msg_register: dict[tuple[int, str], list[Callable]] = {}
+        self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
+
     def _clear(self):
+        """This method resets the show data prior to loading a new one."""
         for scene in self._scenes:
             self._broadcaster.delete_scene.emit(scene)
         for universe in self._universes:
             self._broadcaster.delete_universe.emit(universe)
         for device in self._devices:
             self._broadcaster.delete_device.emit(device)
+        QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
+        self.scenes.clear()
+        self._universes.clear()
+        self._devices.clear()
         self._show_name = ""
         self._default_active_scene = 0
-        self._notes = 0
+        self._notes = ""
+        self._scenes_index = {}
+        self._ui_hints = {}
+        self._show_file_path = ""
+        self._filter_update_msg_register.clear()
 
     def _add_scene(self, scene: Scene):
         """Adds a scene to the list of scenes.
@@ -92,7 +110,6 @@ class BoardConfiguration:
             device: The device to be removed.
         """
         pass
-
     def universe(self, universe_id: int) -> Universe | None:
         """Tries to find universe by id.
 
@@ -169,6 +186,8 @@ class BoardConfiguration:
 
     @file_path.setter
     def file_path(self, new_path: str):
+        """Update the show file path.
+        :param new_path: The location to save the show file to"""
         self._show_file_path = new_path
         self._broadcaster.show_file_path_changed.emit(new_path)
 
@@ -182,3 +201,39 @@ class BoardConfiguration:
             if scene.scene_id == scene_id:
                 return scene
         return None
+
+    def _distribute_filter_update_message(self, param: proto.FilterMode_pb2.update_parameter):
+        """Find listeners to incoming filter update message and distribute it to them."""
+        candidate_list = self._filter_update_msg_register.get((param.scene_id, param.filter_id))
+        if candidate_list is not None:
+            for c in candidate_list:
+                c(param)
+
+    def register_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable):
+        """
+        Register a new callback for filter update messages.
+
+        If filter update messages are received, they need to be routed to their intended destination. This is done using
+        this registration method. Suitable callables receive the update message as a parameter.
+        :param target_scene: The scene the callback belongs to.
+        :param target_filter_id: The filter id to listen on.
+        :param c: The callable to register.
+        """
+        callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
+        if callable_list is None:
+            callable_list = []
+            self._filter_update_msg_register[(target_scene, target_filter_id)] = callable_list
+        if c not in callable_list:
+            callable_list.append(c)
+
+    def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable):
+        """
+        Remove a previously registered callback.
+        :param target_scene: The scene the callback belongs to.
+        :param target_filter_id: The filter id which it is listening on.
+        :param c: The callable to be removed.
+        """
+        callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
+        if callable_list is None:
+            return
+        callable_list.remove(c)
