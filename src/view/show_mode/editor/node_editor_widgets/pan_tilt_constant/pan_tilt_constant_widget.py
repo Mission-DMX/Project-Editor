@@ -1,4 +1,6 @@
 # coding=utf-8
+from typing import TYPE_CHECKING
+
 from PySide6.QtWidgets import QCheckBox, QVBoxLayout, QWidget
 
 from controller.joystick.joystick_enum import JoystickList
@@ -7,9 +9,7 @@ from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidg
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \
     PanTiltConstantContentWidget
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from view.show_mode.editor.nodes import FilterNode
     from view.show_mode.editor.nodes import FilterNode
 
 
