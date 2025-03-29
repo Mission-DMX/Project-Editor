@@ -7,15 +7,15 @@ show file.
 
 from typing import TYPE_CHECKING
 
-from model.virtual_filters.color_mixer_vfilter import ColorMixerVFilter
-from model.virtual_filters.import_vfilter import ImportVFilter
+from model.filter import FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
+from model.virtual_filters.color_mixer_vfilter import ColorMixerVFilter
 from model.virtual_filters.cue_vfilter import CueFilter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
+from model.virtual_filters.import_vfilter import ImportVFilter
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from model.virtual_filters.range_adapters import (ColorGlobalBrightnessMixinVFilter, EightBitToFloatRange,
                                                   SixteenBitToFloatRange)
-from model.filter import FilterTypeEnumeration
 
 if TYPE_CHECKING:
     from model import Scene

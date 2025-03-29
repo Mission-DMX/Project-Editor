@@ -2,11 +2,11 @@
 from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model import ColorHSI, DataType
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
-from logging import getLogger
 
 if TYPE_CHECKING:
     pass
