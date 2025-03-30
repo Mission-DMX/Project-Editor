@@ -55,6 +55,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     device_created: QtCore.Signal = QtCore.Signal(Device)
     delete_device: QtCore.Signal = QtCore.Signal(Device)
     fixture_patched: QtCore.Signal = QtCore.Signal()
+    event_sender_model_updated: QtCore.Signal = QtCore.Signal()
     ################################################################
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()
     view_patching: QtCore.Signal = QtCore.Signal()

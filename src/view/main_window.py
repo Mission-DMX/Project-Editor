@@ -70,7 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ("Debug", debug_console, lambda: self._to_widget(4)),
             (
                 "Actions",
-                MainWidget(CombinedActionSetupWidget(self), self),
+                MainWidget(CombinedActionSetupWidget(self, self._broadcaster), self),
                 self._broadcaster.view_to_action_config.emit
             ),
         ]
