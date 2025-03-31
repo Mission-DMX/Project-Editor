@@ -93,7 +93,7 @@ BTN_OUTPUTS: ButtonCode
 BTN_PAN_EDITSHOW: ButtonCode
 BTN_PLAY_RUNCUE: ButtonCode
 BTN_PLUGIN_PATCH: ButtonCode
-BTN_READOFF_MOVEWINDOW: ButtonCode
+BTN_READOFF_GOTO: ButtonCode
 BTN_REC_RECFRAME: ButtonCode
 BTN_REPLACE_TEMPERATURE: ButtonCode
 BTN_REV_LASTCUE: ButtonCode
@@ -110,7 +110,7 @@ BTN_TRIM: ButtonCode
 BTN_UNDO_UNDO: ButtonCode
 BTN_UP_UP: ButtonCode
 BTN_USER: ButtonCode
-BTN_WRITE: ButtonCode
+BTN_WRITE_MOVEWINDOW: ButtonCode
 DESCRIPTOR: _descriptor.FileDescriptor
 FADERTOUCH_CH1: ButtonCode
 FADERTOUCH_CH2: ButtonCode
