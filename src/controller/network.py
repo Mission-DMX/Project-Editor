@@ -5,7 +5,7 @@ import math
 import queue
 import xml.etree.ElementTree as ET
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
@@ -24,7 +24,7 @@ from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
 if TYPE_CHECKING:
-    from model import Scene
+    from model import Scene, events
     from model.control_desk import FaderBank
     from view.main_window import MainWindow
 
@@ -47,6 +47,7 @@ class NetworkManager(QtCore.QObject):
         super().__init__(parent=parent)
         logger.info("generate new Network Manager")
         self._broadcaster = Broadcaster()
+        events.set_broadcaster_and_network(self._broadcaster, self)
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._message_queue = queue.Queue()
 
@@ -77,6 +78,7 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.change_active_scene.connect(self.enter_scene)
 
         x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)
+        self.sender_message_callback: Callable | None = None
 
     @property
     def is_running(self) -> bool:
@@ -217,8 +219,13 @@ class NetworkManager(QtCore.QObject):
                         message: proto.DirectMode_pb2.dmx_output = proto.DirectMode_pb2.dmx_output()
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.dmx_from_fish.emit(message)
+                    case proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE:
+                        message: proto.Events_pb2.event_sender = proto.Events_pb2.event_sender()
+                        message.ParseFromString(bytes(msg))
+                        if self.sender_message_callback is not None:
+                            self.sender_message_callback(message)
                     case _:
-                        pass
+                        logger.warning(f"Received not implemented message type: {msg_type}")
             except:
                 logger.error("Failed to parse message.", exc_info=True)
         self.push_messages()

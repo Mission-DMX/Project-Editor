@@ -1,5 +1,6 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QListWidget, QScrollArea, QSplitter, QWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QListWidget, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget
 
 from model import Broadcaster
 
@@ -14,10 +15,17 @@ class EventSetupWidget(QSplitter):
 
     def __init__(self, parent: QWidget | None, b: Broadcaster):
         super().__init__(parent=parent)
-        self._sender_list = QListWidget(self)
+        self._selection_panel = QWidget(self)
+        layout = QVBoxLayout()
+        self._selection_panel.setLayout(layout)
+        self._button_pannel = QToolBar(self._selection_panel)
+        self._button_pannel.addAction(QIcon.fromTheme("list-add"), "Add Sender", self._add_sender_pressed)
+        layout.addWidget(self._button_pannel)
+        self._sender_list = QListWidget(self._selection_panel)
         self._sender_list.setMinimumWidth(100)
         self._sender_list.itemSelectionChanged.connect(self._sender_selected)
-        self.addWidget(self._sender_list)
+        layout.addWidget(self._sender_list)
+        self.addWidget(self._selection_panel)
         self._update_sender_list()
         b.event_sender_model_updated.connect(self._update_sender_list)
         self._config_splitter = QSplitter(self)
@@ -38,4 +46,7 @@ class EventSetupWidget(QSplitter):
         # TODO implement repopulation
 
     def _sender_selected(self):
+        pass  # TODO
+
+    def _add_sender_pressed(self):
         pass  # TODO
