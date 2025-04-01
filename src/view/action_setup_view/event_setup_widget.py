@@ -2,7 +2,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QListWidget, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget
 
-from model import Broadcaster
+from model import Broadcaster, events
+from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 
 class _SenderConfigurationWidget(QScrollArea):
@@ -44,6 +45,12 @@ class EventSetupWidget(QSplitter):
     def _update_sender_list(self):
         self._sender_list.clear()
         # TODO implement repopulation
+        for sender in events.get_all_senders():
+            item = AnnotatedListWidgetItem(self._sender_list)
+            item.setText(f"[{sender.index_on_fish}] {sender.name}")
+            item.annotated_data = sender
+            self._sender_list.addItem(item)
+            # TODO set better item based on https://stackoverflow.com/questions/25187444/pyqt-qlistwidget-custom-items
 
     def _sender_selected(self):
         pass  # TODO

@@ -1,24 +1,23 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from controller.network import NetworkManager
-from model import Broadcaster
-
 if TYPE_CHECKING:
+    from controller.network import NetworkManager
+    from model import Broadcaster
     from proto.Events_pb2 import event_sender
 
 logger = getLogger(__file__)
 
-_broadcaster_instance: Broadcaster | None = None
-_senders: dict[str, "event_sender"] = {}
+_broadcaster_instance: "Broadcaster"
+_senders: dict[str, "EventSender"] = {}
 
 
-def set_broadcaster_and_network(b: Broadcaster, nm: NetworkManager):
+def set_broadcaster_and_network(b: "Broadcaster", nm: "NetworkManager"):
     """Set the broadcasting instance"""
     global _broadcaster_instance
     _broadcaster_instance = b
-    nm.sender_message_callback = _handle_incoming_sender_update
     logger.debug("Successfully set up network and signal broadcaster")
+    return _handle_incoming_sender_update
 
 
 def _handle_incoming_sender_update(msg: "event_sender"):
@@ -36,7 +35,8 @@ def _handle_incoming_sender_update(msg: "event_sender"):
             case "fish.builtin.midirtp":
                 raise NotImplemented()
             case "fish.builtin.gpio":
-                raise NotImplemented()
+                print("Name:", msg.name)
+                ev = XtouchGPIOEventSender(msg.name)
             case "fish.builtin.macrokeypad":
                 raise NotImplemented()
         _senders[msg.name] = ev
@@ -58,4 +58,38 @@ class EventSender:
         self.debug_enabled: bool = False
         self.configuration: dict[str, str] = dict()
 
+    @property
+    def name(self) -> str:
+        return self._name
+
     # TODO implement event function and argument renaming model
+
+
+def get_sender(name: str) -> EventSender | None:
+    """
+    Look up a specific sender by its name.
+    :param name: The unique name of the sender
+    :returns: the object if the lookup was successful
+    """
+    return _senders.get(name)
+
+
+def get_all_senders() -> list[EventSender]:
+    """
+    Get a list of all sender currently running on fish.
+    :returns: A mutable list (copied)
+    """
+    return list(_senders.values())
+
+
+class XtouchGPIOEventSender(EventSender):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+    @property
+    def pedal_threshold(self) -> int:
+        return int(self.configuration.get("expression_pedal_threshold") or "0")
+
+    @pedal_threshold.setter
+    def pedal_threshold(self, new_value: int):
+        self.configuration["expression_pedal_threshold"] = str(new_value)
