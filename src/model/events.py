@@ -34,9 +34,10 @@ def _handle_incoming_sender_update(msg: "event_sender"):
                 raise NotImplemented()
             case "fish.builtin.midirtp":
                 raise NotImplemented()
-            case "fish.builtin.gpio":
-                print("Name:", msg.name)
+            case "fish.builtin.xtouchgpio":
                 ev = XtouchGPIOEventSender(msg.name)
+            case "fish.builtin.gpio":
+                raise NotImplemented()
             case "fish.builtin.macrokeypad":
                 raise NotImplemented()
         _senders[msg.name] = ev

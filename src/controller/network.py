@@ -227,6 +227,10 @@ class NetworkManager(QtCore.QObject):
                             self.sender_message_callback(message)
                         else:
                             logger.warning("Discarded event_sender update due to missing callback.")
+                    case proto.MessageTypes_pb2.MSGT_EVENT:
+                        message: proto.Events_pb2.event_sender = proto.Events_pb2.event()
+                        message.ParseFromString(bytes(msg))
+                        self._broadcaster.fish_event_received.emit(message)
                     case _:
                         logger.warning(f"Received not implemented message type: {msg_type}")
             except:

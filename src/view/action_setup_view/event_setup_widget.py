@@ -5,6 +5,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QListWidget, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget
 
 from model import Broadcaster, events
+from proto.Events_pb2 import event
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 logger = getLogger(__file__)
@@ -75,6 +76,7 @@ class EventSetupWidget(QSplitter):
         self._config_splitter.addWidget(self._event_log)
         self.setStretchFactor(1, 2)
         self._config_splitter.setStretchFactor(0, 2)
+        b.fish_event_received.connect(self._event_received)
 
     def _update_sender_list(self):
         self._sender_list.clear()
@@ -90,4 +92,7 @@ class EventSetupWidget(QSplitter):
         pass  # TODO
 
     def _add_sender_pressed(self):
+        pass  # TODO
+
+    def _event_received(self, e: event):
         pass  # TODO
