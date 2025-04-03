@@ -187,7 +187,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 menu.addSeparator()
                 continue
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
-            if entry[0] is not None:
+            if entry[1] is not None:
                 menu_entry.triggered.connect(entry[1])
             else:
                 menu_entry.setEnabled(False)
