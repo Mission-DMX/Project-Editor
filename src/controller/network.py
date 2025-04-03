@@ -446,6 +446,9 @@ class NetworkManager(QtCore.QObject):
         else:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
 
+    def send_event_sender_update(self, msg: proto.Events_pb2.event_sender):
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE)
+
 
 def on_error(error) -> None:
     """logging current error

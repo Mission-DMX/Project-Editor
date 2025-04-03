@@ -1,14 +1,16 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
+from proto.Events_pb2 import event_sender
+
 if TYPE_CHECKING:
     from controller.network import NetworkManager
     from model import Broadcaster
-    from proto.Events_pb2 import event_sender
 
 logger = getLogger(__file__)
 
 _broadcaster_instance: "Broadcaster"
+_network_manager: "NetworkManager"
 _senders: dict[str, "EventSender"] = {}
 
 
@@ -16,6 +18,8 @@ def set_broadcaster_and_network(b: "Broadcaster", nm: "NetworkManager"):
     """Set the broadcasting instance"""
     global _broadcaster_instance
     _broadcaster_instance = b
+    global _network_manager
+    _network_manager = nm
     logger.debug("Successfully set up network and signal broadcaster")
     return _handle_incoming_sender_update
 
@@ -56,14 +60,42 @@ class EventSender:
         self._name: str = name
         self.index_on_fish: int = -1
         self.type: str = ""
-        self.debug_enabled: bool = False
+        self._debug_enabled: bool = False
         self.configuration: dict[str, str] = dict()
 
     @property
     def name(self) -> str:
         return self._name
 
+    @property
+    def debug_enabled(self) -> bool:
+        return self._debug_enabled
+
+    @debug_enabled.setter
+    def debug_enabled(self, new_state: bool):
+        self._debug_enabled = bool(new_state)
+        self.send_update()
+
     # TODO implement event function and argument renaming model
+
+    def send_update(self, auto_commit: bool = True) -> event_sender:
+        """
+        Assemble an event_sender message and publish it if auto_commit is enabled.
+        While it is possible to override this method, it is advisable to implementing classes
+        to only update the configuration parameter.
+        :param auto_commit: Should the message be sent directly?
+        :returns: The assembled (and perhaps sent) message
+        """
+        msg = event_sender()
+        msg.name = self.name
+        msg.sender_id = self.index_on_fish
+        msg.type = self.type
+        msg.gui_debug_enabled = self._debug_enabled
+        msg.configuration.update(self.configuration)
+        if auto_commit:
+            global _network_manager
+            _network_manager.send_event_sender_update(msg)
+        return msg
 
 
 def get_sender(name: str) -> EventSender | None:
