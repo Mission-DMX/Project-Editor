@@ -37,6 +37,7 @@ class _SenderConfigurationWidget(QScrollArea):
         layout.addWidget(self._debug_enabled_checkbox)
         # TODO implement individual configuration widgets for event sender types
         self.setLayout(layout)
+        self.sender = None
 
     @property
     def sender(self) -> events.EventSender | None:
@@ -85,6 +86,7 @@ class _SourceListWidget(QWidget):
         self._id_label.setEnabled(False)
         text_layout.addWidget(self._id_label)
         layout.addLayout(text_layout)
+        # TODO add persistence indicator
         self.setLayout(layout)
 
 
@@ -131,7 +133,13 @@ class EventSetupWidget(QSplitter):
             self._sender_list.setItemWidget(item, item_widget)
 
     def _sender_selected(self):
-        self._configuration_widget.sender = self._sender_list.selectedItems()[0]
+        item_list = self._sender_list.selectedItems()
+        if len(item_list) == 0:
+            return
+        item = item_list[0]
+        if not isinstance(item, AnnotatedListWidgetItem):
+            raise ValueError("Expected out item implementation")
+        self._configuration_widget.sender = item.annotated_data
 
     def _add_sender_pressed(self):
         pass  # TODO

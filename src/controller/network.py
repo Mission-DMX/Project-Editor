@@ -447,7 +447,11 @@ class NetworkManager(QtCore.QObject):
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
 
     def send_event_sender_update(self, msg: proto.Events_pb2.event_sender):
-        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE)
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE,
+                               push_direct=False)
+
+    def send_event_message(self, msg: proto.Events_pb2.event):
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT, push_direct=False)
 
 
 def on_error(error) -> None:

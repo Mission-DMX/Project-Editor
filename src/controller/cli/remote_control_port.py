@@ -119,6 +119,7 @@ class Connection:
     def run(self):
         """This method will be called by the client thread in order to handle the client."""
         try:
+            logger.info(f"Got incoming remote CLI connection.")  # TODO get remote socket address
             reader = SocketStreamReader(self._client)
             while not self.context.exit_called:
                 self._client.send("> ".encode("utf-8"))
@@ -167,6 +168,7 @@ class RemoteCLIServer:
         self._show = show
         self._network_manager = netmgr
         self._server_thread.start()
+        logger.warning(f"Opened up CLI interface on [{interface}]:{port}")
 
     def run(self):
         """This method will be run by the server thread in order to process incoming clients."""

@@ -5,6 +5,7 @@ import traceback
 from typing import TYPE_CHECKING
 
 from controller.cli.bankset_command import BankSetCommand
+from controller.cli.event_command import EventCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
 from controller.cli.select_command import SelectCommand
@@ -31,6 +32,7 @@ class CLIContext:
             SelectCommand(self),
             BankSetCommand(self),
             ShowCommand(self),
+            EventCommand(self),
             HelpCommand(self)
         ]
         self.selected_bank: "BankSet" | None = None

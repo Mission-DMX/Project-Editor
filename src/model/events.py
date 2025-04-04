@@ -1,7 +1,8 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from proto.Events_pb2 import event_sender
+from proto.Events_pb2 import event, event_sender
+from proto.Events_pb2 import event_type as prot_event_type
 
 if TYPE_CHECKING:
     from controller.network import NetworkManager
@@ -126,3 +127,31 @@ class XtouchGPIOEventSender(EventSender):
     @pedal_threshold.setter
     def pedal_threshold(self, new_value: int):
         self.configuration["expression_pedal_threshold"] = str(new_value)
+
+
+def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] = []):
+    """Insert an event in fish.
+
+    :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will
+    abort the action.
+
+    :param sender_function: The event sender function to use
+    :param event_type: The event type to use. Must be one of single, release or start
+    :param arguments: The event arguments to use
+    """
+    if sender_id < 0:
+        return
+    if event_type not in ['single', 'release', 'start']:
+        raise ValueError(f"Unsupported event type. Must be one of single, release or start but is '{event_type}'.")
+    ev = event()
+    ev.sender_id = sender_id
+    ev.sender_function = sender_function
+    match event_type:
+        case 'single':
+            ev.type = prot_event_type.SINGLE_TRIGGER
+        case 'start':
+            ev.type = prot_event_type.START
+        case 'release':
+            ev.type = prot_event_type.RELEASE
+    ev.arguments = [max(min(arg, 255), 0) for arg in arguments]
+    _network_manager.send_event_message(ev)
