@@ -48,3 +48,8 @@ class Command(ABC):
     def help(self) -> str:
         """ help text"""
         return self._help_text
+
+    @help.setter
+    def help(self, new_help: str):
+        """Set a new help text"""
+        self._help_text = str(new_help)

@@ -5,19 +5,21 @@ import math
 import queue
 import xml.etree.ElementTree as ET
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
+import proto.Events_pb2
 import proto.FilterMode_pb2
 import proto.MessageTypes_pb2
 import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
 import x_touch
+from model import events
 from model.broadcaster import Broadcaster
 from model.filter import FilterTypeEnumeration
 from model.patching_universe import PatchingUniverse
@@ -47,6 +49,7 @@ class NetworkManager(QtCore.QObject):
         super().__init__(parent=parent)
         logger.info("generate new Network Manager")
         self._broadcaster = Broadcaster()
+        self.sender_message_callback: Callable = events.set_broadcaster_and_network(self._broadcaster, self)
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._message_queue = queue.Queue()
 
@@ -217,8 +220,19 @@ class NetworkManager(QtCore.QObject):
                         message: proto.DirectMode_pb2.dmx_output = proto.DirectMode_pb2.dmx_output()
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.dmx_from_fish.emit(message)
+                    case proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE:
+                        message: proto.Events_pb2.event_sender = proto.Events_pb2.event_sender()
+                        message.ParseFromString(bytes(msg))
+                        if self.sender_message_callback is not None:
+                            self.sender_message_callback(message)
+                        else:
+                            logger.warning("Discarded event_sender update due to missing callback.")
+                    case proto.MessageTypes_pb2.MSGT_EVENT:
+                        message: proto.Events_pb2.event_sender = proto.Events_pb2.event()
+                        message.ParseFromString(bytes(msg))
+                        self._broadcaster.fish_event_received.emit(message)
                     case _:
-                        pass
+                        logger.warning(f"Received not implemented message type: {msg_type}")
             except:
                 logger.error("Failed to parse message.", exc_info=True)
         self.push_messages()
@@ -431,6 +445,13 @@ class NetworkManager(QtCore.QObject):
             self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
         else:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+
+    def send_event_sender_update(self, msg: proto.Events_pb2.event_sender):
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE,
+                               push_direct=False)
+
+    def send_event_message(self, msg: proto.Events_pb2.event):
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT, push_direct=False)
 
 
 def on_error(error) -> None:

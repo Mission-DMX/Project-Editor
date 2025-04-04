@@ -29,7 +29,7 @@ class SocketStreamReader:
 
     def read(self, num_bytes: int = -1) -> bytes:
         """This method is here to comply with the stream interface but never, hence not implemented"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def read_exactly(self, num_bytes: int) -> bytes:
         """Read num_bytes from the socket."""
@@ -119,6 +119,7 @@ class Connection:
     def run(self):
         """This method will be called by the client thread in order to handle the client."""
         try:
+            logger.info(f"Got incoming remote CLI connection from {self._remote_address}.")
             reader = SocketStreamReader(self._client)
             while not self.context.exit_called:
                 self._client.send("> ".encode("utf-8"))
@@ -147,6 +148,10 @@ class Connection:
         self._client.close()
         self._client_thread.join()
 
+    @property
+    def remote_address(self) -> str:
+        return self._remote_address
+
 
 class RemoteCLIServer:
     """This class handles the control port. Only IPv6 connections are supported."""
@@ -167,6 +172,7 @@ class RemoteCLIServer:
         self._show = show
         self._network_manager = netmgr
         self._server_thread.start()
+        logger.warning(f"Opened up CLI interface on [{interface}]:{port}")
 
     def run(self):
         """This method will be run by the server thread in order to process incoming clients."""
@@ -192,11 +198,12 @@ class RemoteCLIServer:
         """
         self._stopped = True
         self._server_socket.close()
-        to_be_stopped = []
+        to_be_stopped: list[Connection] = []
         for k_addr in self._connected_clients.keys():
             to_be_stopped.append(self._connected_clients[k_addr])
         for c in to_be_stopped:
             c.stop()
+            logger.info(f"CLI clients from {c.remote_address} disconnected.")
         try:
             self._server_thread.join()
         except KeyboardInterrupt:
