@@ -33,7 +33,7 @@ def _handle_incoming_sender_update(msg: "event_sender"):
     ev = _senders.get(msg.name)
     if ev is None:
         match msg.type:
-            case "fish.builtin.plain":
+            case "fish.builtin.plain" | "undef":
                 ev = EventSender(msg.name)
             case "fish.builtin.midi":
                 raise NotImplemented()
@@ -45,6 +45,9 @@ def _handle_incoming_sender_update(msg: "event_sender"):
                 raise NotImplemented()
             case "fish.builtin.macrokeypad":
                 raise NotImplemented()
+            case _:
+                logger.error(f"Unexpaected event sender type: '{msg.type}'")
+                return
         _senders[msg.name] = ev
     ev.index_on_fish = msg.sender_id
     ev.debug_enabled = msg.gui_debug_enabled
@@ -74,8 +77,9 @@ class EventSender:
 
     @debug_enabled.setter
     def debug_enabled(self, new_state: bool):
-        self._debug_enabled = bool(new_state)
-        self.send_update()
+        if self._debug_enabled != new_state:
+            self._debug_enabled = bool(new_state)
+            self.send_update()
 
     # TODO implement event function and argument renaming model
 
@@ -89,7 +93,8 @@ class EventSender:
         """
         msg = event_sender()
         msg.name = self.name
-        msg.sender_id = self.index_on_fish
+        if self.index_on_fish != -1:
+            msg.sender_id = self.index_on_fish
         msg.type = self.type
         msg.gui_debug_enabled = self._debug_enabled
         msg.configuration.update(self.configuration)
@@ -153,5 +158,5 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
             ev.type = prot_event_type.START
         case 'release':
             ev.type = prot_event_type.RELEASE
-    ev.arguments = [max(min(arg, 255), 0) for arg in arguments]
+    ev.arguments.extend([max(min(arg, 255), 0) for arg in arguments])
     _network_manager.send_event_message(ev)

@@ -145,4 +145,7 @@ class EventSetupWidget(QSplitter):
         pass  # TODO
 
     def _event_received(self, e: event):
-        pass  # TODO
+        item = AnnotatedListWidgetItem(self._event_log)
+        item.setText("#{} [{}:{}] {} {}".format(e.event_id, e.sender_id, e.sender_function,
+                                                e.type, ", ".join([str(arg) for arg in e.arguments])))
+        self._event_log.addItem(item)

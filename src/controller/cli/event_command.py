@@ -40,16 +40,17 @@ class EventCommand(Command):
             case "add-sender":
                 evs = EventSender(args.name)
                 evs.type = args.sender_type
-                for item in args.configure:
-                    try:
-                        if "=" in item:
-                            k, v = item.split("=")
-                            evs.configuration[str(k)] = str(v if v is not None else "")
-                        else:
-                            evs.configuration[str(item)] = ""
-                    except ValueError as e:
-                        logger.error(f'Unable to parse event sender configuration entry {item}. Expected'
-                                     f' format: <key>=<value>')
+                if args.configure is not None:
+                    for item in args.configure:
+                        try:
+                            if "=" in item:
+                                k, v = item.split("=")
+                                evs.configuration[str(k)] = str(v if v is not None else "")
+                            else:
+                                evs.configuration[str(item)] = ""
+                        except ValueError as e:
+                            logger.error(f'Unable to parse event sender configuration entry {item}. Expected'
+                                         f' format: <key>=<value>')
                 evs.debug_enabled = args.enable_debug
                 return True
             case "send":
