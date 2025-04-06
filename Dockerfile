@@ -12,6 +12,9 @@ RUN apt update && apt install -y \
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install pyinstaller
 
-RUN mkdir -p /github/home/.cache/pip && chmod -R 777 /github/home/.cache/pip
+RUN mkdir -p /github/home/.cache/pip && \
+    chown -R runner:runner /github/home/.cache/pip && \
+    chmod -R 775 /github/home/.cache/pip
+
 
 WORKDIR /app
