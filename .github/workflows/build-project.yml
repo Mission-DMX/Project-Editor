@@ -29,9 +29,12 @@ jobs:
         run: |
           pyinstaller --onefile --name=Project-Editor src/main.py
 
-      - name: Upload Executables as Artifact
+      - name: Create tar.gz Archive
+        run: |
+          tar -czvf dist/project-editor.tar.gz -C dist project-editor
+
+      - name: Upload tar.gz as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Project-Editor
-          path: |
-            dist/Project-Editor
+          name: project-editor
+          path: dist/project-editor.tar.gz
