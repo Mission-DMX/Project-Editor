@@ -31,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/mission_dmx/builder:latest
+          tags: ghcr.io/mission-dmx/builder:latest
