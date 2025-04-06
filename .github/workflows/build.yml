@@ -1,40 +1,16 @@
-name: Build 
+name: Build Python
 
-#on:
-#  push:
-#    branches:
-#      - '*'
+on:
+  workflow_call:
 
 jobs:
-  build:
+  build-project:
     runs-on: ubuntu-latest
-
+    container:
+      image: ghcr.io/mission-dmx/builder:latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
-      #  with:
-      #    submodules: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential cmake python3 python3-pip
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
 
       - name: Build Python Executable
         run: |
