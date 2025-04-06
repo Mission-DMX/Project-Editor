@@ -1,7 +1,10 @@
 name: create new Release
 
 on:
-  workflow_call:
+  workflow_run:
+    workflows: ["Build Python"]  # Der Name des Build-Workflows, der hier referenziert wird
+    types:
+      - completed
 
 jobs:
   create-release:
@@ -10,6 +13,8 @@ jobs:
       - name: Get current year and month
         id: get_date
         run: echo "RELEASE_TAG=$(date +'%Y-%m').Auto" >> $GITHUB_ENV
+
+
 
       - name: Download Artifact
         uses: actions/download-artifact@v2

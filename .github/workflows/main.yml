@@ -31,7 +31,7 @@ jobs:
     if: ${{ always() && (needs.check-changes.outputs.docker == 'false' || needs.docker.result == 'success') }}
     uses: ./.github/workflows/build-project.yml
 
-  release:
-    needs: [ build ]
-    if: ${{ always() && (needs.build.result == 'success') }}
-    uses: ./.github/workflows/create-release.yml
+  #release:
+  #  needs: [ build ]
+  #  if: ${{ always() && (needs.build.result == 'success') }}
+  #  uses: ./.github/workflows/create-release.yml
