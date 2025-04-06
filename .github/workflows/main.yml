@@ -21,10 +21,10 @@ jobs:
               - 'requirements.txt'
               - '.github/workflows/docker-build.yml'
 
-  #docker:
-  #  needs: check-changes
-  #  if: ${{ needs.check-changes.outputs.docker == 'true' }}
-  #  uses: ./.github/workflows/docker-build.yml
+  docker:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.docker == 'true' }}
+    uses: ./.github/workflows/docker-build.yml
 
   buildAndRelease:
   #  needs: [ docker, check-changes ]
