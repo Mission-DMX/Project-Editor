@@ -17,22 +17,6 @@ jobs:
         id: get_date
         run: echo "RELEASE_TAG=$(date +'%Y-%m').Auto" >> $GITHUB_ENV
 
-      - name: Run whoami
-        run: whoami
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Build Python Executable
         run: |
           pyinstaller --onefile --name=Project-Editor src/main.py
