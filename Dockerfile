@@ -11,6 +11,6 @@ RUN apt update && apt install -y \
 
 # Installiere Python-Tools
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install pyinstaller
+RUN pip install --upgrade pip && pip install pyinstaller && pip install -r requirements.txt
 
 WORKDIR /app
