@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/mission-dmx/builder:latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,10 +36,3 @@ jobs:
           name: Project-Editor
           path: |
             dist/Project-Editor
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/Project-Editor
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
