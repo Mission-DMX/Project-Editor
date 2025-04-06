@@ -17,6 +17,9 @@ jobs:
         id: get_date
         run: echo "RELEASE_TAG=$(date +'%Y-%m').Auto" >> $GITHUB_ENV
 
+      - name: Run whoami
+        run: whoami
+
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
