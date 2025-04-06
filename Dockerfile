@@ -1,4 +1,4 @@
-FROM ghcr.io/mission-dmx/builder:latest
+FROM python:3.13-slim^
 
 # Installiere System-Dependencies
 RUN apt update && apt install -y \
