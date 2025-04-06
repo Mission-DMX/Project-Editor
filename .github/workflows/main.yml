@@ -27,8 +27,8 @@ jobs:
   #  uses: ./.github/workflows/docker-build.yml
 
   build:
-    needs: [ check-changes ]
-    if: ${{ always() && (needs.check-changes.outputs.docker == 'false' || needs.docker.result == 'success') }}
+  #  needs: [ docker, check-changes ]
+  #  if: ${{ always() && (needs.check-changes.outputs.docker == 'false' || needs.docker.result == 'success') }}
     uses: ./.github/workflows/build-project.yml
 
   release:
