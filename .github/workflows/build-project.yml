@@ -35,3 +35,10 @@ jobs:
           name: Project-Editor
           path: |
             dist/Project-Editor
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/Project-Editor
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
