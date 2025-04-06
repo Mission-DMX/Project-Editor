@@ -35,3 +35,4 @@ jobs:
     needs: [ build ]
     if: ${{ always() && (needs.build.result == 'success') }}
     uses: ./.github/workflows/create-release.yml
+    secrets: inherit

@@ -11,16 +11,10 @@ jobs:
         id: get_date
         run: echo "RELEASE_TAG=$(date +'%Y-%m').Auto" >> $GITHUB_ENV
 
-      - name: List all artifacts
-        run: ls -la .github/workflows/
-
-
-
-
-#      - name: Download Artifact
-#        uses: actions/download-artifact@v2
-#        with:
-#          name: Project-Editor
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Project-Editor
 
 #      - name: Create GitHub Release
 #        id: create_release
