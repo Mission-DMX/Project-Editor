@@ -1,14 +1,10 @@
 name: Build and Push Docker Image
 
 on:
-  push:
-    paths:
-      - 'Dockerfile'
-      - '.github/workflows/docker-build.yml'
-      - 'requirements.txt'
+  workflow_call:
 
 jobs:
-  build-and-push:
+  build-docker-and-push:
     runs-on: ubuntu-latest
 
     permissions:
