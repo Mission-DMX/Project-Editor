@@ -13,6 +13,7 @@ logger = getLogger(__file__)
 _broadcaster_instance: "Broadcaster"
 _network_manager: "NetworkManager"
 _senders: dict[str, "EventSender"] = {}
+_senders_by_id: dict[int, "EventSender"] = {}
 
 
 def set_broadcaster_and_network(b: "Broadcaster", nm: "NetworkManager"):
@@ -49,6 +50,7 @@ def _handle_incoming_sender_update(msg: "event_sender"):
                 logger.error(f"Unexpaected event sender type: '{msg.type}'")
                 return
         _senders[msg.name] = ev
+        _senders_by_id[msg.sender_id] = ev
     ev.index_on_fish = msg.sender_id
     ev.debug_enabled = msg.gui_debug_enabled
     ev.configuration.update(msg.configuration)
@@ -65,6 +67,7 @@ class EventSender:
         self.index_on_fish: int = -1
         self.type: str = ""
         self._debug_enabled: bool = False
+        self.debug_include_ongoing_events: bool = False
         self.configuration: dict[str, str] = dict()
 
     @property
@@ -111,6 +114,11 @@ def get_sender(name: str) -> EventSender | None:
     :returns: the object if the lookup was successful
     """
     return _senders.get(name)
+
+
+def get_sender_by_id(sender_id: int) -> EventSender | None:
+    """Get the event sender by its index on fish."""
+    return _senders_by_id.get(sender_id)
 
 
 def get_all_senders() -> list[EventSender]:

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (QCheckBox, QFormLayout, QHBoxLayout, QLabel, QLis
 
 import proto.Events_pb2
 from model import Broadcaster, events
+from model.events import get_sender_by_id
 from proto.Events_pb2 import event
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
@@ -36,6 +37,10 @@ class _SenderConfigurationWidget(QScrollArea):
         self._debug_enabled_checkbox.setText("Enable Event logging")
         self._debug_enabled_checkbox.checkStateChanged.connect(self._debug_enabled_checked_changed)
         layout.addWidget(self._debug_enabled_checkbox)
+        self._debug_include_ongoing_checkbox = QCheckBox(self)
+        self._debug_include_ongoing_checkbox.setText("Include Ongoing Events")
+        self._debug_include_ongoing_checkbox.checkStateChanged.connect(self._debug_include_ongoing_changed)
+        layout.addWidget(self._debug_include_ongoing_checkbox)
         # TODO implement individual configuration widgets for event sender types
         self.setLayout(layout)
         self.sender = None
@@ -53,16 +58,24 @@ class _SenderConfigurationWidget(QScrollArea):
             self._type_label.setText(new_sender.type)
             self._debug_enabled_checkbox.setChecked(new_sender.debug_enabled)
             self._debug_enabled_checkbox.setEnabled(True)
+            self._debug_include_ongoing_checkbox.setChecked(new_sender.debug_include_ongoing_events)
+            self._debug_include_ongoing_checkbox.setEnabled(new_sender.debug_enabled)
         else:
             self._name_label.setText("")
             self._index_label.setText("")
             self._type_label.setText("")
             self._debug_enabled_checkbox.setChecked(False)
             self._debug_enabled_checkbox.setEnabled(False)
+            self._debug_include_ongoing_checkbox.setEnabled(False)
 
     def _debug_enabled_checked_changed(self, *args, **kwargs):
         if self._sender is not None:
             self._sender.debug_enabled = self._debug_enabled_checkbox.isChecked()
+            self._debug_include_ongoing_checkbox.setEnabled(self._sender.debug_enabled)
+
+    def _debug_include_ongoing_changed(self):
+        if self._sender is not None:
+            self._sender.debug_include_ongoing_events = self._debug_include_ongoing_checkbox.isChecked()
 
 
 class _SourceListWidget(QWidget):
@@ -242,6 +255,9 @@ class EventSetupWidget(QSplitter):
         pass  # TODO
 
     def _event_received(self, e: event):
+        if e.type == proto.Events_pb2.ONGOING_EVENT:
+            if not get_sender_by_id(e.sender_id).debug_include_ongoing_events:
+                return
         item = AnnotatedListWidgetItem(self._event_log)
         w = _EventLogListWidget(self._event_log, e)
         item.setSizeHint(w.sizeHint())
