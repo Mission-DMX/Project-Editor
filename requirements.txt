@@ -22,3 +22,5 @@ onnxruntime-gpu>=1.16.1
 #onnxruntime-openvino
 pyjoystick
 markdown
+typing_extensions
+qt_material

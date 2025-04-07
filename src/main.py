@@ -8,6 +8,7 @@ import pathlib
 import sys
 
 from PySide6 import QtWidgets
+from qt_material import apply_stylesheet
 
 from controller.cli.remote_control_port import RemoteCLIServer
 from controller.joystick.joystick_handling import JoystickHandler
@@ -44,6 +45,7 @@ def main():
     app.setOrganizationDomain("technikradio.org")
     app.setDesktopSettingsAware(True)
     # app.setWindowIcon(QIcon("resources/app-icon.png"))
+    apply_stylesheet(app, theme='dark_teal.xml')
 
     width, height = app.primaryScreen().size().toTuple()
     FinalGlobals.set_screen_width(width)
