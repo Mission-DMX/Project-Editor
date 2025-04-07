@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """This file provides the ShowBrowser widget."""
-
+import os.path
 from typing import List
 
 from PySide6.QtCore import QPoint, Qt
@@ -14,6 +14,7 @@ from model import BoardConfiguration, Scene, UIPage
 from model.control_desk import BankSet
 from model.ofl.fixture import UsedFixture
 from model.scene import FilterPage
+from utility import resource_path
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 
@@ -25,12 +26,12 @@ from .fixture_to_filter import place_fixture_filters_in_scene
 class ShowBrowser:
     """This class provides a navigation bar / browser for the complete show."""
 
-    _filter_icon = QIcon("resources/icons/filter.svg")
-    _scene_browser_tab_icon = QIcon("resources/icons/showbrowser-show.svg")
-    _universe_browser_tab_icon = QIcon("resources/icons/showbrowser-universe.svg")
-    _filter_browser_tab_icon = QIcon("resources/icons/showbrowser-filterpages.svg")
-    _fader_icon = QIcon("resources/icons/faders.svg")
-    _uipage_icon = QIcon("resources/icons/uipage.svg")
+    _filter_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter.svg")))
+    _scene_browser_tab_icon = QIcon(resource_path(os.path.join("resources", "icons", "showbrowser-show.svg")))
+    _universe_browser_tab_icon = QIcon(resource_path(os.path.join("resources", "icons", "showbrowser-universe.svg")))
+    _filter_browser_tab_icon = QIcon(resource_path(os.path.join("resources", "icons", "showbrowser-filterpages.svg")))
+    _fader_icon = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
+    _uipage_icon = QIcon(resource_path(os.path.join("resources", "icons", "uipage.svg")))
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget):
         self._recently_created_scene = None
@@ -338,7 +339,7 @@ class ShowBrowser:
         for item in selected_items:
             if not isinstance(item, AnnotatedTreeWidgetItem):
                 continue
-            if  isinstance(item.annotated_data, (FilterPage, Scene)) :
+            if isinstance(item.annotated_data, (FilterPage, Scene)):
                 parent_to_append_to = item.annotated_data
                 self._input_dialog = QInputDialog(self.widget)
                 self._input_dialog.setInputMode(QInputDialog.TextInput)

@@ -1,10 +1,13 @@
+import os
+
 import cv2
 import numpy as np
 
 from controller.autotrack.Helpers.ImageHelper import draw_bounding_box
 from controller.utils.yaml import yaml_load
+from utility import resource_path
 
-CLASSES = yaml_load("resources/autotrack_models/coco128.yaml")["names"]
+CLASSES = yaml_load(resource_path(os.path.join("resources", "autotrack_models", "coco128.yaml")))["names"]
 colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
@@ -50,8 +53,8 @@ def post_process_yolov8_output(output, confidence_threshold=0.5):
             prediction[5:]
         )  # Assuming class IDs start from index 5
         bounding_box = prediction[
-            0:4
-        ]  # Assuming bounding box coordinates are in the first 4 values
+                       0:4
+                       ]  # Assuming bounding box coordinates are in the first 4 values
 
         # Append the filtered detection to the list
         filtered_detections.append(
@@ -78,7 +81,7 @@ def draw_boxes(frame, detections, scale):
     :param scale: The size of the rectangle
     """
     for detection in detections:
-        #print(detection)
+        # print(detection)
         # draw_bounding_box(
         #    frame,
         #   detection["class_id"],
@@ -110,8 +113,8 @@ def get_filtered_detections(outputs, scale: int, confidence_threshold: float):
             classes_scores
         )
         if (
-            maxScore >= confidence_threshold
-            and CLASSES[maxClassIndex] == "person"
+                maxScore >= confidence_threshold
+                and CLASSES[maxClassIndex] == "person"
         ):
             box = [
                 outputs[0][i][0] - (0.5 * outputs[0][i][2]),

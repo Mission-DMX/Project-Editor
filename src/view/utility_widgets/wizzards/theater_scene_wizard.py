@@ -1,5 +1,6 @@
 # coding=utf-8
 import logging
+import os.path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -13,6 +14,7 @@ from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.patching_channel import PatchingChannel
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
+from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -21,8 +23,8 @@ from view.utility_widgets.button_container import ButtonContainer
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
 
-_folder_empty_icon = QIcon("resources/icons/folder.svg")
-_folder_full_icon = QIcon("resources/icons/folder-full.svg")
+_folder_empty_icon = QIcon(resource_path(os.path.join("resources", "icons", "folder.svg")))
+_folder_full_icon = QIcon(resource_path(os.path.join("resources", "icons", "folder-full.svg")))
 logger = logging.getLogger(__file__)
 
 
