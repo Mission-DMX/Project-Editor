@@ -1,12 +1,14 @@
 # coding=utf-8
 
 """This file provides the about-dialog"""
-
+import os.path
 from logging import getLogger
 
 from html2text import html2text
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
+
+from utility import resource_path
 
 logger = getLogger(__file__)
 
@@ -19,7 +21,7 @@ def read_entire_file_as_str(file_path: str) -> str:
     :returns: The content of the loaded file or a hint that something went wrong.
     """
     try:
-        with open(file_path, 'r',encoding='UTF-8') as f:
+        with open(file_path, 'r', encoding='UTF-8') as f:
             text = f.read()
     except IOError as e:
         text = "Unknown Debug"
@@ -27,8 +29,8 @@ def read_entire_file_as_str(file_path: str) -> str:
     return text
 
 
-VERSION_STR = read_entire_file_as_str("resources/version.txt")
-CONTRIBUTORS_STR = html2text(read_entire_file_as_str("resources/contributors.html"))
+VERSION_STR = read_entire_file_as_str(resource_path(os.path.join("resources", "version.txt")))
+CONTRIBUTORS_STR = html2text(read_entire_file_as_str(resource_path(os.path.join("resources", "contributors.html"))))
 
 
 class AboutWindow(QMessageBox):
