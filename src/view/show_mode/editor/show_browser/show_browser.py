@@ -17,9 +17,10 @@ from model.scene import FilterPage
 from utility import resource_path
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
+
+from ..editing_utils import add_scene_to_show
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
-from ..editing_utils import add_scene_to_show
 
 
 class ShowBrowser:
