@@ -5,6 +5,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QCheckBox, QFormLayout, QHBoxLayout, QLabel, QListWidget, QScrollArea, QSplitter,
                                QToolBar, QVBoxLayout, QWidget)
 
+import proto.Events_pb2
 from model import Broadcaster, events
 from proto.Events_pb2 import event
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -90,6 +91,90 @@ class _SourceListWidget(QWidget):
         self.setLayout(layout)
 
 
+def _type_to_string(t):
+    """Get the string representation of an event type"""
+    if t == proto.Events_pb2.ONGOING_EVENT:
+        return "Ongoing"
+    elif t == proto.Events_pb2.START:
+        return "Start"
+    elif t == proto.Events_pb2.RELEASE:
+        return "End"
+    elif t == proto.Events_pb2.SINGLE_TRIGGER:
+        return "Single"
+    else:
+        return str(t)
+
+
+class _EventLogListWidget(QWidget):
+
+    _STYLE_ID_TAG = """
+    background-color: #B0B0B0;
+    color: #FFFFFF;
+    border-radius: 5px;
+    padding: 3px;
+    """
+
+    _STYLE_TAG_REGULAR = """
+    border-radius: 5px;
+    padding: 3px;
+    background-color: #B0B0B0;
+    border: 2px solid #262626;
+    color: #FFFFFF;
+    """
+
+    _STYLE_TAG_START = """
+    border-radius: 5px;
+    padding: 3px;
+    background-color: #B0B0B0;
+    border: 2px solid #262626;
+    color: #00A000;
+    """
+
+    _STYLE_TAG_RELEASE = """
+    border-radius: 5px;
+    padding: 3px;
+    background-color: #B0B0B0;
+    border: 2px solid #262626;
+    color: #FF0000;
+    """
+
+    def __init__(self, parent: QWidget, ev: event):
+        super().__init__(parent=parent)
+        layout = QHBoxLayout()
+        self._id_label = QLabel(str(ev.event_id), parent=self)
+        self._id_label.setToolTip("Event ID")
+        self._id_label.setStyleSheet(_EventLogListWidget._STYLE_ID_TAG)
+        self._sender_label = QLabel("[{}:{}]".format(ev.sender_id, ev.sender_function), parent=self)
+        self._sender_label.setToolTip("Event Sender and function")
+        self._type_label = QLabel(_type_to_string(ev.type), parent=self)
+        if ev.type == proto.Events_pb2.START:
+            self._type_label.setStyleSheet(_EventLogListWidget._STYLE_TAG_START)
+        elif ev.type == proto.Events_pb2.RELEASE:
+            self._type_label.setStyleSheet(_EventLogListWidget._STYLE_TAG_RELEASE)
+        else:
+            self._type_label.setStyleSheet(_EventLogListWidget._STYLE_TAG_REGULAR)
+        self._type_label.setToolTip("Event Type")
+        self._args_label = QLabel(", ".join([str(arg) for arg in ev.arguments]), parent=self)
+        self._args_label.setToolTip("Event Arguments")
+        intermediate_layout = QHBoxLayout()
+        intermediate_layout.addWidget(self._id_label)
+        intermediate_layout.addStretch()
+        layout.addLayout(intermediate_layout)
+        intermediate_layout = QHBoxLayout()
+        intermediate_layout.addWidget(self._sender_label)
+        intermediate_layout.addStretch()
+        layout.addLayout(intermediate_layout)
+        intermediate_layout = QHBoxLayout()
+        intermediate_layout.addWidget(self._type_label)
+        intermediate_layout.addStretch()
+        layout.addLayout(intermediate_layout)
+        intermediate_layout = QHBoxLayout()
+        intermediate_layout.addWidget(self._args_label)
+        intermediate_layout.addStretch()
+        layout.addLayout(intermediate_layout)
+        self.setLayout(layout)
+
+
 class EventSetupWidget(QSplitter):
 
     def __init__(self, parent: QWidget | None, b: Broadcaster):
@@ -99,6 +184,7 @@ class EventSetupWidget(QSplitter):
         self._selection_panel.setLayout(layout)
         self._button_pannel = QToolBar(self._selection_panel)
         self._button_pannel.addAction(QIcon.fromTheme("list-add"), "Add Sender", self._add_sender_pressed)
+        self._button_pannel.addAction(QIcon.fromTheme("edit-clear"), "Clear Log", self._clear_log_pressed)
         layout.addWidget(self._button_pannel)
         self._sender_list = QListWidget(self._selection_panel)
         self._sender_list.setMinimumWidth(100)
@@ -115,9 +201,20 @@ class EventSetupWidget(QSplitter):
         self._configuration_widget = _SenderConfigurationWidget(self._config_splitter)
         self._configuration_widget.setMinimumHeight(100)
         self._config_splitter.addWidget(self._configuration_widget)
-        self._event_log = QListWidget(self._config_splitter)
+        self._log_container = QWidget(self._config_splitter)
+        log_layout = QVBoxLayout()
+        self._log_container.setLayout(log_layout)
+        label_layout = QHBoxLayout()
+        for label_str in ["Event ID", "Sender:Function", "Type", "Arguments"]:
+            intermediate_layout = QHBoxLayout()
+            intermediate_layout.addWidget(QLabel(label_str, parent=self._log_container))
+            intermediate_layout.addStretch()
+            label_layout.addLayout(intermediate_layout)
+        log_layout.addLayout(label_layout)
+        self._event_log = QListWidget(self._log_container)
         self._event_log.setMinimumHeight(100)
-        self._config_splitter.addWidget(self._event_log)
+        log_layout.addWidget(self._event_log)
+        self._config_splitter.addWidget(self._log_container)
         self.setStretchFactor(1, 2)
         self._config_splitter.setStretchFactor(0, 2)
         b.fish_event_received.connect(self._event_received)
@@ -146,6 +243,11 @@ class EventSetupWidget(QSplitter):
 
     def _event_received(self, e: event):
         item = AnnotatedListWidgetItem(self._event_log)
-        item.setText("#{} [{}:{}] {} {}".format(e.event_id, e.sender_id, e.sender_function,
-                                                e.type, ", ".join([str(arg) for arg in e.arguments])))
+        w = _EventLogListWidget(self._event_log, e)
+        item.setSizeHint(w.sizeHint())
+        item.annotated_data = e
         self._event_log.addItem(item)
+        self._event_log.setItemWidget(item, w)
+
+    def _clear_log_pressed(self):
+        self._event_log.clear()
