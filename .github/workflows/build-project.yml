@@ -19,7 +19,7 @@ jobs:
 
       - name: Build Python Executable
         run: |
-          pyinstaller --onefile --name=Project-Editor src/main.py
+          pyinstaller Project-Editor.spec
 
       - name: Upload Executable as Artifact
         uses: actions/upload-artifact@v4
