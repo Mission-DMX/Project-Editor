@@ -1,3 +1,4 @@
+import os
 from logging import getLogger
 
 from PySide6.QtCore import Qt
@@ -9,14 +10,15 @@ import proto.Events_pb2
 from model import Broadcaster, events
 from model.events import get_sender_by_id
 from proto.Events_pb2 import event
+from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 logger = getLogger(__file__)
-_xtouch_gpio_icon = QIcon("resources/icons/eventsource-gpio.svg")
-_plain_icon = QIcon("resources/icons/eventsource-plain.svg")
-_keypad_icon = QIcon("resources/icons/eventsource-keypad.svg")
-_midi_icon = QIcon("resources/icons/eventsource-midi.svg")
-_midirtp_icon = QIcon("resources/icons/eventsource-midirtp.svg")
+_xtouch_gpio_icon = QIcon(resource_path(os.path.join("resources", "icons","eventsource-gpio.svg")))
+_plain_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-plain.svg")))
+_keypad_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-keypad.svg")))
+_midi_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midi.svg")))
+_midirtp_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midirtp.svg")))
 
 
 class _SenderConfigurationWidget(QScrollArea):
