@@ -13,6 +13,7 @@ from controller.cli.remote_control_port import RemoteCLIServer
 from controller.joystick.joystick_handling import JoystickHandler
 from model.final_globals import FinalGlobals
 from style import Style
+from utility import resource_path
 from view.main_window import MainWindow
 
 logger = logging.getLogger("Project-Editor")
@@ -20,7 +21,7 @@ logger = logging.getLogger("Project-Editor")
 
 def setup_logging():
     """read logging from config file and set up the logger"""
-    config_file = pathlib.Path("../configs/logging.json")
+    config_file = resource_path(pathlib.Path("configs/logging.json"))
     with open(config_file, encoding="utf-8") as f_in:
         config = json.load(f_in)
 

@@ -1,5 +1,6 @@
 # coding=utf-8
 """Module for filter settings editor"""
+import os.path
 from logging import getLogger
 
 import PySide6
@@ -9,10 +10,10 @@ from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLine
 
 from model import Universe
 from model.filter import Filter, FilterTypeEnumeration
+from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
-
 from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
@@ -32,7 +33,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
     _open_dialogs: list[QDialog] = []
 
     def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem, filter: Filter):
-        super().__init__("resources/icons/settings.svg", parent)
+        super().__init__(resource_path(os.path.join("resources", "icons", "settings.svg")), parent)
         self.dialog = None
         self.filter_node = filter_node
         self.on_update = lambda: None

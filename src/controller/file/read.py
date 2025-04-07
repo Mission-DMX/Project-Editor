@@ -19,6 +19,7 @@ from model.filter import VirtualFilter
 from model.ofl.fixture import UsedFixture, load_fixture, make_used_fixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
+from utility import resource_path
 from view.dialogs import ExceptionsDialog
 from view.show_mode.show_ui_widgets import WIDGET_LIBRARY, filter_to_ui_widget
 
@@ -79,7 +80,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     try:
         pn.current_step_description = "Load file from disk."
-        with open("resources/ShowFileSchema.xsd", 'r', encoding="UTF-8") as schema_file:
+        with open(resource_path(os.path.join("resources", "ShowFileSchema.xsd")), 'r', encoding="UTF-8") as schema_file:
             schema = xmlschema.XMLSchema(schema_file)
         schema.validate(file_name)
         pn.current_step_number += 1
