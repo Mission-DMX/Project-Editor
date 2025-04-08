@@ -3,12 +3,12 @@ from logging import getLogger
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QCheckBox, QFormLayout, QHBoxLayout, QLabel, QListWidget, QScrollArea, QSplitter,
-                               QToolBar, QVBoxLayout, QWidget, QDialog, QDialogButtonBox, QLineEdit, QComboBox)
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
+                               QLineEdit, QListWidget, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget)
 
 import proto.Events_pb2
 from model import Broadcaster, events
-from model.events import get_sender_by_id, EventSender
+from model.events import EventSender, get_sender_by_id
 from proto.Events_pb2 import event
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -35,6 +35,10 @@ class _SenderConfigurationWidget(QScrollArea):
         layout.addRow("Index on fish: ", self._index_label)
         self._type_label = QLabel(self)
         layout.addRow("Type: ", self._type_label)
+        self._persistence_checkbox = QCheckBox(self)
+        self._persistence_checkbox.setText("Sender Persistence")
+        self._persistence_checkbox.checkStateChanged.connect(self._persistence_changed)
+        layout.addWidget(self._persistence_checkbox)
         self._debug_enabled_checkbox = QCheckBox(self)
         self._debug_enabled_checkbox.setText("Enable Event logging")
         self._debug_enabled_checkbox.checkStateChanged.connect(self._debug_enabled_checked_changed)
@@ -58,6 +62,8 @@ class _SenderConfigurationWidget(QScrollArea):
             self._name_label.setText(new_sender.name)
             self._index_label.setText(str(new_sender.index_on_fish))
             self._type_label.setText(new_sender.type)
+            self._persistence_checkbox.setChecked(new_sender.persistent)
+            self._persistence_checkbox.setEnabled(True)
             self._debug_enabled_checkbox.setChecked(new_sender.debug_enabled)
             self._debug_enabled_checkbox.setEnabled(True)
             self._debug_include_ongoing_checkbox.setChecked(new_sender.debug_include_ongoing_events)
@@ -66,8 +72,11 @@ class _SenderConfigurationWidget(QScrollArea):
             self._name_label.setText("")
             self._index_label.setText("")
             self._type_label.setText("")
+            self._persistence_checkbox.setChecked(False)
+            self._persistence_checkbox.setEnabled(False)
             self._debug_enabled_checkbox.setChecked(False)
             self._debug_enabled_checkbox.setEnabled(False)
+            self._debug_include_ongoing_checkbox.setChecked(False)
             self._debug_include_ongoing_checkbox.setEnabled(False)
 
     def _debug_enabled_checked_changed(self, *args, **kwargs):
@@ -78,6 +87,10 @@ class _SenderConfigurationWidget(QScrollArea):
     def _debug_include_ongoing_changed(self):
         if self._sender is not None:
             self._sender.debug_include_ongoing_events = self._debug_include_ongoing_checkbox.isChecked()
+
+    def _persistence_changed(self):
+        if self._sender is not None:
+            self._sender.persistent = self._persistence_checkbox.isChecked()
 
 
 class _SourceListWidget(QWidget):

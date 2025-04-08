@@ -51,6 +51,7 @@ def _handle_incoming_sender_update(msg: "event_sender"):
                 return
         _senders[msg.name] = ev
         _senders_by_id[msg.sender_id] = ev
+        ev.type = msg.type
     ev.index_on_fish = msg.sender_id
     ev.debug_enabled = msg.gui_debug_enabled
     ev.configuration.update(msg.configuration)
@@ -69,6 +70,8 @@ class EventSender:
         self._debug_enabled: bool = False
         self.debug_include_ongoing_events: bool = False
         self.configuration: dict[str, str] = dict()
+        self.persistent: bool = False
+        self.renamed_events: dict[tuple[int, int, str], str] = dict()
 
     @property
     def name(self) -> str:
