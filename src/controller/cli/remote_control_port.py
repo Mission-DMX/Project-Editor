@@ -179,6 +179,7 @@ class RemoteCLIServer:
         with socket(AF_INET6, SOCK_STREAM) as s:
             self._server_socket = s
             s.bind((self._bind_interface, self._bind_port))
+            s.settimeout(2)
             s.listen()
             while not self._stopped:
                 try:
@@ -187,8 +188,10 @@ class RemoteCLIServer:
                     self._connected_clients[remote_address] = Connection(client, remote_address,
                                                                          self._connected_clients,
                                                                          self._show, self._network_manager)
-                except socket_error:
+                except TimeoutError:
                     pass
+                except socket_error as e:
+                    logger.error(f"CLI socket error: {e}")
             logger.info("Exiting CLI server thread")
 
     def stop(self):
@@ -196,6 +199,7 @@ class RemoteCLIServer:
         
         It may block until the operating system released all resources.
         """
+        logger.info("Stopping CLI server")
         self._stopped = True
         self._server_socket.close()
         to_be_stopped: list[Connection] = []
