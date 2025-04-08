@@ -4,11 +4,11 @@ from logging import getLogger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QCheckBox, QFormLayout, QHBoxLayout, QLabel, QListWidget, QScrollArea, QSplitter,
-                               QToolBar, QVBoxLayout, QWidget)
+                               QToolBar, QVBoxLayout, QWidget, QDialog, QDialogButtonBox, QLineEdit, QComboBox)
 
 import proto.Events_pb2
 from model import Broadcaster, events
-from model.events import get_sender_by_id
+from model.events import get_sender_by_id, EventSender
 from proto.Events_pb2 import event
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -190,6 +190,40 @@ class _EventLogListWidget(QWidget):
         self.setLayout(layout)
 
 
+class _SenderAddDialog(QDialog):
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
+        self.setModal(True)
+        self.setWindowTitle("Add Event Sender")
+        self._button_box = QDialogButtonBox(
+            (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        )
+        self._button_box.rejected.connect(self.close)
+        self._button_box.accepted.connect(self._apply)
+        layout = QFormLayout()
+        self._name_tb = QLineEdit(self)
+        self._name_tb.setPlaceholderText("Enter sender name here")
+        layout.addRow("Name: ", self._name_tb)
+        self._type_cb = QComboBox(self, editable=False)
+        self._type_cb.addItems([
+            'fish.builtin.plain',
+            'fish.builtin.midi',
+            'fish.builtin.midirtp',
+            'fish.builtin.xtouchgpio',
+            'fish.builtin.gpio',
+            'fish.builtin.macrokeypad'
+        ])
+        layout.addRow("Type: ", self._type_cb)
+        layout.addWidget(self._button_box)
+        self.setLayout(layout)
+
+    def _apply(self):
+        evs = EventSender(self._name_tb.text())
+        evs.type = self._type_cb.currentText()
+        evs.send_update(auto_commit=True, push_direct=True)
+        self.close()
+
+
 class EventSetupWidget(QSplitter):
 
     def __init__(self, parent: QWidget | None, b: Broadcaster):
@@ -233,6 +267,7 @@ class EventSetupWidget(QSplitter):
         self.setStretchFactor(1, 2)
         self._config_splitter.setStretchFactor(0, 2)
         b.fish_event_received.connect(self._event_received)
+        self._dialog: QDialog | None = None
 
     def _update_sender_list(self):
         self._sender_list.clear()
@@ -254,7 +289,8 @@ class EventSetupWidget(QSplitter):
         self._configuration_widget.sender = item.annotated_data
 
     def _add_sender_pressed(self):
-        pass  # TODO
+        self._dialog = _SenderAddDialog(self)
+        self._dialog.open()
 
     def _event_received(self, e: event):
         if e.type == proto.Events_pb2.ONGOING_EVENT:

@@ -86,7 +86,7 @@ class EventSender:
 
     # TODO implement event function and argument renaming model
 
-    def send_update(self, auto_commit: bool = True) -> event_sender:
+    def send_update(self, auto_commit: bool = True, push_direct: bool = False) -> event_sender:
         """
         Assemble an event_sender message and publish it if auto_commit is enabled.
         While it is possible to override this method, it is advisable to implementing classes
@@ -103,7 +103,7 @@ class EventSender:
         msg.configuration.update(self.configuration)
         if auto_commit:
             global _network_manager
-            _network_manager.send_event_sender_update(msg)
+            _network_manager.send_event_sender_update(msg, push_direct=push_direct)
         return msg
 
 
