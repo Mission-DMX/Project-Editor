@@ -4,8 +4,8 @@ from logging import getLogger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem, QToolBar,
-                               QVBoxLayout, QWidget)
+                               QLineEdit, QListWidget, QPushButton, QScrollArea, QSplitter, QTableWidget,
+                               QTableWidgetItem, QToolBar, QVBoxLayout, QWidget)
 
 import proto.Events_pb2
 from model import Broadcaster, events
@@ -15,11 +15,12 @@ from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem, AnnotatedTableWidgetItem
 
 logger = getLogger(__file__)
-_xtouch_gpio_icon = QIcon(resource_path(os.path.join("resources", "icons","eventsource-gpio.svg")))
+_xtouch_gpio_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-gpio.svg")))
 _plain_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-plain.svg")))
 _keypad_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-keypad.svg")))
 _midi_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midi.svg")))
 _midirtp_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midirtp.svg")))
+_rename_icon = QIcon(resource_path(os.path.join("resources", "icons", "rename.svg")))
 
 
 class _SenderConfigurationWidget(QScrollArea):
@@ -218,6 +219,11 @@ class _EventLogListWidget(QWidget):
         self._type_label.setToolTip("Event Type")
         self._args_label = QLabel(", ".join([str(arg) for arg in ev.arguments]), parent=self)
         self._args_label.setToolTip("Event Arguments")
+        self._add_rename_button = QPushButton(self)
+        self._add_rename_button.setFixedWidth(32)
+        self._add_rename_button.setIcon(_rename_icon)
+        self._add_rename_button.clicked.connect(self._add_rename_entry)
+        layout.addWidget(self._add_rename_button)
         intermediate_layout = QHBoxLayout()
         intermediate_layout.addWidget(self._id_label)
         intermediate_layout.addStretch()
@@ -235,6 +241,13 @@ class _EventLogListWidget(QWidget):
         intermediate_layout.addStretch()
         layout.addLayout(intermediate_layout)
         self.setLayout(layout)
+        self._event = ev
+
+    def _add_rename_entry(self):
+        sender = get_sender_by_id(self._event.sender_id)
+        if sender is None:
+            return
+        sender.renamed_events[(int(self._event.type), self._event.sender_function, "".join([chr(c) for c in self._event.arguments]))] = "New Event"
 
 
 class _SenderAddDialog(QDialog):
@@ -302,6 +315,7 @@ class EventSetupWidget(QSplitter):
         log_layout = QVBoxLayout()
         self._log_container.setLayout(log_layout)
         label_layout = QHBoxLayout()
+        label_layout.addSpacing(32)
         for label_str in ["Event ID", "Sender:Function", "Type", "Arguments"]:
             intermediate_layout = QHBoxLayout()
             intermediate_layout.addWidget(QLabel(label_str, parent=self._log_container))
