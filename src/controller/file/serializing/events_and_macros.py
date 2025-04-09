@@ -17,8 +17,8 @@ def _write_event_sender(root: "ElementTree.Element", es: "EventSender"):
         ElementTree.SubElement(element, "configuration", attrib={"name": str(k), "value": str(v)})
     for k, v in es.renamed_events.items():
         re = ElementTree.SubElement(element, "eventRename", attrib={
-            "eventType": k[0],
-            "senderFunction": k[1],
-            "arguments": k[2]
+            "eventType": str(k[0]),
+            "senderFunction": str(k[1]),
+            "arguments": str(k[2])
         })
         re.text = v

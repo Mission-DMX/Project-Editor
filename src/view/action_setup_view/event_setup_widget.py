@@ -4,14 +4,15 @@ from logging import getLogger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget)
+                               QLineEdit, QListWidget, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem, QToolBar,
+                               QVBoxLayout, QWidget)
 
 import proto.Events_pb2
 from model import Broadcaster, events
 from model.events import EventSender, get_sender_by_id, mark_sender_persistent
 from proto.Events_pb2 import event
 from utility import resource_path
-from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem, AnnotatedTableWidgetItem
 
 logger = getLogger(__file__)
 _xtouch_gpio_icon = QIcon(resource_path(os.path.join("resources", "icons","eventsource-gpio.svg")))
@@ -47,6 +48,9 @@ class _SenderConfigurationWidget(QScrollArea):
         self._debug_include_ongoing_checkbox.setText("Include Ongoing Events")
         self._debug_include_ongoing_checkbox.checkStateChanged.connect(self._debug_include_ongoing_changed)
         layout.addWidget(self._debug_include_ongoing_checkbox)
+        self._rename_table = QTableWidget(self, rowCount=0, columnCount=4)
+        self._rename_table.cellChanged.connect(self._rename_table_cell_changed)
+        layout.addWidget(self._rename_table)
         # TODO implement individual configuration widgets for event sender types
         self.setLayout(layout)
         self.sender = None
@@ -57,7 +61,10 @@ class _SenderConfigurationWidget(QScrollArea):
 
     @sender.setter
     def sender(self, new_sender: events.EventSender | None):
+        if new_sender == self._sender:
+            return
         self._sender = new_sender
+        self._rename_table.clear()
         if new_sender is not None:
             self._name_label.setText(new_sender.name)
             self._index_label.setText(str(new_sender.index_on_fish))
@@ -68,6 +75,24 @@ class _SenderConfigurationWidget(QScrollArea):
             self._debug_enabled_checkbox.setEnabled(True)
             self._debug_include_ongoing_checkbox.setChecked(new_sender.debug_include_ongoing_events)
             self._debug_include_ongoing_checkbox.setEnabled(new_sender.debug_enabled)
+            rename_items = new_sender.renamed_events.items()
+            self._rename_table.setRowCount(len(rename_items))
+            self._rename_table.setEnabled(True)
+            i = 0
+            for k, v in rename_items:
+                name_item = AnnotatedTableWidgetItem(v)
+                name_item.annotated_data = k
+                ev_type_item = QTableWidgetItem(_type_to_string(k[0]))
+                ev_type_item.setFlags(ev_type_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+                s_function_item = QTableWidgetItem(str(k[1]))
+                s_function_item.setFlags(s_function_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+                args_item = QTableWidgetItem(k[2])
+                args_item.setFlags(args_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+                self._rename_table.setItem(i, 0, name_item)
+                self._rename_table.setItem(i, 1, ev_type_item)
+                self._rename_table.setItem(i, 2, s_function_item)
+                self._rename_table.setItem(i, 3, args_item)
+                i += 1
         else:
             self._name_label.setText("")
             self._index_label.setText("")
@@ -78,6 +103,8 @@ class _SenderConfigurationWidget(QScrollArea):
             self._debug_enabled_checkbox.setEnabled(False)
             self._debug_include_ongoing_checkbox.setChecked(False)
             self._debug_include_ongoing_checkbox.setEnabled(False)
+            self._rename_table.setRowCount(0)
+            self._rename_table.setEnabled(False)
 
     def _debug_enabled_checked_changed(self, *args, **kwargs):
         if self._sender is not None:
@@ -91,6 +118,14 @@ class _SenderConfigurationWidget(QScrollArea):
     def _persistence_changed(self):
         if self._sender is not None:
             self._sender.persistent = self._persistence_checkbox.isChecked()
+
+    def _rename_table_cell_changed(self, row: int, column: int):
+        if self._sender is None:
+            return
+        item = self._rename_table.item(row, column)
+        if not isinstance(item, AnnotatedTableWidgetItem):
+            return
+        self._sender.renamed_events[item.annotated_data] = item.text()
 
 
 class _SourceListWidget(QWidget):
@@ -115,7 +150,6 @@ class _SourceListWidget(QWidget):
         self._id_label.setEnabled(False)
         text_layout.addWidget(self._id_label)
         layout.addLayout(text_layout)
-        # TODO add persistence indicator
         self.setLayout(layout)
 
 

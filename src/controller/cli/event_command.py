@@ -34,6 +34,7 @@ class EventCommand(Command):
         send_parser.add_argument("--function", help="The sender function to be used", type=int, default=0)
         send_parser.add_argument("--type", default="single", choices=['single', 'release', 'start'])
         send_parser.add_argument("--args", nargs='+', type=int, action='extend', help="Specify the event arguments")
+        # TODO add renaming of events
 
     def execute(self, args) -> bool:
         match args.eventactions:
