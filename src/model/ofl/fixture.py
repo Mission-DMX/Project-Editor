@@ -117,6 +117,7 @@ class UsedFixture:
 
     def __init__(self, name: str, short_name: str, categories: set[Category], comment: str, mode: Mode,
                  fixture_file: str, mode_index: int, parent_universe: int, name_on_stage: str) -> None:
+        """Used Fixture in a specific mode"""
         self.name: str = name
         self.short_name: str = short_name
         self.categories: set[Category] = categories
@@ -235,6 +236,8 @@ class UsedFixture:
 
     @property
     def channels(self) -> list["PatchingChannel"]:
+        """property of Patching Channels"""
+        # TODO eigentlich nur auf die elemente der Liste zugreifen
         self._channels.sort(key=lambda x: x.address)
         return self._channels
 
@@ -260,6 +263,7 @@ class UsedFixture:
 
     @property
     def first_channel(self) -> int:
+        """first channel of a Fixture"""
         i = 513
         for c in self.channels:
             i = min(i, c.address)
@@ -269,6 +273,6 @@ class UsedFixture:
 
 
 def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int, name_on_stage: str = "") -> UsedFixture:
-    """generate a new Used Fixture from a fixture"""
+    """generate a new Used Fixture from a Fixture"""
     return UsedFixture(fixture['name'], fixture['shortName'], fixture['categories'], fixture['comment'],
                        fixture['modes'][mode_index], fixture["fileName"], mode_index, universe_id, name_on_stage)

@@ -7,9 +7,10 @@ from model.patching_channel import PatchingChannel
 
 
 class FixtureModifierDialog(QtWidgets.QDialog):
-    """Dialog for modifying fixtures   """
+    """Dialog for modifying fixtures"""
 
     def __init__(self, patching_channel: PatchingChannel, universe: PatchingUniverse, parent: object = None) -> None:
+        """Dialog for modifying fixtures"""
         super().__init__(parent)
         self._patching_channel = patching_channel
         self._patching_universe = universe
@@ -60,18 +61,23 @@ class FixtureModifierDialog(QtWidgets.QDialog):
 
     @property
     def remove(self):
+        """property for remove is checked"""
         return self._remove.isChecked()
 
     @property
     def name_on_stage(self):
+        """property for name_on_stage"""
         return self._name_on_stage.text()
 
     @property
     def color(self):
+        """property for color"""
+        # TODO colorpicker
         return self._color.text()
 
     @property
     def channel(self):
+        """property for channel with default 0"""
         try:
             return int(self._channel.text()) - 1
         except ValueError:
@@ -86,6 +92,7 @@ class FixtureModifierDialog(QtWidgets.QDialog):
         self.reject()
 
     def _validate_input(self) -> None:
+        """validate the input of channel """
         start_channel = self.channel
         length = len(self._patching_channel.fixture.channels)
 
