@@ -116,7 +116,7 @@ class UsedFixture:
     """ Fixture in use with a specific mode"""
 
     def __init__(self, name: str, short_name: str, categories: set[Category], comment: str, mode: Mode,
-                 fixture_file: str, mode_index: int, parent_universe: int) -> None:
+                 fixture_file: str, mode_index: int, parent_universe: int, name_on_stage: str) -> None:
         self.name: str = name
         self.short_name: str = short_name
         self.categories: set[Category] = categories
@@ -125,7 +125,9 @@ class UsedFixture:
         self.parent_universe: int = parent_universe
         self._channels: list["PatchingChannel"] = []
         self.fixture_file: str = fixture_file
-        self.mode_index: int = mode_index
+        self._mode_index: int = mode_index
+
+        self._name_on_stage: str = name_on_stage
 
         self.red_segments: list["PatchingChannel"] = []
         self.blue_segments: list["PatchingChannel"] = []
@@ -138,6 +140,20 @@ class UsedFixture:
         self.pan_channels: list["PatchingChannel"] = []
         self.tilt_channels: list["PatchingChannel"] = []
         self.animation_speed_channels: list["PatchingChannel"] = []
+
+    @property
+    def name_on_stage(self):
+        """property for name on Stage"""
+        return self._name_on_stage
+
+    @name_on_stage.setter
+    def name_on_stage(self, name_on_stage: str):
+        self._name_on_stage = name_on_stage
+
+    @property
+    def mode_index(self):
+        """property for mode_index"""
+        return self._mode_index
 
     def update_segments(self):
         self.red_segments.clear()
@@ -214,7 +230,7 @@ class UsedFixture:
         This method clones the used fixture entry, except for the occupied channels
         """
         return UsedFixture(self.name, self.short_name, self.categories,
-                           self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe)
+                           self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe, "")
         # we do not need to copy the segment data as it is deduced from the channels data
 
     @property
@@ -252,7 +268,7 @@ class UsedFixture:
         return i
 
 
-def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int) -> UsedFixture:
+def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int, name_on_stage: str = "") -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
     return UsedFixture(fixture['name'], fixture['shortName'], fixture['categories'], fixture['comment'],
-                       fixture['modes'][mode_index], fixture["fileName"], mode_index, universe_id)
+                       fixture['modes'][mode_index], fixture["fileName"], mode_index, universe_id, name_on_stage)

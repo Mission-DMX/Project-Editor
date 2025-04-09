@@ -9,7 +9,7 @@ class PatchingUniverse:
 
     def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe) -> None:
         self._universe_proto: proto.UniverseControl_pb2 = universe_proto
-        self._patching: list[PatchingChannel] = [PatchingChannel(channel_address, "#FFFFFF") for channel_address in
+        self._patching: list[PatchingChannel] = [PatchingChannel(channel_address) for channel_address in
                                                  range(512)]
 
     @property

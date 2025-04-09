@@ -11,17 +11,16 @@ class PatchingChannel(QtCore.QObject):
     updated_fixture: QtCore.Signal = QtCore.Signal()
     updated_color: QtCore.Signal = QtCore.Signal(str)
 
-    def __init__(self, channel_address: int, color: str):
+    def __init__(self, channel_address: int):
         """Constructs a patching channel."""
         super().__init__()
         if 0 > channel_address or channel_address > 511:
             raise ValueError(f"Tried to create a channel with address {channel_address}")
         self._address: int = channel_address
-        parent_universe_id = -1
         self._fixture: UsedFixture = UsedFixture("Empty", "", set(), "", Mode(channels=["none"], shortName="", name=""),
-                                                 "", 0, parent_universe_id)
+                                                 "", 0, -1, "")
         self._fixture_channel: int = 0
-        self._color: str = color
+        self._color: str = "#FFFFFF"
         self._ignore_black = True
 
     @property
@@ -77,6 +76,16 @@ class PatchingChannel(QtCore.QObject):
     @color.setter
     def color(self, color: str):
         self._color = color
+        self.updated_color.emit(self._color)
+
+    def clear_chanel(self):
+        """clears the channel"""
+        self._fixture: UsedFixture = UsedFixture("Empty", "", set(), "", Mode(channels=["none"], shortName="", name=""),
+                                                 "", 0, -1, "")
+        self._fixture_channel: int = 0
+        self._color: str = "#FFFFFF"
+        self._ignore_black = True
+        self.updated_fixture.emit()
         self.updated_color.emit(self._color)
 
     def fixture_channel_id(self) -> int:

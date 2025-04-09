@@ -76,7 +76,8 @@ def _create_patching_element(patching: list[PatchingChannel], parent: ElementTre
             ElementTree.SubElement(patching_element, "fixture", attrib={
                 "start": str(channel.address),
                 "fixture_file": channel.fixture.fixture_file,
-                "mode": str(channel.fixture.mode_index)
+                "mode": str(channel.fixture.mode_index),
+                "nameOnStage": str(channel.fixture.name_on_stage)
             })
             index += len(channel.fixture.mode["channels"])
         else:

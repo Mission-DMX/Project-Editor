@@ -606,7 +606,7 @@ def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> 
     used_fixtures: list[tuple[int, UsedFixture]] = []
     for child in location_element:
         used_fixture = make_used_fixture(load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
-                                         int(child.attrib['mode']), universe_id)
+                                         int(child.attrib['mode']), universe_id, child.attrib["nameOnStage"])
 
         used_fixtures.append((int(child.attrib['start']), used_fixture))
     # TODO load fixture name from file
