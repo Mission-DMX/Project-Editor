@@ -38,6 +38,11 @@ def set_dark_theme(app):
     dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(40, 14, 237).lighter())
     dark_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
 
+    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor(150, 150, 150))
+    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor(150, 150, 150))
+    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.WindowText, QColor(150, 150, 150))
+    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.HighlightedText, QColor(100, 100, 100))
+
     app.setPalette(dark_palette)
 
 
