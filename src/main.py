@@ -2,13 +2,17 @@
 """GUI and control elements for the software."""
 
 if __name__ == "__main__":
+    import os
+
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QSplashScreen
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
     app = QApplication([])
     from PySide6.QtGui import QPixmap
 
-    splashscreen = QSplashScreen(QPixmap("resources/splash.png"))
+    from utility import resource_path
+
+    splashscreen = QSplashScreen(QPixmap(resource_path(os.path.join("resources", "splash.png"))))
     splashscreen.show()
     splashscreen.raise_()
     app.processEvents()
@@ -18,15 +22,15 @@ if __name__ == "__main__":
     app.setOrganizationDomain("technikradio.org")
     app.setDesktopSettingsAware(True)
     from PySide6.QtGui import QIcon
-    app.setWindowIcon(QIcon("resources/app-icon.png"))
+    app.setWindowIcon(QIcon(resource_path(os.path.join("resources", "app-icon.png"))))
 
     version_string = "Error reading version."
-    with open("resources/version.txt", "r") as f:
+    with open(resource_path(os.path.join("resources", "version.txt")), "r") as f:
         try:
             version_string = "Version: " + f.read().replace('\n', '').strip()
         except:
             pass
-    from PySide6.QtGui import QColor
+    from PySide6.QtGui import QColor, QPalette
     splashscreen.showMessage(version_string, alignment=Qt.AlignmentFlag.AlignCenter, color=QColor.fromRgb(125, 125, 125))
     app.processEvents()
 
@@ -49,7 +53,7 @@ if __name__ == "__main__":
 
     def setup_logging():
         """read logging from config file and set up the logger"""
-        config_file = pathlib.Path("../configs/logging.json")
+        config_file = resource_path(pathlib.Path(os.path.join("configs", "logging.json")))
         with open(config_file, encoding="utf-8") as f_in:
             config = json.load(f_in)
 
@@ -68,6 +72,32 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
 
+    def set_dark_theme(app):
+        """set default dark theme"""
+
+        app.setStyle("Fusion")
+        dark_palette = QPalette()
+        dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
+        dark_palette.setColor(QPalette.ColorRole.Base, QColor(42, 42, 42))
+        dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(66, 66, 66))
+        dark_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
+        dark_palette.setColor(QPalette.ColorRole.ToolTipText, QColor(255, 255, 255))
+        dark_palette.setColor(QPalette.ColorRole.Text, QColor(255, 255, 255))
+        dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.ColorRole.ButtonText, QColor(255, 255, 255))
+        dark_palette.setColor(QPalette.ColorRole.BrightText, QColor(255, 0, 0))
+        dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(40, 14, 237).lighter())
+        dark_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+
+        dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor(150, 150, 150))
+        dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor(150, 150, 150))
+        dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.WindowText, QColor(150, 150, 150))
+        dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.HighlightedText, QColor(100, 100, 100))
+
+        app.setPalette(dark_palette)
+
+
     def main(app: QApplication):
         """Startup"""
         setup_logging()
@@ -78,6 +108,7 @@ if __name__ == "__main__":
         width, height = app.primaryScreen().size().toTuple()
         FinalGlobals.set_screen_width(width)
         FinalGlobals.set_screen_height(height)
+        set_dark_theme(app)
         app.setStyleSheet(Style.APP)
         JoystickHandler()
 

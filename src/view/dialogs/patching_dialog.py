@@ -40,7 +40,7 @@ class PatchingDialog(QtWidgets.QDialog):
         _patching_node = QtWidgets.QLabel("Enter number of heads@uni-chanel/offset")
         validator = QtGui.QRegularExpressionValidator(
             QtCore.QRegularExpression(
-                r"([1-9]\d{0,2})?(@[1-9]\d{0,2}(-(([1-5]\d{1,2})|([1-9]\d{0,1}))(\/([1-3]\d{1,2}|[1-9]))?)?)?"))
+                r"([1-9]\d{0,2})?(@[1-9]\d{0,2}(-(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1}))(\/(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1})))?)?)?"))
 
         self._patching = QtWidgets.QLineEdit("")
         self._patching.setValidator(validator)

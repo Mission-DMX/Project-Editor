@@ -1,0 +1,33 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      docker: ${{ steps.filter.outputs.docker }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docker:
+              - 'Dockerfile'
+              - 'requirements.txt'
+              - '.github/workflows/docker-build.yml'
+
+  docker:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.docker == 'true' }}
+    uses: ./.github/workflows/docker-build.yml
+
+  buildAndRelease:
+    needs: [ docker, check-changes ]
+    if: ${{ always() && (needs.check-changes.outputs.docker == 'false' || needs.docker.result == 'success') }}
+    uses: ./.github/workflows/build-project.yml
+

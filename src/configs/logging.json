@@ -34,7 +34,7 @@
       "class": "logging.handlers.RotatingFileHandler",
       "level": "INFO",
       "formatter": "json",
-      "filename": "./../logs/project_editor_info.log.jsonl",
+      "filename": "/tmp/project_editor_info.log.jsonl",
       "maxBytes": 10000,
       "backupCount": 3
     },
@@ -42,7 +42,7 @@
       "class": "logging.handlers.RotatingFileHandler",
       "level": "DEBUG",
       "formatter": "json",
-      "filename": "./../logs/project_editor_debug.log.jsonl",
+      "filename": "/tmp/project_editor_debug.log.jsonl",
       "maxBytes": 10000,
       "backupCount": 3
     },

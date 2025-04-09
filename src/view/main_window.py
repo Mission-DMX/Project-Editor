@@ -1,5 +1,6 @@
 # coding=utf-8
 """main Window for the Editor"""
+import os.path
 import platform
 
 from PySide6 import QtGui, QtWidgets
@@ -14,6 +15,7 @@ from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
 from style import Style
+from utility import resource_path
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.dmx_data_log import DmxDataLogWidget
@@ -29,8 +31,8 @@ from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizar
 class MainWindow(QtWidgets.QMainWindow):
     """Main window of the app. All widget are children of its central widget."""
 
-    STATUS_ICON_DIRECT_MODE = QIcon("resources/icons/faders.svg")
-    STATUS_ICON_FILTER_MODE = QIcon("resources/icons/play.svg")
+    STATUS_ICON_DIRECT_MODE = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
+    STATUS_ICON_FILTER_MODE = QIcon(resource_path(os.path.join("resources", "icons", "play.svg")))
 
     def __init__(self, parent=None) -> None:
         """Inits the MainWindow.
@@ -180,7 +182,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 menu.addSeparator()
                 continue
             menu_entry: QtGui.QAction = QtGui.QAction(entry[0], self)
-            if entry[0] is not None:
+            if entry[1] is not None:
                 menu_entry.triggered.connect(entry[1])
             else:
                 menu_entry.setEnabled(False)

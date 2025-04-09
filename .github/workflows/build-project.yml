@@ -1,0 +1,39 @@
+name: Build Python
+
+on:
+  workflow_call:
+
+jobs:
+  build-project:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/mission-dmx/builder:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Get current year and month
+        id: get_date
+        run: echo "RELEASE_TAG=$(date +'%Y-%m').Auto" >> $GITHUB_ENV
+
+      - name: Build Python Executable
+        run: |
+          pyinstaller Project-Editor.spec
+
+      - name: Upload Executable as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Project-Editor
+          path: |
+            dist/Project-Editor
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: dist/Project-Editor
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

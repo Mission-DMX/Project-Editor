@@ -7,7 +7,7 @@ from PySide6.QtGui import QFont
 
 from model import Filter, Scene
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
-from src.view.show_mode.editor.filter_settings_item import FilterSettingsItem
+from view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
 
 logger = getLogger(__name__)
