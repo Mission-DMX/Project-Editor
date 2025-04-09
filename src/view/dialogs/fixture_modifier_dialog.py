@@ -1,6 +1,6 @@
 # coding=utf-8
 """Dialog for modifying fixtures"""
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtGui, QtWidgets
 
 from model import PatchingUniverse
 from model.patching_channel import PatchingChannel
