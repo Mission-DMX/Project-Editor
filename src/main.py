@@ -8,8 +8,7 @@ import pathlib
 import sys
 
 from PySide6 import QtWidgets
-from PySide6.QtGui import QColorConstants
-from qt_material import apply_stylesheet
+from PySide6.QtGui import QColor, QPalette
 
 from controller.cli.remote_control_port import RemoteCLIServer
 from controller.joystick.joystick_handling import JoystickHandler
@@ -24,17 +23,25 @@ logger = logging.getLogger("Project-Editor")
 def set_dark_theme(app):
     """set default dark theme"""
 
-    dark_palette = app.palette()
-    dark_palette.setColor(dark_palette.ColorRole.Window, QColorConstants.DarkGray)
-    dark_palette.setColor(dark_palette.ColorRole.WindowText, QColorConstants.White)
-    dark_palette.setColor(dark_palette.ColorRole.Base, QColorConstants.DarkGray)
-    dark_palette.setColor(dark_palette.ColorRole.Button, QColorConstants.DarkGray)
-    dark_palette.setColor(dark_palette.ColorRole.ButtonText, QColorConstants.White)
-    dark_palette.setColor(dark_palette.ColorRole.BrightText, QColorConstants.Red)
-    dark_palette.setColor(dark_palette.ColorRole.Highlight, QColorConstants.Blue)
-    dark_palette.setColor(dark_palette.ColorRole.Link, QColorConstants.Blue)
-    dark_palette.setColor(dark_palette.ColorRole.Highlight, QColorConstants.Blue)
-    dark_palette.setColor(dark_palette.ColorRole.HighlightedText, QColorConstants.White)
+    app.setStyle("Fusion")
+    dark_palette = QPalette()
+    dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.ColorRole.Base, QColor(42, 42, 42))
+    dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(66, 66, 66))
+    dark_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.ColorRole.ToolTipText, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.ColorRole.Text, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+    dark_palette.setColor(QPalette.ColorRole.ButtonText, QColor(255, 255, 255))
+    dark_palette.setColor(QPalette.ColorRole.BrightText, QColor(255, 0, 0))
+    dark_palette.setColor(QPalette.ColorRole.Highlight, QColor(40, 14, 237).lighter())
+    dark_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
+
+    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor(150, 150, 150))
+    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor(150, 150, 150))
+    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.WindowText, QColor(150, 150, 150))
+    dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.HighlightedText, QColor(100, 100, 100))
 
     app.setPalette(dark_palette)
 
@@ -65,7 +72,6 @@ def main():
     app.setOrganizationDomain("technikradio.org")
     app.setDesktopSettingsAware(True)
     # app.setWindowIcon(QIcon("resources/app-icon.png"))
-    apply_stylesheet(app, theme='dark_teal.xml')
 
     width, height = app.primaryScreen().size().toTuple()
     FinalGlobals.set_screen_width(width)

@@ -9,5 +9,5 @@ This software is checked using continious integration. Having the following in y
 may help you passing those tests:
 ```
 isort $(git rev-parse --show-toplevel)/src
-pylint --fail-under=8 $(git diff --name-only --cached | grep '.py') || exit 1
+pylint --fail-under=9 $(git diff --name-only --cached | grep '.py') || exit 1
 ```
