@@ -15,7 +15,8 @@ smooth out vec2 cord_size;
 
 void main() {
     mat4 mvpMatrix = projectionMatrix * modelMatrix;
-    gl_Position = mvpMatrix * vec4(position, 0.0, 1.0);
+
+    gl_Position = mvpMatrix * vec4(position.xy, 0.0, 1.0);
     ioVertexTexCoord = texture_coordinate;
     cursor_position = in_cursor_position;
     cord_size = in_cord_size;

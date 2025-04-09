@@ -26,10 +26,11 @@ void main() {
     if(!is_visible(pos)) {
         discard;
     }
-    if (is_cursor_overlap(pos, cursor_position)) {
+    /*if (is_cursor_overlap(pos, cursor_position)) {
         out_color = vec4(1.0, 1.0, 1.0, 1.0);
     } else {
         out_color = calculate_position_color(pos);
-    }
+    }*/
+    out_color = vec4(gl_FragCoord.xy / cord_size.xy, 0.0, 1.0);
     //gl_FragColor = out_color;
 }

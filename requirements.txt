@@ -22,3 +22,4 @@ onnxruntime-gpu>=1.16.1
 #onnxruntime-openvino
 pyjoystick
 markdown
+pyopengl

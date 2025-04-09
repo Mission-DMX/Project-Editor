@@ -32,12 +32,13 @@ class ColorPickerWidget(QOpenGLWidget):
         self._r: float = 0
         self._g: float = 0
         self._b: float = 0
-        frame_scale = 100
         self._selection_diagram_coordinates = np.array([
-            0, 1 * frame_scale,
-            0, 0,
-            1 * frame_scale, 1 * frame_scale,
-            1 * frame_scale, 0
+            -1, 1,
+            1, 1,
+            1, -1,
+            -1, 1,
+            1, -1,
+            -1, -1
         ], dtype=np.float32)
 
         self.setMinimumHeight(800)
@@ -54,22 +55,23 @@ class ColorPickerWidget(QOpenGLWidget):
         f = context.functions()
         f.initializeOpenGLFunctions()
 
-        self._gl_program = QOpenGLShaderProgram()
-        self._gl_program.create()
-
-        self._gl_vao = QOpenGLVertexArrayObject()
-        self._gl_vao.create()
-        self._gl_vao.bind()
+        # self._gl_vao = QOpenGLVertexArrayObject()
+        # self._gl_vao.create()
+        # self._gl_vao.bind()
+        # self._gl_vao.release()
 
         self._gl_vbo_color_quad = QOpenGLBuffer()
         self._gl_vbo_color_quad.create()
         self._gl_vbo_color_quad.bind()
         self._gl_vbo_color_quad.allocate(self._selection_diagram_coordinates.nbytes)
         self._gl_vbo_color_quad.write(0, self._selection_diagram_coordinates.data, self._selection_diagram_coordinates.nbytes)
+        self._gl_vbo_color_quad.release()
         # TODO set self.glVertexAttribPointer(...) here
 
         # TODO repeat for controls interface
 
+        self._gl_program = QOpenGLShaderProgram()
+        self._gl_program.create()
         if ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER is None:
             shader_source = os.path.dirname(__file__) + "/color_selection_surface_frag_shader.glsl"
             ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER = QOpenGLShader(QOpenGLShader.ShaderTypeBit.Fragment)
@@ -88,6 +90,7 @@ class ColorPickerWidget(QOpenGLWidget):
             else:
                 logger.debug("Successfully compiled vertex shader from %s.", shader_source)
 
+        self._gl_program.bind()
         self._gl_program.addShader(ColorPickerWidget._COLOR_SELECTION_SURFACE_FRAG_SHADER)
         self._gl_program.addShader(ColorPickerWidget._SIMPLE_VERT_SHADER)
         self._gl_program.bindAttributeLocation("position", 0)
@@ -96,10 +99,11 @@ class ColorPickerWidget(QOpenGLWidget):
             raise RuntimeError("Failed to link shaders. Log={}".format(self._gl_program.log()))
         else:
             logger.debug("Successfully linked GL program")
-        self._gl_program.bind()
+
         self.setBackgroundColor(5, 5, 5, 255)
         self.set_cursor_position((10, 10), (self.width(), self.height()))
         self._recalculate_projection()
+        self._gl_program.release()
 
     def _cleanup_gl(self):
         self.makeCurrent()
@@ -153,11 +157,14 @@ class ColorPickerWidget(QOpenGLWidget):
     def paintGL(self):
         super().paintGL()
         f = self.context().functions()
-        f.glClear(GL.GL_COLOR_BUFFER_BIT)
+        f.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         # TODO theoretically we somehow need to call self.glUseProgram(self._gl_program) here.
         #  But how do we get the pointer from our program?
         self._gl_program.bind()
-        f.glDrawArrays(GL.GL_QUADS, 0, int(self._selection_diagram_coordinates.size / 2))
+        self._gl_vbo_color_quad.bind()  # _gl_vao?
+        trig_count = int(self._selection_diagram_coordinates.size / (2*3))
+        f.glDrawArrays(GL.GL_TRIANGLES, 0, trig_count)
+        self._gl_vbo_color_quad.release()
         self._gl_program.release()
 
     def resizeGL(self, w, h):
