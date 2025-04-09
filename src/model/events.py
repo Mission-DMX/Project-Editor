@@ -14,6 +14,7 @@ _broadcaster_instance: "Broadcaster"
 _network_manager: "NetworkManager"
 _senders: dict[str, "EventSender"] = {}
 _senders_by_id: dict[int, "EventSender"] = {}
+_persistence_notes: dict[str, dict[tuple[int, int, str], str]] = {}
 
 
 def set_broadcaster_and_network(b: "Broadcaster", nm: "NetworkManager"):
@@ -52,6 +53,11 @@ def _handle_incoming_sender_update(msg: "event_sender"):
         _senders[msg.name] = ev
         _senders_by_id[msg.sender_id] = ev
         ev.type = msg.type
+        pnote = _persistence_notes.get(msg.name)
+        if pnote is not None:
+            ev.renamed_events.update(pnote)
+            _persistence_notes.pop(msg.name)
+            ev.persistent = True
     ev.index_on_fish = msg.sender_id
     ev.debug_enabled = msg.gui_debug_enabled
     ev.configuration.update(msg.configuration)
@@ -171,3 +177,12 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
             ev.type = prot_event_type.RELEASE
     ev.arguments.extend([max(min(arg, 255), 0) for arg in arguments])
     _network_manager.send_event_message(ev)
+
+
+def mark_sender_persistent(name: str, renamings: dict[tuple[int, int, str], str] = {}):
+    sender = get_sender(name)
+    if sender is not None:
+        sender.persistent = True
+        sender.renamed_events.update(renamings)
+    else:
+        _persistence_notes[name] = renamings.copy()

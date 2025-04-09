@@ -15,6 +15,7 @@ from controller.file.deserialization.post_load_operations import link_patched_fi
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, ColorHSI, Filter, PatchingUniverse, Scene, UIPage, Universe
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
+from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter
 from model.ofl.fixture import UsedFixture, load_fixture, make_used_fixture
 from model.scene import FilterPage
@@ -128,6 +129,8 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
                 _parse_ui_hint(child, board_configuration)
             case 'bankset':
                 _parse_and_add_bankset(child, loaded_banksets)
+            case "eventsource":
+                _parse_and_add_event_source(child)
             case _:
                 logger.warning("Show %s contains unknown element: %s",
                                board_configuration.show_name, child.tag)
@@ -631,3 +634,30 @@ def _parse_ui_hint(ui_hint_element: ElementTree.Element, board_configuration: Bo
                 logger.warning("Found attribute %s=%s while parsing ui hint", key, value)
 
     board_configuration.ui_hints[ui_hint_key] = ui_hint_value
+
+
+def _parse_and_add_event_source(elm: ElementTree.Element):
+    name = "undef"
+    stype = "fish.builtin.plain"
+    for key, value in elm.attrib.items():
+        match key:
+            case "id":
+                name = value
+            case "name":
+                pass  # as we treat the id and the name to be the same thing for now.
+            case "type":
+                stype = value
+            case _:
+                logger.error(f"Unexpected attribute in event source '{key}'='{value}'.")
+    evs = EventSender(name)
+    evs.type = stype
+    for child in elm:
+        match child.tag:
+            case "configuration":
+                evs.configuration[str(child.attrib["name"])] = str(child.attrib["value"])
+            case "eventRename":
+                evs.renamed_events[(int(child.attrib["eventType"]), int(child.attrib["senderFunction"]), str(child.attrib["arguments"]))] = child.text
+            case _:
+                logger.error(f"Unexpected child in event source definition: {child.tag}.")
+    mark_sender_persistent(name, evs.renamed_events)
+    evs.send_update(auto_commit=True, push_direct=True)

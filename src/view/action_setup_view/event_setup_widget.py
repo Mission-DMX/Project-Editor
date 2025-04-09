@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
 
 import proto.Events_pb2
 from model import Broadcaster, events
-from model.events import EventSender, get_sender_by_id
+from model.events import EventSender, get_sender_by_id, mark_sender_persistent
 from proto.Events_pb2 import event
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -233,6 +233,7 @@ class _SenderAddDialog(QDialog):
     def _apply(self):
         evs = EventSender(self._name_tb.text())
         evs.type = self._type_cb.currentText()
+        mark_sender_persistent(evs.name)
         evs.send_update(auto_commit=True, push_direct=True)
         self.close()
 
