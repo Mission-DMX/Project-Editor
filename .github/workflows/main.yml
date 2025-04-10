@@ -21,13 +21,13 @@ jobs:
               - 'pdm.lock'
               - '.github/workflows/docker-build.yml'
 
-  #docker:
-  #  needs: check-changes
-  #  if: ${{ needs.check-changes.outputs.docker == 'true' }}
-  #  uses: ./.github/workflows/docker-build.yml
+  docker:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.docker == 'true' }}
+    uses: ./.github/workflows/docker-build.yml
 
   buildAndRelease:
-  #  needs: [ docker, check-changes ]
-  #  if: ${{ always() && (needs.check-changes.outputs.docker == 'false' || needs.docker.result == 'success') }}
+    needs: [ docker, check-changes ]
+    if: ${{ always() && (needs.check-changes.outputs.docker == 'false' || needs.docker.result == 'success') }}
     uses: ./.github/workflows/build-project.yml
 
