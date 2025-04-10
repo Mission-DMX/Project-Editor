@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-project:
-    runs-on: ubuntu-latest
+    runs-on:  ubuntu-latest
     container:
       image: ghcr.io/mission-dmx/builder:latest
 
