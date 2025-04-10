@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:1fc4f82c022e75b7c6492295e5c8c2e8c341f9d435e10595963de927fd50465c"
+content_hash = "sha256:196e927d80471beb2da6429817ee7fe22a83e356112f6e20570f805543cf6833"
 
 [[metadata.targets]]
 requires_python = "==3.13.*"
@@ -578,6 +578,16 @@ dependencies = [
 files = [
     {file = "pylint-protobuf-0.22.0.tar.gz", hash = "sha256:fd569200698cf30cb85f13cc5cfff40c49285599bc972b455e932c1805216a11"},
     {file = "pylint_protobuf-0.22.0-py2.py3-none-any.whl", hash = "sha256:d6c5823ca55fb0141b862569aff18e9abc287409a105a9061c1327d425999f09"},
+]
+
+[[package]]
+name = "pyopengl"
+version = "3.1.9"
+summary = "Standard OpenGL bindings for Python"
+groups = ["default"]
+files = [
+    {file = "PyOpenGL-3.1.9-py3-none-any.whl", hash = "sha256:15995fd3b0deb991376805da36137a4ae5aba6ddbb5e29ac1f35462d130a3f77"},
+    {file = "pyopengl-3.1.9.tar.gz", hash = "sha256:28ebd82c5f4491a418aeca9672dffb3adbe7d33b39eada4548a5b4e8c03f60c8"},
 ]
 
 [[package]]
