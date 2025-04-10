@@ -38,6 +38,7 @@ dev = [
     "pylint>=3.3.6",
     "pylint-protobuf>=0.22.0",
     "tomlkit>=0.13.2",
+    "pyinstaller>=6.12.0",
 ]
 
 [tool.pdm]
