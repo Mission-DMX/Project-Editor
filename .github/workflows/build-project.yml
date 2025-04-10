@@ -36,6 +36,14 @@ jobs:
           RELEASE_TAG=$(pdm run python update_version.py)
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
 
+      - name: Commit updated version
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add pyproject.toml
+          git commit -m "Bump version to $VERSION [skip ci]"
+          git push
+
       - name: Build Python Executable
         run: |
           pdm run pyinstaller Project-Editor.spec
