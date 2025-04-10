@@ -10,6 +10,6 @@ RUN apt update && apt install -y \
 
 
 # Installiere Python-Tools
-RUN pip install pdm && pdm install --dev
+RUN pip install pdm
 
 WORKDIR /app
