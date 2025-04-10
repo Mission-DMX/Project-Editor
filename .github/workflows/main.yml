@@ -18,7 +18,6 @@ jobs:
           filters: |
             docker:
               - 'Dockerfile'
-              - 'pdm.lock'
               - '.github/workflows/docker-build.yml'
 
   docker:
