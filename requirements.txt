@@ -1,7 +1,7 @@
 # Base dependencies
 black
 flake8
-PySide6
+PySide6>=6.8.3
 pyqtgraph>=0.13.6
 protobuf
 xmlschema>=3.4.5
@@ -22,5 +22,5 @@ onnxruntime-gpu>=1.16.1
 #onnxruntime-openvino
 pyjoystick
 markdown
+pyopengl
 typing_extensions
-qt_material
