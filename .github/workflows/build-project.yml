@@ -15,6 +15,14 @@ jobs:
         with:
           submodules: true
 
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          cache: true
+
+      - name: Install dependencies
+        run: pdm install --dev
+
       - name: Run update_version.py and capture output
         id: version_update
         run: |
