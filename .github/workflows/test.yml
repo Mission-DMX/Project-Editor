@@ -1,22 +1,23 @@
 name: Testing
 
-on: [pull_request]
+on: [ pull_request ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup PDM
-      uses: pdm-project/setup-pdm@v4
-      with:
-        cache: true
+      - uses: actions/checkout@v4
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          cache: true
+          python-version-file: pyproject.toml
 
-    - name: Install dependencies
-      run: pdm install --dev
+      - name: Install dependencies
+        run: pdm install --dev
 
-    - name: Check Import Order with isort
-      uses: isort/isort-action@v1
-    - name: Analysing the code with pylint
-      run: |
-        pdm run pylint --fail-under=8 $(git ls-files '*.py')
+      - name: Check Import Order with isort
+        uses: isort/isort-action@v1
+      - name: Analysing the code with pylint
+        run: |
+          pdm run pylint --fail-under=8 $(git ls-files '*.py')
