@@ -5,20 +5,20 @@ on:
     branches: [ '*' ]
 
 jobs:
-  check-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      docker: ${{ steps.filter.outputs.docker }}
-    steps:
-      - uses: actions/checkout@v4
+#  check-changes:
+#    runs-on: ubuntu-latest
+#    outputs:
+#      docker: ${{ steps.filter.outputs.docker }}
+#    steps:
+#      - uses: actions/checkout@v4
 
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            docker:
-              - 'Dockerfile'
-              - '.github/workflows/docker-build.yml'
+#      - uses: dorny/paths-filter@v3
+#        id: filter
+#        with:
+#          filters: |
+#            docker:
+#              - 'Dockerfile'
+#              - '.github/workflows/docker-build.yml'
 
 #  docker:
 #    needs: check-changes
