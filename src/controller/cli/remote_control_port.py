@@ -192,7 +192,8 @@ class RemoteCLIServer:
                     pass
                 except socket_error as e:
                     logger.error(f"CLI socket error: {e}")
-            logger.info("Exiting CLI server thread")
+            s.close()
+        logger.info("Exiting CLI server thread")
 
     def stop(self):
         """This method stops the server and disconnects all clients.

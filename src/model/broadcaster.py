@@ -58,6 +58,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     fixture_patched: QtCore.Signal = QtCore.Signal()
     event_sender_model_updated: QtCore.Signal = QtCore.Signal()
     fish_event_received: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event)
+    event_rename_action_occurred: QtCore.Signal = QtCore.Signal(int)  # int: the id of the sender where the rename was
     ################################################################
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()
     view_patching: QtCore.Signal = QtCore.Signal()

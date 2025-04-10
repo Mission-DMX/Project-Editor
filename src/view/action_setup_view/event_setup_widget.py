@@ -24,7 +24,7 @@ _rename_icon = QIcon(resource_path(os.path.join("resources", "icons", "rename.sv
 
 
 class _SenderConfigurationWidget(QScrollArea):
-    def __init__(self, parent: QWidget | None):
+    def __init__(self, parent: QWidget | None, b: Broadcaster):
         super().__init__(parent=parent)
         self._sender: events.EventSender | None = None
         layout = QFormLayout()
@@ -52,9 +52,14 @@ class _SenderConfigurationWidget(QScrollArea):
         self._rename_table = QTableWidget(self, rowCount=0, columnCount=4)
         self._rename_table.cellChanged.connect(self._rename_table_cell_changed)
         layout.addWidget(self._rename_table)
+        # TODO add manual rename button
         # TODO implement individual configuration widgets for event sender types
         self.setLayout(layout)
+        self._own_rename_issued = False
+        self._broadcaster = b
         self.sender = None
+        self._update_widgets_on_new_sender(None)
+        b.event_rename_action_occurred.connect(self._rename_event_occurred)
 
     @property
     def sender(self) -> events.EventSender | None:
@@ -65,7 +70,9 @@ class _SenderConfigurationWidget(QScrollArea):
         if new_sender == self._sender:
             return
         self._sender = new_sender
-        self._rename_table.clear()
+        self._update_widgets_on_new_sender(new_sender)
+
+    def _update_widgets_on_new_sender(self, new_sender: events.EventSender | None):
         if new_sender is not None:
             self._name_label.setText(new_sender.name)
             self._index_label.setText(str(new_sender.index_on_fish))
@@ -76,24 +83,8 @@ class _SenderConfigurationWidget(QScrollArea):
             self._debug_enabled_checkbox.setEnabled(True)
             self._debug_include_ongoing_checkbox.setChecked(new_sender.debug_include_ongoing_events)
             self._debug_include_ongoing_checkbox.setEnabled(new_sender.debug_enabled)
-            rename_items = new_sender.renamed_events.items()
-            self._rename_table.setRowCount(len(rename_items))
             self._rename_table.setEnabled(True)
-            i = 0
-            for k, v in rename_items:
-                name_item = AnnotatedTableWidgetItem(v)
-                name_item.annotated_data = k
-                ev_type_item = QTableWidgetItem(_type_to_string(k[0]))
-                ev_type_item.setFlags(ev_type_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
-                s_function_item = QTableWidgetItem(str(k[1]))
-                s_function_item.setFlags(s_function_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
-                args_item = QTableWidgetItem(k[2])
-                args_item.setFlags(args_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
-                self._rename_table.setItem(i, 0, name_item)
-                self._rename_table.setItem(i, 1, ev_type_item)
-                self._rename_table.setItem(i, 2, s_function_item)
-                self._rename_table.setItem(i, 3, args_item)
-                i += 1
+            self._update_table()
         else:
             self._name_label.setText("")
             self._index_label.setText("")
@@ -104,8 +95,30 @@ class _SenderConfigurationWidget(QScrollArea):
             self._debug_enabled_checkbox.setEnabled(False)
             self._debug_include_ongoing_checkbox.setChecked(False)
             self._debug_include_ongoing_checkbox.setEnabled(False)
+            self._rename_table.clear()
             self._rename_table.setRowCount(0)
             self._rename_table.setEnabled(False)
+
+    def _update_table(self):
+        self._rename_table.clear()
+        rename_items = self._sender.renamed_events.items()
+        self._rename_table.setRowCount(len(rename_items))
+        i = 0
+        for k, v in rename_items:
+            name_item = AnnotatedTableWidgetItem(v)
+            name_item.annotated_data = k
+            ev_type_item = QTableWidgetItem(_type_to_string(k[0]))
+            ev_type_item.setFlags(ev_type_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+            s_function_item = QTableWidgetItem(str(k[1]))
+            s_function_item.setFlags(
+                s_function_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+            args_item = QTableWidgetItem(k[2])
+            args_item.setFlags(args_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+            self._rename_table.setItem(i, 0, name_item)
+            self._rename_table.setItem(i, 1, ev_type_item)
+            self._rename_table.setItem(i, 2, s_function_item)
+            self._rename_table.setItem(i, 3, args_item)
+            i += 1
 
     def _debug_enabled_checked_changed(self, *args, **kwargs):
         if self._sender is not None:
@@ -127,6 +140,16 @@ class _SenderConfigurationWidget(QScrollArea):
         if not isinstance(item, AnnotatedTableWidgetItem):
             return
         self._sender.renamed_events[item.annotated_data] = item.text()
+        self._own_rename_issued = True
+        self._broadcaster.event_rename_action_occurred.emit(self._sender.index_on_fish)
+
+    def _rename_event_occurred(self, s_id: int):
+        if not self._own_rename_issued:
+            if self._sender is not None:
+                if self._sender.index_on_fish == s_id:
+                    self._update_table()
+        else:
+            self._own_rename_issued = False
 
 
 class _SourceListWidget(QWidget):
@@ -201,7 +224,7 @@ class _EventLogListWidget(QWidget):
     color: #FF0000;
     """
 
-    def __init__(self, parent: QWidget, ev: event):
+    def __init__(self, parent: QWidget, ev: event, b: Broadcaster):
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self._id_label = QLabel(str(ev.event_id), parent=self)
@@ -224,6 +247,9 @@ class _EventLogListWidget(QWidget):
         self._add_rename_button.setIcon(_rename_icon)
         self._add_rename_button.clicked.connect(self._add_rename_entry)
         layout.addWidget(self._add_rename_button)
+        self._name_label = QLabel(self)
+        self._name_label.setVisible(False)
+        layout.addWidget(self._name_label)
         intermediate_layout = QHBoxLayout()
         intermediate_layout.addWidget(self._id_label)
         intermediate_layout.addStretch()
@@ -242,12 +268,35 @@ class _EventLogListWidget(QWidget):
         layout.addLayout(intermediate_layout)
         self.setLayout(layout)
         self._event = ev
+        self._broadcaster = b
+        self._broadcaster.event_rename_action_occurred.connect(self._rename_occurred)
+        self._update_name_label()
 
     def _add_rename_entry(self):
         sender = get_sender_by_id(self._event.sender_id)
         if sender is None:
             return
-        sender.renamed_events[(int(self._event.type), self._event.sender_function, "".join([chr(c) for c in self._event.arguments]))] = "New Event"
+        sender.renamed_events[self._get_event_tuple()] = "New Event"
+        self._broadcaster.event_rename_action_occurred.emit(sender.index_on_fish)
+
+    def _get_event_tuple(self) -> tuple[int, int, str]:
+        return int(self._event.type), self._event.sender_function, "".join([chr(c) for c in self._event.arguments])
+
+    def _rename_occurred(self, sid: int):
+        if sid != self._event.sender_id:
+            return
+        self._update_name_label()
+
+    def _update_name_label(self):
+        sender = get_sender_by_id(self._event.sender_id)
+        name = sender.renamed_events.get(self._get_event_tuple())
+        if name is not None:
+            self._add_rename_button.setVisible(False)
+            self._add_rename_button.setEnabled(False)
+            self._name_label.setVisible(True)
+            self._name_label.setFixedWidth(32)
+            self._name_label.setText(name)
+            self._name_label.setToolTip(name)
 
 
 class _SenderAddDialog(QDialog):
@@ -308,14 +357,14 @@ class EventSetupWidget(QSplitter):
         self._config_splitter.setMinimumWidth(100)
         self._config_splitter.setOrientation(Qt.Orientation.Vertical)
         self.addWidget(self._config_splitter)
-        self._configuration_widget = _SenderConfigurationWidget(self._config_splitter)
+        self._configuration_widget = _SenderConfigurationWidget(self._config_splitter, b)
         self._configuration_widget.setMinimumHeight(100)
         self._config_splitter.addWidget(self._configuration_widget)
         self._log_container = QWidget(self._config_splitter)
         log_layout = QVBoxLayout()
         self._log_container.setLayout(log_layout)
         label_layout = QHBoxLayout()
-        label_layout.addSpacing(32)
+        label_layout.addSpacing(48)
         for label_str in ["Event ID", "Sender:Function", "Type", "Arguments"]:
             intermediate_layout = QHBoxLayout()
             intermediate_layout.addWidget(QLabel(label_str, parent=self._log_container))
@@ -329,6 +378,7 @@ class EventSetupWidget(QSplitter):
         self.setStretchFactor(1, 2)
         self._config_splitter.setStretchFactor(0, 2)
         b.fish_event_received.connect(self._event_received)
+        self._broadcaster = b
         self._dialog: QDialog | None = None
 
     def _update_sender_list(self):
@@ -359,7 +409,7 @@ class EventSetupWidget(QSplitter):
             if not get_sender_by_id(e.sender_id).debug_include_ongoing_events:
                 return
         item = AnnotatedListWidgetItem(self._event_log)
-        w = _EventLogListWidget(self._event_log, e)
+        w = _EventLogListWidget(self._event_log, e, self._broadcaster)
         item.setSizeHint(w.sizeHint())
         item.annotated_data = e
         self._event_log.addItem(item)
