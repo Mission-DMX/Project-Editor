@@ -15,9 +15,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Get current year and month
-        id: get_date
-        run: echo "RELEASE_TAG=$(date +'%Y-%m').Auto" >> $GITHUB_ENV
+      - name: Run update_version.py and capture output
+        id: version_update
+        run: |
+          RELEASE_TAG=$(python update_version.py)
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
 
       - name: Build Python Executable
         run: |
