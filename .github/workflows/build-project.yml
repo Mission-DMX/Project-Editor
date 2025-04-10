@@ -6,8 +6,8 @@ on:
 jobs:
   build-project:
     runs-on: ubuntu-latest
-#    container:
-#      image: ghcr.io/mission-dmx/builder:latest
+    container:
+      image: ghcr.io/mission-dmx/builder:latest
 
     steps:
       - name: Checkout code
