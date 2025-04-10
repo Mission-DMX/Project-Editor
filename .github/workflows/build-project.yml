@@ -6,8 +6,8 @@ on:
 jobs:
   build-project:
     runs-on: ubuntu-latest
-#    container:
-#      image: ghcr.io/mission-dmx/builder:latest
+    #    container:
+    #      image: ghcr.io/mission-dmx/builder:latest
 
     steps:
       - name: Checkout code
@@ -30,11 +30,11 @@ jobs:
       - name: Install dependencies
         run: pdm install --dev
 
-      #      - name: Run update_version.py and capture output
-      #        id: version_update
-      #        run: |
-      #          RELEASE_TAG=$(pdm run python update_version.py)
-      #          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+      - name: Run update_version.py and capture output
+        id: version_update
+        run: |
+          RELEASE_TAG=$(pdm run python update_version.py)
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
 
       - name: Build Python Executable
         run: |
@@ -47,10 +47,10 @@ jobs:
           path: |
             dist/Project-Editor
 
-#      - name: Create GitHub Release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          tag_name: ${{ env.RELEASE_TAG }}
-#          files: dist/Project-Editor
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: dist/Project-Editor
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
