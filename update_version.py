@@ -18,4 +18,4 @@ data['project']['version'] = new_version
 with open('pyproject.toml', 'w', encoding="UTF-8") as f:
     tomlkit.dump(data, f)
 
-print(f'New version: {new_version}')
+print(f'v{new_version}')
