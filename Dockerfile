@@ -2,6 +2,7 @@ FROM ubuntu:latest
 
 # Installiere System-Dependencies
 RUN apt update && apt install -y \
+    binutils \
     libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 \
     libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0\
     git\
