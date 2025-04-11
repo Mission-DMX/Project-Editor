@@ -6,10 +6,12 @@ on:
 
 jobs:
   generateVersionsPR:
-    if: ${{github.ref != 'refs/tags/VERSION_UPDATE'}}
+    if: ${{!(github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'version-update')}}
     uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:
-    if: ${{github.ref == 'refs/tags/VERSION_UPDATE'}}
+    if: ${{github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref == 'version-update'}}
     uses: ./.github/workflows/build-project.yml
 
