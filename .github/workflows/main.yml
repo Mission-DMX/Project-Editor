@@ -11,6 +11,8 @@ jobs:
     outputs:
       commit_msg: ${{ steps.commit.outputs.commit_msg }}
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
       - name: get Commit-Message
         id: commit
         run: |
