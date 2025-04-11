@@ -43,10 +43,10 @@ if __name__ == "__main__":
 
     from controller.cli.remote_control_port import RemoteCLIServer
     from controller.joystick.joystick_handling import JoystickHandler
+    from gl_init import opengl_context_init
     from model.final_globals import FinalGlobals
     from style import Style
     from view.main_window import MainWindow
-    from view.utility_widgets.color_picker import opengl_context_init
 
     logger = logging.getLogger("Project-Editor")
 

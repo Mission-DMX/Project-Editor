@@ -4,6 +4,12 @@ This software is responsible for creating and editing project files for the DMX 
 Binäre Abhängigkeiten:
 * libsdl2-dev
 
+## Dev
+For dev use pdm as package manager:
+```
+pip install pdm
+pdm install --dev
+```
 ## CI Tests
 This software is checked using continious integration. Having the following in your `pre-commit` hook
 may help you passing those tests:

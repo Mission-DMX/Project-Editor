@@ -113,7 +113,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._settings_dialog = None
         self._theatre_scene_setup_wizard = None
 
-        self.setWindowIcon(QPixmap("resources/logo.png"))
+        self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:

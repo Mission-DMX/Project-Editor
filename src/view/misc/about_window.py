@@ -4,6 +4,7 @@
 import os.path
 from logging import getLogger
 
+import tomlkit
 from html2text import html2text
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
@@ -11,6 +12,9 @@ from PySide6.QtWidgets import QMessageBox
 from utility import resource_path
 
 logger = getLogger(__file__)
+
+with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
+    data = tomlkit.load(f)
 
 
 def read_entire_file_as_str(file_path: str) -> str:
@@ -20,6 +24,7 @@ def read_entire_file_as_str(file_path: str) -> str:
     :param file_path: The path to the file to load
     :returns: The content of the loaded file or a hint that something went wrong.
     """
+    # TODO in toml
     try:
         with open(file_path, 'r', encoding='UTF-8') as f:
             text = f.read()
@@ -29,7 +34,7 @@ def read_entire_file_as_str(file_path: str) -> str:
     return text
 
 
-VERSION_STR = read_entire_file_as_str(resource_path(os.path.join("resources", "version.txt")))
+VERSION_STR = data['project']['version']
 CONTRIBUTORS_STR = html2text(read_entire_file_as_str(resource_path(os.path.join("resources", "contributors.html"))))
 
 
