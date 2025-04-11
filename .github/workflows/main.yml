@@ -1,6 +1,8 @@
 name: CI Pipeline
 
 on:
+  pull_request:
+    branches: [ main ]
   push:
     branches: [ main ]
 
@@ -14,7 +16,7 @@ jobs:
 
   generateVersionsPR:
     if: ${{!(github.event.pull_request.merged == true &&
-      github.event.pull_request.head.ref == 'version-update')}}
+      github.event.pull_request.head.ref == 'version-update')||github.event_name == 'push'}}
     uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:
