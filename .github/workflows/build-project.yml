@@ -10,12 +10,6 @@ jobs:
     #      image: ghcr.io/mission-dmx/builder:latest
 
     steps:
-      - uses: actions/create-github-app-token@v1
-        id: app-token
-        with:
-          app-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -39,20 +33,12 @@ jobs:
       - name: Run update_version.py and capture output
         id: version_update
         run: |
-          RELEASE_TAG=$(pdm run python update_version.py)
+          RELEASE_TAG=$(pdm run python update_version.py info)
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
 
       - name: Build Python Executable
         run: |
           pdm run pyinstaller Project-Editor.spec
-
-      - name: Commit updated version
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add pyproject.toml
-          git commit -m "Bump version to $VERSION [skip ci]"
-          git push
 
       - name: Upload Executable as Artifact
         uses: actions/upload-artifact@v4
