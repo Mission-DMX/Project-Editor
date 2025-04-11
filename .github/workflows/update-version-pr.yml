@@ -45,5 +45,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: 'versions update'
           body: 'Dieser PR wurde automatisch mit einem Tag und Commit erstellt.'
-          branch: 'version_update'
+          branch: 'version-update'
           base: 'main'
