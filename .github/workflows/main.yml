@@ -1,7 +1,7 @@
 name: CI Pipeline
 
 on:
-  pull_request:
+  push:
     branches: [ main ]
 
 
@@ -9,17 +9,18 @@ jobs:
   show-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Zeige Branch-Namen des PRs
-        run:
-          echo ${{ github.event.pull_request.head.ref }}
+      - name: get Commit-Message
+        id: commit
+        run: |
+          msg=$(git log -1 --pretty=%B)
+          echo "Commit message: $msg"
+          echo "commit_msg=$msg" >> $GITHUB_OUTPUT
 
   generateVersionsPR:
-    if: ${{!(github.event.pull_request.merged == true &&
-      github.event.pull_request.head.ref == 'version-update')||github.event_name == 'push'}}
+    if: ${{!contains(steps.commit.outputs.commit_msg, '[REBUILD]')}}
     uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:
-    if: ${{github.event.pull_request.merged == true &&
-      github.event.pull_request.head.ref == 'version-update'}}
+    if: ${{!contains(steps.commit.outputs.commit_msg, '[REBUILD]')}}
     uses: ./.github/workflows/build-project.yml
 
