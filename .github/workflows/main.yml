@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Zeige Branch-Namen des PRs
         run:
-          echo "Branch ist: ${{ github.event.pull_request.head.ref }}"
+          echo ${{ github.event.pull_request.head.ref }}
 
   generateVersionsPR:
     if: ${{!(github.event.pull_request.merged == true &&
