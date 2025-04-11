@@ -6,8 +6,10 @@ on:
 
 
 jobs:
-  show-branch:
+  read-commit:
     runs-on: ubuntu-latest
+    outputs:
+      commit_msg: ${{ steps.commit.outputs.commit_msg }}
     steps:
       - name: get Commit-Message
         id: commit
@@ -17,10 +19,12 @@ jobs:
           echo "commit_msg=$msg" >> $GITHUB_OUTPUT
 
   generateVersionsPR:
-    if: ${{!contains(steps.commit.outputs.commit_msg, '[REBUILD]')}}
+    needs: read-commit
+    if: ${{!contains(need.read-commit.outputs.commit_msg, '[REBUILD]')}}
     uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:
-    if: ${{!contains(steps.commit.outputs.commit_msg, '[REBUILD]')}}
+    needs: read-commit
+    if: ${{contains(need.read-commit.outputs.commit_msg, '[REBUILD]')}}
     uses: ./.github/workflows/build-project.yml
 
