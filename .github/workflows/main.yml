@@ -6,7 +6,7 @@ on:
 
 jobs:
   generateVersionsPR:
-    if: ${{!github.ref == 'refs/tags/VERSION_UPDATE'}}
+    if: ${{github.ref != 'refs/tags/VERSION_UPDATE'}}
     uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:
