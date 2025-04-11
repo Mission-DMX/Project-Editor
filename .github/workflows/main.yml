@@ -14,7 +14,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Checke ob Commit-Message 'VERSION UPDATE' enthält
+      - name: Checke ob Commit-Message '[REBUILD]' enthält
         id: check
         run: |
           msg=$(git log -1 --pretty=%B)
@@ -27,11 +27,11 @@ jobs:
 
   generateVersionsPR:
     needs: read-commit
-    if: ${{needs.read-commit.outputs.has_version_update == 'false'}}
+    if: ${{needs.read-commit.outputs.rebuild == 'false'}}
     uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:
     needs: read-commit
-    if: ${{needs.read-commit.outputs.has_version_update == 'true'}}
+    if: ${{needs.read-commit.outputs.rebuild == 'true'}}
     uses: ./.github/workflows/build-project.yml
 
