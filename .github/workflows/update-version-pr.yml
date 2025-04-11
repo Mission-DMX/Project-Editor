@@ -39,11 +39,11 @@ jobs:
           git push origin version_update
           git push origin VERSION_UPDATE
 
-      - name: Create a Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: 'versions update'
-          body: 'Dieser PR wurde automatisch mit einem Tag und Commit erstellt.'
-          branch: 'version_update'
-          base: 'main'
+      #- name: Create a Pull Request
+      #  uses: peter-evans/create-pull-request@v7
+      #  with:
+      #    token: ${{ secrets.GITHUB_TOKEN }}
+      #    title: 'versions update'
+      #    body: 'Dieser PR wurde automatisch mit einem Tag und Commit erstellt.'
+      #    branch: 'version_update'
+      #    base: 'main'
