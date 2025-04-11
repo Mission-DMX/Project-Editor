@@ -9,6 +9,7 @@ from model.filter import FilterTypeEnumeration
 from view.show_mode.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
 from view.show_mode.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
+from view.show_mode.show_ui_widgets.color_swift_uiwidget import ColorSwiftUIWidget
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
@@ -25,7 +26,8 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "buttonarray": ("Button Array", ButtonsWithValueSubmit, [
         [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
          FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
-    "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
+    "buttoncolorpicker": ("Button Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
+    "colorpicker": ("Color Picker", ColorSwiftUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
     "cuecontrol": (
     "Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]]),
     "pantiltconstant": (

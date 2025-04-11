@@ -5,7 +5,7 @@ Binäre Abhängigkeiten:
 * libsdl2-dev
 
 ## Dev
-For dev use pdm as package manager: 
+For dev use pdm as package manager:
 ```
 pip install pdm
 pdm install --dev
