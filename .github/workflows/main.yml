@@ -20,11 +20,11 @@ jobs:
 
   generateVersionsPR:
     needs: read-commit
-    if: ${{!contains(need.read-commit.outputs.commit_msg, '[REBUILD]')}}
+    if: ${{!contains(needs.read-commit.outputs.commit_msg, '[REBUILD]')}}
     uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:
     needs: read-commit
-    if: ${{contains(need.read-commit.outputs.commit_msg, '[REBUILD]')}}
+    if: ${{contains(needs.read-commit.outputs.commit_msg, '[REBUILD]')}}
     uses: ./.github/workflows/build-project.yml
 
