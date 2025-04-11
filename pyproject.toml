@@ -1,6 +1,6 @@
 [project]
 name = "Project-Editor"
-version = "1.0.2"
+version = "1.0.0"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
     { name = "MKay", email = "ma.kaussow@uni-luebeck.de" },

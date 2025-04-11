@@ -5,6 +5,13 @@ on:
     branches: [ main ]
 
 jobs:
+  show-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Zeige Branch-Namen des PRs
+        run:
+          echo "Branch ist: ${{ github.event.pull_request.head.ref }}"
+
   generateVersionsPR:
     if: ${{!(github.event.pull_request.merged == true &&
       github.event.pull_request.head.ref == 'version-update')}}
