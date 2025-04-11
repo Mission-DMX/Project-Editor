@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  build-project:
+  update-version-pr:
     runs-on: ubuntu-latest
     #    container:
     #      image: ghcr.io/mission-dmx/builder:latest
@@ -34,7 +34,7 @@ jobs:
           git config user.email "github-actions@github.com"
           git checkout -b version_update
           git add pyproject.toml
-          git commit -m "Bump version to $VERSION"
+          git commit -m "Bump version to $RELEASE_TAG"
           git tag VERSION_UPDATE
           git push origin version_update
           git push origin VERSION_UPDATE
