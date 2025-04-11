@@ -12,7 +12,7 @@ with open('pyproject.toml', 'r', encoding="UTF-8") as f:
 version = data['project']['version']
 major, minor, patch = map(int, version.split('.'))
 
-if len(sys.argv[1]) > 1 and sys.argv[1] == "info":
+if len(sys.argv) > 1 and sys.argv[1] == "info":
     print(f'{major}.{minor}.{patch}')
 else:
     new_version = f'{major}.{minor}.{patch + 1}'
