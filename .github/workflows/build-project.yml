@@ -13,23 +13,18 @@ jobs:
         with:
           submodules: true
 
-      #- name: install cudnn
-      #  run: |
-      #    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
-      #    sudo dpkg -i cuda-keyring_1.1-1_all.deb
-      #    sudo apt-get update
-
       - name: install lib
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 ocl-icd-opencl-dev #cuda nvidia-cuda-toolkit cudnn
+          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 ocl-icd-opencl-dev
           version: 1.0
 
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
         with:
-          cache: false
+          cache: true
           python-version-file: pyproject.toml
+          cache-dependency-path: pdm.lock
 
       - name: Install dependencies
         run: pdm install --dev
@@ -51,11 +46,11 @@ jobs:
           path: |
             dist/Project-Editor
 
-      #- name: Create GitHub Release
-      #  uses: softprops/action-gh-release@v1
-      #  with:
-      #    tag_name: ${{ env.RELEASE_TAG }}
-      #    files: dist/Project-Editor
-      #    generate_release_notes: true
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: dist/Project-Editor
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
