@@ -6,6 +6,8 @@ on:
 jobs:
   build-project:
     runs-on: ubuntu-latest
+    container:
+      image: nvidia/cuda:12.2.0-runtime-ubuntu22.04
 
     steps:
       - name: Checkout code
@@ -15,21 +17,8 @@ jobs:
       - name: install lib
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 libtinfo5 cuda-toolkit-12-2
+          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0
           version: 1.0
-
-      - name: Add NVIDIA CUDA repository
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gnupg software-properties-common
-          
-          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
-          sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
-          
-          sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/3bf863cc.pub
-          sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
-          sudo apt-get update
-          sudo apt-get install cuda-toolkit-12-2
 
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
