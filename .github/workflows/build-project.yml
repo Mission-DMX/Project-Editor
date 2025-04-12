@@ -16,7 +16,7 @@ jobs:
       - name: install lib
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 python3-libnvinfer-dev nvidia-cuda-toolkit
+          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 cuda nvidia-cuda-toolkit
           version: 1.0
 
       - name: Setup PDM
