@@ -13,7 +13,7 @@ jobs:
         with:
           submodules: true
 
-      - name: add cuda to apt
+      - name: add  cuda to apt
         run: |         
           # Download & install NVIDIA repo key + pin
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
