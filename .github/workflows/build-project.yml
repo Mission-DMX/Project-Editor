@@ -12,11 +12,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
+
       - name: install lib
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 nvidia-cuda-toolkit
           version: 1.0
+
+      - name: Set up CUDA repository
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg2 curl
+          curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin | sudo tee /etc/apt/preferences.d/cuda-repository-pin-600
+          sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+          sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+          sudo apt-get update
+          sudo apt-get install -y cuda-10.2 libcudnn8 libnvinfer10 libnvinfer-plugin10 libnvonnxparser10
 
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
