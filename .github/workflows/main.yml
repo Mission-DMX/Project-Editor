@@ -18,8 +18,9 @@ jobs:
         id: check
         run: |
           msg=$(git log -1 --pretty=%B)
-          echo "Commit message: $msg"
-          if echo "$msg" | grep -q "[REBUILD]"; then
+          echo "Commit message:"
+          echo $msg
+          if echo "$msg" | grep -Fq "[REBUILD]"; then
             echo "has_version_update=true" >> $GITHUB_OUTPUT
             echo rebuild
           else
