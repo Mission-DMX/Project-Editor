@@ -6,8 +6,6 @@ on:
 jobs:
   build-project:
     runs-on: ubuntu-latest
-    #    container:
-    #      image: ghcr.io/mission-dmx/builder:latest
 
     steps:
       - name: Checkout code
@@ -15,10 +13,21 @@ jobs:
         with:
           submodules: true
 
+      - name: add cuda to apt
+        run: |         
+          # Download & install NVIDIA repo key + pin
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+          sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
+          
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/3bf863cc.pub
+          sudo apt-key add 3bf863cc.pub
+          
+          sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /"
+
       - name: install lib
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0
+          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 cuda-toolkit-12-2
           version: 1.0
 
       - name: Setup PDM
@@ -47,11 +56,11 @@ jobs:
           path: |
             dist/Project-Editor
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          files: dist/Project-Editor
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #- name: Create GitHub Release
+      #  uses: softprops/action-gh-release@v1
+      #  with:
+      #    tag_name: ${{ env.RELEASE_TAG }}
+      #    files: dist/Project-Editor
+      #    generate_release_notes: true
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
