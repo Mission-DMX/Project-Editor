@@ -21,8 +21,10 @@ jobs:
           echo "Commit message: $msg"
           if echo "$msg" | grep -q "[REBUILD]"; then
             echo "has_version_update=true" >> $GITHUB_OUTPUT
+            echo rebuild
           else
             echo "has_version_update=false" >> $GITHUB_OUTPUT
+            echo version_update
           fi
 
   generateVersionsPR:
@@ -34,4 +36,3 @@ jobs:
     needs: read-commit
     if: ${{needs.read-commit.outputs.rebuild == 'true'}}
     uses: ./.github/workflows/build-project.yml
-
