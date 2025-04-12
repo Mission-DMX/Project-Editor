@@ -20,4 +20,3 @@ RUN apt update && apt install -y \
 #RUN pip install pdm
 
 WORKDIR /app
-COPY . .
