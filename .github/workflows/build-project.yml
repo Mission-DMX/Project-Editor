@@ -15,8 +15,13 @@ jobs:
       - name: install lib
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 cuda-toolkit-12-2
+          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 libtinfo5 cuda-toolkit-12-2
           version: 1.0
+
+      - name: Install libtinfo5 manually
+        run: |
+          wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.2-0ubuntu2_amd64.deb
+          sudo dpkg -i libtinfo5_6.2-0ubuntu2_amd64.deb
 
       - name: Add NVIDIA CUDA repository
         run: |
