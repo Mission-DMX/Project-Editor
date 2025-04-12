@@ -252,3 +252,16 @@ class BoardConfiguration:
         new_index = len(self._macros)
         self._macros.append(m)
         self._broadcaster.macro_added_to_show_file.emit(new_index)
+
+    def get_macro(self, macro_id: int | str) -> Macro | None:
+        """Get the macro specified by its index.
+        :returns: The macro or None if none was found."""
+        if isinstance(macro_id, int):
+            if macro_id >= len(self._macros):
+                return None
+            return self._macros[macro_id]
+        elif isinstance(macro_id, str):
+            for m in self._macros:
+                if m.name == macro_id:
+                    return m
+        return None
