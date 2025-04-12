@@ -27,9 +27,9 @@ dependencies = [
     "qimage2ndarray>=1.10.0",
     "aiortc>=1.11.0",
     "qasync>=0.27.1",
-    "onnxruntime-gpu>=1.21.0",
     "pyjoystick>=1.2.4",
-    "pyopengl>=3.1.9"
+    "pyopengl>=3.1.9",
+    "onnxruntime-openvino>=1.21.0",
 
 ]
 

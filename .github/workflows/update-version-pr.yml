@@ -18,6 +18,7 @@ jobs:
         with:
           cache: true
           python-version-file: pyproject.toml
+          cache-dependency-path: pdm.lock
 
       - name: Install dependencies
         run: pdm install --dev

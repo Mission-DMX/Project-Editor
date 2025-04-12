@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:115615b75dbf182a5ff7eab4eab7e0dd15d926e0bdfcbe11b0e55f47c58ab40d"
+content_hash = "sha256:ab9e517ac1191e4842fc3918b68c4f55aaef90f5675f5fbcd4e8d1e0d05f3f06"
 
 [[metadata.targets]]
 requires_python = "==3.13.*"
@@ -418,7 +418,7 @@ files = [
 ]
 
 [[package]]
-name = "onnxruntime-gpu"
+name = "onnxruntime-openvino"
 version = "1.21.0"
 requires_python = ">=3.10"
 summary = "ONNX Runtime is a runtime accelerator for Machine Learning models"
@@ -432,9 +432,8 @@ dependencies = [
     "sympy",
 ]
 files = [
-    {file = "onnxruntime_gpu-1.21.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:379f473c767e3cbaa1ee8563de29060cbf813ffc79967e932c2ae5780394bbb7"},
-    {file = "onnxruntime_gpu-1.21.0-cp313-cp313-win_amd64.whl", hash = "sha256:e6e5d9dc78b8e16bc631e675af6b094449b7adf4ec41bb2aeaa69b25a6d8f181"},
-    {file = "onnxruntime_gpu-1.21.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5fb033a0647534590fc57219b59a12917c47bbdd79c41854a1549f3125306aea"},
+    {file = "onnxruntime_openvino-1.21.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:697b7eadbda921ba768cfc5734e82f6311d9d534cf569be664ec6d4aac22e935"},
+    {file = "onnxruntime_openvino-1.21.0-cp313-cp313-win_amd64.whl", hash = "sha256:73e8bc1ad3ae6d6eb9eaa38233e1f6807000b9e0b55ee02fa813f5e143db1eab"},
 ]
 
 [[package]]
