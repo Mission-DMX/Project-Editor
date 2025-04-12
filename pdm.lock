@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:7eb6f4491f63854a564db005f1ea667eaaf4cb61d02881ce2fb8182cece6e723"
+content_hash = "sha256:ab9e517ac1191e4842fc3918b68c4f55aaef90f5675f5fbcd4e8d1e0d05f3f06"
 
 [[metadata.targets]]
 requires_python = "==3.13.*"
@@ -418,7 +418,7 @@ files = [
 ]
 
 [[package]]
-name = "onnxruntime"
+name = "onnxruntime-openvino"
 version = "1.21.0"
 requires_python = ">=3.10"
 summary = "ONNX Runtime is a runtime accelerator for Machine Learning models"
@@ -432,32 +432,8 @@ dependencies = [
     "sympy",
 ]
 files = [
-    {file = "onnxruntime-1.21.0-cp313-cp313-macosx_13_0_universal2.whl", hash = "sha256:85718cbde1c2912d3a03e3b3dc181b1480258a229c32378408cace7c450f7f23"},
-    {file = "onnxruntime-1.21.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:94dff3a61538f3b7b0ea9a06bc99e1410e90509c76e3a746f039e417802a12ae"},
-    {file = "onnxruntime-1.21.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c1e704b0eda5f2bbbe84182437315eaec89a450b08854b5a7762c85d04a28a0a"},
-    {file = "onnxruntime-1.21.0-cp313-cp313-win_amd64.whl", hash = "sha256:19b630c6a8956ef97fb7c94948b17691167aa1aaf07b5f214fa66c3e4136c108"},
-    {file = "onnxruntime-1.21.0-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3995c4a2d81719623c58697b9510f8de9fa42a1da6b4474052797b0d712324fe"},
-    {file = "onnxruntime-1.21.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:36b18b8f39c0f84e783902112a0dd3c102466897f96d73bb83f6a6bff283a423"},
-]
-
-[[package]]
-name = "onnxruntime-gpu"
-version = "1.21.0"
-requires_python = ">=3.10"
-summary = "ONNX Runtime is a runtime accelerator for Machine Learning models"
-groups = ["default"]
-dependencies = [
-    "coloredlogs",
-    "flatbuffers",
-    "numpy>=1.21.6",
-    "packaging",
-    "protobuf",
-    "sympy",
-]
-files = [
-    {file = "onnxruntime_gpu-1.21.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:379f473c767e3cbaa1ee8563de29060cbf813ffc79967e932c2ae5780394bbb7"},
-    {file = "onnxruntime_gpu-1.21.0-cp313-cp313-win_amd64.whl", hash = "sha256:e6e5d9dc78b8e16bc631e675af6b094449b7adf4ec41bb2aeaa69b25a6d8f181"},
-    {file = "onnxruntime_gpu-1.21.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5fb033a0647534590fc57219b59a12917c47bbdd79c41854a1549f3125306aea"},
+    {file = "onnxruntime_openvino-1.21.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:697b7eadbda921ba768cfc5734e82f6311d9d534cf569be664ec6d4aac22e935"},
+    {file = "onnxruntime_openvino-1.21.0-cp313-cp313-win_amd64.whl", hash = "sha256:73e8bc1ad3ae6d6eb9eaa38233e1f6807000b9e0b55ee02fa813f5e143db1eab"},
 ]
 
 [[package]]
