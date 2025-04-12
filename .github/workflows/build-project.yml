@@ -19,15 +19,6 @@ jobs:
           packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 nvidia-cuda-toolkit python3-libnvinfer-dev
           version: 1.0
 
-      - name: Set up CUDA repository
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gnupg2 curl
-          curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/nvidia-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64 /" | sudo tee /etc/apt/sources.list.d/cuda.list
-          sudo apt-get update
-          sudo apt-get install -y cuda-10.2 libcudnn8 libnvinfer10 libnvinfer-plugin10 libnvonnxparser10
-
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
         with:
