@@ -6,20 +6,17 @@ on:
 jobs:
   build-project:
     runs-on: ubuntu-latest
-    container:
-      image: nvidia/cuda:12.2.0-runtime-ubuntu22.04
 
     steps:
-      - name: install lib
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 git
-          version: 1.0
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           submodules: true
+      - name: install lib
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 nvidia-cuda-toolkit
+          version: 1.0
 
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
