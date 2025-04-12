@@ -28,7 +28,7 @@ jobs:
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
         with:
-          cache: true
+          cache: false
           python-version-file: pyproject.toml
 
       - name: Install dependencies
