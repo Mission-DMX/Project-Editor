@@ -19,6 +19,7 @@ class Trigger:
         if self._macro is not None:
             self._macro._triggers[self] = False
 
+
 class Macro:
     def __init__(self):
         """Initialize a new empty macro"""
@@ -35,6 +36,10 @@ class Macro:
             if v:
                 l.append(k)
         return l
+
+    @property
+    def all_triggers(self) -> list[Trigger]:
+        return list(self._triggers.keys())
 
     def add_trigger(self, t: Trigger, active: bool = True):
         """

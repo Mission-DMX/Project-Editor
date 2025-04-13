@@ -20,6 +20,7 @@ class MacroSetupWidget(QSplitter):
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
         self._show: "BoardConfiguration" = show_config
+        self._selected_macro: Macro | None = None
         self._macro_panel: QWidget = QWidget(self)
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Macros"))
@@ -31,6 +32,7 @@ class MacroSetupWidget(QSplitter):
         self._macro_panel.setLayout(layout)
         layout.addWidget(self._macro_actions)
         self._macro_list = QListWidget(self._macro_panel)
+        self._macro_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self._macro_list.itemSelectionChanged.connect(self._selected_macro_changed)
         # TODO add action to rename macro on double click
         layout.addWidget(self._macro_list)
@@ -39,6 +41,7 @@ class MacroSetupWidget(QSplitter):
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Triggers"))
         self._trigger_actions = QToolBar(self._trigger_panel)
+        self._trigger_actions.setEnabled(False)
         self._trigger_actions.addAction("New Trigger")
         # TODO connect action
         layout.addWidget(self._trigger_actions)
@@ -49,6 +52,7 @@ class MacroSetupWidget(QSplitter):
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Contents"))
         self._content_panel_actions = QToolBar(self._content_panel)
+        self._content_panel_actions.setEnabled(False)
         self._content_panel_actions.addAction("Insert Cue Switch")
         # TODO connect action
         layout.addWidget(self._content_panel_actions)
@@ -63,9 +67,34 @@ class MacroSetupWidget(QSplitter):
         self._broadcaster.macro_added_to_show_file.connect(self._macro_added)
 
     def _selected_macro_changed(self):
-        pass
-        # TODO implement repopulation of trigger list
-        # TODO update content panel and enable it
+        if self._selected_macro is not None:
+            self._selected_macro.content = self._editor_area.toPlainText()
+        selected_items = self._macro_list.selectedItems()
+        if len(selected_items) < 1:
+            self._selected_macro = None
+        else:
+            if not isinstance(selected_items[0], AnnotatedListWidgetItem):
+                logger.error(f"Expected AnnotatedListWidgetItem with macro. Got {selected_items[0]} instead.")
+            if len(selected_items) > 1:
+                logger.warning(f"Expected only one selected macro. Got {len(selected_items)} instead. Using the first.")
+            self._selected_macro = selected_items[0].annotated_data
+        self._trigger_list.clear()
+        i = 0
+        if self._selected_macro is not None:
+            self._trigger_actions.setEnabled(True)
+            self._editor_area.setEnabled(True)
+            self._content_panel_actions.setEnabled(True)
+            for trigger in self._selected_macro.all_triggers:
+                item = AnnotatedListWidgetItem(self._trigger_list)
+                item.annotated_data = trigger
+                item.setText(str(i))  # TODO replace with something more reasonable, based on condition
+                self._trigger_list.addItem(item)
+            self._editor_area.setText(self._selected_macro.content)
+        else:
+            self._trigger_actions.setEnabled(False)
+            self._content_panel_actions.setEnabled(False)
+            self._editor_area.setEnabled(False)
+            self._editor_area.setText("")
 
     def clear(self):
         self._macro_list.clear()
@@ -77,8 +106,11 @@ class MacroSetupWidget(QSplitter):
         if m is None:
             logger.error(f"Did not expect the newly created macro with index {new_macros_id} to not exist.")
         item = AnnotatedListWidgetItem(self._macro_list)
+        item.annotated_data = m
         item.setText(f"[{new_macros_id}]: {m.name}")
         self._macro_list.addItem(item)
+        if self._macro_list.count() == 1:
+            self._macro_list.setCurrentIndex(self._macro_list.model().index(0, 0))
 
     def _add_macro_pressed(self):
         m = Macro()
