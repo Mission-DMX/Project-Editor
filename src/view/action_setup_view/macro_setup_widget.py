@@ -2,10 +2,11 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QLabel, QListWidget, QSplitter, QTextEdit, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QListWidget, QPlainTextEdit, QSplitter, QToolBar, QVBoxLayout, QWidget
 
 from model import Broadcaster
 from model.macro import Macro
+from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
@@ -56,9 +57,10 @@ class MacroSetupWidget(QSplitter):
         self._content_panel_actions.addAction("Insert Cue Switch")
         # TODO connect action
         layout.addWidget(self._content_panel_actions)
-        self._editor_area = QTextEdit(self._content_panel)
-        self._editor_area.setAcceptRichText(False)
+        self._editor_area = QPlainTextEdit(self._content_panel)
         self._editor_area.setEnabled(False)
+        self._editor_area.textChanged.connect(self._editor_area_text_changed)
+        self._highlighter = CLISyntaxHighlighter(self._editor_area.document())
         layout.addWidget(self._editor_area)
         self._content_panel.setLayout(layout)
         self.addWidget(self._content_panel)
@@ -67,8 +69,6 @@ class MacroSetupWidget(QSplitter):
         self._broadcaster.macro_added_to_show_file.connect(self._macro_added)
 
     def _selected_macro_changed(self):
-        if self._selected_macro is not None:
-            self._selected_macro.content = self._editor_area.toPlainText()
         selected_items = self._macro_list.selectedItems()
         if len(selected_items) < 1:
             self._selected_macro = None
@@ -89,12 +89,12 @@ class MacroSetupWidget(QSplitter):
                 item.annotated_data = trigger
                 item.setText(str(i))  # TODO replace with something more reasonable, based on condition
                 self._trigger_list.addItem(item)
-            self._editor_area.setText(self._selected_macro.content)
+            self._editor_area.document().setPlainText(self._selected_macro.content)
         else:
             self._trigger_actions.setEnabled(False)
             self._content_panel_actions.setEnabled(False)
             self._editor_area.setEnabled(False)
-            self._editor_area.setText("")
+            self._editor_area.document().clear()
 
     def clear(self):
         self._macro_list.clear()
@@ -117,3 +117,7 @@ class MacroSetupWidget(QSplitter):
         m.name = "New Macro"
         self._show.add_macro(m)
         pass  # TODO
+
+    def _editor_area_text_changed(self):
+        if self._selected_macro is not None:
+            self._selected_macro.content = self._editor_area.toPlainText()
