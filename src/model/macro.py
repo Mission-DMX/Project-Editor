@@ -1,3 +1,7 @@
+from logging import getLogger
+
+logger = getLogger(__file__)
+
 class Trigger:
     def __init__(self, description: str):
         self._macro: "Macro" | None = None
@@ -21,11 +25,15 @@ class Trigger:
 
 
 class Macro:
-    def __init__(self):
+    def __init__(self, parent: "BoardConfiguration"):
         """Initialize a new empty macro"""
         self.content: str = ""
         self.name: str = ""
+        self._show: "BoardConfiguration" = parent
         self._triggers: dict[Trigger, bool] = {}
+        from controller.cli.cli_context import CLIContext
+        from controller.network import NetworkManager
+        self.c = CLIContext(self._show, NetworkManager(), exit_available=False)
 
     @property
     def trigger_conditions(self) -> list[Trigger]:
@@ -52,9 +60,17 @@ class Macro:
 
     def copy(self) -> "Macro":
         """Obtain a deep copy of this macro"""
-        m = Macro()
+        m = Macro(self._show)
         m.name = str(self.name)
         m.content = str(self.content)
         for k, v in self._triggers:
             m._triggers[k.copy()] = bool(v)
         return m
+
+    def exec(self) -> bool:
+        success = True
+        for l in self.content.split("\n"):
+            if not self.c.exec_command(l):
+                success = False
+                logger.error(f"Failed to execute command: {l}")
+        return success

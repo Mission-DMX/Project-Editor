@@ -1,12 +1,14 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QLabel, QListWidget, QPlainTextEdit, QSplitter, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import (QDialog, QLabel, QListWidget, QMessageBox, QPlainTextEdit, QSplitter, QToolBar,
+                               QVBoxLayout, QWidget)
 
 from model import Broadcaster
 from model.macro import Macro
 from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
+from view.action_setup_view.new_trigger_dialog import _NewTriggerDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
@@ -23,6 +25,7 @@ class MacroSetupWidget(QSplitter):
         self._show: "BoardConfiguration" = show_config
         self._selected_macro: Macro | None = None
         self._macro_panel: QWidget = QWidget(self)
+        self._dialog: QDialog | None = None
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Macros"))
         self._macro_actions = QToolBar(self._macro_panel)
@@ -43,8 +46,10 @@ class MacroSetupWidget(QSplitter):
         layout.addWidget(QLabel("Triggers"))
         self._trigger_actions = QToolBar(self._trigger_panel)
         self._trigger_actions.setEnabled(False)
-        self._trigger_actions.addAction("New Trigger")
-        # TODO connect action
+        self._new_trigger_action = QAction()
+        self._new_trigger_action.setText("New Trigger")
+        self._new_trigger_action.triggered.connect(self._add_new_trigger_pressed)
+        self._trigger_actions.addAction(self._new_trigger_action)
         layout.addWidget(self._trigger_actions)
         self._trigger_list = QListWidget(self._trigger_panel)
         layout.addWidget(self._trigger_list)
@@ -54,7 +59,16 @@ class MacroSetupWidget(QSplitter):
         layout.addWidget(QLabel("Contents"))
         self._content_panel_actions = QToolBar(self._content_panel)
         self._content_panel_actions.setEnabled(False)
+        self._run_macro_action = QAction()
+        self._run_macro_action.setText("Run Macro")
+        self._run_macro_action.triggered.connect(self._run_macro_pressed)
+        self._run_macro_action.setIcon(QIcon.fromTheme("system-run"))
+        self._content_panel_actions.addAction(self._run_macro_action)
         self._content_panel_actions.addAction("Insert Cue Switch")
+        # TODO connect action
+        self._content_panel_actions.addAction("Insert Sequence Trigger")
+        # TODO connect action
+        self._content_panel_actions.addAction("Insert Constant Update")
         # TODO connect action
         layout.addWidget(self._content_panel_actions)
         self._editor_area = QPlainTextEdit(self._content_panel)
@@ -113,11 +127,29 @@ class MacroSetupWidget(QSplitter):
             self._macro_list.setCurrentIndex(self._macro_list.model().index(0, 0))
 
     def _add_macro_pressed(self):
-        m = Macro()
+        m = Macro(self._show)
         m.name = "New Macro"
         self._show.add_macro(m)
-        pass  # TODO
+
+    def _add_new_trigger_pressed(self):
+        if self._selected_macro is None:
+            return
+        self._dialog = _NewTriggerDialog(self, self._selected_macro)
+        self._dialog.show()
 
     def _editor_area_text_changed(self):
         if self._selected_macro is not None:
             self._selected_macro.content = self._editor_area.toPlainText()
+
+    def _run_macro_pressed(self):
+        if self._selected_macro is None:
+            return
+        logger.info(f"Running macro {self._selected_macro.name} from manual trigger.")
+        self._selected_macro.c.return_text = ""
+        success = self._selected_macro.exec()
+        text = self._selected_macro.c.return_text
+        self._dialog = QMessageBox(self)
+        self._dialog.setWindowTitle("Macro Output")
+        self._dialog.setText(text.replace("\n", "<br />" if len(text) > 0 else "<i>No output was generated</i>"))
+        self._dialog.setIcon(QMessageBox.Icon.Information if success else QMessageBox.Icon.Critical)
+        self._dialog.show()

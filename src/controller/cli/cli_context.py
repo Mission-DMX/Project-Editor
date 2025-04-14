@@ -59,6 +59,8 @@ def _split_args(line: str) -> list[str]:
                     current_arg = ''
             else:
                 current_arg += c
+    if current_arg != '':
+        l.append(current_arg)
     return l
 
 
