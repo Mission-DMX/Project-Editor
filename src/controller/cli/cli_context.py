@@ -17,6 +17,51 @@ if TYPE_CHECKING:
     from model.control_desk import BankSet, DeskColumn
 
 
+def _split_args(line: str) -> list[str]:
+    """Split a line into individual arguments."""
+    l = []
+    in_string: bool = False
+    current_arg = ""
+    in_escape: bool = False
+    for c in line:
+        if in_string:
+            if c == '"' and not in_escape:
+                in_string = False
+                continue
+            if c == '\\':
+                in_escape = not in_escape
+            if not in_escape:
+                current_arg += c
+            else:
+                if c == 't':
+                    current_arg += '\t'
+                    in_string = False
+                elif c == 'n':
+                    current_arg += '\n'
+                    in_escape = False
+                elif c == 'r':
+                    current_arg += '\r'
+                    in_escape = False
+                elif c == '"':
+                    current_arg += c
+                    in_escape = False
+        else:
+            if c == '"':
+                in_string = True
+                in_escape = False
+            elif c == '#':
+                if current_arg != '':
+                    l.append(current_arg)
+                break
+            elif c == ' ' or c == '\t':
+                if current_arg != '':
+                    l.append(current_arg)
+                    current_arg = ''
+            else:
+                current_arg += c
+    return l
+
+
 class CLIContext:
     """Context of the Client"""
 
@@ -59,7 +104,10 @@ class CLIContext:
         true if the evaluation succeeded, false otherwise
         """
         try:
-            global_args = self.parser.parse_args(args=line.split(" "))
+            args = _split_args(line)
+            if len(args) == 0:
+                return True
+            global_args = self.parser.parse_args(args=args)
             if self._exit_available and global_args.subparser_name == "exit":
                 self.exit_called = True
             elif global_args.subparser_name == "?":
