@@ -20,7 +20,7 @@ import proto.UniverseControl_pb2
 import varint
 import x_touch
 from model import events
-from model.broadcaster import Broadcaster
+from model.broadcaster import Broadcaster, QObjectSingletonMeta
 from model.filter import FilterTypeEnumeration
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-class NetworkManager(QtCore.QObject):
+class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """Handles connection to Fish."""
 
     status_updated: QtCore.Signal = QtCore.Signal(str)
@@ -41,12 +41,15 @@ class NetworkManager(QtCore.QObject):
     run_mode_changed: QtCore.Signal = QtCore.Signal(int)
     active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, parent: "MainWindow") -> None:
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, "instance") or cls.instance is None:
+            cls.instance = super(NetworkManager, cls).__new__(cls)
+        return cls.instance
+
+    def __init__(self) -> None:
         """Inits the network connection.
-        Args:
-            parent: parent GUI Object
         """
-        super().__init__(parent=parent)
+        super().__init__()
         logger.info("generate new Network Manager")
         self._broadcaster = Broadcaster()
         self.sender_message_callback: Callable = events.set_broadcaster_and_network(self._broadcaster, self)

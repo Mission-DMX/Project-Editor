@@ -48,7 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Project-Editor")
 
         # model objects
-        self._fish_connector: NetworkManager = NetworkManager(self)
+        self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         from model.ui_configuration import setup_network_manager
