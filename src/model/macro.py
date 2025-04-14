@@ -1,11 +1,24 @@
 from logging import getLogger
 
+from model import Broadcaster
+
 logger = getLogger(__file__)
 
 class Trigger:
-    def __init__(self, description: str):
+
+    def __new__(cls, trigger_type: str):
+        match trigger_type:
+            case "startup":
+                return _StartupTrigger()
+            # TODO implement trigger for macro listening
+            case _:
+                raise ValueError("Unsupported trigger type")
+
+    def __init__(self, tr_t: str):
         self._macro: "Macro" | None = None
-        # TODO parse description
+        self._type: str = tr_t
+        self.name: str = ""
+        self._configuration: dict[str, str] = {}
         pass  # TODO implement something that can be automatically invoked based on events
 
     # TODO implement the __hash__ method
@@ -13,15 +26,43 @@ class Trigger:
     def copy(self) -> "Trigger":
         raise NotImplemented()  # TODO
 
-    def enable(self):
-        """Enable the trigger on its macro (which must be set)"""
+    @property
+    def enabled(self) -> bool:
         if self._macro is not None:
-            self._macro._triggers[self] = True
+            return self._macro._triggers[self]
+        else:
+            return False
 
-    def disable(self):
-        """Disable the trigger on its macro (which must be set)"""
+    @enabled.setter
+    def enabled(self, new_state: bool):
+        """Enable or disable the trigger on its macro (which must be set)"""
         if self._macro is not None:
-            self._macro._triggers[self] = False
+            self._macro._triggers[self] = new_state
+
+    def set_param(self, key: str, value: str):
+        self._configuration[key] = value
+
+    @property
+    def configuration(self) -> dict[str, str]:
+        return self._configuration.copy()
+
+    @property
+    def type(self) -> str:
+        return self._type
+
+    def exec(self):
+        if self._macro is not None:
+            self._macro.exec()
+
+
+class _StartupTrigger(Trigger):
+
+    def __new__(cls):
+        return object.__new__(cls)
+
+    def __init__(self):
+        super().__init__("startup")
+        Broadcaster().board_configuration_loaded.connect(self.exec)
 
 
 class Macro:
@@ -56,7 +97,9 @@ class Macro:
         :param t: The trigger to add
         :param active: Should the new trigger be active by default?
         """
+        t = t.copy()
         self._triggers[t] = active
+        t._macro = self
 
     def copy(self) -> "Macro":
         """Obtain a deep copy of this macro"""
