@@ -6,8 +6,6 @@ on:
 jobs:
   build-project:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/mission-dmx/builder:latest
 
     steps:
       - name: Checkout code
@@ -15,13 +13,30 @@ jobs:
         with:
           submodules: true
 
-      - name: Get current year and month
-        id: get_date
-        run: echo "RELEASE_TAG=$(date +'%Y-%m').Auto" >> $GITHUB_ENV
+      - name: install lib
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-shape0 libxcb-render-util0 libxcb-cursor0 libxcb-xkb1 libxkbcommon-x11-0 libxcb-image0 ocl-icd-opencl-dev
+          version: 1.0
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          cache: false
+          python-version-file: pyproject.toml
+
+      - name: Install dependencies
+        run: pdm install --dev
+
+      - name: Run update_version.py and capture output
+        id: version_update
+        run: |
+          RELEASE_TAG=$(pdm run python update_version.py info)
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
 
       - name: Build Python Executable
         run: |
-          pyinstaller Project-Editor.spec
+          pdm run pyinstaller Project-Editor.spec
 
       - name: Upload Executable as Artifact
         uses: actions/upload-artifact@v4
@@ -35,5 +50,6 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           files: dist/Project-Editor
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

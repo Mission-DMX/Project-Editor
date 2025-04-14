@@ -4,7 +4,7 @@ import os.path
 import platform
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QIcon, QKeySequence
+from PySide6.QtGui import QIcon, QKeySequence, QPixmap
 from PySide6.QtWidgets import QProgressBar
 
 import proto.RealTimeControl_pb2
@@ -112,6 +112,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._about_window = None
         self._settings_dialog = None
         self._theatre_scene_setup_wizard = None
+
+        self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:

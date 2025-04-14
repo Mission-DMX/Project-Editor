@@ -4,30 +4,36 @@ on:
   push:
     branches: [ main ]
 
+
 jobs:
-  check-changes:
+  read-commit:
     runs-on: ubuntu-latest
     outputs:
-      docker: ${{ steps.filter.outputs.docker }}
+      rebuild: ${{ steps.check.outputs.has_version_update }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            docker:
-              - 'Dockerfile'
-              - 'requirements.txt'
-              - '.github/workflows/docker-build.yml'
+      - name: Checke ob Commit-Message '[REBUILD]' enthält
+        id: check
+        run: |
+          msg=$(git log -1 --pretty=%B)
+          echo "Commit message:"
+          echo $msg
+          if echo "$msg" | grep -Fq "[REBUILD]"; then
+            echo "has_version_update=true" >> $GITHUB_OUTPUT
+            echo rebuild
+          else
+            echo "has_version_update=false" >> $GITHUB_OUTPUT
+            echo version_update
+          fi
 
-  docker:
-    needs: check-changes
-    if: ${{ needs.check-changes.outputs.docker == 'true' }}
-    uses: ./.github/workflows/docker-build.yml
+  generateVersionsPR:
+    needs: read-commit
+    if: ${{needs.read-commit.outputs.rebuild == 'false'}}
+    uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:
-    needs: [ docker, check-changes ]
-    if: ${{ always() && (needs.check-changes.outputs.docker == 'false' || needs.docker.result == 'success') }}
+    needs: read-commit
+    if: ${{needs.read-commit.outputs.rebuild == 'true'}}
     uses: ./.github/workflows/build-project.yml
-

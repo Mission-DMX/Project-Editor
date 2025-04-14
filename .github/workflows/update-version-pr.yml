@@ -1,0 +1,38 @@
+name: Update Version PR
+
+on:
+  workflow_call:
+
+jobs:
+  update-version-pr:
+    runs-on: ubuntu-latest
+    #    container:
+    #      image: ghcr.io/mission-dmx/builder:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          cache: false
+          python-version-file: pyproject.toml
+
+      - name: Install dependencies
+        run: pdm install --dev
+
+      - name: Run update_version.py and capture output
+        id: version_update
+        run: |
+          RELEASE_TAG=$(pdm run python update_version.py)
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+
+      - name: Create a Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: 'versions update'
+          body: 'Dieser PR wurde automatisch mit einem Tag und Commit erstellt.'
+          branch: 'version-update'
+          base: 'main'
