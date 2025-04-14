@@ -1,6 +1,8 @@
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QWidget
+from typing import Callable
 
-from model.macro import Macro
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QWidget
+
+from model.macro import Macro, Trigger, trigger_factory
 
 
 class _NewTriggerDialog(QDialog):
@@ -15,10 +17,22 @@ class _NewTriggerDialog(QDialog):
         self._button_box.rejected.connect(self.close)
         self._button_box.accepted.connect(self._apply)
         layout = QFormLayout()
-        # TODO add required widgets
+        self._type_cb = QComboBox(self)
+        self._type_cb.addItems(Trigger.SUPPORTED_TYPES)
+        self._type_cb.setEditable(False)
+        layout.addRow("Type", self._type_cb)
+        self._name_tb = QLineEdit(self)
+        self._name_tb.setPlaceholderText("trigger name")
+        layout.addRow("Name", self._name_tb)
         layout.addWidget(self._button_box)
         self.setLayout(layout)
+        self.added_callable: Callable | None = None
 
     def _apply(self):
-        # TODO construct trigger and add it to self._macro
+        type_str = self._type_cb.currentText()
+        t = trigger_factory(type_str)
+        t.name = self._name_tb.text() or "New Trigger"
+        self._macro.add_trigger(t)
         self.close()
+        if self.added_callable is not None:
+            self.added_callable(t)

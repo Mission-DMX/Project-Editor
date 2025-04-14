@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (QDialog, QLabel, QListWidget, QMessageBox, QPlain
                                QVBoxLayout, QWidget)
 
 from model import Broadcaster
-from model.macro import Macro
+from model.macro import Macro, Trigger
 from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
 from view.action_setup_view.new_trigger_dialog import _NewTriggerDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -93,16 +93,12 @@ class MacroSetupWidget(QSplitter):
                 logger.warning(f"Expected only one selected macro. Got {len(selected_items)} instead. Using the first.")
             self._selected_macro = selected_items[0].annotated_data
         self._trigger_list.clear()
-        i = 0
         if self._selected_macro is not None:
             self._trigger_actions.setEnabled(True)
             self._editor_area.setEnabled(True)
             self._content_panel_actions.setEnabled(True)
             for trigger in self._selected_macro.all_triggers:
-                item = AnnotatedListWidgetItem(self._trigger_list)
-                item.annotated_data = trigger
-                item.setText(str(i))  # TODO replace with something more reasonable, based on condition
-                self._trigger_list.addItem(item)
+                self._trigger_added(trigger)
             self._editor_area.document().setPlainText(self._selected_macro.content)
         else:
             self._trigger_actions.setEnabled(False)
@@ -114,6 +110,12 @@ class MacroSetupWidget(QSplitter):
         self._macro_list.clear()
         self._trigger_list.clear()
         self._editor_area.clear()
+
+    def _trigger_added(self, t: Trigger):
+        item = AnnotatedListWidgetItem(self._trigger_list)
+        item.annotated_data = t
+        item.setText(f"[{str(self._trigger_list.count()) if t.enabled else '-'}] {t.name}")
+        self._trigger_list.addItem(item)
 
     def _macro_added(self, new_macros_id: int):
         m = self._show.get_macro(new_macros_id)
@@ -135,6 +137,7 @@ class MacroSetupWidget(QSplitter):
         if self._selected_macro is None:
             return
         self._dialog = _NewTriggerDialog(self, self._selected_macro)
+        self._dialog.added_callable = self._trigger_added
         self._dialog.show()
 
     def _editor_area_text_changed(self):

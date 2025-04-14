@@ -1,20 +1,27 @@
 from logging import getLogger
 
-from model import Broadcaster
+from PySide6.QtCore import QObject
 
 logger = getLogger(__file__)
 
-class Trigger:
 
-    def __new__(cls, trigger_type: str):
-        match trigger_type:
-            case "startup":
-                return _StartupTrigger()
-            # TODO implement trigger for macro listening
-            case _:
-                raise ValueError("Unsupported trigger type")
+def trigger_factory(trigger_type: str):
+    match trigger_type:
+        case "startup":
+            obj = _StartupTrigger.__new__(_StartupTrigger)
+            obj.__init__()
+            return obj
+        # TODO implement trigger for button listening
+        case _:
+            raise ValueError("Unsupported trigger type")
+
+
+class Trigger(QObject):
+
+    SUPPORTED_TYPES = ["startup"]
 
     def __init__(self, tr_t: str):
+        super().__init__()
         self._macro: "Macro" | None = None
         self._type: str = tr_t
         self.name: str = ""
@@ -24,7 +31,11 @@ class Trigger:
     # TODO implement the __hash__ method
 
     def copy(self) -> "Trigger":
-        raise NotImplemented()  # TODO
+        t = trigger_factory(self._type)
+        t.name = self.name
+        for k, v in self._configuration:
+            t.set_param(k, v)
+        return t
 
     @property
     def enabled(self) -> bool:
@@ -57,11 +68,9 @@ class Trigger:
 
 class _StartupTrigger(Trigger):
 
-    def __new__(cls):
-        return object.__new__(cls)
-
     def __init__(self):
         super().__init__("startup")
+        from model import Broadcaster
         Broadcaster().board_configuration_loaded.connect(self.exec)
 
 
