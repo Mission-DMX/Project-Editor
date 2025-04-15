@@ -17,6 +17,7 @@ from model import BoardConfiguration, ColorHSI, Filter, PatchingUniverse, Scene,
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter
+from model.macro import Macro, trigger_factory
 from model.ofl.fixture import UsedFixture, load_fixture, make_used_fixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
@@ -131,6 +132,8 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
                 _parse_and_add_bankset(child, loaded_banksets)
             case "eventsource":
                 _parse_and_add_event_source(child)
+            case "macro":
+                _parse_and_add_macro(child, board_configuration)
             case _:
                 logger.warning("Show %s contains unknown element: %s",
                                board_configuration.show_name, child.tag)
@@ -661,3 +664,20 @@ def _parse_and_add_event_source(elm: ElementTree.Element):
                 logger.error(f"Unexpected child in event source definition: {child.tag}.")
     mark_sender_persistent(name, evs.renamed_events)
     evs.send_update(auto_commit=True, push_direct=True)
+
+def _parse_and_add_macro(elm: ElementTree.Element, board_configuration: BoardConfiguration):
+    m = Macro(board_configuration)
+    m.name = elm.attrib["name"]
+    for child in elm:
+        match child.tag:
+            case "content":
+                m.content = str(child.text)
+            case "trigger":
+                t = trigger_factory(child.attrib["type"])
+                t.name = child.attrib["name"]
+                m.add_trigger(t, child.attrib["enabled"].lower() == "true")
+                for conf_entry in child:
+                    t.set_param(conf_entry.attrib["name"], conf_entry.attrib["value"])
+            case _:
+                logger.error(f"Unexpected child in macro definition: {child.tag}.")
+    board_configuration.add_macro(m)

@@ -34,7 +34,7 @@ def _write_macro(root: "ElementTree.Element", macro: "Macro"):
         trigger_element = ElementTree.SubElement(element, "trigger", attrib={
             "name": str(t.name),
             "type": str(t.type),
-            "enabled": str(t.enabled)
+            "enabled": str(t.enabled).lower()
         })
         for k, v in t.configuration.items():
             ElementTree.SubElement(trigger_element, "configuration", attrib={
