@@ -1,11 +1,13 @@
 # coding=utf-8
 """GUI and control elements for the software."""
+import tomlkit
 
 if __name__ == "__main__":
     import os
 
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QSplashScreen
+
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
     app = QApplication([])
     from PySide6.QtGui import QPixmap
@@ -22,16 +24,18 @@ if __name__ == "__main__":
     app.setOrganizationDomain("technikradio.org")
     app.setDesktopSettingsAware(True)
     from PySide6.QtGui import QIcon
+
     app.setWindowIcon(QIcon(resource_path(os.path.join("resources", "app-icon.png"))))
 
     version_string = "Error reading version."
-    with open(resource_path(os.path.join("resources", "version.txt")), "r") as f:
-        try:
-            version_string = "Version: " + f.read().replace('\n', '').strip()
-        except:
-            pass
+    with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
+        data = tomlkit.load(f)
+    version_string = f"Version: {data['project']['version']}"
+
     from PySide6.QtGui import QColor, QPalette
-    splashscreen.showMessage(version_string, alignment=Qt.AlignmentFlag.AlignCenter, color=QColor.fromRgb(125, 125, 125))
+
+    splashscreen.showMessage(version_string, alignment=Qt.AlignmentFlag.AlignCenter,
+                             color=QColor.fromRgb(125, 125, 125))
     app.processEvents()
 
     import atexit
@@ -62,6 +66,7 @@ if __name__ == "__main__":
         if queue_handler is not None:
             queue_handler.listener.start()
             atexit.register(queue_handler.listener.stop)
+
 
     def setup_asyncio():
         # Warning: while this change is important, the feature is yet a technical preview in pyside6.6 and the
@@ -125,6 +130,7 @@ if __name__ == "__main__":
         return_code = app.exec()
         cli_server.stop()
         sys.exit(return_code)
+
 
     # Only start if __main__
     main(app)

@@ -1,6 +1,6 @@
 [project]
 name = "Project-Editor"
-version = "1.0.2"
+version = "1.0.3"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
     { name = "MKay", email = "ma.kaussow@uni-luebeck.de" },
@@ -22,6 +22,7 @@ dependencies = [
     "html2text>=2024.2.26",
     "markdown>=3.7",
     "typing-extensions>=4.13.1",
+    "tomlkit>=0.13.2",
     "pydantic>=2.11.3",
     # Dependencies for automatic tracking
     "opencv-python>=4.11.0.86",
@@ -38,7 +39,6 @@ dependencies = [
 dev = [
     "pylint>=3.3.6",
     "pylint-protobuf>=0.22.0",
-    "tomlkit>=0.13.2",
     "pyinstaller>=6.12.0",
 ]
 
