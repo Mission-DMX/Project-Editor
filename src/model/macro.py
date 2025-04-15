@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Signal
 
 from controller.utils.process_notifications import get_process_notifier
 
@@ -21,6 +21,8 @@ def trigger_factory(trigger_type: str):
 class Trigger(QObject):
 
     SUPPORTED_TYPES = ["startup"]
+
+    enabled_changed: Signal = Signal(bool)
 
     def __init__(self, tr_t: str):
         super().__init__()
@@ -51,7 +53,7 @@ class Trigger(QObject):
         """Enable or disable the trigger on its macro (which must be set)"""
         if self._macro is not None:
             self._macro._triggers[self] = new_state
-            # TODO trigger enablement changed signal
+            self.enabled_changed.emit(new_state)
 
     def set_param(self, key: str, value: str):
         self._configuration[key] = value

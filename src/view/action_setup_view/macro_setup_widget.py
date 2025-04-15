@@ -3,8 +3,8 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (QDialog, QFileDialog, QLabel, QListWidget, QMessageBox, QPlainTextEdit, QSplitter,
-                               QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QDialog, QFileDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
+                               QMessageBox, QPlainTextEdit, QSplitter, QToolBar, QVBoxLayout, QWidget)
 
 from model import Broadcaster
 from model.macro import Macro, Trigger
@@ -16,6 +16,29 @@ if TYPE_CHECKING:
     from model.board_configuration import BoardConfiguration
 
 logger = getLogger(__file__)
+
+
+class _TriggerListItemWidget(QWidget):
+    def __init__(self, parent: QWidget, text:str, t: Trigger):
+        super().__init__(parent)
+        self._trigger = t
+        self._enabled_cb = QCheckBox(self)
+        self._enabled_cb.setChecked(t.enabled)
+        self._enabled_cb.setToolTip("Enabled")
+        t.enabled_changed.connect(self._enabled_cb.setChecked)
+        self._enabled_cb.checkStateChanged.connect(self._check_changed)
+        self._label = QLabel(self)
+        self._label.setText(text)
+        layout = QHBoxLayout()
+        layout.addWidget(self._enabled_cb)
+        layout.addWidget(self._label)
+        layout.addStretch()
+        self.setLayout(layout)
+
+    def _check_changed(self):
+        new_state = self._enabled_cb.isChecked()
+        if new_state != self._trigger.enabled:
+            self._trigger.enabled = new_state
 
 
 class MacroSetupWidget(QSplitter):
@@ -125,9 +148,14 @@ class MacroSetupWidget(QSplitter):
     def _trigger_added(self, t: Trigger):
         item = AnnotatedListWidgetItem(self._trigger_list)
         item.annotated_data = t
-        item.setText(f"[{str(self._trigger_list.count()) if t.enabled else '-'}] {t.name}")
-        # TODO add checkbox to enable or disable triggers
+        tw = _TriggerListItemWidget(
+            self._trigger_list,
+            f"[{str(self._trigger_list.count()) if t.enabled else '-'}] {t.name}",
+            t
+        )
+        item.setSizeHint(tw.sizeHint())
         self._trigger_list.addItem(item)
+        self._trigger_list.setItemWidget(item, tw)
 
     def _macro_added(self, new_macros_id: int):
         m = self._show.get_macro(new_macros_id)
