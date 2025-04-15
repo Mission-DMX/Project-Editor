@@ -27,7 +27,6 @@ if __name__ == "__main__":
 
     app.setWindowIcon(QIcon(resource_path(os.path.join("resources", "app-icon.png"))))
 
-    version_string = "Error reading version."
     with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
         data = tomlkit.load(f)
     version_string = f"Version: {data['project']['version']}"
