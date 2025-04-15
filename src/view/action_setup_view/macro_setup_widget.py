@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (QCheckBox, QDialog, QFileDialog, QHBoxLayout, QLa
 from model import Broadcaster
 from model.macro import Macro, Trigger
 from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
+from view.action_setup_view.cue_switch_dialog import _InsertCueSwitchDialog
 from view.action_setup_view.new_trigger_dialog import _NewTriggerDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
@@ -98,12 +99,20 @@ class MacroSetupWidget(QSplitter):
         self._export_macro_action.setIcon(QIcon.fromTheme("document-save"))
         self._export_macro_action.triggered.connect(self._export_macro_clicked)
         self._content_panel_actions.addAction(self._export_macro_action)
-        self._content_panel_actions.addAction("Insert Cue Switch")
+        self._insert_cue_switch_action = QAction()
+        self._insert_cue_switch_action.setText("Insert Cue Switch")
+        self._insert_cue_switch_action.triggered.connect(self._insert_cue_switch_clicked)
+        self._content_panel_actions.addAction(self._insert_cue_switch_action)
+        self._insert_sequence_trigger_action = QAction()
+        self._insert_sequence_trigger_action.setText("Insert Sequence Trigger")
         # TODO connect action
-        self._content_panel_actions.addAction("Insert Sequence Trigger")
+        self._insert_sequence_trigger_action.setEnabled(False)
+        self._content_panel_actions.addAction(self._insert_sequence_trigger_action)
+        self._insert_constant_update_action = QAction()
+        self._insert_constant_update_action.setText("Insert Constant Update")
+        self._insert_constant_update_action.setEnabled(False)
         # TODO connect action
-        self._content_panel_actions.addAction("Insert Constant Update")
-        # TODO connect action
+        self._content_panel_actions.addAction(self._insert_constant_update_action)
         layout.addWidget(self._content_panel_actions)
         self._editor_area = QPlainTextEdit(self._content_panel)
         self._editor_area.setEnabled(False)
@@ -241,3 +250,13 @@ class MacroSetupWidget(QSplitter):
             file_name += ".macro"
         with open(file_name, "w") as f:
             f.write(self._selected_macro.content)
+
+    def _insert_cue_switch_clicked(self):
+        if self._selected_macro is None:
+            return
+        self._dialog = _InsertCueSwitchDialog(self, self._selected_macro, self._show, self._macro_content_changed)
+        self._dialog.show()
+
+    def _macro_content_changed(self):
+        if self._selected_macro is not None:
+            self._editor_area.document().setPlainText(self._selected_macro.content)
