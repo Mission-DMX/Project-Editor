@@ -82,7 +82,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._broadcaster.load_show_file.connect(self.load_show_file)
         self._broadcaster.change_active_scene.connect(self.enter_scene)
 
-        x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)
+        x_touch.XTouchMessages(self._broadcaster, self.button_msg_to_x_touch)
 
     @property
     def is_running(self) -> bool:
@@ -145,7 +145,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
-    def _msg_to_x_touch(self, msg: proto.Console_pb2.button_state_change):
+    def button_msg_to_x_touch(self, msg: proto.Console_pb2.button_state_change):
         """
         Push a button control message to the x-touch.
         :param msg: The button state change to propagate
@@ -307,6 +307,17 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                     self._broadcaster.view_to_file_editor.emit()
                 case proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI:
                     self._broadcaster.view_to_show_player.emit()
+                case btn if btn in [
+                    proto.Console_pb2.ButtonCode.BTN_F1_F1,
+                    proto.Console_pb2.ButtonCode.BTN_F2_F2,
+                    proto.Console_pb2.ButtonCode.BTN_F3_F3,
+                    proto.Console_pb2.ButtonCode.BTN_F4_F4,
+                    proto.Console_pb2.ButtonCode.BTN_F5_F5,
+                    proto.Console_pb2.ButtonCode.BTN_F6_F6,
+                    proto.Console_pb2.ButtonCode.BTN_F7_F7,
+                    proto.Console_pb2.ButtonCode.BTN_F8_F8
+                ]:
+                    self._broadcaster.desk_f_key_pressed.emit(int(msg.button) - int(proto.Console_pb2.ButtonCode.BTN_F1_F1))
                 case _:
                     pass
         else:
