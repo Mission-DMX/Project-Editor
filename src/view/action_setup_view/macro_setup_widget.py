@@ -1,9 +1,10 @@
+import os
 from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (QDialog, QLabel, QListWidget, QMessageBox, QPlainTextEdit, QSplitter, QToolBar,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QDialog, QFileDialog, QLabel, QListWidget, QMessageBox, QPlainTextEdit, QSplitter,
+                               QToolBar, QVBoxLayout, QWidget)
 
 from model import Broadcaster
 from model.macro import Macro, Trigger
@@ -29,6 +30,11 @@ class MacroSetupWidget(QSplitter):
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Macros"))
         self._macro_actions = QToolBar(self._macro_panel)
+        self._import_macro_action: QAction = QAction()
+        self._import_macro_action.setIcon(QIcon.fromTheme("document-open"))
+        self._import_macro_action.setText("Import")
+        self._import_macro_action.triggered.connect(self._import_macro_clicked)
+        self._macro_actions.addAction(self._import_macro_action)
         self.add_macro_action = QAction()
         self.add_macro_action.setText("New Macro")
         self.add_macro_action.triggered.connect(self._add_macro_pressed)
@@ -64,6 +70,11 @@ class MacroSetupWidget(QSplitter):
         self._run_macro_action.triggered.connect(self._run_macro_pressed)
         self._run_macro_action.setIcon(QIcon.fromTheme("system-run"))
         self._content_panel_actions.addAction(self._run_macro_action)
+        self._export_macro_action = QAction()
+        self._export_macro_action.setText("Export Macro")
+        self._export_macro_action.setIcon(QIcon.fromTheme("document-save"))
+        self._export_macro_action.triggered.connect(self._export_macro_clicked)
+        self._content_panel_actions.addAction(self._export_macro_action)
         self._content_panel_actions.addAction("Insert Cue Switch")
         # TODO connect action
         self._content_panel_actions.addAction("Insert Sequence Trigger")
@@ -156,3 +167,48 @@ class MacroSetupWidget(QSplitter):
         self._dialog.setText(text.replace("\n", "<br />" if len(text) > 0 else "<i>No output was generated</i>"))
         self._dialog.setIcon(QMessageBox.Icon.Information if success else QMessageBox.Icon.Critical)
         self._dialog.show()
+
+    def _import_macro_clicked(self):
+        self._create_file_dialog(True)
+        self._dialog.accepted.connect(self._load_macro)
+        self._dialog.show()
+
+    def _create_file_dialog(self, open: bool):
+        self._dialog = QFileDialog(self)
+        self._dialog.setModal(True)
+        self._dialog.setNameFilter("Macro (*.macro)")
+        self._dialog.setViewMode(QFileDialog.ViewMode.Detail)
+        if open:
+            self._dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+            self._dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        else:
+            self._dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+            self._dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+        if self._show.file_path:
+            self._dialog.setDirectory(os.path.dirname(os.path.realpath(self._show.file_path)))
+        else:
+            self._dialog.setDirectory(os.path.expanduser("~"))
+
+    def _load_macro(self):
+        if not isinstance(self._dialog, QFileDialog):
+            logger.error(f"Expected the dialog to be of type QFileDialog. Got {type(self._dialog)} instead.")
+        for f_path in self._dialog.selectedFiles():
+            with open(f_path, "r") as f:
+                m = Macro(self._show)
+                m.name = os.path.splitext(os.path.basename(f_path))[0]
+                m.content = f.read()
+                self._show.add_macro(m)
+
+    def _export_macro_clicked(self):
+        self._create_file_dialog(False)
+        self._dialog.accepted.connect(self._export_macro)
+        self._dialog.show()
+
+    def _export_macro(self):
+        if not isinstance(self._dialog, QFileDialog):
+            logger.error(f"Expected the dialog to be of type QFileDialog. Got {type(self._dialog)} instead.")
+        file_name = self._dialog.selectedFiles()[0]
+        if not os.path.splitext(file_name)[1] == ".macro":
+            file_name += ".macro"
+        with open(file_name, "w") as f:
+            f.write(self._selected_macro.content)
