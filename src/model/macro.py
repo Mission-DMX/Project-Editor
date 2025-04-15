@@ -2,6 +2,8 @@ from logging import getLogger
 
 from PySide6.QtCore import QObject
 
+from controller.utils.process_notifications import ProcessNotifier
+
 logger = getLogger(__file__)
 
 
@@ -63,7 +65,11 @@ class Trigger(QObject):
 
     def exec(self):
         if self._macro is not None:
+            pn = ProcessNotifier(f"Macro: {self._macro.name}, triggered by {self.name}", 1)
+            pn.current_step_description = "Inferencing macro"
             self._macro.exec()
+            pn.current_step_number = 1
+            pn.close()
 
 
 class _StartupTrigger(Trigger):
