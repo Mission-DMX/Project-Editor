@@ -602,11 +602,12 @@ def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> 
     :param universe_id: The id of the universe which this fixture belongs to.
     :returns: The loaded fixtures
     """
-    fixtures_path = '/var/cache/missionDMX/fixtures'
+    fixtures_path = os.path.join(os.sep, "var", "cache", "missionDMX", "fixtures")
     used_fixtures: list[tuple[int, UsedFixture]] = []
     for child in location_element:
         used_fixture = make_used_fixture(load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
-                                         int(child.attrib['mode']), universe_id, child.attrib["nameOnStage"])
+                                         int(child.attrib['mode']), universe_id, child.attrib["nameOnStage"],
+                                         child.attrib["id"])
 
         used_fixtures.append((int(child.attrib['start']), used_fixture))
     # TODO load fixture name from file

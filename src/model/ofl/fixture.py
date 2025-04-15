@@ -4,6 +4,7 @@ import json
 from enum import Enum, IntFlag
 from logging import getLogger
 from typing import TYPE_CHECKING, NotRequired, TypedDict
+from uuid import UUID, uuid4
 
 logger = getLogger(__file__)
 
@@ -116,8 +117,10 @@ class UsedFixture:
     """ Fixture in use with a specific mode"""
 
     def __init__(self, name: str, short_name: str, categories: set[Category], comment: str, mode: Mode,
-                 fixture_file: str, mode_index: int, parent_universe: int, name_on_stage: str) -> None:
+                 fixture_file: str, mode_index: int, parent_universe: int, name_on_stage: str = "",
+                 uuid: UUID = uuid4()) -> None:
         """Used Fixture in a specific mode"""
+        self._uuid: UUID = uuid
         self.name: str = name
         self.short_name: str = short_name
         self.categories: set[Category] = categories
@@ -155,6 +158,11 @@ class UsedFixture:
     def mode_index(self):
         """property for mode_index"""
         return self._mode_index
+
+    @property
+    def uuid(self):
+        """property for uuid"""
+        return self._uuid
 
     def update_segments(self):
         self.red_segments.clear()
@@ -231,7 +239,7 @@ class UsedFixture:
         This method clones the used fixture entry, except for the occupied channels
         """
         return UsedFixture(self.name, self.short_name, self.categories,
-                           self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe, "")
+                           self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe)
         # we do not need to copy the segment data as it is deduced from the channels data
 
     @property
@@ -272,7 +280,9 @@ class UsedFixture:
         return i
 
 
-def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int, name_on_stage: str = "") -> UsedFixture:
+def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int, name_on_stage: str = "",
+                      uuid: str = "") -> UsedFixture:
     """generate a new Used Fixture from a Fixture"""
+    uuid = UUID(uuid) if uuid else uuid4()
     return UsedFixture(fixture['name'], fixture['shortName'], fixture['categories'], fixture['comment'],
-                       fixture['modes'][mode_index], fixture["fileName"], mode_index, universe_id, name_on_stage)
+                       fixture['modes'][mode_index], fixture["fileName"], mode_index, universe_id, name_on_stage, uuid)

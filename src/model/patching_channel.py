@@ -18,7 +18,7 @@ class PatchingChannel(QtCore.QObject):
             raise ValueError(f"Tried to create a channel with address {channel_address}")
         self._address: int = channel_address
         self._fixture: UsedFixture = UsedFixture("Empty", "", set(), "", Mode(channels=["none"], shortName="", name=""),
-                                                 "", 0, -1, "")
+                                                 "", 0, -1)
         self._fixture_channel: int = 0
         self._color: str = "#FFFFFF"
         self._ignore_black = True
@@ -81,7 +81,7 @@ class PatchingChannel(QtCore.QObject):
     def clear_chanel(self):
         """clears the channel"""
         self._fixture: UsedFixture = UsedFixture("Empty", "", set(), "", Mode(channels=["none"], shortName="", name=""),
-                                                 "", 0, -1, "")
+                                                 "", 0, -1)
         self._fixture_channel: int = 0
         self._color: str = "#FFFFFF"
         self._ignore_black = True
