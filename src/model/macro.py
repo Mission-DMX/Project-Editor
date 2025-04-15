@@ -51,6 +51,7 @@ class Trigger(QObject):
         """Enable or disable the trigger on its macro (which must be set)"""
         if self._macro is not None:
             self._macro._triggers[self] = new_state
+            # TODO trigger enablement changed signal
 
     def set_param(self, key: str, value: str):
         self._configuration[key] = value

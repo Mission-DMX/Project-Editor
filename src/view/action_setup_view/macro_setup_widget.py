@@ -126,6 +126,7 @@ class MacroSetupWidget(QSplitter):
         item = AnnotatedListWidgetItem(self._trigger_list)
         item.annotated_data = t
         item.setText(f"[{str(self._trigger_list.count()) if t.enabled else '-'}] {t.name}")
+        # TODO add checkbox to enable or disable triggers
         self._trigger_list.addItem(item)
 
     def _macro_added(self, new_macros_id: int):

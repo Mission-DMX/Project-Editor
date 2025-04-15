@@ -265,3 +265,8 @@ class BoardConfiguration:
                 if m.name == macro_id:
                     return m
         return None
+
+    @property
+    def macros(self) -> list[Macro]:
+        """Get a list of registered macros."""
+        return self._macros.copy()
