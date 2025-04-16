@@ -4,8 +4,8 @@ from PySide6.QtWidgets import (QColorDialog, QComboBox, QDialog, QDoubleSpinBox,
                                QWidget)
 
 from model import ColorHSI
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (KeyFrame, State, StateColor, StateDouble,
-                                                                            StateEightBit, StateSixteenBit)
+from model.filter_data.cues.cue import (KeyFrame, State, StateColor, StateDouble,
+                                        StateEightBit, StateSixteenBit)
 
 
 class KeyFrameStateEditDialog(QDialog):

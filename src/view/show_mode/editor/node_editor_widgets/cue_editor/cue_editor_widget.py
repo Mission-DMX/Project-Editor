@@ -15,12 +15,12 @@ from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColu
 from model.virtual_filters.cue_vfilter import CueFilter
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
+from model.filter_data.cues.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 
 from ..node_editor_widget import NodeEditorFilterConfigWidget
-from .model.cue_filter_model import CueFilterModel
+from model.filter_data.cues.cue_filter_model import CueFilterModel
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode

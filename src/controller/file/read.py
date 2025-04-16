@@ -67,7 +67,7 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration) -> bool:
-    """Parses the specified file to a board configuration data model.
+    """Parses the specified file to a board configuration data cues.
     
     Args:
         file_name: The path to the file to be parsed.

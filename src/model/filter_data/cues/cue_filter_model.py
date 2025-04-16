@@ -1,5 +1,5 @@
 from model import DataType
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
+from model.filter_data.cues.cue import Cue
 
 
 class CueFilterModel:

@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Public classes and methods from model package"""
+"""Public classes and methods from cues package"""
 
 from .board_configuration import BoardConfiguration
 from .broadcaster import Broadcaster
