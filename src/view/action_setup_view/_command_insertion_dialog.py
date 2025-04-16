@@ -1,7 +1,7 @@
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QComboBox, QStackedLayout, QDialogButtonBox
+from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QStackedLayout, QVBoxLayout, QWidget
 
 from model import BoardConfiguration, Scene
-from model.filter import FilterTypeEnumeration
+from model.filter import Filter, FilterTypeEnumeration
 from model.macro import Macro
 from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
@@ -15,6 +15,7 @@ class _CommandInsertionDialog(QDialog):
         self._show = show
         self._scene: Scene | None = None
         self._filter_id: str | None = None
+        self._selected_filter: Filter | None = None
         self._update_callable: callable = update_callable
 
         self._scene_selection_cb = QComboBox(self)
@@ -60,6 +61,7 @@ class _CommandInsertionDialog(QDialog):
     def _filter_selected(self, filter_id: str | None) -> None:
         if filter_id is not None:
             self._filter_id = filter_id
+            self._filter = self._filter_selection.selected_filter
             self.on_filter_selected()
             self._button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 

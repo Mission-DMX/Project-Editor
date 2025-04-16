@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (QCheckBox, QDialog, QFileDialog, QHBoxLayout, QLa
 from model import Broadcaster
 from model.macro import Macro, Trigger
 from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
+from view.action_setup_view.constant_update_dialog import ConstantUpdateInsertionDialog
 from view.action_setup_view.cue_switch_dialog import _InsertCueSwitchDialog
 from view.action_setup_view.new_trigger_dialog import _NewTriggerDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -111,8 +112,7 @@ class MacroSetupWidget(QSplitter):
         self._content_panel_actions.addAction(self._insert_sequence_trigger_action)
         self._insert_constant_update_action = QAction()
         self._insert_constant_update_action.setText("Insert Constant Update")
-        self._insert_constant_update_action.setEnabled(False)
-        # TODO connect action
+        self._insert_constant_update_action.triggered.connect(self._insert_constant_update_clicked)
         self._content_panel_actions.addAction(self._insert_constant_update_action)
         layout.addWidget(self._content_panel_actions)
         self._editor_area = QPlainTextEdit(self._content_panel)
@@ -261,3 +261,8 @@ class MacroSetupWidget(QSplitter):
     def _macro_content_changed(self):
         if self._selected_macro is not None:
             self._editor_area.document().setPlainText(self._selected_macro.content)
+
+    def _insert_constant_update_clicked(self):
+        if self._selected_macro is not None:
+            self._dialog = ConstantUpdateInsertionDialog(self, self._selected_macro, self._show, self._macro_content_changed)
+            self._dialog.show()
