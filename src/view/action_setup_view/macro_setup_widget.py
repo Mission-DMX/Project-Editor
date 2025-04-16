@@ -35,6 +35,7 @@ class _TriggerListItemWidget(QWidget):
         layout.addWidget(self._label)
         layout.addStretch()
         self.setLayout(layout)
+        # TODO implement rename functionality
 
     def _check_changed(self):
         new_state = self._enabled_cb.isChecked()
