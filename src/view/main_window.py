@@ -46,7 +46,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster = Broadcaster()
         self.setWindowTitle("Project-Editor")
 
-        # cues objects
+        # model objects
         self._fish_connector: NetworkManager = NetworkManager(self)
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 

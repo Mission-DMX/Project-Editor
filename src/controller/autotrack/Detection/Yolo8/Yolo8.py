@@ -10,15 +10,15 @@ from controller.autotrack.Detection.Detector import Detector
 
 class Yolo8(Detector):
     """
-    The `Yolo8` class is a detector that uses the YOLOv8 cues for object detection.
+    The `Yolo8` class is a detector that uses the YOLOv8 model for object detection.
 
     Attributes:
-        model (cv2.dnn.Net): The YOLOv8 cues.
+        model (cv2.dnn.Net): The YOLOv8 model.
 
     Methods:
         - `__init__()`: Initialize the Yolo8 object.
         - `detect(frame)`: Detect objects in a given frame.
-        - `loadModel()`: Load the YOLOv8 cues from the ONNX file.
+        - `loadModel()`: Load the YOLOv8 model from the ONNX file.
     """
 
     def __init__(self):
@@ -53,6 +53,6 @@ class Yolo8(Detector):
 
     def loadModel(self):
         """
-        Load the Yolo8 cues from the ONNX file.
+        Load the Yolo8 model from the ONNX file.
         """
         self.model = cv2.dnn.readNetFromONNX("./Detection/Yolo8/models/yolov8n.onnx")

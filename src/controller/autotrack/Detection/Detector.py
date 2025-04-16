@@ -51,7 +51,7 @@ class Detector(ABC):
         # Calculate scale factor
         scale = length / 640
 
-        # Preprocess the image and prepare blob for cues
+        # Preprocess the image and prepare blob for model
         blob = cv2.dnn.blobFromImage(
             image, scalefactor=1 / 255, size=(640, 640), swapRB=True
         )

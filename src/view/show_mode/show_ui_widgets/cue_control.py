@@ -49,7 +49,7 @@ class CueControlUIWidget(UIWidget):
         f.scene.board_configuration.register_filter_update_callback(
             f.scene.scene_id, f.filter_id, self._cue_state.update)
 
-        # TODO refactor this to use cue cues entirely
+        # TODO refactor this to use cue model entirely
         cuelist_str = f.filter_configurations.get("cuelist")
         if cuelist_str:
             cuelist = cuelist_str.split("$")

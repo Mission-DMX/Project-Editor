@@ -32,7 +32,7 @@ class FilterNode(Node):
             self._filter = model
         else:
             self._filter = None
-            logger.warning("Tried creating filter node with unknown cues %s", str(type(model)))
+            logger.warning("Tried creating filter node with unknown model %s", str(type(model)))
 
         super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
 

@@ -306,7 +306,7 @@ class VirtualFilter(Filter, abc.ABC):
 
     def deserialize(self):
         """This method should be called after the filter configuration has been loaded.
-        It might be used to implement the loading of the filter cues."""
+        It might be used to implement the loading of the filter model."""
         pass
 
     def serialize(self):
