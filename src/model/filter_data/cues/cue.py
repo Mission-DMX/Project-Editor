@@ -6,6 +6,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model import ColorHSI, DataType
+from model.filter_data.transfer_function import TransferFunction
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
 
 if TYPE_CHECKING:
@@ -343,15 +344,15 @@ class Cue:
         for kf in self._frames:
             match dt:
                 case DataType.DT_COLOR:
-                    kf_s = StateColor("edg")
+                    kf_s = StateColor(TransferFunction.EDGE.value)
                 case DataType.DT_8_BIT:
-                    kf_s = StateEightBit("edg")
+                    kf_s = StateEightBit(TransferFunction.EDGE.value)
                 case DataType.DT_DOUBLE:
-                    kf_s = StateDouble("edg")
+                    kf_s = StateDouble(TransferFunction.EDGE.value)
                 case DataType.DT_16_BIT:
-                    kf_s = StateSixteenBit("edg")
+                    kf_s = StateSixteenBit(TransferFunction.EDGE.value)
                 case _:
-                    kf_s = StateEightBit("edg")
+                    kf_s = StateEightBit(TransferFunction.EDGE.value)
             kf._states.append(kf_s)
 
     def insert_frame(self, f: KeyFrame):
