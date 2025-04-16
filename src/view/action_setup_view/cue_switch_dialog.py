@@ -24,7 +24,7 @@ class _InsertCueSwitchDialog(_CommandInsertionDialog):
         self.custom_layout.setCurrentIndex(0)
 
     def get_command(self) -> str:
-        return f"showctl filtermsg {self._scene.scene_id} {self._filter_id} run_cue {self._cue_selection_cb.currentIndex()}"
+        return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} run_cue {self._cue_selection_cb.currentIndex()}"
 
     def on_filter_selected(self):
         self._cue_selection_cb.setEnabled(True)

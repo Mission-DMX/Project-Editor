@@ -24,6 +24,9 @@ _rename_icon = QIcon(resource_path(os.path.join("resources", "icons", "rename.sv
 
 
 class _SenderConfigurationWidget(QScrollArea):
+
+    """Widget containing the configuration of the current selected event sender."""
+
     def __init__(self, parent: QWidget | None, b: Broadcaster):
         super().__init__(parent=parent)
         self._sender: events.EventSender | None = None
@@ -154,6 +157,8 @@ class _SenderConfigurationWidget(QScrollArea):
 
 class _SourceListWidget(QWidget):
 
+    """Content widget for ListWidgetItems of event senders"""
+
     def __init__(self, parent: QWidget, sender: events.EventSender):
         super().__init__(parent=parent)
         layout = QHBoxLayout()
@@ -192,6 +197,7 @@ def _type_to_string(t):
 
 
 class _EventLogListWidget(QWidget):
+    """Content widget for ListWidgetItems of logged events"""
 
     _STYLE_ID_TAG = """
     background-color: #B0B0B0;
@@ -300,6 +306,9 @@ class _EventLogListWidget(QWidget):
 
 
 class _SenderAddDialog(QDialog):
+
+    """Dialog to configure new event senders."""
+
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.setModal(True)
@@ -335,6 +344,8 @@ class _SenderAddDialog(QDialog):
 
 
 class EventSetupWidget(QSplitter):
+
+    """Widget containing the entire event sender configuration UI."""
 
     def __init__(self, parent: QWidget | None, b: Broadcaster):
         super().__init__(parent=parent)

@@ -76,17 +76,17 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
 
     def get_command(self) -> str:
         if self._filter.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT]:
-            return f"showctl filtermsg {self._scene.scene_id} {self._filter_id} value {self._int_tb.value()}"
+            return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._int_tb.value()}"
         elif self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
-            return f"showctl filtermsg {self._scene.scene_id} {self._filter_id} value {self._float_tb.value()}"
+            return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._float_tb.value()}"
         elif self._filter.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
-            s = (f"showctl filtermsg {self._scene.scene_id} {self._filter_id}_16bit_pan value {int(self._pan_tilt_widget.pan * 65535)}\n"
-                 f"showctl filtermsg {self._scene.scene_id} {self._filter_id}_16bit_tilt value {int(self._pan_tilt_widget.tilt * 65535)}")
+            s = (f"showctl filtermsg {self._scene.scene_id} {self.filter_id}_16bit_pan value {int(self._pan_tilt_widget.pan * 65535)}\n"
+                 f"showctl filtermsg {self._scene.scene_id} {self.filter_id}_16bit_tilt value {int(self._pan_tilt_widget.tilt * 65535)}")
             return s
         else:
             qtc = self._color.to_qt_color()
             hexcode = "rgb: {:02X}{:02X}{:02X}".format(int(qtc.redF() * 255), int(qtc.greenF() * 255), int(qtc.blueF() * 255))
-            s = f"showctl filtermsg {self._scene.scene_id} {self._filter_id} value {self._color.format_for_filter()} # {hexcode}"
+            s = f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._color.format_for_filter()} # {hexcode}"
             return s
 
     def on_filter_selected(self):

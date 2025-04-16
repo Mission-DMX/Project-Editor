@@ -6,6 +6,12 @@ from model.macro import Macro, Trigger, trigger_factory
 
 
 class _NewTriggerDialog(QDialog):
+
+    """
+    Dialog to add new macro triggers.
+    Upon Accept this dialog adds the new trigger to the provided macro on its own.
+    """
+
     def __init__(self, parent: QWidget, macro: Macro):
         super().__init__(parent)
         self._macro = macro

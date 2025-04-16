@@ -7,6 +7,9 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 
 class _CommandInsertionDialog(QDialog):
+
+    """This class provides a foundation for command insertion dialogs."""
+
     def __init__(self, parent: QWidget, macro: Macro, supported_filter_list: list[FilterTypeEnumeration],
                  show: BoardConfiguration, update_callable: callable):
         super().__init__(parent)
@@ -14,8 +17,8 @@ class _CommandInsertionDialog(QDialog):
         self._macro = macro
         self._show = show
         self._scene: Scene | None = None
-        self._filter_id: str | None = None
-        self._selected_filter: Filter | None = None
+        self.filter_id: str | None = None
+        self.selected_filter: Filter | None = None
         self._update_callable: callable = update_callable
 
         self._scene_selection_cb = QComboBox(self)
@@ -60,7 +63,7 @@ class _CommandInsertionDialog(QDialog):
 
     def _filter_selected(self, filter_id: str | None) -> None:
         if filter_id is not None:
-            self._filter_id = filter_id
+            self.filter_id = filter_id
             self._filter = self._filter_selection.selected_filter
             self.on_filter_selected()
             self._button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
@@ -71,7 +74,17 @@ class _CommandInsertionDialog(QDialog):
         self.close()
 
     def get_command(self) -> str:
+        """
+        This method needs to be implemented in order to get the command that should be inserted.
+        :returns: a string without leading new line.
+        """
         raise NotImplementedError()
 
     def on_filter_selected(self):
+        """
+        This method gets called once the user selected the desired filter.
+        Use this method to implement custom behavior. self.filter and self.filter_id
+        are now guaranteed to be not None. This method may be called multiple times
+        (exactly if the user changes the selected filter).
+        """
         raise NotImplementedError()

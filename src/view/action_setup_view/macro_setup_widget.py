@@ -21,6 +21,8 @@ logger = getLogger(__file__)
 
 
 class _TriggerListItemWidget(QWidget):
+    """Content widget for ListWidgetItems of macro triggers."""
+
     def __init__(self, parent: QWidget, text:str, t: Trigger):
         super().__init__(parent)
         self._trigger = t
@@ -45,6 +47,8 @@ class _TriggerListItemWidget(QWidget):
 
 
 class MacroSetupWidget(QSplitter):
+
+    """Widget to configure a selected macro."""
 
     def __init__(self, parent: QWidget | None, show_config: "BoardConfiguration"):
         super().__init__(parent=parent)
