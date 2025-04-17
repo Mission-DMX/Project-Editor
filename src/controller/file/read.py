@@ -651,7 +651,7 @@ def _parse_and_add_event_source(elm: ElementTree.Element):
             case "type":
                 stype = value
             case _:
-                logger.error(f"Unexpected attribute in event source '{key}'='{value}'.")
+                logger.error("Unexpected attribute in event source '%s'='%s'.", key, value)
     evs = EventSender(name)
     evs.type = stype
     for child in elm:
@@ -659,11 +659,13 @@ def _parse_and_add_event_source(elm: ElementTree.Element):
             case "configuration":
                 evs.configuration[str(child.attrib["name"])] = str(child.attrib["value"])
             case "eventRename":
-                evs.renamed_events[(int(child.attrib["eventType"]), int(child.attrib["senderFunction"]), str(child.attrib["arguments"]))] = child.text
+                evs.renamed_events[(int(child.attrib["eventType"]), int(child.attrib["senderFunction"]),
+                                    str(child.attrib["arguments"]))] = child.text
             case _:
-                logger.error(f"Unexpected child in event source definition: {child.tag}.")
+                logger.error("Unexpected child in event source definition: %s.", child.tag)
     mark_sender_persistent(name, evs.renamed_events)
     evs.send_update(auto_commit=True, push_direct=True)
+
 
 def _parse_and_add_macro(elm: ElementTree.Element, board_configuration: BoardConfiguration):
     m = Macro(board_configuration)
@@ -679,5 +681,5 @@ def _parse_and_add_macro(elm: ElementTree.Element, board_configuration: BoardCon
                 for conf_entry in child:
                     t.set_param(conf_entry.attrib["name"], conf_entry.attrib["value"])
             case _:
-                logger.error(f"Unexpected child in macro definition: {child.tag}.")
+                logger.error("Unexpected child in macro definition: %s.", child.tag)
     board_configuration.add_macro(m)

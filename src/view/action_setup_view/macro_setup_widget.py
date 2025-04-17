@@ -3,8 +3,8 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (QCheckBox, QDialog, QFileDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
-                               QMessageBox, QPlainTextEdit, QSplitter, QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QDialog, QFileDialog, QHBoxLayout, QLabel, QListWidget, QMessageBox,
+                               QPlainTextEdit, QSplitter, QToolBar, QVBoxLayout, QWidget)
 
 from model import Broadcaster
 from model.macro import Macro, Trigger
@@ -23,7 +23,7 @@ logger = getLogger(__file__)
 class _TriggerListItemWidget(QWidget):
     """Content widget for ListWidgetItems of macro triggers."""
 
-    def __init__(self, parent: QWidget, text:str, t: Trigger):
+    def __init__(self, parent: QWidget, text: str, t: Trigger):
         super().__init__(parent)
         self._trigger = t
         self._enabled_cb = QCheckBox(self)
@@ -47,7 +47,6 @@ class _TriggerListItemWidget(QWidget):
 
 
 class MacroSetupWidget(QSplitter):
-
     """Widget to configure a selected macro."""
 
     def __init__(self, parent: QWidget | None, show_config: "BoardConfiguration"):
@@ -136,9 +135,10 @@ class MacroSetupWidget(QSplitter):
             self._selected_macro = None
         else:
             if not isinstance(selected_items[0], AnnotatedListWidgetItem):
-                logger.error("Expected AnnotatedListWidgetItem with macro. Got {} instead.", selected_items[0])
+                logger.error("Expected AnnotatedListWidgetItem with macro. Got %s instead.", selected_items[0])
             if len(selected_items) > 1:
-                logger.warning("Expected only one selected macro. Got {} instead. Using the first.", len(selected_items))
+                logger.warning("Expected only one selected macro. Got %s instead. Using the first.",
+                               len(selected_items))
             self._selected_macro = selected_items[0].annotated_data
         self._trigger_list.clear()
         if self._selected_macro is not None:
@@ -174,7 +174,7 @@ class MacroSetupWidget(QSplitter):
     def _macro_added(self, new_macros_id: int):
         m = self._show.get_macro(new_macros_id)
         if m is None:
-            logger.error("Did not expect the newly created macro with index {} to not exist.", new_macros_id)
+            logger.error("Did not expect the newly created macro with index %s to not exist.", new_macros_id)
         item = AnnotatedListWidgetItem(self._macro_list)
         item.annotated_data = m
         item.setText(f"[{new_macros_id}]: {m.name}")
@@ -201,7 +201,7 @@ class MacroSetupWidget(QSplitter):
     def _run_macro_pressed(self):
         if self._selected_macro is None:
             return
-        logger.info("Running macro {} from manual trigger.", self._selected_macro.name)
+        logger.info("Running macro %s from manual trigger.", self._selected_macro.name)
         self._selected_macro.c.return_text = ""
         success = self._selected_macro.exec()
         text = self._selected_macro.c.return_text
@@ -234,7 +234,7 @@ class MacroSetupWidget(QSplitter):
 
     def _load_macro(self):
         if not isinstance(self._dialog, QFileDialog):
-            logger.error("Expected the dialog to be of type QFileDialog. Got {} instead.", type(self._dialog))
+            logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
         for f_path in self._dialog.selectedFiles():
             with open(f_path, "r") as f:
                 m = Macro(self._show)
@@ -249,7 +249,7 @@ class MacroSetupWidget(QSplitter):
 
     def _export_macro(self):
         if not isinstance(self._dialog, QFileDialog):
-            logger.error("Expected the dialog to be of type QFileDialog. Got {} instead.", type(self._dialog))
+            logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
         file_name = self._dialog.selectedFiles()[0]
         if not os.path.splitext(file_name)[1] == ".macro":
             file_name += ".macro"
@@ -268,5 +268,6 @@ class MacroSetupWidget(QSplitter):
 
     def _insert_constant_update_clicked(self):
         if self._selected_macro is not None:
-            self._dialog = ConstantUpdateInsertionDialog(self, self._selected_macro, self._show, self._macro_content_changed)
+            self._dialog = ConstantUpdateInsertionDialog(self, self._selected_macro, self._show,
+                                                         self._macro_content_changed)
             self._dialog.show()

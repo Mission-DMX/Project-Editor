@@ -1,3 +1,4 @@
+# coding=utf-8
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -6,7 +7,6 @@ from model.events import EventSender, get_sender, insert_event
 
 if TYPE_CHECKING:
     import argparse
-
 
 logger = getLogger(__file__)
 
@@ -50,8 +50,10 @@ class EventCommand(Command):
                             else:
                                 evs.configuration[str(item)] = ""
                         except ValueError as e:
-                            logger.error(f'Unable to parse event sender configuration entry {item}. Expected'
-                                         f' format: <key>=<value>')
+                            logger.error(
+                                'Unable to parse event sender configuration entry %s.'
+                                ' Expected format: <key>=<value>',
+                                item)
                 evs.debug_enabled = args.enable_debug
                 return True
             case "send":

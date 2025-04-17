@@ -119,7 +119,7 @@ class Connection:
     def run(self):
         """This method will be called by the client thread in order to handle the client."""
         try:
-            logger.info(f"Got incoming remote CLI connection from {self._remote_address}.")
+            logger.info("Got incoming remote CLI connection from %s.",self._remote_address)
             reader = SocketStreamReader(self._client)
             while not self.context.exit_called:
                 self._client.send("> ".encode("utf-8"))
@@ -134,7 +134,7 @@ class Connection:
         except UnicodeDecodeError as e:
             self._client.send("Unable to decode command. Exiting.")
             self._client.close()
-            logger.error("Failed to decode CLI command.", e)
+            logger.error("Failed to decode CLI command. %s", e)
         finally:
             self._client.close()
         self._connection_map.pop(self._remote_address)
@@ -150,6 +150,7 @@ class Connection:
 
     @property
     def remote_address(self) -> str:
+        """Property for remote address"""
         return self._remote_address
 
 
@@ -172,7 +173,7 @@ class RemoteCLIServer:
         self._show = show
         self._network_manager = netmgr
         self._server_thread.start()
-        logger.warning(f"Opened up CLI interface on [{interface}]:{port}")
+        logger.warning("Opened up CLI interface on [%s]:%s", interface, port)
 
     def run(self):
         """This method will be run by the server thread in order to process incoming clients."""
@@ -191,7 +192,7 @@ class RemoteCLIServer:
                 except TimeoutError:
                     pass
                 except socket_error as e:
-                    logger.error(f"CLI socket error: {e}")
+                    logger.error("CLI socket error: %s", e)
             s.close()
         logger.info("Exiting CLI server thread")
 
@@ -208,7 +209,7 @@ class RemoteCLIServer:
             to_be_stopped.append(self._connected_clients[k_addr])
         for c in to_be_stopped:
             c.stop()
-            logger.info(f"CLI clients from {c.remote_address} disconnected.")
+            logger.info("CLI clients from %s disconnected.", c.remote_address)
         try:
             self._server_thread.join()
         except KeyboardInterrupt:

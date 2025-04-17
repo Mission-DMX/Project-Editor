@@ -157,5 +157,5 @@ class Macro:
         for l in self.content.split("\n"):
             if not self.c.exec_command(l):
                 success = False
-                logger.error(f"Failed to execute command: {l}")
+                logger.error("Failed to execute command: %s", l)
         return success

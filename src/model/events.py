@@ -48,7 +48,7 @@ def _handle_incoming_sender_update(msg: "event_sender"):
             case "fish.builtin.macrokeypad":
                 raise NotImplemented()
             case _:
-                logger.error(f"Unexpaected event sender type: '{msg.type}'")
+                logger.error("Unexpaected event sender type: '%s'",msg.type)
                 return
         _senders[msg.name] = ev
         _senders_by_id[msg.sender_id] = ev

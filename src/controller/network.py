@@ -235,7 +235,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.fish_event_received.emit(message)
                     case _:
-                        logger.warning(f"Received not implemented message type: {msg_type}")
+                        logger.warning("Received not implemented message type: %s",msg_type)
             except:
                 logger.error("Failed to parse message.", exc_info=True)
         self.push_messages()
