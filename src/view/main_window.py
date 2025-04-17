@@ -228,9 +228,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._status_current_scene_label = QtWidgets.QLabel("")
         self._fish_connector.active_scene_on_fish_changed.connect(
-            lambda i: self._status_current_scene_label.setText("[{}] {}".format(
-                i, self._board_configuration.get_scene_by_id(i).human_readable_name if
-                i != -1 and self._board_configuration.get_scene_by_id(i) is not None else "")))
+            lambda i: self._status_current_scene_label.setText(
+                f"[{i}] {self._board_configuration.get_scene_by_id(i).human_readable_name if
+                i != -1 and self._board_configuration.get_scene_by_id(i) is not None else ''}"))
         status_bar.addWidget(self._status_current_scene_label)
 
         self._label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value
