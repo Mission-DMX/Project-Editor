@@ -85,7 +85,7 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
             return s
         else:
             qtc = self._color.to_qt_color()
-            hexcode = "rgb: {:02X}{:02X}{:02X}".format(int(qtc.redF() * 255), int(qtc.greenF() * 255), int(qtc.blueF() * 255))
+            hexcode = f"rgb: {int(qtc.redF() * 255):02X}{int(qtc.greenF() * 255):02X}{int(qtc.blueF() * 255):02X}"
             s = f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._color.format_for_filter()} # {hexcode}"
             return s
 

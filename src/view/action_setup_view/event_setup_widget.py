@@ -236,7 +236,7 @@ class _EventLogListWidget(QWidget):
         self._id_label = QLabel(str(ev.event_id), parent=self)
         self._id_label.setToolTip("Event ID")
         self._id_label.setStyleSheet(_EventLogListWidget._STYLE_ID_TAG)
-        self._sender_label = QLabel("[{}:{}]".format(ev.sender_id, ev.sender_function), parent=self)
+        self._sender_label = QLabel(f"[{ev.sender_id}:{ev.sender_function}]", parent=self)
         self._sender_label.setToolTip("Event Sender and function")
         self._type_label = QLabel(_type_to_string(ev.type), parent=self)
         if ev.type == proto.Events_pb2.START:
