@@ -31,7 +31,6 @@ dependencies = [
     "pyjoystick>=1.2.4",
     "pyopengl>=3.1.9",
     "onnxruntime-openvino>=1.21.0",
-
 ]
 
 [dependency-groups]

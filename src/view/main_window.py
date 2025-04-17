@@ -16,6 +16,7 @@ from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
 from style import Style
 from utility import resource_path
+from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.dmx_data_log import DmxDataLogWidget
@@ -47,7 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Project-Editor")
 
         # model objects
-        self._fish_connector: NetworkManager = NetworkManager(self)
+        self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
         from model.ui_configuration import setup_network_manager
@@ -69,6 +70,11 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             ("Patch", MainWidget(PatchMode(self), self), self._broadcaster.view_to_patch_menu.emit),
             ("Debug", debug_console, lambda: self._to_widget(4)),
+            (
+                "Actions",
+                MainWidget(CombinedActionSetupWidget(self, self._broadcaster, self._board_configuration), self),
+                self._broadcaster.view_to_action_config.emit
+            ),
         ]
 
         # select Views
@@ -97,6 +103,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster.view_to_color.connect(self._is_column_dialog)
         self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
         self._broadcaster.save_button_pressed.connect(self._save_show)
+        self._broadcaster.view_to_action_config.connect(lambda: self._to_widget(5))
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -129,6 +136,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     self._broadcaster.view_leave_show_player.emit()
                 case 3:
                     self._broadcaster.view_leave_patch_menu.emit()
+                case 4:
+                    self._broadcaster.view_leave_action_config.emit()
             self._widgets.setCurrentIndex(index)
 
     def _setup_menubar(self) -> None:
@@ -219,9 +228,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._status_current_scene_label = QtWidgets.QLabel("")
         self._fish_connector.active_scene_on_fish_changed.connect(
-            lambda i: self._status_current_scene_label.setText("[{}] {}".format(
-                i, self._board_configuration.get_scene_by_id(i).human_readable_name if
-                i != -1 and self._board_configuration.get_scene_by_id(i) is not None else "")))
+            lambda i: self._status_current_scene_label.setText(
+                f"[{i}] {self._board_configuration.get_scene_by_id(i).human_readable_name if
+                i != -1 and self._board_configuration.get_scene_by_id(i) is not None else ''}"))
         status_bar.addWidget(self._status_current_scene_label)
 
         self._label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value

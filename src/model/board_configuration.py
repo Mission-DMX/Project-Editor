@@ -8,6 +8,7 @@ import proto.FilterMode_pb2
 
 from .broadcaster import Broadcaster
 from .device import Device
+from .macro import Macro
 from .patching_universe import PatchingUniverse
 from .scene import Scene
 from .universe import Universe
@@ -25,6 +26,7 @@ class BoardConfiguration:
         self._devices: list[Device] = []
         self._universes: list[Universe] = []
         self._ui_hints: dict[str, str] = {}
+        self._macros: list[Macro] = []
 
         self._show_file_path: str = ""
         self._broadcaster: Broadcaster = Broadcaster()
@@ -59,6 +61,7 @@ class BoardConfiguration:
         self._ui_hints = {}
         self._show_file_path = ""
         self._filter_update_msg_register.clear()
+        self._macros.clear()
 
     def _add_scene(self, scene: Scene):
         """Adds a scene to the list of scenes.
@@ -237,3 +240,33 @@ class BoardConfiguration:
         if callable_list is None:
             return
         callable_list.remove(c)
+
+    def add_macro(self, m: Macro):
+        """
+        Add a new macro to the show file.
+
+        This method must be called from a QObject as it triggers an event.
+
+        :param m: The macro to add.
+        """
+        new_index = len(self._macros)
+        self._macros.append(m)
+        self._broadcaster.macro_added_to_show_file.emit(new_index)
+
+    def get_macro(self, macro_id: int | str) -> Macro | None:
+        """Get the macro specified by its index.
+        :returns: The macro or None if none was found."""
+        if isinstance(macro_id, int):
+            if macro_id >= len(self._macros):
+                return None
+            return self._macros[macro_id]
+        elif isinstance(macro_id, str):
+            for m in self._macros:
+                if m.name == macro_id:
+                    return m
+        return None
+
+    @property
+    def macros(self) -> list[Macro]:
+        """Get a list of registered macros."""
+        return self._macros.copy()

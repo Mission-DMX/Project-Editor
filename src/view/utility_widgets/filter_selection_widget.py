@@ -1,5 +1,5 @@
 # coding=utf-8
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QTreeWidget, QWidget
 
 from model import Scene
@@ -9,7 +9,10 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class FilterSelectionWidget(QTreeWidget):
-    def __init__(self, parent: QWidget | None, scene: Scene, allowed_filter_types: list[FilterTypeEnumeration] | None):
+
+    selected_filter_changed: Signal = Signal(str)
+
+    def __init__(self, parent: QWidget | None, scene: Scene | None, allowed_filter_types: list[FilterTypeEnumeration] | None):
         super().__init__(parent)
         self._scene = scene
         self._target_filter_id: str | None = None
@@ -19,7 +22,8 @@ class FilterSelectionWidget(QTreeWidget):
         self.selectionModel().selectionChanged.connect(self._selection_changed)
         self._allowed_filter_types = allowed_filter_types or []
 
-        self.populate_widget()
+        if self._scene is not None:
+            self.populate_widget()
 
     @property
     def selected_filter(self) -> Filter | None:
@@ -38,6 +42,7 @@ class FilterSelectionWidget(QTreeWidget):
         else:
             self._target_filter_id = None
             self._filter = None
+        self.selected_filter_changed.emit(self._target_filter_id)
 
     def populate_widget(self):
         already_added_filters = set()
@@ -107,3 +112,9 @@ class FilterSelectionWidget(QTreeWidget):
         if len(sitems) == 0 and self._last_selected_item is not None:
             self._last_selected_item.setSelected(True)
         self._find_selected_filter()
+        self.selected_filter_changed.emit(self._target_filter_id)
+
+    def set_scene(self, scene: Scene | None) -> None:
+        self._scene = scene
+        if self._scene is not None:
+            self.populate_widget()

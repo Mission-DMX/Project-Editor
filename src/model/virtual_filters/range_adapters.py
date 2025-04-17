@@ -100,7 +100,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if virtual_port_id == "out":
-            return "{}_color_recomposition:value".format(self.filter_id)
+            return f"{self.filter_id}_color_recomposition:value"
         raise ValueError("Unknown output port")
 
     def instantiate_filters(self, filter_list: list[Filter]):

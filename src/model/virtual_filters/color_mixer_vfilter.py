@@ -5,7 +5,7 @@ from model.filter import FilterTypeEnumeration, VirtualFilter
 
 class ColorMixerVFilter(VirtualFilter):
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
-        return "{}:{}".format(self.filter_id, virtual_port_id)
+        return f"{self.filter_id}:{virtual_port_id}"
 
     def instantiate_filters(self, filter_list: list[Filter]):
         method = self.filter_configurations.get("method")

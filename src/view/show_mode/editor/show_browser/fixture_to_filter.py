@@ -115,7 +115,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
             elif c[c_i].fixture_channel.startswith("Red"):
                 if c[c_i + 1].fixture_channel.startswith("Green") and c[c_i + 2].fixture_channel.startswith("Blue"):
                     if len(c) > c_i + 3 and c[c_i + 3].fixture_channel == "White":
-                        adapter_name = _sanitize_name("color2rgbw_{i}_{name}")
+                        adapter_name = _sanitize_name(f"color2rgbw_{i}_{name}")
                         rgbw_filter = Filter(scene=fp.parent_scene,
                                              filter_id=adapter_name,
                                              filter_type=16,

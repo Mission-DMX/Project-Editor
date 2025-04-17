@@ -15,6 +15,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._command_chain: list[tuple[str, str]] = []  # ??
         self._filter = None
         self._player_widget = None
+        self._conf_widget = None
 
     def set_filter(self, f: "Filter", i: int):
         if not f:
@@ -52,9 +53,10 @@ class PanTiltConstantControlUIWidget(UIWidget):
         return w
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        if self._player_widget is None:  # Todo: Do these have to differ?
-            self._player_widget = self.construct_widget(parent)
-        return self._player_widget
+        if self._conf_widget is None:
+            self._conf_widget = self.construct_widget(parent)
+            self._conf_widget.setEnabled(False)
+        return self._conf_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         w = PanTiltConstantControlUIWidget(self.parent, self.configuration)

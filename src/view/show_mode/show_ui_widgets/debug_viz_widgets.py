@@ -128,7 +128,7 @@ class _DebugVizWidget(UIWidget, ABC):
             self.configured_dimensions_changed_callback()
 
 
-class _ColorLabel(QWidget):
+class ColorLabel(QWidget):
     """A label for displaying colors"""
 
     def __init__(self, *args, **kwargs):
@@ -136,6 +136,9 @@ class _ColorLabel(QWidget):
         super().__init__(*args, **kwargs)
         self._last_color: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self._last_color_processed: QColor = QColor()
+
+    def set_color(self, c: ColorHSI):
+        self.set_hsi(c.hue, c.saturation, c.intensity)
 
     def set_hsi(self, h: float, s: float, i: float):
         """
@@ -164,7 +167,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
     def __init__(self, parent: "UIPage", configuration: dict[str, str]):
         super().__init__(parent, configuration)
         self.configured_dimensions_changed_callback = self._dimensions_changed
-        self._show_widget: _ColorLabel | None = None
+        self._show_widget: ColorLabel | None = None
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._show_widget is None:
@@ -172,7 +175,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
         return self._show_widget
 
     def _construct_player_widget(self, parent: QWidget):
-        w = _ColorLabel(parent=parent)
+        w = ColorLabel(parent=parent)
         w.setFixedWidth(self.configured_width)
         w.setFixedHeight(self.configured_height)
         self._show_widget = w
