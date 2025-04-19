@@ -1,4 +1,6 @@
-from model.filter_data.sequencer.transition import logger
+from logging import getLogger
+
+logger = getLogger(__file__)
 
 
 def _rf(s: str) -> str:

@@ -40,6 +40,7 @@ class ExternalChannelDefinition:
         self.name = name
         self.fader = associated_fader
         self.bankset = bank_set
+        self.enabled = True
 
 
 class CueEditor(NodeEditorFilterConfigWidget):

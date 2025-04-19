@@ -16,6 +16,7 @@ from model.virtual_filters.import_vfilter import ImportVFilter
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from model.virtual_filters.range_adapters import (ColorGlobalBrightnessMixinVFilter, EightBitToFloatRange,
                                                   SixteenBitToFloatRange)
+from model.virtual_filters.sequencer_vfilter import SequencerFilter
 
 if TYPE_CHECKING:
     from model import Scene
@@ -64,6 +65,8 @@ def construct_virtual_filter_instance(scene: "Scene", filter_type: int, filter_i
             return ImportVFilter(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_COLOR_MIXER:
             return ColorMixerVFilter(scene, filter_id, pos=pos)
+        case FilterTypeEnumeration.VFILTER_SEQUENCER:
+            return SequencerFilter(scene, filter_id, pos=pos)
         case _:
             raise ValueError(f"The requested filter type {filter_type} is not yet implemented.")
     pass

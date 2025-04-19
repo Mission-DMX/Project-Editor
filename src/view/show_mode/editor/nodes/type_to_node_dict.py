@@ -15,6 +15,7 @@ from view.show_mode.editor.nodes.impl.waves import *
 from view.show_mode.editor.nodes.import_node import ImportNode
 
 type_to_node: dict[int, str] = {
+    FilterTypeEnumeration.VFILTER_SEQUENCER: SequencerNode.nodeName,
     FilterTypeEnumeration.VFILTER_COLOR_MIXER: ColorMixerVFilterNode.nodeName,
     FilterTypeEnumeration.VFILTER_IMPORT: ImportNode.nodeName,
     FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN: ColorBrightnessMixinNode.nodeName,

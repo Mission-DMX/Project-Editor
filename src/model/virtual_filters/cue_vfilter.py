@@ -35,8 +35,11 @@ class _PreviewFilter(VirtualFilter):
             for channel in self.associated_editor_widget.channels:
                 fader_filter_id = f"{self.filter_id}__{channel.name}"
                 if channel.fader is None:
-                    logger.error(
-                        "The preview is enabled but no logger was assigned for channel '%s'.", channel.name)
+                    if channel.enabled:
+                        logger.error(
+                            "The preview is enabled but no fader was assigned for channel '{}'.",
+                            channel.name
+                        )
                     fader_filter = Filter(self.scene, fader_filter_id,
                                           filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR
                                           if channel.data_type == DataType.DT_COLOR

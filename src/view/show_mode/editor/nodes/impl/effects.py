@@ -1,5 +1,6 @@
 from model import DataType, Scene
 from model.filter import FilterTypeEnumeration
+from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -178,3 +179,26 @@ class EffectsStackNode(FilterNode):
     def update_node_after_settings_changed(self):
         super().update_node_after_settings_changed()
         self.setup_output_terminals()
+
+
+class SequencerNode(FilterNode):
+    nodeName = "Sequencer"
+
+    def __init__(self, model, name):
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER, name=name, terminals={
+            'time': {'io': 'in'},
+            'time_scale': {'io': 'in'}
+        }, allowAddOutput=True)
+
+        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
+        self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
+
+        try:
+            for c_str in self.filter.filter_configurations["channels"].split(';'):
+                c = SequencerChannel.from_filter_str(c_str)
+                self.addOutput(c.name)
+                self.filter.out_data_types[c.name] = c.data_type
+        except KeyError:
+            self.filter.filter_configurations["channels"] = ""
+        if self.filter.filter_configurations.get("transitions") is None:
+            self.filter.filter_configurations["transitions"] = ""
