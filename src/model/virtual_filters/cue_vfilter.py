@@ -12,18 +12,13 @@ if TYPE_CHECKING:
 logger = getLogger(__file__)
 
 
-class CueFilter(VirtualFilter):
-    """
-    This class implements a switch for the cue filter. In case of enabled live preview it links the faders of the
-    temporary bank set to the outputs of the filter. Otherwise, it will simply instantiate a plain cue filter on
-    elaboration.
-    """
-
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
-        super().__init__(scene, filter_id, filter_type=int(FilterTypeEnumeration.VFILTER_CUES), pos=pos)
+class _PreviewFilter(VirtualFilter):
+    def __init__(self, scene: Scene, filter_id: str, filter_type: FilterTypeEnumeration, inst_filter_type: FilterTypeEnumeration, pos: tuple[int] | None = None):
+        super().__init__(scene, filter_id, filter_type=int(filter_type), pos=pos)
         self.in_preview_mode = False
         self.associated_editor_widget: "CueEditor" | None = None
         self._channel_mapping: dict[str, str] = {}
+        self._inst_filter_type: FilterTypeEnumeration = inst_filter_type
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if self.in_preview_mode:
@@ -80,7 +75,7 @@ class CueFilter(VirtualFilter):
                 self._channel_mapping[channel.name] = fader_filter_id
                 filter_list.append(fader_filter)
         else:
-            f = Filter(self.scene, self.filter_id, FilterTypeEnumeration.FILTER_TYPE_CUES, self.pos)
+            f = Filter(self.scene, self.filter_id, self._inst_filter_type, self.pos)
             f.filter_configurations.update(self.filter_configurations)
             f.channel_links.update(self.channel_links)
             f.gui_update_keys.update(self.gui_update_keys)
@@ -88,3 +83,15 @@ class CueFilter(VirtualFilter):
             f.in_data_types.update(self.in_data_types)
             f.default_values.update(self.default_values)
             filter_list.append(f)
+
+
+class CueFilter(_PreviewFilter):
+    """
+    This class implements a switch for the cue filter. In case of enabled live preview it links the faders of the
+    temporary bank set to the outputs of the filter. Otherwise, it will simply instantiate a plain cue filter on
+    elaboration.
+    """
+
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
+        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_CUES,
+                         FilterTypeEnumeration.FILTER_TYPE_CUES, pos=pos)

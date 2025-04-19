@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QInputDialog, QLabel, QListWidget, QToolBar, QVBox
 
 from model import Filter, UIPage, UIWidget
 from model.file_support.cue_state import CueState
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
+from model.filter_data.cues.cue import Cue
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 
