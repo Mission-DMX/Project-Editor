@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from model import ColorHSI, DataType
 from model.filter_data.transfer_function import TransferFunction
-from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
+from model.filter_data.utility import format_seconds
 
 if TYPE_CHECKING:
     pass
