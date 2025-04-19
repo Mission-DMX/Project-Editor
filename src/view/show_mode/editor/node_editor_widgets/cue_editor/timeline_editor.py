@@ -4,9 +4,8 @@ from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QWidget
 
 from model import DataType
 from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, set_seven_seg_display_content
+from model.filter_data.cues.cue import Cue, KeyFrame, StateColor, StateDouble, StateEightBit, StateSixteenBit
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_label import TimelineChannelLabel
-from model.filter_data.cues.cue import (Cue, KeyFrame, StateColor, StateDouble,
-                                        StateEightBit, StateSixteenBit)
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_content_widget import TimelineContentWidget
 
 
