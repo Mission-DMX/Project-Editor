@@ -59,6 +59,7 @@ class State(ABC):
 
     def __init__(self, transition_type: str):
         self._transition_type: str = transition_type
+        self._value = None
 
     @property
     def transition(self):
@@ -209,6 +210,7 @@ class KeyFrame:
         self._states: list[State] = []
         self.timestamp: float = 0.0
         self._parent = parent_cue
+        self.only_on_channel: str | None = None
 
     def get_data_types(self) -> list[DataType]:
         l = []
