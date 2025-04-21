@@ -94,7 +94,7 @@ class CueEditor(PreviewEditWidget):
         self._current_cue_another_play_pressed_checkbox.setEnabled(False)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
 
-        self._setup_zoom_panel(cue_settings_container, cue_settings_container_layout)
+        cue_settings_container_layout.addRow("Zoom", self.zoom_panel)
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
 
@@ -122,22 +122,8 @@ class CueEditor(PreviewEditWidget):
         self._input_dialog: QDialog = None
 
         self._model = CueFilterModel()
-        self._bs_to_channel_mapping: dict[str, DeskColumn] = {}
         self._last_selected_cue = -1
         self._channels_changed_after_load = False
-
-    def _setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
-        zoom_panel = QWidget(cue_settings_container)
-        zoom_panel_layout = QHBoxLayout()
-        zoom_panel.setLayout(zoom_panel_layout)
-        zoom_panel_layout.addWidget(self._zoom_label)
-        increase_zoom_button = QPushButton("+", zoom_panel)
-        increase_zoom_button.pressed.connect(self.increase_zoom)
-        zoom_panel_layout.addWidget(increase_zoom_button)
-        decrease_zoom_button = QPushButton("-", zoom_panel)
-        decrease_zoom_button.pressed.connect(self.decrease_zoom)
-        zoom_panel_layout.addWidget(decrease_zoom_button)
-        cue_settings_container_layout.addRow("Zoom", zoom_panel)
 
     def _configure_toolbar(self, top_layout):
         toolbar = QToolBar(parent=self._parent_widget)
@@ -156,15 +142,7 @@ class CueEditor(PreviewEditWidget):
         self._toolbar_remove_channel_action.triggered.connect(self._remove_channel_button_pressed)
         toolbar.addAction(self._toolbar_remove_channel_action)
         toolbar.addSeparator()
-        transition_type_select_widget = QComboBox(self._parent_widget)
-        transition_type_select_widget.addItems(["lin", "edg", "sig", "e_i", "e_o"])
-        transition_type_select_widget.currentTextChanged.connect(self._transition_type_changed)
-        toolbar.addWidget(transition_type_select_widget)
-        self._gui_rec_action = QAction("Record keyframe", self._parent_widget)
-        self._gui_rec_action.setStatusTip("Insert a Keyframe at the current cursor position")
-        self._gui_rec_action.setIcon(QIcon.fromTheme("media-record"))
-        self._gui_rec_action.setEnabled(False)
-        self._gui_rec_action.triggered.connect(self._rec_pressed)
+        toolbar.addWidget(self.transition_type_select_widget)
         toolbar.addAction(self._gui_rec_action)
         top_layout.addWidget(toolbar)
 
@@ -303,14 +281,6 @@ class CueEditor(PreviewEditWidget):
         else:
             self._cue_list_widget.selectRow(self._last_selected_cue)
 
-    def increase_zoom(self):
-        self._timeline_container.increase_zoom()
-        self._set_zoom_label_text()
-
-    def decrease_zoom(self):
-        self._timeline_container.decrease_zoom()
-        self._set_zoom_label_text()
-
     def _add_cue_button_clicked(self):
         new_index = self.add_cue(Cue())
         self.select_cue(new_index)
@@ -337,25 +307,12 @@ class CueEditor(PreviewEditWidget):
             return
         if self._filter_instance is not None:
             if self._filter_instance.in_preview_mode:
-                self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
+                self.link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
         if not is_part_of_mass_update:
             self._channels_changed_after_load = True
         self._toolbar_remove_channel_action.setEnabled(True)
-
-    def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
-        if not self._bankset:
-            return
-        if channel_type == DataType.DT_COLOR:
-            c = ColorDeskColumn()
-        else:
-            c = RawDeskColumn()
-        c.display_name = channel_name
-        self._bankset.add_column_to_next_bank(c)
-        self._bs_to_channel_mapping[channel_name] = c
-        if not is_part_of_mass_update:
-            self._bankset.update()
 
     def _remove_channel_button_pressed(self):
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
@@ -390,9 +347,6 @@ class CueEditor(PreviewEditWidget):
         self._timeline_container.cue.restart_on_another_play_press = \
             self._current_cue_another_play_pressed_checkbox.checkState().Checked
 
-    def _transition_type_changed(self, text):
-        self._timeline_container.transition_type = text
-
     def _rec_pressed(self):
         self._timeline_container.record_pressed()
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
@@ -419,7 +373,7 @@ class CueEditor(PreviewEditWidget):
             BankSet.push_messages_now()
         show_reset_required = False
         if self._broadcaster and self._broadcaster_signals_connected:
-            self._unlink_broadcaster()
+            self.disconnect_from_broadcaster()
             show_reset_required = True
         if self._filter_instance:
             self._filter_instance.in_preview_mode = False
@@ -431,13 +385,12 @@ class CueEditor(PreviewEditWidget):
     def parent_opened(self):
         self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
 
-    @property
-    def channels(self) -> list[ExternalChannelDefinition]:
+    def get_channel_list(self) -> list[ExternalChannelDefinition]:
         channel_list = []
         # it should be sufficient to only check the fist cue as all cues should have the same channels
         if len(self._model.cues) == 0:
             return channel_list
         for name, c_type in self._model.cues[0].channels:
             channel_list.append(ExternalChannelDefinition(c_type, name,
-                                                          self._bs_to_channel_mapping.get(name), self._bankset))
+                                                          self.bs_to_channel_mapping.get(name), self._bankset))
         return channel_list

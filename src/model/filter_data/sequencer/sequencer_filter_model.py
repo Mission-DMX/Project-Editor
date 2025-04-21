@@ -12,6 +12,7 @@ class SequencerFilterModel:
         for c_str in d["channels"].split(';'):
             c = SequencerChannel.from_filter_str(c_str)
             self.channels.append(c)
+        self.transitions.clear()
         for t_str in d["transitions"].split(';'):
             if len(t_str) == 0:
                 continue

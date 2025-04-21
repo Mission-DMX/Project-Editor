@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 
-from PySide6.QtWidgets import QLabel
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import Broadcaster, DataType, Filter
-from model.control_desk import BankSet, DeskColumn
+from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from model.virtual_filters.cue_vfilter import PreviewFilter
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
@@ -35,13 +36,32 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._broadcaster: Broadcaster = Broadcaster()
         self._broadcaster_signals_connected = False
         self._bankset: BankSet = None
+        self.bs_to_channel_mapping: dict[str, DeskColumn] = {}
 
         self._timeline_container = TimelineContainer(None)
         self._timeline_container.setEnabled(False)
         self._timeline_container.transition_type = "lin"
         self._jw_zoom_mode = False
+        self._gui_rec_action = QAction("Record keyframe")
+        self._gui_rec_action.setStatusTip("Insert a Keyframe at the current cursor position")
+        self._gui_rec_action.setIcon(QIcon.fromTheme("media-record"))
+        self._gui_rec_action.setEnabled(False)
+        self._gui_rec_action.triggered.connect(self._rec_pressed)
 
         self._zoom_label: QLabel | None = QLabel()
+        self.zoom_panel = QWidget()
+        zoom_panel_layout = QHBoxLayout()
+        self.zoom_panel.setLayout(zoom_panel_layout)
+        zoom_panel_layout.addWidget(self._zoom_label)
+        increase_zoom_button = QPushButton("+", self.zoom_panel)
+        increase_zoom_button.pressed.connect(self.increase_zoom)
+        zoom_panel_layout.addWidget(increase_zoom_button)
+        decrease_zoom_button = QPushButton("-", self.zoom_panel)
+        decrease_zoom_button.pressed.connect(self.decrease_zoom)
+        zoom_panel_layout.addWidget(decrease_zoom_button)
+        self.transition_type_select_widget = QComboBox()
+        self.transition_type_select_widget.addItems(["lin", "edg", "sig", "e_i", "e_o"])
+        self.transition_type_select_widget.currentTextChanged.connect(self._transition_type_changed)
 
         self._filter_instance: PreviewFilter | None = f if isinstance(f, PreviewFilter) else None
         if self._filter_instance:
@@ -64,13 +84,20 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
     def channels(self) -> list[ExternalChannelDefinition]:
         return self.get_channel_list().copy()
 
-    def _link_bankset(self):
+    def connect_to_broadcaster(self):
         self._broadcaster.desk_media_rec_pressed.connect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
         self._broadcaster.jogwheel_rotated_left.connect(self.jg_left)
         self._broadcaster.desk_media_scrub_pressed.connect(self.scrub_pressed)
         self._broadcaster.desk_media_scrub_released.connect(self.scrub_released)
         self._broadcaster_signals_connected = True
+
+    def _link_bankset(self):
+        if not self._broadcaster_signals_connected:
+            self.connect_to_broadcaster()
+        if self._bankset is not None:
+            self._bankset.unlink()
+            BankSet.push_messages_now()
         self._bankset = BankSet(gui_controlled=True)
         self._bankset.description = f"Live Editor BS for {self._filter_instance.filter_id if self._filter_instance is not None else ""}"
         self._bankset.link()
@@ -78,15 +105,15 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
 
         self._timeline_container.bankset = self._bankset
         for c in self._timeline_container.cue.channels:
-            self._link_column_to_channel(c[0], c[1], True)
+            self.link_column_to_channel(c[0], c[1], True)
         self._bankset.update()
         BankSet.push_messages_now()
         if self._filter_instance:
             self._filter_instance.in_preview_mode = True
             transmit_to_fish(self._filter_instance.scene.board_configuration, False)
-            # TODO switch to scene of filter
+            # TODO switch to scene of filter if different scene
 
-    def _unlink_broadcaster(self):
+    def disconnect_from_broadcaster(self):
         self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
         self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
@@ -120,3 +147,27 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
 
     def _set_zoom_label_text(self):
         self._zoom_label.setText(self._timeline_container.format_zoom())
+
+    def increase_zoom(self):
+        self._timeline_container.increase_zoom()
+        self._set_zoom_label_text()
+
+    def decrease_zoom(self):
+        self._timeline_container.decrease_zoom()
+        self._set_zoom_label_text()
+
+    def _transition_type_changed(self, text):
+        self._timeline_container.transition_type = text
+
+    def link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
+        if not self._bankset:
+            return
+        if channel_type == DataType.DT_COLOR:
+            c = ColorDeskColumn()
+        else:
+            c = RawDeskColumn()
+        c.display_name = channel_name
+        self._bankset.add_column_to_next_bank(c)
+        self.bs_to_channel_mapping[channel_name] = c
+        if not is_part_of_mass_update:
+            self._bankset.update()

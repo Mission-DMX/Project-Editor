@@ -42,15 +42,16 @@ class SequencerEditor(PreviewEditWidget):
         timeline_panel = QWidget(self._parent_widget)
         layout = QVBoxLayout()
         timeline_toolbar = QToolBar(timeline_panel)
-        # TODO port timeline tool bar from cue editor to preview editor
-        timeline_toolbar.addWidget(self._zoom_label)
+        timeline_toolbar.addWidget(self.transition_type_select_widget)
+        timeline_toolbar.addAction(self._gui_rec_action)
+        timeline_toolbar.addWidget(self.zoom_panel)
         layout.addWidget(timeline_toolbar)
         layout.addWidget(self._timeline_container)
         timeline_panel.setLayout(layout)
         self._parent_widget.addWidget(timeline_panel)
         self._parent_widget.setStretchFactor(2, 2)
-        # TODO make general purpose methods (zoom + zoom_panel, bankset linking, timeline toolbar, parent_closed)
-        #  from cue editor reusable
+        # TODO make remaining general purpose methods (parent_closed) from cue editor reusable
+        # TODO relink bankset on every changed selected transition
 
     def _get_configuration(self) -> dict[str, str]:
         return self._model.get_configuration()
@@ -69,7 +70,11 @@ class SequencerEditor(PreviewEditWidget):
         return {}
 
     def get_channel_list(self) -> list[ExternalChannelDefinition]:
-        pass  # TODO
+        l: list[ExternalChannelDefinition] = []
+        for c in self._model.channels:
+            ec = ExternalChannelDefinition(c.data_type, c.name, self.bs_to_channel_mapping.get(c.name), self._bankset)
+            l.append(ec)
+        return l
 
     def _populate_data(self):
         pass  # TODO
