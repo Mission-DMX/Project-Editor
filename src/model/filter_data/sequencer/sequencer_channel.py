@@ -35,6 +35,8 @@ class SequencerChannel:
         Parse the provided serialized string and return a new instance.
         """
         sc = SequencerChannel()
+        if len(s or "") == 0:
+            return sc
         args = s.split(":")
         sc.name = args[0]
         sc.data_type = DataType.from_filter_str(args[1])

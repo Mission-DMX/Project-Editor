@@ -7,16 +7,16 @@ from model import Filter, Scene
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
 if TYPE_CHECKING:
-    from view.show_mode.editor.node_editor_widgets import CueEditor
+    from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import PreviewEditWidget
 
 logger = getLogger(__file__)
 
 
-class _PreviewFilter(VirtualFilter):
+class PreviewFilter(VirtualFilter):
     def __init__(self, scene: Scene, filter_id: str, filter_type: FilterTypeEnumeration, inst_filter_type: FilterTypeEnumeration, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, filter_type=int(filter_type), pos=pos)
         self.in_preview_mode = False
-        self.associated_editor_widget: "CueEditor" | None = None
+        self.associated_editor_widget: "PreviewEditWidget" | None = None
         self._channel_mapping: dict[str, str] = {}
         self._inst_filter_type: FilterTypeEnumeration = inst_filter_type
 
@@ -88,7 +88,7 @@ class _PreviewFilter(VirtualFilter):
             filter_list.append(f)
 
 
-class CueFilter(_PreviewFilter):
+class CueFilter(PreviewFilter):
     """
     This class implements a switch for the cue filter. In case of enabled live preview it links the faders of the
     temporary bank set to the outputs of the filter. Otherwise, it will simply instantiate a plain cue filter on

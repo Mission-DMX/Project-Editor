@@ -21,6 +21,7 @@ from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidge
 from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+from .node_editor_widgets.sequencer_editor.widget import SequencerEditor
 
 logger = getLogger(__name__)
 
@@ -111,6 +112,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return ImportVFilterSettingsWidget(filter_)
     if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
         return ColorMixingSetupWidget(filter_)
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_SEQUENCER:
+        return SequencerEditor(f=filter_)
 
     return None
 

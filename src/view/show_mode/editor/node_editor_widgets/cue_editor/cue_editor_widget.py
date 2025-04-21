@@ -14,13 +14,14 @@ from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from model.filter_data.cues.cue import Cue, EndAction
 from model.filter_data.cues.cue_filter_model import CueFilterModel
-from model.virtual_filters.cue_vfilter import CueFilter
+from model.virtual_filters.cue_vfilter import PreviewFilter
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 
 from ..node_editor_widget import NodeEditorFilterConfigWidget
+from .preview_edit_widget import ExternalChannelDefinition, PreviewEditWidget
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -28,22 +29,7 @@ if TYPE_CHECKING:
 logger = getLogger(__file__)
 
 
-class ExternalChannelDefinition:
-    """In case we're in preview mode we need to instantiate filters for the preview based on this information.
-
-    As I didn't want to write a tuple of the channel name, its type as well as fader source, this class provides them
-    in a named fashion.
-    """
-
-    def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet):
-        self.data_type = data_type
-        self.name = name
-        self.fader = associated_fader
-        self.bankset = bank_set
-        self.enabled = True
-
-
-class CueEditor(NodeEditorFilterConfigWidget):
+class CueEditor(PreviewEditWidget):
 
     def _get_parameters(self) -> dict[str, str]:
         # TODO implement
@@ -145,7 +131,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._set_zoom_label_text()
         self._model = CueFilterModel()
         self._bs_to_channel_mapping: dict[str, DeskColumn] = {}
-        self._filter_instance = f if isinstance(f, CueFilter) else None
+        self._filter_instance: PreviewFilter | None = f if isinstance(f, PreviewFilter) else None
         self._last_selected_cue = -1
         self._channels_changed_after_load = False
         self._broadcaster_signals_connected = False

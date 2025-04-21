@@ -11,8 +11,8 @@ from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QFormLayout, 
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene
 from model.filter import DataType, Filter, FilterTypeEnumeration
-from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.filter_data.cues.cue import Cue
+from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.patching_channel import PatchingChannel
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance

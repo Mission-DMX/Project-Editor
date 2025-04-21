@@ -8,8 +8,8 @@ from PySide6.QtWidgets import QWidget
 from model import DataType
 from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, set_seven_seg_display_content
 from model.filter_data.cues.cue import KeyFrame, State, StateColor, StateDouble, StateEightBit, StateSixteenBit
-from view.show_mode.editor.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
 from model.filter_data.utility import format_seconds
+from view.show_mode.editor.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
 
