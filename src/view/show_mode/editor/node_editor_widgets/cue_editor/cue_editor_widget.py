@@ -66,7 +66,7 @@ class CueEditor(PreviewEditWidget):
         return self._model.get_as_configuration()
 
     def __init__(self, parent: QWidget = None, f: Filter | None = None):
-        super().__init__()
+        super().__init__(f)
         self._parent_widget = QWidget(parent=parent)
         top_layout = QVBoxLayout()
 
@@ -94,7 +94,6 @@ class CueEditor(PreviewEditWidget):
         self._current_cue_another_play_pressed_checkbox.setEnabled(False)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
 
-        self._zoom_label: QLabel | None = None
         self._setup_zoom_panel(cue_settings_container, cue_settings_container_layout)
         cue_settings_container.setLayout(cue_settings_container_layout)
         cue_list_and_current_settings_container_layout.addWidget(cue_settings_container)
@@ -116,58 +115,21 @@ class CueEditor(PreviewEditWidget):
         v_scroll_area.horizontalScrollBar().setEnabled(False)
         v_scroll_area.setWidgetResizable(True)
         # TODO link up/down button events to scrolling of v_scroll_area
-        self._timeline_container = TimelineContainer(v_scroll_area)
-        self._timeline_container.setEnabled(False)
-        self._timeline_container.transition_type = "lin"
         v_scroll_area.setWidget(self._timeline_container)
         top_layout.addWidget(v_scroll_area)
         self._parent_widget.setLayout(top_layout)
-        self._jw_zoom_mode = False
 
-        self._broadcaster: Broadcaster = None
-        self._bankset: BankSet = None
         self._input_dialog: QDialog = None
 
-        self._set_zoom_label_text()
         self._model = CueFilterModel()
         self._bs_to_channel_mapping: dict[str, DeskColumn] = {}
-        self._filter_instance: PreviewFilter | None = f if isinstance(f, PreviewFilter) else None
         self._last_selected_cue = -1
         self._channels_changed_after_load = False
-        self._broadcaster_signals_connected = False
-
-        if self._filter_instance:
-            self._filter_instance.associated_editor_widget = self
-        else:
-            logger.error("Cue editor widget received invalid filter: %s.", f)
-
-    def _link_bankset(self):
-        self._broadcaster = Broadcaster()
-        self._broadcaster.desk_media_rec_pressed.connect(self._rec_pressed)
-        self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
-        self._broadcaster.jogwheel_rotated_left.connect(self.jg_left)
-        self._broadcaster.desk_media_scrub_pressed.connect(self.scrub_pressed)
-        self._broadcaster.desk_media_scrub_released.connect(self.scrub_released)
-        self._broadcaster_signals_connected = True
-        self._bankset = BankSet(gui_controlled=True)
-        self._bankset.description = "Cue Editor BS"
-        self._bankset.link()
-        self._bankset.activate()
-        self._timeline_container.bankset = self._bankset
-        for c in self._timeline_container.cue.channels:
-            self._link_column_to_channel(c[0], c[1], True)
-        self._bankset.update()
-        BankSet.push_messages_now()
-        if self._filter_instance:
-            self._filter_instance.in_preview_mode = True
-            transmit_to_fish(self._filter_instance.scene.board_configuration, False)
-            # TODO switch to scene of filter
 
     def _setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
         zoom_panel = QWidget(cue_settings_container)
         zoom_panel_layout = QHBoxLayout()
         zoom_panel.setLayout(zoom_panel_layout)
-        self._zoom_label = QLabel(zoom_panel)
         zoom_panel_layout.addWidget(self._zoom_label)
         increase_zoom_button = QPushButton("+", zoom_panel)
         increase_zoom_button.pressed.connect(self.increase_zoom)
@@ -205,9 +167,6 @@ class CueEditor(PreviewEditWidget):
         self._gui_rec_action.triggered.connect(self._rec_pressed)
         toolbar.addAction(self._gui_rec_action)
         top_layout.addWidget(toolbar)
-
-    def _set_zoom_label_text(self):
-        self._zoom_label.setText(self._timeline_container.format_zoom())
 
     def _table_context_popup(self, pos):
         self._input_dialog = QMenu()
@@ -439,26 +398,6 @@ class CueEditor(PreviewEditWidget):
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
             .setText(self._timeline_container.cue.duration_formatted)
 
-    def jg_right(self):
-        if self._jw_zoom_mode:
-            self._timeline_container.increase_zoom(1.25)
-            self._set_zoom_label_text()
-        else:
-            self._timeline_container.move_cursor_right()
-
-    def jg_left(self):
-        if self._jw_zoom_mode:
-            self._timeline_container.decrease_zoom(1.25)
-            self._set_zoom_label_text()
-        else:
-            self._timeline_container.move_cursor_left()
-
-    def scrub_pressed(self):
-        self._jw_zoom_mode = True
-
-    def scrub_released(self):
-        self._jw_zoom_mode = False
-
     def parent_closed(self, filter_node: "FilterNode"):
         self._timeline_container.clear_display()
         if self._channels_changed_after_load:
@@ -480,12 +419,7 @@ class CueEditor(PreviewEditWidget):
             BankSet.push_messages_now()
         show_reset_required = False
         if self._broadcaster and self._broadcaster_signals_connected:
-            self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
-            self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
-            self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
-            self._broadcaster.desk_media_scrub_pressed.disconnect(self.scrub_pressed)
-            self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
-            self._broadcaster_signals_connected = False
+            self._unlink_broadcaster()
             show_reset_required = True
         if self._filter_instance:
             self._filter_instance.in_preview_mode = False

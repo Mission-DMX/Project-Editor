@@ -13,15 +13,15 @@ class TimelineContainer(QWidget):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent=parent)
         layout = QHBoxLayout()
-        self._channel_label = TimelineChannelLabel()
+        self._channel_label = TimelineChannelLabel(parent)
         self._channel_label.sb_offset = 10
         layout.addWidget(self._channel_label)
-        timeline_scroll_area = QScrollArea()
+        timeline_scroll_area = QScrollArea(parent)
         timeline_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         timeline_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         timeline_scroll_area.verticalScrollBar().setEnabled(False)
         timeline_scroll_area.setWidgetResizable(True)
-        self._keyframes_panel = TimelineContentWidget(parent)
+        self._keyframes_panel = TimelineContentWidget(timeline_scroll_area)
         self._keyframes_panel.size_changed.connect(self._keyframe_panel_size_changed)
         timeline_scroll_area.setWidget(self._keyframes_panel)  # timeline_scroll_area
         # TODO link jogwheel events to scrolling of cursor (and thus timeline_scroll_area)

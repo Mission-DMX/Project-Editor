@@ -37,3 +37,6 @@ class SequencerEditor(PreviewEditWidget):
 
     def _populate_data(self):
         pass  # TODO
+
+    def _rec_pressed(self):
+        pass  # TODO
