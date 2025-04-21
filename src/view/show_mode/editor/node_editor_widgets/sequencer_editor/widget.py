@@ -122,4 +122,5 @@ class SequencerEditor(PreviewEditWidget):
             self._transition_selected(self._model.transitions[-1])
 
     def _rec_pressed(self):
+        # TODO add checkboxes to timeline container to select affected channels
         pass  # TODO
