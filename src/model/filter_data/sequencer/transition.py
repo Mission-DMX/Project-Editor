@@ -65,10 +65,12 @@ class SequenceKeyFrame:
 
 class Transition:
     def __init__(self):
+        self._trigger_event = 0
         self.frames: list[SequenceKeyFrame] = []
 
     def format_for_filter(self) -> str:
-        return ";".join([c.format_for_filter() for c in self.frames])
+        # FIXME handle trigger
+        return "#".join([c.format_for_filter() for c in self.frames])
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "Transition":
@@ -78,7 +80,8 @@ class Transition:
                 new_dict[c.name] = c
             channels = new_dict
         t = Transition()
-        for arg in s.split(";"):
+        # FIXME handle trigger
+        for arg in s.split("#"):
             t.frames.append(SequenceKeyFrame.from_filter_str(arg, channels))
         return t
 
@@ -88,6 +91,7 @@ class Transition:
             new_dict[c.name] = c
         new_channels = new_dict
         t = Transition()
+        t._trigger_event = self._trigger_event
         for skf in self.frames:
             t.frames.append(skf.copy(new_channels[skf.channel.name]))
         return t

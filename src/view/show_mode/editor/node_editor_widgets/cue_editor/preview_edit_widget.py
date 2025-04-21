@@ -7,8 +7,8 @@ from controller.file.transmitting_to_fish import transmit_to_fish
 from model import Broadcaster, DataType, Filter
 from model.control_desk import BankSet, DeskColumn
 from model.virtual_filters.cue_vfilter import PreviewFilter
-from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
+from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 logger = getLogger(__file__)
 
@@ -40,6 +40,8 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._timeline_container.setEnabled(False)
         self._timeline_container.transition_type = "lin"
         self._jw_zoom_mode = False
+
+        self._zoom_label: QLabel | None = QLabel()
 
         self._filter_instance: PreviewFilter | None = f if isinstance(f, PreviewFilter) else None
         if self._filter_instance:
@@ -73,8 +75,6 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._bankset.description = f"Live Editor BS for {self._filter_instance.filter_id if self._filter_instance is not None else ""}"
         self._bankset.link()
         self._bankset.activate()
-
-        self._zoom_label: QLabel | None = QLabel()
 
         self._timeline_container.bankset = self._bankset
         for c in self._timeline_container.cue.channels:
