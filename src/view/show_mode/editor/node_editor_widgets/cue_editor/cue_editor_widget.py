@@ -5,22 +5,18 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog,
-                               QLabel, QMenu, QMessageBox, QPushButton, QScrollArea, QTableWidget, QTableWidgetItem,
-                               QToolBar, QVBoxLayout, QWidget)
+                               QMenu, QMessageBox, QScrollArea, QTableWidget, QTableWidgetItem, QToolBar, QVBoxLayout,
+                               QWidget)
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import DataType, Filter
-from model.broadcaster import Broadcaster
-from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
+from model.control_desk import BankSet
 from model.filter_data.cues.cue import Cue, EndAction
 from model.filter_data.cues.cue_filter_model import CueFilterModel
-from model.virtual_filters.cue_vfilter import PreviewFilter
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 
-from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .preview_edit_widget import ExternalChannelDefinition, PreviewEditWidget
 
 if TYPE_CHECKING:
@@ -133,12 +129,14 @@ class CueEditor(PreviewEditWidget):
         toolbar.addAction(toolbar_add_cue_action)
         self._toolbar_add_channel_action = QAction("Add Channel", self._parent_widget)
         self._toolbar_add_channel_action.setEnabled(False)
+        self._toolbar_add_channel_action.setShortcut("Ctrl+K")
         self._toolbar_add_channel_action.setStatusTip("Add a new channel to the filter")
         self._toolbar_add_channel_action.triggered.connect(self._add_channel_button_pressed)
         toolbar.addAction(self._toolbar_add_channel_action)
         self._toolbar_remove_channel_action = QAction("Remove Channel", self._parent_widget)
         self._toolbar_remove_channel_action.setStatusTip("Removes a channel from the filter")
         self._toolbar_remove_channel_action.setEnabled(False)
+        self._toolbar_remove_channel_action.setShortcut("Ctrl+R")
         self._toolbar_remove_channel_action.triggered.connect(self._remove_channel_button_pressed)
         toolbar.addAction(self._toolbar_remove_channel_action)
         toolbar.addSeparator()

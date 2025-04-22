@@ -67,7 +67,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         if self._filter_instance:
             self._filter_instance.associated_editor_widget = self
         else:
-            logger.error("Cue editor widget received invalid filter: %s.", f)
+            logger.error("Preview editor widget received invalid filter: %s.", f)
         self._set_zoom_label_text()
 
     @abstractmethod
