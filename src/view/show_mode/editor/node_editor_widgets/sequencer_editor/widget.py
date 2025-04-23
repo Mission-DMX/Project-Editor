@@ -1,7 +1,8 @@
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, Qt
-from PySide6.QtWidgets import QDialog, QListWidget, QSplitter, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QListWidget, QMessageBox, QSplitter, QToolBar, QVBoxLayout, QWidget
 
 from model import Filter
 from model.filter_data.sequencer.sequencer_channel import SequencerChannel
@@ -12,6 +13,10 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog i
 from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (ExternalChannelDefinition,
                                                                                       PreviewEditWidget)
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QAbstractButton
+
 
 logger = getLogger(__file__)
 
@@ -50,9 +55,12 @@ class SequencerEditor(PreviewEditWidget):
         add_transition_action.triggered.connect(self._add_transition_pressed)
         transition_toolbar.addAction(add_transition_action)
         transition_toolbar.addAction("Link Events")
+        # TODO implement and link action
         transition_toolbar.addSeparator()
-        transition_toolbar.addAction("Remove Transition")
-        # TODO link actions
+        self._remove_transition_action = QAction("Remove Transition", transition_toolbar)
+        self._remove_transition_action.triggered.connect(self._remove_transition_clicked)
+        self._remove_transition_action.setEnabled(False)
+        transition_toolbar.addAction(self._remove_transition_action)
         layout.addWidget(transition_toolbar)
         self._transition_list_widget = QListWidget(transition_panel)
         self._transition_list_widget.currentRowChanged.connect(self._transition_selected)
@@ -102,15 +110,17 @@ class SequencerEditor(PreviewEditWidget):
             l.append(ec)
         return l
 
-    def _transition_selected(self, new_transition: Transition | int):
+    def _transition_selected(self, new_transition: Transition | int | None):
         if isinstance(new_transition, int):
             new_transition = self._transition_list_widget.item(new_transition).annotated_data
         if self._selected_transition is not None:
             self._deselect_transition()
         if new_transition is not None:
             self._timeline_container.cue = new_transition.to_cue()
+            self._remove_transition_action.setEnabled(True)
         else:
             self._timeline_container.cue = None
+            self._remove_transition_action.setEnabled(False)
         self._selected_transition = new_transition
 
     def _deselect_transition(self):
@@ -119,6 +129,7 @@ class SequencerEditor(PreviewEditWidget):
         self._selected_transition.update_frames_from_cue(self._timeline_container.cue, self._model.channels)
         self._timeline_container.cue = None
         self._selected_transition = None
+        self._remove_transition_action.setEnabled(False)
 
     def _add_transition(self, t: Transition, is_new_transition: bool = True):
         if is_new_transition:
@@ -128,7 +139,7 @@ class SequencerEditor(PreviewEditWidget):
         li.annotated_data = t
         self._transition_list_widget.addItem(li)
         # TODO implement custom label widget that also displays linked event
-        if is_new_transition:
+        if is_new_transition or self._selected_transition is None:
             self._transition_selected(t)
 
     def _add_channel(self, c: SequencerChannel, is_new_transition: bool = True):
@@ -167,6 +178,7 @@ class SequencerEditor(PreviewEditWidget):
         for item in items_to_remove:
             self._channel_list_widget.takeItem(self._channel_list_widget.row(item))
         self._transition_selected(orig_t)
+        self._input_dialog.deleteLater()
 
     def _add_transition_pressed(self):
         self._input_dialog = SelectionDialog("Select Channels",
@@ -185,6 +197,36 @@ class SequencerEditor(PreviewEditWidget):
             channel_dict[c_name] = self._model.get_channel_by_name(c_name).data_type
         t.preselected_channels = channel_dict
         self._add_transition(t, True)
+        self._input_dialog.deleteLater()
+
+    def _remove_transition_clicked(self):
+        self._input_dialog = QMessageBox(self._parent_widget)
+        self._input_dialog.setModal(True)
+        self._input_dialog.setWindowTitle("Delete Transition")
+        self._input_dialog.setText("Do you really want to delete this transition?")
+        self._input_dialog.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Abort)
+        self._input_dialog.setIcon(QMessageBox.Icon.Warning)
+        self._input_dialog.buttonClicked.connect(self._remove_transition_final)
+        self._input_dialog.show()
+
+    def _remove_transition_final(self, button: "QAbstractButton"):
+        if not isinstance(self._input_dialog, QMessageBox):
+            logger.error("Expected message box as delete dialog.")
+            return
+        if self._input_dialog.buttonRole(button) == QMessageBox.ButtonRole.YesRole:
+            if self._selected_transition is not None:
+                self._model.transitions.remove(self._selected_transition)
+                items_to_remove = []
+                for item_index in range(self._transition_list_widget.count()):
+                    item = self._transition_list_widget.item(item_index)
+                    if not isinstance(item, AnnotatedListWidgetItem):
+                        continue
+                    if item.annotated_data == self._selected_transition:
+                        items_to_remove.append(item)
+                for item in items_to_remove:
+                    self._transition_list_widget.takeItem(self._transition_list_widget.row(item))
+                self._deselect_transition()
+        self._input_dialog.deleteLater()
 
     def _populate_data(self):
         for c in self._model.channels:

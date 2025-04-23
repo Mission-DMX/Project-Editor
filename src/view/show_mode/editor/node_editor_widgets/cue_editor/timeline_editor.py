@@ -72,11 +72,15 @@ class TimelineContainer(QWidget):
         # TODO clear keyframes_panel
         self._keyframes_panel.clear_cue()
         self._channel_label.clear_labels()
-        for channel in c.channels:
-            self.add_channel(channel[1], channel[0])
-        self._keyframes_panel.cue_index = c.index_in_editor
-        # TODO introduce property
-        self._keyframes_panel.frames = c._frames
+        if c is not None:
+            for channel in c.channels:
+                self.add_channel(channel[1], channel[0])
+            self._keyframes_panel.cue_index = c.index_in_editor
+            # TODO introduce property
+            self._keyframes_panel.frames = c._frames
+        else:
+            self._keyframes_panel.frames = []
+            self._keyframes_panel.cue_index = 0
         self._keyframes_panel.repaint()
 
     def increase_zoom(self, factor: float = 2.0):
