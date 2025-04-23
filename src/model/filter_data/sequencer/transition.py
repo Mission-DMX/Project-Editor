@@ -93,6 +93,7 @@ class Transition:
     def __init__(self):
         self._trigger_event = 0
         self.frames: list[SequenceKeyFrame] = []
+        self.preselected_channels: list[str] = []
 
     def format_for_filter(self) -> str:
         return f"{self._trigger_event}#{"#".join([c.format_for_filter() for c in self.frames])}"
@@ -122,6 +123,10 @@ class Transition:
     def to_cue(self) -> Cue:
         c = Cue()
         channels: dict[str, DataType] = {}
+        if len(self.frames) == 0 and len(self.preselected_channels) > 0:
+            # TODO also add channels here if they wouldn've been added later (used for later addition of channels)
+            for c_name in self.preselected_channels:
+                channels[c_name] = DataType.DT_COLOR  # FIXME request channel data types from preselected_channels
         for f in self.frames:
             channels[f.channel.name] = f.channel.data_type
         for k, v in channels.items():

@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from PySide6.QtGui import QAction, Qt
 from PySide6.QtWidgets import QDialog, QListWidget, QSplitter, QToolBar, QVBoxLayout, QWidget
 
@@ -10,6 +12,8 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog i
 from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (ExternalChannelDefinition,
                                                                                       PreviewEditWidget)
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+
+logger = getLogger(__file__)
 
 
 class SequencerEditor(PreviewEditWidget):
@@ -41,7 +45,10 @@ class SequencerEditor(PreviewEditWidget):
         transition_panel = QWidget(settings_splitter)
         layout = QVBoxLayout()
         transition_toolbar = QToolBar(transition_panel)
-        transition_toolbar.addAction("Add Transition")
+        add_transition_action = QAction("Add Transition", transition_toolbar)
+        add_transition_action.setShortcut("Ctrl+N")
+        add_transition_action.triggered.connect(self._add_transition_pressed)
+        transition_toolbar.addAction(add_transition_action)
         transition_toolbar.addAction("Link Events")
         transition_toolbar.addSeparator()
         transition_toolbar.addAction("Remove Transition")
@@ -160,6 +167,21 @@ class SequencerEditor(PreviewEditWidget):
         for item in items_to_remove:
             self._channel_list_widget.takeItem(self._channel_list_widget.row(item))
         self._transition_selected(orig_t)
+
+    def _add_transition_pressed(self):
+        self._input_dialog = SelectionDialog("Select Channels",
+                                             "Please select Channels to add in the new transition.",
+                                             [c.name for c in self._model.channels], self._parent_widget)
+        self._input_dialog.accepted.connect(self._add_transition_pressed_final)
+        self._input_dialog.show()
+
+    def _add_transition_pressed_final(self):
+        t = Transition()
+        if not isinstance(self._input_dialog, SelectionDialog):
+            logger.error("Expected SelectionDialog.")
+            return
+        t.preselected_channels = self._input_dialog.selected_items
+        self._add_transition(t, True)
 
     def _populate_data(self):
         for c in self._model.channels:

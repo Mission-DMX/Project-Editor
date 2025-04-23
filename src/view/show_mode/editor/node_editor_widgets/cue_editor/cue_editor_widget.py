@@ -124,6 +124,7 @@ class CueEditor(PreviewEditWidget):
     def _configure_toolbar(self, top_layout):
         toolbar = QToolBar(parent=self._parent_widget)
         toolbar_add_cue_action = QAction("Add Cue", self._parent_widget)
+        toolbar_add_cue_action.setShortcut("Ctrl+N")
         toolbar_add_cue_action.setStatusTip("Add a new cue to the stack")
         toolbar_add_cue_action.triggered.connect(self._add_cue_button_clicked)
         toolbar.addAction(toolbar_add_cue_action)
