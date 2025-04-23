@@ -133,7 +133,7 @@ class SequencerEditor(PreviewEditWidget):
 
     def _add_channel(self, c: SequencerChannel, is_new_transition: bool = True):
         if is_new_transition:
-            self._model.channels.append(c)
+            self._model.append_channel(c)
         li = AnnotatedListWidgetItem(self._channel_list_widget)
         li.setText(f"[{c.data_type.format_for_filters()}] {c.name}")
         li.annotated_data = c
@@ -180,7 +180,10 @@ class SequencerEditor(PreviewEditWidget):
         if not isinstance(self._input_dialog, SelectionDialog):
             logger.error("Expected SelectionDialog.")
             return
-        t.preselected_channels = self._input_dialog.selected_items
+        channel_dict = {}
+        for c_name in self._input_dialog.selected_items:
+            channel_dict[c_name] = self._model.get_channel_by_name(c_name).data_type
+        t.preselected_channels = channel_dict
         self._add_transition(t, True)
 
     def _populate_data(self):

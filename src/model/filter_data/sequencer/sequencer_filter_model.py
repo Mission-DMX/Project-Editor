@@ -47,3 +47,12 @@ class SequencerFilterModel:
                         to_remove.append(skf)
                 for rc in to_remove:
                     t.frames.remove(rc)
+
+    def get_channel_by_name(self, c_name: str) -> SequencerChannel | None:
+        for c in self.channels:
+            if c.name == c_name:
+                return c
+        return None
+
+    def append_channel(self, c: SequencerChannel):
+        self.channels.append(c)
