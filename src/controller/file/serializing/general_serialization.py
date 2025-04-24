@@ -1,6 +1,7 @@
 # coding=utf-8
 from xml.etree import ElementTree
 
+from controller.file.serializing.events_and_macros import _write_event_sender, _write_macro
 from controller.file.serializing.scene_serialization import generate_scene_xml_description
 from controller.file.serializing.ui_settings_serialization import _create_ui_hint_element
 from controller.file.serializing.universe_serialization import (_create_artnet_location_element,
@@ -9,6 +10,7 @@ from controller.file.serializing.universe_serialization import (_create_artnet_l
                                                                 _create_universe_element)
 from controller.utils.process_notifications import ProcessNotifier
 from model import BoardConfiguration
+from model.events import get_all_senders
 
 
 def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
@@ -59,6 +61,10 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
     if not assemble_for_fish_loading:
         for ui_hint in board_configuration.ui_hints.items():
             _create_ui_hint_element(ui_hint=ui_hint, parent=root)
+        for event_source in get_all_senders():
+            _write_event_sender(root, event_source)
+        for m in board_configuration.macros:
+            _write_macro(root, m)
     pn.total_step_count += 1
 
     return root

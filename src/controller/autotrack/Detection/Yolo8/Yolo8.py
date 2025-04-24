@@ -45,9 +45,7 @@ class Yolo8(Detector):
         outputs = self.model.forward()
         end_time = time.time()
         elapsed_time = end_time - start_time
-        logging.getLogger().log(
-            logging.DEBUG, f"Yolo8: Elapsed time: {elapsed_time} seconds"
-        )
+        logging.getLogger().debug("Yolo8: Elapsed time: %s seconds", elapsed_time)
         outputs = np.array([cv2.transpose(outputs[0])])
         return outputs
 

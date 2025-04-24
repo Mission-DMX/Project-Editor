@@ -5,20 +5,22 @@ import math
 import queue
 import xml.etree.ElementTree as ET
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
+import proto.Events_pb2
 import proto.FilterMode_pb2
 import proto.MessageTypes_pb2
 import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
 import x_touch
-from model.broadcaster import Broadcaster
+from model import events
+from model.broadcaster import Broadcaster, QObjectSingletonMeta
 from model.filter import FilterTypeEnumeration
 from model.patching_universe import PatchingUniverse
 from model.universe import Universe
@@ -31,7 +33,7 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-class NetworkManager(QtCore.QObject):
+class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """Handles connection to Fish."""
 
     status_updated: QtCore.Signal = QtCore.Signal(str)
@@ -39,14 +41,18 @@ class NetworkManager(QtCore.QObject):
     run_mode_changed: QtCore.Signal = QtCore.Signal(int)
     active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, parent: "MainWindow") -> None:
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, "instance") or cls.instance is None:
+            cls.instance = super(NetworkManager, cls).__new__(cls)
+        return cls.instance
+
+    def __init__(self) -> None:
         """Inits the network connection.
-        Args:
-            parent: parent GUI Object
         """
-        super().__init__(parent=parent)
+        super().__init__()
         logger.info("generate new Network Manager")
         self._broadcaster = Broadcaster()
+        self.sender_message_callback: Callable = events.set_broadcaster_and_network(self._broadcaster, self)
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._message_queue = queue.Queue()
 
@@ -76,7 +82,7 @@ class NetworkManager(QtCore.QObject):
         self._broadcaster.load_show_file.connect(self.load_show_file)
         self._broadcaster.change_active_scene.connect(self.enter_scene)
 
-        x_touch.XTouchMessages(self._broadcaster, self._msg_to_x_touch)
+        x_touch.XTouchMessages(self._broadcaster, self.button_msg_to_x_touch)
 
     @property
     def is_running(self) -> bool:
@@ -139,7 +145,7 @@ class NetworkManager(QtCore.QObject):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
 
-    def _msg_to_x_touch(self, msg: proto.Console_pb2.button_state_change):
+    def button_msg_to_x_touch(self, msg: proto.Console_pb2.button_state_change):
         """
         Push a button control message to the x-touch.
         :param msg: The button state change to propagate
@@ -217,8 +223,19 @@ class NetworkManager(QtCore.QObject):
                         message: proto.DirectMode_pb2.dmx_output = proto.DirectMode_pb2.dmx_output()
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.dmx_from_fish.emit(message)
+                    case proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE:
+                        message: proto.Events_pb2.event_sender = proto.Events_pb2.event_sender()
+                        message.ParseFromString(bytes(msg))
+                        if self.sender_message_callback is not None:
+                            self.sender_message_callback(message)
+                        else:
+                            logger.warning("Discarded event_sender update due to missing callback.")
+                    case proto.MessageTypes_pb2.MSGT_EVENT:
+                        message: proto.Events_pb2.event_sender = proto.Events_pb2.event()
+                        message.ParseFromString(bytes(msg))
+                        self._broadcaster.fish_event_received.emit(message)
                     case _:
-                        pass
+                        logger.warning("Received not implemented message type: %s",msg_type)
             except:
                 logger.error("Failed to parse message.", exc_info=True)
         self.push_messages()
@@ -290,6 +307,17 @@ class NetworkManager(QtCore.QObject):
                     self._broadcaster.view_to_file_editor.emit()
                 case proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI:
                     self._broadcaster.view_to_show_player.emit()
+                case btn if btn in [
+                    proto.Console_pb2.ButtonCode.BTN_F1_F1,
+                    proto.Console_pb2.ButtonCode.BTN_F2_F2,
+                    proto.Console_pb2.ButtonCode.BTN_F3_F3,
+                    proto.Console_pb2.ButtonCode.BTN_F4_F4,
+                    proto.Console_pb2.ButtonCode.BTN_F5_F5,
+                    proto.Console_pb2.ButtonCode.BTN_F6_F6,
+                    proto.Console_pb2.ButtonCode.BTN_F7_F7,
+                    proto.Console_pb2.ButtonCode.BTN_F8_F8
+                ]:
+                    self._broadcaster.desk_f_key_pressed.emit(int(msg.button) - int(proto.Console_pb2.ButtonCode.BTN_F1_F1))
                 case _:
                     pass
         else:
@@ -431,6 +459,13 @@ class NetworkManager(QtCore.QObject):
             self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
         else:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+
+    def send_event_sender_update(self, msg: proto.Events_pb2.event_sender, push_direct: bool = False):
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE,
+                               push_direct=push_direct)
+
+    def send_event_message(self, msg: proto.Events_pb2.event):
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT, push_direct=False)
 
 
 def on_error(error) -> None:

@@ -131,7 +131,7 @@ class Scene:
         """This method makes sure that the bank set associated with this scene gets applied to fish."""
         if self._associated_bankset is None:
             from .control_desk import BankSet
-            self._associated_bankset = BankSet(description="Bankset associated with scene {}.".format(self._scene_id),
+            self._associated_bankset = BankSet(description=f"Bankset associated with scene {self._scene_id}.",
                                                gui_controlled=True)
             return False
         return True

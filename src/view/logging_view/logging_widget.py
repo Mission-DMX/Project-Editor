@@ -45,7 +45,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
                                         ("CRITICAL", self._levels["CRITICAL"].isChecked()))))
         }
         level_menu.addAction(QAction("all", level_menu, triggered=(lambda: self.all_log_levels(True))))
-        for key, value in self._levels.items():
+        for _, value in self._levels.items():
             level_menu.addAction(value)
         level_menu.addAction(QAction("none", level_menu, triggered=(lambda: self.all_log_levels(False))))
         select_bar.addMenu(level_menu)

@@ -1,4 +1,6 @@
 # coding=utf-8
+import os
+
 from PySide6.QtWidgets import QFileDialog, QWidget
 
 from controller.file.read import read_document
@@ -17,6 +19,7 @@ def _select_file(parent: QWidget, func, show_save_dialog: bool, show_data: Board
     if show_save_dialog:
         file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
     file_dialog.setDefaultSuffix(".show")
+    file_dialog.setDirectory(os.path.expanduser("~"))
     file_dialog.fileSelected.connect(lambda file_name: func(file_name, show_data))
     file_dialog.show()
 

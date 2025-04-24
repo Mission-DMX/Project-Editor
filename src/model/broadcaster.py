@@ -6,6 +6,7 @@ from xml.etree.ElementTree import Element
 from PySide6 import QtCore
 
 import proto.DirectMode_pb2
+import proto.Events_pb2
 import proto.FilterMode_pb2
 import proto.RealTimeControl_pb2
 from controller.joystick.joystick_enum import JoystickList
@@ -55,6 +56,10 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     device_created: QtCore.Signal = QtCore.Signal(Device)
     delete_device: QtCore.Signal = QtCore.Signal(Device)
     fixture_patched: QtCore.Signal = QtCore.Signal()
+    event_sender_model_updated: QtCore.Signal = QtCore.Signal()
+    fish_event_received: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event)
+    event_rename_action_occurred: QtCore.Signal = QtCore.Signal(int)  # int: the id of the sender where the rename was
+    macro_added_to_show_file: QtCore.Signal = QtCore.Signal(int)  # int: The index of the new macro in the board config
     ################################################################
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()
     view_patching: QtCore.Signal = QtCore.Signal()
@@ -78,6 +83,9 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     view_to_console_mode: QtCore.Signal = QtCore.Signal()
     view_leave_console_mode: QtCore.Signal = QtCore.Signal()
+
+    view_to_action_config: QtCore.Signal = QtCore.Signal()
+    view_leave_action_config: QtCore.Signal = QtCore.Signal()
     ################################################################
     save_button_pressed: QtCore.Signal = QtCore.Signal()
     commit_button_pressed: QtCore.Signal = QtCore.Signal()
@@ -90,6 +98,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_rec_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
+    desk_f_key_pressed: QtCore.Signal = QtCore.Signal(int)
 
     handle_joystick_event: QtCore.Signal = QtCore.Signal(JoystickList, float, bool)
     joystick_selected_event: QtCore.Signal = QtCore.Signal(JoystickList)
