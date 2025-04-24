@@ -104,7 +104,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._bankset.activate()
 
         self._timeline_container.bankset = self._bankset
-        for c in self._timeline_container.cue.channels:
+        for c in self._get_model_channels():
             self.link_column_to_channel(c[0], c[1], True)
         self._bankset.update()
         BankSet.push_messages_now()
@@ -124,6 +124,9 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
     @abstractmethod
     def _rec_pressed(self):
         raise NotImplementedError()
+
+    def _get_model_channels(self) -> list[tuple[str, DataType]]:
+        return self._timeline_container.cue.channels
 
     def jg_right(self):
         if self._jw_zoom_mode:

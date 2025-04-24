@@ -8,6 +8,7 @@ from model import Filter
 from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 from model.filter_data.sequencer.sequencer_filter_model import SequencerFilterModel
 from model.filter_data.sequencer.transition import Transition
+from proto import Console_pb2
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (ExternalChannelDefinition,
@@ -16,6 +17,8 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QAbstractButton
+
+    from model.filter import DataType
 
 
 logger = getLogger(__file__)
@@ -81,7 +84,6 @@ class SequencerEditor(PreviewEditWidget):
         self._parent_widget.addWidget(timeline_panel)
         self._parent_widget.setStretchFactor(1, 3)
         # TODO make remaining general purpose methods (parent_closed) from cue editor reusable
-        # TODO relink bankset on every changed selected transition
 
         self._input_dialog: QDialog | None = None
 
@@ -103,6 +105,12 @@ class SequencerEditor(PreviewEditWidget):
     def _get_parameters(self) -> dict[str, str]:
         return {}
 
+    def _get_model_channels(self) -> list[tuple[str, "DataType"]]:
+        l = []
+        for c in self._model.channels:
+            l.append((c.name, c.data_type))
+        return l
+
     def get_channel_list(self) -> list[ExternalChannelDefinition]:
         l: list[ExternalChannelDefinition] = []
         for c in self._model.channels:
@@ -122,6 +130,7 @@ class SequencerEditor(PreviewEditWidget):
             self._timeline_container.cue = None
             self._remove_transition_action.setEnabled(False)
         self._selected_transition = new_transition
+        self._recolor_bankset()
 
     def _deselect_transition(self):
         if self._selected_transition is None:
@@ -227,6 +236,22 @@ class SequencerEditor(PreviewEditWidget):
                     self._transition_list_widget.takeItem(self._transition_list_widget.row(item))
                 self._deselect_transition()
         self._input_dialog.deleteLater()
+
+    def _recolor_bankset(self):
+        if self._bankset is None:
+            return
+        active_channels: set[str] = set()
+        if self._timeline_container.cue is not None:
+            for c in self._timeline_container.cue.channels:
+                active_channels.add(c.name)
+        for channel in self.channels:
+            if channel.fader is None:
+                continue
+            if channel.name in active_channels:
+                channel.fader.display_color = Console_pb2.lcd_color.white
+            else:
+                channel.fader.display_color = Console_pb2.lcd_color.black
+            channel.fader.update()
 
     def _populate_data(self):
         for c in self._model.channels:
