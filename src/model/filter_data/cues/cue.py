@@ -269,13 +269,15 @@ class KeyFrame:
 
 
 class Cue:
-    def __init__(self):
+    def __init__(self, definition: str | None = None):
         self.end_action = EndAction.HOLD
         self._frames: list[KeyFrame] = []
         self._channel_definitions: list[tuple[str, DataType]] = []
         self.restart_on_another_play_press: bool = False
         self.index_in_editor = 0
         self.name: str = ""
+        if definition is not None:
+            self.from_string_definition(definition)
 
     @property
     def duration(self) -> float:

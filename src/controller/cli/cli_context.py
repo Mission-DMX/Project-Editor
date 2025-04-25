@@ -5,6 +5,7 @@ import traceback
 from typing import TYPE_CHECKING
 
 from controller.cli.bankset_command import BankSetCommand
+from controller.cli.event_command import EventCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
 from controller.cli.select_command import SelectCommand
@@ -14,6 +15,53 @@ if TYPE_CHECKING:
     from controller.network import NetworkManager
     from model import BoardConfiguration, Scene
     from model.control_desk import BankSet, DeskColumn
+
+
+def _split_args(line: str) -> list[str]:
+    """Split a line into individual arguments."""
+    l = []
+    in_string: bool = False
+    current_arg = ""
+    in_escape: bool = False
+    for c in line:
+        if in_string:
+            if c == '"' and not in_escape:
+                in_string = False
+                continue
+            if c == '\\':
+                in_escape = not in_escape
+            if not in_escape:
+                current_arg += c
+            else:
+                if c == 't':
+                    current_arg += '\t'
+                    in_string = False
+                elif c == 'n':
+                    current_arg += '\n'
+                    in_escape = False
+                elif c == 'r':
+                    current_arg += '\r'
+                    in_escape = False
+                elif c == '"':
+                    current_arg += c
+                    in_escape = False
+        else:
+            if c == '"':
+                in_string = True
+                in_escape = False
+            elif c == '#':
+                if current_arg != '':
+                    l.append(current_arg)
+                break
+            elif c == ' ' or c == '\t':
+                if current_arg != '':
+                    l.append(current_arg)
+                    current_arg = ''
+            else:
+                current_arg += c
+    if current_arg != '':
+        l.append(current_arg)
+    return l
 
 
 class CLIContext:
@@ -31,6 +79,7 @@ class CLIContext:
             SelectCommand(self),
             BankSetCommand(self),
             ShowCommand(self),
+            EventCommand(self),
             HelpCommand(self)
         ]
         self.selected_bank: "BankSet" | None = None
@@ -57,7 +106,10 @@ class CLIContext:
         true if the evaluation succeeded, false otherwise
         """
         try:
-            global_args = self.parser.parse_args(args=line.split(" "))
+            args = _split_args(line)
+            if len(args) == 0:
+                return True
+            global_args = self.parser.parse_args(args=args)
             if self._exit_available and global_args.subparser_name == "exit":
                 self.exit_called = True
             elif global_args.subparser_name == "?":

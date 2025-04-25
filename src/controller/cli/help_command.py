@@ -38,11 +38,15 @@ class HelpCommand(Command):
             case "bank_set":
                 self.context.print("Modify the selected bank set. Usage: bank_set commit/create <description>"
                                    "/add --bank <bank> --col-type <type>/info/activate")
+            case "event":
+                self.context.print("Manage the fish event system")
+                self.context.print("\tadd-sender -- Add a bew event sender to fish")
+                self.context.print("\tsend -- Insert a new event into fish")
             case "showctl":
                 self.context.print("Manage the general show file and execution on fish")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
-                self.context.print("\tselect\tlist\tpatch\tbank_set\tshowctl")
+                self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl")
                 return False
         return True

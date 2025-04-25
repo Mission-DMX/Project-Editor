@@ -10,8 +10,10 @@ from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 
 
 class PanTiltConstantContentWidget(QLabel):
-    def __init__(self, filter: PanTiltConstantFilter, parent: QWidget = None):
+    def __init__(self, filter: PanTiltConstantFilter | None, parent: QWidget = None, enable_joystick: bool = True):
         super().__init__(parent=parent)
+        self.pan = 0
+        self.tilt = 0
         self.setMinimumWidth(800)
         self.setMinimumHeight(400)
         self._dragged = False  # for detecting drag and drop
@@ -21,9 +23,11 @@ class PanTiltConstantContentWidget(QLabel):
 
         self._filter = filter
 
-        self._filter.register_observer(self, self.repaint)
+        if filter is not None:
+            self._filter.register_observer(self, self.repaint)
         self.repaint()
-        (Broadcaster()).handle_joystick_event.connect(self.handle_key_event)
+        if enable_joystick:
+            Broadcaster().handle_joystick_event.connect(self.handle_key_event)
 
     def repaint(self) -> None:
         canvas = QPixmap(QSize(self.width(), self.height()))
@@ -34,7 +38,10 @@ class PanTiltConstantContentWidget(QLabel):
             return
         painter = QtGui.QPainter(canvas)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(0, 0, w, h, QColor.fromRgb(0xF9, 0xF9, 0xF9))
+        if self.isEnabled():
+            painter.fillRect(0, 0, w, h, QColor.fromRgb(0xF9, 0xF9, 0xF9))
+        else:
+            painter.fillRect(0, 0, w, h, QColor.fromRgb(0x80, 0x80, 0x80))
         painter.setPen(QColor.fromRgb(0xC0, 0xC0, 0xC0))
         p = 0.0
         while (p <= self.prange):
@@ -49,8 +56,8 @@ class PanTiltConstantContentWidget(QLabel):
 
         painter.setBrush(QColor.fromRgb(0x00, 0x00, 0xE0))
         pointsize = 10
-        pabs = self._filter.pan * w / self.prange
-        tabs = self._filter.tilt * h / self.trange
+        pabs = self.pan * w / self.prange
+        tabs = self.tilt * h / self.trange
         painter.drawEllipse(pabs - pointsize / 2, tabs - pointsize / 2, pointsize, pointsize)
 
         painter.end()
@@ -73,12 +80,18 @@ class PanTiltConstantContentWidget(QLabel):
         self.repaint()
 
     def update_pan_tilt(self, event: QMouseEvent):
-        self._filter.pan_delta = 0.0
-        self._filter.tilt_delta = 0.0
+        if self._filter is not None:
+            self._filter.pan_delta = 0.0
+            self._filter.tilt_delta = 0.0
         if (self._dragged and event.x() <= self.width() and
                 event.y() <= self.height() and event.x() >= 0 and event.y() >= 0):
-            self._filter.pan = event.pos().x() * self.prange / self.width()
-            self._filter.tilt = event.pos().y() * self.trange / self.height()
+            self.pan = event.pos().x() * self.prange / self.width()
+            self.tilt = event.pos().y() * self.trange / self.height()
+            if self._filter is not None:
+                self._filter.pan = self.pan
+                self._filter.tilt = self.tilt
 
     def handle_key_event(self, joystick: JoystickList, val: float, tilt: bool):
+        if self._filter is None:
+            return
         self._filter.set_delta(val, joystick, tilt)

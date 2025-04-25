@@ -1,6 +1,6 @@
 [project]
 name = "Project-Editor"
-version = "1.0.3"
+version = "1.0.4"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
     { name = "MKay", email = "ma.kaussow@uni-luebeck.de" },
@@ -31,7 +31,6 @@ dependencies = [
     "pyjoystick>=1.2.4",
     "pyopengl>=3.1.9",
     "onnxruntime-openvino>=1.21.0",
-
 ]
 
 [dependency-groups]

@@ -17,7 +17,6 @@ class SceneUIManagerWidget(QTabWidget):
         self._scene = scene
         self.setTabsClosable(True)
 
-        self.addTab(QWidget(), "+")
         plus_button = self.tabBar().tabButton(self.count() - 1, QTabBar.ButtonPosition.RightSide)
         if plus_button:
             plus_button.hide()
@@ -27,14 +26,8 @@ class SceneUIManagerWidget(QTabWidget):
 
         self._add_page()
 
-        self.tabBarClicked.connect(self._tab_bar_clicked)
         self.tabCloseRequested.connect(self.removeTab)
         self.tabBarDoubleClicked.connect(self._pop_page)
-
-    def _tab_bar_clicked(self, index: int):
-        """Handles behaviour when +/- button was clicked"""
-        if index == self.count() - 1:
-            self._add_page()
 
     def _add_page(self):
         """Adds a page to the scene"""

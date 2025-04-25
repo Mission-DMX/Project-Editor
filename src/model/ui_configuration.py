@@ -166,7 +166,7 @@ class UIWidget(ABC):
                 target_fid = split_key[0]
                 k = split_key[1]
             else:
-                target_fid = self.filter_id
+                target_fid = self.filter_ids[0]
             _network_manager_instance.send_gui_update_to_fish(self.parent.scene.scene_id, target_fid, k, v)
 
 
