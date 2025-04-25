@@ -4,9 +4,9 @@ from PySide6.QtWidgets import QComboBox, QVBoxLayout, QWidget
 
 from model import BoardConfiguration, Scene
 from model.filter import FilterTypeEnumeration
+from model.filter_data.cues.cue import Cue
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
 
 
 class _InsertCueSwitchDialog(_CommandInsertionDialog):
