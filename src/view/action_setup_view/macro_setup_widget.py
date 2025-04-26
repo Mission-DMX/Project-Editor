@@ -108,6 +108,11 @@ class MacroSetupWidget(QSplitter):
         self._insert_cue_switch_action.setText("Insert Cue Switch")
         self._insert_cue_switch_action.triggered.connect(self._insert_cue_switch_clicked)
         self._content_panel_actions.addAction(self._insert_cue_switch_action)
+        self._insert_switch_scene_command_action = QAction()
+        self._insert_switch_scene_command_action.setText("Insert Scene Switch")
+        # TODO connect action
+        self._insert_switch_scene_command_action.setEnabled(False)
+        self._content_panel_actions.addAction(self._insert_switch_scene_command_action)
         self._insert_sequence_trigger_action = QAction()
         self._insert_sequence_trigger_action.setText("Insert Sequence Trigger")
         # TODO connect action
