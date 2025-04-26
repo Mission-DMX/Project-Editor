@@ -351,36 +351,6 @@ class CueEditor(PreviewEditWidget):
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
             .setText(self._timeline_container.cue.duration_formatted)
 
-    def parent_closed(self, filter_node: "FilterNode"):
-        self._timeline_container.clear_display()
-        if self._channels_changed_after_load:
-            added_channels = []
-            if len(self._model.cues) > 0:
-                for channel_name, channel_type in self._model.cues[0].channels:
-                    if channel_name not in filter_node.outputs():
-                        filter_node.addTerminal(channel_name, io='out')
-                        filter_node.filter.out_data_types[channel_name] = channel_type
-                    added_channels.append(channel_name)
-            terms_to_remove = []
-            for name, _ in filter_node.terminals.items():
-                if name in filter_node.outputs() and name not in added_channels:
-                    terms_to_remove.append(name)
-            for name in terms_to_remove:
-                filter_node.removeTerminal(name)
-        if self._bankset:
-            self._bankset.unlink()
-            BankSet.push_messages_now()
-        show_reset_required = False
-        if self._broadcaster and self._broadcaster_signals_connected:
-            self.disconnect_from_broadcaster()
-            show_reset_required = True
-        if self._filter_instance:
-            self._filter_instance.in_preview_mode = False
-            if show_reset_required:
-                transmit_to_fish(self._filter_instance.scene.board_configuration, False)
-                # TODO switch to scene of filter
-        super().parent_closed(filter_node)
-
     def parent_opened(self):
         self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
 

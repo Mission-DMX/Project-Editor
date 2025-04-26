@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
@@ -12,6 +13,9 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import
 from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 logger = getLogger(__file__)
+
+if TYPE_CHECKING:
+    from view.show_mode.editor.nodes import FilterNode
 
 
 class ExternalChannelDefinition:
@@ -174,3 +178,36 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self.bs_to_channel_mapping[channel_name] = c
         if not is_part_of_mass_update:
             self._bankset.update()
+
+    def _update_terminals(self, filter_node: "FilterNode"):
+        if self._filter_instance is None:
+            return
+        required_channels: set[tuple[str, DataType]] = set()
+        existing_channels: set[tuple[str, DataType]] = set()
+        for c in self.channels:
+            required_channels.add((c.name, c.data_type))
+        for t in filter_node.outputs().keys():
+            existing_channels.add((t, self._filter_instance.out_data_types.get(t)))
+        for name, _ in existing_channels - required_channels:
+            self._filter_instance.out_data_types.pop(name)
+            filter_node.removeTerminal(name)
+        for name, dtype in required_channels - existing_channels:
+            filter_node.addOutput(name=name)
+            self._filter_instance.out_data_types[name] = dtype
+
+    def parent_closed(self, filter_node: "FilterNode"):
+        self._timeline_container.clear_display()
+        self._update_terminals(filter_node)
+        if self._bankset:
+            self._bankset.unlink()
+            BankSet.push_messages_now()
+        show_reset_required = False
+        if self._broadcaster and self._broadcaster_signals_connected:
+            self.disconnect_from_broadcaster()
+            show_reset_required = True
+        if self._filter_instance:
+            self._filter_instance.in_preview_mode = False
+            if show_reset_required:
+                transmit_to_fish(self._filter_instance.scene.board_configuration, False)
+                # TODO switch to scene of filter
+        super().parent_closed(filter_node)

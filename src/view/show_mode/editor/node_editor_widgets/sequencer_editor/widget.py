@@ -83,7 +83,6 @@ class SequencerEditor(PreviewEditWidget):
         timeline_panel.setLayout(layout)
         self._parent_widget.addWidget(timeline_panel)
         self._parent_widget.setStretchFactor(1, 3)
-        # TODO make remaining general purpose methods (parent_closed) from cue editor reusable
 
         self._input_dialog: QDialog | None = None
 

@@ -174,6 +174,7 @@ class EffectsStackNode(FilterNode):
         self.setup_output_terminals()
 
     def setup_output_terminals(self):
+        # TODO
         pass
 
     def update_node_after_settings_changed(self):
