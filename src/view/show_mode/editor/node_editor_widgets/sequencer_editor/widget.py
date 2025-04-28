@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QAbstractButton
 
     from model.filter import DataType
+    from view.show_mode.editor.nodes import FilterNode
 
 
 logger = getLogger(__file__)
@@ -28,6 +29,7 @@ class SequencerEditor(PreviewEditWidget):
 
     def __init__(self, parent: QWidget = None, f: Filter | None = None):
         super().__init__(f)
+        self._timeline_container.generate_individual_frames = True
         self._parent_widget = QSplitter(parent=parent)
         self._parent_widget.setMinimumWidth(1000)
         self._parent_widget.setOrientation(Qt.Orientation.Vertical)
@@ -83,12 +85,14 @@ class SequencerEditor(PreviewEditWidget):
         timeline_panel.setLayout(layout)
         self._parent_widget.addWidget(timeline_panel)
         self._parent_widget.setStretchFactor(1, 3)
+        # TODO add checkboxes to timeline container to select affected channels
 
         self._input_dialog: QDialog | None = None
-
         self._selected_transition: Transition | None = None
 
     def _get_configuration(self) -> dict[str, str]:
+        if self._selected_transition is not None:
+            self._selected_transition.update_frames_from_cue(self._timeline_container.cue, self._model.channels)
         return self._model.get_configuration()
 
     def _load_configuration(self, conf: dict[str, str]):
@@ -119,15 +123,22 @@ class SequencerEditor(PreviewEditWidget):
 
     def _transition_selected(self, new_transition: Transition | int | None):
         if isinstance(new_transition, int):
-            new_transition = self._transition_list_widget.item(new_transition).annotated_data
+            logger.info("Looking up transition %i.", new_transition)
+            item = self._transition_list_widget.item(new_transition)
+            if item is not None:
+                new_transition = item.annotated_data
+            else:
+                new_transition = None
         if self._selected_transition is not None:
             self._deselect_transition()
         if new_transition is not None:
             self._timeline_container.cue = new_transition.to_cue()
             self._remove_transition_action.setEnabled(True)
+            self.set_editing_enabled(True)
         else:
             self._timeline_container.cue = None
             self._remove_transition_action.setEnabled(False)
+            self.set_editing_enabled(False)
         self._selected_transition = new_transition
         self._recolor_bankset()
 
@@ -138,6 +149,7 @@ class SequencerEditor(PreviewEditWidget):
         self._timeline_container.cue = None
         self._selected_transition = None
         self._remove_transition_action.setEnabled(False)
+        self.set_editing_enabled(False)
 
     def _add_transition(self, t: Transition, is_new_transition: bool = True):
         if is_new_transition:
@@ -146,7 +158,8 @@ class SequencerEditor(PreviewEditWidget):
         li.setText(str(self._transition_list_widget.count()))  # TODO add human readable name index to model
         li.annotated_data = t
         self._transition_list_widget.addItem(li)
-        # TODO implement custom label widget that also displays linked event
+        # TODO implement custom label widget that also displays linked events and duration
+        # TODO write widget in map with k=transition and v=widget
         if is_new_transition or self._selected_transition is None:
             self._transition_selected(t)
 
@@ -261,5 +274,5 @@ class SequencerEditor(PreviewEditWidget):
             self._transition_selected(self._model.transitions[-1])
 
     def _rec_pressed(self):
-        # TODO add checkboxes to timeline container to select affected channels
-        pass  # TODO
+        super()._rec_pressed()
+        # TODO update duration label of transition

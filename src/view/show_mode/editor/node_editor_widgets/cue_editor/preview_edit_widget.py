@@ -125,9 +125,8 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._broadcaster.desk_media_scrub_released.disconnect(self.scrub_released)
         self._broadcaster_signals_connected = False
 
-    @abstractmethod
     def _rec_pressed(self):
-        raise NotImplementedError()
+        self._timeline_container.record_pressed()
 
     def _get_model_channels(self) -> list[tuple[str, DataType]]:
         return self._timeline_container.cue.channels
@@ -165,6 +164,10 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
 
     def _transition_type_changed(self, text):
         self._timeline_container.transition_type = text
+
+    def set_editing_enabled(self, new_state: bool):
+        self._timeline_container.setEnabled(new_state)
+        self._gui_rec_action.setEnabled(new_state)
 
     def link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
         if not self._bankset:

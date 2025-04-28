@@ -268,9 +268,8 @@ class CueEditor(PreviewEditWidget):
         if from_manual_input:
             self._cue_list_widget.selectRow(cue_index)
         self._toolbar_add_channel_action.setEnabled(True)
-        self._timeline_container.setEnabled(True)
+        self.set_editing_enabled(True)
         self._current_cue_end_action_select_widget.setEnabled(True)
-        self._gui_rec_action.setEnabled(True)
         self._current_cue_another_play_pressed_checkbox.setEnabled(True)
 
     def _cue_list_selection_changed(self):
@@ -347,7 +346,7 @@ class CueEditor(PreviewEditWidget):
             self._current_cue_another_play_pressed_checkbox.checkState().Checked
 
     def _rec_pressed(self):
-        self._timeline_container.record_pressed()
+        super()._rec_pressed()
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
             .setText(self._timeline_container.cue.duration_formatted)
 

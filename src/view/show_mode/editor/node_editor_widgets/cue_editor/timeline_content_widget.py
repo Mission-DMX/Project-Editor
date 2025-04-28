@@ -20,7 +20,7 @@ class TimelineContentWidget(QWidget):
         super().__init__(parent=parent)
         self._last_keyframe_end_point = 0  # Defines the length of the Cue in seconds
         self._time_zoom = 0.01  # Defines how many seconds are a pixel, defaults to 1 pixel = 10ms
-        self._channels = []
+        self._channels: list[tuple[DataType, str]] = []
         self.frames: list[KeyFrame] = []
         self.cursor_position = 3.0
         self._drag_begin: tuple[int, int] = None
@@ -77,7 +77,10 @@ class TimelineContentWidget(QWidget):
                 painter.drawLine(x, 20, x, len(kf_states) * CHANNEL_DISPLAY_HEIGHT + 20)
                 painter.setBrush(light_gray_brush)
                 for s in kf_states:
-                    y = 40 + i * CHANNEL_DISPLAY_HEIGHT
+                    if kf.only_on_channel is None:
+                        y = 40 + i * CHANNEL_DISPLAY_HEIGHT
+                    else:
+                        y = 40 + self._get_channel_index(kf.only_on_channel) * CHANNEL_DISPLAY_HEIGHT
                     if s == self._last_clicked_kf_state:
                         marker_path = QPainterPath(QPoint(x, y - 2))
                         marker_path.lineTo(x + 12, y + 10)
@@ -152,7 +155,7 @@ class TimelineContentWidget(QWidget):
         self.setMinimumHeight(max(parent_height, int(len(self._channels) * CHANNEL_DISPLAY_HEIGHT) + 2 * 20))
         self.repaint()
 
-    def add_channels(self, channels: list[DataType]):
+    def add_channels(self, channels: list[tuple[DataType, str]]):
         for c in channels:
             self._channels.append(c)
         self.compute_resize()
@@ -211,29 +214,37 @@ class TimelineContentWidget(QWidget):
         super().mouseReleaseEvent(ev)
         if not self.isEnabled():
             return
-        if ev.y() <= 20:
-            clicked_timeslot = ev.x() * self._time_zoom
+        y = ev.y()
+        x = ev.x()
+        if y <= 20:
+            clicked_timeslot = x * self._time_zoom
             self.cursor_position = clicked_timeslot
             self._update_7seg_text()
         else:
-            if 20 <= ((ev.y() - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40:
+            if 20 <= ((y - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40:
                 state_width = 10
             else:
                 state_width = 1
-            clicked_timeslot_lower = (ev.x() - state_width) * self._time_zoom
-            clicked_timeslot_upper = (ev.x() + state_width) * self._time_zoom
+            clicked_timeslot_lower = (x - state_width) * self._time_zoom
+            clicked_timeslot_upper = (x + state_width) * self._time_zoom
             for kf in self.frames:
                 if clicked_timeslot_lower <= kf.timestamp <= clicked_timeslot_upper:
-                    self._clicked_on_keyframe(kf, ev.y())
-                    break
+                    if kf.only_on_channel is None:
+                        self._clicked_on_keyframe(kf, y)
+                        break
+                    else:
+                        channel_index = self._get_channel_index(kf.only_on_channel)
+                        if channel_index * CHANNEL_DISPLAY_HEIGHT <= y - 20 <= (channel_index + 1) * CHANNEL_DISPLAY_HEIGHT:
+                            self._clicked_on_keyframe(kf, y)
+                            break
         self.repaint()
 
     def _clicked_on_keyframe(self, kf: KeyFrame, y: int):
         state_index = int((y - 20) / CHANNEL_DISPLAY_HEIGHT)
         states = kf._states
         double_click_issued = False
-        if state_index < len(states):
-            new_state = states[state_index]
+        if state_index < len(states) or kf.only_on_channel is not None:
+            new_state = states[state_index] if kf.only_on_channel is None else states[0]
             if new_state == self._last_clicked_kf_state:
                 double_click_issued = True
             self._last_clicked_kf_state = new_state
@@ -272,3 +283,13 @@ class TimelineContentWidget(QWidget):
         self._last_keyframe_end_point = 0
         self._update_7seg_text()
         self.compute_resize()
+
+    def _get_channel_index(self, only_on_channel: str | None) -> int:
+        if only_on_channel is None:
+            return 0
+        i = 0
+        for c in self._channels:
+            if c[1] == only_on_channel:
+                return i
+            i += 1
+        return i

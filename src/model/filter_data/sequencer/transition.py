@@ -12,6 +12,8 @@ logger = getLogger(__file__)
 
 class SequenceKeyFrame:
     def __init__(self, target_channel: SequencerChannel):
+        if target_channel is None:
+            logger.error('target_channel is None')
         self.channel: SequencerChannel = target_channel
         self.target_value: int | float | ColorHSI = 0
         self.duration: float = 0.0
@@ -48,8 +50,8 @@ class SequenceKeyFrame:
                 skf.target_value = ColorHSI.from_filter_str(args[1])
             case _:
                 logger.error("Execpected data type: {}", found_channel.data_type)
-        skf.duration = args[2]
-        skf.tf = TransferFunction(args[3])
+        skf.duration = float(args[3])
+        skf.tf = TransferFunction(args[2])
         return skf
 
     def copy(self, new_target: SequencerChannel) -> "SequenceKeyFrame":
@@ -108,7 +110,8 @@ class Transition:
         t = Transition()
         first_delim = s.find('#')
         t._trigger_event = int(s[:first_delim])  # TODO replace with EventSender, once #191 is merged.
-        for arg in s.split("#")[first_delim+1:]:
+        s = s[first_delim+1:]
+        for arg in s.split("#"):
             t.frames.append(SequenceKeyFrame.from_filter_str(arg, channels))
         return t
 

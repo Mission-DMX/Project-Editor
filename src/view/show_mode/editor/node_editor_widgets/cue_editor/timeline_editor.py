@@ -1,4 +1,6 @@
 # coding=utf-8
+from logging import getLogger
+
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QWidget
 
@@ -7,6 +9,8 @@ from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, set_seve
 from model.filter_data.cues.cue import Cue, KeyFrame, StateColor, StateDouble, StateEightBit, StateSixteenBit
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_label import TimelineChannelLabel
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_content_widget import TimelineContentWidget
+
+logger = getLogger(__file__)
 
 
 class TimelineContainer(QWidget):
@@ -29,6 +33,7 @@ class TimelineContainer(QWidget):
         self.setLayout(layout)
         self.cue = Cue()
         self._current_transition_type = "edg"
+        self.generate_individual_frames: bool = False
 
     @property
     def transition_type(self) -> str:
@@ -48,7 +53,7 @@ class TimelineContainer(QWidget):
 
     def add_channel(self, channel_type: DataType, name: str):
         self._channel_label.add_label(name, channel_type.format_for_filters())
-        self._keyframes_panel.add_channels([channel_type])
+        self._keyframes_panel.add_channels([(channel_type, name)])
 
     def remove_channel(self, c_name: str):
         i = self._channel_label.remove_label(c_name)
@@ -96,41 +101,65 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.move_cursor_right()
 
     def record_pressed(self):
+        if self._cue is None:
+            logger.error("Cue is None. Disable rec buttons in this case.")
+            return
         p = self._keyframes_panel.cursor_position
+        if self.generate_individual_frames:
+            self._generate_frames(p)
+        else:
+            self._generate_combined_frame(p)
+
+    def _generate_frames(self, p):
+        i = 0
+        for c in self._cue.channels:
+            # TODO skip if channel is not selected
+            f = KeyFrame(self._cue)
+            f.timestamp = p
+            f.only_on_channel = c[0]
+            f.append_state(self._generate_state_from_channel(c, i))
+            i += 1
+            self._keyframes_panel.insert_frame(f)
+
+    def _generate_combined_frame(self, p):
         f = KeyFrame(self._cue)
         f.timestamp = p
         i = 0
         for c in self._cue.channels:
-            match c[1]:
-                case DataType.DT_8_BIT:
-                    s = StateEightBit(self._current_transition_type)
-                    if self.bankset:
-                        c = self.bankset.get_column_by_number(i)
-                        if isinstance(c, RawDeskColumn):
-                            s._value = int((c.fader_position * 256) / 65536)
-                case DataType.DT_16_BIT:
-                    s = StateSixteenBit(self._current_transition_type)
-                    if self.bankset:
-                        c = self.bankset.get_column_by_number(i)
-                        if isinstance(c, RawDeskColumn):
-                            s._value = c.fader_position
-                case DataType.DT_DOUBLE:
-                    s = StateDouble(self._current_transition_type)
-                    if self.bankset:
-                        c = self.bankset.get_column_by_number(i)
-                        if isinstance(c, RawDeskColumn):
-                            s._value = c.fader_position / 65536
-                case DataType.DT_COLOR:
-                    s = StateColor(self._current_transition_type)
-                    if self.bankset:
-                        c = self.bankset.get_column_by_number(i)
-                        if isinstance(c, ColorDeskColumn):
-                            s.color = c.color
-                case _:
-                    s = StateEightBit(self._current_transition_type)
+            s = self._generate_state_from_channel(c, i)
             f.append_state(s)
             i += 1
         self._keyframes_panel.insert_frame(f)
+
+    def _generate_state_from_channel(self, c, i):
+        match c[1]:
+            case DataType.DT_8_BIT:
+                s = StateEightBit(self._current_transition_type)
+                if self.bankset:
+                    c = self.bankset.get_column_by_number(i)
+                    if isinstance(c, RawDeskColumn):
+                        s._value = int((c.fader_position * 256) / 65536)
+            case DataType.DT_16_BIT:
+                s = StateSixteenBit(self._current_transition_type)
+                if self.bankset:
+                    c = self.bankset.get_column_by_number(i)
+                    if isinstance(c, RawDeskColumn):
+                        s._value = c.fader_position
+            case DataType.DT_DOUBLE:
+                s = StateDouble(self._current_transition_type)
+                if self.bankset:
+                    c = self.bankset.get_column_by_number(i)
+                    if isinstance(c, RawDeskColumn):
+                        s._value = c.fader_position / 65536
+            case DataType.DT_COLOR:
+                s = StateColor(self._current_transition_type)
+                if self.bankset:
+                    c = self.bankset.get_column_by_number(i)
+                    if isinstance(c, ColorDeskColumn):
+                        s.color = c.color
+            case _:
+                s = StateEightBit(self._current_transition_type)
+        return s
 
     def format_zoom(self) -> str:
         return f"{int(self._keyframes_panel._time_zoom * 10000) / 10000:0>3} Sec/Pixel"
