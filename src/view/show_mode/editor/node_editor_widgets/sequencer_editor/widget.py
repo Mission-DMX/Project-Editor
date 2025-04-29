@@ -13,6 +13,7 @@ from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (ExternalChannelDefinition,
                                                                                       PreviewEditWidget)
+from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
@@ -177,6 +178,9 @@ class SequencerEditor(PreviewEditWidget):
         li.setText(f"[{c.data_type.format_for_filters()}] {c.name}")
         li.annotated_data = c
         # TODO implement custom label widget that vislualizes channel type with its default value
+        if self._filter_instance is not None:
+            if self._filter_instance.in_preview_mode:
+                self.link_column_to_channel(c.name, c.data_type, not is_new_transition)
         self._channel_list_widget.addItem(li)
 
     def _add_channel_pressed(self):
@@ -310,3 +314,6 @@ class SequencerEditor(PreviewEditWidget):
     def _rec_pressed(self):
         super()._rec_pressed()
         # TODO update duration label of transition
+
+    def parent_opened(self):
+        self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
