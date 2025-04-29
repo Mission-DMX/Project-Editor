@@ -93,13 +93,13 @@ def _force_channel_dict(cd: list[SequencerChannel] | dict[str, SequencerChannel]
 
 class Transition:
     def __init__(self):
-        self._trigger_event = 0
+        self._trigger_event: tuple[int, int, str] = (0, 0, "")
         self.frames: list[SequenceKeyFrame] = []
         self.name: str = ""
         self.preselected_channels: dict[str, DataType] = {}
 
     def format_for_filter(self) -> str:
-        return f"{self._trigger_event}#{self.name}#{"#".join([c.format_for_filter() for c in self.frames])}"
+        return f"{self._trigger_event[0]}:{self._trigger_event[1]}#{self.name}#{"#".join([c.format_for_filter() for c in self.frames])}"
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "Transition":
@@ -110,7 +110,8 @@ class Transition:
             channels = new_dict
         t = Transition()
         first_delim = s.find('#')
-        t._trigger_event = int(s[:first_delim])  # TODO replace with EventSender, once #191 is merged.
+        event_def = s[:first_delim].split(':')
+        t._trigger_event = (int(event_def[0]), int(event_def[1]), "")
         s = s[first_delim+1:]
         first_delim = s.find('#')
         t.name = s[:first_delim]
