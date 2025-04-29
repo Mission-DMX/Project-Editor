@@ -14,6 +14,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog i
 from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (ExternalChannelDefinition,
                                                                                       PreviewEditWidget)
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
+from view.show_mode.editor.node_editor_widgets.sequencer_editor.event_selection_dialog import EventSelectionDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
@@ -63,8 +64,11 @@ class SequencerEditor(PreviewEditWidget):
         self.transition_add_channel_action.triggered.connect(self._add_channel_to_transition_pressed)
         self.transition_add_channel_action.setEnabled(False)
         transition_toolbar.addAction(self.transition_add_channel_action)
-        transition_toolbar.addAction("Link Events")
-        # TODO implement and link action
+        self._link_event_action = QAction("Link Events", transition_toolbar)
+        self._link_event_action.setEnabled(False)
+        self._link_event_action.setShortcut("Ctrl+L")
+        self._link_event_action.triggered.connect(self._link_event_action_clicked)
+        transition_toolbar.addAction(self._link_event_action)
         transition_toolbar.addSeparator()
         self._remove_transition_action = QAction("Remove Transition", transition_toolbar)
         self._remove_transition_action.triggered.connect(self._remove_transition_clicked)
@@ -140,11 +144,13 @@ class SequencerEditor(PreviewEditWidget):
             self._remove_transition_action.setEnabled(True)
             self.set_editing_enabled(True)
             self.transition_add_channel_action.setEnabled(True)
+            self._link_event_action.setEnabled(True)
         else:
             self._timeline_container.cue = None
             self._remove_transition_action.setEnabled(False)
             self.set_editing_enabled(False)
             self.transition_add_channel_action.setEnabled(False)
+            self._link_event_action.setEnabled(False)
         self._selected_transition = new_transition
         self._recolor_bankset()
 
@@ -157,6 +163,7 @@ class SequencerEditor(PreviewEditWidget):
         self._remove_transition_action.setEnabled(False)
         self.set_editing_enabled(False)
         self.transition_add_channel_action.setEnabled(False)
+        self._link_event_action.setEnabled(False)
 
     def _add_transition(self, t: Transition, is_new_transition: bool = True):
         if is_new_transition:
@@ -286,6 +293,21 @@ class SequencerEditor(PreviewEditWidget):
                     self._transition_list_widget.takeItem(self._transition_list_widget.row(item))
                 self._deselect_transition()
         self._input_dialog.deleteLater()
+
+    def _link_event_action_clicked(self):
+        self._input_dialog = EventSelectionDialog(self._parent_widget)
+        self._input_dialog.accepted.connect(self._link_event_action_clicked_final)
+        self._input_dialog.show()
+
+    def _link_event_action_clicked_final(self):
+        if not isinstance(self._input_dialog, EventSelectionDialog):
+            logger.error("Expected event selection dialog.")
+            return
+        if self._selected_transition is None:
+            logger.error("Expected selected transition to exist")
+            return
+        self._selected_transition._trigger_event = self._input_dialog.selected_event
+        # TODO update transition label
 
     def _recolor_bankset(self):
         if self._bankset is None:
