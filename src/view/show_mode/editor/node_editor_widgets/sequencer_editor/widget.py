@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QAbstractButton
 
     from model.filter import DataType
-    from view.show_mode.editor.nodes import FilterNode
 
 
 logger = getLogger(__file__)
@@ -163,7 +162,7 @@ class SequencerEditor(PreviewEditWidget):
         if is_new_transition:
             self._model.transitions.append(t)
         li = AnnotatedListWidgetItem(self._transition_list_widget)
-        li.setText(str(self._transition_list_widget.count()))  # TODO add human readable name index to model
+        li.setText(f"{self._transition_list_widget.count()}: {t.name}")
         li.annotated_data = t
         self._transition_list_widget.addItem(li)
         # TODO implement custom label widget that also displays linked events and duration
@@ -228,6 +227,7 @@ class SequencerEditor(PreviewEditWidget):
         for c_name in self._input_dialog.selected_items:
             channel_dict[c_name] = self._model.get_channel_by_name(c_name).data_type
         t.preselected_channels = channel_dict
+        t.name = "No Name"
         self._add_transition(t, True)
         self._input_dialog.deleteLater()
 
