@@ -59,6 +59,10 @@ class SequencerEditor(PreviewEditWidget):
         add_transition_action.setShortcut("Ctrl+N")
         add_transition_action.triggered.connect(self._add_transition_pressed)
         transition_toolbar.addAction(add_transition_action)
+        self.transition_add_channel_action = QAction("Add Channel to Transition", transition_toolbar)
+        self.transition_add_channel_action.triggered.connect(self._add_channel_to_transition_pressed)
+        self.transition_add_channel_action.setEnabled(False)
+        transition_toolbar.addAction(self.transition_add_channel_action)
         transition_toolbar.addAction("Link Events")
         # TODO implement and link action
         transition_toolbar.addSeparator()
@@ -135,10 +139,12 @@ class SequencerEditor(PreviewEditWidget):
             self._timeline_container.cue = new_transition.to_cue()
             self._remove_transition_action.setEnabled(True)
             self.set_editing_enabled(True)
+            self.transition_add_channel_action.setEnabled(True)
         else:
             self._timeline_container.cue = None
             self._remove_transition_action.setEnabled(False)
             self.set_editing_enabled(False)
+            self.transition_add_channel_action.setEnabled(False)
         self._selected_transition = new_transition
         self._recolor_bankset()
 
@@ -150,6 +156,7 @@ class SequencerEditor(PreviewEditWidget):
         self._selected_transition = None
         self._remove_transition_action.setEnabled(False)
         self.set_editing_enabled(False)
+        self.transition_add_channel_action.setEnabled(False)
 
     def _add_transition(self, t: Transition, is_new_transition: bool = True):
         if is_new_transition:
@@ -219,6 +226,33 @@ class SequencerEditor(PreviewEditWidget):
         t.preselected_channels = channel_dict
         self._add_transition(t, True)
         self._input_dialog.deleteLater()
+
+    def _add_channel_to_transition_pressed(self):
+        channels_avail = []
+        existing_channel_names = self._selected_transition.preselected_channels.keys()
+        for c in self._model.channels:
+            channel_name = c.name
+            if channel_name in existing_channel_names:
+                continue
+            channels_avail.append(channel_name)
+        self._input_dialog = SelectionDialog("Select Channels",
+                                             "Please select Channels to add in the existing transition.",
+                                             channels_avail, self._parent_widget)
+        self._input_dialog.accepted.connect(self._add_channel_to_transition_pressed_final)
+        self._input_dialog.show()
+
+    def _add_channel_to_transition_pressed_final(self):
+        if self._selected_transition is None:
+            logger.error("No transition selected while adding channels to it.")
+            return
+        if not isinstance(self._input_dialog, SelectionDialog):
+            logger.error("Expected SelectionDialog.")
+            return
+        channel_dict: dict[str, DataType] = {}
+        for c_name in self._input_dialog.selected_items:
+            channel_dict[c_name] = self._model.get_channel_by_name(c_name).data_type
+        self._selected_transition.preselected_channels.update(channel_dict)
+        self._transition_selected(self._selected_transition)
 
     def _remove_transition_clicked(self):
         self._input_dialog = QMessageBox(self._parent_widget)
