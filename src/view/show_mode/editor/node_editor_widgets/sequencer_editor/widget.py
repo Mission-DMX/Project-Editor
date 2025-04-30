@@ -295,7 +295,7 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.deleteLater()
 
     def _link_event_action_clicked(self):
-        self._input_dialog = EventSelectionDialog(self._filter_instance.scene.board_configuration, self._parent_widget)
+        self._input_dialog = EventSelectionDialog(self._parent_widget)
         self._input_dialog.accepted.connect(self._link_event_action_clicked_final)
         self._input_dialog.show()
 
