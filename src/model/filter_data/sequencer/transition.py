@@ -160,3 +160,12 @@ class Transition:
             skf.duration = cf.timestamp - channel_ages[cf.only_on_channel]
             channel_ages[cf.only_on_channel] += skf.duration
             self.frames.append(skf)
+
+    @property
+    def duration(self) -> float:
+        if len(self.frames) == 0:
+            return 0.0
+        durations = Counter()
+        for f in self.frames:
+            durations[f.channel] += f.duration
+        return max(durations.values())

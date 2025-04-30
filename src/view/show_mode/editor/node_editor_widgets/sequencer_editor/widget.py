@@ -15,6 +15,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget im
                                                                                       PreviewEditWidget)
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.event_selection_dialog import EventSelectionDialog
+from view.show_mode.editor.node_editor_widgets.sequencer_editor.transition_label import TransitionLabel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
@@ -35,6 +36,7 @@ class SequencerEditor(PreviewEditWidget):
         self._parent_widget.setMinimumWidth(1000)
         self._parent_widget.setOrientation(Qt.Orientation.Vertical)
         self._model = SequencerFilterModel()
+        self._transition_widget_map: dict[Transition, TransitionLabel] = {}
         settings_splitter = QSplitter(self._parent_widget)
         channel_panel = QWidget(settings_splitter)
         layout = QVBoxLayout()
@@ -169,11 +171,12 @@ class SequencerEditor(PreviewEditWidget):
         if is_new_transition:
             self._model.transitions.append(t)
         li = AnnotatedListWidgetItem(self._transition_list_widget)
-        li.setText(f"{self._transition_list_widget.count()}: {t.name}")
         li.annotated_data = t
+        item_widget = TransitionLabel(t, self._transition_list_widget.count(), self._transition_list_widget)
+        li.setSizeHint(item_widget.sizeHint())
         self._transition_list_widget.addItem(li)
-        # TODO implement custom label widget that also displays linked events and duration
-        # TODO write widget in map with k=transition and v=widget
+        self._transition_list_widget.setItemWidget(li, item_widget)
+        self._transition_widget_map[t] = item_widget
         if is_new_transition or self._selected_transition is None:
             self._transition_selected(t)
 
@@ -307,7 +310,7 @@ class SequencerEditor(PreviewEditWidget):
             logger.error("Expected selected transition to exist")
             return
         self._selected_transition._trigger_event = self._input_dialog.selected_event
-        # TODO update transition label
+        self._transition_widget_map[self._selected_transition].update_labels(self._selected_transition)
 
     def _recolor_bankset(self):
         if self._bankset is None:
@@ -335,7 +338,8 @@ class SequencerEditor(PreviewEditWidget):
 
     def _rec_pressed(self):
         super()._rec_pressed()
-        # TODO update duration label of transition
+        if self._selected_transition is not None:
+            self._transition_widget_map[self._selected_transition].update_labels(self._selected_transition)
 
     def parent_opened(self):
         self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
