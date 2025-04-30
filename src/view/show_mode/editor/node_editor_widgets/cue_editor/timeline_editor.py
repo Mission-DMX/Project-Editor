@@ -33,7 +33,16 @@ class TimelineContainer(QWidget):
         self.setLayout(layout)
         self.cue = Cue()
         self._current_transition_type = "edg"
-        self.generate_individual_frames: bool = False
+        self._generate_individual_frames: bool = False
+
+    @property
+    def generate_individual_frames(self) -> bool:
+        return self._generate_individual_frames
+
+    @generate_individual_frames.setter
+    def generate_individual_frames(self, value: bool) -> None:
+        self._generate_individual_frames = value
+        self._channel_label.display_active_channel_indicator = value
 
     @property
     def transition_type(self) -> str:
@@ -105,7 +114,7 @@ class TimelineContainer(QWidget):
             logger.error("Cue is None. Disable rec buttons in this case.")
             return
         p = self._keyframes_panel.cursor_position
-        if self.generate_individual_frames:
+        if self._generate_individual_frames:
             self._generate_frames(p)
         else:
             self._generate_combined_frame(p)
@@ -113,7 +122,8 @@ class TimelineContainer(QWidget):
     def _generate_frames(self, p):
         i = 0
         for c in self._cue.channels:
-            # TODO skip if channel is not selected
+            if not self._channel_label.active_channels.get(c[0]):
+                continue
             f = KeyFrame(self._cue)
             f.timestamp = p
             f.only_on_channel = c[0]

@@ -2,7 +2,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, Qt
-from PySide6.QtWidgets import QDialog, QListWidget, QMessageBox, QSplitter, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QListWidget, QMessageBox, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget
 
 from model import Filter
 from model.filter_data.sequencer.sequencer_channel import SequencerChannel
@@ -85,6 +85,7 @@ class SequencerEditor(PreviewEditWidget):
         settings_splitter.addWidget(transition_panel)
         self._parent_widget.addWidget(settings_splitter)
 
+        timeline_scroll_area = QScrollArea()
         timeline_panel = QWidget(self._parent_widget)
         layout = QVBoxLayout()
         timeline_toolbar = QToolBar(timeline_panel)
@@ -94,9 +95,14 @@ class SequencerEditor(PreviewEditWidget):
         layout.addWidget(timeline_toolbar)
         layout.addWidget(self._timeline_container)
         timeline_panel.setLayout(layout)
-        self._parent_widget.addWidget(timeline_panel)
+
+        timeline_scroll_area.setWidget(timeline_panel)
+        timeline_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        timeline_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        timeline_scroll_area.horizontalScrollBar().setEnabled(False)
+        timeline_scroll_area.setWidgetResizable(True)
+        self._parent_widget.addWidget(timeline_scroll_area)
         self._parent_widget.setStretchFactor(1, 3)
-        # TODO add checkboxes to timeline container to select affected channels
 
         self._input_dialog: QDialog | None = None
         self._selected_transition: Transition | None = None
