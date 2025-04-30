@@ -48,7 +48,7 @@ class EventSelectionDialog(QDialog):
         for event_sender in events.get_all_senders():
             sender_item = QTreeWidgetItem(self._event_tree)
             sender_item.setFlags(sender_item.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEditable)
-            sender_item.setText(event_sender.name)
+            sender_item.setText(0, event_sender.name)
             for event, event_name in event_sender.renamed_events.items():
                 event_item = AnnotatedTreeWidgetItem(sender_item)
                 event_item.setText(0, event_name)
