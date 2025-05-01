@@ -12,6 +12,7 @@ from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
 from view.action_setup_view.constant_update_dialog import ConstantUpdateInsertionDialog
 from view.action_setup_view.cue_switch_dialog import _InsertCueSwitchDialog
 from view.action_setup_view.new_trigger_dialog import _NewTriggerDialog
+from view.action_setup_view.sequence_trigger_insertion_dialog import SequenceTriggerInsertionDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
@@ -115,8 +116,7 @@ class MacroSetupWidget(QSplitter):
         self._content_panel_actions.addAction(self._insert_switch_scene_command_action)
         self._insert_sequence_trigger_action = QAction()
         self._insert_sequence_trigger_action.setText("Insert Sequence Trigger")
-        # TODO connect action
-        self._insert_sequence_trigger_action.setEnabled(False)
+        self._insert_sequence_trigger_action.triggered.connect(self._insert_sequence_trigger_clicked)
         self._content_panel_actions.addAction(self._insert_sequence_trigger_action)
         self._insert_constant_update_action = QAction()
         self._insert_constant_update_action.setText("Insert Constant Update")
@@ -275,4 +275,10 @@ class MacroSetupWidget(QSplitter):
         if self._selected_macro is not None:
             self._dialog = ConstantUpdateInsertionDialog(self, self._selected_macro, self._show,
                                                          self._macro_content_changed)
+            self._dialog.show()
+
+    def _insert_sequence_trigger_clicked(self):
+        if self._selected_macro is not None:
+            self._dialog = SequenceTriggerInsertionDialog(self, self._selected_macro, self._show,
+                                                          self._macro_content_changed)
             self._dialog.show()

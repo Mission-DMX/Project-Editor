@@ -117,6 +117,8 @@ class Transition:
         t.name = s[:first_delim]
         s = s[first_delim + 1:]
         for arg in s.split("#"):
+            if len(arg) == 0:
+                continue
             t.frames.append(SequenceKeyFrame.from_filter_str(arg, channels))
         return t
 
