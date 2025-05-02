@@ -1,16 +1,44 @@
 # coding=utf-8
+import os
 from logging import getLogger
 
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QFormLayout, QInputDialog, QLabel, QListWidget, QSpinBox, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (QFormLayout, QHBoxLayout, QInputDialog, QLabel, QListWidget, QSpinBox, QToolBar,
+                               QVBoxLayout, QWidget)
 
 from model import Filter, UIPage, UIWidget
 from model.file_support.cue_state import CueState
 from model.virtual_filters.cue_vfilter import CueFilter
+from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 logger = getLogger(__file__)
+
+
+class _CueLabel(QWidget):
+
+    _PLAY_ICON = QIcon(resource_path(os.path.join("resources", "icons", "play.svg"))).pixmap(16, 16)
+
+    def __init__(self, parent: QWidget | None, name: str):
+        super().__init__(parent=parent)
+        layout = QHBoxLayout()
+        self._play_label = QLabel()
+        self._play_label.setPixmap(_CueLabel._PLAY_ICON)
+        self._play_label.setVisible(False)
+        self._play_label.setFixedWidth(16)
+        layout.addWidget(self._play_label)
+        layout.addWidget(QLabel(name))
+        self.setLayout(layout)
+
+    @property
+    def playing(self) -> bool:
+        return self._play_label.isVisible()
+
+    @playing.setter
+    def playing(self, new_value: bool):
+        self._play_label.setVisible(False)
 
 
 class CueControlUIWidget(UIWidget):
@@ -36,6 +64,7 @@ class CueControlUIWidget(UIWidget):
         self._input_dialog: QInputDialog | None = None
         self._dialog_widget: QWidget | None = None
         self._model: CueFilterModel | None = None
+        self._last_active_cue: int = -1
 
     def set_filter(self, f: "Filter", i: int):
         if not f:
@@ -94,9 +123,11 @@ class CueControlUIWidget(UIWidget):
             cue_list.clear()
             for cue in self._cues:
                 item = AnnotatedListWidgetItem(cue_list)
-                item.setText(cue[0] if cue[0] else "No Name")
+                label = _CueLabel(cue_list, cue[0] if cue[0] else "No Name")
                 item.annotated_data = cue
+                item.setSizeHint(label.sizeHint())
                 cue_list.addItem(item)
+                cue_list.setItemWidget(item, label)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._command_chain
@@ -128,18 +159,18 @@ class CueControlUIWidget(UIWidget):
         cue_list.setMinimumHeight(300)
         if enabled:
             self._player_cue_list_widget = cue_list
+            self._repopulate_lists()
+            self._statuslabel.setParent(w)
+            self._statuslabel.setEnabled(enabled)
+            self._statuslabel.setMinimumHeight(20)
+            self._statuslabel.setVisible(True)
+            self._statuslabel.setText("Init text")
+            self._statuslabel.show()
+            layout.addWidget(self._statuslabel)
         else:
             self._config_cue_list_widget = cue_list
+            layout.addWidget(QLabel("Cue State Label"))
         layout.addWidget(cue_list)
-        self._repopulate_lists()
-        self._statuslabel.setParent(w)
-        self._statuslabel.setEnabled(enabled)
-        self._statuslabel.setMinimumHeight(20)
-        self._statuslabel.setVisible(True)
-        self._statuslabel.setText("Init text")
-        self._statuslabel.show()
-        layout.addWidget(self._statuslabel)
-
         self.update_time_passed()
 
         w.setLayout(layout)
@@ -196,4 +227,14 @@ class CueControlUIWidget(UIWidget):
         return None
 
     def update_time_passed(self):
-        self._statuslabel.setText(str(self._cue_state))
+        if self._statuslabel is not None:
+            self._statuslabel.setText(str(self._cue_state))
+        active_cue = self._cue_state.playing_cue
+        if active_cue != self._last_active_cue:
+            if self._player_cue_list_widget is not None:
+                cue_count = self._player_cue_list_widget.count()
+                if self._last_active_cue != -1 and self._last_active_cue < cue_count:
+                    self._player_cue_list_widget.indexWidget(self._last_active_cue).playing = False
+                if active_cue != -1 and active_cue < cue_count:
+                    self._player_cue_list_widget.indexWidget(active_cue).playing = True
+            self._last_active_cue = active_cue
