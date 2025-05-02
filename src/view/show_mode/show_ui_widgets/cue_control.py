@@ -7,7 +7,6 @@ from PySide6.QtWidgets import QFormLayout, QInputDialog, QLabel, QListWidget, QS
 from model import Filter, UIPage, UIWidget
 from model.file_support.cue_state import CueState
 from model.virtual_filters.cue_vfilter import CueFilter
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
@@ -59,7 +58,7 @@ class CueControlUIWidget(UIWidget):
         self._model = None
 
     def _migrate_name_list(self):
-        cuelist_str = super().configuration.get("cue_names")
+        cuelist_str = self.configuration.get("cue_names")
         if cuelist_str:
             logger.info("Migrating old cue name model")
             for entry_text in cuelist_str.split(";"):
@@ -71,7 +70,7 @@ class CueControlUIWidget(UIWidget):
                     cue.name = name
             if isinstance(self._filter, Filter):
                 logger.info("Saving cue model.")
-                super().configuration.pop("cue_names")
+                self.configuration.pop("cue_names")
                 self._filter.filter_configurations.update(self._model.get_as_configuration())
                 self.update_model()
 
@@ -98,10 +97,6 @@ class CueControlUIWidget(UIWidget):
                 item.setText(cue[0] if cue[0] else "No Name")
                 item.annotated_data = cue
                 cue_list.addItem(item)
-
-    @property
-    def configuration(self) -> dict[str, str]:
-        return {"widget_height": str(max(350, self._config_widget.height()))}
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._command_chain
@@ -148,6 +143,7 @@ class CueControlUIWidget(UIWidget):
         self.update_time_passed()
 
         w.setLayout(layout)
+        w.setFixedHeight(int(self.configuration.get("widget_height") or "350"))
         return w
 
     def insert_action(self, action: str | None, state: str | None):
@@ -176,20 +172,21 @@ class CueControlUIWidget(UIWidget):
         layout = QFormLayout()
         height_widget = QSpinBox(w)
         height_widget.setMinimum(350)
-        # TODO set height from current configuration
+        height_widget.setValue(int(self.configuration.get("widget_height") or "350"))
         height_widget.valueChanged.connect(self._config_item_update_height)
+        height_widget.setEnabled(True)
         layout.addRow("Height: ", height_widget)
         w.setLayout(layout)
         self._dialog_widget = w
         return w
 
     def _config_item_update_height(self, new_height: int):
+        new_height = max(350, new_height)
         if self._config_widget is not None:
-            # TODO link size update
-            pass
+            self._config_widget.setFixedHeight(new_height)
         if self._player_widget is not None:
-            pass  # TODO link size update
-        pass  # TODO store configuration
+            self._player_widget.setFixedHeight(new_height)
+        self.configuration["widget_height"] = str(new_height)
 
     def get_selected_cue_id(self) -> str | None:
         if self._player_cue_list_widget:
