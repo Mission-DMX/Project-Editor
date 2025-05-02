@@ -24,6 +24,7 @@ class CueFilter(VirtualFilter):
         self.in_preview_mode = False
         self.associated_editor_widget: "CueEditor" | None = None
         self._channel_mapping: dict[str, str] = {}
+        self.linked_ui_widgets = []
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if self.in_preview_mode:

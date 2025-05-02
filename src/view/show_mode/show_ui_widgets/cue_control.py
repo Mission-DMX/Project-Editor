@@ -1,11 +1,17 @@
 # coding=utf-8
+from logging import getLogger
+
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QInputDialog, QLabel, QListWidget, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFormLayout, QInputDialog, QLabel, QListWidget, QSpinBox, QToolBar, QVBoxLayout, QWidget
 
 from model import Filter, UIPage, UIWidget
 from model.file_support.cue_state import CueState
+from model.virtual_filters.cue_vfilter import CueFilter
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+
+logger = getLogger(__file__)
 
 
 class CueControlUIWidget(UIWidget):
@@ -24,51 +30,78 @@ class CueControlUIWidget(UIWidget):
         self._timer.timeout.connect(self.update_time_passed)
         self._timer.start()
 
-        cuelist_str = super().configuration.get("cue_names")
-        if cuelist_str:
-            for entry_text in cuelist_str.split(";"):
-                name, id = entry_text.split(":")
-                id = int(id)
-                new_item = (name, id)
-                self._cues.append(new_item)
-
         self._player_cue_list_widget: QListWidget | None = None
         self._config_cue_list_widget: QListWidget | None = None
         self._player_widget: QWidget | None = None
         self._config_widget: QWidget | None = None
         self._input_dialog: QInputDialog | None = None
         self._dialog_widget: QWidget | None = None
+        self._model: CueFilterModel | None = None
 
     def set_filter(self, f: "Filter", i: int):
         if not f:
             return
+        if isinstance(self._filter, CueFilter):
+            self._filter.linked_ui_widgets.remove(self)
+        if self._filter is not None:
+            f.scene.board_configuration.remove_filter_update_callback(
+                self._filter.scene.scene_id, self._filter.filter_id, self._cue_state.update
+            )
         super().set_filter(f, i)
         self.associated_filters["cue_filter"] = f.filter_id
         self._filter = f
-        # Todo: remove callback of the signal
+        if isinstance(self._filter, CueFilter):
+            self._filter.linked_ui_widgets.append(self)
         f.scene.board_configuration.register_filter_update_callback(
             f.scene.scene_id, f.filter_id, self._cue_state.update)
+        self.update_model(clear_model=False)
+        self._migrate_name_list()
+        self._model = None
 
-        # TODO refactor this to use cue model entirely
-        cuelist_str = f.filter_configurations.get("cuelist")
+    def _migrate_name_list(self):
+        cuelist_str = super().configuration.get("cue_names")
         if cuelist_str:
-            cuelist = cuelist_str.split("$")
-            cuelist_count = len(cuelist)
-            while len(self._cues) < cuelist_count:
-                c = Cue()
-                c.from_string_definition(cuelist[len(self._cues)])
+            logger.info("Migrating old cue name model")
+            for entry_text in cuelist_str.split(";"):
+                name, id = entry_text.split(":")
+                id = int(id)
+                cue = self._model.cues[id]
+                if len(cue.name) == 0 or cue.name == "":
+                    logger.info("Updating cue name %s to %s.", cue.name, name)
+                    cue.name = name
+            if isinstance(self._filter, Filter):
+                logger.info("Saving cue model.")
+                super().configuration.pop("cue_names")
+                self._filter.filter_configurations.update(self._model.get_as_configuration())
+                self.update_model()
+
+    def update_model(self, clear_model: bool = True):
+        self._cues.clear()
+        if self._filter:
+            self._model = CueFilterModel()
+            self._model.load_from_configuration(self._filter.filter_configurations)
+            self._cues.clear()
+            for c in self._model.cues:
                 cf = (c.name, len(self._cues))
                 self._cues.append(cf)
-            while len(self._cues) > cuelist_count:
-                self._cues.pop(-1)
+        self._repopulate_lists()
+        if clear_model:
+            self._model = None
+
+    def _repopulate_lists(self):
+        for cue_list in [self._player_cue_list_widget, self._config_cue_list_widget]:
+            if cue_list is None:
+                continue
+            cue_list.clear()
+            for cue in self._cues:
+                item = AnnotatedListWidgetItem(cue_list)
+                item.setText(cue[0] if cue[0] else "No Name")
+                item.annotated_data = cue
+                cue_list.addItem(item)
 
     @property
     def configuration(self) -> dict[str, str]:
-        cue_name_config = ";".join([f"{cue[0]}:{cue[1]}" for cue in self._cues])
-        if self._filter:
-            self._filter.filter_configurations["cue_names"] = cue_name_config
-        # FIXME we do not need this redundancy. The whole point is to provide the cue editor with the names
-        return {"cue_names": cue_name_config}
+        return {"widget_height": str(max(350, self._config_widget.height()))}
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._command_chain
@@ -96,11 +129,6 @@ class CueControlUIWidget(UIWidget):
         toolbar.setMinimumHeight(30)
         layout.addWidget(toolbar)
         cue_list = QListWidget(w)
-        for cue in self._cues:
-            item = AnnotatedListWidgetItem(cue_list)
-            item.setText(cue[0] if cue[0] else "No Name")
-            item.annotated_data = cue
-            cue_list.addItem(item)
         cue_list.setEnabled(enabled)
         cue_list.setMinimumHeight(300)
         if enabled:
@@ -108,7 +136,7 @@ class CueControlUIWidget(UIWidget):
         else:
             self._config_cue_list_widget = cue_list
         layout.addWidget(cue_list)
-
+        self._repopulate_lists()
         self._statuslabel.setParent(w)
         self._statuslabel.setEnabled(enabled)
         self._statuslabel.setMinimumHeight(20)
@@ -144,37 +172,24 @@ class CueControlUIWidget(UIWidget):
     def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
         if self._dialog_widget:
             return self._dialog_widget
-        w = QListWidget(parent)
-        if self._config_cue_list_widget:
-            for item_index in range(self._config_cue_list_widget.count()):
-                template_item = self._config_cue_list_widget.item(item_index)
-                item = AnnotatedListWidgetItem(w)
-                item.setText(template_item.text())
-                item.annotated_data = template_item
-                w.addItem(item)
-        w.itemDoubleClicked.connect(self._config_item_double_clicked)
+        w = QWidget(parent)
+        layout = QFormLayout()
+        height_widget = QSpinBox(w)
+        height_widget.setMinimum(350)
+        # TODO set height from current configuration
+        height_widget.valueChanged.connect(self._config_item_update_height)
+        layout.addRow("Height: ", height_widget)
+        w.setLayout(layout)
         self._dialog_widget = w
         return w
 
-    def _config_item_double_clicked(self, item):
-        if not isinstance(item, AnnotatedListWidgetItem):
-            return
-        self._input_dialog = QInputDialog(self._dialog_widget)
-        self._input_dialog.setWindowTitle("Enter new cue name")
-        self._input_dialog.setLabelText(f"Set name of cue {item.annotated_data.annotated_data[1]}:")
-        self._input_dialog.setTextValue("")
-        self._input_dialog.accepted.connect(lambda: self._set_name(item, self._input_dialog.textValue()))
-        self._input_dialog.open()
-
-    def _set_name(self, item: AnnotatedListWidgetItem, new_name: str):
-        item.setText(new_name)
-        item.annotated_data.setText(new_name)
-        original_cue = item.annotated_data.annotated_data
-        new_cue = (new_name, original_cue[1])
-        item.annotated_data.annotated_data = new_cue
-        for i in range(len(self._cues)):
-            if self._cues[i] == original_cue:
-                self._cues[i] = new_cue
+    def _config_item_update_height(self, new_height: int):
+        if self._config_widget is not None:
+            # TODO link size update
+            pass
+        if self._player_widget is not None:
+            pass  # TODO link size update
+        pass  # TODO store configuration
 
     def get_selected_cue_id(self) -> str | None:
         if self._player_cue_list_widget:
