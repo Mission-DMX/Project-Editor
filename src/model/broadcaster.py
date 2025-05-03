@@ -104,6 +104,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     joystick_selected_event: QtCore.Signal = QtCore.Signal(JoystickList)
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(proto.FilterMode_pb2.update_parameter)
+    active_scene_switched: QtCore.Signal = QtCore.Signal(int)
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []
