@@ -59,6 +59,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     event_sender_model_updated: QtCore.Signal = QtCore.Signal()
     fish_event_received: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event)
     event_rename_action_occurred: QtCore.Signal = QtCore.Signal(int)  # int: the id of the sender where the rename was
+    uipage_renamed: QtCore.Signal = QtCore.Signal(int)  # The ID of the parent scene
     macro_added_to_show_file: QtCore.Signal = QtCore.Signal(int)  # int: The index of the new macro in the board config
     ################################################################
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()
