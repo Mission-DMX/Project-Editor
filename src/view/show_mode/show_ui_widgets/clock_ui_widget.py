@@ -36,8 +36,9 @@ class ClockUIWidget(UIWidget):
         return []
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._widget is None:
-            self._construct_widget(parent)
+        if self._widget is not None:
+            self._widget.deleteLater()
+        self._construct_widget(parent)
         return self._widget
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:

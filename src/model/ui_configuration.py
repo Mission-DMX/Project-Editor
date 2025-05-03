@@ -117,7 +117,7 @@ class UIWidget(ABC):
     def position(self, new_position: tuple[int, int]):
         """Update the position of the widget on the UI page"""
         self._position = new_position
-        # TODO notify player about UI update if running
+        self.parent.display_update_required = True
 
     @property
     def size(self) -> tuple[int, int]:
@@ -128,7 +128,7 @@ class UIWidget(ABC):
     def size(self, new_size: tuple[int, int]):
         """Update the size of the widget"""
         self._size = new_size
-        # TODO notify player about UI update if running
+        self.parent.display_update_required = True
 
     @property
     def configuration(self) -> dict[str, str]:
@@ -183,6 +183,7 @@ class UIPage:
         self._parent_scene: Scene = parent
         self._title: str = ""
         self._player = None
+        self.display_update_required = False
 
     @property
     def scene(self) -> "Scene":
