@@ -42,7 +42,6 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         target_filter_id = conf.get("target") or ""
         if self._widget is None:
             self._construct_widget()
-            return
         self._tree_widget.selected_filter = self._filter.scene.get_filter_by_id(target_filter_id)
         self._rename_dict.clear()
         for entry in (conf.get("rename_dict") or "").split(","):
@@ -121,6 +120,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
 
     def _selection_changed(self):
         self._load_rename_table()
+        self._clear_selection_action.setEnabled(True)
         # TODO issue a warning here if self._target_filter_id changed
 
     def _select_all_channels(self):
