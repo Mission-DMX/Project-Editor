@@ -38,7 +38,7 @@ class _CueLabel(QWidget):
 
     @playing.setter
     def playing(self, new_value: bool):
-        self._play_label.setVisible(False)
+        self._play_label.setVisible(new_value)
 
 
 class CueControlUIWidget(UIWidget):
@@ -234,7 +234,7 @@ class CueControlUIWidget(UIWidget):
             if self._player_cue_list_widget is not None:
                 cue_count = self._player_cue_list_widget.count()
                 if self._last_active_cue != -1 and self._last_active_cue < cue_count:
-                    self._player_cue_list_widget.indexWidget(self._last_active_cue).playing = False
+                    self._player_cue_list_widget.itemWidget(self._player_cue_list_widget.item(self._last_active_cue)).playing = False
                 if active_cue != -1 and active_cue < cue_count:
-                    self._player_cue_list_widget.indexWidget(active_cue).playing = True
+                    self._player_cue_list_widget.itemWidget(self._player_cue_list_widget.item(active_cue)).playing = True
             self._last_active_cue = active_cue
