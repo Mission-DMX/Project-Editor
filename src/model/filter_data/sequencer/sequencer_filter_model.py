@@ -55,4 +55,6 @@ class SequencerFilterModel:
         return None
 
     def append_channel(self, c: SequencerChannel):
+        if self.get_channel_by_name(c.name) is not None:
+            return
         self.channels.append(c)
