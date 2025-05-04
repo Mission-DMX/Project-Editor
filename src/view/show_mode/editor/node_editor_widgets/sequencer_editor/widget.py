@@ -326,7 +326,7 @@ class SequencerEditor(PreviewEditWidget):
         active_channels: set[str] = set()
         if self._timeline_container.cue is not None:
             for c in self._timeline_container.cue.channels:
-                active_channels.add(c.name)
+                active_channels.add(c[0])
         for channel in self.channels:
             if channel.fader is None:
                 continue

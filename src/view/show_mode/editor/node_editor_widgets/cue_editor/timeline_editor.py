@@ -5,12 +5,19 @@ from PySide6.QtCore import QPoint, Qt
 from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QWidget
 
 from model import DataType
-from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, set_seven_seg_display_content
+from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn, set_seven_seg_display_content
 from model.filter_data.cues.cue import Cue, KeyFrame, StateColor, StateDouble, StateEightBit, StateSixteenBit
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_label import TimelineChannelLabel
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_content_widget import TimelineContentWidget
 
 logger = getLogger(__file__)
+
+
+def _get_column_from_name(channel_name: str) -> DeskColumn | None:
+    for c in BankSet.active_bank_set().get_all_columns():
+        if c.display_name == channel_name:
+            return c
+    return None
 
 
 class TimelineContainer(QWidget):
@@ -120,15 +127,15 @@ class TimelineContainer(QWidget):
             self._generate_combined_frame(p)
 
     def _generate_frames(self, p):
-        i = 0
         for c in self._cue.channels:
-            if not self._channel_label.active_channels.get(c[0]):
+            channel_name = c[0]
+            if not self._channel_label.active_channels.get(channel_name):
                 continue
             f = KeyFrame(self._cue)
             f.timestamp = p
-            f.only_on_channel = c[0]
+            f.only_on_channel = channel_name
+            i = _get_column_from_name(channel_name)
             f.append_state(self._generate_state_from_channel(c, i))
-            i += 1
             self._keyframes_panel.insert_frame(f)
 
     def _generate_combined_frame(self, p):
@@ -141,32 +148,33 @@ class TimelineContainer(QWidget):
             i += 1
         self._keyframes_panel.insert_frame(f)
 
-    def _generate_state_from_channel(self, c, i):
-        match c[1]:
+    def _generate_state_from_channel(self, channel, i):
+        if self.bankset:
+            if isinstance(i, int):
+                column = self.bankset.get_column_by_number(i)
+            elif isinstance(i, DeskColumn):
+                column = i
+            else:
+                column = None
+        else:
+            column = None
+        match channel[1]:
             case DataType.DT_8_BIT:
                 s = StateEightBit(self._current_transition_type)
-                if self.bankset:
-                    c = self.bankset.get_column_by_number(i)
-                    if isinstance(c, RawDeskColumn):
-                        s._value = int((c.fader_position * 256) / 65536)
+                if isinstance(column, RawDeskColumn):
+                    s._value = int((column.fader_position * 256) / 65536)
             case DataType.DT_16_BIT:
                 s = StateSixteenBit(self._current_transition_type)
-                if self.bankset:
-                    c = self.bankset.get_column_by_number(i)
-                    if isinstance(c, RawDeskColumn):
-                        s._value = c.fader_position
+                if isinstance(column, RawDeskColumn):
+                    s._value = column.fader_position
             case DataType.DT_DOUBLE:
                 s = StateDouble(self._current_transition_type)
-                if self.bankset:
-                    c = self.bankset.get_column_by_number(i)
-                    if isinstance(c, RawDeskColumn):
-                        s._value = c.fader_position / 65536
+                if isinstance(column, RawDeskColumn):
+                    s._value = column.fader_position / 65536
             case DataType.DT_COLOR:
                 s = StateColor(self._current_transition_type)
-                if self.bankset:
-                    c = self.bankset.get_column_by_number(i)
-                    if isinstance(c, ColorDeskColumn):
-                        s.color = c.color
+                if isinstance(column, ColorDeskColumn):
+                    s.color = column.color
             case _:
                 s = StateEightBit(self._current_transition_type)
         return s
