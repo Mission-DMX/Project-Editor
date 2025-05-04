@@ -66,7 +66,8 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         self._widget = QWidget(parent=self._parent)
         layout = QVBoxLayout()
         toolbar = QToolBar()
-        self._clear_selection_action = QAction('Clear Selection')
+        self._clear_selection_action = QAction('Unlock Selection')
+        self._clear_selection_action.triggered.connect(self._release_filter_tree_widget)
         self._clear_selection_action.setEnabled(False)
         toolbar.addAction(self._clear_selection_action)
         toolbar.addSeparator()
@@ -81,6 +82,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         layout.addLayout(selection_layout)
         self._tree_widget = FilterSelectionWidget(self._widget, self._filter.scene, None)
         self._tree_widget.selectionModel().selectionChanged.connect(self._selection_changed)
+        self._tree_widget.force_selection_of_other_filter = False
         selection_layout.addWidget(self._tree_widget)
         self._rename_table_widget = QTableWidget(parent=self._widget)
         self._rename_table_widget.setColumnCount(3)
@@ -119,6 +121,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             i += 1
 
     def _selection_changed(self):
+        self._tree_widget.setEnabled(False)
         self._load_rename_table()
         self._clear_selection_action.setEnabled(True)
         # TODO issue a warning here if self._target_filter_id changed
@@ -141,8 +144,14 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         if self._widget is None:
             self._construct_widget()
             return
-        self._tree_widget.populate_widget()
+        found_filter = self._tree_widget.populate_widget()
+        self._tree_widget.setEnabled(not found_filter)
+        self._clear_selection_action.setEnabled(found_filter)
         self._load_rename_table()
+
+    def _release_filter_tree_widget(self):
+        self._tree_widget.setEnabled(True)
+        self._clear_selection_action.setEnabled(False)
 
     def parent_opened(self):
         self._populate_widget()
