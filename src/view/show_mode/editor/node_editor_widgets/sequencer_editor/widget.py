@@ -188,6 +188,13 @@ class SequencerEditor(PreviewEditWidget):
             self._transition_selected(t)
 
     def _add_channel(self, c: SequencerChannel, is_new_transition: bool = True):
+        if self._model.get_channel_by_name(c.name) is not None:
+            logger.warning("Skipping adding of channel as name '%s' is not unique.", c.name)
+            self._input_dialog = QMessageBox(QMessageBox.Icon.Warning, "Channel name not unique",
+                                             "The channel was not added due to its name being not unique.")
+            self._input_dialog.setModal(True)
+            self._input_dialog.show()
+            return
         if is_new_transition:
             self._model.append_channel(c)
         li = AnnotatedListWidgetItem(self._channel_list_widget)
