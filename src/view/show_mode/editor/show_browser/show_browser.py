@@ -204,12 +204,14 @@ class ShowBrowser:
                     has_scenes = True
                 if isinstance(si.annotated_data, FilterPage):
                     has_filter_pages = True
+                if isinstance(si.annotated_data, UIPage):
+                    has_ui_page = True
 
         menu = QMenu(self._scene_browsing_tree)
         menu.move(self._scene_browsing_tree.mapToGlobal(point))
         scenes_rename_action = QAction("Rename", menu)
         scenes_rename_action.triggered.connect(lambda: self._rename_scene_from_context_menu(selected_items))
-        scenes_rename_action.setEnabled(has_scenes or has_filter_pages)
+        scenes_rename_action.setEnabled(has_scenes or has_filter_pages or has_ui_page)
         menu.addAction(scenes_rename_action)
         scenes_delete_action = QAction(QIcon.fromTheme("edit-delete"), "Delete", menu)
         scenes_delete_action.triggered.connect(lambda: self._delete_scenes_from_context_menu(selected_items))
@@ -258,6 +260,9 @@ class ShowBrowser:
         def rename(c, scene: Scene | FilterPage, text):
             if isinstance(scene, Scene):
                 scene.human_readable_name = text
+            if isinstance(scene, UIPage):
+                scene.title = text
+                self.board_configuration.broadcaster.uipage_renamed.emit(scene.scene.scene_id)
             else:
                 scene.name = text
             c._refresh_scene_browser()
@@ -279,6 +284,14 @@ class ShowBrowser:
                     self._input_dialog.textValueSelected.connect(lambda text: rename(self, page_to_rename, text))
                     self._input_dialog.setLabelText("Rename filter page '" + page_to_rename.name + "' to:")
                     self._input_dialog.setWindowTitle('Rename Filter Page')
+                    self._input_dialog.open()
+                if isinstance(si.annotated_data, UIPage):
+                    ui_page = si.annotated_data
+                    self._input_dialog = QInputDialog(self.widget)
+                    self._input_dialog.setInputMode(QInputDialog.TextInput)
+                    self._input_dialog.textValueSelected.connect(lambda text: rename(self, ui_page, text))
+                    self._input_dialog.setLabelText("Rename UI page '" + ui_page.title + "' to:")
+                    self._input_dialog.setWindowTitle('Rename UI Page')
                     self._input_dialog.open()
 
     def _scene_item_double_clicked(self, item):

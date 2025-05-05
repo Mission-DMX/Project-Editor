@@ -258,6 +258,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         if msg.current_scene != self._last_active_scene:
             self._last_active_scene = msg.current_scene
             self.active_scene_on_fish_changed.emit(msg.current_scene)
+            self._broadcaster.active_scene_switched.emit(msg.current_scene)
 
     def _log_fish(self, msg: proto.RealTimeControl_pb2.long_log_update):
         """

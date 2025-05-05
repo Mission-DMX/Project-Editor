@@ -31,7 +31,9 @@ class ShowPlayerWidget(QWidget):
         self._board_configuration.broadcaster.scene_created.connect(self._add_scene)
         self._board_configuration.broadcaster.delete_scene.connect(self._remove_scene)
         self._board_configuration.broadcaster.change_active_scene.connect(self._switch_scene)
+        self._board_configuration.broadcaster.active_scene_switched.connect(self._switch_scene)
         self._ui_container = UIPlayerWidget(self)
+        self._scene_index = -1
 
     def _index_to_position(self, index: int) -> tuple[int, int]:
         """Calculates the grid position from index.
@@ -93,6 +95,10 @@ class ShowPlayerWidget(QWidget):
 
     def _switch_scene(self, scene: Scene):
         scene_index = scene.scene_id
+        if scene_index == self._scene_index:
+            return
+        self._scene_index = scene.scene_id
+
         if not (scene_index < len(self._board_configuration.scenes)):
             return
         self._ui_container.scene = self._board_configuration.get_scene_by_id(scene_index)

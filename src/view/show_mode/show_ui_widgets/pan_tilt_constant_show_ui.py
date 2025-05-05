@@ -14,8 +14,8 @@ class PanTiltConstantControlUIWidget(UIWidget):
         super().__init__(parent, configuration)
         self._command_chain: list[tuple[str, str]] = []  # ??
         self._filter = None
-        self._player_widget = None
-        self._conf_widget = None
+        self._player_widget: QWidget | None = None
+        self._conf_widget: QWidget | None = None
 
     def set_filter(self, f: "Filter", i: int):
         if not f:
@@ -31,9 +31,9 @@ class PanTiltConstantControlUIWidget(UIWidget):
         return self._command_chain
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._player_widget is None:
-            # self._player_widget.deleteLater()
-            self._player_widget = self.construct_widget(parent)
+        if self._player_widget is not None:
+            self._player_widget.deleteLater()
+        self._player_widget = self.construct_widget(parent)
         return self._player_widget
 
     def construct_widget(self, parent: QWidget | None):
@@ -53,9 +53,10 @@ class PanTiltConstantControlUIWidget(UIWidget):
         return w
 
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        if self._conf_widget is None:
-            self._conf_widget = self.construct_widget(parent)
-            self._conf_widget.setEnabled(False)
+        if self._conf_widget is not None:
+            self._conf_widget.deleteLater()
+        self._conf_widget = self.construct_widget(parent)
+        self._conf_widget.setEnabled(False)
         return self._conf_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
