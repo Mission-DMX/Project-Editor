@@ -1,7 +1,8 @@
 # coding=utf-8
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QCheckBox, QHBoxLayout, QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem,
-                               QWidget)
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (QCheckBox, QHBoxLayout, QTableWidget, QTableWidgetItem, QToolBar, QTreeWidget,
+                               QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from model import Filter
 from model.scene import FilterPage
@@ -41,7 +42,6 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         target_filter_id = conf.get("target") or ""
         if self._widget is None:
             self._construct_widget()
-            return
         self._tree_widget.selected_filter = self._filter.scene.get_filter_by_id(target_filter_id)
         self._rename_dict.clear()
         for entry in (conf.get("rename_dict") or "").split(","):
@@ -64,14 +64,30 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
 
     def _construct_widget(self):
         self._widget = QWidget(parent=self._parent)
-        layout = QHBoxLayout()
-        self._widget.setLayout(layout)
+        layout = QVBoxLayout()
+        toolbar = QToolBar()
+        self._clear_selection_action = QAction('Unlock Selection')
+        self._clear_selection_action.triggered.connect(self._release_filter_tree_widget)
+        self._clear_selection_action.setEnabled(False)
+        toolbar.addAction(self._clear_selection_action)
+        toolbar.addSeparator()
+        self._select_all_action = QAction('Select All')
+        self._select_all_action.triggered.connect(self._select_all_channels)
+        toolbar.addAction(self._select_all_action)
+        self._deselect_all_action = QAction('Deselect All')
+        self._deselect_all_action.triggered.connect(self._deselect_all_channels)
+        toolbar.addAction(self._deselect_all_action)
+        layout.addWidget(toolbar)
+        selection_layout = QHBoxLayout()
+        layout.addLayout(selection_layout)
         self._tree_widget = FilterSelectionWidget(self._widget, self._filter.scene, None)
         self._tree_widget.selectionModel().selectionChanged.connect(self._selection_changed)
-        layout.addWidget(self._tree_widget)
+        self._tree_widget.force_selection_of_other_filter = False
+        selection_layout.addWidget(self._tree_widget)
         self._rename_table_widget = QTableWidget(parent=self._widget)
         self._rename_table_widget.setColumnCount(3)
-        layout.addWidget(self._rename_table_widget)
+        selection_layout.addWidget(self._rename_table_widget)
+        self._widget.setLayout(layout)
         self._populate_widget()
 
     def _load_rename_table(self):
@@ -105,15 +121,37 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             i += 1
 
     def _selection_changed(self):
+        self._tree_widget.setEnabled(False)
         self._load_rename_table()
+        self._clear_selection_action.setEnabled(True)
         # TODO issue a warning here if self._target_filter_id changed
+
+    def _select_all_channels(self):
+        for i in range(self._rename_table_widget.rowCount()):
+            c_item = self._rename_table_widget.cellWidget(i, 0)
+            if not isinstance(c_item, QCheckBox):
+                continue
+            c_item.setCheckState(Qt.CheckState.Checked)
+
+    def _deselect_all_channels(self):
+        for i in range(self._rename_table_widget.rowCount()):
+            c_item = self._rename_table_widget.cellWidget(i, 0)
+            if not isinstance(c_item, QCheckBox):
+                continue
+            c_item.setCheckState(Qt.CheckState.Unchecked)
 
     def _populate_widget(self):
         if self._widget is None:
             self._construct_widget()
             return
-        self._tree_widget.populate_widget()
+        found_filter = self._tree_widget.populate_widget()
+        self._tree_widget.setEnabled(not found_filter)
+        self._clear_selection_action.setEnabled(found_filter)
         self._load_rename_table()
+
+    def _release_filter_tree_widget(self):
+        self._tree_widget.setEnabled(True)
+        self._clear_selection_action.setEnabled(False)
 
     def parent_opened(self):
         self._populate_widget()

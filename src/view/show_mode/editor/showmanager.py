@@ -14,7 +14,6 @@ from model.scene import FilterPage
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import \
     SceneUIPageEditorWidget
-from view.show_mode.editor.nodes.filter_node_library import FilterNodeLibrary
 
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
@@ -27,7 +26,6 @@ class ShowEditorWidget(QSplitter):
     def __init__(self, board_configuration: BoardConfiguration, bcaster: Broadcaster, parent: QWidget) -> None:
         super().__init__(parent)
         self._broadcaster = bcaster
-        self._library = FilterNodeLibrary()
         self._board_configuration = board_configuration
         self._opened_pages = set()
         self._opened_banksets = set()
