@@ -17,6 +17,7 @@ class FilterSelectionWidget(QTreeWidget):
         self._scene = scene
         self._target_filter_id: str | None = None
         self._filter: Filter | None = None
+        self.force_selection_of_other_filter: bool = True
         self._id_to_item_dict: dict[str, AnnotatedTreeWidgetItem] = {}
         self._last_selected_item: AnnotatedTreeWidgetItem | None = None
         self.selectionModel().selectionChanged.connect(self._selection_changed)
@@ -44,7 +45,8 @@ class FilterSelectionWidget(QTreeWidget):
             self._filter = None
         self.selected_filter_changed.emit(self._target_filter_id)
 
-    def populate_widget(self):
+    def populate_widget(self) -> bool:
+        selected_filter_found = False
         already_added_filters = set()
         fp_index = 0
         target_scene = self._scene
@@ -66,7 +68,9 @@ class FilterSelectionWidget(QTreeWidget):
             if filter_to_add.filter_id == self._target_filter_id:
                 filter_item.setSelected(True)
                 self._last_selected_item = filter_item
-            if filter_to_add == self._filter:
+                nonlocal selected_filter_found
+                selected_filter_found = True
+            if filter_to_add == self._filter and self.force_selection_of_other_filter:
                 filter_item.setHidden(True)
                 filter_item.setFlags(filter_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             already_added_filters.add(filter_to_add)
@@ -96,6 +100,7 @@ class FilterSelectionWidget(QTreeWidget):
                 if is_filter_addable(t_filter):
                     self.insertTopLevelItem(fp_index, add_filter_item(t_filter, self.parent()))
                     fp_index += 1
+        return selected_filter_found
 
     def _find_selected_filter(self):
         for selected_filter_item in self.selectedItems():

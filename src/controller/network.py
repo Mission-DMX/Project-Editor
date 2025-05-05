@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
+from sympy import false
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
@@ -356,7 +357,10 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             bool: Connected or Not Connected
         """
         # TODO at shutdown this sometimes causes the interpreter to crash.
-        return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
+        try:
+            return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
+        except RuntimeError:
+            return False
 
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
         """
