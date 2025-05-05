@@ -32,8 +32,9 @@ class FilterFlowchart(Flowchart):
         if name is None:
             name = nodeType
             index = 0
+            page_name = (self._page.name + ".") if self._page.name != "default" else ""
             while True:
-                tmp = f"{name}.{index}"
+                tmp = f"{page_name}{name}.{index}"
                 if tmp not in self._nodes:
                     name = tmp
                     break
