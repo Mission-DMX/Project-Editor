@@ -472,6 +472,10 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     def send_event_message(self, msg: proto.Events_pb2.event):
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT, push_direct=False)
 
+    @property
+    def current_active_scene_id(self):
+        return self._last_active_scene
+
 
 def on_error(error) -> None:
     """logging current error
