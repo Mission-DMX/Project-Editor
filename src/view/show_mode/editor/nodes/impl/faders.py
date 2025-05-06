@@ -1,12 +1,58 @@
 # coding=utf-8
 """Column fader filter nodes"""
+from typing import TYPE_CHECKING
+
 from model import DataType
 from model.control_desk import BankSet
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
+if TYPE_CHECKING:
+    from model.filter import Filter
+    from model.scene import Scene
 
-class FaderRawNode(FilterNode):
+
+class _FaderNode(FilterNode):
+    def __init__(self, model: "Filter | Scene", filter_type: FilterTypeEnumeration, name: str, terminals: dict[str, dict[str, str]]):
+        super().__init__(model=model, filter_type=filter_type, name=name, terminals=terminals)
+
+        try:
+            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
+        except ValueError:
+            self.filter.filter_configurations["set_id"] = ""
+        try:
+            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
+        except ValueError:
+            self.filter.filter_configurations["column_id"] = ""
+
+        set_id = self.filter.filter_configurations["set_id"]
+        self._bankset_model: BankSet | None = None
+        if self.filter.scene.linked_bankset.id == set_id:
+            self._bankset_model = self.filter.scene.linked_bankset
+        else:
+            for bs in BankSet.linked_bank_sets():
+                if bs.id == set_id:
+                    self._bankset_model = bs
+                    break
+            if self._bankset_model is None:
+                column_candidate = self.filter.scene.linked_bankset.get_column(
+                    self.filter.filter_configurations.get("column_id"))
+                if column_candidate:
+                    self.filter.filter_configurations["set_id"] = self.filter.scene.linked_bankset.id
+                    self._bankset_model = self.filter.scene.linked_bankset
+
+        if self._bankset_model is not None:
+            self._bankset_model.id_update_listeners.append(self)
+
+    def notify_on_new_id(self, new_id: str):
+        self.filter.filter_configurations["set_id"] = new_id
+
+    def __del__(self):
+        if self._bankset_model:
+            self._bankset_model.id_update_listeners.remove(self)
+
+
+class FaderRawNode(_FaderNode):
     """Filter to represent any filter fader"""
 
     nodeName = "Raw"
@@ -17,47 +63,11 @@ class FaderRawNode(FilterNode):
             'secondary': {'io': 'out'}
         })
 
-        try:
-            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
-        except:
-            self.filter.filter_configurations["set_id"] = ""
-        try:
-            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
-        except:
-            self.filter.filter_configurations["column_id"] = ""
-
-        # TODO search for linked bankset and register id update watcher
-        set_id = self.filter.filter_configurations["set_id"]
-        if self.filter.scene.linked_bankset.id == set_id:
-            self._bankset_model = self.filter.scene.linked_bankset
-        else:
-            self._bankset_model = None
-            for bs in BankSet.linked_bank_sets():
-                if bs.id == set_id:
-                    self._bankset_model = bs
-                    break
-            if not self._bankset_model:
-                column_candidate = self.filter.scene.linked_bankset.get_column(
-                    self.filter.filter_configurations.get("column_id"))
-                if column_candidate:
-                    self.filter.filter_configurations["set_id"] = self.filter.scene.linked_bankset.id
-                    self._bankset_model = self.filter.scene.linked_bankset
-
-        if self._bankset_model:
-            self._bankset_model.id_update_listeners.append(self)
-
         self.filter.out_data_types["primary"] = DataType.DT_16_BIT
         self.filter.out_data_types["secondary"] = DataType.DT_16_BIT
 
-    def __del__(self):
-        if self._bankset_model:
-            self._bankset_model.id_update_listeners.remove(self)
 
-    def notify_on_new_id(self, new_id: str):
-        self.filter.filter_configurations["set_id"] = new_id
-
-
-class FaderHSINode(FilterNode):
+class FaderHSINode(_FaderNode):
     """Filter to represent a hsi filter fader"""
     nodeName = "HSI"
 
@@ -65,24 +75,17 @@ class FaderHSINode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name, terminals={
             'color': {'io': 'out'}
         })
-        try:
-            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
-        except:
-            self.filter.filter_configurations["set_id"] = ""
-        try:
-            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
-        except:
-            self.filter.filter_configurations["column_id"] = ""
+
         try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
                 "ignore_main_brightness_control"]
-        except:
+        except ValueError:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
 
 
-class FaderHSIANode(FilterNode):
+class FaderHSIANode(_FaderNode):
     """Filter to represent a hsia filter fader"""
     nodeName = "HSI-A"
 
@@ -91,25 +94,18 @@ class FaderHSIANode(FilterNode):
             'color': {'io': 'out'},
             'amber': {'io': 'out'}
         })
-        try:
-            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
-        except:
-            self.filter.filter_configurations["set_id"] = ""
-        try:
-            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
-        except:
-            self.filter.filter_configurations["column_id"] = ""
+
         try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
                 "ignore_main_brightness_control"]
-        except:
+        except ValueError:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["amber"] = DataType.DT_8_BIT
 
 
-class FaderHSIUNode(FilterNode):
+class FaderHSIUNode(_FaderNode):
     """Filter to represent a hsiu filter fader"""
     nodeName = "HSI_U"
 
@@ -118,25 +114,18 @@ class FaderHSIUNode(FilterNode):
             'color': {'io': 'out'},
             'uv': {'io': 'out'}
         })
-        try:
-            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
-        except:
-            self.filter.filter_configurations["set_id"] = ""
-        try:
-            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
-        except:
-            self.filter.filter_configurations["column_id"] = ""
+
         try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
                 "ignore_main_brightness_control"]
-        except:
+        except ValueError:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
         self.filter.out_data_types["uv"] = DataType.DT_8_BIT
 
 
-class FaderHSIAUNode(FilterNode):
+class FaderHSIAUNode(_FaderNode):
     """Filter to represent a hasiau filter fader"""
     nodeName = "HSI-AU"
 
@@ -147,17 +136,9 @@ class FaderHSIAUNode(FilterNode):
             'uv': {'io': 'out'}
         })
         try:
-            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
-        except:
-            self.filter.filter_configurations["set_id"] = ""
-        try:
-            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
-        except:
-            self.filter.filter_configurations["column_id"] = ""
-        try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
                 "ignore_main_brightness_control"]
-        except:
+        except ValueError:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
