@@ -14,19 +14,22 @@ if TYPE_CHECKING:
 
 class _FaderNode(FilterNode):
     def __init__(self, model: "Filter | Scene", filter_type: FilterTypeEnumeration, name: str, terminals: dict[str, dict[str, str]]):
+        self._bankset_model: BankSet | None = None
         super().__init__(model=model, filter_type=filter_type, name=name, terminals=terminals)
 
         try:
             self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
-        except ValueError:
+        except AttributeError:
             self.filter.filter_configurations["set_id"] = ""
         try:
             self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
-        except ValueError:
+        except AttributeError:
             self.filter.filter_configurations["column_id"] = ""
+        self._update_bankset_listener()
 
+    def _update_bankset_listener(self):
         set_id = self.filter.filter_configurations["set_id"]
-        self._bankset_model: BankSet | None = None
+
         if self.filter.scene.linked_bankset.id == set_id:
             self._bankset_model = self.filter.scene.linked_bankset
         else:
@@ -47,8 +50,13 @@ class _FaderNode(FilterNode):
     def notify_on_new_id(self, new_id: str):
         self.filter.filter_configurations["set_id"] = new_id
 
+    def update_node_after_settings_changed(self):
+        if self._bankset_model is not None:
+            self._bankset_model.id_update_listeners.remove(self)
+        self._update_bankset_listener()
+
     def __del__(self):
-        if self._bankset_model:
+        if self._bankset_model is not None:
             self._bankset_model.id_update_listeners.remove(self)
 
 
@@ -79,7 +87,7 @@ class FaderHSINode(_FaderNode):
         try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
                 "ignore_main_brightness_control"]
-        except ValueError:
+        except AttributeError:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
@@ -98,7 +106,7 @@ class FaderHSIANode(_FaderNode):
         try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
                 "ignore_main_brightness_control"]
-        except ValueError:
+        except AttributeError:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
@@ -118,7 +126,7 @@ class FaderHSIUNode(_FaderNode):
         try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
                 "ignore_main_brightness_control"]
-        except ValueError:
+        except AttributeError:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR
@@ -138,7 +146,7 @@ class FaderHSIAUNode(_FaderNode):
         try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
                 "ignore_main_brightness_control"]
-        except ValueError:
+        except AttributeError:
             self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
 
         self.filter.out_data_types["color"] = DataType.DT_COLOR

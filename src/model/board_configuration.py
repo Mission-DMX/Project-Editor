@@ -239,7 +239,8 @@ class BoardConfiguration:
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
             return
-        callable_list.remove(c)
+        if c in callable_list:
+            callable_list.remove(c)
 
     def add_macro(self, m: Macro):
         """

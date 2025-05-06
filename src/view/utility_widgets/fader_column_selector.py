@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """This file provides a widget to browse bank set columns."""
-
+from logging import getLogger
 from typing import Type
 
 from PySide6.QtCore import Signal
@@ -9,6 +9,8 @@ from PySide6.QtWidgets import QCheckBox, QTreeWidget, QTreeWidgetItem, QVBoxLayo
 
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
+
+logger = getLogger(__file__)
 
 
 class FaderColumnSelectorWidget(QWidget):
@@ -26,7 +28,7 @@ class FaderColumnSelectorWidget(QWidget):
         """
         super().__init__()
         self._filter = column_filter
-        self._base_set: BankSet | None = base_set
+        self._base_sets: list[BankSet] = base_set if isinstance(base_set, list) else [base_set] if isinstance(base_set, BankSet) else []
         self._item_index: dict[str, dict[str, AnnotatedTreeWidgetItem]] = {}
 
         layout = QVBoxLayout()
@@ -94,12 +96,13 @@ class FaderColumnSelectorWidget(QWidget):
 
     def reload_data(self):
         """Refresh the displayed data."""
+        print("ping")
         self._tree.clear()
         bank_sets_to_search: set[BankSet] = set()
         for bs in BankSet.get_linked_bank_sets():
             bank_sets_to_search.add(bs)
-        if self._base_set is not None:
-            bank_sets_to_search.add(self._base_set)
+        for bs in self._base_sets:
+            bank_sets_to_search.add(bs)
         for bank_set in bank_sets_to_search:
             set_item = QTreeWidgetItem(self._tree)
             set_item.setText(0, bank_set.id)
@@ -130,3 +133,10 @@ class FaderColumnSelectorWidget(QWidget):
                 set_item.addChild(bank_item)
                 i += 1
             self._tree.insertTopLevelItem(0, set_item)
+
+    def add_base_bank_set(self, bs: BankSet):
+        if bs is None:
+            logger.warning("Tried to add None type base bank set.")
+            return
+        if bs not in self._base_sets:
+            self._base_sets.append(bs)
