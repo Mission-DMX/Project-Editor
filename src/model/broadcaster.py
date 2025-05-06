@@ -87,6 +87,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     view_to_action_config: QtCore.Signal = QtCore.Signal()
     view_leave_action_config: QtCore.Signal = QtCore.Signal()
+    application_closing: QtCore.Signal = QtCore.Signal()
     ################################################################
     save_button_pressed: QtCore.Signal = QtCore.Signal()
     commit_button_pressed: QtCore.Signal = QtCore.Signal()
