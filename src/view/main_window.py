@@ -190,6 +190,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().closeEvent(event)
         QApplication.processEvents()
         self._broadcaster.application_closing.emit()
+        QApplication.processEvents()
 
     def _start_connection(self):  # TODO rework to signals
         self._fish_connector.start(True)
