@@ -334,8 +334,7 @@ class ShowBrowser:
                 continue
             sc = item.annotated_data.copy(item.annotated_data.board_configuration.scenes)
             sc.human_readable_name = f"Copy ({i}) of Scene '{sc.human_readable_name}'"
-            self._show.scenes.append(sc)
-            self._add_scene_to_scene_browser(sc)
+            self._show.broadcaster.scene_created.emit(sc)
 
     def _add_filter_page(self, selected_items: list[QTreeWidgetItem]):
         def add(c, scene: Scene | FilterPage, text):
