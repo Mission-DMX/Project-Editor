@@ -34,14 +34,23 @@ class _CueLabel(QWidget):
 
     @property
     def playing(self) -> bool:
+        """Get the state of the playing icon of the cue label"""
         return self._play_label.isVisible()
 
     @playing.setter
     def playing(self, new_value: bool):
+        """Set the state of the playing icon of the cue label"""
         self._play_label.setVisible(new_value)
 
 
 class CueControlUIWidget(UIWidget):
+
+    """
+    This widget allows the user to control cue filters.
+
+    This widget supports the 'widget_height' parameter indicating its height in pixels.
+    It will automatically migrate older configurations which still had the 'cue_names' parameter.
+    """
 
     def __init__(self, parent: UIPage, configuration: dict[str, str] | None = None):
         super().__init__(parent, configuration)
@@ -104,6 +113,10 @@ class CueControlUIWidget(UIWidget):
                 self.update_model()
 
     def update_model(self, clear_model: bool = True):
+        """
+        reload the cue model after the configuration has changed in the filter.
+        :param clear_model: Should the loaded model be unloaded afterward?
+        """
         self._cues.clear()
         if self._filter:
             self._model = CueFilterModel()
@@ -117,6 +130,7 @@ class CueControlUIWidget(UIWidget):
             self._model = None
 
     def _repopulate_lists(self):
+        """Load / update the content of the cue lists"""
         for cue_list in [self._player_cue_list_widget, self._config_cue_list_widget]:
             if cue_list is None:
                 continue
@@ -130,6 +144,7 @@ class CueControlUIWidget(UIWidget):
                 cue_list.setItemWidget(item, label)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
+        """Implementation of abstract method 'generate_update_content'."""
         return self._command_chain
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
@@ -212,6 +227,7 @@ class CueControlUIWidget(UIWidget):
         return w
 
     def _config_item_update_height(self, new_height: int):
+        """Change the height of the widgets after adjustment."""
         new_height = max(350, new_height)
         if self._config_widget is not None:
             self._config_widget.setFixedHeight(new_height)

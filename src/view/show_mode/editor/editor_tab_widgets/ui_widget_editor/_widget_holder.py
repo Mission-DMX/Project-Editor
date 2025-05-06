@@ -35,7 +35,7 @@ class UIWidgetHolder(QWidget):
         self._old_pos = QPoint()
         if instance_for_editor:
             self.setStyleSheet("border: 1px solid black")
-        self._instance_for_editor = instance_for_editor
+        self._instance_for_editor: bool = instance_for_editor
         self.setVisible(True)
         super().move(self._model.position[0], self._model.position[1])
         self._edit_dialog = None

@@ -8,6 +8,7 @@ from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
 if TYPE_CHECKING:
     from view.show_mode.editor.node_editor_widgets import CueEditor
+    from view.show_mode.show_ui_widgets import CueControlUIWidget
 
 logger = getLogger(__file__)
 
@@ -24,7 +25,7 @@ class CueFilter(VirtualFilter):
         self.in_preview_mode = False
         self.associated_editor_widget: "CueEditor" | None = None
         self._channel_mapping: dict[str, str] = {}
-        self.linked_ui_widgets = []
+        self.linked_ui_widgets: list["CueControlUIWidget"] = []
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if self.in_preview_mode:
