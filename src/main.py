@@ -88,7 +88,7 @@ if __name__ == "__main__":
         dark_palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
         dark_palette.setColor(QPalette.ColorRole.Base, QColor(42, 42, 42))
         dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(66, 66, 66))
-        dark_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
+        dark_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(42, 42, 42))
         dark_palette.setColor(QPalette.ColorRole.ToolTipText, QColor(255, 255, 255))
         dark_palette.setColor(QPalette.ColorRole.Text, QColor(255, 255, 255))
         dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
