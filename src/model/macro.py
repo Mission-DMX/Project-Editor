@@ -1,8 +1,8 @@
+# coding=utf-8
 from logging import getLogger
 
 from PySide6.QtCore import QObject, Signal
 
-from controller.network import NetworkManager
 from controller.utils.process_notifications import get_process_notifier
 from proto.Console_pb2 import ButtonCode, ButtonState, button_state_change
 
