@@ -47,6 +47,8 @@ class CueFilterModel:
         self.global_restart_on_end = parameters.get("end_handling") == "start_again"
 
         mapping_str = parameters.get("mapping")
+        self.cues.clear()
+        self.channels.clear()
         if mapping_str:
             for channel_dev in mapping_str.split(';'):
                 splitted_channel_dev = channel_dev.split(':')
