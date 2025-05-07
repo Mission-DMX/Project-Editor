@@ -29,11 +29,9 @@ logger = getLogger(__file__)
 class CueEditor(PreviewEditWidget):
 
     def _get_parameters(self) -> dict[str, str]:
-        # TODO implement
         return {}
 
     def _load_parameters(self, conf: dict[str, str]):
-        # TODO implement
         pass
 
     def get_widget(self) -> QWidget:
