@@ -73,8 +73,9 @@ class FilterSettingsItem(QGraphicsSvgItem):
         if ev.button() == Qt.MouseButton.LeftButton:
             # TODO make sure that we're opening it in the same dialog, fixed to a screen unless settings request
             #  otherwise
-            if self.dialog is None:
-                self.dialog = FilterSettingsDialog(self.filter_node)
+            if self.dialog is not None:
+                self.dialog.deleteLater()
+            self.dialog = FilterSettingsDialog(self.filter_node)
             self.dialog.show()
 
     def paint(self, painter, option, widget=...):
