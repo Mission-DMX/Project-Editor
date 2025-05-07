@@ -474,6 +474,11 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     @property
     def current_active_scene_id(self):
+        """
+        Every few miliseconds, fish sends the current active scene. The last transmitted value can be optained using
+        this property.
+        :returns: The current active scene through their ID (int)
+        """
         return self._last_active_scene
 
 

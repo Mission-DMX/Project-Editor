@@ -96,7 +96,6 @@ class FaderColumnSelectorWidget(QWidget):
 
     def reload_data(self):
         """Refresh the displayed data."""
-        print("ping")
         self._tree.clear()
         bank_sets_to_search: set[BankSet] = set()
         for bs in BankSet.get_linked_bank_sets():
@@ -135,6 +134,11 @@ class FaderColumnSelectorWidget(QWidget):
             self._tree.insertTopLevelItem(0, set_item)
 
     def add_base_bank_set(self, bs: BankSet):
+        """
+        Use this method to add a bank set to the list of force-active sets after construction finished.
+
+        :param bs: The bank set to add.
+        """
         if bs is None:
             logger.warning("Tried to add None type base bank set.")
             return

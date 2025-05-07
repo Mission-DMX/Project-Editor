@@ -115,6 +115,7 @@ class UIWidgetHolder(QWidget):
         self._edit_dialog.show()
 
     def unregister(self):
+        """Clean up the stored widget and remove it from the parent canvas."""
         # setting the parent to None is required!
         try:
             self._child.setParent(None)
