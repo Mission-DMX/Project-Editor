@@ -1,9 +1,13 @@
+from logging import getLogger
+
 from PySide6.QtCore import QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from model import UIWidget
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+
+logger = getLogger(__file__)
 
 
 class UIWidgetHolder(QWidget):
@@ -115,7 +119,11 @@ class UIWidgetHolder(QWidget):
         self._edit_dialog.show()
 
     def unregister(self):
+        """Clean up the stored widget and remove it from the parent canvas."""
         # setting the parent to None is required!
-        self._child.setParent(None)
-        self._child.setVisible(False)
-        self._child.setEnabled(False)
+        try:
+            self._child.setParent(None)
+            self._child.setVisible(False)
+            self._child.setEnabled(False)
+        except RuntimeError as e:
+            logger.error("BUG! This widget is already deleted: %s", e)

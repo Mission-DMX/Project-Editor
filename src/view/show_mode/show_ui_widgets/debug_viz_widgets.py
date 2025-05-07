@@ -302,3 +302,4 @@ class NumberDebugVizWidget(_DebugVizWidget):
             self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id,
                                                                                 self.filter_ids[0], self._recv_update)
             self._show_widget.deleteLater()
+            self._show_widget = None
