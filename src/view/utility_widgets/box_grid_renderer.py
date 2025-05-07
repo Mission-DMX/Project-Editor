@@ -1,20 +1,21 @@
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QIcon, QPainter, QBrush, QPalette, QColor, QPixmap
-from PySide6.QtWidgets import QWidget, QApplication
+from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, Qt
+from PySide6.QtWidgets import QApplication, QWidget
 
 if TYPE_CHECKING:
-    from PySide6.QtGui import QPaintEvent
+    from PySide6.QtGui import QMouseEvent, QPaintEvent
 
 
 class BoxGridItem(QObject):
+    clicked: Signal = Signal()
+
     def __init__(self, parent: QWidget | None):
         super().__init__(parent=parent)
         self.text: str = ""
         self._icon: QPixmap | None = None
         self.additional_render_method: callable | None = None
-        self.clicked: Signal = Signal()
 
     def set_icon(self, icon: QPixmap | QIcon | None):
         if icon is None:
@@ -76,10 +77,27 @@ class BoxGridRenderer(QWidget):
     def add_item(self, b: BoxGridItem):
         self._boxes.append(b)
         b.setParent(self)
-        # TODO display scroll bar if boxes > height
-        # TODO link scroll bar signals if scroll bar visible
         self.update()
         self.repaint()
+
+    def _update_scroll_behavior(self):
+        # TODO display scroll bar if boxes > height
+        # TODO link scroll bar signals if scroll bar visible
+        pass
+
+    def resizeEvent(self, event, /):
+        self._update_scroll_behavior()
+        super().resizeEvent(event)
+
+    def clear(self):
+        self._boxes.clear()
+        self.update()
+        self.repaint()
+
+    def item_at(self, i: int) -> BoxGridItem | None:
+        if not 0 <= i < len(self._boxes):
+            return None
+        return self._boxes[i]
 
     def paintEvent(self, event: "QPaintEvent", /):
         p = QPainter(self)
@@ -118,3 +136,16 @@ class BoxGridRenderer(QWidget):
             p.drawPixmap(x + self._box_width / 4, y + s_height + 10, icon)
         if b.additional_render_method is not None:
             b.additional_render_method(p, x, y)
+
+    def mousePressEvent(self, e: "QMouseEvent"):
+        if e.button() == Qt.MouseButton.LeftButton:
+            width_adv_per_box = self._box_width + self._border_width
+            height_adv_per_box = self._box_height + self._border_width
+            boxes_per_row = int((self.width() - self._scroll_bar_size) / width_adv_per_box)
+
+            x = e.pos().x() - self._border_width / 2
+            y = e.pos().y() - self._border_width / 2
+            box_index = int(int(y / height_adv_per_box) * boxes_per_row + int(x / width_adv_per_box))
+            if box_index < len(self._boxes):
+                e.accept()
+                self._boxes[box_index].clicked.emit()
