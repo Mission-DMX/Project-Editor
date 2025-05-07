@@ -13,6 +13,7 @@ from model import DataType, Filter
 from model.control_desk import BankSet
 from model.filter_data.cues.cue import Cue, EndAction
 from model.filter_data.cues.cue_filter_model import CueFilterModel
+from model.virtual_filters.cue_vfilter import CueFilter
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
@@ -120,6 +121,7 @@ class CueEditor(PreviewEditWidget):
         self._model = CueFilterModel()
         self._last_selected_cue = -1
         self._channels_changed_after_load = False
+        self._ui_widget_update_required = False
 
     def _configure_toolbar(self, top_layout):
         toolbar = QToolBar(parent=self._parent_widget)
@@ -170,6 +172,7 @@ class CueEditor(PreviewEditWidget):
         for index in self._indices_from_table_selection():
             new_cue = self._model.cues[index].copy()
             self.add_cue(new_cue, new_cue.name)
+            self._ui_widget_update_required = True
 
     def _swap_table_rows(self, i1: int, i2: int):
         row1: list[tuple[QTableWidgetItem, int]] = []
@@ -190,6 +193,7 @@ class CueEditor(PreviewEditWidget):
             self._model.cues[index - 1] = self._model.cues[index]
             self._model.cues[index] = old_cue
             self._swap_table_rows(index - 1, index)
+        self._ui_widget_update_required = True
 
     def _move_cue_down_clicked(self):
         for index in self._indices_from_table_selection():
@@ -199,6 +203,7 @@ class CueEditor(PreviewEditWidget):
             self._model.cues[index + 1] = self._model.cues[index]
             self._model.cues[index] = old_cue
             self._swap_table_rows(index + 1, index)
+        self._ui_widget_update_required = True
 
     def _rename_selected_cue(self):
         self._input_dialog = []
@@ -226,6 +231,7 @@ class CueEditor(PreviewEditWidget):
             if len(self._input_dialog) == 0:
                 if isinstance(self._parent_widget, QDialog):
                     self._parent_widget.activateWindow()
+        self._ui_widget_update_required = True
 
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
         target_row = self._cue_list_widget.rowCount()
@@ -281,6 +287,7 @@ class CueEditor(PreviewEditWidget):
 
     def _add_cue_button_clicked(self):
         new_index = self.add_cue(Cue())
+        self._ui_widget_update_required = True
         self.select_cue(new_index)
 
     def _add_channel_button_pressed(self):
@@ -350,8 +357,14 @@ class CueEditor(PreviewEditWidget):
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
             .setText(self._timeline_container.cue.duration_formatted)
 
+    def parent_closed(self, filter_node: "FilterNode"):
+        if self._ui_widget_update_required:
+            self._update_ui_widget()
+        super().parent_closed(filter_node)
+
     def parent_opened(self):
         self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
+        self._ui_widget_update_required = False
 
     def get_channel_list(self) -> list[ExternalChannelDefinition]:
         channel_list = []
@@ -362,3 +375,8 @@ class CueEditor(PreviewEditWidget):
             channel_list.append(ExternalChannelDefinition(c_type, name,
                                                           self.bs_to_channel_mapping.get(name), self._bankset))
         return channel_list
+
+    def _update_ui_widget(self):
+        if isinstance(self._filter_instance, CueFilter):
+            for widget in self._filter_instance.linked_ui_widgets:
+                widget.update_model()

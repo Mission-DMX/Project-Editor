@@ -4,6 +4,11 @@ from view.show_mode.editor.nodes import FilterNode
 
 class AggregatingFilterNode(FilterNode):
 
+    """
+    This filter node class provides a template for nodes with a variable amount of inputs that will be aggregated to a
+    single output.
+    """
+
     def __init__(self, target_dt: DataType, model, name, filter_type):
         super().__init__(model=model, filter_type=filter_type, name=name)
         self.addOutput("value")

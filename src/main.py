@@ -1,6 +1,5 @@
 # coding=utf-8
 """GUI and control elements for the software."""
-import tomlkit
 
 if __name__ == "__main__":
     import os
@@ -29,6 +28,7 @@ if __name__ == "__main__":
 
     version_string = "Error reading version."
     with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
+        import tomlkit
         data = tomlkit.load(f)
     version_string = f"Version: {data['project']['version']}"
 
@@ -44,6 +44,8 @@ if __name__ == "__main__":
     import logging.handlers
     import pathlib
     import sys
+
+    from PySide6.QtCore import QEventLoop
 
     from controller.cli.remote_control_port import RemoteCLIServer
     from controller.joystick.joystick_handling import JoystickHandler
@@ -86,7 +88,7 @@ if __name__ == "__main__":
         dark_palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
         dark_palette.setColor(QPalette.ColorRole.Base, QColor(42, 42, 42))
         dark_palette.setColor(QPalette.ColorRole.AlternateBase, QColor(66, 66, 66))
-        dark_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(255, 255, 255))
+        dark_palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(42, 42, 42))
         dark_palette.setColor(QPalette.ColorRole.ToolTipText, QColor(255, 255, 255))
         dark_palette.setColor(QPalette.ColorRole.Text, QColor(255, 255, 255))
         dark_palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
@@ -119,14 +121,22 @@ if __name__ == "__main__":
 
         # TODO we should parse the global application settings and recent project files here
         # TODO show a dialog asking the user to create a new show file or open a recent one
-        # TODO pass the show file to be loaded as a parameter to the constructor of main window.
-        # TODO pass "" if a new one should be created
         # TODO open a new MainWindow if the user clicks new from the window menu
         widget = MainWindow()
         widget.showMaximized()
-        splashscreen.finish(widget)
 
         cli_server = RemoteCLIServer(widget.show_configuration, widget._fish_connector)
+        app.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
+        if len(sys.argv) > 1:
+            show_file_path = sys.argv[1]
+            if os.path.isfile(show_file_path):
+                from controller.file.read import read_document
+                read_document(show_file_path, widget.show_configuration)
+                widget.show_configuration.broadcaster.show_file_loaded.emit()
+                app.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
+            else:
+                logger.warning("Failed to open show file '%s' as it does not seam to be a file.", show_file_path)
+        splashscreen.finish(widget)
         return_code = app.exec()
         cli_server.stop()
         sys.exit(return_code)

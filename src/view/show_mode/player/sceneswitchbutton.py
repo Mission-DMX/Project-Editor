@@ -2,7 +2,7 @@
 """Scene widget for scene player"""
 from PySide6.QtWidgets import QPushButton, QWidget
 
-from model import Scene
+from model import Broadcaster, Scene
 
 
 class SceneSwitchButton(QPushButton):
@@ -12,17 +12,35 @@ class SceneSwitchButton(QPushButton):
     width = 100
     height = 75
 
+    _STYLE_ACTIVE_SCENE = """
+        background: #004400;
+    """
+
+    _STYLE_NOT_ACTIVE = None
+
     def __init__(self, scene: Scene, parent: QWidget = None):
         super().__init__(parent)
+        if SceneSwitchButton._STYLE_NOT_ACTIVE is None:
+            SceneSwitchButton._STYLE_NOT_ACTIVE = self.styleSheet()
         self._scene = scene
         self.clicked.connect(self._clicked)
         self.setFixedSize(self.width, self.height)
         self.setText(self._scene.human_readable_name)
+        b = Broadcaster()
+        b.active_scene_switched.connect(self._active_scene_switched)
 
     def _clicked(self):
         """Handles behaviour when scene button was clicked"""
         # transmit_to_fish(self._scene.board_configuration)
         self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene)
+
+    def _active_scene_switched(self, new_scene_id: int):
+        if new_scene_id == self._scene.scene_id:
+            self.setChecked(True)
+            self.setStyleSheet(SceneSwitchButton._STYLE_ACTIVE_SCENE)
+        else:
+            self.setChecked(False)
+            self.setStyleSheet(SceneSwitchButton._STYLE_NOT_ACTIVE)
 
     @property
     def scene(self) -> Scene:

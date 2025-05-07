@@ -35,6 +35,7 @@ class UIWidgetHolder(QWidget):
         self._old_pos = QPoint()
         if instance_for_editor:
             self.setStyleSheet("border: 1px solid black")
+        self._instance_for_editor: bool = instance_for_editor
         self.setVisible(True)
         super().move(self._model.position[0], self._model.position[1])
         self._edit_dialog = None
@@ -74,7 +75,7 @@ class UIWidgetHolder(QWidget):
         Args:
             event: The mouse event.
         """
-        if event.button() is Qt.MouseButton.LeftButton:
+        if event.button() is Qt.MouseButton.LeftButton and self._instance_for_editor:
             self._old_pos = event.globalPos()
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -83,6 +84,9 @@ class UIWidgetHolder(QWidget):
         Args:
             event: The mouse event.
         """
+        super().mouseMoveEvent(event)
+        if not self._instance_for_editor:
+            return
         # offset = QPoint(event.globalPos() - self._old_pos)
         self.move(self.parent().mapFromGlobal(event.globalPos()))
         # self.move(self.x() + offset.x(), self.y() + offset.y())

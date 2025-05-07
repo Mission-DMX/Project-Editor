@@ -1,12 +1,15 @@
 # coding=utf-8
 """models for X-Touch and also for other connected devices like extenders or joystick"""
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import proto.Console_pb2
-from controller.network import NetworkManager
 from model.broadcaster import Broadcaster
 from model.color_hsi import ColorHSI
+
+if TYPE_CHECKING:
+    from controller.network import NetworkManager
 
 
 def _generate_unique_id() -> str:
@@ -309,14 +312,14 @@ class BankSet:
      except for the event that the active bank set will be unlinked.
     In this case fish will enable the bank set with the next lower index.
     """
-    _fish_connector: NetworkManager = None
+    _fish_connector: "NetworkManager" = None
     _active_bank_set_id: str = None
     _active_bank_set: "BankSet" = None
     _seven_seg_data: str = "00          "
     _linked_bank_sets = []
 
     @classmethod
-    def fish_connector(cls) -> NetworkManager:
+    def fish_connector(cls) -> "NetworkManager":
         """Connector of the Bank"""
         return cls._fish_connector
 
@@ -583,7 +586,7 @@ class BankSet:
         return new_bs
 
 
-def set_network_manager(network_manager: NetworkManager):
+def set_network_manager(network_manager: "NetworkManager"):
     """Set the network manager instance to be used by all bank sets and subsequent banks and columns."""
     BankSet._fish_connector = network_manager
 

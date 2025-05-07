@@ -59,6 +59,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     event_sender_model_updated: QtCore.Signal = QtCore.Signal()
     fish_event_received: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event)
     event_rename_action_occurred: QtCore.Signal = QtCore.Signal(int)  # int: the id of the sender where the rename was
+    uipage_renamed: QtCore.Signal = QtCore.Signal(int)  # The ID of the parent scene
     macro_added_to_show_file: QtCore.Signal = QtCore.Signal(int)  # int: The index of the new macro in the board config
     ################################################################
     view_to_patch_menu: QtCore.Signal = QtCore.Signal()
@@ -86,6 +87,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     view_to_action_config: QtCore.Signal = QtCore.Signal()
     view_leave_action_config: QtCore.Signal = QtCore.Signal()
+    application_closing: QtCore.Signal = QtCore.Signal()
     ################################################################
     save_button_pressed: QtCore.Signal = QtCore.Signal()
     commit_button_pressed: QtCore.Signal = QtCore.Signal()
@@ -104,6 +106,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     joystick_selected_event: QtCore.Signal = QtCore.Signal(JoystickList)
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(proto.FilterMode_pb2.update_parameter)
+    active_scene_switched: QtCore.Signal = QtCore.Signal(int)
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     patching_universes: list[PatchingUniverse] = []

@@ -8,6 +8,7 @@ from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWidget
 from view.show_mode.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
+from view.show_mode.show_ui_widgets.clock_ui_widget import ClockUIWidget
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
@@ -31,6 +32,7 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "pantiltconstant": (
     "Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
     "label": ("Text Label", ShowLabelUIWidget, []),
+    "clock": ("BF Clock", ClockUIWidget, []),
     # TODO add direct inputs
     # TODO add fader update widgets
     "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]]),

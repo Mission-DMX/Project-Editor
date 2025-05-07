@@ -21,6 +21,11 @@ class CueState():
         self._time_scale = 1
         self._start_time = datetime.datetime.now()
 
+    @property
+    def playing_cue(self) -> int:
+        """Returns the number of the playing cue or -1 if there is none."""
+        return self._active_cue if self._state == State.PLAY else -1
+
     def __str__(self):
         ret = ""
         if self._state == State.STOP:

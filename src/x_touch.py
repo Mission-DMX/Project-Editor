@@ -2,8 +2,11 @@
 """All messages send to the x-touch"""
 from typing import TYPE_CHECKING
 
+from PySide6.QtWidgets import QApplication
+
 import proto.Console_pb2
 import proto.MessageTypes_pb2
+from model.control_desk import set_seven_seg_display_content
 
 if TYPE_CHECKING:
     from model.broadcaster import Broadcaster
@@ -91,6 +94,7 @@ class XTouchMessages:
         self._broadcaster.view_to_temperature.connect(lambda: send(VIEW_TEMPERATURE_MSG))
         self._broadcaster.view_leave_temperature.connect(lambda: send(VIEW_NOT_TEMPERATURE_MSG))
         self._broadcaster.show_file_path_changed.connect(self._update_save_button)
+        self._broadcaster.application_closing.connect(self._cleanup_xtouch)
         self._send: callable = send
 
     def _update_save_button(self, file_path: str):
@@ -98,3 +102,15 @@ class XTouchMessages:
             self._send(SAVE_BUTTON_ACTIVE_MSG)
         else:
             self._send(SAVE_BUTTON_DEACTIVATE_MSG)
+
+    def _cleanup_xtouch(self) -> None:
+        self._send(VIEW_NOT_PATCH_MENU_MSG)
+        self._send(VIEW_NOT_FILTER_MENU_MSG)
+        self._send(VIEW_NOT_PATCH_MENU_MSG)
+        self._send(VIEW_NOT_SHOW_MENU)
+        self._send(VIEW_NOT_CONSOLSE_MODE)
+        self._send(VIEW_NOT_COLOR_MSG)
+        self._send(VIEW_NOT_TEMPERATURE_MSG)
+        self._send(SAVE_BUTTON_DEACTIVATE_MSG)
+        set_seven_seg_display_content(" " * 12, update_from_gui=True)
+        QApplication.processEvents()

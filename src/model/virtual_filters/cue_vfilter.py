@@ -8,6 +8,7 @@ from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
 if TYPE_CHECKING:
     from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import PreviewEditWidget
+    from view.show_mode.show_ui_widgets import CueControlUIWidget
 
 logger = getLogger(__file__)
 
@@ -19,6 +20,7 @@ class PreviewFilter(VirtualFilter):
         self.associated_editor_widget: "PreviewEditWidget" | None = None
         self._channel_mapping: dict[str, str] = {}
         self._inst_filter_type: FilterTypeEnumeration = inst_filter_type
+        self.linked_ui_widgets: list["CueControlUIWidget"] = []
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if self.in_preview_mode:

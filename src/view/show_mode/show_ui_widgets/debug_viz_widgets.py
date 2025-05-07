@@ -45,8 +45,9 @@ class _DebugVizWidget(UIWidget, ABC):
         return []
 
     def get_config_dialog_widget(self, parent: QWidget | None) -> QWidget:
-        if self._config_widget is None:
-            self._construct_config_widget()
+        if self._config_widget is not None:
+            self._config_widget.deleteLater()
+        self._construct_config_widget()
         return self._config_widget
 
     def set_conf_width(self, new_width: int):
@@ -110,7 +111,7 @@ class _DebugVizWidget(UIWidget, ABC):
 
     def get_configuration_widget(self, parent: QWidget) -> QWidget:
         if self._placeholder_widget is not None:
-            return self._placeholder_widget
+            self._placeholder_widget.deleteLater()
         w = QWidget(parent=parent)
         w.setFixedWidth(self.configured_width)
         w.setFixedHeight(self.configured_height)
@@ -170,8 +171,9 @@ class ColorDebugVizWidget(_DebugVizWidget):
         self._show_widget: ColorLabel | None = None
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._show_widget is None:
-            self._construct_player_widget(parent)
+        if self._show_widget is not None:
+            self._show_widget.deleteLater()
+        self._construct_player_widget(parent)
         return self._show_widget
 
     def _construct_player_widget(self, parent: QWidget):
@@ -263,12 +265,13 @@ class NumberDebugVizWidget(_DebugVizWidget):
         self.configured_dimensions_changed_callback = self._dimensions_changed
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._show_widget is None:
-            self._show_widget = _NumberLabel(parent)
-            self._dimensions_changed()
-            self.parent.scene.board_configuration.register_filter_update_callback(
-                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
-            self._show_widget.destroyed.connect(self._delete_callback)
+        if self._show_widget is not None:
+            self._show_widget.deleteLater()
+        self._show_widget = _NumberLabel(parent)
+        self._dimensions_changed()
+        self.parent.scene.board_configuration.register_filter_update_callback(
+            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
+        self._show_widget.destroyed.connect(self._delete_callback)
         return self._show_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
