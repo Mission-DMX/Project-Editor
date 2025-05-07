@@ -2,6 +2,7 @@
 """Show player to remote control fish show mode"""
 from PySide6.QtWidgets import QWidget
 
+from controller.network import NetworkManager
 from model import BoardConfiguration, Scene
 
 from .sceneswitchbutton import SceneSwitchButton
@@ -31,7 +32,12 @@ class ShowPlayerWidget(QWidget):
         self._board_configuration.broadcaster.scene_created.connect(self._add_scene)
         self._board_configuration.broadcaster.delete_scene.connect(self._remove_scene)
         self._board_configuration.broadcaster.change_active_scene.connect(self._switch_scene)
+        self._board_configuration.broadcaster.active_scene_switched.connect(self._switch_scene)
         self._ui_container = UIPlayerWidget(self)
+        self._scene_index = -1
+        current_scene_id = NetworkManager().current_active_scene_id
+        if current_scene_id >= 0:
+            self._switch_scene(current_scene_id)
 
     def _index_to_position(self, index: int) -> tuple[int, int]:
         """Calculates the grid position from index.
@@ -54,7 +60,11 @@ class ShowPlayerWidget(QWidget):
         """
         scene_widget = SceneSwitchButton(scene, self)
         self._grid.append(scene_widget)
-        self._reload()
+        requested_scene_id = NetworkManager().current_active_scene_id
+        if self._scene_index != requested_scene_id and scene.scene_id == requested_scene_id:
+            self._switch_scene(scene.scene_id)
+        else:
+            self._reload()
 
     def _remove_scene(self, scene: Scene):
         """Removes a scene from the player.
@@ -91,9 +101,16 @@ class ShowPlayerWidget(QWidget):
         uipage_container_height = self.height() - 10 - max_height
         self._ui_container.resize(uipage_container_width, uipage_container_height)
 
-    def _switch_scene(self, scene: Scene):
-        scene_index = scene.scene_id
+    def _switch_scene(self, scene: Scene | int):
+        if isinstance(scene, Scene):
+            scene_index = scene.scene_id
+        else:
+            scene_index = scene
+        if scene_index == self._scene_index:
+            return
+
         if not (scene_index < len(self._board_configuration.scenes)):
             return
+        self._scene_index = scene_index
         self._ui_container.scene = self._board_configuration.get_scene_by_id(scene_index)
         self._reload()

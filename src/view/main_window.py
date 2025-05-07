@@ -2,10 +2,11 @@
 """main Window for the Editor"""
 import os.path
 import platform
+from typing import TYPE_CHECKING
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QIcon, QKeySequence, QPixmap
-from PySide6.QtWidgets import QProgressBar
+from PySide6.QtWidgets import QApplication, QProgressBar
 
 import proto.RealTimeControl_pb2
 from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
@@ -27,6 +28,9 @@ from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
+
+if TYPE_CHECKING:
+    from PySide6.QtGui import QCloseEvent
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -180,6 +184,13 @@ class MainWindow(QtWidgets.QMainWindow):
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
+
+    def closeEvent(self, event: "QCloseEvent", /):
+        # TODO use event.ignore() here is there's still stuff to do
+        super().closeEvent(event)
+        QApplication.processEvents()
+        self._broadcaster.application_closing.emit()
+        QApplication.processEvents()
 
     def _start_connection(self):  # TODO rework to signals
         self._fish_connector.start(True)

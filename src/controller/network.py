@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
+from sympy import false
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
@@ -257,6 +258,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         if msg.current_scene != self._last_active_scene:
             self._last_active_scene = msg.current_scene
             self.active_scene_on_fish_changed.emit(msg.current_scene)
+            self._broadcaster.active_scene_switched.emit(msg.current_scene)
 
     def _log_fish(self, msg: proto.RealTimeControl_pb2.long_log_update):
         """
@@ -356,7 +358,10 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             bool: Connected or Not Connected
         """
         # TODO at shutdown this sometimes causes the interpreter to crash.
-        return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
+        try:
+            return self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState
+        except RuntimeError:
+            return False
 
     def load_show_file(self, xml: ET.Element, goto_default_scene: bool) -> None:
         """
@@ -466,6 +471,10 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     def send_event_message(self, msg: proto.Events_pb2.event):
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT, push_direct=False)
+
+    @property
+    def current_active_scene_id(self):
+        return self._last_active_scene
 
 
 def on_error(error) -> None:
