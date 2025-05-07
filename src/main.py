@@ -10,27 +10,27 @@ if __name__ == "__main__":
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
     app = QApplication([])
     from PySide6.QtGui import QPixmap
-
     from utility import resource_path
 
     splashscreen = QSplashScreen(QPixmap(resource_path(os.path.join("resources", "splash.png"))))
     splashscreen.show()
     splashscreen.raise_()
+
+    with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
+        import tomlkit
+
+        data = tomlkit.load(f)
+    version_string = f"Version: {data['project']['version']}"
+
     app.processEvents()
-    app.setApplicationName("mission-dmx-editor")
-    app.setApplicationDisplayName("Mission DMX")
-    app.setOrganizationName("missionDMX")
-    app.setOrganizationDomain("technikradio.org")
+    app.setApplicationName(data['project']['name'])
+    app.setApplicationDisplayName(data['tool']['missionDMX']["display-name"])
+    app.setOrganizationName(data['tool']['missionDMX']['organization']['name'])
+    app.setOrganizationDomain(data['tool']['missionDMX']['organization']['domain'])
     app.setDesktopSettingsAware(True)
     from PySide6.QtGui import QIcon
 
     app.setWindowIcon(QIcon(resource_path(os.path.join("resources", "app-icon.png"))))
-
-    version_string = "Error reading version."
-    with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
-        import tomlkit
-        data = tomlkit.load(f)
-    version_string = f"Version: {data['project']['version']}"
 
     from PySide6.QtGui import QColor, QPalette
 
