@@ -9,28 +9,36 @@ jobs:
   read-commit:
     runs-on: ubuntu-latest
     outputs:
-      rebuild: ${{ steps.check.outputs.has_version_update }}
+      rebuild: ${{ steps.check.outputs.has_rebuild }}
+      has_version_update: ${{ steps.check.outputs.has_version_update }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Checke ob Commit-Message '[REBUILD]' enthält
+      - name: Checks if [REBUILD] or VERSION UPDATE in Commit-Message
         id: check
         run: |
           msg=$(git log -1 --pretty=%B)
           echo "Commit message:"
           echo $msg
           if echo "$msg" | grep -Fq "[REBUILD]"; then
+            echo "has_rebuild=true" >> $GITHUB_OUTPUT
             echo "has_version_update=true" >> $GITHUB_OUTPUT
             echo rebuild
           else
-            echo "has_version_update=false" >> $GITHUB_OUTPUT
-            echo version_update
+            echo "has_rebuild=false" >> $GITHUB_OUTPUT
+            if echo "$msg" | grep -Fq "VERSION UPDATE"; then
+              echo "has_version_update=true" >> $GITHUB_OUTPUT
+              echo do nothing
+            else
+              echo "has_version_update=false" >> $GITHUB_OUTPUT
+              echo version_update
+            fi
           fi
 
   generateVersionsPR:
     needs: read-commit
-    if: ${{needs.read-commit.outputs.rebuild == 'false'}}
+    if: ${{needs.read-commit.outputs.has_version_update == 'false'}}
     uses: ./.github/workflows/update-version-pr.yml
 
   buildAndRelease:

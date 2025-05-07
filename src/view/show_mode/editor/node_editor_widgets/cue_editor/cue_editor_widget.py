@@ -148,6 +148,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._last_selected_cue = -1
         self._channels_changed_after_load = False
         self._broadcaster_signals_connected = False
+        self._ui_widget_update_required = False
 
         if self._filter_instance:
             self._filter_instance.associated_editor_widget = self
@@ -247,6 +248,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         for index in self._indices_from_table_selection():
             new_cue = self._model.cues[index].copy()
             self.add_cue(new_cue, new_cue.name)
+            self._ui_widget_update_required = True
 
     def _swap_table_rows(self, i1: int, i2: int):
         row1: list[tuple[QTableWidgetItem, int]] = []
@@ -267,6 +269,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._model.cues[index - 1] = self._model.cues[index]
             self._model.cues[index] = old_cue
             self._swap_table_rows(index - 1, index)
+        self._ui_widget_update_required = True
 
     def _move_cue_down_clicked(self):
         for index in self._indices_from_table_selection():
@@ -276,6 +279,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._model.cues[index + 1] = self._model.cues[index]
             self._model.cues[index] = old_cue
             self._swap_table_rows(index + 1, index)
+        self._ui_widget_update_required = True
 
     def _rename_selected_cue(self):
         self._input_dialog = []
@@ -303,6 +307,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             if len(self._input_dialog) == 0:
                 if isinstance(self._parent_widget, QDialog):
                     self._parent_widget.activateWindow()
+        self._ui_widget_update_required = True
 
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
         target_row = self._cue_list_widget.rowCount()
@@ -367,6 +372,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def _add_cue_button_clicked(self):
         new_index = self.add_cue(Cue())
+        self._ui_widget_update_required = True
         self.select_cue(new_index)
 
     def _add_channel_button_pressed(self):
@@ -505,10 +511,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
             if show_reset_required:
                 transmit_to_fish(self._filter_instance.scene.board_configuration, False)
                 # TODO switch to scene of filter
+        if self._ui_widget_update_required:
+            self._update_ui_widget()
         super().parent_closed(filter_node)
 
     def parent_opened(self):
         self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
+        self._ui_widget_update_required = False
 
     @property
     def channels(self) -> list[ExternalChannelDefinition]:
@@ -520,3 +529,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
             channel_list.append(ExternalChannelDefinition(c_type, name,
                                                           self._bs_to_channel_mapping.get(name), self._bankset))
         return channel_list
+
+    def _update_ui_widget(self):
+        if isinstance(self._filter_instance, CueFilter):
+            for widget in self._filter_instance.linked_ui_widgets:
+                widget.update_model()
