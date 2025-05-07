@@ -10,6 +10,7 @@ if __name__ == "__main__":
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
     app = QApplication([])
     from PySide6.QtGui import QPixmap
+
     from utility import resource_path
 
     splashscreen = QSplashScreen(QPixmap(resource_path(os.path.join("resources", "splash.png"))))
