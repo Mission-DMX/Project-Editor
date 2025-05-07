@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ * ]
 
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
+        
       - name: Checks if [REBUILD] or VERSION UPDATE in Commit-Message
         id: check
         run: |
