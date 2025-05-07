@@ -9,8 +9,8 @@ jobs:
   read-commit:
     runs-on: ubuntu-latest
     outputs:
-      rebuild: ${{steps.check.outputs.has_rebuild}}
-      has_version_update: ${{steps.check.outputs.has_version_update}}
+      rebuild: ${{ steps.check.outputs.has_rebuild }}
+      has_version_update: ${{ steps.check.outputs.has_version_update }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -32,7 +32,8 @@ jobs:
               echo do nothing
             else
               echo "has_version_update=false" >> $GITHUB_OUTPUT
-            echo version_update
+              echo version_update
+            fi
           fi
 
   generateVersionsPR:
