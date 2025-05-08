@@ -100,6 +100,7 @@ class ShowPlayerWidget(QWidget):
         uipage_container_width = self.width() - 10 - last_width
         uipage_container_height = self.height() - 10 - max_height
         self._ui_container.resize(uipage_container_width, uipage_container_height)
+        self._ui_container.check_page_update()
 
     def _switch_scene(self, scene: Scene | int):
         if isinstance(scene, Scene):
@@ -107,6 +108,7 @@ class ShowPlayerWidget(QWidget):
         else:
             scene_index = scene
         if scene_index == self._scene_index:
+            self._ui_container.check_page_update()
             return
 
         if not (scene_index < len(self._board_configuration.scenes)):

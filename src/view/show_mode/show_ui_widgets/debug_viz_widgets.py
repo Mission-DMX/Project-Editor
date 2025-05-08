@@ -190,7 +190,11 @@ class ColorDebugVizWidget(_DebugVizWidget):
             self.parent.scene.board_configuration.remove_filter_update_callback(
                 self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
             )
-            self._show_widget.deleteLater()
+            try:
+                self._show_widget.deleteLater()
+            except RuntimeError:
+                logger.error("RuntimeError: show widget was already deleted.")
+            self._show_widget = None
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         c = ColorDebugVizWidget(new_parent, self.configuration.copy())
