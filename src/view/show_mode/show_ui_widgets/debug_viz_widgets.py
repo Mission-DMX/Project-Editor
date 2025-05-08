@@ -171,8 +171,6 @@ class ColorDebugVizWidget(_DebugVizWidget):
         self._show_widget: ColorLabel | None = None
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._show_widget is not None:
-            self._show_widget.deleteLater()
         self._construct_player_widget(parent)
         return self._show_widget
 
@@ -190,10 +188,6 @@ class ColorDebugVizWidget(_DebugVizWidget):
             self.parent.scene.board_configuration.remove_filter_update_callback(
                 self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
             )
-            try:
-                self._show_widget.deleteLater()
-            except RuntimeError:
-                logger.error("RuntimeError: show widget was already deleted.")
             self._show_widget = None
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
@@ -269,8 +263,6 @@ class NumberDebugVizWidget(_DebugVizWidget):
         self.configured_dimensions_changed_callback = self._dimensions_changed
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._show_widget is not None:
-            self._show_widget.deleteLater()
         self._show_widget = _NumberLabel(parent)
         self._dimensions_changed()
         self.parent.scene.board_configuration.register_filter_update_callback(
@@ -305,5 +297,4 @@ class NumberDebugVizWidget(_DebugVizWidget):
         if self._show_widget is not None:
             self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id,
                                                                                 self.filter_ids[0], self._recv_update)
-            self._show_widget.deleteLater()
             self._show_widget = None

@@ -35,8 +35,7 @@ class UIPlayerWidget(QWidget):
     def scene(self, new_scene: Scene | None):
         self._scene = new_scene
         self._update_page_cb()
-        if new_scene is not None:
-            self._update_page()
+        self._update_page()
 
     def _update_page_cb(self):
         self._page_combo_box.clear()
