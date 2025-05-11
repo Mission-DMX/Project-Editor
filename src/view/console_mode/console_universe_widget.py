@@ -24,7 +24,10 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             parent: Qt parent of the widget.
         """
         super().__init__(parent=parent)
+        self._universe = universe
         self._broadcaster = Broadcaster()
+        self._broadcaster.fixture_patched.connect(self._reload_patched_fixtures)
+        self._subwidgets: list[ChannelWidget | QtWidgets.QLabel] = []
 
         self.setFixedHeight(650)
 
@@ -36,8 +39,8 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setStyleSheet(Style.SCROLL)
 
-        universe_widget = QtWidgets.QWidget()
-        universe_widget.setLayout(QtWidgets.QHBoxLayout(universe_widget))
+        self._universe_widget = QtWidgets.QWidget()
+        self._universe_widget.setLayout(QtWidgets.QHBoxLayout(self._universe_widget))
 
         # TODO we need to discuss the desired behavior in case of multiple universes in console mode as we may need
         # to switch the active one. For now it is not an issue as we only feature one universe for the theatre play.
@@ -48,24 +51,34 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._bank_set.activate()
         self._bank_set_control_elements = []
 
-        # Add all channels of the universe
-        for channel, patching_chanel in zip(universe.channels, universe.patching):
-            channel_widget = ChannelWidget(channel, patching_chanel, bank_set=self._bank_set,
-                                           bank_set_control_list=self._bank_set_control_elements)
-            universe_widget.layout().addWidget(channel_widget)
+        self._reload_patched_fixtures()
 
-            if patching_chanel.fixture.name != "Empty" and patching_chanel.fixture_channel_id() == len(
-                    patching_chanel.fixture.mode['channels']) - 1:
-                universe_widget.layout().addWidget(QtWidgets.QLabel(patching_chanel.fixture.name))
-
-            channel.updated.connect(
-                lambda *args, send_universe=universe: self._broadcaster.send_universe_value.emit(send_universe))
-
-        self.setWidget(universe_widget)
-        self._universe_widget = universe_widget
+        self.setWidget(self._universe_widget)
         self._broadcaster.jogwheel_rotated_left.connect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.connect(self._increase_scroll)
         self._scroll_position = 0
+
+    def _reload_patched_fixtures(self):
+        for w in self._subwidgets:
+            self._universe_widget.layout().removeWidget(w)
+            w.setParent(None)
+            w.deleteLater()
+        self._subwidgets.clear()
+        # Add all channels of the universe
+        for channel, patching_chanel in zip(self._universe.channels, self._universe.patching):
+            channel_widget = ChannelWidget(channel, patching_chanel, bank_set=self._bank_set,
+                                           bank_set_control_list=self._bank_set_control_elements)
+            self._universe_widget.layout().addWidget(channel_widget)
+            self._subwidgets.append(channel_widget)
+
+            if patching_chanel.fixture.name != "Empty" and patching_chanel.fixture_channel_id() == len(
+                    patching_chanel.fixture.mode['channels']) - 1:
+                label = QtWidgets.QLabel(patching_chanel.fixture.name)
+                self._universe_widget.layout().addWidget(label)
+                self._subwidgets.append(label)
+
+            channel.updated.connect(
+                lambda *args, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe))
 
     def __del__(self):
         self._bank_set.unlink()
@@ -97,3 +110,17 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             self._bank_set.activate()
             self._bank_set.update()  # FIXME activate should suffice
             self._bank_set.push_messages_now()
+
+    def automap(self):
+        index = 0
+        fixtures_per_bank = 0
+        for w in self._subwidgets:
+            if isinstance(w, ChannelWidget):
+                w.notify_automap(index)
+                fixtures_per_bank += 1
+                if fixtures_per_bank >= 8:
+                    index += 1
+                    fixtures_per_bank = 0
+            else:
+                index += 1
+                fixtures_per_bank = 0

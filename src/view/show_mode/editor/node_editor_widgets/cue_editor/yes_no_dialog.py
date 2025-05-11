@@ -3,10 +3,10 @@ from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QPushButton, QWidget
 
 
 class YesNoDialog(QDialog):
-    def __init__(self, parent: QWidget, success_action):
+    def __init__(self, parent: QWidget, success_action, text: str = "Would you like to switch to live preview?"):
         super().__init__(parent)
         self._layout = QFormLayout()
-        self._layout.addRow("Would you like to switch to live preview?", QLabel(""))
+        self._layout.addRow(text, QLabel(""))
         self._yes_button = QPushButton("Yes")
         self._yes_button.clicked.connect(self._yes__button_pressed)
         self._no_button = QPushButton("No")
@@ -19,6 +19,8 @@ class YesNoDialog(QDialog):
     def _yes__button_pressed(self):
         self.close()
         self._success_action()
+        self.deleteLater()
 
     def _no_button_pressed(self):
         self.close()
+        self.deleteLater()
