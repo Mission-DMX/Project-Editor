@@ -10,6 +10,7 @@ from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
 from controller.cli.select_command import SelectCommand
 from controller.cli.show_command import ShowCommand
+from controller.cli.utility_commands import DelayCommand
 
 if TYPE_CHECKING:
     from controller.network import NetworkManager
@@ -80,6 +81,7 @@ class CLIContext:
             BankSetCommand(self),
             ShowCommand(self),
             EventCommand(self),
+            DelayCommand(self),
             HelpCommand(self)
         ]
         self.selected_bank: "BankSet" | None = None
