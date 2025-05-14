@@ -143,6 +143,7 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_REMOTE_DEBUG_FLOAT = 67
     FILTER_REMOTE_DEBUG_PIXEL = 68
     FILTER_SEQUENCER = 69
+    FILTER_EVENT_COUNTER = 70
 
 
 class Filter:

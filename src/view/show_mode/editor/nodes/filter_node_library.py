@@ -114,6 +114,7 @@ class FilterNodeLibrary(NodeLibrary):
         """Registers all the time nodes."""
         # Add Node -> Time sub menu
         self.addNodeType(TimeNode, [('Time',)])
+        self.addNodeType(EventCounterFilterNode, [('Time',)])
         self.addNodeType(TimeSwitchOnDelay8BitNode, [('Time',)])
         self.addNodeType(TimeSwitchOnDelay16BitNode, [('Time',)])
         self.addNodeType(TimeSwitchOnDelayFloatNode, [('Time',)])

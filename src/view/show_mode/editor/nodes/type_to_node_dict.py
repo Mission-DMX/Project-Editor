@@ -94,4 +94,5 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT: DebugRemote16BitNode.nodeName,
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT: DebugRemoteFloatNode.nodeName,
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL: DebugRemoteColorNode.nodeName,
+    FilterTypeEnumeration.FILTER_EVENT_COUNTER: EventCounterFilterNode.nodeName,
 }

@@ -169,6 +169,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
         super().__init__(parent, configuration)
         self.configured_dimensions_changed_callback = self._dimensions_changed
         self._show_widget: ColorLabel | None = None
+        self._callback_registered = False
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         self._construct_player_widget(parent)
@@ -179,9 +180,10 @@ class ColorDebugVizWidget(_DebugVizWidget):
         w.setFixedWidth(self.configured_width)
         w.setFixedHeight(self.configured_height)
         self._show_widget = w
-        self.parent.scene.board_configuration.register_filter_update_callback(
-            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
-        self._show_widget.destroyed.connect(self._delete_callback)
+        if not self._callback_registered:
+            self.parent.scene.board_configuration.register_filter_update_callback(
+                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
+            self._callback_registered = True
 
     def _delete_callback(self):
         if self._show_widget is not None:
@@ -189,6 +191,10 @@ class ColorDebugVizWidget(_DebugVizWidget):
                 self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
             )
             self._show_widget = None
+
+    def __del__(self):
+        self._delete_callback()
+        super().__del__()
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         c = ColorDebugVizWidget(new_parent, self.configuration.copy())
@@ -261,13 +267,15 @@ class NumberDebugVizWidget(_DebugVizWidget):
         super().__init__(parent, configuration, ["Plain", "Illumination"])
         self._show_widget: _NumberLabel | None = None
         self.configured_dimensions_changed_callback = self._dimensions_changed
+        self._callback_registered = False
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         self._show_widget = _NumberLabel(parent)
         self._dimensions_changed()
-        self.parent.scene.board_configuration.register_filter_update_callback(
-            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
-        self._show_widget.destroyed.connect(self._delete_callback)
+        if not self._callback_registered:
+            self.parent.scene.board_configuration.register_filter_update_callback(
+                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
+            self._callback_registered = True
         return self._show_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
@@ -293,8 +301,14 @@ class NumberDebugVizWidget(_DebugVizWidget):
             logger.error("Unexpected number received from filter '%s:%s': %s", param.filter_id,
                          param.parameter_key, param.parameter_value)
 
+    def __del__(self):
+        self._delete_callback()
+        super().__del__()
+
     def _delete_callback(self):
+        self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id,
+                                                                            self.filter_ids[0], self._recv_update)
         if self._show_widget is not None:
-            self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id,
-                                                                                self.filter_ids[0], self._recv_update)
+            self._show_widget.deleteLater()
+            self._placeholder_widget.deleteLater()
             self._show_widget = None
