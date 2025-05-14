@@ -4,8 +4,8 @@ from logging import getLogger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QPushButton, QScrollArea, QSplitter, QTableWidget,
-                               QTableWidgetItem, QToolBar, QVBoxLayout, QWidget)
+                               QLineEdit, QListWidget, QPushButton, QScrollArea, QSpinBox, QSplitter, QStackedLayout,
+                               QTableWidget, QTableWidgetItem, QToolBar, QVBoxLayout, QWidget)
 
 import proto.Events_pb2
 from model import Broadcaster, events
@@ -21,6 +21,7 @@ _keypad_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsour
 _midi_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midi.svg")))
 _midirtp_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midirtp.svg")))
 _rename_icon = QIcon(resource_path(os.path.join("resources", "icons", "rename.svg")))
+_audio_icon = QIcon(resource_path(os.path.join("resources", "icons", "audio.svg")))
 
 
 class _SenderConfigurationWidget(QScrollArea):
@@ -52,11 +53,43 @@ class _SenderConfigurationWidget(QScrollArea):
         self._debug_include_ongoing_checkbox.setText("Include Ongoing Events")
         self._debug_include_ongoing_checkbox.checkStateChanged.connect(self._debug_include_ongoing_changed)
         layout.addWidget(self._debug_include_ongoing_checkbox)
+        self._custom_conf_layout = QStackedLayout()
+        custom_conf_widget = QWidget(self)
+        self._no_custom_config_label = QLabel(custom_conf_widget)
+        self._custom_conf_layout.addWidget(self._no_custom_config_label)
+        self._audio_config_widget = QWidget(custom_conf_widget)
+        audio_layout = QFormLayout()
+        self._audio_dev_tb = QLineEdit(self._audio_config_widget)
+        self._audio_dev_tb.textChanged.connect(self._audio_dev_text_changed)
+        audio_layout.addRow("Audio Input Device", self._audio_dev_tb)
+        self._audio_high_cut_tb = QSpinBox(self._audio_config_widget)
+        self._audio_high_cut_tb.setMaximum(1024)
+        self._audio_high_cut_tb.setMinimum(1)
+        self._audio_high_cut_tb.valueChanged.connect(self._audio_high_cut_changed)
+        audio_layout.addRow("High Cut [Hz]", self._audio_high_cut_tb)
+        self._audio_low_cut_tb = QSpinBox(self._audio_config_widget)
+        self._audio_low_cut_tb.setMaximum(1023)
+        self._audio_low_cut_tb.setMinimum(0)
+        self._audio_low_cut_tb.valueChanged.connect(self._audio_low_cut_changed)
+        audio_layout.addRow("Low Cut [Hz]", self._audio_low_cut_tb)
+        self._audio_magnitude_tb = QSpinBox(self._audio_config_widget)
+        self._audio_magnitude_tb.setMaximum(1023)
+        self._audio_magnitude_tb.setMinimum(0)
+        self._audio_magnitude_tb.valueChanged.connect(self._audio_magnitude_changed)
+        audio_layout.addRow("Magnitude", self._audio_magnitude_tb)
+        self._audio_config_widget.setLayout(audio_layout)
+        self._custom_conf_layout.addWidget(self._audio_config_widget)
+        # TODO implement individual configuration widgets for remaining sender types
+        custom_conf_widget.setLayout(self._custom_conf_layout)
+        layout.addWidget(custom_conf_widget)
+        self._apply_config_button = QPushButton(self)
+        self._apply_config_button.setText("Update configuration now.")
+        self._apply_config_button.clicked.connect(self._update_configuration)
+        layout.addWidget(self._apply_config_button)
         self._rename_table = QTableWidget(self, rowCount=0, columnCount=4)
         self._rename_table.cellChanged.connect(self._rename_table_cell_changed)
         layout.addWidget(self._rename_table)
         # TODO add manual rename button
-        # TODO implement individual configuration widgets for event sender types
         self.setLayout(layout)
         self._own_rename_issued = False
         self._broadcaster = b
@@ -88,6 +121,16 @@ class _SenderConfigurationWidget(QScrollArea):
             self._debug_include_ongoing_checkbox.setEnabled(new_sender.debug_enabled)
             self._rename_table.setEnabled(True)
             self._update_table()
+            if isinstance(new_sender, events.AudioExtractEventSender):
+                self._custom_conf_layout.setCurrentWidget(self._audio_config_widget)
+                self._audio_dev_tb.setText(new_sender.audio_device)
+                self._audio_high_cut_tb.setValue(new_sender.high_cut)
+                self._audio_low_cut_tb.setValue(new_sender.low_cut)
+                self._audio_magnitude_tb.setValue(new_sender.magnitude)
+                self._apply_config_button.setEnabled(True)
+            else:
+                self._custom_conf_layout.setCurrentWidget(self._no_custom_config_label)
+                self._apply_config_button.setEnabled(False)
         else:
             self._name_label.setText("")
             self._index_label.setText("")
@@ -101,6 +144,8 @@ class _SenderConfigurationWidget(QScrollArea):
             self._rename_table.clear()
             self._rename_table.setRowCount(0)
             self._rename_table.setEnabled(False)
+            self._apply_config_button.setEnabled(False)
+            self._custom_conf_layout.setCurrentWidget(self._no_custom_config_label)
 
     def _update_table(self):
         self._rename_table.clear()
@@ -154,6 +199,26 @@ class _SenderConfigurationWidget(QScrollArea):
         else:
             self._own_rename_issued = False
 
+    def _audio_dev_text_changed(self, new_text: str):
+        if isinstance(self._sender, events.AudioExtractEventSender):
+            self._sender.audio_device = new_text
+
+    def _audio_high_cut_changed(self, new_value: int):
+        if isinstance(self._sender, events.AudioExtractEventSender):
+            self._sender.high_cut = new_value
+
+    def _audio_low_cut_changed(self, new_value: int):
+        if isinstance(self._sender, events.AudioExtractEventSender):
+            self._sender.low_cut = new_value
+
+    def _audio_magnitude_changed(self, new_value: int):
+        if isinstance(self._sender, events.AudioExtractEventSender):
+            self._sender.magnitude = new_value
+
+    def _update_configuration(self):
+        if self._sender is not None:
+            self._sender.send_update(auto_commit=True, push_direct=True)
+
 
 class _SourceListWidget(QWidget):
 
@@ -168,6 +233,8 @@ class _SourceListWidget(QWidget):
         self._icon_label.setMinimumWidth(64)
         if isinstance(sender, events.XtouchGPIOEventSender):
             self._icon_label.setPixmap(_xtouch_gpio_icon.pixmap(64, 64))
+        if isinstance(sender, events.AudioExtractEventSender):
+            self._icon_label.setPixmap(_audio_icon.pixmap(64, 64))
         else:
             self._icon_label.setPixmap(_plain_icon.pixmap(64, 64))
         layout.addWidget(self._icon_label)
