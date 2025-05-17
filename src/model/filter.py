@@ -203,7 +203,7 @@ class Filter:
 
     @property
     def channel_links(self) -> dict[str, str]:
-        """Dict mapping the filters inputs to the connected outputs"""
+        """Dict mapping the filter inputs to the connected outputs"""
         return self._channel_links
 
     @property
