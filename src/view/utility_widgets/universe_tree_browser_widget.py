@@ -23,7 +23,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             self.refresh()
             self._broadcaster.add_universe.connect(self.refresh)
             self._broadcaster.delete_universe.connect(self.refresh)
-            self._broadcaster.add_fixture.connect(lambda _:self.refresh())
+            self._broadcaster.add_fixture.connect(lambda _: self.refresh())
 
     def refresh(self):
 
@@ -68,7 +68,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                     last_fixture_object.annotated_data = fixture
                     placed_fixtures.add(fixture)
 
-                    for channel in fixture._fixture_channels:  # TODO public
+                    for channel in fixture.fixture_channels:
                         channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
                         channel_item.setText(0 + column_offset,
                                              f"{universe.id}/{fixture.start_index + 1}")

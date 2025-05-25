@@ -205,6 +205,11 @@ class UsedFixture(QtCore.QObject):
         return list(range(self._start_index, self._start_index + len(self._fixture_channels)))
 
     @property
+    def fixture_channels(self) -> tuple[FixtureChannel, ...]:
+        """fixture channels of the fixture"""
+        return tuple(self._fixture_channels)
+
+    @property
     def color_on_stage(self) -> str:
         """color of the fixture on stage"""
         return self._color_on_stage
