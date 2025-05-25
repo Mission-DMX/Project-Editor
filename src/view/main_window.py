@@ -90,8 +90,8 @@ class MainWindow(QtWidgets.QMainWindow):
             mode_button.triggered.connect(view[2])
             self._toolbar.addAction(mode_button)
 
-        data_log_window = DmxDataLogWidget(self._broadcaster)
-        self._toolbar.addAction(QtGui.QAction("dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
+        #data_log_window = DmxDataLogWidget(self._broadcaster)
+        #self._toolbar.addAction(QtGui.QAction("dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
 
         self.setCentralWidget(self._widgets)
 
