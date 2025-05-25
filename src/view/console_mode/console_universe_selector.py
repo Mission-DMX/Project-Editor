@@ -4,7 +4,6 @@
 from PySide6 import QtWidgets
 
 from model.broadcaster import Broadcaster
-from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 from view.console_mode.console_universe_widget import DirectUniverseWidget
 
@@ -19,22 +18,21 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self._universe_widgets: list[DirectUniverseWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
 
-        if self._broadcaster.patching_universes:
-            for patching_universe in self._broadcaster.patching_universes:
-                self.add_universe(patching_universe)
+        if self._broadcaster.universes:
+            for universe in self._broadcaster.universes.values():
+                self.add_universe(universe)
 
     @property
     def universes(self) -> list[Universe]:
         """Universes"""
         return self._universes
 
-    def add_universe(self, patching_universe: PatchingUniverse) -> None:
+    def add_universe(self, universe: Universe) -> None:
         """
         add a new Universe to universe Selector
         Args:
-            patching_universe: the new universe to add
+            universe: the new universe to add
         """
-        universe = Universe(patching_universe)
         self._broadcaster.send_universe_value.emit(universe)
         self._universes.append(universe)
 

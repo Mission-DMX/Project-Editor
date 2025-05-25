@@ -7,6 +7,7 @@ from logging import getLogger
 from model import Filter, Scene
 from model.filter import FilterTypeEnumeration, VirtualFilter
 from model.ofl.fixture import ColorSupport
+from model.patching.fixture_channel import FixtureChannelType
 from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
@@ -32,7 +33,7 @@ class EffectsStack(VirtualFilter):
             socket_target = socket.target
             universe_filter: Filter = Filter(self.scene,
                                              f"{self.filter_id}__universeoutput__{socket_target.parent_universe}"
-                                             f"_{socket_target.channels[0].address}",
+                                             f"_{socket_target.start_index}",
                                              FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT)
             universe_filter.filter_configurations["universe"] = str(socket_target.parent_universe)
             filter_list.append(universe_filter)
@@ -45,7 +46,7 @@ class EffectsStack(VirtualFilter):
                 color_effect = socket.get_socket_by_type(EffectType.COLOR)
                 if color_effect is not None:
                     filter_prefix = (f"{self.filter_id}__coloreffect_{socket_target.parent_universe}_"
-                                     f"{socket_target.channels[0].address}")
+                                     f"{socket_target.start_index}")
                     output_dict = emplace_with_adapter(color_effect, EffectType.COLOR, filter_list, filter_prefix)
 
                     if not isinstance(output_dict["color"], list):
@@ -56,7 +57,7 @@ class EffectsStack(VirtualFilter):
                         segmentation_effect = socket.get_socket_by_type(EffectType.ENABLED_SEGMENTS)
                         if segmentation_effect:
                             filter_prefix = (f"{self.filter_id}__segmentation_{socket_target.parent_universe}_"
-                                             f"{socket_target.channels[0].address}")
+                                             f"{socket_target.start_index}")
                             segmentation_outputs = emplace_with_adapter(segmentation_effect,
                                                                         EffectType.ENABLED_SEGMENTS,
                                                                         filter_list, filter_prefix)
@@ -65,7 +66,7 @@ class EffectsStack(VirtualFilter):
                                 color_index = i % len(output_dict["color"])
                                 seg_split_filter_name = (f"{self.filter_id}__universeoutput__segmentsplitter_"
                                                          f"{socket_target.parent_universe}_"
-                                                         f"{socket_target.channels[0].address}__{segment_number}")
+                                                         f"{socket_target.start_index}__{segment_number}")
                                 split_filter = Filter(self.scene, seg_split_filter_name, 53, self.pos)  # TODO rename
                                 split_filter.channel_links["input"] = output_dict["color"][color_index]
                                 filter_list.append(split_filter)
@@ -86,7 +87,7 @@ class EffectsStack(VirtualFilter):
                                 i += 1
 
                     color_adapter_name_base = f"{filter_prefix}__color_adapter_property"
-                    color_support_of_target = socket_target.color_support()
+                    color_support_of_target = socket_target.color_support
 
                     adapter_filters = []
                     for i in range(len(output_dict["color"])):
@@ -109,22 +110,29 @@ class EffectsStack(VirtualFilter):
                     # TODO handle uv
                     # TODO handle main brightness control
                     for segment_channel_name, segment_list in [
-                        ("r", socket_target.red_segments), ("g", socket_target.green_segments),
-                        ("b", socket_target.blue_segments), ("w", socket_target.white_segments),
-                        ("a", socket_target.amber_segments)]:
+                        ("r", socket_target.get_segment_in_universe_by_type(FixtureChannelType.RED)),
+                        ("g", socket_target.get_segment_in_universe_by_type(FixtureChannelType.GREEN)),
+                        ("b", socket_target.get_segment_in_universe_by_type(FixtureChannelType.BLUE)),
+                        ("w", socket_target.get_segment_in_universe_by_type(FixtureChannelType.WHITE)),
+                        ("a", socket_target.get_segment_in_universe_by_type(FixtureChannelType.AMBER))]:
                         i = 0
                         for segment in segment_list:
-                            universe_filter.filter_configurations[str(segment.address)] = str(segment.address)
-                            universe_filter.channel_links[str(segment.address)] =\
+                            universe_filter.filter_configurations[str(segment)] = str(segment)
+                            universe_filter.channel_links[str(segment)] = \
                                 f"{adapter_filters[i % len(adapter_filters)].filter_id}:{segment_channel_name}"
                             i += 1
                 else:
-                    for segment_list in [socket_target.red_segments, socket_target.green_segments,
-                                         socket_target.blue_segments, socket_target.white_segments,
-                                         socket_target.amber_segments, socket_target.uv_segments]:
-                        for rs in segment_list:
-                            universe_filter.filter_configurations[rs.fixture_channel] = str(rs.address)
-                            universe_filter.channel_links[rs.fixture_channel] = zero_constant_name + "_8bit:value"
+                    for segment_list in [socket_target.get_segment_in_universe_by_type(FixtureChannelType.RED),
+                                         socket_target.get_segment_in_universe_by_type(FixtureChannelType.GREEN),
+                                         socket_target.get_segment_in_universe_by_type(FixtureChannelType.BLUE),
+                                         socket_target.get_segment_in_universe_by_type(FixtureChannelType.WHITE),
+                                         socket_target.get_segment_in_universe_by_type(FixtureChannelType.AMBER),
+                                         socket_target.get_segment_in_universe_by_type(FixtureChannelType.UV)]:
+                        for segment in segment_list:
+                            fixture_chanel_name: str = socket_target.get_fixture_channel(
+                                segment - socket_target.start_index).name
+                            universe_filter.filter_configurations[fixture_chanel_name] = str(segment)
+                            universe_filter.channel_links[fixture_chanel_name] = zero_constant_name + "_8bit:value"
                             zero_constant_8bit_required = True
             # TODO implement other slot types
             #  (except for EffectType.ENABLED_SEGMENTS which will be handled together with the color)
@@ -143,8 +151,8 @@ class EffectsStack(VirtualFilter):
         d = self.filter_configurations
         d.clear()
         for s in self.sockets:
-            name = (f"{'g' if s.is_group else 'f'}{ s.target.parent_univers}/"
-                    f"{ s.target.channels[0].address}")  # TODO Encode start addresses in case of group
+            name = f"{'g' if s.is_group else 'f'}{s.target.universe_id}/{s.target.start_index}"
+            # TODO Encode start addresses in case of group or use uuid of fixture
             d[name] = s.serialize()
 
     def deserialize(self):
@@ -154,11 +162,12 @@ class EffectsStack(VirtualFilter):
             if is_group:
                 raise NotImplementedError("Deserialization of groups is not yet implemented.")
 
-
             universe, channel = k[1:].split('/')
             universe = int(universe)
             channel = int(channel)
-            uf = self.scene.board_configuration.universes[universe - 1].patching[channel].fixture
+            for fixture in self.scene.board_configuration.broadcaster.fixtures:
+                if fixture.universe_id == universe and fixture.start_index == channel:
+                    uf = fixture
             if uf is None:
                 logger.warning(
                     "There is no fixture associated with the address %s/%s", universe, channel + 1

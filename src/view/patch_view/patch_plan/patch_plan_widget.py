@@ -1,31 +1,63 @@
 # coding=utf-8
 """patch Plan Widget for one Universe"""
-from PySide6 import QtCore, QtWidgets
+import math
 
-from layouts.flow_layout import FlowLayout
-from model.patching_universe import PatchingUniverse
-from view.patch_view.patch_plan.patch_plan_item import PatchItem
+from PySide6.QtGui import QPainter, QPixmap
+from PySide6.QtWidgets import QWidget
+
+from model.ofl.fixture import UsedFixture
+from view.patch_view.patch_plan.channel_item_generator import create_item, item_width, item_height
+from view.patch_view.patch_plan.used_fixture_widget import UsedFixtureWidget
 
 
-class PatchPlanWidget(QtWidgets.QScrollArea):
+class PatchPlanWidget(QWidget):
     """Patch Plan Widget for one Universe"""
 
-    def __init__(self, universe: PatchingUniverse, parent=None):
-        super().__init__(parent=parent)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._patch_items: list[PatchItem] = []
+    def __init__(self):
+        super().__init__()
+        self._chanel_items: list[QPixmap] = []
+        self._cols = 1
+        self._init_items()
+        self._fixtures: list[UsedFixtureWidget] = []
 
-        container = QtWidgets.QWidget()
-        container_layout = FlowLayout()
+    def _init_items(self):
+        """initiate Channel Items"""
+        for i in range(1, 513):
+            pixmap = create_item(i)
+            self._chanel_items.append(pixmap)
 
-        for channel in universe.patching:
-            item = PatchItem(channel, universe)
-            container_layout.addWidget(item)
-            self._patch_items.append(item)
+    def paintEvent(self, event):
+        """paint the widget"""
+        painter = QPainter(self)
+        cols = self.width() // item_width()
+        for i, channel_item in enumerate(self._chanel_items):
+            x = (i % cols) * item_width()
+            y = (i // cols) * item_height()
+            painter.drawPixmap(x, y, channel_item)
 
-        container.setLayout(container_layout)
+        for fixture in self._fixtures:
+            for i, fixture_channel in enumerate(fixture.pixmap):
+                x = ((i + fixture.start_index) % cols) * item_width()
+                y = ((i + fixture.start_index) // cols) * item_height()
+                painter.drawPixmap(x, y, fixture_channel)
 
-        self.setWidgetResizable(True)
-        self.setWidget(container)
-        self.universe = universe
+        painter.end()
+
+    def resizeEvent(self, event):
+        """resize the widget"""
+        new_cols = max(1, self.width() // item_width())
+        if new_cols != self._cols:
+            self._cols = new_cols
+            self.update_widget_height()
+        super().resizeEvent(event)
+
+    def update_widget_height(self):
+        """update the widget height"""
+        rows = math.ceil(512 / self._cols)
+        self.setFixedHeight(rows * item_height())
+
+    def add_fixture(self, fixture: UsedFixture):
+        """add a fixture to the widget"""
+        new_fixture = UsedFixtureWidget(fixture)
+        self._fixtures.append(new_fixture)
+        self.update()

@@ -5,11 +5,10 @@ from typing import Callable
 from PySide6 import QtCore, QtGui
 
 import proto.FilterMode_pb2
-
 from .broadcaster import Broadcaster
 from .device import Device
 from .macro import Macro
-from .patching_universe import PatchingUniverse
+from .ofl.fixture import UsedFixture
 from .scene import Scene
 from .universe import Universe
 
@@ -32,6 +31,7 @@ class BoardConfiguration:
         self._broadcaster: Broadcaster = Broadcaster()
 
         self._broadcaster.add_universe.connect(self._add_universe)
+        self._broadcaster.add_fixture.connect(self._add_fixture)
         self._broadcaster.scene_created.connect(self._add_scene)
         self._broadcaster.clear_board_configuration.connect(self._clear)
         self._broadcaster.delete_scene.connect(self._delete_scene)
@@ -81,14 +81,15 @@ class BoardConfiguration:
         self._scenes.remove(scene)
         self._scenes_index.pop(scene.scene_id)
 
-    def _add_universe(self, patching_universe: PatchingUniverse):
+    def _add_universe(self, universe: Universe):
         """Creates and adds a universe from passed patching universe.
-        
         Args:
-            patching_universe: The patching universe from which a universe is to be created and added.
+            universe: The universe to add.
         """
-        universe = Universe(patching_universe)
         self._universes.append(universe)
+
+    def _add_fixture(self, used_fixture: UsedFixture):
+        self._broadcaster.fixtures.append(used_fixture)
 
     def _delete_universe(self, universe: Universe):
         """Removes the passed universe from the list of universes.
@@ -113,6 +114,7 @@ class BoardConfiguration:
             device: The device to be removed.
         """
         pass
+
     def universe(self, universe_id: int) -> Universe | None:
         """Tries to find universe by id.
 

@@ -2,7 +2,6 @@
 """Handles reading a xml document"""
 
 import os
-import random
 from logging import getLogger
 from xml.etree import ElementTree
 
@@ -13,7 +12,7 @@ import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
 from controller.utils.process_notifications import get_process_notifier
-from model import BoardConfiguration, ColorHSI, Filter, PatchingUniverse, Scene, UIPage, Universe
+from model import BoardConfiguration, ColorHSI, Filter, Scene, UIPage, Universe
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter
@@ -521,22 +520,13 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
                                                         physical_location=physical,
                                                         remote_location=artnet,
                                                         ftdi_dongle=ftdi)
-    patching_universe = PatchingUniverse(universe_proto)
-    universe = Universe(patching_universe)
+    universe = Universe(universe_proto)
     universe.name = name
     universe.description = description
-    if patching:
-        for index, fixture in patching:
-            current_channel = index
-            color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-            for index in range(len(fixture.mode['channels'])):
-                item = patching_universe.patching[current_channel + index]
-                item.fixture = fixture
-                item.fixture_channel = index
-                item.color = color
+    board_configuration.broadcaster.add_universe.emit(universe)
 
-    board_configuration.broadcaster.fixture_patched.emit()
-    board_configuration.broadcaster.add_universe.emit(patching_universe)
+    for fixture in patching:
+        board_configuration.broadcaster.add_fixture.emit(fixture)
 
 
 def _parse_physical_location(location_element: ElementTree.Element) -> int:
@@ -601,20 +591,20 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> proto.Univers
                                                         serial=serial_identifier)
 
 
-def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> list[tuple[int, UsedFixture]]:
+def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> list[UsedFixture]:
     """
     Load patching information from XML data.
     :param location_element: The XML data to load from
     :param universe_id: The id of the universe which this fixture belongs to.
     :returns: The loaded fixtures
     """
-    fixtures_path = '/var/cache/missionDMX/fixtures'
-    used_fixtures: list[tuple[int, UsedFixture]] = []
+    fixtures_path = '/var/cache/missionDMX/fixtures'  # TODO config file
+    used_fixtures: list[UsedFixture] = []
     for child in location_element:
         used_fixture = make_used_fixture(load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
-                                         int(child.attrib['mode']), universe_id)
+                                         int(child.attrib['mode']), universe_id, int(child.attrib['start']))
 
-        used_fixtures.append((int(child.attrib['start']), used_fixture))
+        used_fixtures.append(used_fixture)
     # TODO load fixture name from file
     return used_fixtures
 

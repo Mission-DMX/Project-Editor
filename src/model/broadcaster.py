@@ -3,6 +3,7 @@
 
 from xml.etree.ElementTree import Element
 
+import numpy as np
 from PySide6 import QtCore
 
 import proto.DirectMode_pb2
@@ -10,9 +11,8 @@ import proto.Events_pb2
 import proto.FilterMode_pb2
 import proto.RealTimeControl_pb2
 from controller.joystick.joystick_enum import JoystickList
-from model.patching_universe import PatchingUniverse
-
 from .device import Device
+from .ofl.fixture import UsedFixture
 from .scene import FilterPage, Scene
 from .universe import Universe
 
@@ -39,10 +39,11 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
     show_file_loaded: QtCore.Signal = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
-    add_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
-    send_universe: QtCore.Signal = QtCore.Signal(PatchingUniverse)
+    add_universe: QtCore.Signal = QtCore.Signal(Universe)
+    add_fixture:QtCore.Signal  = QtCore.Signal(UsedFixture)
+    send_universe: QtCore.Signal = QtCore.Signal(Universe)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
-    send_request_dmx_data: QtCore.Signal = QtCore.Signal(PatchingUniverse)
+    send_request_dmx_data: QtCore.Signal = QtCore.Signal(Universe)
     request_main_brightness_fader_update: QtCore.Signal = QtCore.Signal(int)
     ################################################################
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
@@ -55,7 +56,6 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     delete_universe: QtCore.Signal = QtCore.Signal(Universe)
     device_created: QtCore.Signal = QtCore.Signal(Device)
     delete_device: QtCore.Signal = QtCore.Signal(Device)
-    fixture_patched: QtCore.Signal = QtCore.Signal()
     event_sender_model_updated: QtCore.Signal = QtCore.Signal()
     fish_event_received: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event)
     event_rename_action_occurred: QtCore.Signal = QtCore.Signal(int)  # int: the id of the sender where the rename was
@@ -109,9 +109,20 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     active_scene_switched: QtCore.Signal = QtCore.Signal(int)
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
-    patching_universes: list[PatchingUniverse] = []
+    universes: dict[int, Universe] = {}
+    fixtures: list[UsedFixture] = []
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
+
+    def get_occupied_channels(self, universe_id: int) -> np.typing.NDArray[int]:
+        """Returns a list of all channels that are occupied by a scene."""
+        ranges = [
+            np.arange(fixture.start_index, fixture.start_index + fixture.channel_length)
+            for fixture in self.fixtures
+            if fixture.universe_id == universe_id
+        ]
+
+        return np.concatenate(ranges) if ranges else np.array([], dtype=int)
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:

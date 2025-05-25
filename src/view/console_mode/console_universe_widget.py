@@ -49,17 +49,17 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._bank_set_control_elements = []
 
         # Add all channels of the universe
-        for channel, patching_chanel in zip(universe.channels, universe.patching):
-            channel_widget = ChannelWidget(channel, patching_chanel, bank_set=self._bank_set,
-                                           bank_set_control_list=self._bank_set_control_elements)
-            universe_widget.layout().addWidget(channel_widget)
-
-            if patching_chanel.fixture.name != "Empty" and patching_chanel.fixture_channel_id() == len(
-                    patching_chanel.fixture.mode['channels']) - 1:
-                universe_widget.layout().addWidget(QtWidgets.QLabel(patching_chanel.fixture.name))
-
-            channel.updated.connect(
-                lambda *args, send_universe=universe: self._broadcaster.send_universe_value.emit(send_universe))
+        for fixture in self._broadcaster.fixtures:
+            if fixture.universe_id == universe.id:
+                for channel_index in range(fixture.channel_length):
+                    channel_widget = ChannelWidget(fixture.get_fixture_channel(channel_index),
+                                                   universe.channels[fixture.start_index + channel_index],
+                                                   self._bank_set,
+                                                   self._bank_set_control_elements, self)
+                    universe_widget.layout().addWidget(channel_widget)
+                    universe.channels[fixture.start_index + channel_index].updated.connect(
+                        lambda *args, send_universe=universe: self._broadcaster.send_universe_value.emit(send_universe))
+                universe_widget.layout().addWidget(QtWidgets.QLabel(fixture.name))
 
         self.setWidget(universe_widget)
         self._universe_widget = universe_widget

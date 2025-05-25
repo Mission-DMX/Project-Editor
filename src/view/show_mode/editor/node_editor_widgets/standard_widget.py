@@ -5,7 +5,6 @@ from logging import getLogger
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, QWidget
 
 from model import Filter
-
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 logger = getLogger(__name__)
@@ -59,9 +58,11 @@ class StandardWidget(NodeEditorFilterConfigWidget):
             logger.warning("Could not find universe %s", universe_id)
             return key
         # Fetch patching short name
-        for channel in universe.patching:
-            if channel.address == int(value):
-                key = f"{key} : {channel.fixture.short_name}"
+        for fixture in self._filter.scene.board_configuration.broadcaster.fixtures:
+            if fixture.universe_id == universe_id and value in range(fixture.start_index,
+                                                                     fixture.start_index + fixture.channel_length + 1):
+                key = f"{key} : {fixture.short_name}"
+                break
         return key
 
     def _ip_value_changed(self, key, value):

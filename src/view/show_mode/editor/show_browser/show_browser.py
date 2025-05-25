@@ -99,7 +99,7 @@ class ShowBrowser:
             b.broadcaster.add_universe.connect(lambda: self._universe_browsing_tree.refresh())
             b.broadcaster.delete_universe.connect(lambda: self._universe_browsing_tree.refresh())
             # TODO listen to scene delete signal
-            b.broadcaster.fixture_patched.connect(lambda: self._universe_browsing_tree.refresh())
+            b.broadcaster.add_fixture.connect(lambda: self._universe_browsing_tree.refresh())
         self._show = b
         self._universe_browsing_tree._show = b
         self._refresh_all()

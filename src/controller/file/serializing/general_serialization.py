@@ -1,15 +1,16 @@
 # coding=utf-8
+"""serialization functions"""
 from xml.etree import ElementTree
 
 from controller.file.serializing.events_and_macros import _write_event_sender, _write_macro
 from controller.file.serializing.scene_serialization import generate_scene_xml_description
 from controller.file.serializing.ui_settings_serialization import _create_ui_hint_element
 from controller.file.serializing.universe_serialization import (_create_artnet_location_element,
-                                                                _create_ftdi_location_element, _create_patching_element,
+                                                                _create_ftdi_location_element,
                                                                 _create_physical_location_element,
-                                                                _create_universe_element)
+                                                                _create_universe_element, _create_fixture_element)
 from controller.utils.process_notifications import ProcessNotifier
-from model import BoardConfiguration
+from model import BoardConfiguration, Broadcaster
 from model.events import get_all_senders
 
 
@@ -48,8 +49,11 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
         else:
             _create_physical_location_element(physical=proto.physical_location, parent=universe_element)
 
-        _create_patching_element(patching=universe.patching, parent=universe_element,
-                                 assemble_for_fish=assemble_for_fish_loading)
+        if fixtures := Broadcaster().fixtures:
+            patching_element = ElementTree.SubElement(universe_element, "patching")
+            for fixture in fixtures:
+                _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
+
     pn.total_step_count += 1
     pn.current_step_description = "Storing device list."
 

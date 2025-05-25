@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
-from sympy import false
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
@@ -23,13 +22,11 @@ import x_touch
 from model import events
 from model.broadcaster import Broadcaster, QObjectSingletonMeta
 from model.filter import FilterTypeEnumeration
-from model.patching_universe import PatchingUniverse
 from model.universe import Universe
 
 if TYPE_CHECKING:
     from model import Scene
     from model.control_desk import FaderBank
-    from view.main_window import MainWindow
 
 logger = getLogger(__name__)
 
@@ -98,7 +95,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         """
         self._server_name = name
 
-    def start(self, active : bool = False) -> None:
+    def start(self, active: bool = False) -> None:
         """establish connection with current fish socket"""
         if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             logger.info("connect local socket to Server: %s", self._server_name)
@@ -131,7 +128,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
 
-    def _react_request_dmx_data(self, universe: PatchingUniverse):
+    def _react_request_dmx_data(self, universe: Universe) -> None:
         """send a Request of DMX data of a universe
 
         Args:
@@ -141,7 +138,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             msg = proto.DirectMode_pb2.request_dmx_data(universe_id=universe.universe_proto.id)
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_REQUEST_DMX_DATA)
 
-    def _generate_universe(self, universe: PatchingUniverse) -> None:
+    def _generate_universe(self, universe: Universe) -> None:
         """send a new universe to the fish socket"""
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(universe.universe_proto.SerializeToString(), proto.MessageTypes_pb2.MSGT_UNIVERSE)
@@ -236,7 +233,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.fish_event_received.emit(message)
                     case _:
-                        logger.warning("Received not implemented message type: %s",msg_type)
+                        logger.warning("Received not implemented message type: %s", msg_type)
             except:
                 logger.error("Failed to parse message.", exc_info=True)
         self.push_messages()
@@ -319,7 +316,8 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                     proto.Console_pb2.ButtonCode.BTN_F7_F7,
                     proto.Console_pb2.ButtonCode.BTN_F8_F8
                 ]:
-                    self._broadcaster.desk_f_key_pressed.emit(int(msg.button) - int(proto.Console_pb2.ButtonCode.BTN_F1_F1))
+                    self._broadcaster.desk_f_key_pressed.emit(
+                        int(msg.button) - int(proto.Console_pb2.ButtonCode.BTN_F1_F1))
                 case _:
                     pass
         else:
@@ -370,7 +368,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             xml: xml data to be sent
             goto_default_scene: scene to be loaded
         """
-        #print(ET.tostring(xml, encoding="utf8", method="xml"))
+        # print(ET.tostring(xml, encoding="utf8", method="xml"))
         msg = proto.FilterMode_pb2.load_show_file(
             show_data=ET.tostring(xml, encoding="utf8", method="xml"), goto_default_scene=goto_default_scene
         )
