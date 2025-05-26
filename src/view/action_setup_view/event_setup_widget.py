@@ -12,6 +12,7 @@ from model import Broadcaster, events
 from model.events import EventSender, get_sender_by_id, mark_sender_persistent
 from proto.Events_pb2 import event
 from utility import resource_path
+from view.action_setup_view._audio_setup_widget import AudioSetupWidget
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem, AnnotatedTableWidgetItem
 
 logger = getLogger(__file__)
@@ -57,27 +58,7 @@ class _SenderConfigurationWidget(QScrollArea):
         custom_conf_widget = QWidget(self)
         self._no_custom_config_label = QLabel(custom_conf_widget)
         self._custom_conf_layout.addWidget(self._no_custom_config_label)
-        self._audio_config_widget = QWidget(custom_conf_widget)
-        audio_layout = QFormLayout()
-        self._audio_dev_tb = QLineEdit(self._audio_config_widget)
-        self._audio_dev_tb.textChanged.connect(self._audio_dev_text_changed)
-        audio_layout.addRow("Audio Input Device", self._audio_dev_tb)
-        self._audio_high_cut_tb = QSpinBox(self._audio_config_widget)
-        self._audio_high_cut_tb.setMaximum(1024)
-        self._audio_high_cut_tb.setMinimum(1)
-        self._audio_high_cut_tb.valueChanged.connect(self._audio_high_cut_changed)
-        audio_layout.addRow("High Cut [Hz]", self._audio_high_cut_tb)
-        self._audio_low_cut_tb = QSpinBox(self._audio_config_widget)
-        self._audio_low_cut_tb.setMaximum(1023)
-        self._audio_low_cut_tb.setMinimum(0)
-        self._audio_low_cut_tb.valueChanged.connect(self._audio_low_cut_changed)
-        audio_layout.addRow("Low Cut [Hz]", self._audio_low_cut_tb)
-        self._audio_magnitude_tb = QSpinBox(self._audio_config_widget)
-        self._audio_magnitude_tb.setMaximum(1023)
-        self._audio_magnitude_tb.setMinimum(0)
-        self._audio_magnitude_tb.valueChanged.connect(self._audio_magnitude_changed)
-        audio_layout.addRow("Magnitude", self._audio_magnitude_tb)
-        self._audio_config_widget.setLayout(audio_layout)
+        self._audio_config_widget = AudioSetupWidget(custom_conf_widget)
         self._custom_conf_layout.addWidget(self._audio_config_widget)
         # TODO implement individual configuration widgets for remaining sender types
         custom_conf_widget.setLayout(self._custom_conf_layout)
@@ -123,10 +104,7 @@ class _SenderConfigurationWidget(QScrollArea):
             self._update_table()
             if isinstance(new_sender, events.AudioExtractEventSender):
                 self._custom_conf_layout.setCurrentWidget(self._audio_config_widget)
-                self._audio_dev_tb.setText(new_sender.audio_device)
-                self._audio_high_cut_tb.setValue(new_sender.high_cut)
-                self._audio_low_cut_tb.setValue(new_sender.low_cut)
-                self._audio_magnitude_tb.setValue(new_sender.magnitude)
+                self._audio_config_widget.update_from_sender(new_sender)
                 self._apply_config_button.setEnabled(True)
             else:
                 self._custom_conf_layout.setCurrentWidget(self._no_custom_config_label)
@@ -198,22 +176,6 @@ class _SenderConfigurationWidget(QScrollArea):
                     self._update_table()
         else:
             self._own_rename_issued = False
-
-    def _audio_dev_text_changed(self, new_text: str):
-        if isinstance(self._sender, events.AudioExtractEventSender):
-            self._sender.audio_device = new_text
-
-    def _audio_high_cut_changed(self, new_value: int):
-        if isinstance(self._sender, events.AudioExtractEventSender):
-            self._sender.high_cut = new_value
-
-    def _audio_low_cut_changed(self, new_value: int):
-        if isinstance(self._sender, events.AudioExtractEventSender):
-            self._sender.low_cut = new_value
-
-    def _audio_magnitude_changed(self, new_value: int):
-        if isinstance(self._sender, events.AudioExtractEventSender):
-            self._sender.magnitude = new_value
 
     def _update_configuration(self):
         if self._sender is not None:
