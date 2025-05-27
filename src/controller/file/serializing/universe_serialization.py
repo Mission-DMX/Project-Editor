@@ -1,10 +1,10 @@
 # coding=utf-8
-
+"""serialization of universes"""
 from xml.etree import ElementTree
 
 import proto.UniverseControl_pb2
 from model import Universe
-from model.patching_channel import PatchingChannel
+from model.ofl.fixture import UsedFixture
 
 
 def _create_universe_element(universe: Universe, parent: ElementTree.Element) -> ElementTree.Element:
@@ -59,25 +59,18 @@ def _create_ftdi_location_element(ftdi_location: proto.UniverseControl_pb2.Unive
     })
 
 
-def _create_patching_element(patching: list[PatchingChannel], parent: ElementTree.Element, assemble_for_fish: bool):
+def _create_fixture_element(fixture: UsedFixture, patching_element: ElementTree.Element, assemble_for_fish: bool):
     """
-    Add patching information to the show file XML structure.
+    add patching information of a fixture to the show file XML structure.
+    :param fixture: The Fixture to add
     :param parent: The parent element to add to
-    :param patching: The patching data to add
     :param assemble_for_fish: Should this information be omitted?
     """
-    patching_element = ElementTree.SubElement(parent, "patching")
     if assemble_for_fish:
         return
-    index: int = 0
-    while index < len(patching):
-        channel = patching[index]
-        if not channel.fixture.name == "Empty":
-            ElementTree.SubElement(patching_element, "fixture", attrib={
-                "start": str(channel.address),
-                "fixture_file": channel.fixture.fixture_file,
-                "mode": str(channel.fixture.mode_index)
-            })
-            index += len(channel.fixture.mode["channels"])
-        else:
-            index += 1
+    ElementTree.SubElement(patching_element, "fixture", attrib={
+        # Todo add to doku "universe": str(fixture.universe_id),
+        "start": str(fixture.start_index),
+        "fixture_file": fixture.fixture_file,
+        "mode": str(fixture.mode_index)
+    })

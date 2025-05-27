@@ -1,7 +1,6 @@
 # coding=utf-8
 """select Manufacturer"""
 import os
-import random
 import zipfile
 
 import requests
@@ -102,48 +101,19 @@ class PatchingSelect(QtWidgets.QScrollArea):
     def _run_patch(self, fixture: Fixture, index: int) -> None:
         """run the patching dialog"""
         dialog = PatchingDialog((fixture, index))
-        dialog.finished.connect(
-            lambda: dialog.open() if not self._patch(dialog) else self._broadcaster.view_leave_patching.emit())
+        dialog.finished.connect(lambda: self._patch(dialog))
+
         dialog.open()
 
-    def _patch(self, form: PatchingDialog) -> bool:
+    def _patch(self, form: PatchingDialog) -> None:
         """
-        patch a specific fixture
-
-        Returns:
-            universe: the index of modified universe
-            updated: list of indices of modified channels
+            patch fixtures from PatchingDialog
         """
         if form.result():
-            if self._patching(form, False):
-                self._patching(form, True)
-            else:
-                form.set_error("Patching not Possible")
-                return False
-        return True
+            self._patching(form)
+        self._broadcaster.view_leave_patching.emit()
 
-    def _patching(self, form: PatchingDialog, execute: bool) -> bool:
-        if len(self._broadcaster.patching_universes) <= form.patching_information.universe:
-            return False
-        current_channel = form.patching_information.channel
-        fixture_channel_count = len(form.patching_information.used_fixture.mode['channels'])
-        for _ in range(form.patching_information.count):
-            if execute:
-                color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-            used_fixture = form.patching_information.used_fixture.copy()
-            for index in range(fixture_channel_count):
-                item = self._broadcaster.patching_universes[form.patching_information.universe].patching[
-                    current_channel + index]
-                if execute:
-                    item.fixture = used_fixture
-                    item.fixture_channel = index
-                    item.color = color
-                else:
-                    if item.fixture.name != "Empty":
-                        return False
-            if form.patching_information.offset == 0:
-                current_channel += fixture_channel_count
-            else:
-                current_channel += form.patching_information.offset
-        self._broadcaster.fixture_patched.emit()
+    def _patching(self, form: PatchingDialog) -> bool:
+        for fixture in form.get_fixtures():
+            self._broadcaster.add_fixture.emit(fixture)
         return True

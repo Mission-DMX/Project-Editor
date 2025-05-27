@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtGui, QtWidgets
 
+from model import Universe
 from model.broadcaster import Broadcaster
-from model.patching_universe import PatchingUniverse
 from view.console_mode.console_universe_selector import UniverseSelector
 
 if TYPE_CHECKING:
@@ -81,7 +81,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
         if index == len(self._scenes) and index != 0:
             self.tabBar().setCurrentIndex(index - 1)
 
-    def add_universe(self, universe: PatchingUniverse) -> None:
+    def add_universe(self, universe: Universe) -> None:
         """ add a new universe """
         for scene in self._scenes:
             scene.add_universe(universe)
@@ -125,7 +125,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
                 file.write(data)
 
     def _load_scenes(self) -> None:
-        """load scene from file"""
+        """load a scene from a file"""
         file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self, "load Scene", "",
                                                              "Text Files (*.txt);;All Files (*)", )
         if file_name:
