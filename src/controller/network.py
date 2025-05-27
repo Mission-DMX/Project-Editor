@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
-from sympy import false
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
