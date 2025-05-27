@@ -44,6 +44,11 @@ class HelpCommand(Command):
                 self.context.print("\tsend -- Insert a new event into fish")
             case "showctl":
                 self.context.print("Manage the general show file and execution on fish")
+                self.context.print("\tload <show file> -- Load the provided show file and make it the current one")
+                self.context.print("\tfiltermsg <scene id> <filter id> <key> <value> -- Update the parameter <key> of "
+                                   "\n\t\tfilter <filter id> from scene <scene id> to value <value>.")
+                self.context.print("select-scene <scene id> -- switch to scene with ID <scene id>")
+                self.context.print("commit [--select-default-scene] -- apply the current loaded show file to fish")
             case "delay":
                 self.context.print("delay the execution of the macro by the specified amount of milliseconds")
             case _:
