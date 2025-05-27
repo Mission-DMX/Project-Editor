@@ -11,6 +11,7 @@ import proto.Events_pb2
 import proto.FilterMode_pb2
 import proto.RealTimeControl_pb2
 from controller.joystick.joystick_enum import JoystickList
+
 from .device import Device
 from .ofl.fixture import UsedFixture
 from .scene import FilterPage, Scene

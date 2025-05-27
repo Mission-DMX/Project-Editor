@@ -1,12 +1,13 @@
 # coding=utf-8
 """models for X-Touch and also for other connected devices like extenders or joystick"""
 from abc import ABC, abstractmethod
-from uuid import uuid4
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 import proto.Console_pb2
 from model.broadcaster import Broadcaster
 from model.color_hsi import ColorHSI
+
 if TYPE_CHECKING:
     from controller.network import NetworkManager
 

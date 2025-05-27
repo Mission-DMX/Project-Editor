@@ -1,6 +1,6 @@
 # coding=utf-8
 """Widget to edit a channel."""
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtCore, QtWidgets
 
 from model.channel import Channel
 from model.control_desk import BankSet

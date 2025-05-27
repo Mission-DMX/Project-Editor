@@ -3,7 +3,6 @@
 from PySide6 import QtCore
 
 
-
 class PatchingChannel(QtCore.QObject):
     """Channels for patching to reduce redundancy over scenes"""
 

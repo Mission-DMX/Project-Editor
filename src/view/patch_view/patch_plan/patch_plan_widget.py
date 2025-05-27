@@ -6,7 +6,7 @@ from PySide6.QtGui import QPainter, QPixmap
 from PySide6.QtWidgets import QWidget
 
 from model.ofl.fixture import UsedFixture
-from view.patch_view.patch_plan.channel_item_generator import create_item, item_width, item_height
+from view.patch_view.patch_plan.channel_item_generator import create_item, item_height, item_width
 from view.patch_view.patch_plan.used_fixture_widget import UsedFixtureWidget
 
 

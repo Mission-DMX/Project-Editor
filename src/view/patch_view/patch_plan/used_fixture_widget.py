@@ -1,11 +1,10 @@
 # coding=utf-8
 """A Used Fixture in the patching view"""
-from PySide6.QtGui import QPainter, QFont, QColorConstants, QPixmap
+from PySide6.QtGui import QColorConstants, QFont, QPainter, QPixmap
 from PySide6.QtWidgets import QWidget
 
 from model.ofl.fixture import UsedFixture
 from view.patch_view.patch_plan.channel_item_generator import create_item
-
 
 
 class UsedFixtureWidget(QWidget):

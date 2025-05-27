@@ -1,6 +1,6 @@
 # coding=utf-8
 """ item of the Patching """
-from PySide6.QtGui import QPixmap, QColorConstants, QPainter, QFont
+from PySide6.QtGui import QColorConstants, QFont, QPainter, QPixmap
 
 _width = 100
 _height = 100
