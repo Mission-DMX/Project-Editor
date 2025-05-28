@@ -11,7 +11,7 @@ from controller.cli.list_command import ListCommand
 from controller.cli.macro_command import MacroCommand
 from controller.cli.select_command import SelectCommand
 from controller.cli.show_command import ShowCommand
-from controller.cli.utility_commands import DelayCommand
+from controller.cli.utility_commands import DelayCommand, IfCommand, PrintCommand, SetCommand
 
 if TYPE_CHECKING:
     from controller.network import NetworkManager
@@ -43,6 +43,9 @@ def _split_args(line: str) -> list[str]:
                     in_escape = False
                 elif c == 'r':
                     current_arg += '\r'
+                    in_escape = False
+                elif c == '$':
+                    current_arg += "\\$"
                     in_escape = False
                 elif c == '"':
                     current_arg += c
@@ -84,12 +87,16 @@ class CLIContext:
             EventCommand(self),
             DelayCommand(self),
             MacroCommand(self),
+            PrintCommand(self),
+            SetCommand(self),
+            IfCommand(self),
             HelpCommand(self)
         ]
         self.selected_bank: "BankSet" | None = None
         self.selected_column: "DeskColumn" | None = None
         self.selected_scene: "Scene" | None = None
         self.stack = set()
+        self.variables: dict[str, str] = {}
         self.show = show
         self.networkmgr: "NetworkManager" = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
@@ -102,6 +109,17 @@ class CLIContext:
         self.exit_called = False
         self._exit_available = exit_available
 
+    def _replace_variables(self, args: list[str]) -> list[str]:
+        new_arg_list = []
+        for arg in args:
+            if arg.startswith("\\$"):
+                new_arg_list.append(arg[1:])
+            elif arg.startswith("$"):
+                new_arg_list.append(str(self.variables.get(arg[1:])))
+            else:
+                new_arg_list.append(arg)
+        return new_arg_list
+
     def exec_command(self, line: str) -> bool:
         """Execute a command within the given context
         Arguments:
@@ -112,6 +130,7 @@ class CLIContext:
         """
         try:
             args = _split_args(line)
+            args = self._replace_variables(args)
             if len(args) == 0:
                 return True
             global_args = self.parser.parse_args(args=args)

@@ -41,6 +41,9 @@ class ListCommand(Command):
             case "macros":
                 for m in self.context.show.macros:
                     self.context.print(m.name)
+            case "variables":
+                for k, v in self.context.variables.items():
+                    self.context.print(f"{k}={v}")
             case "bank_sets":
                 self.context.print(" Bank Set ID                         | Description ")
                 self.context.print("===================================================")

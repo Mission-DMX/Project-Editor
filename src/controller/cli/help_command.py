@@ -28,6 +28,14 @@ class HelpCommand(Command):
                 self.context.print("\tcolumns -- Display the columns in the current selected bank set.")
                 self.context.print("\tbank_sets -- Display the available bank sets.")
                 self.context.print("\tmacros -- Display the available macros.")
+                self.context.print("\tvariables -- Display all current variables.")
+            case "print":
+                self.context.print("Print all appended arguments")
+            case "set":
+                self.context.print("Set the specified variable to the specified value")
+            case "if":
+                self.context.print("Usage: if <expression> <command>")
+                self.context.print("Executes the specified command if the expression evaluates to true.")
             case "patch":
                 self.context.print("Patch a fixture. Usage: patch <fixture name> [number of fixtures]@<universe>"
                                    "[@<start channel>[@<offset>]]")
@@ -60,5 +68,6 @@ class HelpCommand(Command):
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
+                self.context.print("\tprint\tset\tif")
                 return False
         return True

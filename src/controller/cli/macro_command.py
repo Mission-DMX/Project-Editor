@@ -4,6 +4,7 @@ from controller.cli.command import Command
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser
+
     from controller.cli.cli_context import CLIContext
 
 
@@ -23,7 +24,7 @@ class MacroCommand(Command):
         pass
 
     def execute(self, args) -> bool:
-        match args.showaction:
+        match args.macroaction:
             case "exec":
                 if args.macro in self.context.stack:
                     self.context.print(f"ERROR: The macro '{args.macro}' is already in call stack. Recursion is not supported.")
@@ -31,7 +32,10 @@ class MacroCommand(Command):
                 for m in self.context.show.macros:
                     if m.name == args.macro:
                         self.context.stack.add(m.name)
+                        m.c.return_text = ""
                         res = m.exec()
+                        if len(m.c.return_text) > 0:
+                            self.context.print(m.c.return_text)
                         self.context.stack.discard(m.name)
                         return res
                 self.context.print(f"ERROR: Macro '{args.macro}' not found.")

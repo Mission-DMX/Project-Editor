@@ -78,7 +78,11 @@ class AudioSetupWidget(QWidget):
 
     def _get_input_devices(self):
         self._device_list.clear()
-        results = subprocess.run(['pactl', 'list', 'sources'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            results = subprocess.run(['pactl', 'list', 'sources'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except FileNotFoundError as e:
+            logger.error("Reading sources failed: Command 'pactl' not found. Is it in path?")
+            return
         if results.returncode != 0:
             logger.error("Reading available PA sources failed. Is pactl available and in path? Returned error: %s", results.stderr.decode())
             return
