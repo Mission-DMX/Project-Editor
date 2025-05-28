@@ -38,6 +38,9 @@ class ListCommand(Command):
                     for c in bank.columns:
                         self.context.print(
                             f"{"Color" if isinstance(c, ColorDeskColumn) else "Number"} - {c.display_name}")
+            case "macros":
+                for m in self.context.show.macros:
+                    self.context.print(m.name)
             case "bank_sets":
                 self.context.print(" Bank Set ID                         | Description ")
                 self.context.print("===================================================")

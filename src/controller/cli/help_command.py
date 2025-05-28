@@ -27,6 +27,7 @@ class HelpCommand(Command):
                 self.context.print("\tfilters -- Display the filter ids in the current selected scene.")
                 self.context.print("\tcolumns -- Display the columns in the current selected bank set.")
                 self.context.print("\tbank_sets -- Display the available bank sets.")
+                self.context.print("\tmacros -- Display the available macros.")
             case "patch":
                 self.context.print("Patch a fixture. Usage: patch <fixture name> [number of fixtures]@<universe>"
                                    "[@<start channel>[@<offset>]]")
@@ -51,9 +52,13 @@ class HelpCommand(Command):
                 self.context.print("commit [--select-default-scene] -- apply the current loaded show file to fish")
             case "delay":
                 self.context.print("delay the execution of the macro by the specified amount of milliseconds")
+            case "macro":
+                self.context.print("Control macros.")  # TODO
+                self.context.print("\texec <macro> -- Execute the macro")
+                # TODO
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
-                self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay")
+                self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
                 return False
         return True

@@ -8,6 +8,7 @@ from controller.cli.bankset_command import BankSetCommand
 from controller.cli.event_command import EventCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
+from controller.cli.macro_command import MacroCommand
 from controller.cli.select_command import SelectCommand
 from controller.cli.show_command import ShowCommand
 from controller.cli.utility_commands import DelayCommand
@@ -82,11 +83,13 @@ class CLIContext:
             ShowCommand(self),
             EventCommand(self),
             DelayCommand(self),
+            MacroCommand(self),
             HelpCommand(self)
         ]
         self.selected_bank: "BankSet" | None = None
         self.selected_column: "DeskColumn" | None = None
         self.selected_scene: "Scene" | None = None
+        self.stack = set()
         self.show = show
         self.networkmgr: "NetworkManager" = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
