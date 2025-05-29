@@ -11,15 +11,15 @@ from Detection.Detector import Detector
 
 class Yolo8GPUAsync(Detector):
     """
-    The `Yolo8` class is a detector that uses the YOLOv8 model for object detection.
+    The `Yolo8` class is a detector that uses the YOLOv8 models for object detection.
 
     Attributes:
-        model (cv2.dnn.Net): The YOLOv8 model.
+        model (cv2.dnn.Net): The YOLOv8 models.
 
     Methods:
         - `__init__()`: Initialize the Yolo8 object.
         - `detect(frame)`: Detect objects in a given frame.
-        - `loadModel()`: Load the YOLOv8 model from the ONNX file.
+        - `loadModel()`: Load the YOLOv8 models from the ONNX file.
     """
 
     def __init__(self):

@@ -10,6 +10,7 @@ from view.show_mode.show_ui_widgets.autotracker.UIWidget import AutoTrackerUIWid
 from view.show_mode.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
 from view.show_mode.show_ui_widgets.clock_ui_widget import ClockUIWidget
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
+from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
@@ -24,6 +25,9 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "autotracker": ("Auto Tracker", AutoTrackerUIWidget,
                     [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]]),
     "buttonarray": ("Button Array", ButtonsWithValueSubmit, [
+        [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+         FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
+    "buttonarray_submit": ("Button Array w/ Submit", ConstantNumberButtonList, [
         [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
          FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
     "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
