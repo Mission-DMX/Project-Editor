@@ -26,10 +26,20 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
         self._string_expression = QRegularExpression("\\\".+\\\"")
         self._mappings[self._string_expression] = self._string_format
 
+        self._escape_format = QTextCharFormat()
+        self._escape_format.setForeground(QBrush(QColor.fromRgb(0xFF, 0xA5, 0)))
+        self._escape_expression = QRegularExpression("\\\\[tnr$\"]")
+        self._mappings[self._escape_expression] = self._escape_format
+
         self._comment_format = QTextCharFormat()
         self._comment_format.setForeground(QBrush(QColor.fromRgb(0, 125, 0)))
         self._comment_expression = QRegularExpression("(#.+)|#")
         self._mappings[self._comment_expression] = self._comment_format
+
+        self._variable_format = QTextCharFormat()
+        self._variable_format.setForeground(QBrush(QColor.fromRgb(0, 80, 80)))
+        self._variable_expression = QRegularExpression("(?<=[^\\\\])(\\$\\w+)")
+        self._mappings[self._variable_expression] = self._variable_format
 
     def highlightBlock(self, text, /):
         """This method gets called for every text block. It sets the formats on it"""
