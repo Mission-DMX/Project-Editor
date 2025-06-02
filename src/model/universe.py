@@ -10,7 +10,7 @@ class Universe:
     """DMX universe with 512 channels"""
 
     def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe):
-        self._universe_proto: proto.UniverseControl_pb2 = universe_proto
+        self._universe_proto: proto.UniverseControl_pb2.Universe = universe_proto
         self._channels: Final[list[Channel]] = [Channel(channel_address) for channel_address in range(512)]
 
         self._name = f"Universe {self.universe_proto.id + 1}"

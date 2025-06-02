@@ -7,7 +7,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import C
 
 
 class TimelineChannelLabel(QWidget):
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent=parent)
         self._names: list[str] = []
         self._types: list[str] = []
@@ -48,7 +48,7 @@ class TimelineChannelLabel(QWidget):
         if w == 0 or h == 0:
             return
         painter = QtGui.QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(0, 0, w, h, QColor.fromRgb(0x3A, 0x3A, 0x3A))
         i = 0
         channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)

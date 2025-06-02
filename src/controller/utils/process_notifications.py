@@ -74,7 +74,7 @@ class _SignalWrapper(QObject):
 inst = _SignalWrapper()
 
 
-def get_progress_changed_signal() -> QtCore.Signal:
+def get_progress_changed_signal() -> QtCore.SignalInstance:
     """Get the global process notification signal"""
     return inst.global_process_progress_changed
 
