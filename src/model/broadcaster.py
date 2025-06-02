@@ -1,6 +1,6 @@
 # coding=utf-8
 """connector for Signals"""
-
+from typing import ClassVar, Protocol, Callable, TypeVarTuple, TypeVar
 from xml.etree.ElementTree import Element
 
 import numpy as np
@@ -11,11 +11,37 @@ import proto.Events_pb2
 import proto.FilterMode_pb2
 import proto.RealTimeControl_pb2
 from controller.joystick.joystick_enum import JoystickList
-
 from .device import Device
 from .ofl.fixture import UsedFixture
 from .scene import FilterPage, Scene
 from .universe import Universe
+
+Ts = TypeVarTuple("Ts")
+T = TypeVar("T")
+
+
+class SignalInstance(Protocol[T]):
+    """Instance of a Signal with a specific type."""
+
+    def connect(self, __slot: Callable[[T], None]) -> None: ...
+
+    def emit(self, __arg: T) -> None: ...
+
+
+# class SignalInstanceTuple(Protocol[Unpack[Ts]]):
+#    """Instance of a Signal with a specific tuple type."""
+#
+#    def connect(self, __slot: Callable[[Unpack[Ts]], None]) -> None: ...
+#
+#    def emit(self, __arg: Unpack[Ts]) -> None: ...
+
+
+class SignalInstanceEmpty(Protocol):
+    """Instance of a Signal without a type."""
+
+    def connect(self, __slot: Callable[[], None]) -> None: ...
+
+    def emit(self) -> None: ...
 
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
@@ -34,14 +60,14 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     """connector for Signals"""
 
-    connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
+    connection_state_updated: ClassVar[SignalInstance[bool]] = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(proto.RealTimeControl_pb2.RunMode.ValueType)  # TODO Remove
-    change_active_scene: QtCore.Signal = QtCore.Signal(Scene)
-    load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
-    show_file_loaded: QtCore.Signal = QtCore.Signal()
+    change_active_scene: ClassVar[SignalInstance[Scene]] = QtCore.Signal(Scene)
+    load_show_file = QtCore.Signal(Element, bool)  # TODO TYPE check
+    show_file_loaded: ClassVar[SignalInstanceEmpty] = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
     add_universe: QtCore.Signal = QtCore.Signal(Universe)
-    add_fixture:QtCore.Signal  = QtCore.Signal(UsedFixture)
+    add_fixture: QtCore.Signal = QtCore.Signal(UsedFixture)
     send_universe: QtCore.Signal = QtCore.Signal(Universe)
     send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
     send_request_dmx_data: QtCore.Signal = QtCore.Signal(Universe)
