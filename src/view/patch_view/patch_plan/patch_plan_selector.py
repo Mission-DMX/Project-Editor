@@ -85,15 +85,9 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self.insertTab(index, patch_plan, str(universe.name))
 
     def _remove_universe(self, universe: Universe):
-        to_remove = []
-        for ppu in self._patch_planes:
-            if ppu.universe.universe_proto.id == universe.universe_proto.id:
-                to_remove.append(ppu)
-        for tr in to_remove:
-            index = self.indexOf(tr)
-            self.removeTab(index)
-            logger.info("Removing patching tab %s", index)
-            self._patch_planes.remove(tr)
+        del self._patch_planes[universe.id]
+        self.removeTab(universe.id)
+        logger.info("Removing patching tab %s", universe.id)
 
     def _tab_clicked(self, scene_index: int) -> None:
         if scene_index == self.tabBar().count() - 1:
