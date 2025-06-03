@@ -2,13 +2,14 @@
 """Module for filter settings editor"""
 import os.path
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 import PySide6
 from PySide6.QtCore import Qt
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLineEdit, QPushButton, QVBoxLayout
 
-from model import Universe
+from model import Broadcaster, Universe
 from model.filter import Filter, FilterTypeEnumeration
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
@@ -21,6 +22,9 @@ from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidge
 from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+
+if TYPE_CHECKING:
+    from .nodes import FilterNode
 
 logger = getLogger(__name__)
 
@@ -183,7 +187,7 @@ class FilterSettingsDialog(QDialog):
             return key
         # Fetch universe
         universe_id = int(self.filter.filter_configurations["universe"])
-        for uni in self.filter.scene.board_configuration.universes:
+        for uni in self.filter.scene.board_configuration.broadcaster.universes.values():
             if uni.universe_proto.id == universe_id:
                 universe: Universe = uni
                 break
@@ -191,13 +195,13 @@ class FilterSettingsDialog(QDialog):
             logger.warning("FilterSettingsItem: Could not find universe %s", universe_id)
             return key
         # Fetch patching short name
-        for channel in universe.patching:
-            try:
-                if channel.address == int(value):
-                    key = f"{key} : {channel.fixture.short_name}"
-            except ValueError:
-                # We've loaded from a generated filter. Nothing to do here
-                pass
+        key = "Empty"
+        for fixture in Broadcaster().fixtures:
+            if fixture.universe_id == universe_id and value in range(fixture.start_index,
+                                                                     fixture.start_index + fixture.channel_length + 1):
+                key = f"{key} : {fixture.short_name}"
+                break
+
         return key
 
     def _ip_value_changed(self, key, value):

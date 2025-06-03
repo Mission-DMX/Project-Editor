@@ -4,8 +4,10 @@
 import re
 from dataclasses import dataclass
 
+import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from model import Broadcaster
 from model.ofl.fixture import Fixture, UsedFixture, make_used_fixture
 
 
@@ -13,12 +15,17 @@ from model.ofl.fixture import Fixture, UsedFixture, make_used_fixture
 class PatchingInformation:
     """Information for Patching"""
 
-    def __init__(self, used_fixture: UsedFixture):
-        self.used_fixture = used_fixture
+    def __init__(self, fixture):
+        self._fixture: Fixture = fixture
         self.count: int = 0
         self.universe: int = 0
         self.channel: int = 0
         self.offset: int = 0
+
+    @property
+    def fixture(self) -> Fixture:
+        """ property of the Fixture       """
+        return self._fixture
 
 
 class PatchingDialog(QtWidgets.QDialog):
@@ -27,8 +34,8 @@ class PatchingDialog(QtWidgets.QDialog):
     def __init__(self, fixture: tuple[Fixture, int], parent: object = None) -> None:
         super().__init__(parent)
         # Create widgets
-        self._fixture: Fixture = fixture[0]
-        self._patching_information = PatchingInformation(make_used_fixture(self._fixture, 0, -1))
+        self._broadcaster = Broadcaster()
+        self._patching_information = PatchingInformation(fixture[0])
 
         layout_fixture = QtWidgets.QHBoxLayout()
         self._select_mode = QtWidgets.QComboBox()
@@ -73,7 +80,7 @@ class PatchingDialog(QtWidgets.QDialog):
         self._ok.clicked.connect(self._accept)
         _cancel.clicked.connect(self._reject)
 
-        for mode in self._fixture['modes']:
+        for mode in self._patching_information.fixture['modes']:
             self._select_mode.addItem(mode['name'])
         self._select_mode.setCurrentIndex(fixture[1])
 
@@ -87,9 +94,22 @@ class PatchingDialog(QtWidgets.QDialog):
         self._error_label.setText(text)
 
     def _update_used_fixture(self) -> None:
-        self._patching_information.used_fixture = make_used_fixture(self._fixture, self._select_mode.currentIndex(),
-                                                                    self.patching_information.universe)
         self._validate_input()
+
+    def get_fixtures(self) -> list[UsedFixture]:
+        """generate a used Fixture list from Patching information"""
+        used_fixtures = []
+        start_index = self.patching_information.channel
+        for index in range(self.patching_information.count):
+            used_fixture = make_used_fixture(self._patching_information.fixture, self._select_mode.currentIndex(),
+                                             self.patching_information.universe, start_index)
+            used_fixtures.append(used_fixture)
+            if self._patching_information.offset == 0:
+                start_index += used_fixture.channel_length
+            else:
+                start_index += self._patching_information.offset
+
+        return used_fixtures
 
     def _accept(self) -> None:
         """accept the Fixture"""
@@ -113,14 +133,29 @@ class PatchingDialog(QtWidgets.QDialog):
         self._patching_information.universe = spliter[1] - 1 if spliter[1] > 0 else 0
         self._patching_information.channel = spliter[2] - 1 if spliter[2] > 0 else 0
         self._patching_information.offset = spliter[3]
-        channel_count = len(self._patching_information.used_fixture.mode['channels'])
+        channel_count = len(self._patching_information.fixture["modes"][self._select_mode.currentIndex()]["channels"])
 
         self._ok.setEnabled(False)
+        if not self._broadcaster.universes.get(self._patching_information.universe):
+            self._error_label.setText("no matching Universes")
+            return
         if 0 < self._patching_information.offset < channel_count:
             self._error_label.setText("offset to low")
             return
-        if self.patching_information.channel > 512 - (channel_count * self.patching_information.count):
+
+        start_index = self.patching_information.channel
+        offset = self._patching_information.offset or channel_count
+
+        block_starts = np.arange(self._patching_information.count) * offset + start_index
+        channel_offsets = np.arange(channel_count)
+        occupied = (block_starts[:, np.newaxis] + channel_offsets).ravel()
+
+        if occupied[-1] > 512:
             self._error_label.setText("not enough channels")
+            return
+
+        if np.isin(occupied, self._broadcaster.get_occupied_channels(self._patching_information.universe)).any():
+            self._error_label.setText("channels already occupied")
             return
 
         self._error_label.setText("No Error Found")

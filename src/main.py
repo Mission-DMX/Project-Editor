@@ -26,9 +26,9 @@ if __name__ == "__main__":
 
     app.setWindowIcon(QIcon(resource_path(os.path.join("resources", "app-icon.png"))))
 
-    version_string = "Error reading version."
     with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
         import tomlkit
+
         data = tomlkit.load(f)
     version_string = f"Version: {data['project']['version']}"
 
@@ -79,10 +79,10 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
 
-    def set_dark_theme(app):
+    def set_dark_theme(application: QApplication):
         """set default dark theme"""
 
-        app.setStyle("Fusion")
+        application.setStyle("Fusion")
         dark_palette = QPalette()
         dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
         dark_palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
@@ -102,21 +102,21 @@ if __name__ == "__main__":
         dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.WindowText, QColor(150, 150, 150))
         dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.HighlightedText, QColor(100, 100, 100))
 
-        app.setPalette(dark_palette)
+        application.setPalette(dark_palette)
 
 
-    def main(app: QApplication):
+    def main(application: QApplication):
         """Startup"""
         setup_logging()
         logging.basicConfig(level="INFO")
         opengl_context_init()
         setup_asyncio()
 
-        width, height = app.primaryScreen().size().toTuple()
+        width, height = application.primaryScreen().size().toTuple()
         FinalGlobals.set_screen_width(width)
         FinalGlobals.set_screen_height(height)
-        set_dark_theme(app)
-        app.setStyleSheet(Style.APP)
+        set_dark_theme(application)
+        application.setStyleSheet(Style.APP)
         JoystickHandler()
 
         # TODO we should parse the global application settings and recent project files here
@@ -126,18 +126,18 @@ if __name__ == "__main__":
         widget.showMaximized()
 
         cli_server = RemoteCLIServer(widget.show_configuration, widget._fish_connector)
-        app.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
+        application.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
         if len(sys.argv) > 1:
             show_file_path = sys.argv[1]
             if os.path.isfile(show_file_path):
                 from controller.file.read import read_document
                 read_document(show_file_path, widget.show_configuration)
                 widget.show_configuration.broadcaster.show_file_loaded.emit()
-                app.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
+                application.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
             else:
                 logger.warning("Failed to open show file '%s' as it does not seam to be a file.", show_file_path)
         splashscreen.finish(widget)
-        return_code = app.exec()
+        return_code = application.exec()
         cli_server.stop()
         sys.exit(return_code)
 
