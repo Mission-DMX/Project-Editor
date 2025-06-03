@@ -4,12 +4,10 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
 
-
-
 if TYPE_CHECKING:
+    from controller.network import NetworkManager
     from model import Broadcaster, Filter
     from model.scene import Scene
-    from controller.network import NetworkManager
 
 _network_manager_instance: "NetworkManager" = None
 
