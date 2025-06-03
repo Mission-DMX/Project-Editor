@@ -31,8 +31,9 @@ class PatchingSelect(QtWidgets.QScrollArea):
         if not os.path.exists(fixtures_path):
             print("Downloading fixture library. Please wait")
             url = 'https://open-fixture-library.org/download.ofl'
-            r = requests.get(url, allow_redirects=True)
-            open(zip_path, 'wb').write(r.content)
+            r = requests.get(url, allow_redirects=True, timeout=5)
+            with open(zip_path, 'wb') as file:
+                file.write(r.content)
             with zipfile.ZipFile(zip_path) as zip_ref:
                 zip_ref.extractall(fixtures_path)
             print("Fixture lib downloaded and installed.")
