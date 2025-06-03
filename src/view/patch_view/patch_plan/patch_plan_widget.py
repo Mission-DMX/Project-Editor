@@ -26,7 +26,7 @@ class PatchPlanWidget(QWidget):
             pixmap = create_item(i)
             self._chanel_items.append(pixmap)
 
-    def paintEvent(self, event):
+    def paintEvent(self, _):
         """paint the widget"""
         painter = QPainter(self)
         cols = self.width() // item_width()
