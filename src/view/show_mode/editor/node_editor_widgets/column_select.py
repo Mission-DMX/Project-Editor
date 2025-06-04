@@ -35,6 +35,8 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
             self._widget.ignore_main_brightness = conf.get("ignore_main_brightness_control") == "true"
         set_id = conf.get("set_id") if "set_id" in conf.keys() else ""
         column_id = conf.get("column_id") if "column_id" in conf.keys() else ""
+        self._widget.add_base_bank_set(self._filter.scene.linked_bankset)
+        self._widget.reload_data()
         self._widget.set_selected_item(set_id, column_id)
 
     def _get_configuration(self) -> dict[str, str]:

@@ -359,7 +359,7 @@ class _BankEditWidget(QWidget):
                     self._update_color_label(index)
 
     def _update_color_label(self, index: int):
-        c = Qt.gray
+        c = Qt.GlobalColor.gray
         if self._bank:
             if len(self._bank.columns) > index:
                 col = self._bank.columns[index]
