@@ -47,6 +47,8 @@ def _handle_incoming_sender_update(msg: "event_sender"):
                 raise NotImplemented()
             case "fish.builtin.macrokeypad":
                 raise NotImplemented()
+            case "fish.builtin.audioextract":
+                ev = AudioExtractEventSender(msg.name)
             case _:
                 logger.error("Unexpaected event sender type: '%s'",msg.type)
                 return
@@ -149,6 +151,43 @@ class XtouchGPIOEventSender(EventSender):
     @pedal_threshold.setter
     def pedal_threshold(self, new_value: int):
         self.configuration["expression_pedal_threshold"] = str(new_value)
+
+
+class AudioExtractEventSender(EventSender):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+    @property
+    def audio_device(self) -> str:
+        return self.configuration.get("dev") or "default"
+
+    @audio_device.setter
+    def audio_device(self, new_value: str):
+        self.configuration["dev"] = new_value
+
+    @property
+    def high_cut(self) -> int:
+        return int(self.configuration.get("high_cut") or "100")
+
+    @high_cut.setter
+    def high_cut(self, new_value: int):
+        self.configuration["high_cut"] = str(new_value)
+
+    @property
+    def low_cut(self) -> int:
+        return int(self.configuration.get("low_cut") or "10")
+
+    @low_cut.setter
+    def low_cut(self, new_value: int):
+        self.configuration["low_cut"] = str(new_value)
+
+    @property
+    def magnitude(self) -> float:
+        return float(self.configuration.get("magnitude") or "10")
+
+    @magnitude.setter
+    def magnitude(self, new_value: float):
+        self.configuration["magnitude"] = str(new_value)
 
 
 def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] = []):
