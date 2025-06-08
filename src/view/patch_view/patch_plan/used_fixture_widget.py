@@ -32,10 +32,9 @@ class UsedFixtureWidget(QWidget):
         return self._fixture.start_index
 
     def _build_static_pixmap(self, channel_id: int) -> QPixmap:
-        pixmap = create_item(self._fixture.start_index + channel_id, self._fixture.color_on_stage)
+        pixmap = create_item(self._fixture.start_index + channel_id + 1, self._fixture.color_on_stage)
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
 
         painter.setPen(QColorConstants.Black)
         font = QFont("Arial", 10)
