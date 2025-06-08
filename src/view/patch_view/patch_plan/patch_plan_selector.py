@@ -48,8 +48,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
 
         dialog = UniverseDialog(nex_id)
         if dialog.exec():
-            universe = Universe(dialog.output)
-            self._broadcaster.add_universe.emit(universe)
+            Universe(dialog.output)
 
     def contextMenuEvent(self, event):
         """context menu"""

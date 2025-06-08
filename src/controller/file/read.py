@@ -523,7 +523,6 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     universe = Universe(universe_proto)
     universe.name = name
     universe.description = description
-    board_configuration.broadcaster.add_universe.emit(universe)
 
     for fixture in patching:
         board_configuration.broadcaster.add_fixture.emit(fixture)
