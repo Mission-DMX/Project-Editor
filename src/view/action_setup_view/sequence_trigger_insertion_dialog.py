@@ -5,6 +5,7 @@ from model.filter import FilterTypeEnumeration
 from model.filter_data.sequencer.sequencer_filter_model import SequencerFilterModel
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog
+from view.action_setup_view._command_insertion_dialog import escape_argument as esc
 
 
 class SequenceTriggerInsertionDialog(_CommandInsertionDialog):
@@ -31,4 +32,5 @@ class SequenceTriggerInsertionDialog(_CommandInsertionDialog):
 
     def get_command(self) -> str:
         data = self._sequence_selection_cb.currentData()
-        return f"event send -i {data[0]} --function {data[1]} --args {data[2]}  # trigger transition {self._sequence_selection_cb.currentText()}"
+        return (f"event send -i {esc(data[0])} --function {esc(data[1])} --args {esc(data[2])}  # trigger "
+                f"transition {self._sequence_selection_cb.currentText()}")

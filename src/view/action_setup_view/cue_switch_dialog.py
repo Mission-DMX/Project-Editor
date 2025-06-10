@@ -7,6 +7,7 @@ from model.filter import FilterTypeEnumeration
 from model.filter_data.cues.cue import Cue
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog
+from view.action_setup_view._command_insertion_dialog import escape_argument as esc
 
 
 class _InsertCueSwitchDialog(_CommandInsertionDialog):
@@ -24,8 +25,8 @@ class _InsertCueSwitchDialog(_CommandInsertionDialog):
         self.custom_layout.setCurrentIndex(0)
 
     def get_command(self) -> str:
-        return (f"showctl filtermsg {self._scene.scene_id} {self.filter_id} run_cue "
-                f"{self._cue_selection_cb.currentIndex()}  # switch to cue '{self._cue_selection_cb.currentText()}' ")
+        return (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} run_cue "
+                f"{self._cue_selection_cb.currentIndex()}  # switch to cue '{esc(self._cue_selection_cb.currentText())}' ")
 
     def on_filter_selected(self):
         self._cue_selection_cb.setEnabled(True)

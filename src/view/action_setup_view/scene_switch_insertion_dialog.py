@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QComboBox, QDialogButtonBox, QWidget
 from model import BoardConfiguration
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog
+from view.action_setup_view._command_insertion_dialog import escape_argument as esc
 
 
 class SceneSwitchInsertionDialog(_CommandInsertionDialog):
@@ -24,4 +25,4 @@ class SceneSwitchInsertionDialog(_CommandInsertionDialog):
         data = self._scene_cb.currentData()
         if data is None:
             return "# please create a scene first."
-        return f"showctl select-scene {data}  # go to scene {self._scene_cb.currentText()}"
+        return f"showctl select-scene {esc(data)}  # go to scene {self._scene_cb.currentText()}"
