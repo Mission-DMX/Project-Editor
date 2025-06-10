@@ -13,6 +13,7 @@ from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelecti
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
+from view.show_mode.show_ui_widgets.macro_buttons_ui_widget import MacroButtonUIWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
 from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
 
@@ -37,6 +38,7 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
     "label": ("Text Label", ShowLabelUIWidget, []),
     "clock": ("BF Clock", ClockUIWidget, []),
+    "macrobuttons": ("Macro Buttons", MacroButtonUIWidget, []),
     # TODO add direct inputs
     # TODO add fader update widgets
     "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]]),
