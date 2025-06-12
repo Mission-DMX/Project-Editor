@@ -1,3 +1,5 @@
+# coding=utf-8
+"""Macros with their Triggers"""
 from logging import getLogger
 
 from PySide6.QtCore import QObject, Signal
@@ -19,7 +21,6 @@ def trigger_factory(trigger_type: str):
 
 
 class Trigger(QObject):
-
     SUPPORTED_TYPES = ["startup", "f_keys"]
 
     enabled_changed: Signal = Signal(bool)
@@ -53,17 +54,21 @@ class Trigger(QObject):
             self.enabled_changed.emit(new_state)
 
     def set_param(self, key: str, value: str):
+        """set Params of a Trigger"""
         self._configuration[key] = value
 
     @property
     def configuration(self) -> dict[str, str]:
+        """configuration Copy of a Trigger"""
         return self._configuration.copy()
 
     @property
     def type(self) -> str:
+        """type of the Trigger"""
         return self._type
 
     def exec(self):
+        """Execute a Trigger"""
         if self._macro is not None:
             pn = get_process_notifier(f"Macro: {self._macro.name}, triggered by {self.name}", 1)
             pn.current_step_description = "Inferencing macro"
@@ -73,13 +78,17 @@ class Trigger(QObject):
 
 
 class _StartupTrigger(Trigger):
+    """Trigger on Startup"""
 
     def __init__(self):
         super().__init__("startup")
         from model import Broadcaster
         Broadcaster().board_configuration_loaded.connect(self.exec)
 
+
 class _FKeysTrigger(Trigger):
+    """Triggers for F-Keys"""
+
     def __init__(self):
         super().__init__("f_keys")
         self._key: int = 0
@@ -92,6 +101,7 @@ class _FKeysTrigger(Trigger):
             self.exec()
 
     def set_param(self, key: str, value: str):
+        """set Params of a Trigger"""
         super().set_param(key, value)
         if key == "button":
             new_value = int(value)
@@ -129,6 +139,7 @@ class Macro:
 
     @property
     def all_triggers(self) -> list[Trigger]:
+        """all Triggers of a Macro"""
         return list(self._triggers.keys())
 
     def add_trigger(self, t: Trigger, active: bool = True):
@@ -152,6 +163,7 @@ class Macro:
         return m
 
     def exec(self) -> bool:
+        """execute a Macro"""
         success = True
         for l in self.content.split("\n"):
             if not self.c.exec_command(l):
