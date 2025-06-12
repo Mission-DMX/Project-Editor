@@ -9,6 +9,10 @@ if TYPE_CHECKING:
 
 
 class BoxGridItem(QObject):
+    """
+    This class represents a box button. It features a text and an optional icon.
+    On click, a signal 'clicked' will be emitted.
+    """
     clicked: Signal = Signal()
 
     def __init__(self, parent: QWidget | None):
@@ -18,6 +22,11 @@ class BoxGridItem(QObject):
         self.additional_render_method: callable | None = None
 
     def set_icon(self, icon: QPixmap | QIcon | None):
+        """
+        Sets the icon of this item. If a QIcon is passed, it will be automatically converted to the correct size.
+        If a pixmap is passed, it needs to have the correct size from the beginning on.
+        :param icon: QPixmap or QIcon or None, the icon to set
+        """
         if icon is None:
             self._icon = None
         elif isinstance(icon, QPixmap):
@@ -29,7 +38,8 @@ class BoxGridItem(QObject):
             )
 
     @property
-    def pixmap(self) -> "QPixmap":
+    def pixmap(self) -> "QPixmap | None":
+        """Get the current pixmap of the item. This property might return None."""
         return self._icon
 
 
@@ -48,10 +58,12 @@ class BoxGridRenderer(QWidget):
 
     @property
     def box_width(self) -> int:
+        """Get the width of individual items."""
         return self._box_width
 
     @box_width.setter
     def box_width(self, new_value: int):
+        """Set the width of individual items."""
         self._box_width = max(new_value, 0)
         self.setMinimumWidth(self._box_width + self._scroll_bar_size)
         self.update()
@@ -59,22 +71,32 @@ class BoxGridRenderer(QWidget):
 
     @property
     def box_height(self) -> int:
+        """Get the height of individual items."""
         return self._box_height
 
     @box_height.setter
     def box_height(self, new_value: int):
+        """Set the height of individual items."""
         self._box_height = max(0, new_value)
         self.setMinimumHeight(self._box_height)
         self.update()
         self.repaint()
 
     def add_label(self, text: str, icon: QIcon | None = None):
+        """
+        Add a new item based on the provided text.
+        :param text: The text of the new item
+        :param icon: (optional) an icon of the new item to add."""
         b = BoxGridItem(self)
         b.text = text
         b.icon = icon
         self.add_item(b)
 
     def add_item(self, b: BoxGridItem):
+        """
+        Add an item object.
+        :param b: The BoxGridItem to add.
+        """
         self._boxes.append(b)
         b.setParent(self)
         self.update()
@@ -90,12 +112,18 @@ class BoxGridRenderer(QWidget):
         super().resizeEvent(event)
 
     def clear(self):
+        """Clear the contained items."""
         self._boxes.clear()
         self.update()
         self.repaint()
 
     def item_at(self, i: int) -> BoxGridItem | None:
-        if not 0 <= i < len(self._boxes):
+        """
+        Access the desired item using the given location.
+        :param i: The index of the item to get.
+        :returns: The item or None if it does not exist.
+        """
+        if not (0 <= i < len(self._boxes)):
             return None
         return self._boxes[i]
 
