@@ -269,13 +269,6 @@ class UsedFixture(QtCore.QObject):
         """get a fixture channel by index"""
         return self._fixture_channels[index]
 
-    def copy(self):
-        """
-        This method clones the used fixture entry, except for the occupied channels
-        """
-        return UsedFixture(self._fixture.copy(), self.mode_index, self.parent_universe,
-                           self.start_index)
-
 
 def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int, start_index: int) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
