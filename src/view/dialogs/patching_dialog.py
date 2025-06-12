@@ -96,20 +96,18 @@ class PatchingDialog(QtWidgets.QDialog):
     def _update_used_fixture(self) -> None:
         self._validate_input()
 
-    def get_fixtures(self) -> list[UsedFixture]:
+    def generate_fixtures(self) -> None:
         """generate a used Fixture list from Patching information"""
-        used_fixtures = []
+
         start_index = self.patching_information.channel
         for index in range(self.patching_information.count):
             used_fixture = make_used_fixture(self._patching_information.fixture, self._select_mode.currentIndex(),
                                              self.patching_information.universe, start_index)
-            used_fixtures.append(used_fixture)
+
             if self._patching_information.offset == 0:
                 start_index += used_fixture.channel_length
             else:
                 start_index += self._patching_information.offset
-
-        return used_fixtures
 
     def _accept(self) -> None:
         """accept the Fixture"""

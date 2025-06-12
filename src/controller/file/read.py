@@ -507,7 +507,7 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
             case "ftdi_location":
                 ftdi = _parse_ftdi_location(child)
             case "patching":
-                patching = _parse_patching(child, universe_id)
+                _parse_patching(child, universe_id)
 
             case _:
                 logger.warning("Universe %s contains unknown element: %s",
@@ -523,9 +523,6 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     universe = Universe(universe_proto)
     universe.name = name
     universe.description = description
-
-    for fixture in patching:
-        board_configuration.broadcaster.add_fixture.emit(fixture)
 
 
 def _parse_physical_location(location_element: ElementTree.Element) -> int:
@@ -590,7 +587,7 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> proto.Univers
                                                         serial=serial_identifier)
 
 
-def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> list[UsedFixture]:
+def _parse_patching(location_element: ElementTree.Element, universe_id: int) ->None:
     """
     Load patching information from XML data.
     :param location_element: The XML data to load from
@@ -598,14 +595,13 @@ def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> 
     :returns: The loaded fixtures
     """
     fixtures_path = '/var/cache/missionDMX/fixtures'  # TODO config file
-    used_fixtures: list[UsedFixture] = []
+
     for child in location_element:
-        used_fixture = make_used_fixture(load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
+        make_used_fixture(load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
                                          int(child.attrib['mode']), universe_id, int(child.attrib['start']))
 
-        used_fixtures.append(used_fixture)
+
     # TODO load fixture name from file
-    return used_fixtures
 
 
 def _parse_ui_hint(ui_hint_element: ElementTree.Element, board_configuration: BoardConfiguration):

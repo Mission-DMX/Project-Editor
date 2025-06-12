@@ -111,10 +111,5 @@ class PatchingSelect(QtWidgets.QScrollArea):
             patch fixtures from PatchingDialog
         """
         if form.result():
-            self._patching(form)
+            form.generate_fixtures()
         self._broadcaster.view_leave_patching.emit()
-
-    def _patching(self, form: PatchingDialog) -> bool:
-        for fixture in form.get_fixtures():
-            self._broadcaster.add_fixture.emit(fixture)
-        return True

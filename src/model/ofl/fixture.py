@@ -10,9 +10,10 @@ from typing import Final, NotRequired, TypedDict
 from uuid import UUID, uuid4
 
 import numpy as np
-from numpy.typing import NDArray
 from PySide6 import QtCore
+from numpy.typing import NDArray
 
+from model import Broadcaster
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 logger = getLogger(__file__)
@@ -124,7 +125,7 @@ class UsedFixture(QtCore.QObject):
     static_data_changed: QtCore.Signal = QtCore.Signal()
 
     def __init__(self, fixture: Fixture, mode_index: int, parent_universe: int,
-                 start_index: int, uuid: UUID = None, color: str = None) -> None:
+                 start_index: int, uuid: UUID = None, color: str = None):
         super().__init__()
         self._fixture: Final[Fixture] = fixture
         self._uuid: Final[UUID] = uuid if uuid else uuid4()
@@ -144,6 +145,7 @@ class UsedFixture(QtCore.QObject):
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
         self.parent_universe: int = parent_universe
+        Broadcaster().add_fixture.emit(self)
 
     @property
     def uuid(self) -> UUID:
