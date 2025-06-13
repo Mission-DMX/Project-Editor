@@ -13,7 +13,7 @@ import numpy as np
 from PySide6 import QtCore
 from numpy.typing import NDArray
 
-from model import Broadcaster
+from model.broadcaster import Broadcaster
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 logger = getLogger(__file__)

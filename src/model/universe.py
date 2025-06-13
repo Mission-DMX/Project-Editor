@@ -3,7 +3,7 @@
 from typing import Final
 
 import proto.UniverseControl_pb2
-from model import Broadcaster
+from model.broadcaster import Broadcaster
 from model.channel import Channel
 
 
