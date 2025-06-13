@@ -403,12 +403,12 @@ class TheaterSceneWizard(QWizard):
         return True
 
     def _link_output_filters(self, bankset_link_map, cue_link_map: dict[str, str], output_map, scene):
-        for c in self._channels:
+        for c in self._channels: # TODO  channels have no fixtures
             for fd in c["fixtures"]:
                 fixture = fd[0]
                 if not isinstance(fixture, UsedFixture):
                     logger.critical("Entry was supposed to be Fixture")
-                for patching_channel in fixture.channels:  # TODO
+                for patching_channel in fixture.channels:
                     output_channel_id = output_map.get(patching_channel)
                     if output_channel_id is not None:
                         output_channel_id = str(output_channel_id).split(":")
