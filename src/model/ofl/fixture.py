@@ -3,7 +3,7 @@
 import json
 from enum import Enum, IntFlag
 from logging import getLogger
-from typing import TYPE_CHECKING, NotRequired, TypedDict
+from typing import TYPE_CHECKING, NotRequired, TypedDict, Any
 
 logger = getLogger(__file__)
 
@@ -98,14 +98,14 @@ class ColorSupport(IntFlag):
 def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
     with open(file, "r", encoding='UTF-8') as f:
-        ob: json = json.load(f)
+        ob: dict[str, Any] = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
-                   categories=ob["categories"] if "categories" in ob else [],
+                   categories=ob["categories"] if "categories" in ob else set(),
                    modes=ob["modes"] if "modes" in ob else [], fileName=file.split("/fixtures/")[1])
 
 
-def try_load(ob: json, name: object) -> str:
-    """ try to load not required json parts"""
+def try_load(ob: dict[str, str], name: str) -> str:
+    """ try to load not required JSON parts"""
     try:
         return ob[name]
     except KeyError:
@@ -139,7 +139,7 @@ class UsedFixture:
         self.tilt_channels: list["PatchingChannel"] = []
         self.animation_speed_channels: list["PatchingChannel"] = []
 
-    def update_segments(self):
+    def update_segments(self) -> None:
         self.red_segments.clear()
         self.blue_segments.clear()
         self.green_segments.clear()
@@ -233,13 +233,13 @@ class UsedFixture:
         has_uv = len(self.uv_segments) > 0
 
         if has_red and has_green and has_blue:
-            found_color += ColorSupport.HAS_RGB_SUPPORT
+            found_color &= ColorSupport.HAS_RGB_SUPPORT
         if has_uv:
-            found_color += ColorSupport.HAS_UV_SEGMENT
+            found_color &= ColorSupport.HAS_UV_SEGMENT
         if has_amber:
-            found_color += ColorSupport.HAS_AMBER_SEGMENT
+            found_color &= ColorSupport.HAS_AMBER_SEGMENT
         if has_white:
-            found_color += ColorSupport.HAS_WHITE_SEGMENT
+            found_color &= ColorSupport.HAS_WHITE_SEGMENT
         return found_color
 
     @property
