@@ -496,7 +496,6 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     physical: int | None = None
     artnet: proto.UniverseControl_pb2.Universe.ArtNet | None = None
     ftdi: proto.UniverseControl_pb2.Universe.ArtNet | None = None
-    patching = None
 
     for child in universe_element:
         match child.tag:
