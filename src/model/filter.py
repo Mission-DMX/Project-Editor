@@ -192,6 +192,10 @@ class Filter:
         one in case of a virtual filter that the GUI needs to resolve first."""
         return self._filter_type
 
+    @filter_type.setter
+    def filter_type(self, type_):
+        self._filter_type = type_
+
     @property
     def pos(self) -> tuple[float, float] | None:
         """The position of the filter node inside the ui"""
