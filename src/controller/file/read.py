@@ -493,24 +493,9 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     if universe_id is None:
         logger.error("Could not parse universe element, id attribute is missing")
 
-    physical: int | None = None
-    artnet: proto.UniverseControl_pb2.Universe.ArtNet | None = None
-    ftdi: proto.UniverseControl_pb2.Universe.ArtNet | None = None
-
-    for child in universe_element:
-        match child.tag:
-            case "physical_location":
-                physical = _parse_physical_location(child)
-            case "artnet_location":
-                artnet = _parse_artnet_location(child)
-            case "ftdi_location":
-                ftdi = _parse_ftdi_location(child)
-            case "patching":
-                _parse_patching(board_configuration, child, universe_id)
-
-            case _:
-                logger.warning("Universe %s contains unknown element: %s",
-                               universe_id, child.tag)
+    physical = _parse_physical_location(pl) if (pl := universe_element.find("physical_location")) is not None else None
+    artnet = _parse_artnet_location(an) if (an := universe_element.find("artnet_location")) is not None else None
+    ftdi = _parse_ftdi_location(ftdi_l) if (ftdi_l := universe_element.find("ftdi_location")) is not None else None
 
     if physical is None and artnet is None and ftdi is None:
         logger.warning("Could not parse any location for universe %s", universe_id)
@@ -519,9 +504,13 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
                                                         physical_location=physical,
                                                         remote_location=artnet,
                                                         ftdi_dongle=ftdi)
+
     universe = Universe(universe_proto)
     universe.name = name
     universe.description = description
+
+    _parse_patching(board_configuration, pi, universe_id) if (pi := universe_element.find(
+        "patching")) is not None else None
 
 
 def _parse_physical_location(location_element: ElementTree.Element) -> int:
