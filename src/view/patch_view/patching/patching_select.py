@@ -35,6 +35,10 @@ class PatchingSelect(QtWidgets.QScrollArea):
             logger.info("Downloading fixture library. Please wait")
             url = 'https://open-fixture-library.org/download.ofl'
             r = requests.get(url, allow_redirects=True, timeout=5)
+            if r.status_code != 200:
+                logger.error("Failed to download fixture library")
+                return
+
             with open(zip_path, 'wb') as file:
                 file.write(r.content)
             with zipfile.ZipFile(zip_path) as zip_ref:
