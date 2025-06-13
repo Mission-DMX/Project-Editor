@@ -509,8 +509,8 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     universe.name = name
     universe.description = description
 
-    _parse_patching(board_configuration, pi, universe_id) if (pi := universe_element.find(
-        "patching")) is not None else None
+    if patching := universe_element.find("patching"):
+        _parse_patching(board_configuration, patching, universe_id)
 
 
 def _parse_physical_location(location_element: ElementTree.Element) -> int:
