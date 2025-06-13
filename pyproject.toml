@@ -1,9 +1,9 @@
 [project]
 name = "Project-Editor"
-version = "1.0.14"
+version = "1.0.15"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
-    { name = "MKay", email = "ma.kaussow@uni-luebeck.de" },
+    { name = "CorsCodini", email = "cors.codini@web.de" },
     { name = "Niklas Naumann", email = "niklas.naumann@student.uni-luebeck.de" },
     { name = "Doralitze", email = "doralitze@chaotikum.org" },
 ]
@@ -44,6 +44,10 @@ dev = [
     "types-requests>=2.32.0.20250328",
     "types-Markdown>=3.8.0.20250415",
 ]
+
+[tool.missionDMX]
+display-name = "Mission DMX"
+organization = { name = "missionDMX", domain = "technikradio.org" }
 
 [tool.pdm]
 distribution = false
