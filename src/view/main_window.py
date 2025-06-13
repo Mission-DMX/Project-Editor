@@ -18,7 +18,7 @@ from model.control_desk import BankSet, ColorDeskColumn
 from style import Style
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
-from view.console_mode.console_scene_selector import ConsoleSceneSelector
+from view.console_mode.console_universe_selector import UniverseSelector
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
@@ -60,7 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
-            ("Console Mode", MainWidget(ConsoleSceneSelector(self._board_configuration, self), self),
+            ("Console Mode", MainWidget(UniverseSelector(self._board_configuration, self), self),
              lambda: self._to_widget(0)),
             (
                 "Editor Mode",
