@@ -2,6 +2,7 @@
 """select Manufacturer"""
 import os
 import zipfile
+from logging import getLogger
 
 import requests
 from PySide6 import QtWidgets
@@ -16,6 +17,8 @@ from view.patch_view.patching.fixture_item import FixtureItem
 from view.patch_view.patching.manufacturer_item import ManufacturerItem
 from view.patch_view.patching.mode_item import ModeItem
 
+logger = getLogger(__name__)
+
 
 class PatchingSelect(QtWidgets.QScrollArea):
     """select Manufacturer"""
@@ -29,14 +32,14 @@ class PatchingSelect(QtWidgets.QScrollArea):
         fixtures_path = os.path.join(cache_path, 'fixtures/')
         zip_path = os.path.join(cache_path, 'fixtures.zip')
         if not os.path.exists(fixtures_path):
-            print("Downloading fixture library. Please wait")
+            logger.info("Downloading fixture library. Please wait")
             url = 'https://open-fixture-library.org/download.ofl'
             r = requests.get(url, allow_redirects=True, timeout=5)
             with open(zip_path, 'wb') as file:
                 file.write(r.content)
             with zipfile.ZipFile(zip_path) as zip_ref:
                 zip_ref.extractall(fixtures_path)
-            print("Fixture lib downloaded and installed.")
+            logger.info("Fixture lib downloaded and installed.")
         manufacturers: list[tuple[Manufacture, list[Fixture]]] = generate_manufacturers(fixtures_path)
         self.index = 0
         self.container = QtWidgets.QStackedWidget()
