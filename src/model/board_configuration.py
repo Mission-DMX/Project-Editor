@@ -2,12 +2,12 @@
 """Provides data structures with accessors and modifiers for DMX"""
 from logging import getLogger
 from typing import Callable, Sequence
+
 import numpy as np
-
-
 from PySide6 import QtCore, QtGui
 
 import proto.FilterMode_pb2
+
 from .broadcaster import Broadcaster
 from .device import Device
 from .macro import Macro

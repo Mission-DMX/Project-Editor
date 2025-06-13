@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QScrollArea
 
-from model import Universe, BoardConfiguration
+from model import BoardConfiguration, Universe
 from model.broadcaster import Broadcaster
 from model.ofl.fixture import UsedFixture
 from view.dialogs.universe_dialog import UniverseDialog

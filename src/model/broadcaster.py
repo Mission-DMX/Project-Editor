@@ -3,7 +3,6 @@
 
 from xml.etree.ElementTree import Element
 
-
 from PySide6 import QtCore
 
 import proto.DirectMode_pb2
