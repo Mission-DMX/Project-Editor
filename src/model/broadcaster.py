@@ -3,7 +3,7 @@
 
 from xml.etree.ElementTree import Element
 
-import numpy as np
+
 from PySide6 import QtCore
 
 import proto.DirectMode_pb2
@@ -108,20 +108,8 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     active_scene_switched: QtCore.Signal = QtCore.Signal(int)
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
-    fixtures: list["sedFixture"] = []
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
-
-    def get_occupied_channels(self, universe_id: int) -> np.typing.NDArray[int]:
-        """Returns a list of all channels that are occupied by a scene."""
-        ranges = [
-            np.arange(fixture.start_index, fixture.start_index + fixture.channel_length)
-            for fixture in self.fixtures
-            if fixture.universe_id == universe_id
-        ]
-
-        return np.concatenate(ranges) if ranges else np.array([], dtype=int)
-
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super(Broadcaster, cls).__new__(cls)

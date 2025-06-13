@@ -9,13 +9,12 @@ from PySide6.QtCore import Qt
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLineEdit, QPushButton, QVBoxLayout
 
-from model import Broadcaster, Universe
+from model import Universe
 from model.filter import Filter, FilterTypeEnumeration
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
-
 from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
@@ -196,7 +195,7 @@ class FilterSettingsDialog(QDialog):
             return key
         # Fetch patching short name
         key = "Empty"
-        for fixture in Broadcaster().fixtures:
+        for fixture in self.filter.scene.board_configuration.fixtures:
             if fixture.universe_id == universe_id and value in range(fixture.start_index,
                                                                      fixture.start_index + fixture.channel_length + 1):
                 key = f"{key} : {fixture.short_name}"

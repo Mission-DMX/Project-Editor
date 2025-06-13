@@ -49,7 +49,7 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
         else:
             _create_physical_location_element(physical=proto.physical_location, parent=universe_element)
 
-        if fixtures := Broadcaster().fixtures:
+        if fixtures := board_configuration.fixtures:
             patching_element = ElementTree.SubElement(universe_element, "patching")
             for fixture in fixtures:
                 _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)

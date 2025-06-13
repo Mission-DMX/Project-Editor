@@ -1,8 +1,9 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
 from logging import getLogger
-from types import MappingProxyType
-from typing import Callable
+from typing import Callable, Sequence
+import numpy as np
+
 
 from PySide6 import QtCore, QtGui
 
@@ -27,7 +28,8 @@ class BoardConfiguration:
         self._scenes: list[Scene] = []
         self._scenes_index: dict[int, int] = {}
         self._devices: list[Device] = []
-        self._universes: dict[int, "Universe"] = {}
+        self._universes: dict[int, Universe] = {}
+        self._fixtures: list[UsedFixture] = []
         self._ui_hints: dict[str, str] = {}
         self._macros: list[Macro] = []
 
@@ -93,7 +95,7 @@ class BoardConfiguration:
         self._universes.update({universe.id: universe})
 
     def _add_fixture(self, used_fixture: UsedFixture):
-        self._broadcaster.fixtures.append(used_fixture)
+        self._fixtures.append(used_fixture)
 
     def _delete_universe(self, universe: Universe):
         """Removes the passed universe from the list of universes.
@@ -132,6 +134,11 @@ class BoardConfiguration:
             The universe if found, else None.
         """
         return self._universes.get(universe_id, None)
+
+    @property
+    def fixtures(self) -> Sequence[UsedFixture]:
+        """Fixtures associated with this Show"""
+        return self._fixtures
 
     @property
     def show_name(self) -> str:
@@ -284,3 +291,13 @@ class BoardConfiguration:
         while self._universes.get(nex_id):
             nex_id += 1
         return nex_id
+
+    def get_occupied_channels(self, universe_id: int) -> np.typing.NDArray[int]:
+        """Returns a list of all channels that are occupied by a scene."""
+        ranges = [
+            np.arange(fixture.start_index, fixture.start_index + fixture.channel_length)
+            for fixture in self.fixtures
+            if fixture.universe_id == universe_id
+        ]
+
+        return np.concatenate(ranges) if ranges else np.array([], dtype=int)

@@ -56,7 +56,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                 placed_fixtures = set()
                 last_fixture_object: AnnotatedTreeWidgetItem | None = None
                 last_fixture: UsedFixture | None = None
-                for fixture in self._broadcaster.fixtures:
+                for fixture in self._show.fixtures:
                     last_fixture_object = AnnotatedTreeWidgetItem(item)
                     if self._show_selection_checkboxes:
                         last_fixture_object.setCheckState(0, Qt.CheckState.Unchecked)

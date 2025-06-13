@@ -165,7 +165,7 @@ class EffectsStack(VirtualFilter):
             universe, channel = k[1:].split('/')
             universe = int(universe)
             channel = int(channel)
-            for fixture in self.scene.board_configuration.broadcaster.fixtures:
+            for fixture in self.scene.board_configuration.fixtures:
                 if fixture.universe_id == universe and fixture.start_index == channel:
                     uf = fixture
             if uf is None:

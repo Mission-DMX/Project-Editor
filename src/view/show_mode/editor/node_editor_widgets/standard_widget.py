@@ -59,7 +59,7 @@ class StandardWidget(NodeEditorFilterConfigWidget):
             logger.warning("Could not find universe %s", universe_id)
             return key
         # Fetch patching short name
-        for fixture in self._filter.scene.board_configuration.broadcaster.fixtures:
+        for fixture in self._filter.scene.board_configuration.fixtures:
             if fixture.universe_id == universe_id and value in range(fixture.start_index,
                                                                      fixture.start_index + fixture.channel_length + 1):
                 key = f"{key} : {fixture.short_name}"
