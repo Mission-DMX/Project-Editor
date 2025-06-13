@@ -52,7 +52,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._broadcaster = Broadcaster()
         self.sender_message_callback: Callable = events.set_broadcaster_and_network(self._broadcaster, self)
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
-        self._message_queue = queue.Queue()
+        self._message_queue: queue.Queue[tuple[bytes, proto.MessageTypes_pb2.MsgType]] = queue.Queue()
 
         self._last_run_mode = None
         self._last_active_scene: int = -1
@@ -151,7 +151,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_BUTTON_STATE_CHANGE)
 
-    def _send_with_format(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType,
+    def _send_with_format(self, msg: bytes, msg_type: proto.MessageTypes_pb2.MsgType,
                           push_direct: bool = True) -> None:
         """send message in correct format to fish"""
         self._enqueue_message(msg, msg_type)
@@ -168,12 +168,12 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             else:
                 logger.error("not Connected with fish server")
 
-    def _enqueue_message(self, msg: bytearray, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
+    def _enqueue_message(self, msg: bytes, msg_type: proto.MessageTypes_pb2.MsgType) -> None:
         """
         Push a message to the send queue.
         :param msg: The message to enqueue
         :param msg_type: The type of the message to enqueue"""
-        self._message_queue.put(tuple([msg, msg_type]))
+        self._message_queue.put((msg, msg_type))
 
     def _on_ready_read(self) -> None:
         """Processes incoming data."""
@@ -465,10 +465,12 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
 
     def send_event_sender_update(self, msg: proto.Events_pb2.event_sender, push_direct: bool = False):
+        """send event that Sender has updated to Fish"""
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE,
                                push_direct=push_direct)
 
     def send_event_message(self, msg: proto.Events_pb2.event):
+        """send message event Message to Fish"""
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT, push_direct=False)
 
     @property
