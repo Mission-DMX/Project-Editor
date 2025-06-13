@@ -127,6 +127,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
 
+    @property
+    def fish_connector(self) -> NetworkManager:
+        """NetworkManager"""
+        return self._fish_connector
+
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
             if self._widgets.currentIndex() == 3:

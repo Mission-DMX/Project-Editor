@@ -126,7 +126,7 @@ if __name__ == "__main__":
         widget = MainWindow()
         widget.showMaximized()
 
-        cli_server = RemoteCLIServer(widget.show_configuration, widget._fish_connector)
+        cli_server = RemoteCLIServer(widget.show_configuration, widget.fish_connector)
         application.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
         if len(sys.argv) > 1:
             show_file_path = sys.argv[1]
