@@ -51,7 +51,7 @@ class StandardWidget(NodeEditorFilterConfigWidget):
             return key
         # Fetch universe
         universe_id = int(self._filter.filter_configurations["universe"])
-        for uni in self._filter.scene.board_configuration.universes:
+        for uni in self._filter.scene.board_configuration.universes.values():
             if uni.universe_proto.id == universe_id:
                 universe = uni
                 break

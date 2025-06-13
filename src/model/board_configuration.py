@@ -1,17 +1,20 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
+from logging import getLogger
+from types import MappingProxyType
 from typing import Callable
 
 from PySide6 import QtCore, QtGui
 
 import proto.FilterMode_pb2
-
 from .broadcaster import Broadcaster
 from .device import Device
 from .macro import Macro
 from .ofl.fixture import UsedFixture
 from .scene import Scene
 from .universe import Universe
+
+logger = getLogger(__file__)
 
 
 class BoardConfiguration:
@@ -24,7 +27,7 @@ class BoardConfiguration:
         self._scenes: list[Scene] = []
         self._scenes_index: dict[int, int] = {}
         self._devices: list[Device] = []
-        self._universes: list[Universe] = []
+        self._universes: dict[int, "Universe"] = {}
         self._ui_hints: dict[str, str] = {}
         self._macros: list[Macro] = []
 
@@ -87,7 +90,7 @@ class BoardConfiguration:
         Args:
             universe: The universe to add.
         """
-        self._universes.append(universe)
+        self._universes.update({universe.id: universe})
 
     def _add_fixture(self, used_fixture: UsedFixture):
         self._broadcaster.fixtures.append(used_fixture)
@@ -98,7 +101,10 @@ class BoardConfiguration:
         Args:
             universe: The universe to be removed.
         """
-        self._universes.remove(universe)
+        try:
+            del self._universes[universe.id]
+        except ValueError:
+            logger.error("Unable to remove universe %s", universe.name)
 
     def _add_device(self, device: Device):
         """Adds the device to the board configuration.
@@ -117,7 +123,7 @@ class BoardConfiguration:
         pass
 
     def universe(self, universe_id: int) -> Universe | None:
-        """Tries to find universe by id.
+        """Tries to find a universe by id.
 
         Arg:
             universe_id: The id of the universe requested.
@@ -125,10 +131,7 @@ class BoardConfiguration:
         Returns:
             The universe if found, else None.
         """
-        for universe in self._universes:
-            if universe.id == universe_id:
-                return universe
-        return None
+        return self._universes.get(universe_id, None)
 
     @property
     def show_name(self) -> str:
@@ -171,9 +174,9 @@ class BoardConfiguration:
         return self._devices
 
     @property
-    def universes(self) -> list[Universe]:
+    def universes(self) -> MappingProxyType[int, Universe]:
         """The universes of the show"""
-        return self._universes
+        return MappingProxyType(self._universes)
 
     @property
     def ui_hints(self) -> dict[str, str]:
@@ -274,3 +277,10 @@ class BoardConfiguration:
     def macros(self) -> list[Macro]:
         """Get a list of registered macros."""
         return self._macros.copy()
+
+    def next_universe_id(self) -> int:
+        """next empty universe id"""
+        nex_id = len(self._universes)
+        while self._universes.get(nex_id):
+            nex_id += 1
+        return nex_id

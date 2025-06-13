@@ -40,7 +40,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
         self.clear()
         i = 0
         if self._show:
-            for universe in self._show.universes:
+            for universe in self._show.universes.values():
                 item = AnnotatedTreeWidgetItem(self)
                 if self._show_selection_checkboxes:
                     column_offset = 1

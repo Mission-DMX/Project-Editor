@@ -3,7 +3,7 @@
 
 from PySide6 import QtWidgets
 
-from model.broadcaster import Broadcaster
+from model import BoardConfiguration
 from model.universe import Universe
 from view.console_mode.console_universe_widget import DirectUniverseWidget
 
@@ -11,15 +11,15 @@ from view.console_mode.console_universe_widget import DirectUniverseWidget
 class UniverseSelector(QtWidgets.QTabWidget):
     """select Universe from Tab Widget"""
 
-    def __init__(self, parent) -> None:
+    def __init__(self, board_configuration: BoardConfiguration, parent) -> None:
         super().__init__(parent=parent)
-        self._broadcaster = Broadcaster()
+        self._board_configuration = board_configuration
         self._universes: list[Universe] = []
         self._universe_widgets: list[DirectUniverseWidget] = []
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
 
-        if self._broadcaster.universes:
-            for universe in self._broadcaster.universes.values():
+        if self._board_configuration.universes:
+            for universe in self._board_configuration.universes.values():
                 self.add_universe(universe)
 
     @property
@@ -33,7 +33,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         Args:
             universe: the new universe to add
         """
-        self._broadcaster.send_universe_value.emit(universe)
+        self._board_configuration.broadcaster.send_universe_value.emit(universe)
         self._universes.append(universe)
 
         widget = QtWidgets.QTabWidget()
@@ -49,7 +49,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
     def send_all_universe(self) -> None:
         """send all universes to fish"""
         for universe in self._universes:
-            self._broadcaster.send_universe_value.emit(universe)
+            self._board_configuration.broadcaster.send_universe_value.emit(universe)
 
     def notify_activate(self):
         # TODO this obviously breaks given multiple universes but it'll work for now

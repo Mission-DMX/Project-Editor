@@ -6,15 +6,17 @@ from collections import defaultdict
 from collections.abc import Sequence
 from enum import Enum, IntFlag
 from logging import getLogger
-from typing import Final, NotRequired, TypedDict
+from typing import Final, NotRequired, TypedDict, TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import numpy as np
 from PySide6 import QtCore
 from numpy.typing import NDArray
 
-from model.broadcaster import Broadcaster
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
+
+if TYPE_CHECKING:
+    from model import BoardConfiguration
 
 logger = getLogger(__file__)
 
@@ -124,9 +126,11 @@ class UsedFixture(QtCore.QObject):
     """ Fixture in use with a specific mode"""
     static_data_changed: QtCore.Signal = QtCore.Signal()
 
-    def __init__(self, fixture: Fixture, mode_index: int, parent_universe: int,
+    def __init__(self, board_configuration: "BoardConfiguration", fixture: Fixture, mode_index: int,
+                 parent_universe: int,
                  start_index: int, uuid: UUID = None, color: str = None):
         super().__init__()
+        self._board_configuration: Final["BoardConfiguration"] = board_configuration
         self._fixture: Final[Fixture] = fixture
         self._uuid: Final[UUID] = uuid if uuid else uuid4()
 
@@ -145,7 +149,7 @@ class UsedFixture(QtCore.QObject):
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
         self.parent_universe: int = parent_universe
-        Broadcaster().add_fixture.emit(self)
+        self._board_configuration.broadcaster.add_fixture.emit(self)
 
     @property
     def uuid(self) -> UUID:
@@ -270,6 +274,7 @@ class UsedFixture(QtCore.QObject):
         return self._fixture_channels[index]
 
 
-def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int, start_index: int) -> UsedFixture:
+def make_used_fixture(board_configuration: "BoardConfiguration", fixture: Fixture, mode_index: int, universe_id: int,
+                      start_index: int) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
-    return UsedFixture(fixture, mode_index, universe_id, start_index)
+    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)

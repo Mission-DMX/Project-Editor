@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtGui, QtWidgets
 
-from model import Universe
-from model.broadcaster import Broadcaster
+from model import Universe, BoardConfiguration
 from view.console_mode.console_universe_selector import UniverseSelector
 
 if TYPE_CHECKING:
@@ -18,16 +17,16 @@ logger = getLogger(__name__)
 class ConsoleSceneSelector(QtWidgets.QTabWidget):
     """Widget to mange different scenes in Tab Widgets"""
 
-    def __init__(self, parent: "MainWindow") -> None:
+    def __init__(self, board_configuration: BoardConfiguration, parent: "MainWindow") -> None:
         super().__init__(parent=parent)
-        broadcaster = Broadcaster()
+        self._board_configuration = board_configuration
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self._last_tab: int = 0
         self._scenes: list[UniverseSelector] = []
         self.addTab(QtWidgets.QWidget(), "+")
         self.currentChanged.connect(self._tab_changed)
         self.tabBarClicked.connect(self._tab_clicked)
-        broadcaster.add_universe.connect(self.add_universe)
+        self._board_configuration.broadcaster.add_universe.connect(self.add_universe)
 
         self._toolbar: list[QtGui.QAction] = []
         save_button = QtGui.QAction("Save")
@@ -66,7 +65,7 @@ class ConsoleSceneSelector(QtWidgets.QTabWidget):
         else:
             run = True
         if run:
-            universe_selector = UniverseSelector(self)
+            universe_selector = UniverseSelector(self._board_configuration,self)
             self._scenes.append(universe_selector)
             self.insertTab(self.tabBar().count() - 1, self._scenes[-1], text)
 

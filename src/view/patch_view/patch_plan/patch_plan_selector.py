@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QScrollArea
 
-from model import Universe
+from model import Universe, BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.ofl.fixture import UsedFixture
 from view.dialogs.universe_dialog import UniverseDialog
@@ -21,8 +21,9 @@ logger = getLogger(__file__)
 class PatchPlanSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
 
-    def __init__(self, parent: "PatchMode"):
+    def __init__(self, board_configuration: BoardConfiguration, parent: "PatchMode"):
         super().__init__(parent=parent)
+        self._board_configuration = board_configuration
         self._broadcaster = Broadcaster()
         self._broadcaster.add_universe.connect(self._add_universe)
         self._broadcaster.delete_universe.connect(self._remove_universe)
@@ -42,11 +43,8 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
 
     def _generate_universe(self) -> None:
         """add a new Universe to universe Selector"""
-        nex_id = len(self._broadcaster.universes)
-        while self._broadcaster.universes.get(nex_id):
-            nex_id += 1
 
-        dialog = UniverseDialog(nex_id)
+        dialog = UniverseDialog(self._board_configuration.next_universe_id())
         if dialog.exec():
             Universe(dialog.output)
 
@@ -67,10 +65,10 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
 
     def _rename_universe(self, index: int) -> None:
         universe_id = list(self._patch_planes.keys())[index]
-        dialog = UniverseDialog(self._broadcaster.universes[universe_id].universe_proto)
+        dialog = UniverseDialog(self._board_configuration.universe(universe_id).universe_proto)
         if dialog.exec():
-            self._broadcaster.universes[universe_id].universe_proto = dialog.output
-            self._broadcaster.send_universe.emit(self._broadcaster.universes[index])
+            self._board_configuration.universe(universe_id).universe_proto = dialog.output
+            self._broadcaster.send_universe.emit(self._board_configuration.universe(index))
 
     def _add_universe(self, universe: Universe):
         index = self.tabBar().count() - 1

@@ -7,7 +7,7 @@ import requests
 from PySide6 import QtWidgets
 
 from layouts.flow_layout import FlowLayout
-from model.broadcaster import Broadcaster
+from model import BoardConfiguration
 from model.ofl.fixture import Fixture
 from model.ofl.manufacture import Manufacture, generate_manufacturers
 from style import Style
@@ -20,9 +20,9 @@ from view.patch_view.patching.mode_item import ModeItem
 class PatchingSelect(QtWidgets.QScrollArea):
     """select Manufacturer"""
 
-    def __init__(self, parent):
+    def __init__(self, board_configuration: BoardConfiguration, parent):
         super().__init__(parent)
-        self._broadcaster = Broadcaster()
+        self._board_configuration = board_configuration
         cache_path = '/var/cache/missionDMX'
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
@@ -101,7 +101,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
 
     def _run_patch(self, fixture: Fixture, index: int) -> None:
         """run the patching dialog"""
-        dialog = PatchingDialog((fixture, index))
+        dialog = PatchingDialog(self._board_configuration, (fixture, index))
         dialog.finished.connect(lambda: self._patch(dialog))
 
         dialog.open()
@@ -112,4 +112,4 @@ class PatchingSelect(QtWidgets.QScrollArea):
         """
         if form.result():
             form.generate_fixtures()
-        self._broadcaster.view_leave_patching.emit()
+        self._board_configuration.broadcaster.view_leave_patching.emit()

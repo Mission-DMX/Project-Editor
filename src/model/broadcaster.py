@@ -108,7 +108,6 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     active_scene_switched: QtCore.Signal = QtCore.Signal(int)
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
-    universes: dict[int, "Universe"] = {}
     fixtures: list["sedFixture"] = []
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)

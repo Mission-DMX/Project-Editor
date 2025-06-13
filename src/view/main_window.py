@@ -20,7 +20,6 @@ from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_scene_selector import ConsoleSceneSelector
 from view.dialogs.colum_dialog import ColumnDialog
-from view.logging_view.dmx_data_log import DmxDataLogWidget
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.settings.settings_dialog import SettingsDialog
@@ -61,7 +60,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
-            ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)),
+            ("Console Mode", MainWidget(ConsoleSceneSelector(self._board_configuration, self), self),
+             lambda: self._to_widget(0)),
             (
                 "Editor Mode",
                 MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
@@ -72,7 +72,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
                 self._broadcaster.view_to_show_player.emit,
             ),
-            ("Patch", MainWidget(PatchMode(self), self), self._broadcaster.view_to_patch_menu.emit),
+            ("Patch", MainWidget(PatchMode(self._board_configuration, self), self),
+             self._broadcaster.view_to_patch_menu.emit),
             ("Debug", debug_console, lambda: self._to_widget(4)),
             (
                 "Actions",
@@ -90,8 +91,8 @@ class MainWindow(QtWidgets.QMainWindow):
             mode_button.triggered.connect(view[2])
             self._toolbar.addAction(mode_button)
 
-        #data_log_window = DmxDataLogWidget(self._broadcaster)
-        #self._toolbar.addAction(QtGui.QAction("dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
+        # data_log_window = DmxDataLogWidget(self._broadcaster)
+        # self._toolbar.addAction(QtGui.QAction("dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
 
         self.setCentralWidget(self._widgets)
 

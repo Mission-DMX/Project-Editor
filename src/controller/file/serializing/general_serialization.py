@@ -37,7 +37,7 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
         pn.total_step_count += 1
 
     pn.current_step_description = "Creating universes."
-    for universe in board_configuration.universes:
+    for universe in board_configuration.universes.values():
         universe_element = _create_universe_element(universe=universe, parent=root)
 
         proto = universe.universe_proto

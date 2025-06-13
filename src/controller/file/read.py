@@ -17,7 +17,7 @@ from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColum
 from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter
 from model.macro import Macro, trigger_factory
-from model.ofl.fixture import UsedFixture, load_fixture, make_used_fixture
+from model.ofl.fixture import load_fixture, make_used_fixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
@@ -506,7 +506,7 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
             case "ftdi_location":
                 ftdi = _parse_ftdi_location(child)
             case "patching":
-                _parse_patching(child, universe_id)
+                _parse_patching(board_configuration, child, universe_id)
 
             case _:
                 logger.warning("Universe %s contains unknown element: %s",
@@ -586,7 +586,8 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> proto.Univers
                                                         serial=serial_identifier)
 
 
-def _parse_patching(location_element: ElementTree.Element, universe_id: int) ->None:
+def _parse_patching(board_configuration: BoardConfiguration, location_element: ElementTree.Element,
+                    universe_id: int) -> None:
     """
     Load patching information from XML data.
     :param location_element: The XML data to load from
@@ -596,9 +597,8 @@ def _parse_patching(location_element: ElementTree.Element, universe_id: int) ->N
     fixtures_path = '/var/cache/missionDMX/fixtures'  # TODO config file
 
     for child in location_element:
-        make_used_fixture(load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
-                                         int(child.attrib['mode']), universe_id, int(child.attrib['start']))
-
+        make_used_fixture(board_configuration, load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
+                          int(child.attrib['mode']), universe_id, int(child.attrib['start']))
 
     # TODO load fixture name from file
 
