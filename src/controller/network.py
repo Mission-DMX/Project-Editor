@@ -432,6 +432,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_COLUMN)
 
     def set_main_brightness_fader_position(self, new_position: int, push_direct: bool = True):
+        """set positon of the main brightness fader"""
         if not self.is_running:
             return
         msg = proto.Console_pb2.fader_position()
