@@ -5,6 +5,7 @@ from model.control_desk import BankSet, ColorDeskColumn
 
 
 class ListCommand(Command):
+    """Client Commands"""
 
     def __init__(self, context):
         super().__init__(context, "list")

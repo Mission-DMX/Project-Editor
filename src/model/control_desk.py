@@ -11,7 +11,6 @@ from model.color_hsi import ColorHSI
 if TYPE_CHECKING:
     from controller.network import NetworkManager
 
-
 def _generate_unique_id() -> str:
     return str(uuid4())
 

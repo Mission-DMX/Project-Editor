@@ -10,7 +10,7 @@ class ColorSelectionUIWidget(UIWidget):
     def __init__(self, parent: UIPage, configuration: dict[str, str]):
         super().__init__(parent, configuration)
 
-        self._value = ColorHSI.from_filter_str("")
+        self._value: ColorHSI = ColorHSI.from_filter_str("")
         if not self.configuration.get("number_of_presets"):
             self.configuration["number_of_presets"] = "0"
         if not self.configuration.get("stored_presets"):

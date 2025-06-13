@@ -22,6 +22,6 @@ def replace_old_filter_configurations(f: Filter) -> Filter:
     :returns: f if no modification was required or a new representation.
     """
     if f.filter_type == FilterTypeEnumeration.FILTER_TYPE_CUES:
-        f._filter_type = int(FilterTypeEnumeration.VFILTER_CUES)
+        f.filter_type = int(FilterTypeEnumeration.VFILTER_CUES)
         logger.info("Replaced filter type of filter %s to become virtual.", f.filter_id)
     return f

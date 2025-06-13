@@ -75,12 +75,20 @@ class EffectsSocket:
     def __init__(self, target: UsedFixture):
         self.target: UsedFixture = target  # TODO also implement support for fixture groups
         self._color_socket: ColorEffect | None = None
-        self.has_color_property: bool = target.color_support() != ColorSupport.NO_COLOR_SUPPORT
+        self.has_color_property: bool = target.color_support != ColorSupport.NO_COLOR_SUPPORT
         self._segment_socket: SegmentEffect | None = None
-        self.has_segmentation_support: bool = (len(target.red_segments) > 1 and len(target.green_segments) > 1 and
-                                               len(target.blue_segments) > 1) or len(target.white_segments) > 1
+        self.has_segmentation_support: bool = (target.color_support & ColorSupport.HAS_RGB_SUPPORT > 0 or
+                                               target.color_support & ColorSupport.HAS_WHITE_SEGMENT > 0)
 
     def get_socket_by_type(self, slot_type: EffectType) -> Effect | None:
+        """
+        get socket by Effect Type
+        Args:
+            slot_type:
+
+        Returns:
+
+        """
         if slot_type == EffectType.COLOR and self.has_color_property:
             return self._color_socket
         if slot_type == EffectType.ENABLED_SEGMENTS and self.has_segmentation_support:

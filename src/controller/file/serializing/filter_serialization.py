@@ -1,4 +1,5 @@
 # coding=utf-8
+"""XML serialization for Filters"""
 from xml.etree import ElementTree
 
 from controller.file.serializing.fish_optimizer import SceneOptimizerModule

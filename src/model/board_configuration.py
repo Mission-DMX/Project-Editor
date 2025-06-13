@@ -1,7 +1,9 @@
 # coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
-from typing import Callable
+from logging import getLogger
+from typing import Callable, Sequence
 
+import numpy as np
 from PySide6 import QtCore, QtGui
 
 import proto.FilterMode_pb2
@@ -9,9 +11,11 @@ import proto.FilterMode_pb2
 from .broadcaster import Broadcaster
 from .device import Device
 from .macro import Macro
-from .patching_universe import PatchingUniverse
+from .ofl.fixture import UsedFixture
 from .scene import Scene
 from .universe import Universe
+
+logger = getLogger(__file__)
 
 
 class BoardConfiguration:
@@ -24,7 +28,8 @@ class BoardConfiguration:
         self._scenes: list[Scene] = []
         self._scenes_index: dict[int, int] = {}
         self._devices: list[Device] = []
-        self._universes: list[Universe] = []
+        self._universes: dict[int, Universe] = {}
+        self._fixtures: list[UsedFixture] = []
         self._ui_hints: dict[str, str] = {}
         self._macros: list[Macro] = []
 
@@ -32,6 +37,7 @@ class BoardConfiguration:
         self._broadcaster: Broadcaster = Broadcaster()
 
         self._broadcaster.add_universe.connect(self._add_universe)
+        self._broadcaster.add_fixture.connect(self._add_fixture)
         self._broadcaster.scene_created.connect(self._add_scene)
         self._broadcaster.clear_board_configuration.connect(self._clear)
         self._broadcaster.delete_scene.connect(self._delete_scene)
@@ -81,14 +87,15 @@ class BoardConfiguration:
         self._scenes.remove(scene)
         self._scenes_index.pop(scene.scene_id)
 
-    def _add_universe(self, patching_universe: PatchingUniverse):
+    def _add_universe(self, universe: Universe):
         """Creates and adds a universe from passed patching universe.
-        
         Args:
-            patching_universe: The patching universe from which a universe is to be created and added.
+            universe: The universe to add.
         """
-        universe = Universe(patching_universe)
-        self._universes.append(universe)
+        self._universes.update({universe.id: universe})
+
+    def _add_fixture(self, used_fixture: UsedFixture):
+        self._fixtures.append(used_fixture)
 
     def _delete_universe(self, universe: Universe):
         """Removes the passed universe from the list of universes.
@@ -96,7 +103,10 @@ class BoardConfiguration:
         Args:
             universe: The universe to be removed.
         """
-        self._universes.remove(universe)
+        try:
+            del self._universes[universe.id]
+        except ValueError:
+            logger.error("Unable to remove universe %s", universe.name)
 
     def _add_device(self, device: Device):
         """Adds the device to the board configuration.
@@ -113,8 +123,9 @@ class BoardConfiguration:
             device: The device to be removed.
         """
         pass
+
     def universe(self, universe_id: int) -> Universe | None:
-        """Tries to find universe by id.
+        """Tries to find a universe by id.
 
         Arg:
             universe_id: The id of the universe requested.
@@ -122,10 +133,12 @@ class BoardConfiguration:
         Returns:
             The universe if found, else None.
         """
-        for universe in self._universes:
-            if universe.id == universe_id:
-                return universe
-        return None
+        return self._universes.get(universe_id, None)
+
+    @property
+    def fixtures(self) -> Sequence[UsedFixture]:
+        """Fixtures associated with this Show"""
+        return self._fixtures
 
     @property
     def show_name(self) -> str:
@@ -170,7 +183,7 @@ class BoardConfiguration:
     @property
     def universes(self) -> list[Universe]:
         """The universes of the show"""
-        return self._universes
+        return list(self._universes.values())
 
     @property
     def ui_hints(self) -> dict[str, str]:
@@ -271,3 +284,20 @@ class BoardConfiguration:
     def macros(self) -> list[Macro]:
         """Get a list of registered macros."""
         return self._macros.copy()
+
+    def next_universe_id(self) -> int:
+        """next empty universe id"""
+        nex_id = len(self._universes)
+        while self._universes.get(nex_id):
+            nex_id += 1
+        return nex_id
+
+    def get_occupied_channels(self, universe_id: int) -> np.typing.NDArray[int]:
+        """Returns a list of all channels that are occupied by a scene."""
+        ranges = [
+            np.arange(fixture.start_index, fixture.start_index + fixture.channel_length)
+            for fixture in self.fixtures
+            if fixture.universe_id == universe_id
+        ]
+
+        return np.concatenate(ranges) if ranges else np.array([], dtype=int)

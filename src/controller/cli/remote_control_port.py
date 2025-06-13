@@ -205,7 +205,7 @@ class RemoteCLIServer:
         self._stopped = True
         self._server_socket.close()
         to_be_stopped: list[Connection] = []
-        for k_addr in self._connected_clients.keys():
+        for k_addr in self._connected_clients:
             to_be_stopped.append(self._connected_clients[k_addr])
         for c in to_be_stopped:
             c.stop()
