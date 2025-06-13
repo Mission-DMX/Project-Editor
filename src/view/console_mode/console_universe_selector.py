@@ -19,7 +19,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
 
         if self._board_configuration.universes:
-            for universe in self._board_configuration.universes.values():
+            for universe in self._board_configuration.universes:
                 self.add_universe(universe)
 
     @property

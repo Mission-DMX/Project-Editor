@@ -174,9 +174,9 @@ class BoardConfiguration:
         return self._devices
 
     @property
-    def universes(self) -> MappingProxyType[int, Universe]:
+    def universes(self) -> list[Universe]:
         """The universes of the show"""
-        return MappingProxyType(self._universes)
+        return list(self._universes.values())
 
     @property
     def ui_hints(self) -> dict[str, str]:

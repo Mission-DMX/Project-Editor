@@ -32,5 +32,5 @@ class PatchMode(QtWidgets.QStackedWidget):
     def _connection_changed(self, connected):
         """connection to fish is changed"""
         if connected:
-            for universe in self._board_configuration.universes.values():
+            for universe in self._board_configuration.universes:
                 self._board_configuration.broadcaster.send_universe.emit(universe)
