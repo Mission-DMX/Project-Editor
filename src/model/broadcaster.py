@@ -5,6 +5,7 @@ from xml.etree.ElementTree import Element
 
 import numpy as np
 from PySide6 import QtCore
+from typing_extensions import TYPE_CHECKING
 
 import proto.DirectMode_pb2
 import proto.Events_pb2
@@ -14,7 +15,9 @@ from controller.joystick.joystick_enum import JoystickList
 from .device import Device
 from .ofl.fixture import UsedFixture
 from .scene import FilterPage, Scene
-from .universe import Universe
+
+if TYPE_CHECKING:
+    from .universe import Universe
 
 Ts = TypeVarTuple("Ts")
 T = TypeVar("T")
@@ -66,12 +69,12 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     load_show_file = QtCore.Signal(Element, bool)  # TODO TYPE check
     show_file_loaded: ClassVar[SignalInstanceEmpty] = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
-    add_universe: QtCore.Signal = QtCore.Signal(Universe)
-    add_fixture: QtCore.Signal = QtCore.Signal(UsedFixture)
-    send_universe: QtCore.Signal = QtCore.Signal(Universe)
-    send_universe_value: QtCore.Signal = QtCore.Signal(Universe)
-    send_request_dmx_data: QtCore.Signal = QtCore.Signal(Universe)
-    request_main_brightness_fader_update: QtCore.Signal = QtCore.Signal(int)
+    add_universe: ClassVar[SignalInstance["Universe"]] = QtCore.Signal(object)
+    add_fixture: ClassVar[SignalInstance[UsedFixture]] = QtCore.Signal(UsedFixture)
+    send_universe: ClassVar[SignalInstance["Universe"]] = QtCore.Signal(object)
+    send_universe_value: ClassVar[SignalInstance["Universe"]] = QtCore.Signal(object)
+    send_request_dmx_data: ClassVar[SignalInstance["Universe"]] = QtCore.Signal(object)
+    request_main_brightness_fader_update: ClassVar[int] = QtCore.Signal(int)
     ################################################################
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
     board_configuration_loaded: QtCore.Signal = QtCore.Signal(str)
@@ -80,7 +83,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     bankset_open_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
     uipage_opened_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
     delete_scene: QtCore.Signal = QtCore.Signal(Scene)
-    delete_universe: QtCore.Signal = QtCore.Signal(Universe)
+    delete_universe: ClassVar[SignalInstance["Universe"]] = QtCore.Signal(object)
     device_created: QtCore.Signal = QtCore.Signal(Device)
     delete_device: QtCore.Signal = QtCore.Signal(Device)
     event_sender_model_updated: QtCore.Signal = QtCore.Signal()
@@ -136,7 +139,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     active_scene_switched: QtCore.Signal = QtCore.Signal(int)
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
-    universes: dict[int, Universe] = {}
+    universes: dict[int, "Universe"] = {}
     fixtures: list[UsedFixture] = []
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
