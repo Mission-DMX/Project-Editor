@@ -154,7 +154,7 @@ class PatchingDialog(QtWidgets.QDialog):
             self._error_label.setText("not enough channels")
             return
 
-        if np.isin(occupied, self._broadcaster.get_occupied_channels(self._patching_information.universe)).any():
+        if np.isin(occupied, self._board_configuration.broadcaster.get_occupied_channels(self._patching_information.universe)).any():
             self._error_label.setText("channels already occupied")
             return
 
