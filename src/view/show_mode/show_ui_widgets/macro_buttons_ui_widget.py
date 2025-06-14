@@ -3,11 +3,12 @@ import os
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QPushButton, QSpinBox,
-                               QWidget)
+from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
+                               QListWidget, QPushButton, QSpinBox, QWidget)
 
 from model import UIWidget
 from utility import resource_path
+from view.action_setup_view._command_insertion_dialog import escape_argument
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
@@ -21,13 +22,48 @@ class _AddMacroActionDialog(QDialog):
         self._button_list = button_list
         self.setModal(True)
         self.setWindowTitle("Add Macro")
-        # TODO add button list for OK and Cancel
-        # TODO add Macro selection (combo box)
+        layout = QFormLayout()
+        self._macro_combo_box = QComboBox(self)
+        self._macro_combo_box.setEditable(False)
+        self._reload_macro_cb()
+        self._macro_combo_box.currentIndexChanged.connect(self._populate_command_from_macro)
+        layout.addRow("Macro: ", self._macro_combo_box)
         # TODO add New Macro Button
-        # TODO add Text Box for manual command insertion update
-        # TODO add Text Box for Button Text
+        self._command_tb = QLineEdit(self)
+        layout.addRow("Command: ", self._macro_combo_box)
+        self._text_tb = QLineEdit(self)
+        layout.addRow("Display Text: ", self._macro_combo_box)
         # TODO add Icon selection from show media storage
+        self._button_box = QDialogButtonBox((QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel))
+        self._button_box.accepted.connect(self._ok_button_pressed)
+        self._button_box.rejected.connect(self._cancel_button_pressed)
+        layout.addWidget(self._button_box)
+        self.setLayout(layout)
+        self.setMinimumWidth(400)
         self.show()
+
+    def _reload_macro_cb(self):
+        self._macro_combo_box.clear()
+        for m in self._ui_widget.parent.scene.board_configuration.macros:
+            self._macro_combo_box.addItem(m.name, m)
+        self._populate_command_from_macro()
+
+    def _populate_command_from_macro(self):
+        if data := self._macro_combo_box.currentData():
+            self._command_tb.setText(f"macro exec {escape_argument(data.name)}")
+
+    def _ok_button_pressed(self):
+        model = json.loads(self._ui_widget.configuration.get("items") or "[]")
+        model.append({
+            "text": self._command_tb.text(),
+            "command": self._command_tb.text()
+        })
+        self._ui_widget.configuration["items"] = json.dumps(model)
+        self._ui_widget.refresh_config_macro_list(self._button_list)
+        self.close()
+
+    def _cancel_button_pressed(self):
+        self.close()
 
 
 class _MacroListWidget(QWidget):
@@ -99,6 +135,7 @@ class MacroButtonUIWidget(UIWidget):
             config_list.addItem(item)
             item_widget = _MacroListWidget(config_list, item_def, i)
             config_list.setItemWidget(item, item_widget)
+            item.setSizeHint(item.sizeHint())
             i += 1
 
     def get_config_dialog_widget(self, parent: "QWidget") -> "QWidget":
