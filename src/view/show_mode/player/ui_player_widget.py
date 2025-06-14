@@ -20,7 +20,7 @@ class UIPlayerWidget(QWidget):
         self._page_combo_box.show()
         self._page_combo_box.currentIndexChanged.connect(self._switch_page_index)
         b = Broadcaster()
-        b.view_to_show_player.connect(self._check_page_update)
+        b.view_to_show_player.connect(self.check_page_update)
         b.uipage_renamed.connect(self._page_renamed)
 
     def resizeEvent(self, event, /):
@@ -35,8 +35,7 @@ class UIPlayerWidget(QWidget):
     def scene(self, new_scene: Scene | None):
         self._scene = new_scene
         self._update_page_cb()
-        if new_scene is not None:
-            self._update_page()
+        self._update_page()
 
     def _update_page_cb(self):
         self._page_combo_box.clear()
@@ -63,7 +62,7 @@ class UIPlayerWidget(QWidget):
         else:
             self._ui_page_window_index = max(len(scene.ui_pages) - 1, 0)
 
-    def _check_page_update(self):
+    def check_page_update(self):
         if self._scene is None:
             return
         index = self._ui_page_window_index

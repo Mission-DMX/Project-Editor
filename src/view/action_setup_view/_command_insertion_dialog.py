@@ -6,6 +6,17 @@ from model.macro import Macro
 from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 
+def escape_argument(argument: str) -> str:
+    s = argument if isinstance(argument, str) else str(argument)
+    s = s.replace("\\", "\\\\")
+    s = s.replace("\n", "\\n")
+    s = s.replace("\t", "\\t")
+    if " " in s:
+        return '"' + s + '"'
+    else:
+        return s
+
+
 class _CommandInsertionDialog(QDialog):
 
     """This class provides a foundation for command insertion dialogs."""
