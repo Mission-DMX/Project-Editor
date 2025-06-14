@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QColor
 
-
 if TYPE_CHECKING:
     from pydantic import confloat
 
