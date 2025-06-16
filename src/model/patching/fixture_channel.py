@@ -64,7 +64,7 @@ class FixtureChannel:
         for channel_type in FixtureChannelType:
             if str(channel_type.name).lower() in self._name.lower():
                 types &= channel_type
-                if channel_type == FixtureChannelType.PAN or channel_type == FixtureChannelType.TILT:
+                if channel_type in (FixtureChannelType.PAN, FixtureChannelType.TILT):
                     types &= FixtureChannelType.POSITION
 
         return types
