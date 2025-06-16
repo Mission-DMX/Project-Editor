@@ -153,7 +153,7 @@ class PatchingDialog(QtWidgets.QDialog):
         channel_offsets = np.arange(channel_count)
         occupied = (block_starts[:, np.newaxis] + channel_offsets).ravel()
 
-        if occupied[-1] > 512:
+        if occupied[-1] > 511:
             self._error_label.setText("not enough channels")
             return
 
