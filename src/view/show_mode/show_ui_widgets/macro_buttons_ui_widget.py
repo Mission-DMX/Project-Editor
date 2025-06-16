@@ -10,6 +10,7 @@ from model import UIWidget
 from utility import resource_path
 from view.action_setup_view._command_insertion_dialog import escape_argument
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+from view.utility_widgets.box_grid_renderer import BoxGridItem, BoxGridRenderer
 
 if TYPE_CHECKING:
     from model import UIPage
@@ -107,18 +108,36 @@ class MacroButtonUIWidget(UIWidget):
             self.configuration["width"] = "128"
         if not self.configuration.get("height"):
             self.configuration["height"] = "64"
+        self._latest_config_widget: BoxGridRenderer | None = None
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return []
 
     def _construct_widget(self) -> "QWidget":
-        return QWidget()  # TODO replace with BoxGridRenderer
+        w = BoxGridRenderer()
+        self._populate_button_items(w)
+        return w
+
+    def _populate_button_items(self, w: BoxGridRenderer):
+        w.clear()
+        for item_def in json.loads(self.configuration.get("items") or "[]"):
+            item = BoxGridItem(w)
+            item.text = item_def["text"]
+            item.data = item_def["command"]
+            item.clicked.connect(self._exec_command)
+            w.add_item(item)
+
+    def _exec_command(self, command: str):
+        if not command:
+            return
+        pass  # TODO
 
     def get_player_widget(self, parent: "QWidget") -> "QWidget":
         return self._construct_widget()
 
     def get_configuration_widget(self, parent: "QWidget") -> "QWidget":
-        return self._construct_widget()
+        self._latest_config_widget = self._construct_widget()
+        return self._latest_config_widget
 
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         w = MacroButtonUIWidget(new_parent, self.configuration.copy())
@@ -137,6 +156,8 @@ class MacroButtonUIWidget(UIWidget):
             config_list.addItem(item)
             config_list.setItemWidget(item, item_widget)
             i += 1
+        if self._latest_config_widget is not None:
+            self._populate_button_items(self._latest_config_widget)
 
     def get_config_dialog_widget(self, parent: "QWidget") -> "QWidget":
         w = QWidget()
@@ -145,10 +166,12 @@ class MacroButtonUIWidget(UIWidget):
         l = QFormLayout()
         width_box = QSpinBox()
         width_box.setMinimum(64)
+        width_box.setMaximum(16384)
         width_box.setValue(int(self.configuration.get("width") or "64"))
         l.addRow("Width", width_box)
         height_box = QSpinBox()
         height_box.setMinimum(64)
+        height_box.setMaximum(16384)
         height_box.setValue(int(self.configuration.get("height") or "64"))
         l.addRow("Height", height_box)
         add_macro_button = QPushButton("Add macro")
