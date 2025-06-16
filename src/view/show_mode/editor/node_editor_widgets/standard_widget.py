@@ -22,7 +22,7 @@ class StandardWidget(NodeEditorFilterConfigWidget):
 
         self._layout.addRow(filter_.filter_id, QLabel("Settings"))
 
-        add_patch_info: bool = self._filter.filter_type == 11
+
         # Only add initial parameters section if present
         if len(self._filter.initial_parameters) > 0:
             self._layout.addRow("Initial Parameters", QLabel(""))
@@ -38,33 +38,10 @@ class StandardWidget(NodeEditorFilterConfigWidget):
                 line_edit = QLineEdit()
                 line_edit.setText(value)
                 line_edit.textChanged.connect(lambda new_value: self._fc_value_changed(key, new_value))
-                if add_patch_info:
-                    key = self._add_patch_info(key, value)
                 self._layout.addRow(key, line_edit)
 
     def get_widget(self) -> QWidget:
         return self._widget
-
-    def _add_patch_info(self, key: str, value: str) -> str:
-        # Only channel inputs have patching info
-        if key == "universe":
-            return key
-        # Fetch universe
-        universe_id = int(self._filter.filter_configurations["universe"])
-        for uni in self._filter.scene.board_configuration.universes:
-            if uni.universe_proto.id == universe_id:
-                universe = uni
-                break
-        else:
-            logger.warning("Could not find universe %s", universe_id)
-            return key
-        # Fetch patching short name
-        for fixture in self._filter.scene.board_configuration.fixtures:
-            if fixture.universe_id == universe_id and value in range(fixture.start_index,
-                                                                     fixture.start_index + fixture.channel_length + 1):
-                key = f"{key} : {fixture.short_name}"
-                break
-        return key
 
     def _ip_value_changed(self, key, value):
         self._filter.initial_parameters[key] = value
