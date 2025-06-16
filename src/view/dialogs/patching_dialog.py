@@ -48,7 +48,10 @@ class PatchingDialog(QtWidgets.QDialog):
         _patching_node = QtWidgets.QLabel("Enter number of heads@uni-chanel/offset")
         validator = QtGui.QRegularExpressionValidator(
             QtCore.QRegularExpression(
-                r"([1-9]\d{0,2})?(@[1-9]\d{0,2}(-(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1}))(\/(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1})))?)?)?"))
+                r"([1-9]\d{0,2})?"
+                r"(@[1-9]\d{0,2}"
+                r"(-(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1}))"
+                r"(\/(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1})))?)?)?"))
 
         self._patching = QtWidgets.QLineEdit("")
         self._patching.setValidator(validator)
@@ -154,7 +157,8 @@ class PatchingDialog(QtWidgets.QDialog):
             self._error_label.setText("not enough channels")
             return
 
-        if np.isin(occupied, self._board_configuration.get_occupied_channels(self._patching_information.universe)).any():
+        if np.isin(occupied,
+                   self._board_configuration.get_occupied_channels(self._patching_information.universe)).any():
             self._error_label.setText("channels already occupied")
             return
 
