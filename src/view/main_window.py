@@ -178,10 +178,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Undo", None, "Z"),  # TODO implement edit history
                 ("&Redo", None, "Shift+Z")
             ],
-            "Show": [
-                ("Scene Wizard", self._open_scene_setup_wizard, None)
-                # TODO link wizard that creates a theater scene based on patched fixtures
-            ],
+            #"Show": [
+            #    ("Scene Wizard", self._open_scene_setup_wizard, None)
+            #    # TODO link wizard that creates a theater scene based on patched fixtures
+            #],
             "Help": [
                 ("&About", self._open_about_window, None)
             ]
