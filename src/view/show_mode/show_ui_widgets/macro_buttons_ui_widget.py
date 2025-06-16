@@ -1,10 +1,11 @@
 import json
 import os
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
-                               QListWidget, QPushButton, QSpinBox, QWidget)
+                               QListWidget, QMessageBox, QPushButton, QSpinBox, QWidget)
 
 from model import UIWidget
 from utility import resource_path
@@ -109,6 +110,10 @@ class MacroButtonUIWidget(UIWidget):
         if not self.configuration.get("height"):
             self.configuration["height"] = "64"
         self._latest_config_widget: BoxGridRenderer | None = None
+        from controller.cli.cli_context import CLIContext
+        from controller.network import NetworkManager
+        self._context = CLIContext(parent.scene.board_configuration, NetworkManager(), False)
+        self._logger = getLogger(f"{parent.title} macro_button_returns")
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return []
@@ -130,7 +135,13 @@ class MacroButtonUIWidget(UIWidget):
     def _exec_command(self, command: str):
         if not command:
             return
-        pass  # TODO
+        if not self._context.exec_command(command):
+            self._mbox = QMessageBox()
+            self._mbox.setWindowTitle("Command failed.")
+            self._mbox.setText("Please check the log for its output.")
+            self._mbox.show()
+        self._logger.info(self._context.return_text)
+        self._context.return_text = ""
 
     def get_player_widget(self, parent: "QWidget") -> "QWidget":
         return self._construct_widget()
