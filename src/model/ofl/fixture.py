@@ -81,6 +81,7 @@ class Fixture(TypedDict):
 
 
 class ColorSupport(IntFlag):
+    """Color Support of Fixture"""
     NO_COLOR_SUPPORT = 0
     COLD_AND_WARM_WHITE = 1
     HAS_RGB_SUPPORT = 2
