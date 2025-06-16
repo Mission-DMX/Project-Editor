@@ -111,7 +111,7 @@ class UIWidgetHolder(QWidget):
 
     def _show_edit_dialog(self):
         if not self._edit_dialog:
-            self._edit_dialog = QDialog(self)
+            self._edit_dialog = QDialog(self.parent())
             layout = QVBoxLayout()
             layout.addWidget(self._model.get_config_dialog_widget(self._edit_dialog))
             # TODO add cancel and close buttons

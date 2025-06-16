@@ -23,16 +23,16 @@ class _AddMacroActionDialog(QDialog):
         self.setModal(True)
         self.setWindowTitle("Add Macro")
         layout = QFormLayout()
+        self._command_tb = QLineEdit(self)
         self._macro_combo_box = QComboBox(self)
         self._macro_combo_box.setEditable(False)
         self._reload_macro_cb()
         self._macro_combo_box.currentIndexChanged.connect(self._populate_command_from_macro)
         layout.addRow("Macro: ", self._macro_combo_box)
         # TODO add New Macro Button
-        self._command_tb = QLineEdit(self)
-        layout.addRow("Command: ", self._macro_combo_box)
+        layout.addRow("Command: ", self._command_tb)
         self._text_tb = QLineEdit(self)
-        layout.addRow("Display Text: ", self._macro_combo_box)
+        layout.addRow("Display Text: ", self._text_tb)
         # TODO add Icon selection from show media storage
         self._button_box = QDialogButtonBox((QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel))
         self._button_box.accepted.connect(self._ok_button_pressed)
@@ -55,7 +55,7 @@ class _AddMacroActionDialog(QDialog):
     def _ok_button_pressed(self):
         model = json.loads(self._ui_widget.configuration.get("items") or "[]")
         model.append({
-            "text": self._command_tb.text(),
+            "text": self._text_tb.text(),
             "command": self._command_tb.text()
         })
         self._ui_widget.configuration["items"] = json.dumps(model)
@@ -132,14 +132,16 @@ class MacroButtonUIWidget(UIWidget):
         for item_def in model:
             item = AnnotatedListWidgetItem(config_list)
             item.annotated_data = item_def
-            config_list.addItem(item)
             item_widget = _MacroListWidget(config_list, item_def, i)
+            item.setSizeHint(item_widget.sizeHint())
+            config_list.addItem(item)
             config_list.setItemWidget(item, item_widget)
-            item.setSizeHint(item.sizeHint())
             i += 1
 
     def get_config_dialog_widget(self, parent: "QWidget") -> "QWidget":
         w = QWidget()
+        w.setMinimumWidth(600)
+        w.setMinimumHeight(800)
         l = QFormLayout()
         width_box = QSpinBox()
         width_box.setMinimum(64)
