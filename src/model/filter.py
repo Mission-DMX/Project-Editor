@@ -192,18 +192,22 @@ class Filter:
         one in case of a virtual filter that the GUI needs to resolve first."""
         return self._filter_type
 
+    @filter_type.setter
+    def filter_type(self, type_):
+        self._filter_type = type_
+
     @property
-    def pos(self) -> tuple[float] | None:
+    def pos(self) -> tuple[float, float] | None:
         """The position of the filter node inside the ui"""
         return self._pos
 
     @pos.setter
-    def pos(self, pos: list[float, float]):
+    def pos(self, pos: tuple[float, float] | None):
         self._pos = pos
 
     @property
     def channel_links(self) -> dict[str, str]:
-        """Dict mapping the filters inputs to the connected outputs"""
+        """Dict mapping the filter inputs to the connected outputs"""
         return self._channel_links
 
     @property

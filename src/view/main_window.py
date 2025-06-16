@@ -18,9 +18,8 @@ from model.control_desk import BankSet, ColorDeskColumn
 from style import Style
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
-from view.console_mode.console_scene_selector import ConsoleSceneSelector
+from view.console_mode.console_universe_selector import UniverseSelector
 from view.dialogs.colum_dialog import ColumnDialog
-from view.logging_view.dmx_data_log import DmxDataLogWidget
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.settings.settings_dialog import SettingsDialog
@@ -61,7 +60,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
-            ("Console Mode", MainWidget(ConsoleSceneSelector(self), self), lambda: self._to_widget(0)),
+            ("Console Mode", MainWidget(UniverseSelector(self._board_configuration, self), self),
+             lambda: self._to_widget(0)),
             (
                 "Editor Mode",
                 MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
@@ -72,7 +72,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
                 self._broadcaster.view_to_show_player.emit,
             ),
-            ("Patch", MainWidget(PatchMode(self), self), self._broadcaster.view_to_patch_menu.emit),
+            ("Patch", MainWidget(PatchMode(self._board_configuration, self), self),
+             self._broadcaster.view_to_patch_menu.emit),
             ("Debug", debug_console, lambda: self._to_widget(4)),
             (
                 "Actions",
@@ -90,8 +91,8 @@ class MainWindow(QtWidgets.QMainWindow):
             mode_button.triggered.connect(view[2])
             self._toolbar.addAction(mode_button)
 
-        data_log_window = DmxDataLogWidget(self._broadcaster)
-        self._toolbar.addAction(QtGui.QAction("dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
+        # data_log_window = DmxDataLogWidget(self._broadcaster)
+        # self._toolbar.addAction(QtGui.QAction("dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
 
         self.setCentralWidget(self._widgets)
 
@@ -125,6 +126,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._theatre_scene_setup_wizard = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
+
+    @property
+    def fish_connector(self) -> NetworkManager:
+        """NetworkManager"""
+        return self._fish_connector
 
     def _to_widget(self, index: int) -> None:
         if self._widgets.currentIndex() == index:
@@ -172,10 +178,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Undo", None, "Z"),  # TODO implement edit history
                 ("&Redo", None, "Shift+Z")
             ],
-            "Show": [
-                ("Scene Wizard", self._open_scene_setup_wizard, None)
-                # TODO link wizard that creates a theater scene based on patched fixtures
-            ],
+            #"Show": [
+            #    ("Scene Wizard", self._open_scene_setup_wizard, None)
+            #    # TODO link wizard that creates a theater scene based on patched fixtures
+            #],
             "Help": [
                 ("&About", self._open_about_window, None)
             ]
