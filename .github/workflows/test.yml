@@ -20,4 +20,4 @@ jobs:
         uses: isort/isort-action@v1
       - name: Analysing the code with pylint
         run: |
-          pdm run pylint --fail-under=8 $(git ls-files '*.py')
+          pdm run pylint --fail-under=8 src/

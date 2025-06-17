@@ -5,11 +5,11 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QTimer
 
 import proto.DirectMode_pb2
-from model import Broadcaster, PatchingUniverse
+from model import Broadcaster, Universe
 from model.final_globals import FinalGlobals
-from model.patching_channel import PatchingChannel
 
 
+# TODO komplett
 class DmxDataLogWidget(QtWidgets.QWidget):
     """Widget to Log DMX Data"""
 
@@ -22,7 +22,7 @@ class DmxDataLogWidget(QtWidgets.QWidget):
         self._timer.timeout.connect(self._request_dmx_data)
 
         self._widgets = QtWidgets.QTabWidget(self)
-        self._universes: list[tuple[PatchingUniverse, list[DmxLogItem]]] = []
+        self._universes: list[tuple[Universe, list[DmxLogItem]]] = []
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self._widgets)
@@ -47,9 +47,9 @@ class DmxDataLogWidget(QtWidgets.QWidget):
         for universe in self._universes:
             self._broadcaster.send_request_dmx_data.emit(universe[0])
 
-    def react_add_universe(self, patching_universe: PatchingUniverse):
+    def react_add_universe(self, universe: Universe):
         """react on add universe Signal"""
-        universe = []
+        universe_items = []
         tab = QtWidgets.QTabWidget(self._widgets)
         tab_layout = QtWidgets.QVBoxLayout(tab)
         scroll = QtWidgets.QScrollArea(tab)
@@ -57,16 +57,16 @@ class DmxDataLogWidget(QtWidgets.QWidget):
         scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         scroll_widget = QtWidgets.QWidget(scroll)
         layout = QtWidgets.QVBoxLayout(scroll_widget)
-        for i in range(0, 512):
-            item = DmxLogItem(patching_universe.patching[i])
-            universe.append(item)
-            layout.addWidget(item)
+        #        for i in range(0, 512):
+        #            item = DmxLogItem(patching_universe.patching[i])
+        #            universe.append(item)
+        #            layout.addWidget(item)
         scroll_widget.setLayout(layout)
         scroll.setWidget(scroll_widget)
         tab_layout.addWidget(scroll)
         tab.setLayout(tab_layout)
         self._widgets.addTab(tab, str(len(self._universes)))
-        self._universes.append((patching_universe, universe))
+        self._universes.append((universe, universe_items))
 
     def react_dmx_data(self, dmx: proto.DirectMode_pb2.dmx_output):
         """react on dmx data signal from fish"""
@@ -77,7 +77,7 @@ class DmxDataLogWidget(QtWidgets.QWidget):
 class DmxLogItem(QtWidgets.QWidget):
     """log Item for DMX signal"""
 
-    def __init__(self, channel: PatchingChannel, parent=None):
+    def __init__(self, channel, parent=None):
         super().__init__(parent)
         element_size = 35
         self.setFixedSize(int(element_size * 9.5), element_size)
@@ -91,16 +91,16 @@ class DmxLogItem(QtWidgets.QWidget):
         self._value_label.setFixedSize(element_size, element_size)
         self._value_label.setMargin(0)
 
-        fixture_label: QtWidgets.QLabel = QtWidgets.QLabel(channel.fixture.name, self)
-        channel.updated_fixture.connect(lambda: fixture_label.setText(channel.fixture.name))
-        fixture_label.setFixedSize(element_size * 7, element_size)
-        fixture_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        fixture_label.setMargin(0)
+        # fixture_label: QtWidgets.QLabel = QtWidgets.QLabel(channel.fixture.name, self)
+        # channel.updated_fixture.connect(lambda: fixture_label.setText(channel.fixture.name))
+        # fixture_label.setFixedSize(element_size * 7, element_size)
+        # fixture_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        # fixture_label.setMargin(0)
 
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(address_label)
         layout.addWidget(self._value_label)
-        layout.addWidget(fixture_label)
+        # layout.addWidget(fixture_label)
         self.setLayout(layout)
 
     def update_value(self, value: str):

@@ -3,10 +3,12 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6 import QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtWidgets import QScrollArea
 
+from model import BoardConfiguration, Universe
 from model.broadcaster import Broadcaster
-from model.patching_universe import PatchingUniverse
+from model.ofl.fixture import UsedFixture
 from view.dialogs.universe_dialog import UniverseDialog
 from view.patch_view.patch_plan.patch_plan_widget import PatchPlanWidget
 
@@ -19,24 +21,32 @@ logger = getLogger(__file__)
 class PatchPlanSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
 
-    def __init__(self, parent: "PatchMode"):
+    def __init__(self, board_configuration: BoardConfiguration, parent: "PatchMode"):
         super().__init__(parent=parent)
+        self._board_configuration = board_configuration
         self._broadcaster = Broadcaster()
         self._broadcaster.add_universe.connect(self._add_universe)
         self._broadcaster.delete_universe.connect(self._remove_universe)
-        self._patch_planes: list[PatchPlanWidget] = []
+        self._broadcaster.add_fixture.connect(self._add_fixture)
+
+        self._patch_planes: dict[int, PatchPlanWidget] = {}
+
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self.addTab(QtWidgets.QWidget(), "+")
         # self.currentChanged.connect(self._tab_changed)
         self.tabBarClicked.connect(self._tab_clicked)
         self.tabBar().setCurrentIndex(0)
 
+    def _add_fixture(self, fixture: UsedFixture):
+        widget: PatchPlanWidget = self._patch_planes[fixture.parent_universe]
+        widget.add_fixture(fixture)
+
     def _generate_universe(self) -> None:
         """add a new Universe to universe Selector"""
-        dialog = UniverseDialog(len(self._broadcaster.patching_universes) + 1)
+
+        dialog = UniverseDialog(self._board_configuration.next_universe_id())
         if dialog.exec():
-            universe = PatchingUniverse(dialog.output)
-            self._broadcaster.add_universe.emit(universe)
+            Universe(dialog.output)
 
     def contextMenuEvent(self, event):
         """context menu"""
@@ -54,27 +64,27 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
                 break
 
     def _rename_universe(self, index: int) -> None:
-        dialog = UniverseDialog(self._broadcaster.patching_universes[index].universe_proto)
+        universe_id = list(self._patch_planes.keys())[index]
+        dialog = UniverseDialog(self._board_configuration.universe(universe_id).universe_proto)
         if dialog.exec():
-            self._broadcaster.patching_universes[index].universe_proto = dialog.output
-            self._broadcaster.send_universe.emit(self._broadcaster.patching_universes[index])
+            self._board_configuration.universe(universe_id).universe_proto = dialog.output
+            self._broadcaster.send_universe.emit(self._board_configuration.universe(index))
 
-    def _add_universe(self, universe: PatchingUniverse):
+    def _add_universe(self, universe: Universe):
         index = self.tabBar().count() - 1
-        patch_plan = PatchPlanWidget(universe, parent=self)
-        self._patch_planes.append(patch_plan)
-        self.insertTab(index, patch_plan, str(universe.universe_proto.id))
+        patch_plan = QScrollArea()
+        patch_plan.setWidgetResizable(True)
+        patch_plan.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        patch_plan.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        widget = PatchPlanWidget()
+        patch_plan.setWidget(widget)
+        self._patch_planes.update({universe.id: widget})
+        self.insertTab(index, patch_plan, str(universe.name))
 
-    def _remove_universe(self, universe: PatchingUniverse):
-        to_remove = []
-        for ppu in self._patch_planes:
-            if ppu.universe.universe_proto.id == universe.universe_proto.id:
-                to_remove.append(ppu)
-        for tr in to_remove:
-            index = self.indexOf(tr)
-            self.removeTab(index)
-            logger.info("Removing patching tab %s", index)
-            self._patch_planes.remove(tr)
+    def _remove_universe(self, universe: Universe):
+        del self._patch_planes[universe.id]
+        self.removeTab(universe.id)
+        logger.info("Removing patching tab %s", universe.id)
 
     def _tab_clicked(self, scene_index: int) -> None:
         if scene_index == self.tabBar().count() - 1:

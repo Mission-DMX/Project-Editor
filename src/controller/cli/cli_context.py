@@ -58,7 +58,7 @@ def _split_args(line: str) -> list[str]:
                 if current_arg != '':
                     l.append(current_arg)
                 break
-            elif c == ' ' or c == '\t':
+            elif c in (' ', '\t'):
                 if current_arg != '':
                     l.append(current_arg)
                     current_arg = ''

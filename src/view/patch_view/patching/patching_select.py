@@ -1,14 +1,14 @@
 # coding=utf-8
 """select Manufacturer"""
 import os
-import random
 import zipfile
+from logging import getLogger
 
 import requests
 from PySide6 import QtWidgets
 
 from layouts.flow_layout import FlowLayout
-from model.broadcaster import Broadcaster
+from model import BoardConfiguration
 from model.ofl.fixture import Fixture
 from model.ofl.manufacture import Manufacture, generate_manufacturers
 from style import Style
@@ -17,26 +17,33 @@ from view.patch_view.patching.fixture_item import FixtureItem
 from view.patch_view.patching.manufacturer_item import ManufacturerItem
 from view.patch_view.patching.mode_item import ModeItem
 
+logger = getLogger(__name__)
+
 
 class PatchingSelect(QtWidgets.QScrollArea):
     """select Manufacturer"""
 
-    def __init__(self, parent):
+    def __init__(self, board_configuration: BoardConfiguration, parent):
         super().__init__(parent)
-        self._broadcaster = Broadcaster()
+        self._board_configuration = board_configuration
         cache_path = '/var/cache/missionDMX'
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
         fixtures_path = os.path.join(cache_path, 'fixtures/')
         zip_path = os.path.join(cache_path, 'fixtures.zip')
         if not os.path.exists(fixtures_path):
-            print("Downloading fixture library. Please wait")
+            logger.info("Downloading fixture library. Please wait")
             url = 'https://open-fixture-library.org/download.ofl'
-            r = requests.get(url, allow_redirects=True)
-            open(zip_path, 'wb').write(r.content)
+            r = requests.get(url, allow_redirects=True, timeout=5)
+            if r.status_code != 200:
+                logger.error("Failed to download fixture library")
+                return
+
+            with open(zip_path, 'wb') as file:
+                file.write(r.content)
             with zipfile.ZipFile(zip_path) as zip_ref:
                 zip_ref.extractall(fixtures_path)
-            print("Fixture lib downloaded and installed.")
+            logger.info("Fixture lib downloaded and installed.")
         manufacturers: list[tuple[Manufacture, list[Fixture]]] = generate_manufacturers(fixtures_path)
         self.index = 0
         self.container = QtWidgets.QStackedWidget()
@@ -101,49 +108,15 @@ class PatchingSelect(QtWidgets.QScrollArea):
 
     def _run_patch(self, fixture: Fixture, index: int) -> None:
         """run the patching dialog"""
-        dialog = PatchingDialog((fixture, index))
-        dialog.finished.connect(
-            lambda: dialog.open() if not self._patch(dialog) else self._broadcaster.view_leave_patching.emit())
+        dialog = PatchingDialog(self._board_configuration, (fixture, index))
+        dialog.finished.connect(lambda: self._patch(dialog))
+
         dialog.open()
 
-    def _patch(self, form: PatchingDialog) -> bool:
+    def _patch(self, form: PatchingDialog) -> None:
         """
-        patch a specific fixture
-
-        Returns:
-            universe: the index of modified universe
-            updated: list of indices of modified channels
+            patch fixtures from PatchingDialog
         """
         if form.result():
-            if self._patching(form, False):
-                self._patching(form, True)
-            else:
-                form.set_error("Patching not Possible")
-                return False
-        return True
-
-    def _patching(self, form: PatchingDialog, execute: bool) -> bool:
-        if len(self._broadcaster.patching_universes) <= form.patching_information.universe:
-            return False
-        current_channel = form.patching_information.channel
-        fixture_channel_count = len(form.patching_information.used_fixture.mode['channels'])
-        for _ in range(form.patching_information.count):
-            if execute:
-                color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-            used_fixture = form.patching_information.used_fixture.copy()
-            for index in range(fixture_channel_count):
-                item = self._broadcaster.patching_universes[form.patching_information.universe].patching[
-                    current_channel + index]
-                if execute:
-                    item.fixture = used_fixture
-                    item.fixture_channel = index
-                    item.color = color
-                else:
-                    if item.fixture.name != "Empty":
-                        return False
-            if form.patching_information.offset == 0:
-                current_channel += fixture_channel_count
-            else:
-                current_channel += form.patching_information.offset
-        self._broadcaster.fixture_patched.emit()
-        return True
+            form.generate_fixtures()
+        self._board_configuration.broadcaster.view_leave_patching.emit()

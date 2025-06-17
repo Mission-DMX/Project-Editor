@@ -62,8 +62,8 @@ class LoggingWidget(QtWidgets.QTabWidget):
         self._tree.setColumnCount(2)
         self._tree.setHeaderLabels(["key", "value"])
         self._tree.setColumnWidth(0, 150)
-        self._tree.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self._tree.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._tree.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self._tree.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._tree.setLayout(QtWidgets.QVBoxLayout())
 
         self._log_items: List[LoggingItemWidget] = []
@@ -94,7 +94,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
     def update_display(self, text: str) -> None:
         """update display for searching items"""
         search: list[Search] = []
-        ands: [str] = text.split("&")
+        ands: list[str] = text.split("&")
         for item in ands:
             part = item.split(":")
             if len(part) == 2:

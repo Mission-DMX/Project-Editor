@@ -4,6 +4,7 @@ from controller.cli.command import Command
 
 
 class HelpCommand(Command):
+    """Commands for Help"""
 
     def __init__(self, context):
         super().__init__(context, "help")

@@ -1,4 +1,5 @@
 # coding=utf-8
+"""Serialization of Scenes to XML."""
 from xml.etree import ElementTree
 
 from controller.file.serializing.bankset_config_serialization import _create_scene_bankset

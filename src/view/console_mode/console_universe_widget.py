@@ -4,6 +4,7 @@ from PySide6 import QtCore, QtWidgets
 
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet
+from model.ofl.fixture import UsedFixture
 from model.universe import Universe
 from style import Style
 from view.console_mode.console_channel_widget import ChannelWidget
@@ -26,8 +27,10 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         super().__init__(parent=parent)
         self._universe = universe
         self._broadcaster = Broadcaster()
-        self._broadcaster.fixture_patched.connect(self._reload_patched_fixtures)
+        #self._broadcaster.fixture_patched.connect(self._reload_patched_fixtures)
         self._subwidgets: list[ChannelWidget | QtWidgets.QLabel] = []
+        self._broadcaster.add_fixture.connect(self._reload_patched_fixtures)
+        self._universe = universe
 
         self.setFixedHeight(650)
 
@@ -41,11 +44,13 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
 
         self._universe_widget = QtWidgets.QWidget()
         self._universe_widget.setLayout(QtWidgets.QHBoxLayout(self._universe_widget))
+        self._universe_widget.layout().setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinimumSize)
+        self._universe_widget.setFixedHeight(650)
+        self._universe_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
 
-        # TODO we need to discuss the desired behavior in case of multiple universes in console mode as we may need
-        # to switch the active one. For now it is not an issue as we only feature one universe for the theatre play.
-        # In future it will be an issue as we intend to use the console as a default for scenes and a scene might use
-        # multiple universes.
+        self._universe_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum,
+                                            QtWidgets.QSizePolicy.Policy.Expanding)
+
         self._bank_set = BankSet(gui_controlled=True,
                                  description=f"Console mode Bankset for universe {universe.description}.")
         self._bank_set.activate()
@@ -124,3 +129,15 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             else:
                 index += 1
                 fixtures_per_bank = 0
+
+    def _add_fixture(self, fixture: UsedFixture):
+        layout = self._universe_widget.layout()
+        for channel_index in range(fixture.channel_length):
+            channel_widget = ChannelWidget(fixture.get_fixture_channel(channel_index),
+                                           self._universe.channels[fixture.start_index + channel_index],
+                                           self._bank_set,
+                                           self._bank_set_control_elements, self)
+            layout.addWidget(channel_widget)
+            self._universe.channels[fixture.start_index + channel_index].updated.connect(
+                lambda *args, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe))
+        layout.addWidget(QtWidgets.QLabel(fixture.name))
