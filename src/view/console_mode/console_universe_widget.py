@@ -27,10 +27,9 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         super().__init__(parent=parent)
         self._universe = universe
         self._broadcaster = Broadcaster()
-        #self._broadcaster.fixture_patched.connect(self._reload_patched_fixtures)
+        # self._broadcaster.fixture_patched.connect(self._reload_patched_fixtures)
         self._subwidgets: list[ChannelWidget | QtWidgets.QLabel] = []
-        self._broadcaster.add_fixture.connect(self._reload_patched_fixtures)
-        self._universe = universe
+        self._broadcaster.add_fixture.connect(self._add_fixture)
 
         self.setFixedHeight(650)
 
@@ -56,34 +55,10 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._bank_set.activate()
         self._bank_set_control_elements = []
 
-        self._reload_patched_fixtures()
-
         self.setWidget(self._universe_widget)
         self._broadcaster.jogwheel_rotated_left.connect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.connect(self._increase_scroll)
         self._scroll_position = 0
-
-    def _reload_patched_fixtures(self):
-        for w in self._subwidgets:
-            self._universe_widget.layout().removeWidget(w)
-            w.setParent(None)
-            w.deleteLater()
-        self._subwidgets.clear()
-        # Add all channels of the universe
-        for channel, patching_chanel in zip(self._universe.channels, self._universe.patching):
-            channel_widget = ChannelWidget(channel, patching_chanel, bank_set=self._bank_set,
-                                           bank_set_control_list=self._bank_set_control_elements)
-            self._universe_widget.layout().addWidget(channel_widget)
-            self._subwidgets.append(channel_widget)
-
-            if patching_chanel.fixture.name != "Empty" and patching_chanel.fixture_channel_id() == len(
-                    patching_chanel.fixture.mode['channels']) - 1:
-                label = QtWidgets.QLabel(patching_chanel.fixture.name)
-                self._universe_widget.layout().addWidget(label)
-                self._subwidgets.append(label)
-
-            channel.updated.connect(
-                lambda *args, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe))
 
     def __del__(self):
         self._bank_set.unlink()
