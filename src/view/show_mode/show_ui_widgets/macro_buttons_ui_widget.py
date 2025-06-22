@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout
 from model import UIWidget
 from utility import resource_path
 from view.action_setup_view._command_insertion_dialog import escape_argument
+from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.utility_widgets.box_grid_renderer import BoxGridItem, BoxGridRenderer
 
@@ -203,15 +204,19 @@ class MacroButtonUIWidget(UIWidget):
         return w
 
     def _config_width_value_changed(self, new_value: int):
-        if self._latest_player_widget is not None:
-            self._latest_player_widget.setFixedWidth(new_value)
-        if self._latest_config_widget is not None:
-            self._latest_config_widget.setFixedWidth(new_value)
+        for widget in [self._latest_player_widget, self._latest_config_widget]:
+            if widget is not None:
+                widget.setFixedWidth(new_value)
+                wh = widget.parent()
+                if isinstance(wh, UIWidgetHolder):
+                    wh.update_size()
         self.configuration["width"] = str(new_value)
 
     def _config_height_value_changed(self, new_value: int):
-        if self._latest_player_widget is not None:
-            self._latest_player_widget.setFixedHeight(new_value)
-        if self._latest_config_widget is not None:
-            self._latest_config_widget.setFixedHeight(new_value)
+        for widget in [self._latest_player_widget, self._latest_config_widget]:
+            if widget is not None:
+                widget.setFixedHeight(new_value)
+                wh = widget.parent()
+                if isinstance(wh, UIWidgetHolder):
+                    wh.update_size()
         self.configuration["height"] = str(new_value)
