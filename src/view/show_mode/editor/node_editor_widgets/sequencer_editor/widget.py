@@ -197,6 +197,9 @@ class SequencerEditor(PreviewEditWidget):
             return
         if is_new_transition:
             self._model.append_channel(c)
+        self._add_existing_channel_to_list(c, is_new_transition)
+
+    def _add_existing_channel_to_list(self, c: SequencerChannel, is_new_transition: bool):
         li = AnnotatedListWidgetItem(self._channel_list_widget)
         li.annotated_data = c
         item_widget = ChannelLabel(c, self._channel_list_widget)
@@ -345,7 +348,7 @@ class SequencerEditor(PreviewEditWidget):
 
     def _populate_data(self):
         for c in self._model.channels:
-            self._add_channel(c, is_new_transition=False)
+            self._add_existing_channel_to_list(c, is_new_transition=False)
         if len(self._model.transitions) > 0:
             for t in self._model.transitions:
                 self._add_transition(t, is_new_transition=False)
