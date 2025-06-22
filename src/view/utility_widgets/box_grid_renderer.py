@@ -98,6 +98,8 @@ class BoxGridRenderer(QWidget):
         self._border_width = 10
         self.setMinimumWidth(self._box_width + self._scroll_bar_size)
         self.setMinimumHeight(self._box_height)
+        self.setMaximumHeight(65565)
+        self.setMaximumWidth(65565)
         self._fg_brush = QBrush(QColor(0xdc, 0x66, 0x01))
 
     @property

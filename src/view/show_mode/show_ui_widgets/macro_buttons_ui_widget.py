@@ -103,6 +103,9 @@ class _MacroListWidget(QWidget):
 class MacroButtonUIWidget(UIWidget):
     def __init__(self, parent: "UIPage", configuration: dict[str, str]):
         super().__init__(parent, configuration)
+        self._latest_config_widget: QWidget | None = None
+        self._latest_player_widget: QWidget | None = None
+
         if not self.configuration.get("items"):
             self.configuration["items"] = "[]"
         if not self.configuration.get("width"):
@@ -120,6 +123,8 @@ class MacroButtonUIWidget(UIWidget):
 
     def _construct_widget(self) -> "QWidget":
         w = BoxGridRenderer()
+        w.setFixedWidth(max(int(self.configuration.get("width") or "64"), w.minimumWidth()))
+        w.setFixedHeight(max(int(self.configuration.get("height") or "64"), w.minimumHeight()))
         self._populate_button_items(w)
         return w
 
@@ -144,7 +149,8 @@ class MacroButtonUIWidget(UIWidget):
         self._context.return_text = ""
 
     def get_player_widget(self, parent: "QWidget") -> "QWidget":
-        return self._construct_widget()
+        self._latest_player_widget = self._construct_widget()
+        return self._latest_player_widget
 
     def get_configuration_widget(self, parent: "QWidget") -> "QWidget":
         self._latest_config_widget = self._construct_widget()
@@ -179,11 +185,13 @@ class MacroButtonUIWidget(UIWidget):
         width_box.setMinimum(64)
         width_box.setMaximum(16384)
         width_box.setValue(int(self.configuration.get("width") or "64"))
+        width_box.valueChanged.connect(self._config_width_value_changed)
         l.addRow("Width", width_box)
         height_box = QSpinBox()
         height_box.setMinimum(64)
         height_box.setMaximum(16384)
         height_box.setValue(int(self.configuration.get("height") or "64"))
+        height_box.valueChanged.connect(self._config_height_value_changed)
         l.addRow("Height", height_box)
         add_macro_button = QPushButton("Add macro")
         l.addWidget(add_macro_button)
@@ -193,3 +201,17 @@ class MacroButtonUIWidget(UIWidget):
         add_macro_button.clicked.connect(lambda: _AddMacroActionDialog(self, button_list))
         w.setLayout(l)
         return w
+
+    def _config_width_value_changed(self, new_value: int):
+        if self._latest_player_widget is not None:
+            self._latest_player_widget.setFixedWidth(new_value)
+        if self._latest_config_widget is not None:
+            self._latest_config_widget.setFixedWidth(new_value)
+        self.configuration["width"] = str(new_value)
+
+    def _config_height_value_changed(self, new_value: int):
+        if self._latest_player_widget is not None:
+            self._latest_player_widget.setFixedHeight(new_value)
+        if self._latest_config_widget is not None:
+            self._latest_config_widget.setFixedHeight(new_value)
+        self.configuration["height"] = str(new_value)
