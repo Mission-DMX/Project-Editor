@@ -19,9 +19,10 @@ if TYPE_CHECKING:
 
 
 class _AddMacroActionDialog(QDialog):
-    def __init__(self, ui_widget: "MacroButtonUIWidget", button_list: QListWidget):
+    def __init__(self, ui_widget: "MacroButtonUIWidget", button_list: QListWidget, update_button: QPushButton):
         super().__init__(parent=button_list)
         self._ui_widget = ui_widget
+        self._update_button = update_button
         self._button_list = button_list
         self.setModal(True)
         self.setWindowTitle("Add Macro")
@@ -62,7 +63,7 @@ class _AddMacroActionDialog(QDialog):
             "command": self._command_tb.text()
         })
         self._ui_widget.configuration["items"] = json.dumps(model)
-        self._ui_widget.refresh_config_macro_list(self._button_list)
+        self._ui_widget.refresh_config_macro_list(self._button_list, update_button=self._update_button)
         self.close()
 
     def _cancel_button_pressed(self):
@@ -73,9 +74,10 @@ class _MacroListWidget(QWidget):
 
     _NO_ICON = QIcon(resource_path(os.path.join("resources", "icons", "missing-image.svg")))
 
-    def __init__(self, parent: QListWidget, item_def: dict[str, str], index: int):
+    def __init__(self, parent: QListWidget, item_def: dict[str, str], index: int, update_button: QPushButton):
         super().__init__(parent)
         self._item_def = item_def
+        self._update_button : QPushButton = update_button
         layout = QHBoxLayout()
         layout.addWidget(QLabel(str(index)))
         self._icon_bt = QPushButton(self)
@@ -96,9 +98,15 @@ class _MacroListWidget(QWidget):
 
     def _text_changed(self, text: str):
         self._item_def["text"] = text
+        self._update_button.setEnabled(True)
 
     def _command_changed(self, text: str):
-        self._item_def["text"] = text
+        self._item_def["command"] = text
+        self._update_button.setEnabled(True)
+
+    @property
+    def item_def(self) -> dict[str, str]:
+        return self._item_def
 
 
 class MacroButtonUIWidget(UIWidget):
@@ -162,14 +170,14 @@ class MacroButtonUIWidget(UIWidget):
         self.copy_base(w)
         return w
 
-    def refresh_config_macro_list(self, config_list: QListWidget):
+    def refresh_config_macro_list(self, config_list: QListWidget, update_button: QPushButton):
         config_list.clear()
         model = json.loads(self.configuration["items"])
         i = 0
         for item_def in model:
             item = AnnotatedListWidgetItem(config_list)
             item.annotated_data = item_def
-            item_widget = _MacroListWidget(config_list, item_def, i)
+            item_widget = _MacroListWidget(config_list, item_def, i, update_button)
             item.setSizeHint(item_widget.sizeHint())
             config_list.addItem(item)
             config_list.setItemWidget(item, item_widget)
@@ -197,11 +205,28 @@ class MacroButtonUIWidget(UIWidget):
         add_macro_button = QPushButton("Add macro")
         l.addWidget(add_macro_button)
         button_list = QListWidget()
-        self.refresh_config_macro_list(button_list)
         l.addWidget(button_list)
-        add_macro_button.clicked.connect(lambda: _AddMacroActionDialog(self, button_list))
+        update_button = QPushButton("Update Buttons")
+        update_button.setEnabled(False)
+        update_button.clicked.connect(lambda: self._update_properties(button_list, update_button))
+        l.addWidget(update_button)
+        self.refresh_config_macro_list(button_list, update_button)
+        add_macro_button.clicked.connect(lambda: _AddMacroActionDialog(self, button_list, update_button))
         w.setLayout(l)
         return w
+
+    def _update_properties(self, button_list: QListWidget, update_button: QPushButton):
+        model = json.loads(self.configuration["items"])
+        i = 0
+        for item_def in model:
+            item_def.update(button_list.itemWidget(button_list.item(i)).item_def)
+            i += 1
+        self.configuration["items"] = json.dumps(model)
+        if self._latest_config_widget is not None:
+            self._populate_button_items(self._latest_config_widget)
+        if self._latest_player_widget is not None:
+            self._populate_button_items(self._latest_player_widget)
+        update_button.setEnabled(False)
 
     def _config_width_value_changed(self, new_value: int):
         for widget in [self._latest_player_widget, self._latest_config_widget]:
