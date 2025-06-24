@@ -35,21 +35,22 @@ def _split_args(line: str) -> list[str]:
             if not in_escape:
                 current_arg += c
             else:
-                if c == 't':
-                    current_arg += '\t'
-                    in_string = False
-                elif c == 'n':
-                    current_arg += '\n'
-                    in_escape = False
-                elif c == 'r':
-                    current_arg += '\r'
-                    in_escape = False
-                elif c == '$':
-                    current_arg += "\\$"
-                    in_escape = False
-                elif c == '"':
-                    current_arg += c
-                    in_escape = False
+                match c:
+                    case 't':
+                        current_arg += '\t'
+                        in_string = False
+                    case  'n':
+                        current_arg += '\n'
+                        in_escape = False
+                    case 'r':
+                        current_arg += '\r'
+                        in_escape = False
+                    case '$':
+                        current_arg += "\\$"
+                        in_escape = False
+                    case '"':
+                        current_arg += c
+                        in_escape = False
         else:
             if c == '"':
                 in_string = True
