@@ -26,7 +26,10 @@ class PatchingSelect(QtWidgets.QScrollArea):
     def __init__(self, board_configuration: BoardConfiguration, parent):
         super().__init__(parent)
         self._board_configuration = board_configuration
-        cache_path = '/var/cache/missionDMX'
+        if platform.system() == "Windows":
+            cache_path = os.path.join(os.getenv('LOCALAPPDATA'), 'missionDMX')
+        else:
+            cache_path = '/var/cache/missionDMX'
         if not os.path.exists(cache_path):
             os.makedirs(cache_path)
         fixtures_path = os.path.join(cache_path, 'fixtures')
