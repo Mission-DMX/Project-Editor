@@ -28,8 +28,8 @@ class PatchingSelect(QtWidgets.QScrollArea):
         self._board_configuration = board_configuration
         cache_path = '/var/cache/missionDMX'
         if not os.path.exists(cache_path):
-            os.mkdir(cache_path)
-        fixtures_path = os.path.join(cache_path, 'fixtures/')
+            os.makedirs(cache_path)
+        fixtures_path = os.path.join(cache_path, 'fixtures')
         zip_path = os.path.join(cache_path, 'fixtures.zip')
         if not os.path.exists(fixtures_path):
             logger.info("Downloading fixture library. Please wait")
