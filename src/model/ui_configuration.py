@@ -4,16 +4,15 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
 
-from controller.network import NetworkManager
-
 if TYPE_CHECKING:
+    from controller.network import NetworkManager
     from model import Broadcaster, Filter
     from model.scene import Scene
 
-_network_manager_instance: NetworkManager = None
+_network_manager_instance: "NetworkManager" = None
 
 
-def setup_network_manager(nm: NetworkManager, b: "Broadcaster"):
+def setup_network_manager(nm: "NetworkManager", b: "Broadcaster"):
     global _network_manager_instance
     _network_manager_instance = nm
     b.request_main_brightness_fader_update.connect(nm.set_main_brightness_fader_position)
@@ -236,7 +235,7 @@ class ShowUI:
 
     The _page_storage variable contains the pages per scene.
     """
-    _fish_connector: NetworkManager = None
+    _fish_connector: "NetworkManager" = None
 
     def __init__(self):
         """This constructor initializes the show UI.

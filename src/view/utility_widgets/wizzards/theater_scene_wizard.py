@@ -1,3 +1,4 @@
+# pylint: skip-file
 # coding=utf-8
 import logging
 import os.path
@@ -10,9 +11,10 @@ from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QFormLayout, 
 
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene
+from model.channel import Channel
 from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.ofl.fixture import ColorSupport, UsedFixture
-from model.patching_channel import PatchingChannel
+from model.patching.fixture_channel import FixtureChannelType
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
@@ -31,7 +33,7 @@ logger = logging.getLogger(__file__)
 def _d_assign(d, v, k):
     d[v] = k
 
-
+#TODO komplett überarbeiten
 class TheaterSceneWizard(QWizard):
     def __init__(self, parent: QWidget, show: BoardConfiguration):
         super().__init__(parent)
@@ -175,7 +177,7 @@ class TheaterSceneWizard(QWizard):
         selected_fixtures = self._fixture_selection_browser.get_selected_fixtures()
         for f in selected_fixtures:
             # Map color channels
-            fcs = f.color_support()
+            fcs = f.color_support
             for supported_mode, name in [
                 (ColorSupport.HAS_RGB_SUPPORT, "Color"),
                 (ColorSupport.HAS_AMBER_SEGMENT, "Amber"),
@@ -185,31 +187,44 @@ class TheaterSceneWizard(QWizard):
                 if fcs & supported_mode > 0:
                     item = AnnotatedListWidgetItem(self._fixture_feature_list)
                     item.annotated_data = (f, supported_mode)
-                    item.setText(f"({f.parent_universe}:{f.channels[0].address}) {f.name}: {name}")
+                    item.setText(f"({f.parent_universe}:{f.start_index}) {f.name}: {name}")
                     self._fixture_feature_list.addItem(item)
 
             # Map position Channels
-            for type in [("Pan", f.pan_channels), ("Tilt", f.tilt_channels),
-                         ("Animation Speed", f.animation_speed_channels)]:
-                mode = type[0]
-                for channel in type[1]:
+            for type_ in [("Pan", f.get_segment_in_universe_by_type(
+                FixtureChannelType.PAN)), ("Tilt", f.get_segment_in_universe_by_type(
+                FixtureChannelType.TILT)),  # TODO public and not np
+                          ("Animation Speed", f.get_segment_in_universe_by_type(
+                FixtureChannelType.SPEED))]:
+                mode = type_[0]
+                for _ in type_[1]:
                     item = AnnotatedListWidgetItem(self._fixture_feature_list)
                     item.annotated_data = (f, mode)
-                    item.setText(f"({f.parent_universe}:{f.channels[0].address}) {f.name}: {mode}")
+                    item.setText(f"({f.parent_universe}:{f.start_index}) {f.name}: {mode}")
                     self._fixture_feature_list.addItem(item)
 
-            remaining_channels = []
-            already_added_channels = (f.uv_segments + f.white_segments + f.green_segments + f.blue_segments +
-                                      f.red_segments + f.amber_segments + f.pan_channels + f.tilt_channels +
-                                      f.animation_speed_channels)
-            for fc in f.channels:
+            remaining_channels: list[int] = []
+
+            already_added_channels = (f.get_segment_in_universe_by_type(
+                FixtureChannelType.UV) + f.get_segment_in_universe_by_type(
+                FixtureChannelType.WHITE) + f.get_segment_in_universe_by_type(
+                FixtureChannelType.GREEN) + f.get_segment_in_universe_by_type(
+                FixtureChannelType.BLUE) +                                      f.get_segment_in_universe_by_type(
+                                          FixtureChannelType.RED) + f.get_segment_in_universe_by_type(
+                FixtureChannelType.AMBER) +f.get_segment_in_universe_by_type(
+                FixtureChannelType.PAN) + f.get_segment_in_universe_by_type(
+                FixtureChannelType.TILT) +
+                                      f.get_segment_in_universe_by_type(
+                                          FixtureChannelType.SPEED))  # TODO public and not np
+            for fc in f._fixture_channels:  # TODO public and not np
                 if fc not in already_added_channels:
                     remaining_channels.append(fc)
+
             for c in remaining_channels:
                 item = AnnotatedListWidgetItem(self._fixture_feature_list)
-                item.annotated_data = (f, c)
+                # item.annotated_data = (f, c) #TODO für was
                 item.setText(
-                    f"({f.parent_universe}:{f.channels[0].address}) {f.name}: [undef] {c.address} {c.fixture_channel}/")
+                    f"({f.parent_universe}:{f.start_index}) {f.name}: [undef] {c} {f.get_fixture_channel(c).name}/")
                 self._fixture_feature_list.addItem(item)
 
     def add_group_to_feature_group_list_pressed(self):
@@ -252,7 +267,7 @@ class TheaterSceneWizard(QWizard):
                 selected_group.setIcon(_folder_full_icon)
             selected_group.annotated_data["fixtures"].append(selected_feature.annotated_data)
             selected_group.setToolTip("Content: " + ",".join(
-                [f"{i[0].parent_universe}/{str(i[0].first_channel)}: {i[0].color_support()}" for i in
+                [f"{i[0].parent_universe}/{str(i[0].start_index)}: {i[0].color_support}" for i in
                  selected_group.annotated_data["fixtures"]]))
         else:
             new_group_item = AnnotatedListWidgetItem(self._feature_grouping_list)
@@ -360,9 +375,7 @@ class TheaterSceneWizard(QWizard):
                 if isinstance(f[1], str):
                     if f[1] == "Pan" or f[1] == "Tilt":
                         position_found = True
-                if isinstance(f[1], PatchingChannel):
-                    # Unknown Feature
-                    pass
+
             if color_found and not position_found:
                 selected_data_type = DataType.DT_COLOR
             elif position_found:
@@ -390,8 +403,8 @@ class TheaterSceneWizard(QWizard):
         pn.close()
         return True
 
-    def _link_output_filters(self, bankset_link_map, cue_link_map: dict[PatchingChannel | str, str], output_map, scene):
-        for c in self._channels:
+    def _link_output_filters(self, bankset_link_map, cue_link_map: dict[str, str], output_map, scene):
+        for c in self._channels: # TODO  channels have no fixtures
             for fd in c["fixtures"]:
                 fixture = fd[0]
                 if not isinstance(fixture, UsedFixture):
@@ -412,7 +425,7 @@ class TheaterSceneWizard(QWizard):
                         scene.get_filter_by_id(output_filter_to_connect).channel_links[
                             filter_channel_to_connect] = selected_channel
 
-    def _generate_cue_filter(self, scene: Scene) -> dict[PatchingChannel | str, str]:
+    def _generate_cue_filter(self, scene: Scene) -> dict[str, str]:
         time_filter = Filter(filter_id="Time_Input", filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT,
                              scene=scene, pos=(-10, 0))
         scene.append_filter(time_filter, filter_page_index=0)
@@ -425,11 +438,11 @@ class TheaterSceneWizard(QWizard):
         )
         cue_filter.channel_links['time'] = time_filter.filter_id + ":value"
         cue_model = CueFilterModel()
-        link_map: dict[PatchingChannel | str, str] = {}
+        link_map: dict[str, str] = {}
         for c in self._channels:
             if c.get("desk-controlled") != "true":
                 associated_channel = c.get("name").replace(" ", "_").replace(":", "")
-                fixture_channels: list[PatchingChannel | str] = []
+                fixture_channels: list[str] = []
                 associated_fixtures = c.get("fixtures") or []
                 match c.get("data-type"):
                     case DataType.DT_8_BIT:
@@ -477,5 +490,5 @@ class TheaterSceneWizard(QWizard):
                                      )
         return output_map
 
-    def _generate_bank_set(self, scene: Scene) -> dict[PatchingChannel, str]:
+    def _generate_bank_set(self, scene: Scene) -> dict[Channel, str]:
         return {}  # TODO

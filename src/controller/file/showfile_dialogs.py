@@ -1,4 +1,5 @@
 # coding=utf-8
+"""Dialogs for Show File"""
 import os
 
 from PySide6.QtWidgets import QFileDialog, QWidget
@@ -35,7 +36,7 @@ def _load_show_file(file_name: str, show_data: BoardConfiguration):
 
 
 def _save_show_file(file_name: str, show_data: BoardConfiguration):
-    """Saves the board configuration to specified file.
+    """Saves the board configuration to a specified file.
 
     Args:
         file_name: File in which the config is saved.

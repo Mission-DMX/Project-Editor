@@ -1,3 +1,5 @@
+# coding=utf-8
+""" A process notifier informs the user of the activity and status of background processes."""
 from PySide6 import QtCore, QtGui
 from PySide6.QtCore import QObject
 
@@ -6,6 +8,7 @@ class ProcessNotifier:
     """
     A process notifier informs the user of the activity and status of background processes.
     """
+
     def __init__(self, name: str, max_count: int):
         """
         Initialize a new process notifier.

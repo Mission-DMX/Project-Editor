@@ -2,7 +2,6 @@
 """Handles reading a xml document"""
 
 import os
-import random
 from logging import getLogger
 from xml.etree import ElementTree
 
@@ -13,12 +12,12 @@ import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
 from controller.utils.process_notifications import get_process_notifier
-from model import BoardConfiguration, ColorHSI, Filter, PatchingUniverse, Scene, UIPage, Universe
+from model import BoardConfiguration, ColorHSI, Filter, Scene, UIPage, Universe
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter
 from model.macro import Macro, trigger_factory
-from model.ofl.fixture import UsedFixture, load_fixture, make_used_fixture
+from model.ofl.fixture import load_fixture, make_used_fixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
@@ -494,25 +493,9 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
     if universe_id is None:
         logger.error("Could not parse universe element, id attribute is missing")
 
-    physical: int | None = None
-    artnet: proto.UniverseControl_pb2.Universe.ArtNet | None = None
-    ftdi: proto.UniverseControl_pb2.Universe.ArtNet | None = None
-    patching = None
-
-    for child in universe_element:
-        match child.tag:
-            case "physical_location":
-                physical = _parse_physical_location(child)
-            case "artnet_location":
-                artnet = _parse_artnet_location(child)
-            case "ftdi_location":
-                ftdi = _parse_ftdi_location(child)
-            case "patching":
-                patching = _parse_patching(child, universe_id)
-
-            case _:
-                logger.warning("Universe %s contains unknown element: %s",
-                               universe_id, child.tag)
+    physical = _parse_physical_location(pl) if (pl := universe_element.find("physical_location")) is not None else None
+    artnet = _parse_artnet_location(an) if (an := universe_element.find("artnet_location")) is not None else None
+    ftdi = _parse_ftdi_location(ftdi_l) if (ftdi_l := universe_element.find("ftdi_location")) is not None else None
 
     if physical is None and artnet is None and ftdi is None:
         logger.warning("Could not parse any location for universe %s", universe_id)
@@ -521,22 +504,13 @@ def _parse_universe(universe_element: ElementTree.Element, board_configuration: 
                                                         physical_location=physical,
                                                         remote_location=artnet,
                                                         ftdi_dongle=ftdi)
-    patching_universe = PatchingUniverse(universe_proto)
-    universe = Universe(patching_universe)
+
+    universe = Universe(universe_proto)
     universe.name = name
     universe.description = description
-    if patching:
-        for index, fixture in patching:
-            current_channel = index
-            color = "#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-            for index in range(len(fixture.mode['channels'])):
-                item = patching_universe.patching[current_channel + index]
-                item.fixture = fixture
-                item.fixture_channel = index
-                item.color = color
 
-    board_configuration.broadcaster.fixture_patched.emit()
-    board_configuration.broadcaster.add_universe.emit(patching_universe)
+    if patching := universe_element.find("patching"):
+        _parse_patching(board_configuration, patching, universe_id)
 
 
 def _parse_physical_location(location_element: ElementTree.Element) -> int:
@@ -601,22 +575,21 @@ def _parse_ftdi_location(location_element: ElementTree.Element) -> proto.Univers
                                                         serial=serial_identifier)
 
 
-def _parse_patching(location_element: ElementTree.Element, universe_id: int) -> list[tuple[int, UsedFixture]]:
+def _parse_patching(board_configuration: BoardConfiguration, location_element: ElementTree.Element,
+                    universe_id: int) -> None:
     """
     Load patching information from XML data.
     :param location_element: The XML data to load from
     :param universe_id: The id of the universe which this fixture belongs to.
     :returns: The loaded fixtures
     """
-    fixtures_path = '/var/cache/missionDMX/fixtures'
-    used_fixtures: list[tuple[int, UsedFixture]] = []
-    for child in location_element:
-        used_fixture = make_used_fixture(load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
-                                         int(child.attrib['mode']), universe_id)
+    fixtures_path = '/var/cache/missionDMX/fixtures'  # TODO config file
 
-        used_fixtures.append((int(child.attrib['start']), used_fixture))
+    for child in location_element:
+        make_used_fixture(board_configuration, load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
+                          int(child.attrib['mode']), universe_id, int(child.attrib['start']))
+
     # TODO load fixture name from file
-    return used_fixtures
 
 
 def _parse_ui_hint(ui_hint_element: ElementTree.Element, board_configuration: BoardConfiguration):

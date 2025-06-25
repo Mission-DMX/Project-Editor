@@ -2,7 +2,7 @@
 """manufacturers for fixtures"""
 import json
 import os.path
-from typing import TypedDict, cast
+from typing import TypedDict, cast, LiteralString
 
 from typing_extensions import NotRequired
 
@@ -17,10 +17,10 @@ class Manufacture(TypedDict):
     rdmID: NotRequired[int]
 
 
-def generate_manufacturers(fixture_directory: os.path) -> list[tuple[Manufacture, list[Fixture]]]:
+def generate_manufacturers(fixture_directory: LiteralString) -> list[tuple[Manufacture, list[Fixture]]]:
     """generate all Manufactures"""
     with open(os.path.join(fixture_directory, "manufacturers.json"), "r", encoding='UTF-8') as f:
-        ob: json = json.load(f)
+        ob: dict = json.load(f)
     iter_manufactures = iter(ob)
     next(iter_manufactures)
     manufactures: list[tuple[Manufacture, list[Fixture]]] = []

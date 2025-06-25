@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 class FilterPage:
+    """Filter page in a Scene"""
+
     def __init__(self, parent: "Scene"):
         self._filters: list[Filter] = []
         self._child_pages: list["FilterPage"] = []
@@ -19,6 +21,7 @@ class FilterPage:
 
     @property
     def name(self) -> str:
+        """name"""
         return self._name
 
     @name.setter
@@ -27,24 +30,28 @@ class FilterPage:
 
     @property
     def filters(self) -> list[Filter]:
+        """list of filters"""
         return self._filters
 
     @property
     def child_pages(self) -> list["FilterPage"]:
+        """list of child pages"""
         return self._child_pages
 
     @property
     def parent_scene(self) -> "Scene":
+        """parent scene"""
         return self._parent_scene
 
     def copy(self, new_scene: "Scene" = None):
+        """copy of a filter page"""
         if not new_scene:
             new_fp = FilterPage(self._parent_scene)
-            # Internal copying should not copy filters as they are unique within scene
+            # Internal copying should not copy filters as they are unique within Scene
         else:
             new_fp = FilterPage(new_scene)
-            for filter in self._filters:
-                found_filter = new_scene.get_filter_by_id(filter.filter_id)
+            for filter_ in self._filters:
+                found_filter = new_scene.get_filter_by_id(filter_.filter_id)
                 if found_filter:
                     new_fp._filters.append(found_filter)
         for child_fp in self._child_pages:
@@ -54,7 +61,7 @@ class FilterPage:
 
 
 class Scene:
-    """Scene for show file."""
+    """Scene for a show file."""
 
     def __init__(self, scene_id: int,
                  human_readable_name: str,
@@ -65,7 +72,7 @@ class Scene:
         self._filters: list[Filter] = []
         self._filter_index: dict[str, Filter] = {}
         self._filter_pages: list[FilterPage] = []
-        self._associated_bankset: Optional["BankSet"] | None = None
+        self._associated_bankset: Optional["BankSet"] = None
         self._ui_pages: list["UIPage"] = []
 
     @property
@@ -75,12 +82,12 @@ class Scene:
 
     @property
     def human_readable_name(self) -> str:
-        """The human readable name of the scene displayed by the ui"""
+        """The human-readable name of the scene displayed by the ui"""
         return self._human_readable_name
 
     @human_readable_name.setter
     def human_readable_name(self, human_readable_name: str):
-        """Sets the human readable name of the scene displayed by the ui"""
+        """Sets the human-readable name of the scene displayed by the ui"""
         self._human_readable_name = human_readable_name
 
     @property
@@ -105,10 +112,14 @@ class Scene:
         return self._filter_pages
 
     def insert_filterpage(self, fp: FilterPage):
+        """
+        add a filterpage to the scene
+        """
         self._filter_pages.append(fp)
 
     @property
-    def linked_bankset(self) -> Optional["BankSet"] | None:
+    def linked_bankset(self) -> Optional["BankSet"]:
+        """associated_bankset"""
         return self._associated_bankset
 
     @linked_bankset.setter
@@ -120,6 +131,7 @@ class Scene:
 
     @property
     def ui_pages(self) -> list["UIPage"]:
+        """list of UIPages"""
         return self._ui_pages
 
     def __str__(self) -> str:
@@ -164,6 +176,7 @@ class Scene:
         return scene
 
     def get_filter_by_id(self, fid: str) -> Filter | None:
+        """get filter by filter ID"""
         f = self._filter_index.get(fid)
         if f:
             return f
@@ -174,7 +187,7 @@ class Scene:
         return None
 
     def ensure_name_uniqueness(self, name_to_try: str) -> str:
-        """This methods checks the provided name for uniqueness within this scene.
+        """This method checks the provided name for uniqueness within this scene.
         :param name_to_try: The name to check for uniqueness
         :returns: A minimal modified version of the provided name that ensures uniqueness.
         """
@@ -185,7 +198,7 @@ class Scene:
                 name_to_try = name_to_try[:-1]
             if name_appendix == "":
                 name_appendix = "0"
-            name_to_try = name_to_try + str(int(name_appendix) + 1)
+            name_to_try += str(int(name_appendix) + 1)
         return name_to_try
 
     def append_filter(self, f: Filter, filter_page_index: int = -1):
