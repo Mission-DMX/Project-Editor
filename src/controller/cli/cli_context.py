@@ -80,7 +80,7 @@ class CLIContext:
         :param networkmgr: The active network manager, user for communication with fish
         :param exit_available: Should the exit command (close the connection) be available or not?
         """
-        self.commands = [
+        self._commands = [
             ListCommand(self),
             SelectCommand(self),
             BankSetCommand(self),
@@ -102,7 +102,7 @@ class CLIContext:
         self.networkmgr: "NetworkManager" = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
-        for c in self.commands:
+        for c in self._commands:
             c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
         if exit_available:
             subparsers.add_parser("exit", exit_on_error=False, help="Close this remote connection")
@@ -111,6 +111,11 @@ class CLIContext:
         self._exit_available = exit_available
 
     def _replace_variables(self, args: list[str]) -> list[str]:
+        """
+        This method replaces variables in the provided list of arguments with their respective current values.
+        :param args: The list of arguments
+        :return: The list of arguments with resolved variables
+        """
         new_arg_list = []
         for arg in args:
             if arg.startswith("\\$"):
@@ -140,7 +145,7 @@ class CLIContext:
             elif global_args.subparser_name == "?":
                 self.print(self.parser.format_help())
             else:
-                for c in self.commands:
+                for c in self._commands:
                     if c.name == global_args.subparser_name:
                         return c.execute(global_args)
         except argparse.ArgumentError as e:

@@ -9,13 +9,19 @@ if TYPE_CHECKING:
 
 
 class DelayCommand(Command):
+
+    """Purpose of this command is delayed execution."""
+
     def __init__(self, context):
+        """:see Command.__init__:"""
         super().__init__(context, "delay")
 
     def configure_parser(self, parser: "ArgumentParser"):
+        """:see Command.configure_parser:"""
         parser.add_argument("delay", type=int, help="Delay in milliseconds")
 
     def execute(self, args) -> bool:
+        """:see Command.execute:"""
         try:
             sleep(args.delay / 1000)
             return True
@@ -25,27 +31,39 @@ class DelayCommand(Command):
 
 
 class PrintCommand(Command):
+
+    """Purpose of this command is printing stuff."""
+
     def __init__(self, context):
+        """:see Command.__init__:"""
         super().__init__(context, "print")
 
     def configure_parser(self, parser: "ArgumentParser"):
+        """:see Command.configure_parser:"""
         parser.add_argument("text", type=str, help="Stuff to print", nargs="*")
 
     def execute(self, args) -> bool:
+        """:see Command.execute:"""
         text = " ".join(args.text)
         self.context.print(text)
         return True
 
 
 class SetCommand(Command):
+
+    """Purpose of this command is setting of variables."""
+
     def __init__(self, context):
+        """:see Command.__init__:"""
         super().__init__(context, "set")
 
     def configure_parser(self, parser: "ArgumentParser"):
+        """:see Command.configure_parser:"""
         parser.add_argument("key", type=str, help="The variable to set")
         parser.add_argument("value", type=str, help="The value to set it to")
 
     def execute(self, args) -> bool:
+        """:see Command.execute:"""
         self.context.variables[args.key] = args.value
         # TODO implement support for arithmetic in case of numbers
         return True
@@ -61,13 +79,19 @@ class _CmpMode(Enum):
 
 
 class IfCommand(Command):
+
+    """Purpose of this command is conditional execution of the appended command."""
+
     def __init__(self, context):
+        """:see Command.__init__:"""
         super().__init__(context, "if")
 
     def configure_parser(self, parser: "ArgumentParser"):
+        """:see Command.configure_parser:"""
         parser.add_argument("expression", type=str, help="The expression to evaluate", nargs="*")
 
     def execute(self, args) -> bool:
+        """:see Command.execute:"""
         def bool_eval(arg: str):
             return len(arg) > 0 and not arg == "0"
 

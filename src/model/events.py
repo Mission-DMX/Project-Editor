@@ -83,6 +83,10 @@ class EventSender:
 
     @property
     def name(self) -> str:
+        """
+        The human-readable name of the event sender.
+        This should be unique as it is possible to search for senders by name.
+        """
         return self._name
 
     @property
@@ -159,6 +163,7 @@ class AudioExtractEventSender(EventSender):
 
     @property
     def audio_device(self) -> str:
+        """The alsa device node or pulse device name"""
         return self.configuration.get("dev") or "default"
 
     @audio_device.setter
@@ -167,6 +172,7 @@ class AudioExtractEventSender(EventSender):
 
     @property
     def high_cut(self) -> int:
+        """High cutoff frequency of beat detection."""
         return int(self.configuration.get("high_cut") or "100")
 
     @high_cut.setter
@@ -175,6 +181,7 @@ class AudioExtractEventSender(EventSender):
 
     @property
     def low_cut(self) -> int:
+        """Low cutoff frequency of beat detection."""
         return int(self.configuration.get("low_cut") or "10")
 
     @low_cut.setter
@@ -183,6 +190,7 @@ class AudioExtractEventSender(EventSender):
 
     @property
     def magnitude(self) -> float:
+        """Trigger magnitude of beat detection."""
         return float(self.configuration.get("magnitude") or "10")
 
     @magnitude.setter

@@ -566,6 +566,10 @@ class BankSet:
                 i += 1
 
     def get_all_columns(self) -> list[DeskColumn]:
+        """
+        Use this method to get all columns in the set.
+        :returns: A list of all columns.
+        """
         l = []
         for b in self.banks:
             for c in b.columns:

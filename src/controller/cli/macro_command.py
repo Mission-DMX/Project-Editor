@@ -9,10 +9,15 @@ if TYPE_CHECKING:
 
 
 class MacroCommand(Command):
+
+    """Purpose of this command is management and execution of other macros."""
+
     def __init__(self, context: "CLIContext"):
+        """:see Command.__init__:"""
         super().__init__(context, "macro")
 
     def configure_parser(self, parser: "ArgumentParser"):
+        """:see Command.configure_parser:"""
         subparsers = parser.add_subparsers(help="macro commands", dest="macroaction")
         exec_parser: "ArgumentParser" = subparsers.add_parser("exec", help="Execute a macro", exit_on_error=False)
         exec_parser.add_argument("macro", help="The macro to execute")
@@ -24,6 +29,7 @@ class MacroCommand(Command):
         pass
 
     def execute(self, args) -> bool:
+        """:see Command.execute:"""
         match args.macroaction:
             case "exec":
                 if args.macro in self.context.stack:
