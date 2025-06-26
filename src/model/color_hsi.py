@@ -92,3 +92,7 @@ class ColorHSI:
     def from_qt_color(cls, c: QColor):
         """ generate a HSI color from qt color format"""
         return ColorHSI(c.hslHueF() * 360.0, c.hslSaturationF(), c.lightnessF())
+
+    def __str__(self) -> str:
+        r, g, b = self.to_rgb()
+        return f"#{r:02x}{g:02x}{b:02x}".upper()

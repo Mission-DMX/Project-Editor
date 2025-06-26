@@ -61,3 +61,9 @@ class ChannelLabel(QWidget):
         name_label = QLabel(channel.name)
         layout.addWidget(name_label)
         self.setLayout(layout)
+        self.setToolTip(f"Channel {channel.name}\n"
+                        f"Data Type: {channel.data_type.name}\n"
+                        f"Default Value: {channel.default_value}\n"
+                        f"Apply Default On Empty: {channel.apply_default_on_empty}\n"
+                        f"Apply Default on Scene Switch: {channel.apply_default_on_scene_switch}\n"
+                        f"Interleave Method: {channel.interleave_method.name}")
