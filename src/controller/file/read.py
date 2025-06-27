@@ -91,6 +91,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         pn.close()
         return False
 
+    board_configuration.broadcaster.begin_show_file_parsing.emit()
     board_configuration.broadcaster.clear_board_configuration.emit()
     pn.current_step_number += 1
     tree = ElementTree.parse(file_name)
@@ -156,6 +157,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name
     pn.close()
+    board_configuration.broadcaster.end_show_file_parsing.emit()
     return True
 
 

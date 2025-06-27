@@ -77,7 +77,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT)
         )
 
-        self._broadcaster.load_show_file.connect(self.load_show_file)
+        self._broadcaster.transmitting_show_file.connect(self.load_show_file)
         self._broadcaster.change_active_scene.connect(self.enter_scene)
 
         x_touch.XTouchMessages(self._broadcaster, self.button_msg_to_x_touch)
