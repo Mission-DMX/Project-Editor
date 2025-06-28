@@ -24,8 +24,8 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             self.refresh()
             self._broadcaster.add_universe.connect(self.refresh)
             self._broadcaster.delete_universe.connect(self.refresh)
-            self._broadcaster.add_fixture.connect(lambda _: self.refresh() if not self._currently_show_file_loading else None)
-            self._broadcaster.begin_show_file_parsing.connect(lambda _: self._change_show_file_state(True))
+            self._broadcaster.add_fixture.connect(lambda _: self.refresh())
+            self._broadcaster.begin_show_file_parsing.connect(lambda: self._change_show_file_state(True))
             self._broadcaster.end_show_file_parsing.connect(lambda: self._change_show_file_state(False))
 
     def _change_show_file_state(self, new_state: bool):
@@ -34,6 +34,8 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             self.refresh()
 
     def refresh(self):
+        if self._currently_show_file_loading:
+            return
 
         def location_to_string(location):
             if isinstance(location, proto.UniverseControl_pb2.Universe.ArtNet):

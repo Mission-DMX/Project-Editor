@@ -77,21 +77,23 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         A BoardConfiguration instance parsed from the provided file.
     """
 
-    pn = get_process_notifier("Load Showfile", 5)
+    board_configuration.broadcaster.begin_show_file_parsing.emit()
+    pn = get_process_notifier("Load Showfile", 6)
 
     try:
         pn.current_step_description = "Load file from disk."
         with open(resource_path(os.path.join("resources", "ShowFileSchema.xsd")), 'r', encoding="UTF-8") as schema_file:
             schema = xmlschema.XMLSchema(schema_file)
+        pn.current_step_number += 1
         schema.validate(file_name)
         pn.current_step_number += 1
     except Exception as error:
         logger.error("Error while validating show file: %s", error)
         ExceptionsDialog(error).exec()
+        board_configuration.broadcaster.end_show_file_parsing.emit()
         pn.close()
         return False
 
-    board_configuration.broadcaster.begin_show_file_parsing.emit()
     board_configuration.broadcaster.clear_board_configuration.emit()
     pn.current_step_number += 1
     tree = ElementTree.parse(file_name)
@@ -156,8 +158,9 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name
-    pn.close()
     board_configuration.broadcaster.end_show_file_parsing.emit()
+    board_configuration.broadcaster.show_file_loaded.emit()
+    pn.close()
     return True
 
 
