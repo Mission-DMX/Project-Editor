@@ -8,8 +8,10 @@ from controller.cli.bankset_command import BankSetCommand
 from controller.cli.event_command import EventCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
+from controller.cli.macro_command import MacroCommand
 from controller.cli.select_command import SelectCommand
 from controller.cli.show_command import ShowCommand
+from controller.cli.utility_commands import DelayCommand, IfCommand, PrintCommand, SetCommand
 
 if TYPE_CHECKING:
     from controller.network import NetworkManager
@@ -33,18 +35,22 @@ def _split_args(line: str) -> list[str]:
             if not in_escape:
                 current_arg += c
             else:
-                if c == 't':
-                    current_arg += '\t'
-                    in_string = False
-                elif c == 'n':
-                    current_arg += '\n'
-                    in_escape = False
-                elif c == 'r':
-                    current_arg += '\r'
-                    in_escape = False
-                elif c == '"':
-                    current_arg += c
-                    in_escape = False
+                match c:
+                    case 't':
+                        current_arg += '\t'
+                        in_string = False
+                    case  'n':
+                        current_arg += '\n'
+                        in_escape = False
+                    case 'r':
+                        current_arg += '\r'
+                        in_escape = False
+                    case '$':
+                        current_arg += "\\$"
+                        in_escape = False
+                    case '"':
+                        current_arg += c
+                        in_escape = False
         else:
             if c == '"':
                 in_string = True
@@ -74,28 +80,51 @@ class CLIContext:
         :param networkmgr: The active network manager, user for communication with fish
         :param exit_available: Should the exit command (close the connection) be available or not?
         """
-        self.commands = [
+        self._commands = [
             ListCommand(self),
             SelectCommand(self),
             BankSetCommand(self),
             ShowCommand(self),
             EventCommand(self),
+            DelayCommand(self),
+            MacroCommand(self),
+            PrintCommand(self),
+            SetCommand(self),
+            IfCommand(self),
             HelpCommand(self)
         ]
         self.selected_bank: "BankSet" | None = None
         self.selected_column: "DeskColumn" | None = None
         self.selected_scene: "Scene" | None = None
+        self.stack = set()
+        self.variables: dict[str, str] = {}
         self.show = show
         self.networkmgr: "NetworkManager" = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
-        for c in self.commands:
+        for c in self._commands:
             c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
         if exit_available:
             subparsers.add_parser("exit", exit_on_error=False, help="Close this remote connection")
         self.return_text = ""
         self.exit_called = False
         self._exit_available = exit_available
+
+    def _replace_variables(self, args: list[str]) -> list[str]:
+        """
+        This method replaces variables in the provided list of arguments with their respective current values.
+        :param args: The list of arguments
+        :return: The list of arguments with resolved variables
+        """
+        new_arg_list = []
+        for arg in args:
+            if arg.startswith("\\$"):
+                new_arg_list.append(arg[1:])
+            elif arg.startswith("$"):
+                new_arg_list.append(str(self.variables.get(arg[1:])))
+            else:
+                new_arg_list.append(arg)
+        return new_arg_list
 
     def exec_command(self, line: str) -> bool:
         """Execute a command within the given context
@@ -107,6 +136,7 @@ class CLIContext:
         """
         try:
             args = _split_args(line)
+            args = self._replace_variables(args)
             if len(args) == 0:
                 return True
             global_args = self.parser.parse_args(args=args)
@@ -115,7 +145,7 @@ class CLIContext:
             elif global_args.subparser_name == "?":
                 self.print(self.parser.format_help())
             else:
-                for c in self.commands:
+                for c in self._commands:
                     if c.name == global_args.subparser_name:
                         return c.execute(global_args)
         except argparse.ArgumentError as e:

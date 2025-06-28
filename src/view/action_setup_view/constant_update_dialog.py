@@ -7,6 +7,7 @@ from model import BoardConfiguration, ColorHSI
 from model.filter import FilterTypeEnumeration
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog
+from view.action_setup_view._command_insertion_dialog import escape_argument as esc
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \
     PanTiltConstantContentWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
@@ -76,17 +77,17 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
 
     def get_command(self) -> str:
         if self._filter.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT]:
-            return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._int_tb.value()}"
+            return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {self._int_tb.value()}"
         elif self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
-            return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._float_tb.value()}"
+            return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {self._float_tb.value()}"
         elif self._filter.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
-            s = (f"showctl filtermsg {self._scene.scene_id} {self.filter_id}_16bit_pan value {int(self._pan_tilt_widget.pan * 65535)}\n"
-                 f"showctl filtermsg {self._scene.scene_id} {self.filter_id}_16bit_tilt value {int(self._pan_tilt_widget.tilt * 65535)}")
+            s = (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)}_16bit_pan value {int(self._pan_tilt_widget.pan * 65535)}\n"
+                 f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)}_16bit_tilt value {int(self._pan_tilt_widget.tilt * 65535)}")
             return s
         else:
             qtc = self._color.to_qt_color()
             hexcode = f"rgb: {int(qtc.redF() * 255):02X}{int(qtc.greenF() * 255):02X}{int(qtc.blueF() * 255):02X}"
-            s = f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._color.format_for_filter()} # {hexcode}"
+            s = f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {esc(self._color.format_for_filter())} # {hexcode}"
             return s
 
     def on_filter_selected(self):

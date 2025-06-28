@@ -20,7 +20,7 @@ def transmit_to_fish(show: BoardConfiguration, goto_default_scene: bool = True) 
         pn.current_step_number += 1
     xml = create_xml(show, pn, assemble_for_fish_loading=True)
     # TODO query current active scene
-    show.broadcaster.load_show_file.emit(xml, goto_default_scene)
+    show.broadcaster.transmitting_show_file.emit(xml, goto_default_scene)
     # TODO jump to current active scene and active bank set
     # TODO implement error handling
     pn.close()
