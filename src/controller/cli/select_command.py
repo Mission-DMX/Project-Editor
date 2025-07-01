@@ -16,7 +16,7 @@ def find_bank_set(identifier: str) -> BankSet | None:
     linked_sets = BankSet.get_linked_bank_sets()
     try:
         return linked_sets[int(identifier)]
-    except:
+    except KeyError as _:
         for bank_set in linked_sets:
             if bank_set.id == identifier:
                 return bank_set
