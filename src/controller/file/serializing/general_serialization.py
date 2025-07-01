@@ -10,7 +10,7 @@ from controller.file.serializing.universe_serialization import (_create_artnet_l
                                                                 _create_physical_location_element,
                                                                 _create_universe_element)
 from controller.utils.process_notifications import ProcessNotifier
-from model import BoardConfiguration, Broadcaster
+from model import BoardConfiguration
 from model.events import get_all_senders
 
 
