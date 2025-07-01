@@ -38,11 +38,11 @@ dev = [
     "pylint>=3.3.6",
     "pylint-protobuf>=0.22.0",
     "pyinstaller>=6.12.0",
-    #mypy
     "mypy>=1.15.0",
     "types-protobuf>=6.30.2.20250506",
     "types-requests>=2.32.0.20250328",
     "types-Markdown>=3.8.0.20250415",
+    "ruff>=0.12.0",
 ]
 
 [tool.missionDMX]
@@ -52,9 +52,15 @@ organization = { name = "missionDMX", domain = "technikradio.org" }
 [tool.pdm]
 distribution = false
 
+[tool.ruff]
+line-length=120
+
 [tool.isort]
-skip = ["src/proto/", ".venv"]
+profile = "black"
 line_length = 120
+skip = ["src/proto/", ".venv"]
+multi_line_output = 3
+
 
 [tool.pylint.MASTER]
 extension-pkg-whitelist = "PyQt6, PySide6, pydantic"
