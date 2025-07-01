@@ -49,7 +49,7 @@ class EventCommand(Command):
                                 evs.configuration[str(k)] = str(v if v is not None else "")
                             else:
                                 evs.configuration[str(item)] = ""
-                        except ValueError as e:
+                        except ValueError as _:
                             logger.error(
                                 'Unable to parse event sender configuration entry %s.'
                                 ' Expected format: <key>=<value>',
