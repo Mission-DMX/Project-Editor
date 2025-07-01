@@ -15,8 +15,8 @@ class BankSetCommand(Command):
 
     def configure_parser(self, parser):
         subparsers = parser.add_subparsers(help="Specify what you would like to do", dest="what")
-        commit_parser = subparsers.add_parser("commit", exit_on_error=False,
-                                              help="Commit the changes made to the bank set")
+        subparsers.add_parser("commit", exit_on_error=False,
+                              help="Commit the changes made to the bank set")
         create_parser = subparsers.add_parser("create", exit_on_error=False,
                                               help="Create a new bank set and make it the selected one")
         create_parser.add_argument('description', default="", type=str, nargs='?',
@@ -27,8 +27,8 @@ class BankSetCommand(Command):
                                 help="The type of the column to be created")
         add_parser.add_argument("--bank", type=int, default=-1, help="The bank to create the column on", nargs='?')
         add_parser.add_argument("--name", type=str, default="", nargs="?", help="Specify the displayed column name")
-        info_parser = subparsers.add_parser("info", exit_on_error=False, help="Display the selected bank set content")
-        activate_parser = subparsers.add_parser("activate", exit_on_error=False, help="Activate the selected bank set")
+        subparsers.add_parser("info", exit_on_error=False, help="Display the selected bank set content")
+        subparsers.add_parser("activate", exit_on_error=False, help="Activate the selected bank set")
 
     def execute(self, args) -> bool:
         """
