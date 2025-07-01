@@ -1,4 +1,3 @@
-# pylint: skip-file
 # coding=utf-8
 import logging
 import os.path
