@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from enum import Enum, IntFlag
 from logging import getLogger
-from typing import TYPE_CHECKING, Final, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Final, NotRequired, TypedDict, Any
 from uuid import UUID, uuid4
 
 import numpy as np
