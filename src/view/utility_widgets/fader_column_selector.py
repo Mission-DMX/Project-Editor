@@ -28,7 +28,8 @@ class FaderColumnSelectorWidget(QWidget):
         """
         super().__init__()
         self._filter = column_filter
-        self._base_sets: list[BankSet] = base_set if isinstance(base_set, list) else [base_set] if isinstance(base_set, BankSet) else []
+        self._base_sets: list[BankSet] = base_set if isinstance(base_set, list) \
+            else [base_set] if isinstance(base_set, BankSet) else []
         self._item_index: dict[str, dict[str, AnnotatedTreeWidgetItem]] = {}
 
         layout = QVBoxLayout()

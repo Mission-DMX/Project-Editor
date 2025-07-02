@@ -18,7 +18,6 @@ logger = getLogger(__file__)
 
 
 class _CueLabel(QWidget):
-
     _PLAY_ICON = QIcon(resource_path(os.path.join("resources", "icons", "play.svg"))).pixmap(16, 16)
 
     def __init__(self, parent: QWidget | None, name: str):
@@ -44,7 +43,6 @@ class _CueLabel(QWidget):
 
 
 class CueControlUIWidget(UIWidget):
-
     """
     This widget allows the user to control cue filters.
 
@@ -250,7 +248,9 @@ class CueControlUIWidget(UIWidget):
             if self._player_cue_list_widget is not None:
                 cue_count = self._player_cue_list_widget.count()
                 if self._last_active_cue != -1 and self._last_active_cue < cue_count:
-                    self._player_cue_list_widget.itemWidget(self._player_cue_list_widget.item(self._last_active_cue)).playing = False
+                    self._player_cue_list_widget.itemWidget(
+                        self._player_cue_list_widget.item(self._last_active_cue)).playing = False
                 if active_cue != -1 and active_cue < cue_count:
-                    self._player_cue_list_widget.itemWidget(self._player_cue_list_widget.item(active_cue)).playing = True
+                    self._player_cue_list_widget.itemWidget(
+                        self._player_cue_list_widget.item(active_cue)).playing = True
             self._last_active_cue = active_cue
