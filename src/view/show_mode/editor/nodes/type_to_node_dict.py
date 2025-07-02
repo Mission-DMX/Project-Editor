@@ -3,9 +3,9 @@
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.impl.adapters import ColorBrightnessMixinNode, Adapter16BitTo8BitNode, \
     Adapter16BitToBoolNode, AdapterColorToRGBNode, AdapterColorToRGBWNode, AdapterColorToRGBWANode, \
-    AdapterFloatToColorNode, Adapter8bitToFloat, Adapter16bitToFloat, AdapterColorToFloatsNode, AdapterFloatTo8BitRange, \
-    AdapterFloatTo16BitRange, AdapterFloatToRange, CombineTwo8BitToSingle16Bit, Map8BitTo16Bit, \
-    Adapter16BitToRangeFloat, Adapter8BitToRangeFloat
+    AdapterFloatToColorNode, Adapter8bitToFloat, Adapter16bitToFloat, AdapterColorToFloatsNode, \
+    AdapterFloatTo8BitRange, AdapterFloatTo16BitRange, AdapterFloatToRange, CombineTwo8BitToSingle16Bit, \
+    Map8BitTo16Bit, Adapter16BitToRangeFloat, Adapter8BitToRangeFloat
 from view.show_mode.editor.nodes.impl.arithmetics import ArithmeticMACNode, ArithmeticFloatTo16BitNode, \
     ArithmeticFloatTo8BitNode, ArithmeticRoundNode, ArithmeticLogarithmNode, ArithmeticExponentialNode, \
     ArithmeticMinimumNode, ArithmeticMaximumNode, Sum8BitNode, Sum16BitNode, SumFloatNode
