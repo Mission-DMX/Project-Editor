@@ -203,7 +203,7 @@ class Effect(ABC):
             found_working |= Effect.can_convert_slot(target_slot_type, candidate)
         if not found_working:
             return False
-        if not slot_id in self._inputs.keys():
+        if slot_id not in self._inputs.keys():
             raise ValueError("The requested slot id is not present within this filter.")
         self._inputs[slot_id] = e
         e._containing_slot = (self, slot_id)
