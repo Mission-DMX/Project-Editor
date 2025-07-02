@@ -6,7 +6,7 @@ This file contains the fundamental building blocks for effects.
 
 from abc import ABC, abstractmethod
 from enum import IntFlag
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self, ItemsView
 
 from PySide6.QtWidgets import QWidget
 
@@ -185,8 +185,8 @@ class Effect(ABC):
         # TODO add more capabilities once adapters are implemented
         return False
 
-    def slot_definitions(self) -> "dict_items[str, Effect | None]":
-        """This method return the effects that have been added to this effect as an input as well as empty slots"""
+    def slot_definitions(self) -> ItemsView[str, Self | None]:
+        """This method returns the effects that have been added to this effect as an input as well as empty slots"""
         return self._inputs.items()
 
     def attach(self, slot_id: str, e: "Effect") -> bool:
