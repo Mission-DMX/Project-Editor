@@ -9,13 +9,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLineEdit, QPushButton, QVBoxLayout
 
-from model import Universe
 from model.filter import Filter, FilterTypeEnumeration
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
-
 from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
@@ -185,15 +183,11 @@ class FilterSettingsDialog(QDialog):
         # Only channel inputs have patching info
         if key == "universe":
             return key
-        # Fetch universe
         universe_id = int(self.filter.filter_configurations["universe"])
-        for uni in self.filter.scene.board_configuration.universes:
-            if uni.universe_proto.id == universe_id:
-                universe: Universe = uni
-                break
-        else:
+        if not self.filter.scene.board_configuration.universe(universe_id):
             logger.warning("FilterSettingsItem: Could not find universe %s", universe_id)
             return key
+
         # Fetch patching short name
         key = "Empty"
         for fixture in self.filter.scene.board_configuration.fixtures:
