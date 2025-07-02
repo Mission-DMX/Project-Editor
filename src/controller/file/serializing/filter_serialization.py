@@ -105,8 +105,8 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizer
                         val = '0'
                         if datatype == DataType.DT_COLOR:
                             val = '0,0,0'
-                        default_value = filter_.default_values[
-                            default_val_id] if filter_.default_values and default_val_id in filter_.default_values else val
+                        default_value = filter_.default_values[default_val_id] \
+                            if filter_.default_values and default_val_id in filter_.default_values else val
                         if default_value not in default_nodes[datatype]:
                             default_nodes[datatype].append(default_value)
                         _create_channel_link_element(

@@ -119,8 +119,8 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             normalize_from_16bit = True
         conv_filter_id = f"{self.filter_id}__input_converter"
         conv_filter = Filter(filter_id=conv_filter_id,
-                             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT
-                             if normalize_from_16bit else FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
+                             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT \
+                                 if normalize_from_16bit else FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
                              pos=self.pos,
                              scene=self.scene)
         conv_filter.channel_links['value_in'] = brightness_input
