@@ -131,11 +131,11 @@ class Macro:
     def trigger_conditions(self) -> list[Trigger]:
         """Get a list of all active triggers.
         :returns: A copy of the active trigger list"""
-        l = []
+        trigger_conditions = []
         for k, v in self._triggers:
             if v:
-                l.append(k)
-        return l
+                trigger_conditions.append(k)
+        return trigger_conditions
 
     @property
     def all_triggers(self) -> list[Trigger]:
