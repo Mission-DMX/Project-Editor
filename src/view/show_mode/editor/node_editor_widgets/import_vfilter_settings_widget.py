@@ -1,7 +1,8 @@
 # coding=utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (QCheckBox, QHBoxLayout, QTableWidget, QTableWidgetItem, QToolBar, QTreeWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QHBoxLayout, QTableWidget, QTableWidgetItem, QToolBar, QTreeWidgetItem,
+                               QVBoxLayout, QWidget)
 
 from model import Filter
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
