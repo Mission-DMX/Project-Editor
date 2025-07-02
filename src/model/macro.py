@@ -165,8 +165,8 @@ class Macro:
     def exec(self) -> bool:
         """execute a Macro"""
         success = True
-        for l in self.content.split("\n"):
-            if not self.c.exec_command(l):
+        for command in self.content.split("\n"):
+            if not self.c.exec_command(command):
                 success = False
-                logger.error("Failed to execute command: %s", l)
+                logger.error("Failed to execute command: %s", command)
         return success
