@@ -210,10 +210,10 @@ class KeyFrame:
         self._parent = parent_cue
 
     def get_data_types(self) -> list[DataType]:
-        l = []
+        data_types = []
         for s in self._states:
-            l.append(s.get_data_type())
-        return l
+            data_types.append(s.get_data_type())
+        return data_types
 
     def format_filter_str(self) -> str:
         return f"{self.timestamp}:{"&".join([s.encode() for s in self._states])}"
