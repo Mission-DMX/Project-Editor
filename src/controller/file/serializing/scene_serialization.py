@@ -49,7 +49,7 @@ def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage)
             'variante': str(get_widget_key(widget) or "")
         })
         for k, v in widget.configuration.items():
-            config_element = ElementTree.SubElement(widget_element, "configurationEntry", attrib={
+            ElementTree.SubElement(widget_element, "configurationEntry", attrib={
                 'name': str(k),
                 'value': str(v)
             })
