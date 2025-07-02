@@ -1,19 +1,15 @@
 # coding=utf-8
 """Column fader filter nodes"""
-from typing import TYPE_CHECKING
 
 from model import DataType
 from model.control_desk import BankSet
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
-if TYPE_CHECKING:
-    from model.filter import Filter
-    from model.scene import Scene
-
 
 class _FaderNode(FilterNode):
-    def __init__(self, model: "Filter | Scene", filter_type: FilterTypeEnumeration, name: str, terminals: dict[str, dict[str, str]]):
+    def __init__(self, model: "Filter | Scene", filter_type: FilterTypeEnumeration, name: str,
+                 terminals: dict[str, dict[str, str]]):
         self._bankset_model: BankSet | None = None
         super().__init__(model=model, filter_type=filter_type, name=name, terminals=terminals)
 
