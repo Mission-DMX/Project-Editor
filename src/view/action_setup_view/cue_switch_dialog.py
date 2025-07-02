@@ -1,8 +1,9 @@
+# coding=utf-8
 from typing import Callable
 
-from PySide6.QtWidgets import QComboBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QWidget
 
-from model import BoardConfiguration, Scene
+from model import BoardConfiguration
 from model.filter import FilterTypeEnumeration
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog
@@ -24,7 +25,8 @@ class _InsertCueSwitchDialog(_CommandInsertionDialog):
         self.custom_layout.setCurrentIndex(0)
 
     def get_command(self) -> str:
-        return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} run_cue {self._cue_selection_cb.currentIndex()}"
+        return (f"showctl filtermsg {self._scene.scene_id} {self.filter_id} "
+                f"run_cue {self._cue_selection_cb.currentIndex()}")
 
     def on_filter_selected(self):
         self._cue_selection_cb.setEnabled(True)
