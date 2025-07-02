@@ -10,7 +10,6 @@ from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 logger = getLogger(__file__)
 
-
 _text_brush = QBrush(QColor(30, 30, 30, 255))
 _value_box_brush = QBrush(QColor(128, 128, 128, 150))
 
@@ -54,7 +53,8 @@ class Constants8BitNode(TextPreviewRendererMixin):
 
     def update_node_after_settings_changed(self):
         try:
-            self.filter.initial_parameters["value"] = str(max(min(int(self.filter.initial_parameters["value"]), 255), 0))
+            self.filter.initial_parameters["value"] = str(
+                max(min(int(self.filter.initial_parameters["value"]), 255), 0))
         except ValueError as e:
             logger.error("Error while checking entered value. %s", e)
             self.filter.initial_parameters["value"] = "0"
