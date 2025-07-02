@@ -72,24 +72,24 @@ class UIWidget(ABC):
     @property
     def filter_ids(self) -> list[str]:
         """Get the id of the linked filter"""
-        l: list[str | None] = [None] * len(self._associated_filters)
+        linked_filters: list[str | None] = [None] * len(self._associated_filters)
         i = 0
         for k, v in self._associated_filters.items():
             try:
                 ik = int(k)
             except ValueError:
                 ik = i
-            if l[ik] is not None:
-                l[ik] = v
+            if linked_filters[ik] is not None:
+                linked_filters[ik] = v
             else:
-                for j in range(len(l)):
-                    if l[j] is None:
-                        l[j] = v
+                for j in range(len(linked_filters)):
+                    if linked_filters[j] is None:
+                        linked_filters[j] = v
                         break
             i += 1
-        while None in l:
-            l.remove(None)
-        return l
+        while None in linked_filters:
+            linked_filters.remove(None)
+        return linked_filters
 
     @property
     def associated_filters(self) -> dict[str, str]:
