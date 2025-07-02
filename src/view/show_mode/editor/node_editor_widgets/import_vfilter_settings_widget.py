@@ -1,13 +1,10 @@
 # coding=utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (QCheckBox, QHBoxLayout, QTableWidget, QTableWidgetItem, QToolBar, QTreeWidget,
-                               QTreeWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QHBoxLayout, QTableWidget, QTableWidgetItem, QToolBar, QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from model import Filter
-from model.scene import FilterPage
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
-from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 

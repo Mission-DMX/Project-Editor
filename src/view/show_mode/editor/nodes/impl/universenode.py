@@ -42,7 +42,7 @@ class UniverseNode(FilterNode):
                         input_channel = key
                         self.filter.in_data_types[input_channel] = DataType.DT_8_BIT
                         if key not in self.terminals.keys():
-                            term = super().addInput(key)
+                            super().addInput(key)
                         else:
                             t: Terminal = self.terminals[key]
                             if not t.isInput():

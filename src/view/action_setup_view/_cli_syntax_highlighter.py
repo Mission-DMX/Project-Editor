@@ -1,4 +1,3 @@
-import re
 
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFormat, QTextDocument
