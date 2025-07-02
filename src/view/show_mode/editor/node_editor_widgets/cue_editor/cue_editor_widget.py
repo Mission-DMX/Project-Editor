@@ -18,9 +18,8 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog i
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
-
-from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .model.cue_filter_model import CueFilterModel
+from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -300,7 +299,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         else:
             d = None
         self._model.cues[index].name = new_name
-        self._cue_list_widget.item(index, 0).setText(f"{index +1 } '{new_name}'")
+        self._cue_list_widget.item(index, 0).setText(f"{index + 1} '{new_name}'")
         if isinstance(self._input_dialog, list) and d is not None:
             self._input_dialog.remove(d)
             d.deleteLater()
@@ -392,7 +391,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._model.add_channel(channel_name, channel_type)
         except ValueError as e:
             QMessageBox.critical(self._parent_widget, "Failed to add channel",
-                                 f"Unable to add the requested channel {channel_name}. Channel names must be unique within "
+                                 f"Unable to add the requested channel {channel_name}. "
+                                 "Channel names must be unique within "
                                  f"this filter.<br/>Detailed message: {str(e)}")
             return
         if self._filter_instance is not None:
