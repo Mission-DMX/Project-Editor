@@ -9,10 +9,10 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class FilterSelectionWidget(QTreeWidget):
-
     selected_filter_changed: Signal = Signal(str)
 
-    def __init__(self, parent: QWidget | None, scene: Scene | None, allowed_filter_types: list[FilterTypeEnumeration] | None):
+    def __init__(self, parent: QWidget | None, scene: Scene | None,
+                 allowed_filter_types: list[FilterTypeEnumeration] | None):
         super().__init__(parent)
         self._scene = scene
         self._target_filter_id: str | None = None
