@@ -47,7 +47,8 @@ class SceneOptimizerModule:
         information for the given filter. Otherwise, false will be returned.
 
         :param f: The filter to check for substitution.
-        :returns: true if the filter was scheduled to be substituted and therefore should not be emplaced for transmission to fish.
+        :returns: true if the filter was scheduled to be substituted
+        and therefore should not be emplaced for transmission to fish.
         """
         match f.filter_type:
             # TODO expand this by also reduce constants with the same value
