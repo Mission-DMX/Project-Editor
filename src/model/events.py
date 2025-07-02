@@ -1,3 +1,4 @@
+# coding=utf-8
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -38,15 +39,15 @@ def _handle_incoming_sender_update(msg: "event_sender"):
             case "fish.builtin.plain" | "undef":
                 ev = EventSender(msg.name)
             case "fish.builtin.midi":
-                raise NotImplemented()
+                raise NotImplementedError()
             case "fish.builtin.midirtp":
-                raise NotImplemented()
+                raise NotImplementedError()
             case "fish.builtin.xtouchgpio":
                 ev = XtouchGPIOEventSender(msg.name)
             case "fish.builtin.gpio":
-                raise NotImplemented()
+                raise NotImplementedError()
             case "fish.builtin.macrokeypad":
-                raise NotImplemented()
+                raise NotImplementedError()
             case _:
                 logger.error("Unexpaected event sender type: '%s'",msg.type)
                 return
