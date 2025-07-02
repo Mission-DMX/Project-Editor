@@ -1,14 +1,14 @@
 # coding=utf-8
 """Column fader filter nodes"""
 
-from model import DataType
+from model import DataType, Filter, Scene
 from model.control_desk import BankSet
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class _FaderNode(FilterNode):
-    def __init__(self, model: "Filter | Scene", filter_type: FilterTypeEnumeration, name: str,
+    def __init__(self, model: Filter | Scene, filter_type: FilterTypeEnumeration, name: str,
                  terminals: dict[str, dict[str, str]]):
         self._bankset_model: BankSet | None = None
         super().__init__(model=model, filter_type=filter_type, name=name, terminals=terminals)
