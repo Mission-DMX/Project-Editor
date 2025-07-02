@@ -93,8 +93,12 @@ class SceneUIPageEditorWidget(QWidget):
         self._widget_setup_dialog = None
         self._ui_page.display_update_required = True
 
-    def _remove_widget_holder(self, wh: UIWidgetHolder):
-        """This method should be invoked once a widget should be removed and handles the destruction of the container."""
+    def _remove_widget_holder(self, wh: UIWidgetHolder) -> None:
+        """
+        This method should be invoked once a widget should be removed and handles the destruction of the container.
+        Args:
+            wh: The widget that should be removed
+        """
         self._widgets.remove(wh)
         self._ui_page.remove_widget(wh.widget)
         self._ui_page.display_update_required = True
