@@ -54,7 +54,12 @@ organization = { name = "missionDMX", domain = "technikradio.org" }
 distribution = false
 
 [tool.ruff]
-line-length=120
+line-length = 120
+exclude = ["src/proto", "src/controller/autotrack", "test/", "src/view/utility_widgets/wizzards/theater_scene_wizard.py"]
+
+[tool.ruff.lint]
+select = ["E"]
+ignore = ["E722"]
 
 [tool.isort]
 profile = "black"
