@@ -3,13 +3,13 @@ from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from model import ColorHSI, DataType
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
 
 if TYPE_CHECKING:
-    pass
+    from view.show_mode.editor.node_editor_widgets.cue_editor.cue_editor_widget import ExternalChannelDefinition
 
 logger = getLogger(__file__)
 
@@ -360,7 +360,7 @@ class Cue:
         """Add a frame to the cue"""
         self._frames.append(f)
 
-    def remove_channel(self, c: "ExternalChannelDefinition | tuple[str, DataType]"):
+    def remove_channel(self, c: Union["ExternalChannelDefinition", tuple[str, DataType]]):
         target_index = -1
         if isinstance(c, tuple):
             name = c[0]
