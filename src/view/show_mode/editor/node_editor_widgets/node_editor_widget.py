@@ -1,6 +1,11 @@
+# coding=utf-8
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QWidget
+
+if TYPE_CHECKING:
+    from view.show_mode.editor.nodes import FilterNode
 
 
 class NodeEditorFilterConfigWidget(ABC):
