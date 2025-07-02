@@ -1,5 +1,5 @@
 # coding=utf-8
-from model import Filter
+from model import Filter, Scene
 from model.filter import FilterTypeEnumeration, VirtualFilter
 
 
@@ -28,7 +28,7 @@ class ColorMixerVFilter(VirtualFilter):
             mixer_filter.channel_links[k] = v
         filter_list.append(mixer_filter)
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_MIXER, pos=pos)
         if "method" not in self.filter_configurations.keys():
             self.filter_configurations["method"] = "hsv"
