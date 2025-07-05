@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import zipfile
 from logging import getLogger
 from typing import TYPE_CHECKING
