@@ -1,6 +1,7 @@
 # coding=utf-8
 """select Manufacturer"""
 import os
+import platform
 import zipfile
 from logging import getLogger
 

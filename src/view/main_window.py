@@ -27,6 +27,7 @@ from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
+from view.visualizer.visualizer_widget import StageVisualizerWidget
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QCloseEvent
@@ -80,6 +81,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 MainWidget(CombinedActionSetupWidget(self, self._broadcaster, self._board_configuration), self),
                 self._broadcaster.view_to_action_config.emit
             ),
+            ("Visualizer", MainWidget(StageVisualizerWidget(self._board_configuration, self._broadcaster, self), self),
+             self._broadcaster.view_to_visualizer.emit),
         ]
 
         # select Views
@@ -109,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
         self._broadcaster.save_button_pressed.connect(self._save_show)
         self._broadcaster.view_to_action_config.connect(lambda: self._to_widget(5))
+        self._broadcaster.view_to_visualizer.connect(lambda: self._to_widget(6))
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -121,6 +125,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
             self._broadcaster.view_leave_console_mode.emit()
+            self._broadcaster.view_leave_visualizer.emit()
+
         self._about_window = None
         self._settings_dialog = None
         self._theatre_scene_setup_wizard = None

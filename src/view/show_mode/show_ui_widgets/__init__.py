@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from typing import Type
 
-from sdl2.ext.compat import deprecated
+#from sdl2.ext.compat import deprecated
 
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
@@ -54,7 +54,7 @@ def get_widget_key(w: UIWidget) -> str | None:
     return None
 
 
-@deprecated
+#@deprecated
 def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage",
                         configuration: dict[str, str] | None = None) -> UIWidget:
     """Deprecated? We used to construct widgets this way but the WIDGET_LIBRARY method should be used instead now."""
