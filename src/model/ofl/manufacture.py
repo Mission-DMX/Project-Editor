@@ -3,7 +3,7 @@ import json
 import os.path
 from typing import TypedDict, cast, LiteralString
 
-from typing_extensions import NotRequired
+from typing import NotRequired
 
 from model.ofl.fixture import Fixture, load_fixture
 

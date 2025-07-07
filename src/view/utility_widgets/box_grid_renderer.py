@@ -5,7 +5,7 @@ from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 
 if TYPE_CHECKING:
-    from typing import Callable
+    from collections.abc import Callable
 
     from PySide6.QtGui import QMouseEvent, QPaintEvent
 

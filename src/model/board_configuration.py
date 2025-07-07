@@ -1,6 +1,6 @@
 """Provides data structures with accessors and modifiers for DMX"""
 from logging import getLogger
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 
 import numpy as np
 from PySide6 import QtCore, QtGui

@@ -5,7 +5,8 @@ This file contains the fundamental building blocks for effects.
 
 from abc import ABC, abstractmethod
 from enum import IntFlag
-from typing import TYPE_CHECKING, Self, ItemsView
+from typing import TYPE_CHECKING, Self
+from collections.abc import ItemsView
 
 from PySide6.QtWidgets import QWidget
 
