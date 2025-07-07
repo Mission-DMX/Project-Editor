@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This widget provides an adapter to view the effect stacking editor widget as a filter config widget."""
 

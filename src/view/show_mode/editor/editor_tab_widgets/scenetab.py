@@ -1,4 +1,3 @@
-# coding=utf-8
 """Widget containing a nodeeditor for one scene."""
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QToolBar, QVBoxLayout, QWidget

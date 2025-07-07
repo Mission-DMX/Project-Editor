@@ -1,4 +1,3 @@
-# coding=utf-8
 """Serialization of Scenes to XML."""
 from xml.etree import ElementTree
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Widget containing a nodeeditor for one scene."""
 from PySide6.QtWidgets import QDialog, QGridLayout, QTabBar, QTabWidget, QWidget
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 from typing import Any
 
 from PySide6.QtWidgets import QListWidgetItem, QTableWidgetItem, QTreeWidgetItem

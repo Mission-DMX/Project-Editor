@@ -1,4 +1,3 @@
-# coding=utf-8
 """
 This file contains methods to migrate a loading show file to a newer version
 """

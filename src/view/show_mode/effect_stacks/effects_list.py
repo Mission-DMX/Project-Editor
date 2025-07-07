@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This file implements the list widget for effects. Register your effect inside the EFFECT_LIST widget.
 Usage: The key indicates the category of the effect and the list all containing effects."""

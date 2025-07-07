@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This file implements effects that manipulate the enabled segments."""
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 from model import Filter, Scene
 from model.filter import FilterTypeEnumeration, VirtualFilter
 

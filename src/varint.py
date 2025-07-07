@@ -1,4 +1,3 @@
-# coding=utf-8
 """Varint encoder/decoder
 varints are a common encoding for variable length integer data, used in
 libraries such as sqlite, protobuf, v8, and more.

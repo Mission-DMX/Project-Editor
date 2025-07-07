@@ -1,4 +1,3 @@
-# coding=utf-8
 """Provides data structures with accessors and modifiers for DMX"""
 from logging import getLogger
 from typing import Callable, Sequence

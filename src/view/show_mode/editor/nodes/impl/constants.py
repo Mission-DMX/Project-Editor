@@ -1,4 +1,3 @@
-# coding=utf-8
 """Constants filter nodes"""
 from logging import getLogger
 

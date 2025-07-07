@@ -1,4 +1,3 @@
-# coding=utf-8
 """Scene widget for scene player"""
 from PySide6.QtWidgets import QPushButton, QWidget
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 """utility functions"""
 import os
 import sys

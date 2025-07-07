@@ -1,4 +1,3 @@
-# coding=utf-8
 """Module to convert a board configuration to a xml element.
 
 Usage:

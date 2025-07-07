@@ -1,4 +1,3 @@
-# coding=utf-8
 """Commands for Help"""
 from controller.cli.command import Command
 

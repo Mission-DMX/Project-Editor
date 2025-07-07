@@ -1,4 +1,3 @@
-# coding=utf-8
 """Module containing and exporting all available filter nodes"""
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.impl.adapters import ColorBrightnessMixinNode, Adapter16BitTo8BitNode, \

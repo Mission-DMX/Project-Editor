@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This file provides the effect (dummy) socket classes.
 An effect socket provides the inputs for a selected fixture. It is therefore the root of effect chaining.

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Macros with their Triggers"""
 from logging import getLogger
 from typing import TYPE_CHECKING

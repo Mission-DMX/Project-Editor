@@ -1,4 +1,3 @@
-# coding=utf-8
 """baseline for all Views """
 
 from PySide6 import QtWidgets

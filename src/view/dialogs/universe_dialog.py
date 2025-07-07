@@ -1,4 +1,3 @@
-# coding=utf-8
 """dialog for editing patching universe"""
 from PySide6 import QtWidgets
 

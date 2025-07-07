@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QComboBox, QGridLayout, QWidget
 

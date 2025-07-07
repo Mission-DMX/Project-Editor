@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This file provides a widget to browse bank set columns."""
 from logging import getLogger

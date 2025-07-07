@@ -1,4 +1,3 @@
-# coding=utf-8
 import os.path
 
 from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent

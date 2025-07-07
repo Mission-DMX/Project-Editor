@@ -1,4 +1,3 @@
-# coding=utf-8
 """widget for logging_view"""
 import json
 import logging

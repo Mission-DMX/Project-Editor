@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap
 from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget

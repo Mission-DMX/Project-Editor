@@ -1,4 +1,3 @@
-# coding=utf-8
 """Module to handle connection with real-time software Fish."""
 
 import math

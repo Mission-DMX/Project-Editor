@@ -1,4 +1,3 @@
-# coding=utf-8
 """write Events and Macros"""
 from typing import TYPE_CHECKING
 from xml.etree import ElementTree

@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import QColorDialog, QHBoxLayout, QListWidget, QPushButton, QToolBar, QVBoxLayout, QWidget
 

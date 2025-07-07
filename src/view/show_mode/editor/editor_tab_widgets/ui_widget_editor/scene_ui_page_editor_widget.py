@@ -1,4 +1,3 @@
-# coding=utf-8
 """A scene can have multiple pages"""
 from typing import Type
 

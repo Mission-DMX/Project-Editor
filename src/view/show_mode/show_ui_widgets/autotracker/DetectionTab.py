@@ -1,4 +1,3 @@
-# coding=utf-8
 import asyncio
 
 from PySide6.QtWidgets import QCheckBox, QGridLayout, QLabel, QLayout

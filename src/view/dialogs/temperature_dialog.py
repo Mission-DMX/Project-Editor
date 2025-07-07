@@ -1,4 +1,3 @@
-# coding=utf-8
 """dialog for change of Temperature"""
 import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets

@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """
 This file contains the copy symbol placeholders for the effects stack system.

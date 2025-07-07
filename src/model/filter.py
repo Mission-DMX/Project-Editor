@@ -1,4 +1,3 @@
-# coding=utf-8
 # pylint: disable=implicit-flag-alias
 """Filter module"""
 import abc

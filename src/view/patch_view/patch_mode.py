@@ -1,4 +1,3 @@
-# coding=utf-8
 """Patching Mode"""
 from logging import getLogger
 

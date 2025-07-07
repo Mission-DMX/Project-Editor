@@ -1,4 +1,3 @@
-# coding=utf-8
 """write fixture to file"""
 from logging import getLogger
 from typing import Union

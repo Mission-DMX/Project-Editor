@@ -1,4 +1,3 @@
-# coding=utf-8
 """ logging Handler to broadcast formatted log massages"""
 import logging
 

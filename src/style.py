@@ -1,4 +1,3 @@
-# coding=utf-8
 """Styles for UI"""
 from enum import Enum
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Filter nodes related to time"""
 from model import DataType
 from model.filter import FilterTypeEnumeration

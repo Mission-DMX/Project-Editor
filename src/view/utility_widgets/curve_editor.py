@@ -1,4 +1,3 @@
-# coding=utf-8
 """This file contains a widget that allows the editing and visualization of parameters of a trigonometric curve."""
 
 from logging import getLogger

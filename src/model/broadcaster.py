@@ -1,4 +1,3 @@
-# coding=utf-8
 """connector for Signals"""
 
 from xml.etree.ElementTree import Element

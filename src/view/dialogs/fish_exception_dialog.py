@@ -1,4 +1,3 @@
-# coding=utf-8
 """Dialogs to display fish exceptions"""
 
 from PySide6 import QtGui, QtWidgets

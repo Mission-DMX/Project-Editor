@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This file contains an effect factory for obtaining effects in the context of restoring a show file state."""
 

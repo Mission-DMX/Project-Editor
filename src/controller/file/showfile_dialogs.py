@@ -1,4 +1,3 @@
-# coding=utf-8
 """Dialogs for Show File"""
 import os
 

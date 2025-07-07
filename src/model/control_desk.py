@@ -1,4 +1,3 @@
-# coding=utf-8
 """models for X-Touch and also for other connected devices like extenders or joystick"""
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING

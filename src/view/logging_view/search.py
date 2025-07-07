@@ -1,4 +1,3 @@
-# coding=utf-8
 """search in logging Items"""
 import enum
 

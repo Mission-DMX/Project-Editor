@@ -1,4 +1,3 @@
-# coding=utf-8
 """Universe filter node"""
 from logging import getLogger
 

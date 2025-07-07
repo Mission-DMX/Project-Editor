@@ -1,4 +1,3 @@
-# coding=utf-8
 """This file contains adapters between different effect output types that can be instantiated."""
 
 from model import Filter

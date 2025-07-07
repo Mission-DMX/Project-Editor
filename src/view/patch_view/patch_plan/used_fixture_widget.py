@@ -1,4 +1,3 @@
-# coding=utf-8
 """A Used Fixture in the patching view"""
 from PySide6.QtGui import QColorConstants, QFont, QPainter, QPixmap
 from PySide6.QtWidgets import QWidget

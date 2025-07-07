@@ -1,4 +1,3 @@
-# coding=utf-8
 """manufacturers for fixtures"""
 import json
 import os.path

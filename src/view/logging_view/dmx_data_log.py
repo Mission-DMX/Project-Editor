@@ -1,4 +1,3 @@
-# coding=utf-8
 """Widget for displaying DMX current data"""
 
 from PySide6 import QtCore, QtWidgets

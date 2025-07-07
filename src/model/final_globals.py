@@ -1,4 +1,3 @@
-# coding=utf-8
 """Globals for whole Project"""
 from abc import ABC
 

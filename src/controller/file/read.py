@@ -1,4 +1,3 @@
-# coding=utf-8
 """Handles reading a xml document"""
 
 import os

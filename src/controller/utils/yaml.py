@@ -1,4 +1,3 @@
-# coding=utf-8
 """YAML handler"""
 from logging import getLogger
 

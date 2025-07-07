@@ -1,4 +1,3 @@
-# coding=utf-8
 """logging formatter to json"""
 import datetime as dt
 import json

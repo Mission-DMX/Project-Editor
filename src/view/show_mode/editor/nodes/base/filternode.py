@@ -1,4 +1,3 @@
-# coding=utf-8
 """Basic filter node"""
 from logging import getLogger
 

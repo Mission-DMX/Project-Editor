@@ -1,4 +1,3 @@
-# coding=utf-8
 """This file contains the switching vFilter implementation for the cue filter."""
 from logging import getLogger
 from typing import TYPE_CHECKING

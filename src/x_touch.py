@@ -1,4 +1,3 @@
-# coding=utf-8
 """All messages send to the x-touch"""
 from typing import TYPE_CHECKING
 

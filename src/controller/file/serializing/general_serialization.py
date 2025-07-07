@@ -1,4 +1,3 @@
-# coding=utf-8
 """serialization functions"""
 from xml.etree import ElementTree
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """
 This file provides a factory for v-filter instances. The primary use case is for restoring efforts after loading a

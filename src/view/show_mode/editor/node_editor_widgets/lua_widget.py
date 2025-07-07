@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QListWidget, QTextEdit, QToolBar, QVBoxLayout, QWidget
 
 from model import DataType

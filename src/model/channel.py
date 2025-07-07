@@ -1,4 +1,3 @@
-# coding=utf-8
 """Basic dmx channel with 256 values"""
 from PySide6 import QtCore
 

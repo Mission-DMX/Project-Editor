@@ -1,4 +1,3 @@
-# coding=utf-8
 """Channels of a Fixture"""
 from enum import IntFlag
 from typing import Final

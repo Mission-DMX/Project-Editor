@@ -1,4 +1,3 @@
-# coding=utf-8
 """commands for selection"""
 from controller.cli.command import Command
 from model.control_desk import BankSet

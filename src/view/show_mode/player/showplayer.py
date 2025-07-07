@@ -1,4 +1,3 @@
-# coding=utf-8
 """Show player to remote control fish show mode"""
 from PySide6.QtWidgets import QWidget
 

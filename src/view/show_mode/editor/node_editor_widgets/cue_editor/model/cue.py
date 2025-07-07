@@ -1,4 +1,3 @@
-# coding=utf-8
 from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum

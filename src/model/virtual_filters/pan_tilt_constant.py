@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtCore import QTimer
 
 from controller.joystick.joystick_enum import JoystickList

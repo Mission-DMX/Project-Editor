@@ -1,4 +1,3 @@
-# coding=utf-8
 """Fixture Definitions from OFL """
 import json
 import random

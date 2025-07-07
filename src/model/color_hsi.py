@@ -1,4 +1,3 @@
-# coding=utf-8
 """Color in HSI Form"""
 import colorsys
 

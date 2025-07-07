@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtWidgets import QWidget
 
 from model import Filter

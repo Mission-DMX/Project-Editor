@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6 import QtGui
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget

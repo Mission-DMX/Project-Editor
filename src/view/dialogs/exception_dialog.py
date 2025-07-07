@@ -1,4 +1,3 @@
-# coding=utf-8
 """Dialogs to display exceptions"""
 from PySide6.QtWidgets import QDialog, QFormLayout, QLabel
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QLineEdit, QPushButton
 
 from controller.autotrack.Helpers.InstanceManager import InstanceManager

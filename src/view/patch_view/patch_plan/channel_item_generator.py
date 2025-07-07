@@ -1,4 +1,3 @@
-# coding=utf-8
 """ item of the Patching """
 from PySide6.QtGui import QColorConstants, QFont, QPainter, QPixmap
 

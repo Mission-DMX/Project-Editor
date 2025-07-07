@@ -1,4 +1,3 @@
-# coding=utf-8
 from model.filter import DataType, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.aggregating_filter_node import AggregatingFilterNode
 

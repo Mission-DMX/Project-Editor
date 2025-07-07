@@ -1,4 +1,3 @@
-# coding=utf-8
 """List of all joysticks"""
 from enum import Enum
 

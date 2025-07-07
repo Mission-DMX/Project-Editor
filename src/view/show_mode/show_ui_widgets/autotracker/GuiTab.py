@@ -1,4 +1,3 @@
-# coding=utf-8
 from abc import abstractmethod
 
 from PySide6.QtWidgets import QWidget

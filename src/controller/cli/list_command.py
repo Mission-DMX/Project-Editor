@@ -1,4 +1,3 @@
-# coding=utf-8
 """Client Commands"""
 from controller.cli.command import Command
 from model.control_desk import BankSet, ColorDeskColumn

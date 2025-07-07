@@ -1,4 +1,3 @@
-# coding=utf-8
 """patch Plan Widget for one Universe"""
 import math
 

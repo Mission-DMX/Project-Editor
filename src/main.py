@@ -1,4 +1,3 @@
-# coding=utf-8
 """GUI and control elements for the software."""
 
 if __name__ == "__main__":

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Wave forming filter nodes"""
 from model import DataType
 from model.filter import FilterTypeEnumeration

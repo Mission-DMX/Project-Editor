@@ -1,4 +1,3 @@
-# coding=utf-8
 """Classes for remote connection"""
 from asyncio import IncompleteReadError
 from logging import Logger

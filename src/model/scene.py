@@ -1,4 +1,3 @@
-# coding=utf-8
 """Scene module"""
 from typing import TYPE_CHECKING, Optional
 

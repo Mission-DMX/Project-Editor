@@ -1,4 +1,3 @@
-# coding=utf-8
 """Starts a listener for the joystick"""
 
 import pyjoystick

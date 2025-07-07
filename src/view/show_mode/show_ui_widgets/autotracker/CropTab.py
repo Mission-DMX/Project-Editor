@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QSlider
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 """serialization of universes"""
 from xml.etree import ElementTree
 

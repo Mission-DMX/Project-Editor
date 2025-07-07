@@ -1,4 +1,3 @@
-# coding=utf-8
 """Widget to edit a channel."""
 from PySide6 import QtCore, QtWidgets
 

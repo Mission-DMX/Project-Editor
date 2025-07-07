@@ -1,4 +1,3 @@
-# coding=utf-8
 # pylint: disable=implicit-flag-alias
 """
 This file contains the fundamental building blocks for effects.

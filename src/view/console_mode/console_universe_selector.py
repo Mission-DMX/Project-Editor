@@ -1,4 +1,3 @@
-# coding=utf-8
 """select Universe"""
 
 from PySide6 import QtWidgets

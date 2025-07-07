@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This file provides the universe browser widget."""
 from PySide6.QtCore import Qt

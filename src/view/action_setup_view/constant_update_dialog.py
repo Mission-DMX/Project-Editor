@@ -1,4 +1,3 @@
-# coding=utf-8
 from logging import getLogger
 
 from PySide6.QtWidgets import (QColorDialog, QDoubleSpinBox, QHBoxLayout, QLabel, QPushButton, QSpinBox, QVBoxLayout,

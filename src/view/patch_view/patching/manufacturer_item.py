@@ -1,4 +1,3 @@
-# coding=utf-8
 """Widget of a Manufacturer"""
 from PySide6 import QtWidgets
 

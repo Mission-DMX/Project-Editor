@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This file provides the v-filter implementation of the effects stack system"""
 

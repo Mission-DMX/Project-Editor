@@ -1,4 +1,3 @@
-# coding=utf-8
 """Column fader filter nodes"""
 
 from model import DataType, Filter, Scene

@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """This file provides the main control widget for the filter stacking v-filter."""
 

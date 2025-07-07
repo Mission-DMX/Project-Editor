@@ -1,4 +1,3 @@
-# coding=utf-8
 """selector for Patching witch holds all Patching Universes"""
 from logging import getLogger
 from typing import TYPE_CHECKING

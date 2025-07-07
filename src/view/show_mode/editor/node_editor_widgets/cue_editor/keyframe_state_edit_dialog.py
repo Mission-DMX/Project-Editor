@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import (QColorDialog, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QPushButton, QSpinBox,
                                QWidget)

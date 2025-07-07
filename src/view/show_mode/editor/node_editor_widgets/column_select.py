@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """
 This file provides the column input filter settings widget.

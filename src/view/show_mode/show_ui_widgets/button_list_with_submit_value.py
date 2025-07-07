@@ -1,4 +1,3 @@
-# coding=utf-8
 """This file contains a widget with a textfield and a button, extended by a list of buttons to update constants nodes
 with a new value or predefined one in fish"""
 import sys

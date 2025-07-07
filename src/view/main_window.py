@@ -1,4 +1,3 @@
-# coding=utf-8
 """main Window for the Editor"""
 import os.path
 import platform

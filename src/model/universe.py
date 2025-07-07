@@ -1,4 +1,3 @@
-# coding=utf-8
 """DMX Universe"""
 from typing import Final
 

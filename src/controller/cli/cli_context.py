@@ -1,4 +1,3 @@
-# coding=utf-8
 """Context of the Client"""
 import argparse
 import traceback

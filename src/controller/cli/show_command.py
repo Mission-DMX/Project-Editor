@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """
 This file contains a command implementation to control show files, including their running state on fish.

@@ -1,4 +1,3 @@
-# coding=utf-8
 """
 implementation of flow Layout for Python 3.12
 from https://doc.qt.io/qtforpython-6/examples/example_widgets_layouts_flowlayout.html

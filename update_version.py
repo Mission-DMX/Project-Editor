@@ -1,4 +1,3 @@
-# coding=utf-8
 """Update Version in GitHub action"""
 import sys
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtGui import QStandardItem, QStandardItemModel, Qt
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QListView, QWidget
 

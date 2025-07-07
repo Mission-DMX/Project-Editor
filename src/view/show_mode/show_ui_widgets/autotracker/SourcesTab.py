@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLayout, QPushButton, QVBoxLayout
 
 from controller.autotrack.Helpers.ImageHelper import cv2qim

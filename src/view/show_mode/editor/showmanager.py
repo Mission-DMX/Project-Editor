@@ -1,4 +1,3 @@
-# coding=utf-8
 """Widget to create multiple scenes and manage filters.
 
 Usage (where self is a QWidget and board_configuration is a BoardConfiguration):

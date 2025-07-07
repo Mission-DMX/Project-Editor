@@ -1,4 +1,3 @@
-# encoding=utf-8
 """Extended Flowchart to handle creating nodes from file"""
 from pyqtgraph.flowchart import Flowchart
 from PySide6.QtGui import QBrush, QColor
