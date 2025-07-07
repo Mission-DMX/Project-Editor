@@ -3,7 +3,6 @@ from PySide6.QtWidgets import QWidget
 
 from controller.network import NetworkManager
 from model import BoardConfiguration, Scene
-
 from .sceneswitchbutton import SceneSwitchButton
 from .ui_player_widget import UIPlayerWidget
 
@@ -101,10 +100,7 @@ class ShowPlayerWidget(QWidget):
         self._ui_container.resize(uipage_container_width, uipage_container_height)
 
     def _switch_scene(self, scene: Scene | int):
-        if isinstance(scene, Scene):
-            scene_index = scene.scene_id
-        else:
-            scene_index = scene
+        scene_index = scene.scene_id if isinstance(scene, Scene) else scene
         if scene_index == self._scene_index:
             return
 
