@@ -1,5 +1,7 @@
 # pylint: disable=implicit-flag-alias
 """Filter module"""
+from __future__ import annotations
+
 import abc
 from enum import IntFlag, auto
 from typing import TYPE_CHECKING
@@ -145,13 +147,13 @@ class FilterTypeEnumeration(IntFlag):
 class Filter:
     """Filter for show file"""
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int,
+    def __init__(self, scene: Scene, filter_id: str, filter_type: int,
                  pos: tuple[int, int] | tuple[float, float] | None = None,
                  filter_configurations: dict[str, str] | None = None,
                  initial_parameters: dict[str, str] | None = None):
         if pos is None:
             pos = [0.0, 0.0]
-        self._scene: "Scene" = scene
+        self._scene: Scene = scene
         self._filter_id = filter_id
         self._filter_type = int(filter_type)
         self._pos: tuple[float, float] | None = pos
@@ -165,7 +167,7 @@ class Filter:
         self._configuration_supported: bool = True
 
     @property
-    def scene(self) -> "Scene":
+    def scene(self) -> Scene:
         """The scene the filter belongs to"""
         return self._scene
 
@@ -242,7 +244,7 @@ class Filter:
     def is_virtual_filter(self) -> bool:
         return self.filter_type < 0
 
-    def copy(self, new_scene: "Scene" = None, new_id: str = None) -> "Filter":
+    def copy(self, new_scene: Scene = None, new_id: str = None) -> Filter:
         from .virtual_filters.vfilter_factory import construct_virtual_filter_instance
         if self.is_virtual_filter:
             f = construct_virtual_filter_instance(new_scene if new_scene else self.scene,
@@ -274,7 +276,7 @@ class VirtualFilter(Filter, abc.ABC):
     that the show will be serialized for fish.
     """
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, filter_type: int, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, filter_type, pos)
 
     @abc.abstractmethod

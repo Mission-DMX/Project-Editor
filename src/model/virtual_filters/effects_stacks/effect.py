@@ -2,11 +2,12 @@
 """
 This file contains the fundamental building blocks for effects.
 """
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import ItemsView
 from enum import IntFlag
 from typing import TYPE_CHECKING, Self
-from collections.abc import ItemsView
 
 from PySide6.QtWidgets import QWidget
 
@@ -76,11 +77,11 @@ class Effect(ABC):
     def __init__(self, supported_input_types: dict[str, list[EffectType]]):
         super().__init__()
         self._supported_inputs = supported_input_types
-        self._inputs: dict[str, "Effect" or None] = {}
+        self._inputs: dict[str, Effect | None] = {}
         for slot_name in supported_input_types.keys():
             self._inputs[slot_name] = None
-        self._parent_filter: "EffectsStack" | None = None
-        self._containing_slot: tuple["Effect", str] | None = None
+        self._parent_filter: EffectsStack | None = None
+        self._containing_slot: tuple[Effect, str] | None = None
 
     @abstractmethod
     def get_configuration_widget(self) -> QWidget | None:
@@ -189,7 +190,7 @@ class Effect(ABC):
         """This method returns the effects that have been added to this effect as an input as well as empty slots"""
         return self._inputs.items()
 
-    def attach(self, slot_id: str, e: "Effect") -> bool:
+    def attach(self, slot_id: str, e: Effect) -> bool:
         """This method gets called in order to attach an effect to an input slot.
 
         :param slot_id: The slot that should be populated
@@ -234,7 +235,7 @@ class Effect(ABC):
             return 0, 0
         return self._parent_filter.pos
 
-    def set_parent_filter(self, f: "EffectsStack"):
+    def set_parent_filter(self, f: EffectsStack):
         """This method sets the parent filter, which needs to be of type EffectsStack."""
         self._parent_filter = f
 
@@ -257,7 +258,7 @@ class Effect(ABC):
         raise NotImplementedError("The class did not implement the deserialize method.")
 
     @property
-    def slot_parent(self) -> tuple["Effect", str] | None:
+    def slot_parent(self) -> tuple[Effect, str] | None:
         return self._containing_slot
 
     def clear_slot(self, slot_id: str):

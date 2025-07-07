@@ -1,4 +1,6 @@
 """Macros with their Triggers"""
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -30,12 +32,12 @@ class Trigger(QObject):
 
     def __init__(self, tr_t: str):
         super().__init__()
-        self._macro: "Macro" | None = None
+        self._macro: Macro | None = None
         self._type: str = tr_t
         self.name: str = ""
         self._configuration: dict[str, str] = {}
 
-    def copy(self) -> "Trigger":
+    def copy(self) -> Trigger:
         t = trigger_factory(self._type)
         t.name = self.name
         for k, v in self._configuration.items():
@@ -120,11 +122,11 @@ class _FKeysTrigger(Trigger):
 
 
 class Macro:
-    def __init__(self, parent: "BoardConfiguration"):
+    def __init__(self, parent: BoardConfiguration):
         """Initialize a new empty macro"""
         self.content: str = ""
         self.name: str = ""
-        self._show: "BoardConfiguration" = parent
+        self._show: BoardConfiguration = parent
         self._triggers: dict[Trigger, bool] = {}
         from controller.cli.cli_context import CLIContext
         from controller.network import NetworkManager
@@ -156,7 +158,7 @@ class Macro:
         self._triggers[t] = active
         t._macro = self
 
-    def copy(self) -> "Macro":
+    def copy(self) -> Macro:
         """Obtain a deep copy of this macro"""
         m = Macro(self._show)
         m.name = str(self.name)

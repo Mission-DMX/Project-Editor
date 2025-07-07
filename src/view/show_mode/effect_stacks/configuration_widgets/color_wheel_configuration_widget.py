@@ -1,5 +1,5 @@
-
 """This file contains the configuration widget for the color wheel effect."""
+from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
@@ -12,9 +12,9 @@ if TYPE_CHECKING:
 class ColorWheelConfigurationWidget(QWidget):
     """This widget enables the user to set up the defaults of the color wheel effect settings."""
 
-    def __init__(self, f: "ColorWheelEffect"):
+    def __init__(self, f: ColorWheelEffect):
         super().__init__()
-        self._f: "ColorWheelEffect" = f
+        self._f: ColorWheelEffect = f
         layout = QFormLayout()
         self.setLayout(layout)
 

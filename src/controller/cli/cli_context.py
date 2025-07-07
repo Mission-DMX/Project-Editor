@@ -1,4 +1,6 @@
 """Context of the Client"""
+from __future__ import annotations
+
 import argparse
 import traceback
 from typing import TYPE_CHECKING
@@ -66,7 +68,7 @@ def _split_args(line: str) -> list[str]:
 class CLIContext:
     """Context of the Client"""
 
-    def __init__(self, show: "BoardConfiguration", networkmgr: "NetworkManager", exit_available: bool = False):
+    def __init__(self, show: BoardConfiguration, networkmgr: NetworkManager, exit_available: bool = False):
         """
         Initialize a new CLI context.
         :param show: The current active show configuration
@@ -81,11 +83,11 @@ class CLIContext:
             EventCommand(self),
             HelpCommand(self)
         ]
-        self.selected_bank: "BankSet" | None = None
-        self.selected_column: "DeskColumn" | None = None
-        self.selected_scene: "Scene" | None = None
+        self.selected_bank: BankSet | None = None
+        self.selected_column: DeskColumn | None = None
+        self.selected_scene: Scene | None = None
         self.show = show
-        self.networkmgr: "NetworkManager" = networkmgr
+        self.network_manager: NetworkManager = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
         for c in self.commands:

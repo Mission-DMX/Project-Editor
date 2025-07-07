@@ -1,4 +1,6 @@
 """Fixture Definitions from OFL """
+from __future__ import annotations
+
 import json
 import random
 from collections import defaultdict
@@ -9,8 +11,8 @@ from typing import TYPE_CHECKING, Final, NotRequired, TypedDict, Any
 from uuid import UUID, uuid4
 
 import numpy as np
-from numpy.typing import NDArray
 from PySide6 import QtCore
+from numpy.typing import NDArray
 
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
@@ -126,11 +128,11 @@ class UsedFixture(QtCore.QObject):
     """ Fixture in use with a specific mode"""
     static_data_changed: QtCore.Signal = QtCore.Signal()
 
-    def __init__(self, board_configuration: "BoardConfiguration", fixture: Fixture, mode_index: int,
+    def __init__(self, board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int,
                  parent_universe: int,
                  start_index: int, uuid: UUID = None, color: str = None):
         super().__init__()
-        self._board_configuration: Final["BoardConfiguration"] = board_configuration
+        self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[Fixture] = fixture
         self._uuid: Final[UUID] = uuid if uuid else uuid4()
 
@@ -274,7 +276,7 @@ class UsedFixture(QtCore.QObject):
         return self._fixture_channels[index]
 
 
-def make_used_fixture(board_configuration: "BoardConfiguration", fixture: Fixture, mode_index: int, universe_id: int,
+def make_used_fixture(board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int, universe_id: int,
                       start_index: int) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
     return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)

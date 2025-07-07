@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from logging import getLogger
 from typing import TYPE_CHECKING
@@ -49,10 +51,10 @@ class _TriggerListItemWidget(QWidget):
 class MacroSetupWidget(QSplitter):
     """Widget to configure a selected macro."""
 
-    def __init__(self, parent: QWidget | None, show_config: "BoardConfiguration"):
+    def __init__(self, parent: QWidget | None, show_config: BoardConfiguration):
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
-        self._show: "BoardConfiguration" = show_config
+        self._show: BoardConfiguration = show_config
         self._selected_macro: Macro | None = None
         self._macro_panel: QWidget = QWidget(self)
         self._dialog: QDialog | None = None
