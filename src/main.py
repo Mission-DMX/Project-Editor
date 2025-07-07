@@ -16,7 +16,7 @@ if __name__ == "__main__":
     splashscreen.show()
     splashscreen.raise_()
 
-    with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
+    with open(resource_path(os.path.join("resources", 'pyproject.toml')), encoding="UTF-8") as f:
         import tomlkit
 
         data = tomlkit.load(f)

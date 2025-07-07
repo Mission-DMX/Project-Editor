@@ -12,7 +12,7 @@ from utility import resource_path
 
 logger = getLogger(__file__)
 
-with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
+with open(resource_path(os.path.join("resources", 'pyproject.toml')), encoding="UTF-8") as f:
     data = tomlkit.load(f)
 
 
@@ -25,7 +25,7 @@ def read_entire_file_as_str(file_path: str) -> str:
     """
     # TODO in toml
     try:
-        with open(file_path, 'r', encoding='UTF-8') as f:
+        with open(file_path, encoding='UTF-8') as f:
             text = f.read()
     except OSError as e:
         text = "Unknown Debug"

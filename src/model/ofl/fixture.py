@@ -109,7 +109,7 @@ class ColorSupport(IntFlag):
 
 def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
-    with open(file, "r", encoding='UTF-8') as f:
+    with open(file, encoding='UTF-8') as f:
         ob: dict[str, Any] = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
                    categories=ob["categories"] if "categories" in ob else set(),

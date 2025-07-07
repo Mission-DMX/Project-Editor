@@ -15,7 +15,7 @@ def yaml_load(file_path: str) -> dict:
     :returns: The dictionary defined in the file or an empty one in case of any issue.
     """
     d = {}
-    with open(file_path, 'r', encoding='UTF-8') as f:
+    with open(file_path, encoding='UTF-8') as f:
         try:
             d = yaml.YAML(typ='safe').load(f.read())
         except YAMLError as e:

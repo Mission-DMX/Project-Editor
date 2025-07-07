@@ -238,7 +238,7 @@ class MacroSetupWidget(QSplitter):
         if not isinstance(self._dialog, QFileDialog):
             logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
         for f_path in self._dialog.selectedFiles():
-            with open(f_path, "r") as f:
+            with open(f_path) as f:
                 m = Macro(self._show)
                 m.name = os.path.splitext(os.path.basename(f_path))[0]
                 m.content = f.read()
