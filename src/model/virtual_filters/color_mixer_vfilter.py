@@ -29,5 +29,5 @@ class ColorMixerVFilter(VirtualFilter):
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_MIXER, pos=pos)
-        if "method" not in self.filter_configurations.keys():
+        if "method" not in self.filter_configurations:
             self.filter_configurations["method"] = "hsv"

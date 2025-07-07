@@ -27,10 +27,10 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
         self._filter = filter
 
     def _load_configuration(self, conf):
-        if "ignore_main_brightness_control" in conf.keys():
+        if "ignore_main_brightness_control" in conf:
             self._widget.main_brightness_cb_enabled = True
             self._widget.ignore_main_brightness = conf.get("ignore_main_brightness_control") == "true"
-        set_id = conf.get("set_id") if "set_id" in conf.keys() else ""
+        set_id = conf.get("set_id") if "set_id" in conf else ""
         column_id = conf.get("column_id") if "column_id" in conf else ""
         self._widget.add_base_bank_set(self._filter.scene.linked_bankset)
         self._widget.reload_data()

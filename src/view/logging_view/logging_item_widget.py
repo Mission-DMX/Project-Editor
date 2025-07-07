@@ -50,7 +50,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
                 match entry.operation:
                     case Operation.IS:
                         if not (
-                            entry.items[0] in self._content.keys() and entry.items[1] in self._content[entry.items[0]]
+                            entry.items[0] in self._content and entry.items[1] in self._content[entry.items[0]]
                         ):
                             visible = False
         self.setHidden(not visible)

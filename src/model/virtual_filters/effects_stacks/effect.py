@@ -203,7 +203,7 @@ class Effect(ABC):
             found_working |= Effect.can_convert_slot(target_slot_type, candidate)
         if not found_working:
             return False
-        if slot_id not in self._inputs.keys():
+        if slot_id not in self._inputs:
             raise ValueError("The requested slot id is not present within this filter.")
         self._inputs[slot_id] = e
         e._containing_slot = (self, slot_id)
@@ -261,6 +261,6 @@ class Effect(ABC):
         return self._containing_slot
 
     def clear_slot(self, slot_id: str):
-        if slot_id not in self._inputs.keys():
+        if slot_id not in self._inputs:
             raise ValueError(f"This filter does not contain an input slot with id {slot_id}.")
         self._inputs[slot_id] = None

@@ -97,7 +97,7 @@ class UIWidget(ABC):
     def notify_id_rename(self, old_id: str, new_id: str):
         """This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
         in order to implement special behaviour"""
-        for slot in self._associated_filters.keys():
+        for slot in self._associated_filters:
             if self._associated_filters[slot] == old_id:
                 self._associated_filters[slot] = new_id
 

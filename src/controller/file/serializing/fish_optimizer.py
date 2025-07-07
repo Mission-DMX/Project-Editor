@@ -92,7 +92,7 @@ class SceneOptimizerModule:
         logger.debug(
             "Substituted filter %s with %s in scene %s.", f.filter_id, substitution_filter.filter_id,
             f.scene.scene_id)
-        for output_channel_name in f.out_data_types.keys():
+        for output_channel_name in f.out_data_types:
             self.channel_override_dict[
                 f"{f.filter_id}:{output_channel_name}"] = f"{substitution_filter.filter_id}:{output_channel_name}"
 
@@ -107,7 +107,7 @@ class SceneOptimizerModule:
             for channel_mapping in channel_list:
                 filter_input_channel, universe_channel, foreign_filter_output_channel = channel_mapping
                 filter_config_parameters[filter_input_channel] = str(int(universe_channel) - 1)
-                if foreign_filter_output_channel in self.channel_override_dict.keys():
+                if foreign_filter_output_channel in self.channel_override_dict:
                     foreign_filter_output_channel = self.channel_override_dict.get(foreign_filter_output_channel)
                 channel_mappings[filter_input_channel] = foreign_filter_output_channel
             filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
