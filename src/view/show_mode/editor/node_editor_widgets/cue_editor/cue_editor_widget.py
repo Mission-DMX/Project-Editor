@@ -302,9 +302,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if isinstance(self._input_dialog, list) and d is not None:
             self._input_dialog.remove(d)
             d.deleteLater()
-            if len(self._input_dialog) == 0:
-                if isinstance(self._parent_widget, QDialog):
-                    self._parent_widget.activateWindow()
+            if len(self._input_dialog) == 0 and isinstance(self._parent_widget, QDialog):
+                self._parent_widget.activateWindow()
         self._ui_widget_update_required = True
 
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
@@ -394,9 +393,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
                                  "Channel names must be unique within "
                                  f"this filter.<br/>Detailed message: {str(e)}")
             return
-        if self._filter_instance is not None:
-            if self._filter_instance.in_preview_mode:
-                self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
+        if self._filter_instance is not None and self._filter_instance.in_preview_mode:
+            self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
         if not is_part_of_mass_update:

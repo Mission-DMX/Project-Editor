@@ -145,10 +145,8 @@ class _SenderConfigurationWidget(QScrollArea):
         self._broadcaster.event_rename_action_occurred.emit(self._sender.index_on_fish)
 
     def _rename_event_occurred(self, s_id: int):
-        if not self._own_rename_issued:
-            if self._sender is not None:
-                if self._sender.index_on_fish == s_id:
-                    self._update_table()
+        if not self._own_rename_issued and self._sender is not None and self._sender.index_on_fish == s_id:
+            self._update_table()
         else:
             self._own_rename_issued = False
 
@@ -409,9 +407,8 @@ class EventSetupWidget(QSplitter):
         self._dialog.open()
 
     def _event_received(self, e: event):
-        if e.type == proto.Events_pb2.ONGOING_EVENT:
-            if not get_sender_by_id(e.sender_id).debug_include_ongoing_events:
-                return
+        if e.type == proto.Events_pb2.ONGOING_EVENT and not get_sender_by_id(e.sender_id).debug_include_ongoing_events:
+            return
         item = AnnotatedListWidgetItem(self._event_log)
         w = _EventLogListWidget(self._event_log, e, self._broadcaster)
         item.setSizeHint(w.sizeHint())

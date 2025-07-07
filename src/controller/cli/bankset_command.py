@@ -45,11 +45,10 @@ class BankSetCommand(Command):
                     return False
                 return self.context.selected_bank.update()
             case "create":
-                if self.context.selected_bank:
-                    if not self.context.selected_bank.is_linked:
-                        self.context.print("ERROR: Creating a new bank set now would discard the changes made to the "
-                                           "current selected one.")
-                        return False
+                if self.context.selected_bank and not self.context.selected_bank.is_linked:
+                    self.context.print("ERROR: Creating a new bank set now would discard the changes made to the "
+                                       "current selected one.")
+                    return False
                 self.context.selected_bank = BankSet([], description=args.description)
             case "add":
                 if not self.context.selected_bank:

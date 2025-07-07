@@ -1,4 +1,3 @@
-
 """This file contains the widget to stack the effects."""
 
 from logging import getLogger
@@ -205,18 +204,17 @@ class EffectCompilationWidget(QWidget):
                     for supported_target in supported_slot_types:
                         can_attach_effect |= Effect.can_convert_slot(self._pending_effect.get_output_slot_type(),
                                                                      supported_target)
-                    if can_attach_effect:
-                        if slot_name not in rendered_slots:
-                            # render placement hint
-                            slot_counter_str = str(len(self._slot_counter))
-                            x -= 10
-                            slot_counter_str_width = fm.horizontalAdvance(slot_counter_str)
-                            p.fillRect(x - slot_counter_str_width - 6, int(y + socket_height / 2 - text_height / 2 - 3),
-                                       slot_counter_str_width + 6, text_height / 2 + 6, light_blue_brush)
-                            p.drawText(x - slot_counter_str_width - 3, y + socket_height / 2 + 3, slot_counter_str)
-                            rendered_slots.add(slot_name)
-                            dummy_effect = ChainingEffectDummy(effect, slot_name, supported_slot_types)
-                            self._slot_counter.append((slot_name, dummy_effect))
+                    if can_attach_effect and slot_name not in rendered_slots:
+                        # render placement hint
+                        slot_counter_str = str(len(self._slot_counter))
+                        x -= 10
+                        slot_counter_str_width = fm.horizontalAdvance(slot_counter_str)
+                        p.fillRect(x - slot_counter_str_width - 6, int(y + socket_height / 2 - text_height / 2 - 3),
+                                   slot_counter_str_width + 6, text_height / 2 + 6, light_blue_brush)
+                        p.drawText(x - slot_counter_str_width - 3, y + socket_height / 2 + 3, slot_counter_str)
+                        rendered_slots.add(slot_name)
+                        dummy_effect = ChainingEffectDummy(effect, slot_name, supported_slot_types)
+                        self._slot_counter.append((slot_name, dummy_effect))
 
         y += socket_height
         return x, y
@@ -281,27 +279,25 @@ class EffectCompilationWidget(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent):
         for x, y, widget in self._config_button_positions:
-            if x < event.x() < x + 25:
-                if y < event.y() < y + 25:
-                    self._active_config_widget = widget
-                    self.active_config_widget_changed.emit(widget)
-                    self.update()
-                    return
+            if x < event.x() < x + 25 and y < event.y() < y + 25:
+                self._active_config_widget = widget
+                self.active_config_widget_changed.emit(widget)
+                self.update()
+                return
         for x, y, effect in self._delete_button_positions:
-            if x < event.x() < x + 25:
-                if y < event.y() < y + 25:
-                    if self._active_config_widget == effect.get_configuration_widget():
-                        self._active_config_widget = None
-                        self.active_config_widget_changed.emit(None)
-                        # FIXME this does not yet automatically disable the widget.
-                        # TODO test deleting after loading
-                        # TODO fix deleting of top level effects (effect.attach is not called if attached to socket)
-                    if effect.slot_parent is not None:
-                        parent_effect, slot_name = effect.slot_parent
-                        parent_effect.clear_slot(slot_name)
-                    else:
-                        logger.error("The effect '%s' should be deleted but the parent is None. FIXME!",
-                                     effect.get_human_filter_name()
-                                     )
-                        self.update()
-                    return
+            if x < event.x() < x + 25 and y < event.y() < y + 25:
+                if self._active_config_widget == effect.get_configuration_widget():
+                    self._active_config_widget = None
+                    self.active_config_widget_changed.emit(None)
+                    # FIXME this does not yet automatically disable the widget.
+                    # TODO test deleting after loading
+                    # TODO fix deleting of top level effects (effect.attach is not called if attached to socket)
+                if effect.slot_parent is not None:
+                    parent_effect, slot_name = effect.slot_parent
+                    parent_effect.clear_slot(slot_name)
+                else:
+                    logger.error("The effect '%s' should be deleted but the parent is None. FIXME!",
+                                 effect.get_human_filter_name()
+                                 )
+                    self.update()
+                return

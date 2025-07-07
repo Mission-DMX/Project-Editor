@@ -296,74 +296,65 @@ class _BankEditWidget(QWidget):
             self._update_color_label(i)
 
     def _display_text_field_changed(self, index: int, text: str):
-        if self._bank:
-            if len(self._bank.columns) > index:
-                self._bank.columns[index].display_name = self._text_widgets[index].text()
-                if self._bank_item:
-                    self._bank_item.update_description_text()
+        if self._bank and len(self._bank.columns) > index:
+            self._bank.columns[index].display_name = self._text_widgets[index].text()
+            if self._bank_item:
+                self._bank_item.update_description_text()
 
     def _top_inverted_changed(self, index: int, checked: bool):
-        if self._bank:
-            if len(self._bank.columns) > index:
-                self._bank.columns[index].top_display_line_inverted = self._top_inverted_widgets[index].isChecked()
+        if self._bank and len(self._bank.columns) > index:
+            self._bank.columns[index].top_display_line_inverted = self._top_inverted_widgets[index].isChecked()
 
     def _bottom_inverted_changed(self, index: int, checked: bool):
-        if self._bank:
-            if len(self._bank.columns) > index:
-                self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[
-                    index].isChecked()
+        if self._bank and len(self._bank.columns) > index:
+            self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[
+                index].isChecked()
 
     def _raw_encoder_value_changed(self, index: int, new_value: int):
-        if self._bank:
-            if len(self._bank.columns) > index:
-                col = self._bank.columns[index]
-                if isinstance(col, RawDeskColumn):
-                    col.encoder_position = new_value
+        if self._bank and len(self._bank.columns) > index:
+            col = self._bank.columns[index]
+            if isinstance(col, RawDeskColumn):
+                col.encoder_position = new_value
 
     def _raw_fader_value_changed(self, index: int, new_value: int):
-        if self._bank:
-            if len(self._bank.columns) > index:
-                col = self._bank.columns[index]
-                if isinstance(col, RawDeskColumn):
-                    col.fader_position = new_value
+        if self._bank and len(self._bank.columns) > index:
+            col = self._bank.columns[index]
+            if isinstance(col, RawDeskColumn):
+                col.fader_position = new_value
 
     def _color_hue_value_changed(self, index: int, new_value: float):
-        if self._bank:
-            if len(self._bank.columns) > index:
-                col = self._bank.columns[index]
-                if isinstance(col, ColorDeskColumn):
-                    c = col.color
-                    ca = ColorHSI(new_value, c.saturation, c.intensity)
-                    col.color = ca
-                    self._update_color_label(index)
+        if self._bank and len(self._bank.columns) > index:
+            col = self._bank.columns[index]
+            if isinstance(col, ColorDeskColumn):
+                c = col.color
+                ca = ColorHSI(new_value, c.saturation, c.intensity)
+                col.color = ca
+                self._update_color_label(index)
 
     def _color_saturation_value_changed(self, index: int, new_value: float):
-        if self._bank:
-            if len(self._bank.columns) > index:
-                col = self._bank.columns[index]
-                if isinstance(col, ColorDeskColumn):
-                    c = col.color
-                    ca = ColorHSI(c.hue, new_value, c.intensity)
-                    col.color = ca
-                    self._update_color_label(index)
+        if self._bank and len(self._bank.columns) > index:
+            col = self._bank.columns[index]
+            if isinstance(col, ColorDeskColumn):
+                c = col.color
+                ca = ColorHSI(c.hue, new_value, c.intensity)
+                col.color = ca
+                self._update_color_label(index)
 
     def _color_intensity_value_changed(self, index: int, new_value: float):
-        if self._bank:
-            if len(self._bank.columns) > index:
-                col = self._bank.columns[index]
-                if isinstance(col, ColorDeskColumn):
-                    c = col.color
-                    ca = ColorHSI(c.hue, c.saturation, new_value)
-                    col.color = ca
-                    self._update_color_label(index)
+        if self._bank and len(self._bank.columns) > index:
+            col = self._bank.columns[index]
+            if isinstance(col, ColorDeskColumn):
+                c = col.color
+                ca = ColorHSI(c.hue, c.saturation, new_value)
+                col.color = ca
+                self._update_color_label(index)
 
     def _update_color_label(self, index: int):
         c = Qt.GlobalColor.gray
-        if self._bank:
-            if len(self._bank.columns) > index:
-                col = self._bank.columns[index]
-                if isinstance(col, ColorDeskColumn):
-                    c = col.color.to_qt_color()
+        if self._bank and len(self._bank.columns) > index:
+            col = self._bank.columns[index]
+            if isinstance(col, ColorDeskColumn):
+                c = col.color.to_qt_color()
         p = self._color_labels[index].palette()
         p.setColor(self._color_labels[index].backgroundRole(), c)
         self._color_labels[index].setPalette(p)

@@ -13,7 +13,6 @@ from model.scene import FilterPage
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import \
     SceneUIPageEditorWidget
-
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
 from .show_browser.show_browser import ShowBrowser
@@ -102,10 +101,9 @@ class ShowEditorWidget(QSplitter):
         if page in self._opened_pages:
             for tab_index in range(self._open_page_tab_widget.count()):
                 tab = self._open_page_tab_widget.widget(tab_index)
-                if isinstance(tab, SceneTabWidget):
-                    if tab.scene == page:
-                        self._open_page_tab_widget.setCurrentIndex(tab_index)
-                        return tab
+                if isinstance(tab, SceneTabWidget) and tab.scene == page:
+                    self._open_page_tab_widget.setCurrentIndex(tab_index)
+                    return tab
             return None
 
         # Each scene is represented by its own editor
@@ -125,10 +123,9 @@ class ShowEditorWidget(QSplitter):
         if bankset in self._opened_banksets:
             for tab_index in range(self._open_page_tab_widget.count()):
                 tab = self._open_page_tab_widget.widget(tab_index)
-                if isinstance(tab, BankSetTabWidget):
-                    if tab.bankset == bankset:
-                        self._open_page_tab_widget.setCurrentIndex(tab_index)
-                        return tab
+                if isinstance(tab, BankSetTabWidget) and tab.bankset == bankset:
+                    self._open_page_tab_widget.setCurrentIndex(tab_index)
+                    return tab
             return None
 
         self._opened_banksets.add(bankset)
@@ -145,10 +142,9 @@ class ShowEditorWidget(QSplitter):
         if uipage in self._opened_uieditors:
             for tab_index in range(self._open_page_tab_widget.count()):
                 tab = self._open_page_tab_widget.widget(tab_index)
-                if isinstance(tab, SceneUIPageEditorWidget):
-                    if tab.ui_page == uipage:
-                        self._open_page_tab_widget.setCurrentIndex(tab_index)
-                        return tab
+                if isinstance(tab, SceneUIPageEditorWidget) and tab.ui_page == uipage:
+                    self._open_page_tab_widget.setCurrentIndex(tab_index)
+                    return tab
             return None
 
         self._opened_uieditors.add(uipage)

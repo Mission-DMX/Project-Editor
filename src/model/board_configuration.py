@@ -1,12 +1,11 @@
 """Provides data structures with accessors and modifiers for DMX"""
-from logging import getLogger
 from collections.abc import Callable, Sequence
+from logging import getLogger
 
 import numpy as np
 from PySide6 import QtCore, QtGui
 
 import proto.FilterMode_pb2
-
 from .broadcaster import Broadcaster
 from .device import Device
 from .macro import Macro
@@ -209,9 +208,8 @@ class BoardConfiguration:
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
         """Returns the scene by her id"""
         looked_up_position = self._scenes_index.get(scene_id)
-        if looked_up_position is not None:
-            if looked_up_position < len(self._scenes):
-                return self._scenes[looked_up_position]
+        if looked_up_position is not None and looked_up_position < len(self._scenes):
+            return self._scenes[looked_up_position]
         for scene in self._scenes:
             if scene.scene_id == scene_id:
                 return scene

@@ -244,11 +244,10 @@ class ShowBrowser:
             self._input_dialog.close()
             self._input_dialog = None
         for si in items:
-            if isinstance(si, AnnotatedTreeWidgetItem):
-                if isinstance(si.annotated_data, Scene):
-                    scene_to_delete = si.annotated_data
-                    self._show.broadcaster.delete_scene.emit(scene_to_delete)
-                    del si
+            if isinstance(si, AnnotatedTreeWidgetItem) and isinstance(si.annotated_data, Scene):
+                scene_to_delete = si.annotated_data
+                self._show.broadcaster.delete_scene.emit(scene_to_delete)
+                del si
         self._refresh_scene_browser()
 
     def _rename_scene_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]):
@@ -316,9 +315,9 @@ class ShowBrowser:
             return
         if isinstance(item.annotated_data, UsedFixture):
             current_widget = self._editor_tab_widget.currentWidget()
-            if isinstance(current_widget, SceneTabWidget):
-                if place_fixture_filters_in_scene(item.annotated_data, current_widget.filter_page):
-                    current_widget.refresh()
+            if (isinstance(current_widget, SceneTabWidget) and
+                    place_fixture_filters_in_scene(item.annotated_data, current_widget.filter_page)):
+                current_widget.refresh()
 
     def _upload_showfile(self):
         transmit_to_fish(self._show, False)

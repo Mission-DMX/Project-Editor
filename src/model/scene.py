@@ -125,9 +125,8 @@ class Scene:
 
     @linked_bankset.setter
     def linked_bankset(self, new_bs: BankSet):
-        if self._associated_bankset:
-            if self._associated_bankset.is_linked:
-                self._associated_bankset.unlink()
+        if self._associated_bankset and self._associated_bankset.is_linked:
+            self._associated_bankset.unlink()
         self._associated_bankset = new_bs
 
     @property
@@ -216,9 +215,8 @@ class Scene:
         f.filter_id = self.ensure_name_uniqueness(f.filter_id)
         self._filters.append(f)
         self._filter_index[f.filter_id] = f
-        if filter_page_index != -1:
-            if filter_page_index < len(self.pages):
-                self._filter_pages[filter_page_index].filters.append(f)
+        if filter_page_index != -1 and filter_page_index < len(self.pages):
+            self._filter_pages[filter_page_index].filters.append(f)
 
     def remove_filter(self, f: Filter):
         """Delete a filter."""

@@ -60,10 +60,9 @@ class FilterSettingsItem(QGraphicsSvgItem):
         Args:
             ev: event
         """
-        if ev.key() == Qt.Key.Key_Enter or ev.key() == Qt.Key.Key_Return:
-            if self.on_update is not None:
-                self.on_update()
-                return
+        if ev.key() == Qt.Key.Key_Enter or ev.key() == Qt.Key.Key_Return and self.on_update is not None:
+            self.on_update()
+            return
         super().keyPressEvent(ev)
 
     def mousePressEvent(self, ev):

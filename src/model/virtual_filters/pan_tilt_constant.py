@@ -73,7 +73,7 @@ class PanTiltConstantFilter(VirtualFilter):
                                   'value_upper': DataType.DT_8_BIT}
         filter._gui_update_keys = {}
         filter._in_data_types = {}
-        filter._channel_links = {'value': f"{self.filter_id}_16bit_{ 'tilt' if tilt else 'pan'}:value"}
+        filter._channel_links = {'value': f"{self.filter_id}_16bit_{'tilt' if tilt else 'pan'}:value"}
         filter_list.append(filter)
 
     @property
@@ -111,12 +111,11 @@ class PanTiltConstantFilter(VirtualFilter):
         self._tilt_delta = tilt_delta
 
     def set_delta(self, delta: float, joystick: JoystickList, tilt: bool):
-        if self._joystick != JoystickList.NO_JOYSTICK:
-            if self._joystick in (joystick, JoystickList.EVERY_JOYSTICK):
-                if tilt:
-                    self._tilt_delta = delta
-                else:
-                    self._pan_delta = delta
+        if self._joystick != JoystickList.NO_JOYSTICK and self._joystick in (joystick, JoystickList.EVERY_JOYSTICK):
+            if tilt:
+                self._tilt_delta = delta
+            else:
+                self._pan_delta = delta
 
     @property
     def sixteen_bit_available(self):
