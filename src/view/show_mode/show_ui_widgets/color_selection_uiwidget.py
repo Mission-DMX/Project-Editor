@@ -50,7 +50,7 @@ class ColorSelectionUIWidget(UIWidget):
             column_layout = QVBoxLayout()
             select_button = QPushButton("Sel", w)
             select_button.setEnabled(for_player)
-            select_button.clicked.connect(lambda _i=i: self._select_color(i))
+            select_button.clicked.connect(lambda _i=i: self._select_color(_i))
             column_layout.addWidget(select_button)
             color_label = QWidget(w)
             color_label.setMinimumWidth(16)

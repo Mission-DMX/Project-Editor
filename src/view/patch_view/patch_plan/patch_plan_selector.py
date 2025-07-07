@@ -55,7 +55,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
 
                 rename_universe = QtGui.QAction('rename Universe', self)
                 # delete_scene = QtGui.QAction('delete Scene', self)
-                rename_universe.triggered.connect(lambda: self._rename_universe(index))
+                rename_universe.triggered.connect(lambda index_=index: self._rename_universe(index_))
                 # delete_scene.triggered.connect(lambda: self._remove_scene(index))
                 menu.addAction(rename_universe)
                 # menu.addAction(delete_scene)

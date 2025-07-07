@@ -1,4 +1,3 @@
-
 """This file provides the ShowBrowser widget."""
 import os.path
 
@@ -15,10 +14,9 @@ from model.scene import FilterPage
 from utility import resource_path
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
-
-from ..editing_utils import add_scene_to_show
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
+from ..editing_utils import add_scene_to_show
 
 
 class ShowBrowser:
@@ -271,7 +269,8 @@ class ShowBrowser:
                     scene_to_rename = si.annotated_data
                     self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
-                    self._input_dialog.textValueSelected.connect(lambda text: rename(self, scene_to_rename, text))
+                    self._input_dialog.textValueSelected.connect(
+                        lambda text, scene_to_rename_=scene_to_rename: rename(self, scene_to_rename_, text))
                     self._input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
                     self._input_dialog.setWindowTitle('Rename Scene')
                     self._input_dialog.open()
@@ -279,7 +278,8 @@ class ShowBrowser:
                     page_to_rename = si.annotated_data
                     self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
-                    self._input_dialog.textValueSelected.connect(lambda text: rename(self, page_to_rename, text))
+                    self._input_dialog.textValueSelected.connect(
+                        lambda text, page_to_rename_=page_to_rename: rename(self, page_to_rename_, text))
                     self._input_dialog.setLabelText("Rename filter page '" + page_to_rename.name + "' to:")
                     self._input_dialog.setWindowTitle('Rename Filter Page')
                     self._input_dialog.open()
@@ -287,7 +287,8 @@ class ShowBrowser:
                     ui_page = si.annotated_data
                     self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
-                    self._input_dialog.textValueSelected.connect(lambda text: rename(self, ui_page, text))
+                    self._input_dialog.textValueSelected.connect(
+                        lambda text, ui_page_=ui_page: rename(self, ui_page_, text))
                     self._input_dialog.setLabelText("Rename UI page '" + ui_page.title + "' to:")
                     self._input_dialog.setWindowTitle('Rename UI Page')
                     self._input_dialog.open()
@@ -353,7 +354,8 @@ class ShowBrowser:
                 parent_to_append_to = item.annotated_data
                 self._input_dialog = QInputDialog(self.widget)
                 self._input_dialog.setInputMode(QInputDialog.TextInput)
-                self._input_dialog.textValueSelected.connect(lambda text: add(self, parent_to_append_to, text))
+                self._input_dialog.textValueSelected.connect(
+                    lambda text, parent=parent_to_append_to: add(self, parent, text))
                 self._input_dialog.setLabelText("Please enter the name of the new page.")
                 self._input_dialog.setWindowTitle('Enter Name')
                 self._input_dialog.open()

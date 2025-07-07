@@ -22,7 +22,7 @@ class SceneUIPageEditorWidget(QWidget):
         for uiw in self._ui_page.widgets:
             widget = UIWidgetHolder(uiw, self)
             self._widgets.append(widget)
-            widget.closing.connect(lambda: self._widgets.remove(widget))
+            widget.closing.connect(lambda widget_=widget: self._widgets.remove(widget_))
         self._widget_setup_dialog: WidgetSetupDialog | None = None
 
     # TODO add other add method (for example x-touch button opening the dialog in the middle of the editor
