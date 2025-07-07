@@ -1,14 +1,14 @@
 """Globals for whole Project"""
-from abc import ABC
 
 
-class FinalGlobals(ABC):
+class FinalGlobals:
     """class for Globals of the whole Project"""
 
-    _screen_width, _screen_height = (0, 0)
+    _screen_width: int = 0
+    _screen_height: int = 0
 
     @staticmethod
-    def get_screen_width():
+    def get_screen_width() -> int:
         """get screen width"""
         return FinalGlobals._screen_width
 
@@ -18,7 +18,7 @@ class FinalGlobals(ABC):
         FinalGlobals._screen_width = screen_width
 
     @staticmethod
-    def get_screen_height():
+    def get_screen_height() -> int:
         """get screen height"""
         return FinalGlobals._screen_height
 
