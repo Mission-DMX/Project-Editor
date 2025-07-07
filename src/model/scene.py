@@ -1,7 +1,7 @@
 """Scene module"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .filter import Filter
 
@@ -73,7 +73,7 @@ class Scene:
         self._filters: list[Filter] = []
         self._filter_index: dict[str, Filter] = {}
         self._filter_pages: list[FilterPage] = []
-        self._associated_bankset: Optional[BankSet] = None
+        self._associated_bankset: BankSet | None = None
         self._ui_pages: list[UIPage] = []
 
     @property
@@ -119,7 +119,7 @@ class Scene:
         self._filter_pages.append(fp)
 
     @property
-    def linked_bankset(self) -> Optional[BankSet]:
+    def linked_bankset(self) -> BankSet | None:
         """associated_bankset"""
         return self._associated_bankset
 
