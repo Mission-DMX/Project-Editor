@@ -95,10 +95,7 @@ class BankSetTabWidget(QWidget):
                 continue
             if len(item.bank.columns) > 7:
                 continue
-            if self._new_column_type_cbox.currentText() == "Color":
-                col = ColorDeskColumn()
-            else:
-                col = RawDeskColumn()
+            col = ColorDeskColumn() if self._new_column_type_cbox.currentText() == "Color" else RawDeskColumn()
             item.bank.columns.append(col)
             self._bank_edit_widget.refresh_column_count()
             item.update_description_text()
@@ -242,10 +239,7 @@ class _BankEditWidget(QWidget):
         self._bank_item = item
 
     def refresh_column_count(self):
-        if self._bank:
-            number_of_columns = len(self._bank.columns)
-        else:
-            number_of_columns = 0
+        number_of_columns = len(self._bank.columns) if self._bank else 0
         for i in range(len(self._text_widgets)):
             column_enabled = i < number_of_columns
             self._text_widgets[i].setEnabled(column_enabled)

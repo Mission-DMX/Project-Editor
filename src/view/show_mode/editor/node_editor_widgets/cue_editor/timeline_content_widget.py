@@ -59,10 +59,7 @@ class TimelineContentWidget(QWidget):
                 painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
                                  channel_background_color)
 
-        if self.isEnabled():
-            marker_color = QColor.fromRgb(0xFF, 0xFF, 0x00)
-        else:
-            marker_color = QColor.fromRgb(0x80, 0x80, 0x00)
+        marker_color = QColor.fromRgb(255, 255, 0) if self.isEnabled() else QColor.fromRgb(128, 128, 0)
         marker_brush = QBrush(marker_color)
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         kf_line_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
@@ -215,10 +212,7 @@ class TimelineContentWidget(QWidget):
             self.cursor_position = clicked_timeslot
             self._update_7seg_text()
         else:
-            if 20 <= ((ev.y() - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40:
-                state_width = 10
-            else:
-                state_width = 1
+            state_width = 10 if 20 <= (ev.y() - 20) % CHANNEL_DISPLAY_HEIGHT <= 40 else 1
             clicked_timeslot_lower = (ev.x() - state_width) * self._time_zoom
             clicked_timeslot_upper = (ev.x() + state_width) * self._time_zoom
             for kf in self.frames:

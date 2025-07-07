@@ -330,10 +330,8 @@ class Cue:
 
     def add_channel(self, name: str, t: str | DataType):
         """Add a channel name to list of names"""
-        if isinstance(t, str):
-            dt = DataType.from_filter_str(t)
-        else:
-            dt = t
+        dt = DataType.from_filter_str(t) if isinstance(t, str) else t
+
         for cd in self._channel_definitions:
             if cd[0] == name:
                 if cd[1] == dt:
@@ -361,10 +359,7 @@ class Cue:
 
     def remove_channel(self, c: Union["ExternalChannelDefinition", tuple[str, DataType]]):
         target_index = -1
-        if isinstance(c, tuple):
-            name = c[0]
-        else:
-            name = c.name
+        name = c[0] if isinstance(c, tuple) else c.name
         for i in range(len(self._channel_definitions)):
             if self._channel_definitions[i][0] == name:
                 self._channel_definitions.pop(i)

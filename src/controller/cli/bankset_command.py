@@ -54,10 +54,7 @@ class BankSetCommand(Command):
                 if not self.context.selected_bank:
                     self.context.print("ERROR: No bank set selected. Create or select one first.")
                     return False
-                if args.col_type == "raw":
-                    col = RawDeskColumn()
-                else:
-                    col = ColorDeskColumn()
+                col = RawDeskColumn() if args.col_type == "raw" else ColorDeskColumn()
                 if args.bank == len(self.context.selected_bank.banks):
                     self.context.selected_bank.banks.append(FaderBank())
                 if args.bank > len(self.context.selected_bank.banks) or args.bank < -1:

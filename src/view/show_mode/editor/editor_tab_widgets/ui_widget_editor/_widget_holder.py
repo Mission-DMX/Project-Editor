@@ -49,10 +49,7 @@ class UIWidgetHolder(QWidget):
         self.setMinimumHeight(30)
 
         child_layout = self._child.layout()
-        if child_layout:
-            minimum_size = child_layout.totalMinimumSize()
-        else:
-            minimum_size = QSize(250, 100)
+        minimum_size = child_layout.minimumSize() if child_layout else QSize(250, 100)
         w = max(minimum_size.width() + 50, self.minimumWidth())
         h = max(minimum_size.height() + 50, self.minimumHeight())
         self._label.resize(w, 20)

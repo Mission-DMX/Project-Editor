@@ -56,10 +56,7 @@ class CueFilterModel:
 
         cuelist_definition_str = parameters.get("cuelist")
         cue_names = parameters.get("cue_names")
-        if cue_names:
-            cue_names = cue_names.split(';')
-        else:
-            cue_names = []
+        cue_names = cue_names.split(';') if cue_names else []
         tmp_dict = {}
         for e in cue_names:
             e = e.split(':')

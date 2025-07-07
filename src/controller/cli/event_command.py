@@ -56,11 +56,7 @@ class EventCommand(Command):
                 evs.debug_enabled = args.enable_debug
                 return True
             case "send":
-                effective_sender_id = -1
-                if args.sender_name:
-                    effective_sender_id = get_sender(args.sender_name).index_on_fish
-                else:
-                    effective_sender_id = args.sender_id
+                effective_sender_id = get_sender(args.sender_name).index_on_fish if args.sender_name else args.sender_id
                 insert_event(effective_sender_id, args.function, args.type, args.args or [])
                 return True
         return False

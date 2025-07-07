@@ -404,10 +404,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
         if not self._bankset:
             return
-        if channel_type == DataType.DT_COLOR:
-            c = ColorDeskColumn()
-        else:
-            c = RawDeskColumn()
+        c = ColorDeskColumn() if channel_type == DataType.DT_COLOR else RawDeskColumn()
         c.display_name = channel_name
         self._bankset.add_column_to_next_bank(c)
         self._bs_to_channel_mapping[channel_name] = c

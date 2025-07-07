@@ -1,4 +1,3 @@
-
 """This file provides the fader input effect configuration widget."""
 
 from typing import TYPE_CHECKING
@@ -15,10 +14,7 @@ class FaderSelectionConfigurationWidget(FaderColumnSelectorWidget):
 
     def __init__(self, effect: "ColorInputEffect"):
         scene = effect.get_scene()
-        if scene is not None:
-            bankset = scene.linked_bankset
-        else:
-            bankset = None
+        bankset = scene.linked_bankset if scene is not None else None
         super().__init__(column_filter=ColorDeskColumn, base_set=bankset)
         self._effect = effect
         super().selection_changed.connect(self._column_selected)
