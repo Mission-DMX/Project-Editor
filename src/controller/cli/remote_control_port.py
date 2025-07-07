@@ -2,7 +2,6 @@
 from asyncio import IncompleteReadError
 from logging import Logger
 from socket import AF_INET6, SOCK_STREAM
-from socket import error as socket_error
 from socket import socket
 from threading import Thread
 
@@ -118,16 +117,16 @@ class Connection:
     def run(self):
         """This method will be called by the client thread in order to handle the client."""
         try:
-            logger.info("Got incoming remote CLI connection from %s.",self._remote_address)
+            logger.info("Got incoming remote CLI connection from %s.", self._remote_address)
             reader = SocketStreamReader(self._client)
             while not self.context.exit_called:
-                self._client.send("> ".encode("utf-8"))
-                line = reader.readline().decode("utf-8").replace("\r", "").replace("\n", "")
+                self._client.send(b"> ")
+                line = reader.readline().decode().replace("\r", "").replace("\n", "")
                 if line == "@echo off":
                     reader.echo = False
                 else:
                     self.context.exec_command(line)
-                self._client.send(self.context.fetch_print_buffer().encode("utf-8"))
+                self._client.send(self.context.fetch_print_buffer().encode())
         except OSError:
             pass
         except UnicodeDecodeError as e:
