@@ -1,4 +1,3 @@
-
 """This file contains the effects of type color."""
 
 from abc import ABC
@@ -106,7 +105,7 @@ class ColorWheelEffect(ColorEffect):
                 filter_list,
                 prefix + "__segments_brightness_"
             )
-            if 'intensity' in brightness_channel_names.keys():
+            if 'intensity' in brightness_channel_names:
                 bg_input_channel_name = brightness_channel_names['intensity'].split(':')[0]
                 bg_byte_to_float = Filter(self.get_scene(), bg_input_channel_name + "_map_conv_float",
                                           FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT)

@@ -97,7 +97,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
 
     def _add_output(self):
         name = self._new_channel_name.text()
-        if name and name not in self._channels.keys():
+        if name and name not in self._channels:
             data_type = DataType.from_filter_str(self._data_type_combo_box.currentText())
             self._channels[name] = (False, data_type)
             self._insert_channel_in_list(name, data_type, False)

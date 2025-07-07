@@ -1,4 +1,3 @@
-
 """
 This file provides the column input filter settings widget.
 """
@@ -7,7 +6,6 @@ from PySide6.QtWidgets import QWidget
 
 from model import Filter
 from view.utility_widgets.fader_column_selector import FaderColumnSelectorWidget
-
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
@@ -33,7 +31,7 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
             self._widget.main_brightness_cb_enabled = True
             self._widget.ignore_main_brightness = conf.get("ignore_main_brightness_control") == "true"
         set_id = conf.get("set_id") if "set_id" in conf.keys() else ""
-        column_id = conf.get("column_id") if "column_id" in conf.keys() else ""
+        column_id = conf.get("column_id") if "column_id" in conf else ""
         self._widget.add_base_bank_set(self._filter.scene.linked_bankset)
         self._widget.reload_data()
         self._widget.set_selected_item(set_id, column_id)

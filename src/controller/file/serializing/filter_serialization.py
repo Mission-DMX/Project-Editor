@@ -24,7 +24,7 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
         filter_.instantiate_filters(ifl)
         for instantiated_filter in ifl:
             _create_filter_element_for_fish(instantiated_filter, parent, True, om)
-        for output_channel_name in filter_.out_data_types.keys():
+        for output_channel_name in filter_.out_data_types:
             om.channel_override_dict[f"{filter_.filter_id}:{output_channel_name}"] = \
                 filter_.resolve_output_port_id(output_channel_name)
     else:

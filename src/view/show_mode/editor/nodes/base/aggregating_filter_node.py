@@ -3,7 +3,6 @@ from view.show_mode.editor.nodes import FilterNode
 
 
 class AggregatingFilterNode(FilterNode):
-
     """
     This filter node class provides a template for nodes with a variable amount of inputs that will be aggregated to a
     single output.
@@ -28,7 +27,7 @@ class AggregatingFilterNode(FilterNode):
         for i in range(requested_input_count):
             required_inputs.add(str(i))
         existing_inputs = set()
-        for k in self.inputs().keys():
+        for k in self.inputs():
             existing_inputs.add(k)
         for i in required_inputs - existing_inputs:
             self.addInput(i)

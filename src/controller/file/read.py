@@ -287,7 +287,7 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                 logger.error("No suitable parent found while parsing filter pages")
                 break
 
-    if scene_element.attrib.get('linkedBankset') in loaded_banksets.keys():
+    if scene_element.attrib.get('linkedBankset') in loaded_banksets:
         scene.linked_bankset = loaded_banksets[scene_element.attrib['linkedBankset']]
 
     for ui_page_element in ui_page_elements:

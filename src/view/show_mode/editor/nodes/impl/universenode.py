@@ -34,13 +34,13 @@ class UniverseNode(FilterNode):
                 self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
                 self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
             else:
-                for key in self.filter.filter_configurations.keys():
+                for key in self.filter.filter_configurations:
                     if self.filter != model:
                         self.filter.filter_configurations[key] = model.filter_configurations[key]
                     if key != "universe":
                         input_channel = key
                         self.filter.in_data_types[input_channel] = DataType.DT_8_BIT
-                        if key not in self.terminals.keys():
+                        if key not in self.terminals:
                             super().addInput(key)
                         else:
                             t: Terminal = self.terminals[key]

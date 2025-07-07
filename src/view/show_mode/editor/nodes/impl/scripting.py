@@ -41,7 +41,7 @@ class LuaFilterNode(FilterNode):
             channel_name, data_type = input_mapping.split(':')
             if channel_name in legal_inputs:
                 raise ConfigurationError("Connection key already in use")
-            if channel_name not in self.terminals.keys():
+            if channel_name not in self.terminals:
                 self.addInput(name=channel_name)
             self.filter.in_data_types[channel_name] = DataType.from_filter_str(data_type)
             legal_inputs.append(channel_name)
@@ -51,12 +51,12 @@ class LuaFilterNode(FilterNode):
             channel_name, data_type = output_mapping.split(':')
             if channel_name in legal_inputs:
                 raise ConfigurationError("Connection key already in use")
-            if channel_name not in self.terminals.keys():
+            if channel_name not in self.terminals:
                 self.addOutput(name=channel_name)
             self.filter.out_data_types[channel_name] = DataType.from_filter_str(data_type)
             legal_inputs.append(channel_name)
         terms_to_remove = []
-        for term in self.terminals.keys():
+        for term in self.terminals:
             if term not in legal_inputs:
                 terms_to_remove.append(term)
         for term in terms_to_remove:

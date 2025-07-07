@@ -1,8 +1,8 @@
 """Basic filter node"""
 from logging import getLogger
 
-from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
+from pyqtgraph.flowchart.Flowchart import Node, Terminal
 
 from model import Filter, Scene
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
@@ -114,7 +114,7 @@ class FilterNode(Node):
                 if isinstance(next_filter_node, FilterNode):
                     filters_to_update.add(next_filter_node.filter)
         for filter in filters_to_update:
-            for input_key in filter.channel_links.keys():
+            for input_key in filter.channel_links:
                 # FIXME the name is not always present
                 prefix, suffix = filter.channel_links[input_key].split(":")
                 if prefix == old_name:

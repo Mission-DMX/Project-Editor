@@ -78,7 +78,7 @@ class Effect(ABC):
         super().__init__()
         self._supported_inputs = supported_input_types
         self._inputs: dict[str, Effect | None] = {}
-        for slot_name in supported_input_types.keys():
+        for slot_name in supported_input_types:
             self._inputs[slot_name] = None
         self._parent_filter: EffectsStack | None = None
         self._containing_slot: tuple[Effect, str] | None = None

@@ -89,7 +89,7 @@ class ShiftFilterNode(FilterNode):
         self.setup_output_terminals()
 
     def setup_output_terminals(self):
-        existing_output_keys = [k for k in self.outputs().keys()]
+        existing_output_keys = [k for k in self.outputs()]
         previous_output_count = len(existing_output_keys)
         new_output_count = int(self.filter.filter_configurations["nr_outputs"])
         if previous_output_count > new_output_count:
