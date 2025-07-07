@@ -180,11 +180,10 @@ class Effect(ABC):
     def can_convert_slot(cls, candidate: EffectType, target: EffectType) -> bool:
         if candidate == target:
             return True
-        if candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY, EffectType.GOBO_SELECTION,
-                                                                 EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]:
-            return True
+        return candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY,
+                                                                     EffectType.GOBO_SELECTION,
+                                                                     EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]
         # TODO add more capabilities once adapters are implemented
-        return False
 
     def slot_definitions(self) -> ItemsView[str, Self | None]:
         """This method returns the effects that have been added to this effect as an input as well as empty slots"""

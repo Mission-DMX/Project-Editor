@@ -54,9 +54,8 @@ class FilterSelectionWidget(QTreeWidget):
         self._last_selected_item = None
 
         def is_filter_addable(filter_to_add: Filter) -> bool:
-            if len(self._allowed_filter_types) > 0 and filter_to_add.filter_type not in self._allowed_filter_types:
-                return False
-            return True
+            return not len(
+                self._allowed_filter_types) > 0 and filter_to_add.filter_type not in self._allowed_filter_types
 
         def add_filter_item(filter_to_add: Filter, page_item):
             nonlocal already_added_filters
