@@ -26,7 +26,7 @@ def _sanitize_name(input: str | dict) -> str:
 def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, ColorSupport], filter_page: FilterPage,
                                    output_map: dict[Union[
                                        ColorSupport, str], str] | None = None) -> bool:
-    #TODO output_map do nothing
+    # TODO output_map do nothing
     if isinstance(fixture, tuple):
         fixture = fixture[0]
 
@@ -54,13 +54,20 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
 
     filter.filter_configurations["universe"] = str(fixture.parent_universe)
     already_added_filters = [filter]
-    i = 0
+
+    used_names = set(filter.filter_configurations)
+
     for index in range(fixture.channel_length):
-        selected_input_name = _sanitize_name(fixture.get_fixture_channel(index).name or str(index))
-        if selected_input_name in filter.filter_configurations.keys():
-            selected_input_name += str(i)
-        filter.filter_configurations[selected_input_name] = str(fixture.start_index + index + 1)
-        i += 1
+        base_name = _sanitize_name(fixture.get_fixture_channel(index).name or str(index))
+        selected_name = base_name
+        suffix = 1
+
+        while selected_name in used_names:
+            selected_name = f"{base_name}_{suffix}"
+            suffix += 1
+
+        filter.filter_configurations[selected_name] = str(fixture.start_index + index + 1)
+        used_names.add(selected_name)
 
     scene.append_filter(filter)
     filter_page.filters.append(filter)
