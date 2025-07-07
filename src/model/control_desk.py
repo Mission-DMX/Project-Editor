@@ -408,10 +408,7 @@ class BankSet:
                 BankSet._fish_connector.send_fader_bank_set_delete_message(old_set_id)
         else:
             BankSet._linked_bank_sets.append(self)
-        if BankSet._active_bank_set_id == self.id:
-            self._id = new_id
-            self.activate()
-        elif not BankSet._active_bank_set_id:
+        if BankSet._active_bank_set_id == self.id or not BankSet._active_bank_set_id:
             self._id = new_id
             self.activate()
         else:
