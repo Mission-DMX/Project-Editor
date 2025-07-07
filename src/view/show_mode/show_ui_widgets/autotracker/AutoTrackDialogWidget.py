@@ -7,6 +7,7 @@ from controller.autotrack.Helpers.InstanceManager import InstanceManager
 from view.show_mode.show_ui_widgets.autotracker.CropTab import CropTab
 from view.show_mode.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+
 # from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.show_ui_widgets.autotracker.LightSetupTab import LightSetupTab
 from view.show_mode.show_ui_widgets.autotracker.SettingsTab import SettingsTab

@@ -9,8 +9,9 @@ from model import Filter
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
-from view.show_mode.effect_stacks.configuration_widgets.color_wheel_configuration_widget import \
-    ColorWheelConfigurationWidget
+from view.show_mode.effect_stacks.configuration_widgets.color_wheel_configuration_widget import (
+    ColorWheelConfigurationWidget,
+)
 
 
 class ColorEffect(Effect, ABC):

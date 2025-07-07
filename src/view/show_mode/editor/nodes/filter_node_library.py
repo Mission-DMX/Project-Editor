@@ -1,30 +1,93 @@
 """Custom Node Library"""
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
-from view.show_mode.editor.nodes.impl.adapters import ColorBrightnessMixinNode, Adapter16BitTo8BitNode, \
-    Adapter16BitToBoolNode, AdapterColorToRGBNode, AdapterColorToRGBWNode, AdapterColorToRGBWANode, \
-    AdapterFloatToColorNode, Adapter8bitToFloat, Adapter16bitToFloat, AdapterColorToFloatsNode, \
-    AdapterFloatTo8BitRange, AdapterFloatTo16BitRange, AdapterFloatToRange, CombineTwo8BitToSingle16Bit, \
-    Map8BitTo16Bit, Adapter16BitToRangeFloat, Adapter8BitToRangeFloat
-from view.show_mode.editor.nodes.impl.arithmetics import ArithmeticMACNode, ArithmeticFloatTo16BitNode, \
-    ArithmeticFloatTo8BitNode, ArithmeticRoundNode, ArithmeticLogarithmNode, ArithmeticExponentialNode, \
-    ArithmeticMinimumNode, ArithmeticMaximumNode, Sum8BitNode, Sum16BitNode, SumFloatNode
+from view.show_mode.editor.nodes.impl.adapters import (
+    Adapter8bitToFloat,
+    Adapter8BitToRangeFloat,
+    Adapter16BitTo8BitNode,
+    Adapter16BitToBoolNode,
+    Adapter16bitToFloat,
+    Adapter16BitToRangeFloat,
+    AdapterColorToFloatsNode,
+    AdapterColorToRGBNode,
+    AdapterColorToRGBWANode,
+    AdapterColorToRGBWNode,
+    AdapterFloatTo8BitRange,
+    AdapterFloatTo16BitRange,
+    AdapterFloatToColorNode,
+    AdapterFloatToRange,
+    ColorBrightnessMixinNode,
+    CombineTwo8BitToSingle16Bit,
+    Map8BitTo16Bit,
+)
+from view.show_mode.editor.nodes.impl.arithmetics import (
+    ArithmeticExponentialNode,
+    ArithmeticFloatTo8BitNode,
+    ArithmeticFloatTo16BitNode,
+    ArithmeticLogarithmNode,
+    ArithmeticMACNode,
+    ArithmeticMaximumNode,
+    ArithmeticMinimumNode,
+    ArithmeticRoundNode,
+    Sum8BitNode,
+    Sum16BitNode,
+    SumFloatNode,
+)
 from view.show_mode.editor.nodes.impl.color_manip_nodes import ColorMixerVFilterNode
-from view.show_mode.editor.nodes.impl.constants import PanTiltConstant, Constants8BitNode, Constants16BitNode, \
-    ConstantsFloatNode, ConstantsColorNode
-from view.show_mode.editor.nodes.impl.debug import Debug8BitNode, Debug16BitNode, DebugFloatNode, DebugColorNode, \
-    DebugRemote8BitNode, DebugRemote16BitNode, DebugRemoteFloatNode, DebugRemoteColorNode
-from view.show_mode.editor.nodes.impl.effects import CueListNode, AutoTrackerNode, EffectsStackNode, Shift8BitNode, \
-    Shift16BitNode, ShiftFloatNode, ShiftColorNode
-from view.show_mode.editor.nodes.impl.faders import FaderRawNode, FaderHSINode, FaderHSIANode, FaderHSIUNode, \
-    FaderHSIAUNode, FaderMainBrightness
+from view.show_mode.editor.nodes.impl.constants import (
+    Constants8BitNode,
+    Constants16BitNode,
+    ConstantsColorNode,
+    ConstantsFloatNode,
+    PanTiltConstant,
+)
+from view.show_mode.editor.nodes.impl.debug import (
+    Debug8BitNode,
+    Debug16BitNode,
+    DebugColorNode,
+    DebugFloatNode,
+    DebugRemote8BitNode,
+    DebugRemote16BitNode,
+    DebugRemoteColorNode,
+    DebugRemoteFloatNode,
+)
+from view.show_mode.editor.nodes.impl.effects import (
+    AutoTrackerNode,
+    CueListNode,
+    EffectsStackNode,
+    Shift8BitNode,
+    Shift16BitNode,
+    ShiftColorNode,
+    ShiftFloatNode,
+)
+from view.show_mode.editor.nodes.impl.faders import (
+    FaderHSIANode,
+    FaderHSIAUNode,
+    FaderHSINode,
+    FaderHSIUNode,
+    FaderMainBrightness,
+    FaderRawNode,
+)
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
-from view.show_mode.editor.nodes.impl.time import TimeNode, TimeSwitchOnDelay8BitNode, TimeSwitchOnDelay16BitNode, \
-    TimeSwitchOnDelayFloatNode, TimeSwitchOffDelay8BitNode, TimeSwitchOffDelay16BitNode, TimeSwitchOffDelayFloatNode
-from view.show_mode.editor.nodes.impl.trigonometics import TrigonometricSineNode, TrigonometricCosineNode, \
-    TrigonometricTangentNode, TrigonometricArcCosNode, TrigonometricArcSinNode, TrigonometricArcTanNode
+from view.show_mode.editor.nodes.impl.time import (
+    TimeNode,
+    TimeSwitchOffDelay8BitNode,
+    TimeSwitchOffDelay16BitNode,
+    TimeSwitchOffDelayFloatNode,
+    TimeSwitchOnDelay8BitNode,
+    TimeSwitchOnDelay16BitNode,
+    TimeSwitchOnDelayFloatNode,
+)
+from view.show_mode.editor.nodes.impl.trigonometics import (
+    TrigonometricArcCosNode,
+    TrigonometricArcSinNode,
+    TrigonometricArcTanNode,
+    TrigonometricCosineNode,
+    TrigonometricSineNode,
+    TrigonometricTangentNode,
+)
 from view.show_mode.editor.nodes.impl.universenode import UniverseNode
-from view.show_mode.editor.nodes.impl.waves import SquareWaveNode, TriangleWaveNode, SawtoothWaveNode
+from view.show_mode.editor.nodes.impl.waves import SawtoothWaveNode, SquareWaveNode, TriangleWaveNode
 from view.show_mode.editor.nodes.import_node import ImportNode
 
 

@@ -13,8 +13,11 @@ from model.virtual_filters.cue_vfilter import CueFilter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.import_vfilter import ImportVFilter
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
-from model.virtual_filters.range_adapters import (ColorGlobalBrightnessMixinVFilter, EightBitToFloatRange,
-                                                  SixteenBitToFloatRange)
+from model.virtual_filters.range_adapters import (
+    ColorGlobalBrightnessMixinVFilter,
+    EightBitToFloatRange,
+    SixteenBitToFloatRange,
+)
 
 if TYPE_CHECKING:
     from model import Scene

@@ -1,9 +1,7 @@
 """manufacturers for fixtures"""
 import json
 import os.path
-from typing import TypedDict, cast, LiteralString
-
-from typing import NotRequired
+from typing import LiteralString, NotRequired, TypedDict, cast
 
 from model.ofl.fixture import Fixture, load_fixture
 

@@ -4,10 +4,13 @@ from xml.etree import ElementTree
 from controller.file.serializing.events_and_macros import _write_event_sender, _write_macro
 from controller.file.serializing.scene_serialization import generate_scene_xml_description
 from controller.file.serializing.ui_settings_serialization import _create_ui_hint_element
-from controller.file.serializing.universe_serialization import (_create_artnet_location_element,
-                                                                _create_fixture_element, _create_ftdi_location_element,
-                                                                _create_physical_location_element,
-                                                                _create_universe_element)
+from controller.file.serializing.universe_serialization import (
+    _create_artnet_location_element,
+    _create_fixture_element,
+    _create_ftdi_location_element,
+    _create_physical_location_element,
+    _create_universe_element,
+)
 from controller.utils.process_notifications import ProcessNotifier
 from model import BoardConfiguration
 from model.events import get_all_senders

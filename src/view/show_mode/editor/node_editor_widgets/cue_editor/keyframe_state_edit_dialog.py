@@ -1,10 +1,24 @@
 from PySide6.QtGui import QColor, QIcon
-from PySide6.QtWidgets import (QColorDialog, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QPushButton, QSpinBox,
-                               QWidget)
+from PySide6.QtWidgets import (
+    QColorDialog,
+    QComboBox,
+    QDialog,
+    QDoubleSpinBox,
+    QFormLayout,
+    QPushButton,
+    QSpinBox,
+    QWidget,
+)
 
 from model import ColorHSI
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (KeyFrame, State, StateColor, StateDouble,
-                                                                            StateEightBit, StateSixteenBit)
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (
+    KeyFrame,
+    State,
+    StateColor,
+    StateDouble,
+    StateEightBit,
+    StateSixteenBit,
+)
 
 
 class KeyFrameStateEditDialog(QDialog):

@@ -2,8 +2,17 @@
 """This file provides the main control widget for the filter stacking v-filter."""
 
 from PySide6.QtCore import QEvent, Qt
-from PySide6.QtWidgets import (QHBoxLayout, QMessageBox, QScrollArea, QSpinBox, QSplitter, QStackedWidget,
-                               QTreeWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QMessageBox,
+    QScrollArea,
+    QSpinBox,
+    QSplitter,
+    QStackedWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import Filter
 from model.ofl.fixture import UsedFixture

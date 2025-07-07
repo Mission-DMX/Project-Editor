@@ -1,8 +1,7 @@
 """Classes for remote connection"""
 from asyncio import IncompleteReadError
 from logging import Logger
-from socket import AF_INET6, SOCK_STREAM
-from socket import socket
+from socket import AF_INET6, SOCK_STREAM, socket
 from threading import Thread
 
 from controller.cli.cli_context import CLIContext

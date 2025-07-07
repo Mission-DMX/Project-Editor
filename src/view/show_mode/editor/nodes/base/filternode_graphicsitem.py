@@ -1,9 +1,9 @@
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from pyqtgraph.flowchart.Node import NodeGraphicsItem
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter
-from pyqtgraph.flowchart.Node import NodeGraphicsItem
 
 from model import DataType
 

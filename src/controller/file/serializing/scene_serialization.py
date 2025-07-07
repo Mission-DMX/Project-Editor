@@ -2,8 +2,10 @@
 from xml.etree import ElementTree
 
 from controller.file.serializing.bankset_config_serialization import _create_scene_bankset
-from controller.file.serializing.filter_serialization import (_create_filter_element_for_fish,
-                                                              create_channel_mappings_for_filter_set_for_fish)
+from controller.file.serializing.filter_serialization import (
+    _create_filter_element_for_fish,
+    create_channel_mappings_for_filter_set_for_fish,
+)
 from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 from controller.utils.process_notifications import ProcessNotifier
 from model import Scene, UIPage

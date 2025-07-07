@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QWidget
 
 from controller.network import NetworkManager
 from model import BoardConfiguration, Scene
+
 from .sceneswitchbutton import SceneSwitchButton
 from .ui_player_widget import UIPlayerWidget
 

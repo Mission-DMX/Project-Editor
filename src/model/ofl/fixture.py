@@ -7,12 +7,12 @@ from collections import defaultdict
 from collections.abc import Sequence
 from enum import Enum, IntFlag
 from logging import getLogger
-from typing import TYPE_CHECKING, Final, NotRequired, TypedDict, Any
+from typing import TYPE_CHECKING, Any, Final, NotRequired, TypedDict
 from uuid import UUID, uuid4
 
 import numpy as np
-from PySide6 import QtCore
 from numpy.typing import NDArray
+from PySide6 import QtCore
 
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 

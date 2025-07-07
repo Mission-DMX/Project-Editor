@@ -1,7 +1,15 @@
 import sys
 
-from PySide6.QtWidgets import (QDoubleSpinBox, QHBoxLayout, QLabel, QLineEdit, QListWidget, QPushButton, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (
+    QDoubleSpinBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration

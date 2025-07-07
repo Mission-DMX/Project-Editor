@@ -4,9 +4,23 @@ import os.path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QPushButton, QRadioButton, QScrollArea, QVBoxLayout, QWidget,
-                               QWizard)
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QCheckBox,
+    QComboBox,
+    QFormLayout,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+    QWizard,
+)
 
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene

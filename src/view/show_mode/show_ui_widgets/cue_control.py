@@ -3,8 +3,17 @@ from logging import getLogger
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QFormLayout, QHBoxLayout, QInputDialog, QLabel, QListWidget, QSpinBox, QToolBar,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QListWidget,
+    QSpinBox,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import Filter, UIPage, UIWidget
 from model.file_support.cue_state import CueState

@@ -3,8 +3,9 @@ from PySide6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
 from controller.joystick.joystick_handling import JoystickHandler
 from model import Filter, UIPage, UIWidget
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
-from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \
-    PanTiltConstantContentWidget
+from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import (
+    PanTiltConstantContentWidget,
+)
 
 
 class PanTiltConstantControlUIWidget(UIWidget):

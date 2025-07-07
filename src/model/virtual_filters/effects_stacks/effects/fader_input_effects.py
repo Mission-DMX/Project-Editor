@@ -7,8 +7,9 @@ from model import Filter
 from model.control_desk import ColorDeskColumn
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
-from view.show_mode.effect_stacks.configuration_widgets.fader_selection_configuration_widget import \
-    FaderSelectionConfigurationWidget
+from view.show_mode.effect_stacks.configuration_widgets.fader_selection_configuration_widget import (
+    FaderSelectionConfigurationWidget,
+)
 
 
 class ColorInputEffect(ColorEffect):

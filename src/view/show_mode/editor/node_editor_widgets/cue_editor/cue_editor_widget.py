@@ -3,9 +3,25 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog,
-                               QLabel, QMenu, QMessageBox, QPushButton, QScrollArea, QTableWidget, QTableWidgetItem,
-                               QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QFormLayout,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import DataType, Filter
@@ -17,8 +33,9 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog i
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
-from .model.cue_filter_model import CueFilterModel
+
 from ..node_editor_widget import NodeEditorFilterConfigWidget
+from .model.cue_filter_model import CueFilterModel
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode

@@ -1,14 +1,23 @@
 from logging import getLogger
 
-from PySide6.QtWidgets import (QColorDialog, QDoubleSpinBox, QHBoxLayout, QLabel, QPushButton, QSpinBox, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (
+    QColorDialog,
+    QDoubleSpinBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import BoardConfiguration, ColorHSI
 from model.filter import FilterTypeEnumeration
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog
-from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import \
-    PanTiltConstantContentWidget
+from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import (
+    PanTiltConstantContentWidget,
+)
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
 
 logger = getLogger(__file__)

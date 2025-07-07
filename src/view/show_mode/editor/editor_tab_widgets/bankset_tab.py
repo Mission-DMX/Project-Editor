@@ -1,7 +1,20 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-                               QListWidget, QListWidgetItem, QSpinBox, QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDoubleSpinBox,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QSpinBox,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import ColorHSI
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn

@@ -7,6 +7,7 @@ from : https://github.com/fmoo/python-varint/blob/master/varint.py
 """
 
 import sys
+
 # byte-oriented StringIO was moved to io.BytesIO in py3k
 from io import BytesIO
 

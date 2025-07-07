@@ -4,8 +4,18 @@ Usage: The key indicates the category of the effect and the list all containing 
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPaintEvent
-from PySide6.QtWidgets import (QCompleter, QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
-                               QSpacerItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QCompleter,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSpacerItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model.virtual_filters.effects_stacks.effect import Effect
 from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
