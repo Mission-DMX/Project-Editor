@@ -54,9 +54,8 @@ class FilterSelectionWidget(QTreeWidget):
         self._last_selected_item = None
 
         def is_filter_addable(filter_to_add: Filter) -> bool:
-            if len(self._allowed_filter_types) > 0:
-                if filter_to_add.filter_type not in self._allowed_filter_types:
-                    return False
+            if len(self._allowed_filter_types) > 0 and filter_to_add.filter_type not in self._allowed_filter_types:
+                return False
             return True
 
         def add_filter_item(filter_to_add: Filter, page_item):
@@ -95,10 +94,9 @@ class FilterSelectionWidget(QTreeWidget):
             add_filter_page(filter_page, None)
 
         for t_filter in target_scene.filters:
-            if t_filter not in already_added_filters:
-                if is_filter_addable(t_filter):
-                    self.insertTopLevelItem(fp_index, add_filter_item(t_filter, self.parent()))
-                    fp_index += 1
+            if t_filter not in already_added_filters and is_filter_addable(t_filter):
+                self.insertTopLevelItem(fp_index, add_filter_item(t_filter, self.parent()))
+                fp_index += 1
         return selected_filter_found
 
     def _find_selected_filter(self):
