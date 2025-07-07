@@ -59,6 +59,7 @@ class NodeEditorFilterConfigWidget(ABC):
             filter_node -- might be used to alter the filter being presented."""
         filter_node.update_node_after_settings_changed()
 
+    @abstractmethod
     def parent_opened(self):
         """This method might be overridden to listen for parent open events."""
         pass
