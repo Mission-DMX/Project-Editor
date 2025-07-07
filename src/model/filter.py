@@ -252,7 +252,7 @@ class Filter:
                                                   pos=self._pos)
             f.filter_configurations.update(self.filter_configurations.copy())
         else:
-            f = Filter(new_scene if new_scene else self.scene, self._filter_id if not new_id else new_id,
+            f = Filter(new_scene if new_scene else self.scene, new_id if new_id else self._filter_id,
                        self._filter_type, self._pos, self.filter_configurations.copy())
         f._channel_links = self.channel_links.copy()
         f._initial_parameters = self.initial_parameters.copy()
