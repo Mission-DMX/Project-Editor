@@ -71,7 +71,7 @@ class FilterNode(Node):
             return
 
         try:
-            if not self.filter.in_data_types[localTerm.name()] == remote_node.filter.out_data_types[remoteTerm.name()]:
+            if self.filter.in_data_types[localTerm.name()] != remote_node.filter.out_data_types[remoteTerm.name()]:
                 logger.warning("Tried to connect incompatible filter channels. Forced disconnection.")
                 localTerm.disconnectFrom(remoteTerm)
                 return

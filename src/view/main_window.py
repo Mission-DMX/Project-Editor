@@ -303,7 +303,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Dialog modify tho selected Column"""
         active_bank_set = BankSet.active_bank_set()
         column = active_bank_set.get_column(index)
-        if not active_bank_set.active_column == column:
+        if active_bank_set.active_column != column:
             if active_bank_set.active_column:
                 self._broadcaster.view_change_colum_select.emit()
             active_bank_set.set_active_column(column)

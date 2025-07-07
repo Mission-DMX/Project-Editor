@@ -97,7 +97,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     def start(self, active: bool = False) -> None:
         """establish connection with current fish socket"""
-        if not self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
+        if self._socket.state() != QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             logger.info("connect local socket to Server: %s", self._server_name)
             self._socket.connectToServer(self._server_name)
             if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:

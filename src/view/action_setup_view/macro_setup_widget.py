@@ -253,7 +253,7 @@ class MacroSetupWidget(QSplitter):
         if not isinstance(self._dialog, QFileDialog):
             logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
         file_name = self._dialog.selectedFiles()[0]
-        if not os.path.splitext(file_name)[1] == ".macro":
+        if os.path.splitext(file_name)[1] != ".macro":
             file_name += ".macro"
         with open(file_name, "w") as f:
             f.write(self._selected_macro.content)
