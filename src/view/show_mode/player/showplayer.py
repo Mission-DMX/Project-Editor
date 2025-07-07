@@ -79,11 +79,10 @@ class ShowPlayerWidget(QWidget):
 
     def _reload(self):
         """Reloads all scene widgets by filling up emtpty spaces"""
-        index = 0
         max_height = 0
         last_height = 0
         last_width = 0
-        for scene_widget in self._grid:
+        for index, scene_widget in enumerate(self._grid):
             column, row = self._index_to_position(index)
             height = row * scene_widget.height + 5
             last_height = scene_widget.height
@@ -91,7 +90,6 @@ class ShowPlayerWidget(QWidget):
             last_width = column * scene_widget.width + 5
             scene_widget.move(last_width, height)
             last_width += scene_widget.width
-            index += 1
         max_height += last_height
         # self._ui_container.move(0, max_height + 5)
         self._ui_container.move(last_width + 5, 5)

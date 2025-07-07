@@ -160,13 +160,12 @@ class ShowBrowser:
         bankset_item.annotated_data = s.linked_bankset
         if len(s.ui_pages) < 1:
             s.ui_pages.append(UIPage(s))
-        i = 0
-        for ui_page in s.ui_pages:
-            i += 1
+
+        for i, ui_page in enumerate(s.ui_pages, start=1):
             uipage_item = AnnotatedTreeWidgetItem(item)
             uipage_item.setText(0, f"UI Page {i} '{ui_page.title}'")
             uipage_item.setIcon(0, ShowBrowser._uipage_icon)
-            uipage_item.setText(1, str(len(ui_page.widgets)) + " widgets")
+            uipage_item.setText(1, f"{len(ui_page.widgets)} widgets")
             uipage_item.annotated_data = ui_page
         for fp in s.pages:
             add_filter_page(item, fp)
