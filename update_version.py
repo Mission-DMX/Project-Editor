@@ -4,7 +4,7 @@ import sys
 import tomlkit
 
 # Load pyproject.toml
-with open('pyproject.toml', 'r', encoding="UTF-8") as f:
+with open('pyproject.toml', encoding="UTF-8") as f:
     data = tomlkit.load(f)
 
 # Get current version and split into parts
