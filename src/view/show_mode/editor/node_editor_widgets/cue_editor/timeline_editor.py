@@ -95,8 +95,8 @@ class TimelineContainer(QWidget):
         p = self._keyframes_panel.cursor_position
         f = KeyFrame(self._cue)
         f.timestamp = p
-        i = 0
-        for c in self._cue.channels:
+
+        for i, c in enumerate(self._cue.channels):
             match c[1]:
                 case DataType.DT_8_BIT:
                     s = StateEightBit(self._current_transition_type)
@@ -125,7 +125,7 @@ class TimelineContainer(QWidget):
                 case _:
                     s = StateEightBit(self._current_transition_type)
             f.append_state(s)
-            i += 1
+
         self._keyframes_panel.insert_frame(f)
 
     def format_zoom(self) -> str:

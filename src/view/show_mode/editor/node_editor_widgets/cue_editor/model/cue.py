@@ -224,8 +224,8 @@ class KeyFrame:
             raise ArgumentError("A keyframe definition should contain exactly two elements")
         f = KeyFrame(parent_cue)
         f.timestamp = float(parts[0])
-        i = 0
-        for state_dev in parts[1].split('&'):
+
+        for i, state_dev in enumerate(parts[1].split('&')):
             state_dev_parts = state_dev.split('@')
             if i >= len(channel_data_types):
                 if i == 0 and len(channel_data_types) == 0:
@@ -245,7 +245,7 @@ class KeyFrame:
                     raise ArgumentError(f"Unsupported filter data type: {state_dev_parts[1]}")
             s_entry.decode(state_dev)
             f._states.append(s_entry)
-            i += 1
+
         return f
 
     def append_state(self, s: State):

@@ -97,25 +97,24 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             return
         output_channel_list = target.out_data_types.keys()
         self._rename_table_widget.setRowCount(len(output_channel_list))
-        i = 0
-        for channel_name in output_channel_list:
+
+        for row, channel_name in enumerate(output_channel_list):
             new_name = self._rename_dict.get(channel_name)
             enabled_item = QTableWidgetItem()
             enabled_item.setFlags(enabled_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
-            self._rename_table_widget.setItem(i, 0, enabled_item)
+            self._rename_table_widget.setItem(row, 0, enabled_item)
             cb = QCheckBox()
             cb.setCheckState(Qt.CheckState.Checked if new_name != "" else Qt.CheckState.Unchecked)
             self._enabled_cb_dict[channel_name] = cb
-            self._rename_table_widget.setCellWidget(i, 0, cb)
+            self._rename_table_widget.setCellWidget(row, 0, cb)
             orig_name_item = QTableWidgetItem(channel_name)
             orig_name_item.setFlags(
                 orig_name_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
-            self._rename_table_widget.setItem(i, 1, orig_name_item)
+            self._rename_table_widget.setItem(row, 1, orig_name_item)
             new_name_item = QTableWidgetItem(new_name if new_name is not None and new_name != "" else channel_name)
             new_name_item.setFlags(new_name_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             self._new_name_item_dict[channel_name] = new_name_item
-            self._rename_table_widget.setItem(i, 2, new_name_item)
-            i += 1
+            self._rename_table_widget.setItem(row, 2, new_name_item)
 
     def _selection_changed(self):
         self._tree_widget.setEnabled(False)

@@ -52,13 +52,12 @@ class TimelineContentWidget(QWidget):
         painter.fillRect(0, 0, w, h, QColor.fromRgb(0x3A, 0x3A, 0x3A))
 
         # render transitions
-        i = 0
+
         channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
-        for _ in self._channels:
+        for i, _ in enumerate(self._channels):
             if (i % 2) == 0:
                 painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
                                  channel_background_color)
-            i += 1
 
         if self.isEnabled():
             marker_color = QColor.fromRgb(0xFF, 0xFF, 0x00)
