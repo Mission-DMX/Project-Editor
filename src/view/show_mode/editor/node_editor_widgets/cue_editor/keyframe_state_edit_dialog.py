@@ -60,7 +60,7 @@ class KeyFrameStateEditDialog(QDialog):
         self._repaint_function = repaint_function
 
     def _ok_pressed(self):
-        if isinstance(self._input, QSpinBox) or isinstance(self._input, QDoubleSpinBox):
+        if isinstance(self._input, (QSpinBox, QDoubleSpinBox)):
             self._state._value = self._input.value()
         else:
             c = self._input.currentColor().toHsl()
