@@ -10,7 +10,7 @@ class State(Enum):
     PAUSE = 3
 
 
-class CueState():
+class CueState:
     def __init__(self, filter):
         self._filter = filter
         self._state = State.STOP
