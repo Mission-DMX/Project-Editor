@@ -1,4 +1,3 @@
-
 """This file provides the universe browser widget."""
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeWidget
@@ -41,10 +40,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
         if self._show:
             for universe in self._show.universes:
                 item = AnnotatedTreeWidgetItem(self)
-                if self._show_selection_checkboxes:
-                    column_offset = 1
-                else:
-                    column_offset = 0
+                column_offset = 1 if self._show_selection_checkboxes else 0
                 item.setText(0 + column_offset, str(universe.id))
                 item.setText(1 + column_offset, str(universe.name))
                 item.setText(2 + column_offset, location_to_string(universe.location))
