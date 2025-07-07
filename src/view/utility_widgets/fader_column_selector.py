@@ -1,7 +1,6 @@
 
 """This file provides a widget to browse bank set columns."""
 from logging import getLogger
-from typing import Type
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QCheckBox, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
@@ -17,7 +16,7 @@ class FaderColumnSelectorWidget(QWidget):
 
     selection_changed = Signal(DeskColumn)
 
-    def __init__(self, parent: QWidget | None = None, column_filter: Type[DeskColumn] | None = None,
+    def __init__(self, parent: QWidget | None = None, column_filter: type[DeskColumn] | None = None,
                  base_set: BankSet | None = None):
         """Construct a new browser widget.
 

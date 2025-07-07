@@ -1,5 +1,4 @@
 """A scene can have multiple pages"""
-from typing import Type
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QMouseEvent
@@ -73,7 +72,7 @@ class SceneUIPageEditorWidget(QWidget):
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
         self._add_generic_widget(config_widget, pos)
 
-    def _inst_generic_widget(self, widget_def: tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]],
+    def _inst_generic_widget(self, widget_def: tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]]],
                              pos: QPoint):
         config_widget = widget_def[1](self._ui_page, {})
         key_filters = widget_def[2]

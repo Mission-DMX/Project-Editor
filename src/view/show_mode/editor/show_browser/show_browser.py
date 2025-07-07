@@ -1,7 +1,6 @@
 
 """This file provides the ShowBrowser widget."""
 import os.path
-from typing import List
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QIcon
@@ -231,7 +230,7 @@ class ShowBrowser:
         menu.addAction(add_ui_page_action)
         menu.show()
 
-    def _delete_scenes_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
+    def _delete_scenes_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]):
         self._input_dialog = QMessageBox()
         self._input_dialog.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel)
         self._input_dialog.setDefaultButton(QMessageBox.StandardButton.Cancel)
@@ -243,7 +242,7 @@ class ShowBrowser:
             f"Do you really want to delete the scene {", ".join([f"'{item.text(1)}'" for item in items])}?")
         self._input_dialog.show()
 
-    def _delete_scenes_from_context_menu_accepted(self, items: List[AnnotatedTreeWidgetItem]):
+    def _delete_scenes_from_context_menu_accepted(self, items: list[AnnotatedTreeWidgetItem]):
         if self._input_dialog:
             self._input_dialog.close()
             self._input_dialog = None
@@ -255,7 +254,7 @@ class ShowBrowser:
                     del si
         self._refresh_scene_browser()
 
-    def _rename_scene_from_context_menu(self, items: List[AnnotatedTreeWidgetItem]):
+    def _rename_scene_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]):
         def rename(c, scene: Scene | FilterPage, text):
             if isinstance(scene, Scene):
                 scene.human_readable_name = text

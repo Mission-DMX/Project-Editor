@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-from typing import Type
 
 from sdl2.ext.compat import deprecated
 
@@ -19,7 +18,7 @@ The widget library contains information about widgets, provided by their slug. T
 out of the human readable name, the type required to instantiate a requested widget, the supported filter types (that
 should be selected for construction) and a number indicating how many filters should be selected.
 """
-WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumeration]]]] = {
+WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]]]] = {
     "autotracker": ("Auto Tracker", AutoTrackerUIWidget,
                     [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]]),
     "buttonarray": ("Button Array", ButtonsWithValueSubmit, [

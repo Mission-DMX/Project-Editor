@@ -1,7 +1,6 @@
 """widget for logging_view"""
 import json
 import logging
-from typing import List
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
@@ -65,7 +64,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
         self._tree.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._tree.setLayout(QtWidgets.QVBoxLayout())
 
-        self._log_items: List[LoggingItemWidget] = []
+        self._log_items: list[LoggingItemWidget] = []
 
         container_layout = QtWidgets.QVBoxLayout()
         container_layout.addWidget(select_bar)
