@@ -48,7 +48,7 @@ def _handle_incoming_sender_update(msg: "event_sender"):
             case "fish.builtin.macrokeypad":
                 raise NotImplementedError()
             case _:
-                logger.error("Unexpaected event sender type: '%s'",msg.type)
+                logger.error("Unexpaected event sender type: '%s'", msg.type)
                 return
         _senders[msg.name] = ev
         _senders_by_id[msg.sender_id] = ev
@@ -67,6 +67,7 @@ def _handle_incoming_sender_update(msg: "event_sender"):
 
 class EventSender:
     """Base class for fish event sender representations. Also used for fish.builtin.plain"""
+
     def __init__(self, name: str):
         """Create a new event sender.
         :param name: The name to give it. This cannot be changed later on."""
@@ -151,7 +152,7 @@ class XtouchGPIOEventSender(EventSender):
         self.configuration["expression_pedal_threshold"] = str(new_value)
 
 
-def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] = []):
+def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] = None):
     """Insert an event in fish.
 
     :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will
@@ -165,6 +166,9 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
         return
     if event_type not in ['single', 'release', 'start']:
         raise ValueError(f"Unsupported event type. Must be one of single, release or start but is '{event_type}'.")
+    if arguments is None:
+        arguments = []
+
     ev = event()
     ev.sender_id = sender_id
     ev.sender_function = sender_function
@@ -179,10 +183,12 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
     _network_manager.send_event_message(ev)
 
 
-def mark_sender_persistent(name: str, renamings: dict[tuple[int, int, str], str] = {}):
+def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] = None):
+    if renaming is None:
+        renaming = {}
     sender = get_sender(name)
     if sender is not None:
         sender.persistent = True
-        sender.renamed_events.update(renamings)
+        sender.renamed_events.update(renaming)
     else:
-        _persistence_notes[name] = renamings.copy()
+        _persistence_notes[name] = renaming.copy()
