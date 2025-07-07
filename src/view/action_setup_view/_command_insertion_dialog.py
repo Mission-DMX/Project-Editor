@@ -7,7 +7,6 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 
 class _CommandInsertionDialog(QDialog):
-
     """This class provides a foundation for command insertion dialogs."""
 
     def __init__(self, parent: QWidget, macro: Macro, supported_filter_list: list[FilterTypeEnumeration],
@@ -33,9 +32,7 @@ class _CommandInsertionDialog(QDialog):
         self._filter_selection.setEnabled(False)
         self._filter_selection.selected_filter_changed.connect(self._filter_selected)
 
-        self._button_box = QDialogButtonBox(
-            (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        )
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.rejected.connect(self.close)
         self._button_box.accepted.connect(self._apply)
         self._button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)

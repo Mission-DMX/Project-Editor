@@ -6,7 +6,6 @@ from model.macro import Macro, Trigger, trigger_factory
 
 
 class _NewTriggerDialog(QDialog):
-
     """
     Dialog to add new macro triggers.
     Upon Accept this dialog adds the new trigger to the provided macro on its own.
@@ -17,9 +16,7 @@ class _NewTriggerDialog(QDialog):
         self._macro = macro
         self.setModal(True)
         self.setWindowTitle(f"Add Trigger to Macro {macro.name}")
-        self._button_box = QDialogButtonBox(
-            (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        )
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.rejected.connect(self.close)
         self._button_box.accepted.connect(self._apply)
         layout = QFormLayout()
