@@ -41,10 +41,9 @@ class UIPlayerWidget(QWidget):
         self._page_combo_box.clear()
         if self._scene is None:
             return
-        i = 0
-        for page in self._scene.ui_pages:
+
+        for i, page in enumerate(self._scene.ui_pages):
             self._page_combo_box.addItem(f"[{i + 1}] {page.title}", i)
-            i += 1
 
     def _update_page(self):
         for w in self._widgets:
