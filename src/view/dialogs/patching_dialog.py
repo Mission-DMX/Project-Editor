@@ -103,7 +103,7 @@ class PatchingDialog(QtWidgets.QDialog):
         """generate a used Fixture list from Patching information"""
 
         start_index = self.patching_information.channel
-        for index in range(self.patching_information.count):
+        for _ in range(self.patching_information.count):
             used_fixture = make_used_fixture(self._board_configuration, self._patching_information.fixture,
                                              self._select_mode.currentIndex(),
                                              self.patching_information.universe, start_index)
