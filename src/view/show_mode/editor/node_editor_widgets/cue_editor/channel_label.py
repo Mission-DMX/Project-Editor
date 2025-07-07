@@ -49,14 +49,13 @@ class TimelineChannelLabel(QWidget):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillRect(0, 0, w, h, QColor.fromRgb(0x3A, 0x3A, 0x3A))
-        i = 0
+
         channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
-        for channel_name in self._names:
+        for i, channel_name in enumerate(self._names):
             if (i % 2) == 0:
                 painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
                                  channel_background_color)
             painter.drawText(5, 45 + i * CHANNEL_DISPLAY_HEIGHT, channel_name)
             if len(self._types) > i:
                 painter.drawText(10, 60 + i * CHANNEL_DISPLAY_HEIGHT, self._types[i])
-            i += 1
         painter.end()
