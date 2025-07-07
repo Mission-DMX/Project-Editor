@@ -1,9 +1,9 @@
-from typing import TYPE_CHECKING
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
-from pyqtgraph.flowchart.Node import NodeGraphicsItem
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter
+from pyqtgraph.flowchart.Node import NodeGraphicsItem
 
 from model import DataType
 
@@ -38,7 +38,7 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
         y_inp = self.titleOffset() * 4 + 35
         y_outp = self.titleOffset() * 4 + 35
         node_width = self.bounds.width()
-        for terminal_id, terminal_tuple in self.terminals.items():
+        for terminal_tuple in self.terminals.values():
             terminal, _ = terminal_tuple
             if not self.node.filter:
                 return
