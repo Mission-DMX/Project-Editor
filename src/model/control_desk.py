@@ -395,11 +395,12 @@ class BankSet:
         self.active_bank = min(self.active_bank, bank_set_size - 1)
         old_set_id: str = self.id
 
-        if self.is_linked:
-            # new_id = _generate_unique_id()
-            new_id = old_set_id
-        else:
-            new_id = old_set_id
+        # if self.is_linked:
+        #    # new_id = _generate_unique_id()
+        #    new_id = old_set_id
+        # else:
+        #    new_id = old_set_id
+        new_id = old_set_id
         # TODO find out if we actually really need to change the ID as this messes with the filters
         BankSet._fish_connector.send_add_fader_bank_set_message(new_id, self.active_bank, self.banks)
         if self.pushed_to_fish:
