@@ -1,4 +1,3 @@
-
 """This file provides the v-filter implementation of the effects stack system"""
 
 from logging import getLogger
@@ -60,8 +59,8 @@ class EffectsStack(VirtualFilter):
                             segmentation_outputs = emplace_with_adapter(segmentation_effect,
                                                                         EffectType.ENABLED_SEGMENTS,
                                                                         filter_list, filter_prefix)
-                            i = 0
-                            for segment_number, segment_out_port in segmentation_outputs.items():
+
+                            for i, segment_number, segment_out_port in enumerate(segmentation_outputs.items()):
                                 color_index = i % len(output_dict["color"])
                                 seg_split_filter_name = (f"{self.filter_id}__universeoutput__segmentsplitter_"
                                                          f"{socket_target.parent_universe}_"
@@ -83,7 +82,6 @@ class EffectsStack(VirtualFilter):
                                 combination_filter.channel_links["i"] = seg_split_filter_name + "_multiply:value"
                                 filter_list.append(combination_filter)
                                 output_dict["color"][color_index] = seg_split_filter_name + "_combine:value"
-                                i += 1
 
                     color_adapter_name_base = f"{filter_prefix}__color_adapter_property"
                     color_support_of_target = socket_target.color_support

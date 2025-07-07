@@ -10,6 +10,7 @@ from model.color_hsi import ColorHSI
 if TYPE_CHECKING:
     from controller.network import NetworkManager
 
+
 def _generate_unique_id() -> str:
     return str(uuid4())
 
@@ -509,14 +510,13 @@ class BankSet:
             return False
         if not BankSet._fish_connector.is_running:
             return False
-        i = 0
+
         found_index = -1
-        for linked_bank in BankSet._linked_bank_sets:
+        for i, linked_bank in enumerate(BankSet._linked_bank_sets):
             if linked_bank.id == self.id:
                 found_index = i
                 break
 
-            i += 1
         if found_index != -1:
             BankSet._fish_connector.send_fader_bank_set_delete_message(self.id)
             BankSet._linked_bank_sets.pop(found_index)

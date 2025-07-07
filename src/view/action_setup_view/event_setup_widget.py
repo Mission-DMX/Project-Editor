@@ -105,8 +105,8 @@ class _SenderConfigurationWidget(QScrollArea):
         self._rename_table.clear()
         rename_items = self._sender.renamed_events.items()
         self._rename_table.setRowCount(len(rename_items))
-        i = 0
-        for k, v in rename_items:
+
+        for i, k, v in enumerate(rename_items):
             name_item = AnnotatedTableWidgetItem(v)
             name_item.annotated_data = k
             ev_type_item = QTableWidgetItem(_type_to_string(k[0]))
@@ -120,7 +120,6 @@ class _SenderConfigurationWidget(QScrollArea):
             self._rename_table.setItem(i, 1, ev_type_item)
             self._rename_table.setItem(i, 2, s_function_item)
             self._rename_table.setItem(i, 3, args_item)
-            i += 1
 
     def _debug_enabled_checked_changed(self, *args, **kwargs):
         if self._sender is not None:

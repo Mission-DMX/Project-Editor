@@ -351,10 +351,10 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
             ui_widget = filter_to_ui_widget(filters[0], page, conf)
         else:
             ui_widget = widget_cdef[1](page, conf)
-        i = 0
-        for f in filters:
+
+        for i, f in enumerate(filters):
             ui_widget.set_filter(f, i)
-            i += 1
+
         ui_widget.position = (pos_x, pos_y)
         ui_widget.size = (w, h)
         page.append_widget(ui_widget)

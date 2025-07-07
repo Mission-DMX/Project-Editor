@@ -74,12 +74,11 @@ class BankSetCommand(Command):
                 if not self.context.selected_bank:
                     self.context.print("ERROR: No bank set selected. Create or select one first.")
                     return False
-                bank_index = 0
+
                 self.context.print(
                     f"The selected bank set contains {len(self.context.selected_bank.banks)} banks.")
-                for bank in self.context.selected_bank.banks:
-                    column_index = 0
-                    for column in bank.columns:
+                for bank_index, bank in enumerate(self.context.selected_bank.banks):
+                    for column_index, column in enumerate(bank.columns):
                         col_type_str = "???"
                         if isinstance(column, ColorDeskColumn):
                             col_type_str = "HSI"
@@ -87,8 +86,7 @@ class BankSetCommand(Command):
                             col_type_str = "RAW"
                         self.context.print(
                             str(bank_index) + "/" + str(column_index) + " " + col_type_str + " " + column.display_name)
-                        column_index += 1
-                    bank_index += 1
+
             case "activate":
                 if not self.context.selected_bank:
                     self.context.print("ERROR: No bank set selected. Create or select one first.")
