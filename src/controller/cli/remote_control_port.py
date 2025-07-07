@@ -128,7 +128,7 @@ class Connection:
                 else:
                     self.context.exec_command(line)
                 self._client.send(self.context.fetch_print_buffer().encode("utf-8"))
-        except socket_error:
+        except OSError:
             pass
         except UnicodeDecodeError as e:
             self._client.send("Unable to decode command. Exiting.")
@@ -190,7 +190,7 @@ class RemoteCLIServer:
                                                                          self._show, self._network_manager)
                 except TimeoutError:
                     pass
-                except socket_error as e:
+                except OSError as e:
                     logger.error("CLI socket error: %s", e)
             s.close()
         logger.info("Exiting CLI server thread")
