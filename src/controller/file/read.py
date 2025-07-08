@@ -446,7 +446,8 @@ def _parse_initial_parameters(initial_parameters_element: ElementTree.Element, f
     filter_.initial_parameters[ip_key] = ip_value
 
 
-def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter, fc: dict[str, str]) -> None:
+def _parse_filter_configuration(filter_configuration_element: ElementTree.Element, filter_: Filter,
+                                fc: dict[str, str]) -> None:
     """
     Load the configuration of a filter.
     :param filter_configuration_element: The XML data to load the configuration from
