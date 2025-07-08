@@ -7,17 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup PDM
-        uses: pdm-project/setup-pdm@v4
+      - name: Test with ruff
+        uses: astral-sh/ruff-action@v3
         with:
-          cache: true
-          python-version-file: pyproject.toml
+          src: "./src"
 
-      - name: Install dependencies
-        run: pdm install --dev
 
-      - name: Check Import Order with isort
-        uses: isort/isort-action@v1
-      - name: Analysing the code with pylint
-        run: |
-          pdm run pylint --fail-under=8 src/

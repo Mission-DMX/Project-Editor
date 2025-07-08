@@ -58,8 +58,8 @@ line-length = 120
 exclude = ["src/proto", "src/controller/autotrack", "test/", "src/view/utility_widgets/wizzards/theater_scene_wizard.py"]
 
 [tool.ruff.lint]
-select = ["E", "F"]
 ignore = ["E722", "F401"]
+select = ["E", "F", "UP", "I"]
 
 [tool.isort]
 profile = "black"
