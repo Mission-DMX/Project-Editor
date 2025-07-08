@@ -1,5 +1,6 @@
 import asyncio
 import threading
+from logging import getLogger
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QPushButton, QSlider
@@ -8,6 +9,8 @@ from controller.autotrack.Calibration.MappingCalibration import MappingCalibrati
 from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
 from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+
+logger = getLogger(__name__)
 
 
 class LightSetupTab(GuiTab):
@@ -126,7 +129,7 @@ class LightSetupTab(GuiTab):
             for j in range(grid_size):
                 item = [((1 + i) * w + x, (1 + j) * h + y), (0, 0)]
                 self._calibration_points.append(item)
-        print(self._calibration_points)
+        logger.info(self._calibration_points)
 
     async def _async_btn_frame_pressed(self):
         await self.instance.settings.lights.frame(
@@ -145,7 +148,7 @@ class LightSetupTab(GuiTab):
             await self.instance.settings.lights.frame(
                 2000, self.instance.settings.lights.corners
             )
-            print("Asyncio code running in worker thread")
+            logger.info("Asyncio code running in worker thread")
 
         # Run the asyncio function
         event_loop.run_until_complete(my_async_function(self))
@@ -157,8 +160,8 @@ class LightSetupTab(GuiTab):
             self.sliderx1.value(),
             self.sliderx2.value(),
         ]
-        print(f"Button {self.buttons.index(button)} gedrückt")
-        print(self.instance.settings.lights.corners)
+        logger.info(f"Button {self.buttons.index(button)} gedrückt")
+        logger.info(self.instance.settings.lights.corners)
 
     def slider_changed(self):
         asyncio.run(self._async_slider())
@@ -181,7 +184,7 @@ class LightSetupTab(GuiTab):
         x, y = click_position.x(), click_position.y()
 
         # Display the position in the console
-        print(f"Mouse clicked at position (x: {x}, y: {y})")
+        logger.info(f"Mouse clicked at position (x: {x}, y: {y})")
 
         # h, w, _ = self.last_image.shape
 
@@ -264,8 +267,8 @@ class LightSetupTab(GuiTab):
         self._calibration_points[self._calibration_step][1] = (x, y)
         self._calibration_step = self._calibration_step + 1
         self.move_calibration_light(self._calibration_step)
-        print(self._calibration_points)
-        print(f"{self._calibration_step}:{len(self._calibration_points)}")
+        logger.info(self._calibration_points)
+        logger.info(f"{self._calibration_step}:{len(self._calibration_points)}")
         if self._calibration_step >= len(self._calibration_points) - 1:
             self._calibration_running = False
             self.instance.settings.map = MappingCalibration(self._calibration_points)

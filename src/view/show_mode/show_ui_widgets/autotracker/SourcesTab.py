@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLayout, QPushButton, QVBoxLayout
 
 from controller.autotrack.Helpers.ImageHelper import cv2qim
@@ -7,6 +9,8 @@ from controller.autotrack.Sources.CameraLoader import CameraLoader
 from controller.autotrack.Sources.FileLoader import FileLoader
 from controller.autotrack.Sources.FrameManager import FrameManager
 from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+
+logger = getLogger(__name__)
 
 
 class SourcesTab(GuiTab):
@@ -64,12 +68,9 @@ class SourcesTab(GuiTab):
         self.frame_thread.start()
 
     def load_webcam(self):
-        print("click")
-
         dlg = WebcamSelector()
         dlg.exec_()
         selected_index = dlg.combo_box.currentIndex()
-        print(selected_index)
         loader = CameraLoader(selected_index)
         self.instance.set_loader(loader)
         self.frame_thread.change_loader(loader)
@@ -118,7 +119,6 @@ class SourcesTab(GuiTab):
             options=options,
         )
         if file_name:
-            print(file_name)
             loader = FileLoader(True)
             loader.load_file(path=file_name)
             self.instance.set_loader(loader)
@@ -167,4 +167,4 @@ class WebcamSelector(QDialog):
     def start_webcam(self):
         selected_index = self.combo_box.currentIndex()
         if selected_index >= 0:
-            print(f"selected webcam {selected_index}")
+            logger.info(f"Selected webcam {selected_index}")

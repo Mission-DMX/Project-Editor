@@ -100,7 +100,6 @@ class ConstantNumberButtonList(UIWidget):
     def _set_value(self, new_value: int | float):
         self._value = new_value
         self.push_update()
-        print("Pushed update", new_value)
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", str(self._value))]

@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QCheckBox, QVBoxLayout, QWidget
@@ -11,6 +12,8 @@ from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_consta
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes import FilterNode
+
+logger = getLogger(__name__)
 
 
 class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
@@ -42,10 +45,11 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
                 if key == "outputs":
                     self._filter.filter_configurations["outputs"] = value
                 else:
-                    print("wrong key: ", key)
+                    logger.error(f"Unknown configuration key: {key}")
+
                     return False
             except:
-                print("error parsing configuration, value: ", value, " for param: ", key)
+                logger.info("error parsing configuration, value: %s for param: %s", value, key)
                 return False
         return True
 
@@ -60,10 +64,10 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
                 elif key == "tilt":
                     self._filter.tilt = float(value)
                 else:
-                    print("wrong key: ", key)
+                    logger.info("wrong key: %s", key)
                     return False
             except:
-                print("error parsing parameter, value: ", value, " for param: ", key)
+                logger.info("error parsing parameter, value: %s for param: %s", value, key)
                 return False
         return True
 

@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from PySide6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
 
 from controller.joystick.joystick_handling import JoystickHandler
@@ -6,6 +8,8 @@ from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import (
     PanTiltConstantContentWidget,
 )
+
+logger = getLogger(__name__)
 
 
 class PanTiltConstantControlUIWidget(UIWidget):
@@ -23,7 +27,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         super().set_filter(f, i)
         self.associated_filters["pan_tilt_vfilter_fid"] = f.filter_id
         if not isinstance(f, PanTiltConstantFilter):
-            print("the filter has to be a PanTiltConstantFilter")
+            logger.info("the filter has to be a PanTiltConstantFilter")
         self._filter = f
         self._filter.register_observer(self, self.insert_action)
 

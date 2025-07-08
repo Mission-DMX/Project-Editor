@@ -1,4 +1,5 @@
 import asyncio
+from logging import getLogger
 
 from PySide6.QtWidgets import QCheckBox, QGridLayout, QLabel, QLayout
 
@@ -8,6 +9,8 @@ from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
 from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
 from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+
+logger = getLogger(__name__)
 
 
 class DetectionTab(GuiTab):
@@ -69,7 +72,7 @@ class DetectionTab(GuiTab):
             # h, w, _ = frame.shape
             x1, y1, x2, y2 = max_detection["box"]
             p = (int(x1 + (x2 - x1) / 2), int(y1 + (y2 - y1) / 2))
-            print(f"{p}")
+            logger.info(str(p))
             # c = ImageHelper.map_image(x, y, w, h, self.instance.settings.lights.corners)
             c = self.instance.settings.map.get_point(p)
             asyncio.run(self._asy_mouse(c))

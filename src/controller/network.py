@@ -383,9 +383,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         if scene.linked_bankset:
             # Todo: Error while calling with cli
             scene.linked_bankset.activate(out_of_thread=True)
-            print("Activated Bankset")
-        else:
-            print("No Bankset.")
+
         msg = proto.FilterMode_pb2.enter_scene(scene_id=scene.scene_id)
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ENTER_SCENE,
                                push_direct=push_direct)
