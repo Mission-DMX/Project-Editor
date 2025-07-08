@@ -30,7 +30,7 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
         self._comment_expression = QRegularExpression("(#.+)|#")
         self._mappings[self._comment_expression] = self._comment_format
 
-    def highlightBlock(self, text, /):
+    def highlightBlock(self, text, /) -> None:
         """This method gets called for every text block. It sets the formats on it"""
         for pattern, fmt in self._mappings.items():
             iter = pattern.globalMatch(text)

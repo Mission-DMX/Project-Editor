@@ -37,7 +37,7 @@ class _WaveRenderer(PlotWidget):
         self._data_line.setPen(mkPen(width=3, color="#CC00AA"))
         self.setBackground(QPalette().color(QPalette.ColorGroup.Normal, QPalette.ColorRole.Window))
 
-    def replot(self):
+    def replot(self) -> None:
         steps = 3600
         x = numpy.linspace(0.0, 360.0, steps, dtype=numpy.float32)
         if self._curve_configuration.append_features_using_addition:
@@ -124,7 +124,7 @@ class _WaveRenderer(PlotWidget):
         return self._curve_configuration
 
     @curve_config.setter
-    def curve_config(self, new_config: CurveConfiguration):
+    def curve_config(self, new_config: CurveConfiguration) -> None:
         self._curve_configuration = new_config
         self.replot()
 
@@ -182,7 +182,7 @@ class CurveEditorWidget(QWidget):
 
         self.setLayout(layout)
 
-    def _load_values_from_config(self):
+    def _load_values_from_config(self) -> None:
         self._loading_values = True
         self._base_amplitude_edit.setValue(self._config.base_amplitude)
         self._base_phase_edit.setValue(self._config.base_phase)
@@ -204,7 +204,7 @@ class CurveEditorWidget(QWidget):
     def get_wave_config(self) -> CurveConfiguration:
         return self._config
 
-    def _update_values_from_gui(self):
+    def _update_values_from_gui(self) -> None:
         if self._loading_values:
             return
         self._config.base_phase = self._base_phase_edit.value()

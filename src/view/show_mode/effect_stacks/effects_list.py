@@ -47,23 +47,23 @@ class _EffectSeparator(QWidget):
         self._text = text
         self.setFont(self.font())
 
-    def setFont(self, arg__1):
+    def setFont(self, arg__1) -> None:
         super().setFont(arg__1)
         fm = self.fontMetrics()
         self.setMinimumHeight(fm.height() + 2)
         self.setMinimumWidth(fm.horizontalAdvance(self._text) + 10)
 
-    def add_child(self, c: QWidget):
+    def add_child(self, c: QWidget) -> None:
         self._children.append(c)
         self.update_visibility()
 
-    def update_visibility(self):
+    def update_visibility(self) -> None:
         visible = False
         for c in self._children:
             visible |= not c.isHidden()
         self.setVisible(visible)
 
-    def paintEvent(self, event: QPaintEvent):
+    def paintEvent(self, event: QPaintEvent) -> None:
         p = QPainter(self)
         if self.isVisible():
             fm = self.fontMetrics()
@@ -107,17 +107,17 @@ class _EffectLabel(QWidget):
         separator.add_child(self)
         self._list_widget = list_widget
 
-    def show(self):
+    def show(self) -> None:
         for w in [self, self._label, self._button]:
             w.setVisible(True)
         self._separator.update_visibility()
 
-    def hide(self):
+    def hide(self) -> None:
         for w in [self, self._label, self._button]:
             w.setVisible(False)
         self._separator.update_visibility()
 
-    def add_effect(self):
+    def add_effect(self) -> None:
         self._list_widget.effect_selected.emit(self._template())
 
 
@@ -166,7 +166,7 @@ class EffectsListWidget(QWidget):
         container_layout.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Minimum, QSizePolicy.Expanding))
         self.setMaximumWidth(400)
 
-    def _update_search(self, new_query_text: str):
+    def _update_search(self, new_query_text: str) -> None:
         new_query_text = new_query_text.lower()
         for w in self._effect_widgets:
             # TODO introduce category splitters

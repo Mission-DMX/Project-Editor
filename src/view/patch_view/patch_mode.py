@@ -24,11 +24,11 @@ class PatchMode(QtWidgets.QStackedWidget):
         self._board_configuration.broadcaster.view_patching.connect(lambda: self.setCurrentIndex(1))
         self._board_configuration.broadcaster.view_leave_patching.connect(lambda: self.setCurrentIndex(0))
 
-    def _add_universe(self, universe: Universe):
+    def _add_universe(self, universe: Universe) -> None:
         self._board_configuration.broadcaster.send_universe.emit(universe)
 
 
-    def _connection_changed(self, connected):
+    def _connection_changed(self, connected) -> None:
         """connection to fish is changed"""
         if connected:
             for universe in self._board_configuration.universes:

@@ -86,7 +86,7 @@ class ShowBrowser:
         self._show.broadcaster.commit_button_pressed.connect(self._upload_showfile)
         self._show.broadcaster.scene_created.connect(self._add_scene_to_scene_browser)
 
-    def _refresh_all(self):
+    def _refresh_all(self) -> None:
         self._refresh_scene_browser()
         self._universe_browsing_tree.refresh()
         self._refresh_filter_browser()
@@ -100,7 +100,7 @@ class ShowBrowser:
         return self._show
 
     @board_configuration.setter
-    def board_configuration(self, b: BoardConfiguration | None):
+    def board_configuration(self, b: BoardConfiguration | None) -> None:
         if not self._show and b:
             b.broadcaster.add_universe.connect(lambda: self._universe_browsing_tree.refresh())
             b.broadcaster.delete_universe.connect(lambda: self._universe_browsing_tree.refresh())
@@ -116,11 +116,11 @@ class ShowBrowser:
         return self._selected_scene
 
     @selected_scene.setter
-    def selected_scene(self, s: Scene | None):
+    def selected_scene(self, s: Scene | None) -> None:
         self._selected_scene = s
         self._refresh_filter_browser()
 
-    def _refresh_filter_browser(self):
+    def _refresh_filter_browser(self) -> None:
         self._filter_browsing_tree.clear()
 
         def generate_tree_item(fp: FilterPage, parent) -> QTreeWidgetItem:
@@ -144,12 +144,12 @@ class ShowBrowser:
                 self._filter_browsing_tree.insertTopLevelItem(i, tlli)
                 i += 1
 
-    def _add_scene_to_scene_browser(self, s: Scene):
+    def _add_scene_to_scene_browser(self, s: Scene) -> None:
         if self._recently_created_scene == s:
             return
         self._recently_created_scene = s
 
-        def add_filter_page(parent_item: AnnotatedTreeWidgetItem, fp: FilterPage):
+        def add_filter_page(parent_item: AnnotatedTreeWidgetItem, fp: FilterPage) -> None:
             filter_page_item = AnnotatedTreeWidgetItem(parent_item)
             filter_page_item.setText(0, fp.name)
             filter_page_item.setText(1, str(len(fp.filters)) + " Filters")
@@ -181,23 +181,23 @@ class ShowBrowser:
             add_filter_page(item, fp)
         self._scene_browsing_tree.insertTopLevelItem(self._scene_browsing_tree.topLevelItemCount(), item)
 
-    def _refresh_scene_browser(self):
+    def _refresh_scene_browser(self) -> None:
         self._recently_created_scene = None
         self._scene_browsing_tree.clear()
         if self._show:
             for scene in self._show.scenes:
                 self._add_scene_to_scene_browser(scene)
 
-    def _add_element_pressed(self):
+    def _add_element_pressed(self) -> None:
         new_scene = add_scene_to_show(self._widget, self._show)
         if new_scene:
             self._add_scene_to_scene_browser(new_scene)
 
-    def _edit_element_pressed(self):
+    def _edit_element_pressed(self) -> None:
         # TODO
         pass
 
-    def _scene_context_menu_triggered(self, point: QPoint):
+    def _scene_context_menu_triggered(self, point: QPoint) -> None:
         selected_items = self._scene_browsing_tree.selectedItems()
 
         has_scenes = False
@@ -237,7 +237,7 @@ class ShowBrowser:
         menu.addAction(add_ui_page_action)
         menu.show()
 
-    def _delete_scenes_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]):
+    def _delete_scenes_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]) -> None:
         self._input_dialog = QMessageBox()
         self._input_dialog.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel)
         self._input_dialog.setDefaultButton(QMessageBox.StandardButton.Cancel)
@@ -249,7 +249,7 @@ class ShowBrowser:
             f"Do you really want to delete the scene {", ".join([f"'{item.text(1)}'" for item in items])}?")
         self._input_dialog.show()
 
-    def _delete_scenes_from_context_menu_accepted(self, items: list[AnnotatedTreeWidgetItem]):
+    def _delete_scenes_from_context_menu_accepted(self, items: list[AnnotatedTreeWidgetItem]) -> None:
         if self._input_dialog:
             self._input_dialog.close()
             self._input_dialog = None
@@ -260,8 +260,8 @@ class ShowBrowser:
                 del si
         self._refresh_scene_browser()
 
-    def _rename_scene_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]):
-        def rename(c, scene: Scene | FilterPage, text):
+    def _rename_scene_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]) -> None:
+        def rename(c, scene: Scene | FilterPage, text) -> None:
             if isinstance(scene, Scene):
                 scene.human_readable_name = text
             if isinstance(scene, UIPage):
@@ -301,7 +301,7 @@ class ShowBrowser:
                     self._input_dialog.setWindowTitle("Rename UI Page")
                     self._input_dialog.open()
 
-    def _scene_item_double_clicked(self, item):
+    def _scene_item_double_clicked(self, item) -> None:
         if isinstance(item, AnnotatedTreeWidgetItem):
             data = item.annotated_data
             if isinstance(data, Scene):
@@ -320,7 +320,7 @@ class ShowBrowser:
             elif isinstance(data, UIPage):
                 self._show.broadcaster.uipage_opened_in_editor_requested.emit({"uipage": data})
 
-    def _universe_item_double_clicked(self, item: QTreeWidgetItem, column: int):
+    def _universe_item_double_clicked(self, item: QTreeWidgetItem, column: int) -> None:
         if not isinstance(item, AnnotatedTreeWidgetItem):
             return
         if isinstance(item.annotated_data, UsedFixture):
@@ -329,10 +329,10 @@ class ShowBrowser:
                     place_fixture_filters_in_scene(item.annotated_data, current_widget.filter_page)):
                 current_widget.refresh()
 
-    def _upload_showfile(self):
+    def _upload_showfile(self) -> None:
         transmit_to_fish(self._show, False)
 
-    def _duplicate_scene(self, selected_items: list[QTreeWidgetItem]):
+    def _duplicate_scene(self, selected_items: list[QTreeWidgetItem]) -> None:
         i: int = 1
         for item in selected_items:
             if not isinstance(item, AnnotatedTreeWidgetItem):
@@ -343,8 +343,8 @@ class ShowBrowser:
             sc.human_readable_name = f"Copy ({i}) of Scene '{sc.human_readable_name}'"
             self._show.broadcaster.scene_created.emit(sc)
 
-    def _add_filter_page(self, selected_items: list[QTreeWidgetItem]):
-        def add(c, scene: Scene | FilterPage, text):
+    def _add_filter_page(self, selected_items: list[QTreeWidgetItem]) -> None:
+        def add(c, scene: Scene | FilterPage, text) -> None:
             if isinstance(scene, Scene):
                 fp = FilterPage(scene)
                 scene.insert_filterpage(fp)
@@ -368,7 +368,7 @@ class ShowBrowser:
                 self._input_dialog.setWindowTitle("Enter Name")
                 self._input_dialog.open()
 
-    def _add_ui_page(self, selected_items: list[QTreeWidgetItem]):
+    def _add_ui_page(self, selected_items: list[QTreeWidgetItem]) -> None:
         update_occurred = False
         for item in selected_items:
             if not isinstance(item, AnnotatedTreeWidgetItem):

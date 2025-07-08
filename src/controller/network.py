@@ -257,7 +257,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             self.active_scene_on_fish_changed.emit(msg.current_scene)
             self._broadcaster.active_scene_switched.emit(msg.current_scene)
 
-    def _log_fish(self, msg: proto.RealTimeControl_pb2.long_log_update):
+    def _log_fish(self, msg: proto.RealTimeControl_pb2.long_log_update) -> None:
         """
         long log messages from Fish
         Args:
@@ -273,7 +273,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             case proto.RealTimeControl_pb2.LogLevel.LL_WARNING:
                 logger.warning(msg.what)
 
-    def _button_clicked(self, msg: proto.Console_pb2.button_state_change):
+    def _button_clicked(self, msg: proto.Console_pb2.button_state_change) -> None:
         """
         Handle incomming button events.
         :param msg: The raw message to handle
@@ -327,7 +327,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                 case _:
                     pass
 
-    def _handle_desk_update(self, msg: proto.Console_pb2.desk_update):
+    def _handle_desk_update(self, msg: proto.Console_pb2.desk_update) -> None:
         """
         Process incoming fader state changes.
         :param msg: The message to process

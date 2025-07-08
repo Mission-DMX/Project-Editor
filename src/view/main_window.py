@@ -197,7 +197,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster.application_closing.emit()
         QApplication.processEvents()
 
-    def _start_connection(self):  # TODO rework to signals
+    def _start_connection(self) -> None:  # TODO rework to signals
         self._fish_connector.start(True)
 
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
@@ -263,12 +263,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector.last_cycle_time_update.connect(self._update_last_cycle_time)
         status_bar.addWidget(self._last_cycle_time_widget)
 
-    def _proccess_status_listener(self):
+    def _proccess_status_listener(self) -> None:
         c, m = get_global_process_state()
         self._status_pbar.setVisible(c != m)
         self._status_pbar.setValue(int((c / m) * 100))
 
-    def _fish_run_mode_changed(self, new_run_mode: int):
+    def _fish_run_mode_changed(self, new_run_mode: int) -> None:
         if new_run_mode == proto.RealTimeControl_pb2.RunMode.RM_FILTER:
             self._status_current_scene_label.setVisible(True)
             self._status_runmode.setPixmap(MainWindow.STATUS_ICON_FILTER_MODE.pixmap(16, 16))
@@ -276,7 +276,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._status_current_scene_label.setVisible(False)
             self._status_runmode.setPixmap(MainWindow.STATUS_ICON_DIRECT_MODE.pixmap(16, 16))
 
-    def _fish_state_update(self, connected: bool):
+    def _fish_state_update(self, connected: bool) -> None:
         if connected:
             self._label_state_update.setText("Connected")
             self._last_cycle_time_widget.setVisible(True)
@@ -284,7 +284,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._label_state_update.setText("Not Connected")
             self._last_cycle_time_widget.setVisible(False)
 
-    def _update_last_cycle_time(self, new_value: int):
+    def _update_last_cycle_time(self, new_value: int) -> None:
         """update plot of fish last cycle Time"""
         self._last_cycle_time = self._last_cycle_time[1:]  # Remove the first y element.
         self._last_cycle_time.append(new_value)  # Add a new value
@@ -299,7 +299,7 @@ class MainWindow(QtWidgets.QMainWindow):
             case _:
                 self._last_cycle_time_widget.setStyleSheet(Style.LABEL_ERROR)
 
-    def _show_column_dialog(self, index: str):
+    def _show_column_dialog(self, index: str) -> None:
         """Dialog modify tho selected Column"""
         active_bank_set = BankSet.active_bank_set()
         column = active_bank_set.get_column(index)
@@ -312,7 +312,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 column_dialog.finished.connect(BankSet.push_messages_now)
                 column_dialog.show()
 
-    def _is_column_dialog(self):
+    def _is_column_dialog(self) -> None:
         if not BankSet.active_bank_set():
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
@@ -321,14 +321,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
 
-    def _save_show(self):
+    def _save_show(self) -> None:
         if self._board_configuration:
             if self._board_configuration.file_path:
                 _save_show_file(self._board_configuration.file_path, self._board_configuration)
             else:
                 show_save_showfile_dialog(self, self._board_configuration)
 
-    def _open_about_window(self):
+    def _open_about_window(self) -> None:
         if not self._about_window:
             from view.misc.about_window import AboutWindow
             self._about_window = AboutWindow(self)
@@ -342,6 +342,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
 
-    def _open_scene_setup_wizard(self):
+    def _open_scene_setup_wizard(self) -> None:
         self._theatre_scene_setup_wizard = TheaterSceneWizard(self, self.show_configuration)
         self._theatre_scene_setup_wizard.show()

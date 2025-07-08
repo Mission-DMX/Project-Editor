@@ -33,7 +33,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
                 ex.exec()
                 break
 
-    def _level_visible_change(self, level: tuple[str, bool]):
+    def _level_visible_change(self, level: tuple[str, bool]) -> None:
         """change the visibility of a logging item by level"""
         if self._level == level[0]:
             self._possible_visible = level[1]

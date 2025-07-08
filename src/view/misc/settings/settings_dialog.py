@@ -76,7 +76,7 @@ class SettingsDialog(QDialog):
         return self._show
 
     @show_file.setter
-    def show_file(self, new_show: "BoardConfiguration"):
+    def show_file(self, new_show: "BoardConfiguration") -> None:
         self._show = new_show
         self.show_file_tb.setText(new_show.show_name)
         self.show_notes_tb.setText(new_show.notes)

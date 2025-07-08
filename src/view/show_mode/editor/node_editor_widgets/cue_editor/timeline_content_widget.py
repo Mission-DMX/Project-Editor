@@ -40,7 +40,7 @@ class TimelineContentWidget(QWidget):
         return self._cue_index
 
     @cue_index.setter
-    def cue_index(self, arg: int):
+    def cue_index(self, arg: int) -> None:
         if arg > 0:
             self._cue_index = arg
             self._update_7seg_text()
@@ -200,7 +200,7 @@ class TimelineContentWidget(QWidget):
         self._update_7seg_text()
         self.compute_resize()
 
-    def _update_7seg_text(self):
+    def _update_7seg_text(self) -> None:
         txt = format_seconds(self.cursor_position).replace(":", "").replace(".", "")
         while len(txt) < 10:
             txt = "0" + txt
@@ -227,7 +227,7 @@ class TimelineContentWidget(QWidget):
                     break
         self.repaint()
 
-    def _clicked_on_keyframe(self, kf: KeyFrame, y: int):
+    def _clicked_on_keyframe(self, kf: KeyFrame, y: int) -> None:
         state_index = int((y - 20) / CHANNEL_DISPLAY_HEIGHT)
         states = kf._states
         double_click_issued = False

@@ -41,7 +41,7 @@ class TimelineContainer(QWidget):
         return self._current_transition_type
 
     @transition_type.setter
-    def transition_type(self, new_value: str):
+    def transition_type(self, new_value: str) -> None:
         self._current_transition_type = new_value
 
     @property
@@ -49,7 +49,7 @@ class TimelineContainer(QWidget):
         return self._keyframes_panel.used_bankset
 
     @bankset.setter
-    def bankset(self, bs: BankSet):
+    def bankset(self, bs: BankSet) -> None:
         self._keyframes_panel.used_bankset = bs
 
     def add_channel(self, channel_type: DataType, name: str):
@@ -73,7 +73,7 @@ class TimelineContainer(QWidget):
         return self._cue
 
     @cue.setter
-    def cue(self, c: Cue):
+    def cue(self, c: Cue) -> None:
         self._cue = c
         # TODO clear keyframes_panel
         self._keyframes_panel.clear_cue()
@@ -141,7 +141,7 @@ class TimelineContainer(QWidget):
     def clear_display():
         set_seven_seg_display_content(" " * 12, True)
 
-    def _keyframe_panel_size_changed(self, new_size: QPoint):
+    def _keyframe_panel_size_changed(self, new_size: QPoint) -> None:
         if new_size.y() != self._channel_label.height():
             self._channel_label.setMinimumHeight(max(new_size.y(), self._channel_label.height()))
             self._channel_label.update()

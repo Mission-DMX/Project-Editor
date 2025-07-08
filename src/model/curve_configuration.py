@@ -72,7 +72,7 @@ class CurveConfiguration:
         cc.base_amplitude = float(config[3])
         cc.append_features_using_addition = config[4] == "true"
 
-        def decode_common_props(target: dict[BaseCurve, float], source: str):
+        def decode_common_props(target: dict[BaseCurve, float], source: str) -> None:
             for entry in source.split(","):
                 k, v = entry.split(":")
                 k = BaseCurve(int(k))

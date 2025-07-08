@@ -11,13 +11,13 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
         return self._widget
 
-    def _load_parameters(self, parameters: dict[str, str]):
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         self._script_edit_field.setText(parameters["script"])
 
     def _get_parameters(self) -> dict[str, str]:
         return {"script": self._script_edit_field.toPlainText()}
 
-    def _load_configuration(self, conf: dict[str, str]):
+    def _load_configuration(self, conf: dict[str, str]) -> None:
         self._channel_list.clear()
         self._channels.clear()
         self._new_channel_name.setText("")
@@ -34,7 +34,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
             self._channels[channel_name] = (False, DataType.from_filter_str(data_type))
             self._insert_channel_in_list(channel_name, data_type, False)
 
-    def _insert_channel_in_list(self, channel_name: str, data_type: DataType, is_input: bool):
+    def _insert_channel_in_list(self, channel_name: str, data_type: DataType, is_input: bool) -> None:
         # TODO replace with AnnotatedListWidgetItem
         format_str = "{}: input,{}" if is_input else "{}: output,{}"
         item = AnnotatedListWidgetItem(self._channel_list)
@@ -86,7 +86,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         # TODO add syntax highlighting support
         self._widget.setLayout(central_layout)
 
-    def _add_input(self):
+    def _add_input(self) -> None:
         name = self._new_channel_name.text()
         if name and name not in self._channels:
             data_type = DataType.from_filter_str(self._data_type_combo_box.currentText())
@@ -95,7 +95,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         else:
             pass  # TODO error message
 
-    def _add_output(self):
+    def _add_output(self) -> None:
         name = self._new_channel_name.text()
         if name and name not in self._channels:
             data_type = DataType.from_filter_str(self._data_type_combo_box.currentText())
@@ -104,7 +104,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         else:
             pass  # TODO show appropriate error message
 
-    def _remove_channel(self):
+    def _remove_channel(self) -> None:
         for item in self._channel_list.selectedItems().copy():
             if not isinstance(item, AnnotatedListWidgetItem):
                 continue

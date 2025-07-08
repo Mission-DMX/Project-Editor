@@ -27,7 +27,7 @@ class _InsertCueSwitchDialog(_CommandInsertionDialog):
         return (f"showctl filtermsg {self._scene.scene_id} {self.filter_id} "
                 f"run_cue {self._cue_selection_cb.currentIndex()}")
 
-    def on_filter_selected(self):
+    def on_filter_selected(self) -> None:
         self._cue_selection_cb.setEnabled(True)
         self._cue_selection_cb.clear()
         cue_model: list[Cue] = [

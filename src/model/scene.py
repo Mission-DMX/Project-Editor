@@ -26,7 +26,7 @@ class FilterPage:
         return self._name
 
     @name.setter
-    def name(self, new_name: str):
+    def name(self, new_name: str) -> None:
         self._name = str(new_name)
 
     @property
@@ -87,7 +87,7 @@ class Scene:
         return self._human_readable_name
 
     @human_readable_name.setter
-    def human_readable_name(self, human_readable_name: str):
+    def human_readable_name(self, human_readable_name: str) -> None:
         """Sets the human-readable name of the scene displayed by the ui"""
         self._human_readable_name = human_readable_name
 
@@ -124,7 +124,7 @@ class Scene:
         return self._associated_bankset
 
     @linked_bankset.setter
-    def linked_bankset(self, new_bs: BankSet):
+    def linked_bankset(self, new_bs: BankSet) -> None:
         if self._associated_bankset and self._associated_bankset.is_linked:
             self._associated_bankset.unlink()
         self._associated_bankset = new_bs
@@ -224,7 +224,7 @@ class Scene:
         if self._filter_index.get(f.filter_id):
             self._filter_index.pop(f.filter_id)
 
-        def remove_filter_from_page(p: FilterPage):
+        def remove_filter_from_page(p: FilterPage) -> None:
             try:
                 p.filters.remove(f)
             except ValueError:

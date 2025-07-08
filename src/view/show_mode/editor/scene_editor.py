@@ -29,7 +29,7 @@ class SceneUIManagerWidget(QTabWidget):
         self.tabCloseRequested.connect(self.removeTab)
         self.tabBarDoubleClicked.connect(self._pop_page)
 
-    def _add_page(self):
+    def _add_page(self) -> None:
         """Adds a page to the scene"""
         page_widget = SceneUIPageEditorWidget(self.scene.ui_pages[0], self)
         self.insertTab(self.count() - 1, page_widget, f"Page {self.count()}")
@@ -52,7 +52,7 @@ class SceneUIManagerWidget(QTabWidget):
         self._poped_pages.append(dialog)
         dialog.show()
 
-    def _unpop_page(self, page: QWidget, index: int):
+    def _unpop_page(self, page: QWidget, index: int) -> None:
         """Reinserts page.
 
         Args:

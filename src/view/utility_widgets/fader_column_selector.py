@@ -46,7 +46,7 @@ class FaderColumnSelectorWidget(QWidget):
         self.reload_data()
         # TODO add button to add a new column right in this widget
 
-    def _selection_changed_handler(self, *args):
+    def _selection_changed_handler(self, *args) -> None:
         item = self._tree.selectedItems()[0]
         if isinstance(item, AnnotatedTreeWidgetItem):
             self.selected_item = item
@@ -58,7 +58,7 @@ class FaderColumnSelectorWidget(QWidget):
         return self._ignore_main_brightness_checkbox.isChecked()
 
     @ignore_main_brightness.setter
-    def ignore_main_brightness(self, new_value: bool):
+    def ignore_main_brightness(self, new_value: bool) -> None:
         self._ignore_main_brightness_checkbox.setChecked(new_value)
 
     @property
@@ -67,7 +67,7 @@ class FaderColumnSelectorWidget(QWidget):
         return self._ignore_main_brightness_checkbox.isEnabled()
 
     @main_brightness_cb_enabled.setter
-    def main_brightness_cb_enabled(self, new_value: bool):
+    def main_brightness_cb_enabled(self, new_value: bool) -> None:
         self._ignore_main_brightness_checkbox.setEnabled(new_value)
 
     def set_selected_item(self, set_id: str, column_id: str):

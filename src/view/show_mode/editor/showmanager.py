@@ -68,7 +68,7 @@ class ShowEditorWidget(QSplitter):
         board_configuration.broadcaster.uipage_opened_in_editor_requested.connect(self._add_uipage_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
 
-    def _select_scene_to_be_removed(self):
+    def _select_scene_to_be_removed(self) -> None:
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
         if ok_button_pressed and 0 <= scene_index < self._open_page_tab_widget.tabBar().count() - 2:
             self._board_configuration.broadcaster.delete_scene()
@@ -78,7 +78,7 @@ class ShowEditorWidget(QSplitter):
         """toolbar for node_mode"""
         return self._toolbar
 
-    def _tab_bar_clicked(self, index: int):
+    def _tab_bar_clicked(self, index: int) -> None:
         """Handles adding/deleting button action.
         
         Args:
@@ -88,7 +88,7 @@ class ShowEditorWidget(QSplitter):
         if index == self._open_page_tab_widget.tabBar().count() - 1:
             self._add_button_clicked()
 
-    def _add_button_clicked(self):
+    def _add_button_clicked(self) -> None:
         add_scene_to_show(self, self._board_configuration)
 
     def _add_scene_tab(self, page: Scene | FilterPage) -> SceneTabWidget | None:
@@ -158,7 +158,7 @@ class ShowEditorWidget(QSplitter):
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
 
-    def _remove_tab(self, scene_or_index: Scene | int):
+    def _remove_tab(self, scene_or_index: Scene | int) -> None:
         """Removes the tab corresponding to the scene or index.
 
         Args:

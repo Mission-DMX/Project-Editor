@@ -71,7 +71,7 @@ class GuiTab(QWidget):
         return self._id
 
     @id.setter
-    def id(self, value):
+    def id(self, value) -> None:
         self._id = value
 
     @abstractmethod

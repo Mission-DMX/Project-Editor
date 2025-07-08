@@ -26,7 +26,7 @@ class Channel(QtCore.QObject):
         return self._value
 
     @value.setter
-    def value(self, value: int):
+    def value(self, value: int) -> None:
         """Updates the value of the channel.
         Must be between 0 and 255.
 

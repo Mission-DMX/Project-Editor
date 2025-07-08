@@ -63,7 +63,7 @@ class State(ABC):
         return self._transition_type
 
     @transition.setter
-    def transition(self, new_value: str):
+    def transition(self, new_value: str) -> None:
         if new_value not in ["edg", "lin", "sig", "e_i", "e_o"]:
             raise ArgumentError(f"Unsupported transition type: {new_value}")
         self._transition_type = new_value
@@ -198,7 +198,7 @@ class StateColor(State):
         return self._value
 
     @color.setter
-    def color(self, value: ColorHSI):
+    def color(self, value: ColorHSI) -> None:
         self._value = value
 
 

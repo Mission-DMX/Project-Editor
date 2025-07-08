@@ -14,7 +14,7 @@ class AnnotatedTreeWidgetItem(QTreeWidgetItem):
         return self._annotated_data
 
     @annotated_data.setter
-    def annotated_data(self, new_data):
+    def annotated_data(self, new_data) -> None:
         self._annotated_data = new_data
 
 
@@ -29,7 +29,7 @@ class AnnotatedListWidgetItem(QListWidgetItem):
         return self._annotated_data
 
     @annotated_data.setter
-    def annotated_data(self, new_data):
+    def annotated_data(self, new_data) -> None:
         self._annotated_data = new_data
 
 
@@ -43,5 +43,5 @@ class AnnotatedTableWidgetItem(QTableWidgetItem):
         return self._annotated_data
 
     @annotated_data.setter
-    def annotated_data(self, new_data):
+    def annotated_data(self, new_data) -> None:
         self._annotated_data = new_data

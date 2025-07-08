@@ -63,14 +63,14 @@ class CueEditor(NodeEditorFilterConfigWidget):
         # TODO implement
         return {}
 
-    def _load_parameters(self, conf: dict[str, str]):
+    def _load_parameters(self, conf: dict[str, str]) -> None:
         # TODO implement
         pass
 
     def get_widget(self) -> QWidget:
         return self._parent_widget
 
-    def _load_configuration(self, parameters: dict[str, str]):
+    def _load_configuration(self, parameters: dict[str, str]) -> None:
         self._model.load_from_configuration(parameters)
 
         for c in self._model.cues:
@@ -170,7 +170,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         else:
             logger.error("Cue editor widget received invalid filter: %s.", f)
 
-    def _link_bankset(self):
+    def _link_bankset(self) -> None:
         self._broadcaster = Broadcaster()
         self._broadcaster.desk_media_rec_pressed.connect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
@@ -192,7 +192,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             transmit_to_fish(self._filter_instance.scene.board_configuration, False)
             # TODO switch to scene of filter
 
-    def _setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
+    def _setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout) -> None:
         zoom_panel = QWidget(cue_settings_container)
         zoom_panel_layout = QHBoxLayout()
         zoom_panel.setLayout(zoom_panel_layout)
@@ -206,7 +206,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         zoom_panel_layout.addWidget(decrease_zoom_button)
         cue_settings_container_layout.addRow("Zoom", zoom_panel)
 
-    def _configure_toolbar(self, top_layout):
+    def _configure_toolbar(self, top_layout) -> None:
         toolbar = QToolBar(parent=self._parent_widget)
         toolbar_add_cue_action = QAction("Add Cue", self._parent_widget)
         toolbar_add_cue_action.setStatusTip("Add a new cue to the stack")
@@ -235,10 +235,10 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar.addAction(self._gui_rec_action)
         top_layout.addWidget(toolbar)
 
-    def _set_zoom_label_text(self):
+    def _set_zoom_label_text(self) -> None:
         self._zoom_label.setText(self._timeline_container.format_zoom())
 
-    def _table_context_popup(self, pos):
+    def _table_context_popup(self, pos) -> None:
         self._input_dialog = QMenu()
         self._input_dialog.addAction("Rename Cue", self._rename_selected_cue)
         self._input_dialog.addAction(QIcon.fromTheme("edit-paste"), "Duplicate", self._duplicate_cue_clicked)
@@ -259,13 +259,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
         processed_indices.sort(reverse=not ascending_order)
         return processed_indices
 
-    def _duplicate_cue_clicked(self):
+    def _duplicate_cue_clicked(self) -> None:
         for index in self._indices_from_table_selection():
             new_cue = self._model.cues[index].copy()
             self.add_cue(new_cue, new_cue.name)
             self._ui_widget_update_required = True
 
-    def _swap_table_rows(self, i1: int, i2: int):
+    def _swap_table_rows(self, i1: int, i2: int) -> None:
         row1: list[tuple[QTableWidgetItem, int]] = []
         row2: list[tuple[QTableWidgetItem, int]] = []
         for column_index in range(self._cue_list_widget.columnCount()):
@@ -276,7 +276,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         for item in row2:
             self._cue_list_widget.setItem(i1, item[1], item[0])
 
-    def _move_cue_up_clicked(self):
+    def _move_cue_up_clicked(self) -> None:
         for index in self._indices_from_table_selection():
             if index == 0:
                 continue
@@ -286,7 +286,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._swap_table_rows(index - 1, index)
         self._ui_widget_update_required = True
 
-    def _move_cue_down_clicked(self):
+    def _move_cue_down_clicked(self) -> None:
         for index in self._indices_from_table_selection():
             if index >= self._cue_list_widget.rowCount() - 1:
                 continue
@@ -296,7 +296,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._swap_table_rows(index + 1, index)
         self._ui_widget_update_required = True
 
-    def _rename_selected_cue(self):
+    def _rename_selected_cue(self) -> None:
         self._input_dialog = []
         for index in self._indices_from_table_selection(ascending_order=False):
             id = QInputDialog(self._cue_list_widget)
@@ -308,7 +308,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             id.show()
             self._input_dialog.append(id)
 
-    def _change_cue_name(self, index: int, new_name: str | QInputDialog):
+    def _change_cue_name(self, index: int, new_name: str | QInputDialog) -> None:
         if isinstance(new_name, QInputDialog):
             d: QInputDialog | None = new_name
             new_name = new_name.textValue()
@@ -369,7 +369,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._gui_rec_action.setEnabled(True)
         self._current_cue_another_play_pressed_checkbox.setEnabled(True)
 
-    def _cue_list_selection_changed(self):
+    def _cue_list_selection_changed(self) -> None:
         items_list = self._cue_list_widget.selectedIndexes()
         if len(items_list) > 0:
             self.select_cue(items_list[0].row(), from_manual_input=False)
@@ -384,12 +384,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._timeline_container.decrease_zoom()
         self._set_zoom_label_text()
 
-    def _add_cue_button_clicked(self):
+    def _add_cue_button_clicked(self) -> None:
         new_index = self.add_cue(Cue())
         self._ui_widget_update_required = True
         self.select_cue(new_index)
 
-    def _add_channel_button_pressed(self):
+    def _add_channel_button_pressed(self) -> None:
         """This button queries the user for a channel type and adds it to the filter and all cues.
 
         The default for all cues is a 0 keyframe at the start.
@@ -397,7 +397,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog = ChannelInputDialog(self._parent_widget, self._add_channel)
         self._input_dialog.show()
 
-    def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False):
+    def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False) -> None:
         if channel_name in ("time", "time_scale"):
             QMessageBox.critical(self._parent_widget, "Failed to add channel",
                                  "Unfortunately, 'time' and 'time_scale' is a reserved keyword for this filter.")
@@ -418,7 +418,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._channels_changed_after_load = True
         self._toolbar_remove_channel_action.setEnabled(True)
 
-    def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
+    def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update) -> None:
         if not self._bankset:
             return
         c = ColorDeskColumn() if channel_type == DataType.DT_COLOR else RawDeskColumn()
@@ -428,7 +428,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if not is_part_of_mass_update:
             self._bankset.update()
 
-    def _remove_channel_button_pressed(self):
+    def _remove_channel_button_pressed(self) -> None:
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
         all cues.
         """
@@ -437,7 +437,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog.accepted.connect(self._remove_channels_button_pressed_final)
         self._input_dialog.show()
 
-    def _remove_channels_button_pressed_final(self):
+    def _remove_channels_button_pressed_final(self) -> None:
         if not isinstance(self._input_dialog, SelectionDialog):
             return
         selected_channels = self._input_dialog.selected_items
@@ -452,19 +452,19 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._channels_changed_after_load = True
         self._toolbar_remove_channel_action.setEnabled(len(self._model.cues) > 0 and len(self._model.channels) > 0)
 
-    def _cue_end_action_changed(self):
+    def _cue_end_action_changed(self) -> None:
         action = EndAction(self._current_cue_end_action_select_widget.currentIndex())
         self._timeline_container.cue.end_action = action
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 2).setText(str(action))
 
-    def _cue_play_pressed_restart_changed(self):
+    def _cue_play_pressed_restart_changed(self) -> None:
         self._timeline_container.cue.restart_on_another_play_press = \
             self._current_cue_another_play_pressed_checkbox.checkState().Checked
 
-    def _transition_type_changed(self, text):
+    def _transition_type_changed(self, text) -> None:
         self._timeline_container.transition_type = text
 
-    def _rec_pressed(self):
+    def _rec_pressed(self) -> None:
         self._timeline_container.record_pressed()
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
             .setText(self._timeline_container.cue.duration_formatted)
@@ -541,7 +541,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
                                                           self._bs_to_channel_mapping.get(name), self._bankset))
         return channel_list
 
-    def _update_ui_widget(self):
+    def _update_ui_widget(self) -> None:
         if isinstance(self._filter_instance, CueFilter):
             for widget in self._filter_instance.linked_ui_widgets:
                 widget.update_model()

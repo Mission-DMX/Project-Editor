@@ -181,7 +181,7 @@ class Filter:
         return self._filter_id
 
     @filter_id.setter
-    def filter_id(self, id_):
+    def filter_id(self, id_) -> None:
         old_id: str = self._filter_id
         self._filter_id = id_
         if self.scene:
@@ -194,7 +194,7 @@ class Filter:
         return self._filter_type
 
     @filter_type.setter
-    def filter_type(self, type_):
+    def filter_type(self, type_) -> None:
         self._filter_type = type_
 
     @property
@@ -203,7 +203,7 @@ class Filter:
         return self._pos
 
     @pos.setter
-    def pos(self, pos: tuple[float, float] | None):
+    def pos(self, pos: tuple[float, float] | None) -> None:
         self._pos = pos
 
     @property

@@ -37,13 +37,13 @@ class ColorWheelConfigurationWidget(QWidget):
         # TODO disable settings if the corresponding input is occupied
         self.load_values_from_effect()
 
-    def _fragment_count_changed(self, e):
+    def _fragment_count_changed(self, e) -> None:
         self._f.fragment_number = self._fragment_number_widget.value()
 
-    def _min_hue_changed(self, e):
+    def _min_hue_changed(self, e) -> None:
         self._f.min_hue = self._minimum_hue.value()
 
-    def _max_hue_changed(self, e):
+    def _max_hue_changed(self, e) -> None:
         self._f.max_hue = self._maximum_hue.value()
 
     def load_values_from_effect(self):

@@ -27,7 +27,7 @@ def set_broadcaster_and_network(b: "Broadcaster", nm: "NetworkManager"):
     return _handle_incoming_sender_update
 
 
-def _handle_incoming_sender_update(msg: "event_sender"):
+def _handle_incoming_sender_update(msg: "event_sender") -> None:
     """Update the sender model based on the provided message from fish.
     :param msg: The message to use"""
     global _broadcaster_instance
@@ -89,7 +89,7 @@ class EventSender:
         return self._debug_enabled
 
     @debug_enabled.setter
-    def debug_enabled(self, new_state: bool):
+    def debug_enabled(self, new_state: bool) -> None:
         if self._debug_enabled != new_state:
             self._debug_enabled = bool(new_state)
             self.send_update()
@@ -148,7 +148,7 @@ class XtouchGPIOEventSender(EventSender):
         return int(self.configuration.get("expression_pedal_threshold") or "0")
 
     @pedal_threshold.setter
-    def pedal_threshold(self, new_value: int):
+    def pedal_threshold(self, new_value: int) -> None:
         self.configuration["expression_pedal_threshold"] = str(new_value)
 
 

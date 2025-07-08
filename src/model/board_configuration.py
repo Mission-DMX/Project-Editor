@@ -47,7 +47,7 @@ class BoardConfiguration:
         self._filter_update_msg_register: dict[tuple[int, str], list[Callable]] = {}
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
-    def _clear(self):
+    def _clear(self) -> None:
         """This method resets the show data prior to loading a new one."""
         for scene in self._scenes:
             self._broadcaster.delete_scene.emit(scene)
@@ -68,7 +68,7 @@ class BoardConfiguration:
         self._filter_update_msg_register.clear()
         self._macros.clear()
 
-    def _add_scene(self, scene: Scene):
+    def _add_scene(self, scene: Scene) -> None:
         """Adds a scene to the list of scenes.
         
         Args:
@@ -77,7 +77,7 @@ class BoardConfiguration:
         self._scenes.append(scene)
         self._scenes_index[scene.scene_id] = len(self._scenes) - 1
 
-    def _delete_scene(self, scene: Scene):
+    def _delete_scene(self, scene: Scene) -> None:
         """Removes the passed scene from the list of scenes.
         
         Args:
@@ -86,17 +86,17 @@ class BoardConfiguration:
         self._scenes.remove(scene)
         self._scenes_index.pop(scene.scene_id)
 
-    def _add_universe(self, universe: Universe):
+    def _add_universe(self, universe: Universe) -> None:
         """Creates and adds a universe from passed patching universe.
         Args:
             universe: The universe to add.
         """
         self._universes.update({universe.id: universe})
 
-    def _add_fixture(self, used_fixture: UsedFixture):
+    def _add_fixture(self, used_fixture: UsedFixture) -> None:
         self._fixtures.append(used_fixture)
 
-    def _delete_universe(self, universe: Universe):
+    def _delete_universe(self, universe: Universe) -> None:
         """Removes the passed universe from the list of universes.
         
         Args:
@@ -107,7 +107,7 @@ class BoardConfiguration:
         except ValueError:
             logger.error("Unable to remove universe %s", universe.name)
 
-    def _add_device(self, device: Device):
+    def _add_device(self, device: Device) -> None:
         """Adds the device to the board configuration.
         
         Args:
@@ -115,7 +115,7 @@ class BoardConfiguration:
         """
         self._devices.append(device)
 
-    def _delete_device(self, device: Device):
+    def _delete_device(self, device: Device) -> None:
         """Removes the passed device from the list of devices.
         
         Args:
@@ -145,7 +145,7 @@ class BoardConfiguration:
         return self._show_name
 
     @show_name.setter
-    def show_name(self, show_name: str):
+    def show_name(self, show_name: str) -> None:
         """Sets the show name"""
         self._show_name = show_name
 
@@ -155,7 +155,7 @@ class BoardConfiguration:
         return self._default_active_scene
 
     @default_active_scene.setter
-    def default_active_scene(self, default_active_scene: int):
+    def default_active_scene(self, default_active_scene: int) -> None:
         """Setss the scene to be activated by fish on loadup"""
         self._default_active_scene = default_active_scene
 
@@ -165,7 +165,7 @@ class BoardConfiguration:
         return self._notes
 
     @notes.setter
-    def notes(self, notes: str):
+    def notes(self, notes: str) -> None:
         """Sets the notes for the show"""
         self._notes = notes
 
@@ -200,7 +200,7 @@ class BoardConfiguration:
         return self._show_file_path
 
     @file_path.setter
-    def file_path(self, new_path: str):
+    def file_path(self, new_path: str) -> None:
         """Update the show file path.
         :param new_path: The location to save the show file to"""
         self._show_file_path = new_path
@@ -216,7 +216,7 @@ class BoardConfiguration:
                 return scene
         return None
 
-    def _distribute_filter_update_message(self, param: proto.FilterMode_pb2.update_parameter):
+    def _distribute_filter_update_message(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Find listeners to incoming filter update message and distribute it to them."""
         candidate_list = self._filter_update_msg_register.get((param.scene_id, param.filter_id))
         if candidate_list is not None:

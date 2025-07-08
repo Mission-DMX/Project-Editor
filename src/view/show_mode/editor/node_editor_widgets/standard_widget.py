@@ -42,21 +42,21 @@ class StandardWidget(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
         return self._widget
 
-    def _ip_value_changed(self, key, value):
+    def _ip_value_changed(self, key, value) -> None:
         self._filter.initial_parameters[key] = value
 
-    def _fc_value_changed(self, key, value):
+    def _fc_value_changed(self, key, value) -> None:
         self._filter.filter_configurations[key] = value
 
     def _get_configuration(self) -> dict[str, str]:
         """Does nothing"""
         pass
 
-    def _load_configuration(self, conf: dict[str, str]):
+    def _load_configuration(self, conf: dict[str, str]) -> None:
         """Does nothing"""
         pass
 
-    def _load_parameters(self, parameters: dict[str, str]):
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         """Does nothing"""
         pass
 

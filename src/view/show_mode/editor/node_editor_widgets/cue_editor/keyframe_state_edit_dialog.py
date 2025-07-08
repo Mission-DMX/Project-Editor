@@ -73,7 +73,7 @@ class KeyFrameStateEditDialog(QDialog):
         self._state = s
         self._repaint_function = repaint_function
 
-    def _ok_pressed(self):
+    def _ok_pressed(self) -> None:
         if isinstance(self._input, (QSpinBox, QDoubleSpinBox)):
             self._state._value = self._input.value()
         else:
@@ -86,7 +86,7 @@ class KeyFrameStateEditDialog(QDialog):
         self._repaint_function()
         self.close()
 
-    def _delete_pressed(self):
+    def _delete_pressed(self) -> None:
         self._keyframe.delete_from_parent_cue()
         self.close()
         self._repaint_function()

@@ -16,11 +16,11 @@ class _ColorHelpWidget(QWidget):
         self.setMinimumHeight(25 * 4)
         self._data: list[dict] = []
 
-    def set_help_content(self, d: list[dict]):
+    def set_help_content(self, d: list[dict]) -> None:
         self._data = d
         self.repaint()
 
-    def paintEvent(self, ev: QPaintEvent):
+    def paintEvent(self, ev: QPaintEvent) -> None:
         w = self.width()
         h = self.height()
         if w == 0 or h == 0:
@@ -78,7 +78,7 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
             "method": str(self._method_selection_box.currentText())
         }
 
-    def _load_configuration(self, conf: dict[str, str]):
+    def _load_configuration(self, conf: dict[str, str]) -> None:
         try:
             self._channel_count_spinbox.setValue(int(conf.get("input_count")))
         except ValueError:
@@ -88,12 +88,12 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
         return self._widget
 
-    def _load_parameters(self, parameters: dict[str, str]):
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         # We're not using UI parameters
         pass
 
     def _get_parameters(self) -> dict[str, str]:
         return {}
 
-    def _selected_method_changed(self, new_method: str):
+    def _selected_method_changed(self, new_method: str) -> None:
         self._color_help_widget.set_help_content(ColorMixingSetupWidget._help_data.get(new_method))

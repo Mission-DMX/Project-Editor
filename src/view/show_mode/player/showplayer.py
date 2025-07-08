@@ -51,7 +51,7 @@ class ShowPlayerWidget(QWidget):
         row = index - column * self._max_rows
         return column, row
 
-    def _add_scene(self, scene: Scene):
+    def _add_scene(self, scene: Scene) -> None:
         """Adds a scene to the player.
 
         Args:
@@ -65,7 +65,7 @@ class ShowPlayerWidget(QWidget):
         else:
             self._reload()
 
-    def _remove_scene(self, scene: Scene):
+    def _remove_scene(self, scene: Scene) -> None:
         """Removes a scene from the player.
 
         Args:
@@ -78,7 +78,7 @@ class ShowPlayerWidget(QWidget):
                 self._reload()
                 break
 
-    def _reload(self):
+    def _reload(self) -> None:
         """Reloads all scene widgets by filling up emtpty spaces"""
         max_height = 0
         last_height = 0
@@ -98,7 +98,7 @@ class ShowPlayerWidget(QWidget):
         uipage_container_height = self.height() - 10 - max_height
         self._ui_container.resize(uipage_container_width, uipage_container_height)
 
-    def _switch_scene(self, scene: Scene | int):
+    def _switch_scene(self, scene: Scene | int) -> None:
         scene_index = scene.scene_id if isinstance(scene, Scene) else scene
         if scene_index == self._scene_index:
             return

@@ -19,7 +19,7 @@ class TextPreviewRendererMixin(FilterNode):
         super().__init__(*args, **kwargs)
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
-    def _draw_preview(self, p: QPainter):
+    def _draw_preview(self, p: QPainter) -> None:
         value_str = str(self.filter.initial_parameters.get("value"))
         fm: QFontMetrics = p.fontMetrics()
         sheight = fm.height()
@@ -128,7 +128,7 @@ class ConstantsColorNode(FilterNode):
         self.graphicsItem().additional_rendering_method = self._draw_preview
         self._color_brush = QBrush(ColorHSI.from_filter_str(self.filter.initial_parameters["value"]).to_qt_color())
 
-    def _draw_preview(self, p: QPainter):
+    def _draw_preview(self, p: QPainter) -> None:
         p.setBrush(_value_box_brush)
         br = self.graphicsItem().boundingRect()
         p.scale(1.0, 1.0)
@@ -174,7 +174,7 @@ class PanTiltConstant(FilterNode):
         self.filter.gui_update_keys["pan"] = DataType.DT_DOUBLE
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
-    def _draw_preview(self, p: QPainter):
+    def _draw_preview(self, p: QPainter) -> None:
         value_pan_str = "Pan: " + str(self.filter.initial_parameters.get("pan"))
         value_tilt_str = "Tilt: " + str(self.filter.initial_parameters.get("tilt"))
         fm: QFontMetrics = p.fontMetrics()

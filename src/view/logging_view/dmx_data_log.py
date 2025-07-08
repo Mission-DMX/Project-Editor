@@ -40,7 +40,7 @@ class DmxDataLogWidget(QtWidgets.QWidget):
         """close logging Window stp timer"""
         self._timer.stop()
 
-    def _request_dmx_data(self):
+    def _request_dmx_data(self) -> None:
         """send signal to request dmx data from fish for each universe"""
         for universe in self._universes:
             self._broadcaster.send_request_dmx_data.emit(universe[0])

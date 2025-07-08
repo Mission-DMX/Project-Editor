@@ -57,7 +57,7 @@ class ShowLabelUIWidget(UIWidget):
         w.textChanged.connect(self._editor_text_changed)
         return w
 
-    def _editor_text_changed(self):
+    def _editor_text_changed(self) -> None:
         new_text = self._edit_widget.toMarkdown()
         self.configuration["text"] = new_text
         text_as_html = markdown(new_text)

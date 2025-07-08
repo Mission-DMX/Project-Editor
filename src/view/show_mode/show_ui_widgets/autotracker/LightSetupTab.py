@@ -131,7 +131,7 @@ class LightSetupTab(GuiTab):
                 self._calibration_points.append(item)
         logger.info(self._calibration_points)
 
-    async def _async_btn_frame_pressed(self):
+    async def _async_btn_frame_pressed(self) -> None:
         await self.instance.settings.lights.frame(
             2000, self.instance.settings.lights.corners
         )
@@ -144,7 +144,7 @@ class LightSetupTab(GuiTab):
         asyncio.set_event_loop(event_loop)
 
         # Define an asyncio function to run in the worker thread
-        async def my_async_function(self):
+        async def my_async_function(self) -> None:
             await self.instance.settings.lights.frame(
                 2000, self.instance.settings.lights.corners
             )
@@ -166,7 +166,7 @@ class LightSetupTab(GuiTab):
     def slider_changed(self):
         asyncio.run(self._async_slider())
 
-    async def _async_slider(self):
+    async def _async_slider(self) -> None:
         await self.instance.settings.lights.set_position(
             [self.sliderx1.value(), self.sliderx2.value()]
         )
@@ -192,7 +192,7 @@ class LightSetupTab(GuiTab):
         c = self.instance.settings.map.get_point((x, y))
         asyncio.run(self._asy_mouse(c))
 
-    async def _asy_mouse(self, pos):
+    async def _asy_mouse(self, pos) -> None:
         await self.instance.settings.lights.set_position(pos)
 
     def tab_activated(self):

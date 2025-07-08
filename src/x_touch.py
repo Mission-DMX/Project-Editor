@@ -10,7 +10,6 @@ from model.control_desk import set_seven_seg_display_content
 if TYPE_CHECKING:
     from model.broadcaster import Broadcaster
 
-
 VIEW_PATCH_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_PLUGIN_PATCH, new_state=proto.Console_pb2.ButtonState.BS_ACTIVE)
 
@@ -96,7 +95,7 @@ class XTouchMessages:
         self._broadcaster.application_closing.connect(self._cleanup_xtouch)
         self._send: callable = send
 
-    def _update_save_button(self, file_path: str):
+    def _update_save_button(self, file_path: str) -> None:
         if file_path:
             self._send(SAVE_BUTTON_ACTIVE_MSG)
         else:

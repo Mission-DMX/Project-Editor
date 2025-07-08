@@ -30,7 +30,7 @@ class _EffectDummy_Socket(Effect):
         logger.error("A dummy effect should never be serialized. Something went wrong.")
         return {}
 
-    def deserialize(self, data: dict[str, str]):
+    def deserialize(self, data: dict[str, str]) -> None:
         pass
 
     def get_configuration_widget(self) -> QWidget | None:
@@ -45,7 +45,7 @@ class _EffectDummy_Socket(Effect):
     def resolve_input_port_name(self, slot_id: str) -> str:
         return ""
 
-    def emplace_filter(self, heading_effects: dict[str, tuple["Effect", int]], filter_list: list[Filter]):
+    def emplace_filter(self, heading_effects: dict[str, tuple["Effect", int]], filter_list: list[Filter]) -> None:
         pass
 
     def get_serializable_effect_name(self) -> str:

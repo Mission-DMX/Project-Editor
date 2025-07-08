@@ -31,7 +31,7 @@ class SceneUIPageEditorWidget(QWidget):
         if event.button() is Qt.MouseButton.RightButton:
             self._widget_selection_menu(event.pos())
 
-    def _widget_selection_menu(self, pos: QPoint):
+    def _widget_selection_menu(self, pos: QPoint) -> None:
         menu = QMenu(self)
         """
         added_filters = 0
@@ -59,7 +59,7 @@ class SceneUIPageEditorWidget(QWidget):
             menu.addAction(action)
         menu.popup(self.mapToGlobal(pos))
 
-    def _add_filter_widget(self, filter_: Filter, pos: QPoint):
+    def _add_filter_widget(self, filter_: Filter, pos: QPoint) -> None:
         """Adds the filter widget to the page at the specified position.
 
         Args:
@@ -73,7 +73,7 @@ class SceneUIPageEditorWidget(QWidget):
         self._add_generic_widget(config_widget, pos)
 
     def _inst_generic_widget(self, widget_def: tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]]],
-                             pos: QPoint):
+                             pos: QPoint) -> None:
         config_widget = widget_def[1](self._ui_page, {})
         key_filters = widget_def[2]
         if len(key_filters) == 0:
@@ -82,7 +82,7 @@ class SceneUIPageEditorWidget(QWidget):
             self._widget_setup_dialog = WidgetSetupDialog(self, key_filters, self._add_generic_widget, pos,
                                                           self._ui_page, config_widget)
 
-    def _add_generic_widget(self, config_widget: UIWidget, pos: QPoint):
+    def _add_generic_widget(self, config_widget: UIWidget, pos: QPoint) -> None:
         widget_holder = UIWidgetHolder(config_widget, self)
         self._widgets.append(widget_holder)
         widget_holder.closing.connect(lambda: self._remove_widget_holder(widget_holder))

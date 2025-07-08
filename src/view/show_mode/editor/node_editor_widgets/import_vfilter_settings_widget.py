@@ -43,7 +43,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             "rename_dict": ",".join(renaming_data)
         }
 
-    def _load_configuration(self, conf: dict[str, str]):
+    def _load_configuration(self, conf: dict[str, str]) -> None:
         target_filter_id = conf.get("target") or ""
         if self._widget is None:
             self._construct_widget()
@@ -61,13 +61,13 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             self._construct_widget()
         return self._widget
 
-    def _load_parameters(self, parameters: dict[str, str]):
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         pass
 
     def _get_parameters(self) -> dict[str, str]:
         return dict()
 
-    def _construct_widget(self):
+    def _construct_widget(self) -> None:
         self._widget = QWidget(parent=self._parent)
         layout = QVBoxLayout()
         toolbar = QToolBar()
@@ -95,7 +95,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         self._widget.setLayout(layout)
         self._populate_widget()
 
-    def _load_rename_table(self):
+    def _load_rename_table(self) -> None:
         self._rename_table_widget.clear()
         self._enabled_cb_dict.clear()
         self._new_name_item_dict.clear()
@@ -124,27 +124,27 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             self._new_name_item_dict[channel_name] = new_name_item
             self._rename_table_widget.setItem(row, 2, new_name_item)
 
-    def _selection_changed(self):
+    def _selection_changed(self) -> None:
         self._tree_widget.setEnabled(False)
         self._load_rename_table()
         self._clear_selection_action.setEnabled(True)
         # TODO issue a warning here if self._target_filter_id changed
 
-    def _select_all_channels(self):
+    def _select_all_channels(self) -> None:
         for i in range(self._rename_table_widget.rowCount()):
             c_item = self._rename_table_widget.cellWidget(i, 0)
             if not isinstance(c_item, QCheckBox):
                 continue
             c_item.setCheckState(Qt.CheckState.Checked)
 
-    def _deselect_all_channels(self):
+    def _deselect_all_channels(self) -> None:
         for i in range(self._rename_table_widget.rowCount()):
             c_item = self._rename_table_widget.cellWidget(i, 0)
             if not isinstance(c_item, QCheckBox):
                 continue
             c_item.setCheckState(Qt.CheckState.Unchecked)
 
-    def _populate_widget(self):
+    def _populate_widget(self) -> None:
         if self._widget is None:
             self._construct_widget()
             return
@@ -153,7 +153,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         self._clear_selection_action.setEnabled(found_filter)
         self._load_rename_table()
 
-    def _release_filter_tree_widget(self):
+    def _release_filter_tree_widget(self) -> None:
         self._tree_widget.setEnabled(True)
         self._clear_selection_action.setEnabled(False)
 

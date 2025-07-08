@@ -44,7 +44,7 @@ class ClockUIWidget(UIWidget):
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         return _configure_label(QLabel("HH:MM:SS"))
 
-    def _construct_widget(self, parent: QWidget | None):
+    def _construct_widget(self, parent: QWidget | None) -> None:
         self._widget = _configure_label(QLabel(parent))
         self._timer = QTimer()
         self._timer.setInterval(1000)
@@ -52,7 +52,7 @@ class ClockUIWidget(UIWidget):
         self._timer.start()
         self._update_label()
 
-    def _update_label(self):
+    def _update_label(self) -> None:
         ct = datetime.now().time()
         text = f"{ct.hour:02}:{ct.minute:02}:{ct.second:02}"
         self._widget.setText(text)

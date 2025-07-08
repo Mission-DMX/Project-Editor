@@ -19,7 +19,7 @@ class PatchPlanWidget(QWidget):
         self._init_items()
         self._fixtures: list[UsedFixtureWidget] = []
 
-    def _init_items(self):
+    def _init_items(self) -> None:
         """initiate Channel Items"""
         for i in range(1, 513):
             pixmap = create_item(i)

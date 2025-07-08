@@ -44,7 +44,7 @@ class UIWidgetHolder(QWidget):
         super().move(self._model.position[0], self._model.position[1])
         self._edit_dialog = None
 
-    def update_size(self):
+    def update_size(self) -> None:
         self.setMinimumWidth(100)
         self.setMinimumHeight(30)
 
@@ -102,11 +102,11 @@ class UIWidgetHolder(QWidget):
     def widget(self) -> UIWidget:
         return self._model
 
-    def move(self, new_pos: QPoint):
+    def move(self, new_pos: QPoint) -> None:
         super().move(new_pos)
         self._model.position = (new_pos.x(), new_pos.y())
 
-    def _show_edit_dialog(self):
+    def _show_edit_dialog(self) -> None:
         if not self._edit_dialog:
             self._edit_dialog = QDialog(self)
             layout = QVBoxLayout()
@@ -115,7 +115,7 @@ class UIWidgetHolder(QWidget):
             self._edit_dialog.setLayout(layout)
         self._edit_dialog.show()
 
-    def unregister(self):
+    def unregister(self) -> None:
         """Clean up the stored widget and remove it from the parent canvas."""
         # setting the parent to None is required!
         try:

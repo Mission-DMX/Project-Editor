@@ -11,12 +11,12 @@ class ComposableWizardPage(QWizardPage):
         self._page_cleanup_function: Callable | None = page_cleanup_function
         self._completeness_function: Callable | None = check_completeness_function
 
-    def cleanupPage(self):
+    def cleanupPage(self) -> None:
         super().cleanupPage()
         if self._page_cleanup_function is not None:
             self._page_cleanup_function(self)
 
-    def initializePage(self):
+    def initializePage(self) -> None:
         super().initializePage()
         if self._page_activation_function is not None:
             self._page_activation_function(self)

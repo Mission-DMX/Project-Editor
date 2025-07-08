@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from model.macro import Macro
 
 
-def _write_event_sender(root: "ElementTree.Element", es: "EventSender"):
+def _write_event_sender(root: "ElementTree.Element", es: "EventSender") -> None:
     if not es.persistent:
         return
     element = ElementTree.SubElement(root, "eventsource", attrib={
@@ -25,7 +25,7 @@ def _write_event_sender(root: "ElementTree.Element", es: "EventSender"):
         })
         re.text = v
 
-def _write_macro(root: "ElementTree.Element", macro: "Macro"):
+def _write_macro(root: "ElementTree.Element", macro: "Macro") -> None:
     element = ElementTree.SubElement(root, "macro", attrib={
         "name": str(macro.name),
     })

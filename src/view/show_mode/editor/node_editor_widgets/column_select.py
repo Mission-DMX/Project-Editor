@@ -27,7 +27,7 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
         self._widget = FaderColumnSelectorWidget(parent=parent, base_set=filter.scene.linked_bankset)
         self._filter = filter
 
-    def _load_configuration(self, conf):
+    def _load_configuration(self, conf) -> None:
         if "ignore_main_brightness_control" in conf:
             self._widget.main_brightness_cb_enabled = True
             self._widget.ignore_main_brightness = conf.get("ignore_main_brightness_control") == "true"

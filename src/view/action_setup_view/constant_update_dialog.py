@@ -103,7 +103,7 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
                  f"{self._color.format_for_filter()} # {hexcode}")
             return s
 
-    def on_filter_selected(self):
+    def on_filter_selected(self) -> None:
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT:
             self._int_tb.setMaximum(255)
             self._int_tb.setEnabled(True)
@@ -122,6 +122,6 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
             self._color_panel.setEnabled(True)
             self.custom_layout.setCurrentIndex(3)
 
-    def _select_color(self):
+    def _select_color(self) -> None:
         self._color = ColorHSI.from_qt_color(self._color_picker.selectedColor())
         self._color_label.set_color(self._color)

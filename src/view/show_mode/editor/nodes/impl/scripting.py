@@ -32,7 +32,7 @@ class LuaFilterNode(FilterNode):
     def update_node_after_settings_changed(self):
         self._setup_terminals()
 
-    def _setup_terminals(self):
+    def _setup_terminals(self) -> None:
         self._ensure_parameters()
         legal_inputs: list[str] = []
         for input_mapping in self.filter.filter_configurations["in_mapping"].split(";"):
@@ -70,7 +70,7 @@ class LuaFilterNode(FilterNode):
             except KeyError:
                 pass
 
-    def _ensure_parameters(self):
+    def _ensure_parameters(self) -> None:
         if not self.filter.filter_configurations.get("in_mapping"):
             self.filter.filter_configurations["in_mapping"] = ""
         if not self.filter.filter_configurations.get("out_mapping"):

@@ -30,7 +30,7 @@ class ProcessNotifier:
         return self._total_step_count
 
     @total_step_count.setter
-    def total_step_count(self, new_maximum_step_number: int):
+    def total_step_count(self, new_maximum_step_number: int) -> None:
         """Set the new maximum number of steps that need to be performed. This method triggers a Qt event processing
         interrupt. As a consequence, it will take a bit longer to return and should not be called too often."""
         self._total_step_count = new_maximum_step_number
@@ -43,7 +43,7 @@ class ProcessNotifier:
         return self._current_step_number
 
     @current_step_number.setter
-    def current_step_number(self, new_pos: int):
+    def current_step_number(self, new_pos: int) -> None:
         """Set the current process indicator. This method will also process queued Qt events, preventing the application
         from freezing. It may take a bit longer to return though."""
         self._current_step_number = new_pos
@@ -56,7 +56,7 @@ class ProcessNotifier:
         return self._current_step_description
 
     @current_step_description.setter
-    def current_step_description(self, new_description: str):
+    def current_step_description(self, new_description: str) -> None:
         """Set the current step description. A step discription tells the operator, what the application is currently
         doing. This method does not process Qt events and should be called prior to updating the current step number."""
         self._current_step_description = new_description
@@ -90,7 +90,7 @@ def get_process_notifier(name: str, number_of_steps: int) -> ProcessNotifier:
     return p
 
 
-def _close_progress_handler(p: ProcessNotifier):
+def _close_progress_handler(p: ProcessNotifier) -> None:
     """Internal handle to deregister a finished process notifier."""
     _process_list.remove(p)
     inst.global_process_progress_changed.emit()

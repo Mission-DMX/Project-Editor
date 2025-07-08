@@ -29,7 +29,7 @@ class ColorInputEffect(ColorEffect):
         if self.get_scene() is not None:
             self._resolve_fader()
 
-    def _resolve_fader(self):
+    def _resolve_fader(self) -> None:
         # FIXME this does only look up the scenes bank set and ignores the stored bank set id
         scene = self.get_scene()
         if scene is not None:
@@ -65,5 +65,5 @@ class ColorInputEffect(ColorEffect):
         return self._fader
 
     @fader.setter
-    def fader(self, new_fader: ColorDeskColumn):
+    def fader(self, new_fader: ColorDeskColumn) -> None:
         self._fader = new_fader

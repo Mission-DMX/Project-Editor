@@ -45,7 +45,7 @@ class _CueLabel(QWidget):
         return self._play_label.isVisible()
 
     @playing.setter
-    def playing(self, new_value: bool):
+    def playing(self, new_value: bool) -> None:
         """Set the state of the playing icon of the cue label"""
         self._play_label.setVisible(new_value)
 
@@ -101,7 +101,7 @@ class CueControlUIWidget(UIWidget):
         self._migrate_name_list()
         self._model = None
 
-    def _migrate_name_list(self):
+    def _migrate_name_list(self) -> None:
         cuelist_str = self.configuration.get("cue_names")
         if cuelist_str:
             logger.info("Migrating old cue name model")
@@ -135,7 +135,7 @@ class CueControlUIWidget(UIWidget):
         if clear_model:
             self._model = None
 
-    def _repopulate_lists(self):
+    def _repopulate_lists(self) -> None:
         """Load / update the content of the cue lists"""
         for cue_list in [self._player_cue_list_widget, self._config_cue_list_widget]:
             if cue_list is None:
@@ -232,7 +232,7 @@ class CueControlUIWidget(UIWidget):
         self._dialog_widget = w
         return w
 
-    def _config_item_update_height(self, new_height: int):
+    def _config_item_update_height(self, new_height: int) -> None:
         """Change the height of the widgets after adjustment."""
         new_height = max(350, new_height)
         if self._config_widget is not None:

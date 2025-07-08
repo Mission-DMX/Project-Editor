@@ -43,7 +43,7 @@ class Universe:
         return self._name
 
     @name.setter
-    def name(self, name: str):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
@@ -52,7 +52,7 @@ class Universe:
         return self._description
 
     @description.setter
-    def description(self, description: str):
+    def description(self, description: str) -> None:
         self._description = description
 
     @property

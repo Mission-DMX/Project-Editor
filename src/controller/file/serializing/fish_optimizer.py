@@ -21,7 +21,7 @@ class SceneOptimizerModule:
         self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = {}
         self._first_universe_filter_id: dict[str, str] = {}
 
-    def _substitute_universe_filter(self, f: Filter):
+    def _substitute_universe_filter(self, f: Filter) -> None:
         """
         This method reads the filter configuration and updates the universe filter creation dict.
         Entries are lists of tuple (input_channel_name, corresponding_universe_channel, foreign_output_channel_to_map).
@@ -76,7 +76,7 @@ class SceneOptimizerModule:
             case _:
                 return False
 
-    def _fill_ch_sub_dict(self, f: Filter, substitution_filter: Filter):
+    def _fill_ch_sub_dict(self, f: Filter, substitution_filter: Filter) -> None:
         """
         This method is used to fill the substitution dictionary with required port mappings.
 
@@ -96,7 +96,7 @@ class SceneOptimizerModule:
             self.channel_override_dict[
                 f"{f.filter_id}:{output_channel_name}"] = f"{substitution_filter.filter_id}:{output_channel_name}"
 
-    def _emplace_universe_filters(self, scene_element: ElementTree.Element):
+    def _emplace_universe_filters(self, scene_element: ElementTree.Element) -> None:
         """
         This method places the replacement for the aggregated universe output filters.
         :param scene_element: The scene to place the new filter into.

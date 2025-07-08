@@ -158,7 +158,7 @@ class ColorWheelEffect(ColorEffect):
         return self._number_of_fragments
 
     @fragment_number.setter
-    def fragment_number(self, new_fragment_count: int):
+    def fragment_number(self, new_fragment_count: int) -> None:
         self._number_of_fragments = max(new_fragment_count, 1)
 
     @property
@@ -166,7 +166,7 @@ class ColorWheelEffect(ColorEffect):
         return self._min_hue
 
     @min_hue.setter
-    def min_hue(self, new_value: float):
+    def min_hue(self, new_value: float) -> None:
         self._min_hue = new_value % 360.0
 
     @property
@@ -174,7 +174,7 @@ class ColorWheelEffect(ColorEffect):
         return self._max_hue
 
     @max_hue.setter
-    def max_hue(self, new_value: float):
+    def max_hue(self, new_value: float) -> None:
         self._max_hue = new_value % 360.0
 
     def serialize(self) -> dict:

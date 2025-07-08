@@ -84,13 +84,13 @@ class _SenderConfigurationWidget(QScrollArea):
         return self._sender
 
     @sender.setter
-    def sender(self, new_sender: events.EventSender | None):
+    def sender(self, new_sender: events.EventSender | None) -> None:
         if new_sender == self._sender:
             return
         self._sender = new_sender
         self._update_widgets_on_new_sender(new_sender)
 
-    def _update_widgets_on_new_sender(self, new_sender: events.EventSender | None):
+    def _update_widgets_on_new_sender(self, new_sender: events.EventSender | None) -> None:
         if new_sender is not None:
             self._name_label.setText(new_sender.name)
             self._index_label.setText(str(new_sender.index_on_fish))
@@ -117,7 +117,7 @@ class _SenderConfigurationWidget(QScrollArea):
             self._rename_table.setRowCount(0)
             self._rename_table.setEnabled(False)
 
-    def _update_table(self):
+    def _update_table(self) -> None:
         self._rename_table.clear()
         rename_items = self._sender.renamed_events.items()
         self._rename_table.setRowCount(len(rename_items))
@@ -137,20 +137,20 @@ class _SenderConfigurationWidget(QScrollArea):
             self._rename_table.setItem(i, 2, s_function_item)
             self._rename_table.setItem(i, 3, args_item)
 
-    def _debug_enabled_checked_changed(self, *args, **kwargs):
+    def _debug_enabled_checked_changed(self, *args, **kwargs) -> None:
         if self._sender is not None:
             self._sender.debug_enabled = self._debug_enabled_checkbox.isChecked()
             self._debug_include_ongoing_checkbox.setEnabled(self._sender.debug_enabled)
 
-    def _debug_include_ongoing_changed(self):
+    def _debug_include_ongoing_changed(self) -> None:
         if self._sender is not None:
             self._sender.debug_include_ongoing_events = self._debug_include_ongoing_checkbox.isChecked()
 
-    def _persistence_changed(self):
+    def _persistence_changed(self) -> None:
         if self._sender is not None:
             self._sender.persistent = self._persistence_checkbox.isChecked()
 
-    def _rename_table_cell_changed(self, row: int, column: int):
+    def _rename_table_cell_changed(self, row: int, column: int) -> None:
         if self._sender is None:
             return
         item = self._rename_table.item(row, column)
@@ -160,7 +160,7 @@ class _SenderConfigurationWidget(QScrollArea):
         self._own_rename_issued = True
         self._broadcaster.event_rename_action_occurred.emit(self._sender.index_on_fish)
 
-    def _rename_event_occurred(self, s_id: int):
+    def _rename_event_occurred(self, s_id: int) -> None:
         if not self._own_rename_issued and self._sender is not None and self._sender.index_on_fish == s_id:
             self._update_table()
         else:
@@ -289,7 +289,7 @@ class _EventLogListWidget(QWidget):
         self._broadcaster.event_rename_action_occurred.connect(self._rename_occurred)
         self._update_name_label()
 
-    def _add_rename_entry(self):
+    def _add_rename_entry(self) -> None:
         sender = get_sender_by_id(self._event.sender_id)
         if sender is None:
             return
@@ -299,12 +299,12 @@ class _EventLogListWidget(QWidget):
     def _get_event_tuple(self) -> tuple[int, int, str]:
         return int(self._event.type), self._event.sender_function, "".join([chr(c) for c in self._event.arguments])
 
-    def _rename_occurred(self, sid: int):
+    def _rename_occurred(self, sid: int) -> None:
         if sid != self._event.sender_id:
             return
         self._update_name_label()
 
-    def _update_name_label(self):
+    def _update_name_label(self) -> None:
         sender = get_sender_by_id(self._event.sender_id)
         name = sender.renamed_events.get(self._get_event_tuple())
         if name is not None:
@@ -343,7 +343,7 @@ class _SenderAddDialog(QDialog):
         layout.addWidget(self._button_box)
         self.setLayout(layout)
 
-    def _apply(self):
+    def _apply(self) -> None:
         evs = EventSender(self._name_tb.text())
         evs.type = self._type_cb.currentText()
         mark_sender_persistent(evs.name)
@@ -399,7 +399,7 @@ class EventSetupWidget(QSplitter):
         self._broadcaster = b
         self._dialog: QDialog | None = None
 
-    def _update_sender_list(self):
+    def _update_sender_list(self) -> None:
         self._sender_list.clear()
         for sender in events.get_all_senders():
             item = AnnotatedListWidgetItem(self._sender_list)
@@ -409,7 +409,7 @@ class EventSetupWidget(QSplitter):
             self._sender_list.addItem(item)
             self._sender_list.setItemWidget(item, item_widget)
 
-    def _sender_selected(self):
+    def _sender_selected(self) -> None:
         item_list = self._sender_list.selectedItems()
         if len(item_list) == 0:
             return
@@ -418,11 +418,11 @@ class EventSetupWidget(QSplitter):
             raise ValueError("Expected out item implementation")
         self._configuration_widget.sender = item.annotated_data
 
-    def _add_sender_pressed(self):
+    def _add_sender_pressed(self) -> None:
         self._dialog = _SenderAddDialog(self)
         self._dialog.open()
 
-    def _event_received(self, e: event):
+    def _event_received(self, e: event) -> None:
         if e.type == proto.Events_pb2.ONGOING_EVENT and not get_sender_by_id(e.sender_id).debug_include_ongoing_events:
             return
         item = AnnotatedListWidgetItem(self._event_log)
@@ -432,5 +432,5 @@ class EventSetupWidget(QSplitter):
         self._event_log.addItem(item)
         self._event_log.setItemWidget(item, w)
 
-    def _clear_log_pressed(self):
+    def _clear_log_pressed(self) -> None:
         self._event_log.clear()

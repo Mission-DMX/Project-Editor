@@ -48,7 +48,7 @@ class _CommandInsertionDialog(QDialog):
 
         self.setLayout(layout)
 
-    def _scene_selected(self):
+    def _scene_selected(self) -> None:
         if self._scene_selection_cb.count() == 0:
             return
         scene_index = self._scene_selection_cb.currentIndex()
@@ -65,7 +65,7 @@ class _CommandInsertionDialog(QDialog):
             self.on_filter_selected()
             self._button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
-    def _apply(self):
+    def _apply(self) -> None:
         self._macro.content += "\n" + self.get_command()
         self._update_callable()
         self.close()
@@ -77,7 +77,7 @@ class _CommandInsertionDialog(QDialog):
         """
         raise NotImplementedError()
 
-    def on_filter_selected(self):
+    def on_filter_selected(self) -> None:
         """
         This method gets called once the user selected the desired filter.
         Use this method to implement custom behavior. self.filter and self.filter_id

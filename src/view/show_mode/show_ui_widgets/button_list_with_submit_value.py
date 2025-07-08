@@ -66,7 +66,7 @@ class ButtonsWithValueSubmit(UIWidget):
             valuefield.setDecimals(0)
         submit_button = QPushButton("Send Value", widget)
 
-        def pressed_button():
+        def pressed_button() -> None:
             value = valuefield.value() if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(
                 valuefield.value())
             self._button_list._set_value(value)

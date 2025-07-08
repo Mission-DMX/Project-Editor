@@ -39,7 +39,7 @@ class _NewTriggerDialog(QDialog):
         self.setLayout(layout)
         self.added_callable: Callable | None = None
 
-    def _apply(self):
+    def _apply(self) -> None:
         type_str = self._type_cb.currentText()
         t = trigger_factory(type_str)
         t.name = self._name_tb.text() or "New Trigger"
@@ -50,5 +50,5 @@ class _NewTriggerDialog(QDialog):
         if self.added_callable is not None:
             self.added_callable(t)
 
-    def _type_changed(self):
+    def _type_changed(self) -> None:
         self._fbutton_cb.setEnabled(self._type_cb.currentText() == "f_keys")

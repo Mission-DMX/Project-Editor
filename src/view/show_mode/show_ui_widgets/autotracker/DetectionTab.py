@@ -77,5 +77,5 @@ class DetectionTab(GuiTab):
             c = self.instance.settings.map.get_point(p)
             asyncio.run(self._asy_mouse(c))
 
-    async def _asy_mouse(self, pos):
+    async def _asy_mouse(self, pos) -> None:
         await self.instance.settings.lights.set_position(pos)

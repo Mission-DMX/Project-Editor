@@ -39,7 +39,7 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
     def _get_configuration(self) -> dict[str, str]:
         return self._filter.filter_configurations
 
-    def _load_configuration(self, conf: dict[str, str]):
+    def _load_configuration(self, conf: dict[str, str]) -> bool:
         for key, value in conf.items():
             try:
                 if key == "outputs":
@@ -56,7 +56,7 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
         return self._parent_widget
 
-    def _load_parameters(self, parameters: dict[str, str]):
+    def _load_parameters(self, parameters: dict[str, str]) -> bool:
         for key, value in parameters.items():
             try:
                 if key == "pan":

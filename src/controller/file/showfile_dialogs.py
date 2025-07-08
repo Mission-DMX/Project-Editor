@@ -24,7 +24,7 @@ def _select_file(parent: QWidget, func, show_save_dialog: bool, show_data: Board
     file_dialog.show()
 
 
-def _load_show_file(file_name: str, show_data: BoardConfiguration):
+def _load_show_file(file_name: str, show_data: BoardConfiguration) -> None:
     """Loads a show file.
 
     Args:
@@ -34,7 +34,7 @@ def _load_show_file(file_name: str, show_data: BoardConfiguration):
         show_data.broadcaster.show_file_loaded.emit()
 
 
-def _save_show_file(file_name: str, show_data: BoardConfiguration):
+def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
     """Saves the board configuration to a specified file.
 
     Args:

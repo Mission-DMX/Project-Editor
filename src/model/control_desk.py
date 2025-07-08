@@ -80,7 +80,7 @@ class DeskColumn(ABC):
         return self._upper_text
 
     @display_name.setter
-    def display_name(self, text: str):
+    def display_name(self, text: str) -> None:
         self._lower_text = ""
         self._upper_text = text
         self.update()
@@ -91,7 +91,7 @@ class DeskColumn(ABC):
         return self._bottom_display_line_inverted
 
     @bottom_display_line_inverted.setter
-    def bottom_display_line_inverted(self, state: bool):
+    def bottom_display_line_inverted(self, state: bool) -> None:
         self._bottom_display_line_inverted = state
         self.update()
 
@@ -101,7 +101,7 @@ class DeskColumn(ABC):
         return self._top_display_line_inverted
 
     @top_display_line_inverted.setter
-    def top_display_line_inverted(self, state: bool):
+    def top_display_line_inverted(self, state: bool) -> None:
         self._top_display_line_inverted = state
         self.update()
 
@@ -163,7 +163,7 @@ class RawDeskColumn(DeskColumn):
         return self._secondary_text_line
 
     @secondary_text_line.setter
-    def secondary_text_line(self, new_value: str | None):
+    def secondary_text_line(self, new_value: str | None) -> None:
         """This method sets the secondary text line.
 
         new_value -- The text to set
@@ -184,7 +184,7 @@ class RawDeskColumn(DeskColumn):
         return self._fader_position
 
     @fader_position.setter
-    def fader_position(self, position: int):
+    def fader_position(self, position: int) -> None:
         """Set the fader position. Please keep in mind that the fader positions range from 0 to 65535
 
         position -- The new position to set
@@ -202,7 +202,7 @@ class RawDeskColumn(DeskColumn):
         return self._encoder_position
 
     @encoder_position.setter
-    def encoder_position(self, position: int):
+    def encoder_position(self, position: int) -> None:
         if position == self._encoder_position:
             return
         self._encoder_position = position
@@ -240,7 +240,7 @@ class ColorDeskColumn(DeskColumn):
         return self._color
 
     @color.setter
-    def color(self, color: ColorHSI):
+    def color(self, color: ColorHSI) -> None:
         if color == self._color:
             return
         self._color = color
@@ -441,13 +441,13 @@ class BankSet:
         if self._gui_controlled:
             self.push_messages_now()
 
-    def _leaf_selected(self):
+    def _leaf_selected(self) -> None:
         if not self.active_column:
             return
         self.active_column = None
         self._send_desk_update_message()
 
-    def _send_desk_update_message(self):
+    def _send_desk_update_message(self) -> None:
         msg = proto.Console_pb2.desk_update()
         if self.active_column:
             msg.selected_column_id = self.active_column.id

@@ -69,14 +69,14 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         widget_width = self._universe_widget.width()
         return (absolute_position / widget_width) * maximum
 
-    def _decrease_scroll(self):
+    def _decrease_scroll(self) -> None:
         if self._translate_scroll_position(self._scroll_position - 25) < self.horizontalScrollBar().minimum():
             return
         self._scroll_position -= 25
         self._universe_widget.scroll(25, 0)
         self.horizontalScrollBar().setValue(self._translate_scroll_position(self._scroll_position))
 
-    def _increase_scroll(self):
+    def _increase_scroll(self) -> None:
         if self._translate_scroll_position(self._scroll_position + 25) > self.horizontalScrollBar().maximum():
             return
         self._scroll_position += 25
@@ -89,7 +89,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             self._bank_set.update()  # FIXME activate should suffice
             self._bank_set.push_messages_now()
 
-    def _add_fixture(self, fixture: UsedFixture):
+    def _add_fixture(self, fixture: UsedFixture) -> None:
         layout = self._universe_widget.layout()
         for channel_index in range(fixture.channel_length):
             channel_widget = ChannelWidget(fixture.get_fixture_channel(channel_index),

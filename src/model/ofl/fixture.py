@@ -199,7 +199,7 @@ class UsedFixture(QtCore.QObject):
         return self._universe_id
 
     @universe_id.setter
-    def universe_id(self, universe_id: int):
+    def universe_id(self, universe_id: int) -> None:
         self._universe_id = universe_id
 
     @property
@@ -223,7 +223,7 @@ class UsedFixture(QtCore.QObject):
         return self._color_on_stage
 
     @color_on_stage.setter
-    def color_on_stage(self, color: str):
+    def color_on_stage(self, color: str) -> None:
         self._color_on_stage = color
         self.static_data_changed.emit()
 
@@ -233,7 +233,7 @@ class UsedFixture(QtCore.QObject):
         return self._name_on_stage
 
     @name_on_stage.setter
-    def name_on_stage(self, name: str):
+    def name_on_stage(self, name: str) -> None:
         self._name_on_stage = name
         self.static_data_changed.emit()
 

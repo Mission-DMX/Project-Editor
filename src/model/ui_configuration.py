@@ -112,7 +112,7 @@ class UIWidget(ABC):
         return self._position
 
     @position.setter
-    def position(self, new_position: tuple[int, int]):
+    def position(self, new_position: tuple[int, int]) -> None:
         """Update the position of the widget on the UI page"""
         self._position = new_position
         self.parent.display_update_required = True
@@ -123,7 +123,7 @@ class UIWidget(ABC):
         return self._size
 
     @size.setter
-    def size(self, new_size: tuple[int, int]):
+    def size(self, new_size: tuple[int, int]) -> None:
         """Update the size of the widget"""
         self._size = new_size
         self.parent.display_update_required = True
@@ -208,7 +208,7 @@ class UIPage:
         return self._title
 
     @title.setter
-    def title(self, new_title: str):
+    def title(self, new_title: str) -> None:
         self._title = new_title
 
     def copy(self, new_parent: "Scene") -> "UIPage":
@@ -252,7 +252,7 @@ class ShowUI:
         return self._active_scene
 
     @active_scene.setter
-    def active_scene(self, scene: int):
+    def active_scene(self, scene: int) -> None:
         """Set the current active scene.
 
         Warning: setting this property will actually update the current active scene, if this UI is the active one.

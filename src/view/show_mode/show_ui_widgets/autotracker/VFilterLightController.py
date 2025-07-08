@@ -46,7 +46,7 @@ class VFilterLightController(LightController):
         logger.error(
             "Someone wanted to set the moving head color to '%s'. This however is not supported.", color)
 
-    def _request_update(self):
+    def _request_update(self) -> None:
         if not self._widget:
             logger.error("Unable to pass auto tracker updates. No UIWidget was loaded yet.")
             return

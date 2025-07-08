@@ -15,9 +15,9 @@ class YesNoDialog(QDialog):
         self._success_action = success_action
         self.open()
 
-    def _yes__button_pressed(self):
+    def _yes__button_pressed(self) -> None:
         self.close()
         self._success_action()
 
-    def _no_button_pressed(self):
+    def _no_button_pressed(self) -> None:
         self.close()

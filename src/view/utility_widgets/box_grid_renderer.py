@@ -98,7 +98,7 @@ class BoxGridRenderer(QWidget):
         return self._box_width
 
     @box_width.setter
-    def box_width(self, new_value: int):
+    def box_width(self, new_value: int) -> None:
         """Set the width of individual items."""
         self._box_width = max(new_value, 0)
         self.setMinimumWidth(self._box_width + self._scroll_bar_size)
@@ -111,7 +111,7 @@ class BoxGridRenderer(QWidget):
         return self._box_height
 
     @box_height.setter
-    def box_height(self, new_value: int):
+    def box_height(self, new_value: int) -> None:
         """Set the height of individual items."""
         self._box_height = max(0, new_value)
         self.setMinimumHeight(self._box_height)
@@ -138,7 +138,7 @@ class BoxGridRenderer(QWidget):
         self.update()
         self.repaint()
 
-    def _update_scroll_behavior(self):
+    def _update_scroll_behavior(self) -> None:
         # TODO display scroll bar if boxes > height
         # TODO link scroll bar signals if scroll bar visible
         pass
@@ -190,7 +190,7 @@ class BoxGridRenderer(QWidget):
         # TODO render scroll bar
         p.end()
 
-    def _draw_box(self, p: QPainter, b: BoxGridItem, x: int, y: int):
+    def _draw_box(self, p: QPainter, b: BoxGridItem, x: int, y: int) -> None:
         """Draws a box. At the given location."""
         p.setBrush(self._fg_brush)
         p.drawRect(x, y, self._box_width, self._box_height)

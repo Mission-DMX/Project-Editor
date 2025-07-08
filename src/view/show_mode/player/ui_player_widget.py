@@ -31,13 +31,13 @@ class UIPlayerWidget(QWidget):
         return self._scene
 
     @scene.setter
-    def scene(self, new_scene: Scene | None):
+    def scene(self, new_scene: Scene | None) -> None:
         self._scene = new_scene
         self._update_page_cb()
         if new_scene is not None:
             self._update_page()
 
-    def _update_page_cb(self):
+    def _update_page_cb(self) -> None:
         self._page_combo_box.clear()
         if self._scene is None:
             return
@@ -45,7 +45,7 @@ class UIPlayerWidget(QWidget):
         for i, page in enumerate(self._scene.ui_pages):
             self._page_combo_box.addItem(f"[{i + 1}] {page.title}", i)
 
-    def _update_page(self):
+    def _update_page(self) -> None:
         for w in self._widgets:
             w.unregister()
             w.setParent(None)
@@ -61,7 +61,7 @@ class UIPlayerWidget(QWidget):
         else:
             self._ui_page_window_index = max(len(scene.ui_pages) - 1, 0)
 
-    def _check_page_update(self):
+    def _check_page_update(self) -> None:
         if self._scene is None:
             return
         index = self._ui_page_window_index
@@ -72,13 +72,13 @@ class UIPlayerWidget(QWidget):
             self._update_page()
             page.display_update_required = False
 
-    def _switch_page_index(self):
+    def _switch_page_index(self) -> None:
         self._ui_page_window_index = self._page_combo_box.currentData()
         if self._ui_page_window_index is None:
             self._ui_page_window_index = 0
         self._update_page()
 
-    def _page_renamed(self, scene_id: int):
+    def _page_renamed(self, scene_id: int) -> None:
         if self._scene is None:
             return
         if scene_id == self._scene.scene_id:

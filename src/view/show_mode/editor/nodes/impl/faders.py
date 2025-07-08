@@ -22,7 +22,7 @@ class _FaderNode(FilterNode):
             self.filter.filter_configurations["column_id"] = ""
         self._update_bankset_listener()
 
-    def _update_bankset_listener(self):
+    def _update_bankset_listener(self) -> None:
         set_id = self.filter.filter_configurations["set_id"]
 
         if self.filter.scene.linked_bankset.id == set_id:
@@ -42,10 +42,10 @@ class _FaderNode(FilterNode):
         if self._bankset_model is not None:
             self._bankset_model.id_update_listeners.append(self)
 
-    def notify_on_new_id(self, new_id: str):
+    def notify_on_new_id(self, new_id: str) -> None:
         self.filter.filter_configurations["set_id"] = new_id
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         if self._bankset_model is not None:
             self._bankset_model.id_update_listeners.remove(self)
         self._update_bankset_listener()

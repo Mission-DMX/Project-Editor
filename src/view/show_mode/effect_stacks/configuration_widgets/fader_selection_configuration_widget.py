@@ -31,5 +31,5 @@ class FaderSelectionConfigurationWidget(FaderColumnSelectorWidget):
             return
         self.set_selected_item(f.bank_set.id, f.id)
 
-    def _column_selected(self, column: DeskColumn):
+    def _column_selected(self, column: DeskColumn) -> None:
         self._effect.fader = column

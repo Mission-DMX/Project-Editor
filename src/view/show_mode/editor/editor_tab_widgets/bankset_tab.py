@@ -56,7 +56,7 @@ class BankSetTabWidget(QWidget):
         return self._bankset
 
     @bankset.setter
-    def bankset(self, bs: BankSet):
+    def bankset(self, bs: BankSet) -> None:
         self._bank_list.clear()
         self._bankset = bs
         first_bank = True
@@ -76,7 +76,7 @@ class BankSetTabWidget(QWidget):
             self._description_text_box.setText("")
             self._description_text_box.setEnabled(False)
 
-    def _add_bank(self):
+    def _add_bank(self) -> None:
         if not self._bankset:
             return
         was_empty = self._bankset.is_empty
@@ -85,7 +85,7 @@ class BankSetTabWidget(QWidget):
         self._insert_bank(b, was_empty)
         self._bankset.update_required = True
 
-    def _insert_bank(self, b: FaderBank, was_empty: bool):
+    def _insert_bank(self, b: FaderBank, was_empty: bool) -> None:
         bank_list_item = _BankItem(b, self._bank_list.count())
         self._bank_list.addItem(bank_list_item)
         if was_empty:
@@ -95,14 +95,14 @@ class BankSetTabWidget(QWidget):
             self._bank_edit_widget.set_linked_bank_item(bank_list_item)
         self._bankset.update_required = True
 
-    def _select_bank_to_edit(self, item: QListWidgetItem):
+    def _select_bank_to_edit(self, item: QListWidgetItem) -> None:
         if not isinstance(item, _BankItem):
             return
         item.update_description_text()
         self._bank_edit_widget.bank = item.bank
         self._bank_edit_widget.set_linked_bank_item(item)
 
-    def _add_column(self):
+    def _add_column(self) -> None:
         for item in self._bank_list.selectedItems():
             if not isinstance(item, _BankItem):
                 continue
@@ -115,7 +115,7 @@ class BankSetTabWidget(QWidget):
             break
         self._bankset.update_required = True
 
-    def _description_text_changed(self, text: str):
+    def _description_text_changed(self, text: str) -> None:
         if text and self._bankset:
             self.bankset.description = text
 
@@ -132,10 +132,10 @@ class _BankItem(QListWidgetItem):
         return self._bank
 
     @bank.setter
-    def bank(self, b: FaderBank):
+    def bank(self, b: FaderBank) -> None:
         self._bank = b
 
-    def update_description_text(self):
+    def update_description_text(self) -> None:
         text_items: list[str] = []
         for col in self._bank.columns:
             text_items.append(col.display_name)
@@ -244,14 +244,14 @@ class _BankEditWidget(QWidget):
         return self._bank
 
     @bank.setter
-    def bank(self, bank: FaderBank | None):
+    def bank(self, bank: FaderBank | None) -> None:
         self._bank = bank
         self.refresh_column_count()
 
-    def set_linked_bank_item(self, item: _BankItem | None):
+    def set_linked_bank_item(self, item: _BankItem | None) -> None:
         self._bank_item = item
 
-    def refresh_column_count(self):
+    def refresh_column_count(self) -> None:
         number_of_columns = len(self._bank.columns) if self._bank else 0
         for i in range(len(self._text_widgets)):
             column_enabled = i < number_of_columns
@@ -302,34 +302,34 @@ class _BankEditWidget(QWidget):
                 self._color_labels[i].setAutoFillBackground(False)
             self._update_color_label(i)
 
-    def _display_text_field_changed(self, index: int, text: str):
+    def _display_text_field_changed(self, index: int, text: str) -> None:
         if self._bank and len(self._bank.columns) > index:
             self._bank.columns[index].display_name = self._text_widgets[index].text()
             if self._bank_item:
                 self._bank_item.update_description_text()
 
-    def _top_inverted_changed(self, index: int, checked: bool):
+    def _top_inverted_changed(self, index: int, checked: bool) -> None:
         if self._bank and len(self._bank.columns) > index:
             self._bank.columns[index].top_display_line_inverted = self._top_inverted_widgets[index].isChecked()
 
-    def _bottom_inverted_changed(self, index: int, checked: bool):
+    def _bottom_inverted_changed(self, index: int, checked: bool) -> None:
         if self._bank and len(self._bank.columns) > index:
             self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[
                 index].isChecked()
 
-    def _raw_encoder_value_changed(self, index: int, new_value: int):
+    def _raw_encoder_value_changed(self, index: int, new_value: int) -> None:
         if self._bank and len(self._bank.columns) > index:
             col = self._bank.columns[index]
             if isinstance(col, RawDeskColumn):
                 col.encoder_position = new_value
 
-    def _raw_fader_value_changed(self, index: int, new_value: int):
+    def _raw_fader_value_changed(self, index: int, new_value: int) -> None:
         if self._bank and len(self._bank.columns) > index:
             col = self._bank.columns[index]
             if isinstance(col, RawDeskColumn):
                 col.fader_position = new_value
 
-    def _color_hue_value_changed(self, index: int, new_value: float):
+    def _color_hue_value_changed(self, index: int, new_value: float) -> None:
         if self._bank and len(self._bank.columns) > index:
             col = self._bank.columns[index]
             if isinstance(col, ColorDeskColumn):
@@ -338,7 +338,7 @@ class _BankEditWidget(QWidget):
                 col.color = ca
                 self._update_color_label(index)
 
-    def _color_saturation_value_changed(self, index: int, new_value: float):
+    def _color_saturation_value_changed(self, index: int, new_value: float) -> None:
         if self._bank and len(self._bank.columns) > index:
             col = self._bank.columns[index]
             if isinstance(col, ColorDeskColumn):
@@ -347,7 +347,7 @@ class _BankEditWidget(QWidget):
                 col.color = ca
                 self._update_color_label(index)
 
-    def _color_intensity_value_changed(self, index: int, new_value: float):
+    def _color_intensity_value_changed(self, index: int, new_value: float) -> None:
         if self._bank and len(self._bank.columns) > index:
             col = self._bank.columns[index]
             if isinstance(col, ColorDeskColumn):
@@ -356,7 +356,7 @@ class _BankEditWidget(QWidget):
                 col.color = ca
                 self._update_color_label(index)
 
-    def _update_color_label(self, index: int):
+    def _update_color_label(self, index: int) -> None:
         c = Qt.GlobalColor.gray
         if self._bank and len(self._bank.columns) > index:
             col = self._bank.columns[index]

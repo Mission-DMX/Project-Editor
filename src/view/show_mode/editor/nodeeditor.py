@@ -34,7 +34,7 @@ class NodeEditorWidget(QWidget):
 
         self._populate_flowchart()
 
-    def _populate_flowchart(self):
+    def _populate_flowchart(self) -> None:
         self._flowchart = FilterFlowchart(page=self._page, library=self._library)
         self._flowchart.removeNode(self._flowchart.outputNode)
         self._flowchart.removeNode(self._flowchart.inputNode)

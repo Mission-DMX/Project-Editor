@@ -103,7 +103,7 @@ class ColorSelectionUIWidget(UIWidget):
         layout.addWidget(preset_list)
         w.setLayout(layout)
 
-        def _add_preset(c_template):
+        def _add_preset(c_template) -> None:
             c: ColorHSI = ColorHSI.from_qt_color(c_template)
             self._presets.append(c)
             self.configuration["number_of_presets"] = str(int(self.configuration["number_of_presets"]) + 1)
@@ -118,7 +118,7 @@ class ColorSelectionUIWidget(UIWidget):
                 config_parent = self._config_widget.parent()
                 self._config_widget = self._build_base_widget(config_parent, False)
 
-        def open_dialog():
+        def open_dialog() -> None:
             d = QColorDialog(w)
             d.colorSelected.connect(_add_preset)
             d.show()
@@ -126,12 +126,12 @@ class ColorSelectionUIWidget(UIWidget):
         add_action.triggered.connect(open_dialog)
         return w
 
-    def _select_color(self, i: int):
+    def _select_color(self, i: int) -> None:
         if not self._player_widget:
             return
         d = QColorDialog(self._player_widget)
         d.colorSelected.connect(lambda color: self._set_preset(i, color))
         d.show()
 
-    def _set_preset(self, i: int, color: QColor):
+    def _set_preset(self, i: int, color: QColor) -> None:
         self._presets[i] = ColorHSI.from_qt_color(color)

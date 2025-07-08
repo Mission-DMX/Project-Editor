@@ -112,7 +112,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_scripting_nodes()
         self.addNodeType(ImportNode, [("")])
 
-    def _register_constants_nodes(self):
+    def _register_constants_nodes(self) -> None:
         """Registers all the constants nodes."""
         # Add Node -> Constants sub menu
         self.addNodeType(Constants8BitNode, [("Constants",)])
@@ -121,7 +121,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ConstantsColorNode, [("Constants",)])
         self.addNodeType(PanTiltConstant, [("Constants",)])
 
-    def _register_debug_nodes(self):
+    def _register_debug_nodes(self) -> None:
         """Registers all the debugs nodes."""
         # Add Node -> Debug sub menu
         self.addNodeType(Debug8BitNode, [("Debug", "Fish-Log",)])
@@ -133,7 +133,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(DebugRemoteFloatNode, [("Debug",)])
         self.addNodeType(DebugRemoteColorNode, [("Debug",)])
 
-    def _register_adapters_nodes(self):
+    def _register_adapters_nodes(self) -> None:
         """Registers all the constants nodes."""
         # Add Node -> Adapters sub menu
         self.addNodeType(Adapter16BitTo8BitNode, [("Adapters",)])
@@ -155,7 +155,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(Map8BitTo16Bit, [("Adapters",)])
         self.addNodeType(ColorBrightnessMixinNode, [("Adapters",)])
 
-    def _register_arithmetic_nodes(self):
+    def _register_arithmetic_nodes(self) -> None:
         """Registers all the arithmetics nodes."""
         # Add Node -> Arithmetic sub menu
         self.addNodeType(ArithmeticMACNode, [("Arithmetics",)])
@@ -170,7 +170,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(Sum16BitNode, [("Arithmetics",)])
         self.addNodeType(SumFloatNode, [("Arithmetics",)])
 
-    def _register_trigonometric_nodes(self):
+    def _register_trigonometric_nodes(self) -> None:
         self.addNodeType(TrigonometricSineNode, [("Trigonometrics",)])
         self.addNodeType(TrigonometricCosineNode, [("Trigonometrics",)])
         self.addNodeType(TrigonometricTangentNode, [("Trigonometrics",)])
@@ -178,13 +178,13 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(TrigonometricArcCosNode, [("Trigonometrics",)])
         self.addNodeType(TrigonometricArcTanNode, [("Trigonometrics",)])
 
-    def _register_wave_nodes(self):
+    def _register_wave_nodes(self) -> None:
         """Registers all the wave nodes."""
         self.addNodeType(SquareWaveNode, [("Waves",)])
         self.addNodeType(TriangleWaveNode, [("Waves",)])
         self.addNodeType(SawtoothWaveNode, [("Waves",)])
 
-    def _register_time_nodes(self):
+    def _register_time_nodes(self) -> None:
         """Registers all the time nodes."""
         # Add Node -> Time sub menu
         self.addNodeType(TimeNode, [("Time",)])
@@ -195,7 +195,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(TimeSwitchOffDelay16BitNode, [("Time",)])
         self.addNodeType(TimeSwitchOffDelayFloatNode, [("Time",)])
 
-    def _register_fader_nodes(self):
+    def _register_fader_nodes(self) -> None:
         """Registers all the fader nodes."""
         # Add Node -> Filter Fader sub menu
         self.addNodeType(FaderMainBrightness, [("Filter Fader",)])
@@ -205,7 +205,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(FaderHSIUNode, [("Filter Fader",)])
         self.addNodeType(FaderHSIAUNode, [("Filter Fader",)])
 
-    def _register_effect_nodes(self):
+    def _register_effect_nodes(self) -> None:
         self.addNodeType(CueListNode, [("Effects",)])
         self.addNodeType(AutoTrackerNode, [("Effects",)])
         self.addNodeType(Shift8BitNode, [("Effects",)])
@@ -214,8 +214,8 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ShiftColorNode, [("Effects",)])
         self.addNodeType(EffectsStackNode, [("Effects",)])
 
-    def _register_scripting_nodes(self):
+    def _register_scripting_nodes(self) -> None:
         self.addNodeType(LuaFilterNode, [("Script",)])
 
-    def _register_color_manip_nodes(self):
+    def _register_color_manip_nodes(self) -> None:
         self.addNodeType(ColorMixerVFilterNode, [("Color Manip",)])

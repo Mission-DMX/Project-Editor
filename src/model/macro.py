@@ -52,7 +52,7 @@ class Trigger(QObject):
             return False
 
     @enabled.setter
-    def enabled(self, new_state: bool):
+    def enabled(self, new_state: bool) -> None:
         """Enable or disable the trigger on its macro (which must be set)"""
         if self._macro is not None:
             self._macro._triggers[self] = new_state
@@ -101,11 +101,11 @@ class _FKeysTrigger(Trigger):
         from model import Broadcaster
         Broadcaster().desk_f_key_pressed.connect(self._key_pressed)
 
-    def _key_pressed(self, key: int):
+    def _key_pressed(self, key: int) -> None:
         if key == self._key:
             self.exec()
 
-    def set_param(self, key: str, value: str):
+    def set_param(self, key: str, value: str) -> None:
         """set Params of a Trigger"""
         super().set_param(key, value)
         if key == "button":

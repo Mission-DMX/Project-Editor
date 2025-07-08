@@ -30,7 +30,7 @@ class FilterSelectionWidget(QTreeWidget):
         return self._filter
 
     @selected_filter.setter
-    def selected_filter(self, f: Filter | None):
+    def selected_filter(self, f: Filter | None) -> None:
         self.clearSelection()
         if f is not None:
             self._target_filter_id = f.filter_id
@@ -74,7 +74,7 @@ class FilterSelectionWidget(QTreeWidget):
             self._id_to_item_dict[filter_to_add.filter_id] = filter_item
             return filter_item
 
-        def add_filter_page(fp: FilterPage, parent: AnnotatedTreeWidgetItem | None):
+        def add_filter_page(fp: FilterPage, parent: AnnotatedTreeWidgetItem | None) -> None:
             nonlocal fp_index
             page_item = AnnotatedTreeWidgetItem(self if parent is None else parent)
             page_item.setText(0, filter_page.name)
@@ -98,7 +98,7 @@ class FilterSelectionWidget(QTreeWidget):
                 fp_index += 1
         return selected_filter_found
 
-    def _find_selected_filter(self):
+    def _find_selected_filter(self) -> None:
         for selected_filter_item in self.selectedItems():
             if isinstance(selected_filter_item, AnnotatedTreeWidgetItem):
                 ad = selected_filter_item.annotated_data
@@ -108,7 +108,7 @@ class FilterSelectionWidget(QTreeWidget):
                     return
         # we do not clear out the last selected item in case of non-filter selection
 
-    def _selection_changed(self):
+    def _selection_changed(self) -> None:
         sitems = self.selectedItems()
         if len(sitems) == 0 and self._last_selected_item is not None:
             self._last_selected_item.setSelected(True)

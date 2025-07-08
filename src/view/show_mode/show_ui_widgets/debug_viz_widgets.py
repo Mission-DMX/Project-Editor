@@ -50,7 +50,7 @@ class _DebugVizWidget(UIWidget, ABC):
         self._construct_config_widget()
         return self._config_widget
 
-    def set_conf_width(self, new_width: int):
+    def set_conf_width(self, new_width: int) -> None:
         """
         This method updates the configured width.
         Passing 0 or negative numbers will abort execution.
@@ -65,7 +65,7 @@ class _DebugVizWidget(UIWidget, ABC):
         if self._placeholder_widget is not None:
             self._placeholder_widget.setFixedWidth(new_width)
 
-    def set_conf_height(self, new_height: int):
+    def set_conf_height(self, new_height: int) -> None:
         """
         This method updates the configured height.
         Passing 0 or negative numbers will abort execution.
@@ -80,7 +80,7 @@ class _DebugVizWidget(UIWidget, ABC):
         if self._placeholder_widget is not None:
             self._placeholder_widget.setFixedHeight(new_height)
 
-    def _construct_config_widget(self):
+    def _construct_config_widget(self) -> None:
         """This method constructs the widget for dimension and display mode setup."""
         w = QWidget()
         w.setMinimumWidth(250)
@@ -122,7 +122,7 @@ class _DebugVizWidget(UIWidget, ABC):
         self._placeholder_widget = w
         return w
 
-    def _mode_conf_changed(self, new_mode_str: str):
+    def _mode_conf_changed(self, new_mode_str: str) -> None:
         """Change the configured mode and call dimensions changed callback if any."""
         self.configuration["mode"] = new_mode_str
         if self.configured_dimensions_changed_callback is not None:
@@ -176,7 +176,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
         self._construct_player_widget(parent)
         return self._show_widget
 
-    def _construct_player_widget(self, parent: QWidget):
+    def _construct_player_widget(self, parent: QWidget) -> None:
         w = ColorLabel(parent=parent)
         w.setFixedWidth(self.configured_width)
         w.setFixedHeight(self.configured_height)
@@ -185,7 +185,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
             self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
         self._show_widget.destroyed.connect(self._delete_callback)
 
-    def _delete_callback(self):
+    def _delete_callback(self) -> None:
         if self._show_widget is not None:
             self.parent.scene.board_configuration.remove_filter_update_callback(
                 self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
@@ -197,13 +197,13 @@ class ColorDebugVizWidget(_DebugVizWidget):
         super().copy_base(c)
         return c
 
-    def _dimensions_changed(self):
+    def _dimensions_changed(self) -> None:
         if self._show_widget is None:
             return
         self._show_widget.setFixedWidth(self.configured_width)
         self._show_widget.setFixedHeight(self.configured_height)
 
-    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter):
+    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Checks for correct filter and updates the displayed color"""
         if self._show_widget is None:
             return
@@ -224,7 +224,7 @@ class _NumberLabel(QWidget):
         self._number: float = 0.0
         self._text: str = "0"
 
-    def paintEvent(self, event: QPaintEvent, /):
+    def paintEvent(self, event: QPaintEvent, /) -> None:
         """Redraw the widget"""
         painter = QPainter(self)
         painter.drawRect(0, 0, self.width(), self.height())
@@ -243,7 +243,7 @@ class _NumberLabel(QWidget):
         return self._number
 
     @number.setter
-    def number(self, new_number: int | float):
+    def number(self, new_number: int | float) -> None:
         if new_number == self._number:
             return
         text = f"{new_number:.5f}"
@@ -279,14 +279,14 @@ class NumberDebugVizWidget(_DebugVizWidget):
         super().copy_base(c)
         return c
 
-    def _dimensions_changed(self):
+    def _dimensions_changed(self) -> None:
         if self._show_widget is None:
             return
         self._show_widget.setFixedWidth(self.configured_width)
         self._show_widget.setFixedHeight(self.configured_height)
         self._show_widget.mode = self.configuration.get("mode") or "Plain"
 
-    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter):
+    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Checks for correct filter and updates the displayed number"""
         if self._show_widget is None:
             return
@@ -297,7 +297,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
             logger.error("Unexpected number received from filter '%s:%s': %s", param.filter_id,
                          param.parameter_key, param.parameter_value)
 
-    def _delete_callback(self):
+    def _delete_callback(self) -> None:
         if self._show_widget is not None:
             self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id,
                                                                                 self.filter_ids[0], self._recv_update)

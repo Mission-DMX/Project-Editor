@@ -70,13 +70,13 @@ class EffectsStackEditor(QWidget):
         global_layout.addWidget(self._right_side_container)
         self._message_box = QMessageBox(self.parent())
 
-    def _fixture_or_group_add_clicked(self, item: QTreeWidgetItem, column: int):
+    def _fixture_or_group_add_clicked(self, item: QTreeWidgetItem, column: int) -> None:
         if not isinstance(item, AnnotatedTreeWidgetItem):
             return
         if isinstance(item.annotated_data, UsedFixture):
             self._compilation_widget.add_fixture_or_group(item.annotated_data)
 
-    def _effect_add_button_clicked(self, e: Effect):
+    def _effect_add_button_clicked(self, e: Effect) -> None:
         self._compilation_widget.load_effect_to_add(e)
         e.set_parent_filter(self._filter)
         avail_slots = self._compilation_widget.get_maximum_slot_counter()
@@ -107,7 +107,7 @@ class EffectsStackEditor(QWidget):
                 return True
         return False
 
-    def _effect_added(self, e: Effect):
+    def _effect_added(self, e: Effect) -> None:
         self._effect_placement_bar.setEnabled(False)
         self._effect_placement_bar.setVisible(False)
         self._effect_placement_bar.clearFocus()
@@ -129,7 +129,7 @@ class EffectsStackEditor(QWidget):
         w.setMinimumHeight(max(w.minimumHeight(), 60))
         return index
 
-    def _effect_config_widget_changed(self, w: QWidget):
+    def _effect_config_widget_changed(self, w: QWidget) -> None:
         if w is None:
             return
         index = self._config_widget_dict.get(w)

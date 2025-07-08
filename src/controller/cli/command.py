@@ -49,6 +49,6 @@ class Command(ABC):
         return self._help_text
 
     @help.setter
-    def help(self, new_help: str):
+    def help(self, new_help: str) -> None:
         """Set a new help text"""
         self._help_text = str(new_help)

@@ -36,7 +36,7 @@ class TimelineChannelLabel(QWidget):
         self._types.clear()
         self._update()
 
-    def _update(self):
+    def _update(self) -> None:
         required_height = 2 * 20 + CHANNEL_DISPLAY_HEIGHT * len(self._names) + self.sb_offset
         self.setMinimumHeight(required_height)
         self.update()

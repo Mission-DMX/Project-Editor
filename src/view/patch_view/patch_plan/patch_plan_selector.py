@@ -36,7 +36,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self.tabBarClicked.connect(self._tab_clicked)
         self.tabBar().setCurrentIndex(0)
 
-    def _add_fixture(self, fixture: UsedFixture):
+    def _add_fixture(self, fixture: UsedFixture) -> None:
         widget: PatchPlanWidget = self._patch_planes[fixture.parent_universe]
         widget.add_fixture(fixture)
 
@@ -69,7 +69,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
             self._board_configuration.universe(universe_id).universe_proto = dialog.output
             self._broadcaster.send_universe.emit(self._board_configuration.universe(index))
 
-    def _add_universe(self, universe: Universe):
+    def _add_universe(self, universe: Universe) -> None:
         index = self.tabBar().count() - 1
         patch_plan = QScrollArea()
         patch_plan.setWidgetResizable(True)
@@ -80,7 +80,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self._patch_planes.update({universe.id: widget})
         self.insertTab(index, patch_plan, str(universe.name))
 
-    def _remove_universe(self, universe: Universe):
+    def _remove_universe(self, universe: Universe) -> None:
         del self._patch_planes[universe.id]
         self.removeTab(universe.id)
         logger.info("Removing patching tab %s", universe.id)

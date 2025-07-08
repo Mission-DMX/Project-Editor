@@ -50,7 +50,7 @@ class WidgetSetupDialog(QDialog):
         self.setMinimumHeight(600)
         self.show()
 
-    def _select_pressed(self, *args, **kwargs):
+    def _select_pressed(self, *args, **kwargs) -> None:
         """This method handles the filter selection and finishing of the dialog."""
         self._page_index += 1
         if self._page_index == len(self._fsw):

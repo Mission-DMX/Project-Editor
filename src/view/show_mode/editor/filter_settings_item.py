@@ -197,10 +197,10 @@ class FilterSettingsDialog(QDialog):
 
         return key
 
-    def _ip_value_changed(self, key, value):
+    def _ip_value_changed(self, key, value) -> None:
         self.filter.initial_parameters[key] = value
 
-    def _fc_value_changed(self, key, value):
+    def _fc_value_changed(self, key, value) -> None:
         self.filter.filter_configurations[key] = value
 
     def ok_button_pressed(self):

@@ -53,7 +53,7 @@ class FixtureChannel:
         return self._ignore_black
 
     @ignore_black.setter
-    def ignore_black(self, ignore_black: bool):
+    def ignore_black(self, ignore_black: bool) -> None:
         self._ignore_black = ignore_black
 
     def _get_channel_type_from_string(self) -> FixtureChannelType:

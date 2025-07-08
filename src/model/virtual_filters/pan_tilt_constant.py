@@ -81,7 +81,7 @@ class PanTiltConstantFilter(VirtualFilter):
         return self._pan
 
     @pan.setter
-    def pan(self, pan):
+    def pan(self, pan) -> None:
         self._pan = pan
         self.notify_observer()
 
@@ -90,7 +90,7 @@ class PanTiltConstantFilter(VirtualFilter):
         return self._tilt
 
     @tilt.setter
-    def tilt(self, tilt):
+    def tilt(self, tilt) -> None:
         self._tilt = tilt
         self.notify_observer()
 
@@ -99,7 +99,7 @@ class PanTiltConstantFilter(VirtualFilter):
         return self._pan_delta
 
     @pan_delta.setter
-    def pan_delta(self, pan_delta):
+    def pan_delta(self, pan_delta) -> None:
         self._pan_delta = pan_delta
 
     @property
@@ -107,7 +107,7 @@ class PanTiltConstantFilter(VirtualFilter):
         return self._tilt_delta
 
     @tilt_delta.setter
-    def tilt_delta(self, tilt_delta):
+    def tilt_delta(self, tilt_delta) -> None:
         self._tilt_delta = tilt_delta
 
     def set_delta(self, delta: float, joystick: JoystickList, tilt: bool):
@@ -142,7 +142,7 @@ class PanTiltConstantFilter(VirtualFilter):
         return self._joystick
 
     @joystick.setter
-    def joystick(self, joystick):
+    def joystick(self, joystick) -> None:
         if joystick != self._joystick:
             if joystick == JoystickList.NO_JOYSTICK:
                 self._timer.stop()
