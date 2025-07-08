@@ -247,9 +247,9 @@ class _NumberLabel(QWidget):
         if new_number == self._number:
             return
         text = f"{new_number:.5f}"
-        while text[-1] == '0' and '.' in text:
+        while text[-1] == "0" and "." in text:
             text = text[:-1]
-        if text[-1] == '.':
+        if text[-1] == ".":
             text = text[:-1]
         if text == self._text:
             return

@@ -28,30 +28,30 @@ def emplace_with_adapter(input_effect: Effect, target_type: EffectType,
             if given_type == EffectType.GENERIC_NUMBER:
                 conv_f = Filter(filter_list[-1].scene, name_prefix + "+adapter_number_to_light",
                                 FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE)
-                conv_f.channel_links['value_in'] = input_dict['x']
+                conv_f.channel_links["value_in"] = input_dict["x"]
                 filter_list.append(conv_f)
-                return {'intensity': name_prefix + "+adapter_number_to_light:value"}
+                return {"intensity": name_prefix + "+adapter_number_to_light:value"}
         case EffectType.GOBO_SELECTION:
             if given_type == EffectType.GENERIC_NUMBER:
                 conv_f = Filter(filter_list[-1].scene, name_prefix + "+adapter_number_to_gobo",
                                 FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE)
-                conv_f.channel_links['value_in'] = input_dict['x']
+                conv_f.channel_links["value_in"] = input_dict["x"]
                 filter_list.append(conv_f)
-                return {'gobo': name_prefix + "+adapter_number_to_gobo:value"}
+                return {"gobo": name_prefix + "+adapter_number_to_gobo:value"}
         case EffectType.ZOOM_FOCUS:
             if given_type == EffectType.GENERIC_NUMBER:
                 conv_f = Filter(filter_list[-1].scene, name_prefix + "+adapter_number_to_zf",
                                 FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE)
-                conv_f.channel_links['value_in'] = input_dict['x']
+                conv_f.channel_links["value_in"] = input_dict["x"]
                 filter_list.append(conv_f)
-                return {'zoom': name_prefix + "+adapter_number_to_zf:value",
-                        'focus': name_prefix + "+adapter_number_to_zf:value"}
+                return {"zoom": name_prefix + "+adapter_number_to_zf:value",
+                        "focus": name_prefix + "+adapter_number_to_zf:value"}
         case EffectType.SHUTTER_STROBE:
             if given_type == EffectType.GENERIC_NUMBER:
                 conv_f = Filter(filter_list[-1].scene, name_prefix + "+adapter_number_to_strobe",
                                 FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE,
-                                initial_parameters={'upper_bound_out': '40'})
-                conv_f.channel_links['value_in'] = input_dict['x']
+                                initial_parameters={"upper_bound_out": "40"})
+                conv_f.channel_links["value_in"] = input_dict["x"]
                 filter_list.append(conv_f)
-                return {'shutter': name_prefix + "+adapter_number_to_strobe:value"}
+                return {"shutter": name_prefix + "+adapter_number_to_strobe:value"}
     raise NotImplementedError("Please implement the adapter instantiation.")

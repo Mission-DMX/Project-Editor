@@ -10,8 +10,8 @@ class CueListNode(FilterNode):
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
-            'time': {'io': 'in'},
-            'time_scale': {'io': 'in'}
+            "time": {"io": "in"},
+            "time_scale": {"io": "in"}
         }, allowAddOutput=True)
 
         try:
@@ -36,14 +36,14 @@ class CueListNode(FilterNode):
         self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]
         self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
-        self.filter.default_values['time_scale'] = '1.0'
+        self.filter.default_values["time_scale"] = "1.0"
         self.channel_hints["time"] = " [ms]"
 
     def parse_and_add_output_channels(self, mappings: str):
         output_list = []
-        for channel_dev in mappings.split(';'):
+        for channel_dev in mappings.split(";"):
             if channel_dev:
-                splitted_channel_dev = channel_dev.split(':')
+                splitted_channel_dev = channel_dev.split(":")
                 if len(splitted_channel_dev) > 1:
                     channel_name = splitted_channel_dev[0]
                     channel_type = DataType.from_filter_str(splitted_channel_dev[1])
@@ -57,16 +57,16 @@ class CueListNode(FilterNode):
 class ShiftFilterNode(FilterNode):
     def __init__(self, model, name, id: int, data_type: DataType):
         super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True, terminals={
-            'input': {'io': 'in'},
-            'switch_time': {'io': 'in'},
-            'time': {'io': 'in'}
+            "input": {"io": "in"},
+            "switch_time": {"io": "in"},
+            "time": {"io": "in"}
         }, )
 
         self.filter.in_data_types["input"] = data_type
         self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.default_values['time'] = '0'
-        self.filter.default_values['switch_time'] = '1000'
+        self.filter.default_values["time"] = "0"
+        self.filter.default_values["switch_time"] = "1000"
         self.channel_hints["switch_time"] = " [ms]"
         self.channel_hints["time"] = " [ms]"
 

@@ -27,12 +27,12 @@ def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     xml = create_xml(show_data, pn)
     if os.path.exists(file_name):
         # TODO introduce proper version control
-        copyfile(file_name, os.path.splitext(file_name)[0] + '.show_backup')
+        copyfile(file_name, os.path.splitext(file_name)[0] + ".show_backup")
     pn.current_step_description = "Writing to disk."
     pn.current_step_number += 1
-    with open(file_name, 'w+', encoding="UTF-8") as file:
+    with open(file_name, "w+", encoding="UTF-8") as file:
         ElementTree.indent(xml)
-        file.write(ElementTree.tostring(xml, encoding='unicode', method='xml'))
+        file.write(ElementTree.tostring(xml, encoding="unicode", method="xml"))
     pn.current_step_number += 1
     pn.close()
     return True

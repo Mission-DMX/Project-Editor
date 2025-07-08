@@ -65,7 +65,7 @@ class CurveConfiguration:
         cc = CurveConfiguration()
         if config is None or len(config) == 0:
             return cc
-        config = config.split(';')
+        config = config.split(";")
         opset = int(config[0])
         cc.selected_features = BaseCurve(int(config[1]))
         cc.base_phase = float(config[2])
@@ -73,8 +73,8 @@ class CurveConfiguration:
         cc.append_features_using_addition = config[4] == "true"
 
         def decode_common_props(target: dict[BaseCurve, float], source: str):
-            for entry in source.split(','):
-                k, v = entry.split(':')
+            for entry in source.split(","):
+                k, v = entry.split(":")
                 k = BaseCurve(int(k))
                 v = float(v)
                 target[k] = v

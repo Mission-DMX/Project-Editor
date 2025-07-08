@@ -35,7 +35,7 @@ class ShowCommand(Command):
         commit_parser: ArgumentParser = subparsers.add_parser("commit", help="Commit the current show file state",
                                                               exit_on_error=False)
         commit_parser.add_argument("--select-default-scene", help="Load the default scene after commit",
-                                   action='store_true')
+                                   action="store_true")
         load_parser: ArgumentParser = subparsers.add_parser("load", help="Load a show file", exit_on_error=False)
         load_parser.add_argument("filename", help="The location of the .show file.")
         scene_parser: ArgumentParser = subparsers.add_parser("select-scene",

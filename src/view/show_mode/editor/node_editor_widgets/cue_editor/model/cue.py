@@ -219,14 +219,14 @@ class KeyFrame:
 
     @staticmethod
     def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: "Cue"):
-        parts = f_str.split(':')
+        parts = f_str.split(":")
         if len(parts) != 2:
             raise ArgumentError("A keyframe definition should contain exactly two elements")
         f = KeyFrame(parent_cue)
         f.timestamp = float(parts[0])
 
-        for i, state_dev in enumerate(parts[1].split('&')):
-            state_dev_parts = state_dev.split('@')
+        for i, state_dev in enumerate(parts[1].split("&")):
+            state_dev_parts = state_dev.split("@")
             if i >= len(channel_data_types):
                 if i == 0 and len(channel_data_types) == 0:
                     return None

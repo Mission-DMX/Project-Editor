@@ -77,7 +77,7 @@ class AutoTrackerFilter(VirtualFilter):
                     return tr
             except ValueError:
                 pass
-        self.filter_configurations['trackercount'] = '0'
+        self.filter_configurations["trackercount"] = "0"
         return 0
 
     @property

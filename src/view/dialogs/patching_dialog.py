@@ -40,7 +40,7 @@ class PatchingDialog(QtWidgets.QDialog):
         layout_fixture = QtWidgets.QHBoxLayout()
         self._select_mode = QtWidgets.QComboBox()
         self._select_mode.currentIndexChanged.connect(self._update_used_fixture)
-        layout_fixture.addWidget(QtWidgets.QLabel(fixture[0]['name']))
+        layout_fixture.addWidget(QtWidgets.QLabel(fixture[0]["name"]))
         layout_fixture.addWidget(self._select_mode)
 
         patching_layout = QtWidgets.QHBoxLayout()
@@ -83,8 +83,8 @@ class PatchingDialog(QtWidgets.QDialog):
         self._ok.clicked.connect(self._accept)
         _cancel.clicked.connect(self._reject)
 
-        for mode in self._patching_information.fixture['modes']:
-            self._select_mode.addItem(mode['name'])
+        for mode in self._patching_information.fixture["modes"]:
+            self._select_mode.addItem(mode["name"])
         self._select_mode.setCurrentIndex(fixture[1])
 
     @property
@@ -128,7 +128,7 @@ class PatchingDialog(QtWidgets.QDialog):
             patching = "1"
         if patching[0] == "@":
             patching = "1" + patching
-        spliter = list(filter(None, re.split('[@/]|-', patching)))
+        spliter = list(filter(None, re.split("[@/]|-", patching)))
         spliter += [0] * (4 - len(spliter))
         spliter = list(map(int, spliter))
         self._patching_information.count = spliter[0]

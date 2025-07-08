@@ -32,36 +32,36 @@ def _parse_and_add_bankset(child: ElementTree.Element, loaded_banksets: dict[str
     :param child: The XML element to examine
     :param loaded_banksets: The list to add the bankset to.
     """
-    _id = child.attrib.get('id')
+    _id = child.attrib.get("id")
     bs: BankSet = BankSet(gui_controlled=True, id=_id)
     for bank_element in child:
         bank = FaderBank()
-        if bank_element.tag != 'bank':
+        if bank_element.tag != "bank":
             logger.error("Unexpected element '%s' while parsing bank", bank_element.tag)
             continue
         for column_element in bank_element:
-            if column_element.tag == 'hslcolumn':
-                col = ColorDeskColumn(_id=column_element.attrib['id'])
-                col.display_name = column_element.attrib['display_name']
-                col.top_display_line_inverted = column_element.attrib.get('top_line_inverted') == 'true'
-                col.bottom_display_line_inverted = column_element.attrib.get('bottom_line_inverted') == 'true'
-                col.display_color = lcd_color_from_string(column_element.attrib['lcd_color'])
-                col.color = ColorHSI.from_filter_str(column_element.attrib['color'])
-            elif column_element.tag == 'rawcolumn':
-                col = RawDeskColumn(_id=column_element.attrib['id'])
-                col.display_name = column_element.attrib['display_name']
-                col.top_display_line_inverted = column_element.attrib.get('top_line_inverted') == 'true'
-                col.bottom_display_line_inverted = column_element.attrib.get('bottom_line_inverted') == 'true'
-                col.display_color = lcd_color_from_string(column_element.attrib['lcd_color'])
-                col.secondary_text_line = column_element.attrib['secondary_text_line']
-                col.fader_position = int(column_element.attrib['fader_position'])
-                col.encoder_position = int(column_element.attrib['encoder_position'])
+            if column_element.tag == "hslcolumn":
+                col = ColorDeskColumn(_id=column_element.attrib["id"])
+                col.display_name = column_element.attrib["display_name"]
+                col.top_display_line_inverted = column_element.attrib.get("top_line_inverted") == "true"
+                col.bottom_display_line_inverted = column_element.attrib.get("bottom_line_inverted") == "true"
+                col.display_color = lcd_color_from_string(column_element.attrib["lcd_color"])
+                col.color = ColorHSI.from_filter_str(column_element.attrib["color"])
+            elif column_element.tag == "rawcolumn":
+                col = RawDeskColumn(_id=column_element.attrib["id"])
+                col.display_name = column_element.attrib["display_name"]
+                col.top_display_line_inverted = column_element.attrib.get("top_line_inverted") == "true"
+                col.bottom_display_line_inverted = column_element.attrib.get("bottom_line_inverted") == "true"
+                col.display_color = lcd_color_from_string(column_element.attrib["lcd_color"])
+                col.secondary_text_line = column_element.attrib["secondary_text_line"]
+                col.fader_position = int(column_element.attrib["fader_position"])
+                col.encoder_position = int(column_element.attrib["encoder_position"])
             else:
                 logger.error("Unsupported bank column type '%s'.", column_element.tag)
                 continue
             bank.add_column(col)
         bs.add_bank(bank)
-    if child.attrib.get('linked_by_default') == 'true':
+    if child.attrib.get("linked_by_default") == "true":
         bs.link()
     loaded_banksets[bs.id] = bs
 
@@ -126,7 +126,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
                 _parse_universe(child, board_configuration)
             case "uihint":
                 _parse_ui_hint(child, board_configuration)
-            case 'bankset':
+            case "bankset":
                 _parse_and_add_bankset(child, loaded_banksets)
             case "eventsource":
                 _parse_and_add_event_source(child)
@@ -147,7 +147,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     link_patched_fixtures(board_configuration)
     pn.current_step_number += 2
     try:
-        fader_value = int(board_configuration.ui_hints.get('default_main_brightness') or '255')
+        fader_value = int(board_configuration.ui_hints.get("default_main_brightness") or "255")
         board_configuration.broadcaster.request_main_brightness_fader_update.emit(fader_value)
     except ValueError as e:
         logger.error("Unable to parse main brightness setting: %s", e)
@@ -165,21 +165,21 @@ def lcd_color_from_string(display_color: str) -> proto.Console_pb2.lcd_color:
     :returns: The enum representation
     """
     match display_color:
-        case 'white':
+        case "white":
             return proto.Console_pb2.lcd_color.white
-        case 'red':
+        case "red":
             return proto.Console_pb2.lcd_color.red
-        case 'blue':
+        case "blue":
             return proto.Console_pb2.lcd_color.blue
-        case 'cyan':
+        case "cyan":
             return proto.Console_pb2.lcd_color.cyan
-        case 'black':
+        case "black":
             return proto.Console_pb2.lcd_color.black
-        case 'green':
+        case "green":
             return proto.Console_pb2.lcd_color.green
-        case 'magenta':
+        case "magenta":
             return proto.Console_pb2.lcd_color.magenta
-        case 'yellow':
+        case "yellow":
             return proto.Console_pb2.lcd_color.yellow
         case _:
             return proto.Console_pb2.lcd_color.white
@@ -188,7 +188,7 @@ def lcd_color_from_string(display_color: str) -> proto.Console_pb2.lcd_color:
 def _clean_tags(element: ElementTree.Element, prefix: str):
     """This method recursively cleans up immediate XML tag prefixes."""
     for child in element:
-        child.tag = child.tag.replace(prefix, '')
+        child.tag = child.tag.replace(prefix, "")
         _clean_tags(child, prefix)
 
 
@@ -287,8 +287,8 @@ def _parse_scene(scene_element: ElementTree.Element, board_configuration: BoardC
                 logger.error("No suitable parent found while parsing filter pages")
                 break
 
-    if scene_element.attrib.get('linkedBankset') in loaded_banksets:
-        scene.linked_bankset = loaded_banksets[scene_element.attrib['linkedBankset']]
+    if scene_element.attrib.get("linkedBankset") in loaded_banksets:
+        scene.linked_bankset = loaded_banksets[scene_element.attrib["linkedBankset"]]
 
     for ui_page_element in ui_page_elements:
         _append_ui_page(ui_page_element, scene)
@@ -305,7 +305,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
     page = UIPage(scene)
     for k, v in page_def.attrib.items():
         match k:
-            case 'title':
+            case "title":
                 page.title = str(v)
             case _:
                 logger.error("Unexpected attribute '%s':'%s' in ui page definition.", k, v)
@@ -336,7 +336,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene):
             if config_entry.tag != "configurationEntry":
                 logger.error("Found unexpected child '%s' in ui widget definition.", config_entry.tag)
                 continue
-            conf[str(config_entry.attrib['name'])] = str(config_entry.attrib['value'])
+            conf[str(config_entry.attrib["name"])] = str(config_entry.attrib["value"])
         filters = []
         for fid in fids:
             corresponding_filter = scene.get_filter_by_id(fid)
@@ -582,11 +582,11 @@ def _parse_patching(board_configuration: BoardConfiguration, location_element: E
     :param universe_id: The id of the universe which this fixture belongs to.
     :returns: The loaded fixtures
     """
-    fixtures_path = '/var/cache/missionDMX/fixtures'  # TODO config file
+    fixtures_path = "/var/cache/missionDMX/fixtures"  # TODO config file
 
     for child in location_element:
-        make_used_fixture(board_configuration, load_fixture(os.path.join(fixtures_path, child.attrib['fixture_file'])),
-                          int(child.attrib['mode']), universe_id, int(child.attrib['start']))
+        make_used_fixture(board_configuration, load_fixture(os.path.join(fixtures_path, child.attrib["fixture_file"])),
+                          int(child.attrib["mode"]), universe_id, int(child.attrib["start"]))
 
     # TODO load fixture name from file
 

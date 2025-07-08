@@ -109,7 +109,7 @@ class ColorSupport(IntFlag):
 
 def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
-    with open(file, encoding='UTF-8') as f:
+    with open(file, encoding="UTF-8") as f:
         ob: dict[str, Any] = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
                    categories=ob.get("categories", set()), modes=ob.get("modes", []),
@@ -146,8 +146,8 @@ class UsedFixture(QtCore.QObject):
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
-        self._color_on_stage: str = color if color else "#" + ''.join(
-            [random.choice('0123456789ABCDEF') for _ in range(6)])
+        self._color_on_stage: str = color if color else "#" + "".join(
+            [random.choice("0123456789ABCDEF") for _ in range(6)])
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
         self.parent_universe: int = parent_universe

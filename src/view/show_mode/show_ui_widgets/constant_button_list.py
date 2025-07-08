@@ -43,8 +43,8 @@ class ConstantNumberButtonList(UIWidget):
         list_widget = QListWidget(widget)
         bc = self.configuration.get("buttons")
         if bc:
-            for entry in bc.split(';'):
-                name, value = entry.split(':')
+            for entry in bc.split(";"):
+                name, value = entry.split(":")
                 list_widget.addItem(f"{name} -> {value}")
         layout.addWidget(list_widget)
         widget.setLayout(layout)
@@ -77,7 +77,7 @@ class ConstantNumberButtonList(UIWidget):
         self._configuration_widget: QWidget | None = None
         self._model = None
         value_str = "0"
-        if '.' in value_str:
+        if "." in value_str:
             self._value = float(value_str)
         else:
             self._value = int(value_str)

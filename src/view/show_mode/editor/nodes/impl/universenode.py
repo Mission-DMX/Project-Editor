@@ -12,7 +12,7 @@ logger = getLogger(__name__)
 
 class UniverseNode(FilterNode):
     """Filter to represent a dmx universe. By default, it has 8 outputs, put more can be added."""
-    nodeName = 'Universe'
+    nodeName = "Universe"
 
     universe_ids: list[int] = []
 
@@ -20,12 +20,12 @@ class UniverseNode(FilterNode):
         if isinstance(model, Filter):
             super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
                              terminals={
-                                 input_link: {'io': 'in'} for input_link, _ in model.channel_links.items()},
+                                 input_link: {"io": "in"} for input_link, _ in model.channel_links.items()},
                              allowAddInput=True)
         else:
             super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
                              terminals={
-                                 "input_1": {'io': 'in'}},
+                                 "input_1": {"io": "in"}},
                              allowAddInput=True)
 
         try:

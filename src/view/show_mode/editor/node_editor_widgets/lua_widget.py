@@ -21,16 +21,16 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         self._channel_list.clear()
         self._channels.clear()
         self._new_channel_name.setText("")
-        for in_item in conf["in_mapping"].split(';'):
+        for in_item in conf["in_mapping"].split(";"):
             if not in_item:
                 continue
-            channel_name, data_type = in_item.split(':')
+            channel_name, data_type = in_item.split(":")
             self._channels[channel_name] = (True, DataType.from_filter_str(data_type))
             self._insert_channel_in_list(channel_name, data_type, True)
-        for out_item in conf["out_mapping"].split(';'):
+        for out_item in conf["out_mapping"].split(";"):
             if not out_item:
                 continue
-            channel_name, data_type = out_item.split(':')
+            channel_name, data_type = out_item.split(":")
             self._channels[channel_name] = (False, DataType.from_filter_str(data_type))
             self._insert_channel_in_list(channel_name, data_type, False)
 
@@ -53,7 +53,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
                 in_maps.append(description)
             else:
                 out_maps.append(description)
-        return {'in_mapping': ";".join(in_maps), 'out_mapping': ";".join(out_maps)}
+        return {"in_mapping": ";".join(in_maps), "out_mapping": ";".join(out_maps)}
 
     def __init__(self, parent: QWidget = None):
         super().__init__()

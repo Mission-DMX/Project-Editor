@@ -164,7 +164,7 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
     """
     if sender_id < 0:
         return
-    if event_type not in ['single', 'release', 'start']:
+    if event_type not in ["single", "release", "start"]:
         raise ValueError(f"Unsupported event type. Must be one of single, release or start but is '{event_type}'.")
     if arguments is None:
         arguments = []
@@ -173,11 +173,11 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
     ev.sender_id = sender_id
     ev.sender_function = sender_function
     match event_type:
-        case 'single':
+        case "single":
             ev.type = prot_event_type.SINGLE_TRIGGER
-        case 'start':
+        case "start":
             ev.type = prot_event_type.START
-        case 'release':
+        case "release":
             ev.type = prot_event_type.RELEASE
     ev.arguments.extend([max(min(arg, 255), 0) for arg in arguments])
     _network_manager.send_event_message(ev)

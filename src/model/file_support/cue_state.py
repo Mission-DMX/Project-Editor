@@ -48,32 +48,32 @@ class CueState:
         self._end_time = datetime.timedelta(seconds=float(values[3]))
         self._active_cue = int(values[1])
         self._time_scale = float(values[4])
-        if values[0] == 'play':
+        if values[0] == "play":
             self._state = State.PLAY
-        elif values[0] == 'pause':
+        elif values[0] == "pause":
             self._paused_time = datetime.timedelta(seconds=float(values[2]))
             self._state = State.PAUSE
-        elif values[0] == 'stop':
+        elif values[0] == "stop":
             self._state = State.STOP
 
     def time_delta_to_str(self, delta: datetime.timedelta):
         ret = ""
         if self._end_time >= datetime.timedelta(days=1):
             days = int(delta.total_seconds() / 86400)
-            ret += f'{days:01d}' + "d "
+            ret += f"{days:01d}" + "d "
             delta -= datetime.timedelta(days=days)
         if self._end_time >= datetime.timedelta(hours=1):
             hours = int(delta.total_seconds() / 3600)
-            ret += f'{hours:02d}' + ":"
+            ret += f"{hours:02d}" + ":"
             delta -= datetime.timedelta(hours=hours)
         # if self._end_time >= datetime.timedelta(minutes=1):
         minutes = int(delta.total_seconds() / 60)
-        ret += f'{minutes:02d}'
+        ret += f"{minutes:02d}"
         delta -= datetime.timedelta(minutes=minutes)
         if self._end_time < datetime.timedelta(days=1):
             seconds = int(delta.total_seconds())
-            ret += ":" + f'{seconds:02d}'
+            ret += ":" + f"{seconds:02d}"
             delta -= datetime.timedelta(seconds=seconds)
         if self._end_time < datetime.timedelta(hours=1):
-            ret += "." + f'{int(delta.total_seconds() * 100):02d}'
+            ret += "." + f"{int(delta.total_seconds() * 100):02d}"
         return ret

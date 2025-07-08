@@ -25,8 +25,8 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
         top_layout.addWidget(graph)
         self.cB8Bit = QCheckBox(self._parent_widget)
         self.cB16Bit = QCheckBox(self._parent_widget)
-        self.cB8Bit.setText('8 Bit available')
-        self.cB16Bit.setText('16 Bit available')
+        self.cB8Bit.setText("8 Bit available")
+        self.cB16Bit.setText("16 Bit available")
         self.cB8Bit.setChecked(self._filter.eight_bit_available)
         self.cB16Bit.setChecked(self._filter.sixteen_bit_available)
         top_layout.addWidget(self.cB8Bit)
@@ -39,13 +39,13 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
     def _load_configuration(self, conf: dict[str, str]):
         for key, value in conf.items():
             try:
-                if key == 'outputs':
-                    self._filter.filter_configurations['outputs'] = value
+                if key == "outputs":
+                    self._filter.filter_configurations["outputs"] = value
                 else:
-                    print('wrong key: ', key)
+                    print("wrong key: ", key)
                     return False
             except:
-                print('error parsing configuration, value: ', value, ' for param: ', key)
+                print("error parsing configuration, value: ", value, " for param: ", key)
                 return False
         return True
 
@@ -55,21 +55,21 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
     def _load_parameters(self, parameters: dict[str, str]):
         for key, value in parameters.items():
             try:
-                if key == 'pan':
+                if key == "pan":
                     self._filter.pan = float(value)
-                elif key == 'tilt':
+                elif key == "tilt":
                     self._filter.tilt = float(value)
                 else:
-                    print('wrong key: ', key)
+                    print("wrong key: ", key)
                     return False
             except:
-                print('error parsing parameter, value: ', value, ' for param: ', key)
+                print("error parsing parameter, value: ", value, " for param: ", key)
                 return False
         return True
 
     def _get_parameters(self) -> dict[str, str]:
-        return {'pan': self._filter.pan,
-                'tilt': self._filter.tilt}
+        return {"pan": self._filter.pan,
+                "tilt": self._filter.tilt}
 
     def parent_closed(self, filter_node: "FilterNode"):
         if self._filter.joystick == JoystickList.EVERY_JOYSTICK:

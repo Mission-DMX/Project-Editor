@@ -18,8 +18,8 @@ def _sanitize_name(input: str | dict) -> str:
     if isinstance(input, dict):
         input = input.get("insert")
         logger.error("Did not extract channel macro while creating fixture filters.")
-    if input == 'universe':
-        return '_universe_channel'
+    if input == "universe":
+        return "_universe_channel"
     return input.replace(" ", "_").replace("/", "_").replace("\\", "_")
 
 
@@ -198,7 +198,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
             universe_filter.pos = (x + 11, pos[1])
 
     if not global_dimmer_found and str(
-            fp.parent_scene.board_configuration.ui_hints.get('color-mixin-auto-add-disabled')).lower() != 'true':
+            fp.parent_scene.board_configuration.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true":
         for color_input_filter in color_inputs:
             brightness_mixin_filter = construct_virtual_filter_instance(
                 scene=fp.parent_scene,
@@ -209,7 +209,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
             fp.filters.append(brightness_mixin_filter)
             added_depth = max(added_depth, 2 * _additional_filter_depth)
             fp.parent_scene.append_filter(brightness_mixin_filter)
-            color_input_filter.channel_links['value'] = brightness_mixin_filter.filter_id + ":out"
+            color_input_filter.channel_links["value"] = brightness_mixin_filter.filter_id + ":out"
             if output_map is not None:
                 update_list = []
                 for k, v in output_map.items():

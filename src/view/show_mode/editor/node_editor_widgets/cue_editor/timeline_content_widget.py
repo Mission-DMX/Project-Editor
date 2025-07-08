@@ -201,7 +201,7 @@ class TimelineContentWidget(QWidget):
         self.compute_resize()
 
     def _update_7seg_text(self):
-        txt = format_seconds(self.cursor_position).replace(':', '').replace('.', '')
+        txt = format_seconds(self.cursor_position).replace(":", "").replace(".", "")
         while len(txt) < 10:
             txt = "0" + txt
         txt = str(self._cue_index % 100) + txt

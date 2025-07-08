@@ -90,26 +90,26 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizer
         if for_fish:
             for default_val_id, datatype in filter_.in_data_types.items():
                 if not filter_.channel_links.get(default_val_id) or filter_.channel_links[default_val_id] == "":
-                    if default_val_id == 'time':
+                    if default_val_id == "time":
                         if not default_nodes.get(datatype):
                             default_nodes[datatype] = []
                         if time_node is None:
-                            time_node = 'timedefaultfilter'
-                            default_nodes[datatype].append('time')
-                        _create_channel_link_element(channel_link=(default_val_id, time_node + ':value'),
+                            time_node = "timedefaultfilter"
+                            default_nodes[datatype].append("time")
+                        _create_channel_link_element(channel_link=(default_val_id, time_node + ":value"),
                                                      parent=filter_element)
                     else:
                         if not default_nodes.get(datatype):
                             default_nodes[datatype] = []
-                        val = '0'
+                        val = "0"
                         if datatype == DataType.DT_COLOR:
-                            val = '0,0,0'
+                            val = "0,0,0"
                         default_value = filter_.default_values[default_val_id] \
                             if filter_.default_values and default_val_id in filter_.default_values else val
                         if default_value not in default_nodes[datatype]:
                             default_nodes[datatype].append(default_value)
                         _create_channel_link_element(
-                            channel_link=(default_val_id, 'const' + str(datatype) + 'val' + default_value + ':value'),
+                            channel_link=(default_val_id, "const" + str(datatype) + "val" + default_value + ":value"),
                             parent=filter_element)
     if for_fish:
         for datatype, defvalues in default_nodes.items():
@@ -121,19 +121,19 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizer
                     type = FilterTypeEnumeration.FILTER_CONSTANT_FLOAT
                 elif datatype == DataType.DT_COLOR:
                     type = FilterTypeEnumeration.FILTER_CONSTANT_COLOR
-                if default_value == 'time':
+                if default_value == "time":
                     filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
-                        "id": 'timedefaultfilter',
+                        "id": "timedefaultfilter",
                         "type": str(FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT),
                         "pos": "0,0"
                     })
                 else:
                     filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
-                        "id": 'const' + str(datatype) + 'val' + default_value,
+                        "id": "const" + str(datatype) + "val" + default_value,
                         "type": str(type),
                         "pos": "0,0"
                     })
-                    _create_initial_parameters_element(('value', default_value), filter_element)
+                    _create_initial_parameters_element(("value", default_value), filter_element)
 
 
 def _create_channel_link_element(channel_link: tuple[str, str], parent: ElementTree.Element) -> ElementTree.Element:

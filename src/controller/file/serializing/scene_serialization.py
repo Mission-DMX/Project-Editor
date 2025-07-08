@@ -20,8 +20,8 @@ def _add_filter_page_to_element(scene_element: ElementTree.Element, page: Filter
     :param parent_page: This needs to be the parent page of the one to serialize (if any, otherwise pass None)
     """
     item = ElementTree.SubElement(scene_element, "filterpage", attrib={
-        'name': page.name,
-        'parent': parent_page.name if parent_page else ''
+        "name": page.name,
+        "parent": parent_page.name if parent_page else ""
     })
     for f in page.filters:
         filter_id_item = ElementTree.SubElement(item, "filterid", attrib={})
@@ -37,22 +37,22 @@ def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage)
     :param ui_page: The UI page to add
     """
     page_element = ElementTree.SubElement(scene_element, "uipage", attrib={
-        'title': ""
+        "title": ""
     })
     from view.show_mode.show_ui_widgets import get_widget_key
     for widget in ui_page.widgets:
         widget_element = ElementTree.SubElement(page_element, "widget", attrib={
-            'posX': str(widget.position[0]),
-            'posY': str(widget.position[1]),
-            'sizeW': str(widget.size[0]),
-            'sizeH': str(widget.size[1]),
-            'filterID': ":".join(widget.filter_ids),
-            'variante': str(get_widget_key(widget) or "")
+            "posX": str(widget.position[0]),
+            "posY": str(widget.position[1]),
+            "sizeW": str(widget.size[0]),
+            "sizeH": str(widget.size[1]),
+            "filterID": ":".join(widget.filter_ids),
+            "variante": str(get_widget_key(widget) or "")
         })
         for k, v in widget.configuration.items():
             ElementTree.SubElement(widget_element, "configurationEntry", attrib={
-                'name': str(k),
-                'value': str(v)
+                "name": str(k),
+                "value": str(v)
             })
 
 
@@ -94,5 +94,5 @@ def _create_scene_element(scene: Scene, parent: ElementTree.Element) -> ElementT
         "human_readable_name": str(scene.human_readable_name)
     })
     if scene.linked_bankset:
-        se.attrib['linkedBankset'] = str(scene.linked_bankset.id)
+        se.attrib["linkedBankset"] = str(scene.linked_bankset.id)
     return se

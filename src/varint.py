@@ -11,7 +11,7 @@ import sys
 # byte-oriented StringIO was moved to io.BytesIO in py3k
 from io import BytesIO
 
-if sys.version > '3':
+if sys.version > "3":
     def _byte(byte):
         return bytes((byte,))
 else:
@@ -21,7 +21,7 @@ else:
 
 def encode(number):
     """Pack `number` into varint bytes"""
-    buf = b''
+    buf = b""
     while True:
         towrite = number & 0x7f
         number >>= 7
@@ -57,7 +57,7 @@ def _read_one(stream):
     raises EOFError if the stream ends while reading bytes.
     """
     bytes_ = stream.read(1)
-    if bytes_ == b'':
+    if bytes_ == b"":
         # TODO save showfile backup and exit
         raise EOFError("Unexpected EOF while reading bytes")
     return ord(bytes_)

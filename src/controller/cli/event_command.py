@@ -20,19 +20,19 @@ class EventCommand(Command):
         add_parser = subparsers.add_parser("add-sender", exit_on_error=False, help="Add a new event sender to fish")
         add_parser.add_argument("name", help="The name of the new event sender", type=str)
         add_parser.add_argument("--sender-type", help="Specify the type of the sender to add",
-                                default="fish.builtin.plain", const="fish.builtin.plain", nargs='?',
-                                choices=['fish.builtin.plain', 'fish.builtin.midi', 'fish.builtin.midirtp',
-                                         'fish.builtin.xtouchgpio', 'fish.builtin.gpio', 'fish.builtin.macrokeypad'])
+                                default="fish.builtin.plain", const="fish.builtin.plain", nargs="?",
+                                choices=["fish.builtin.plain", "fish.builtin.midi", "fish.builtin.midirtp",
+                                         "fish.builtin.xtouchgpio", "fish.builtin.gpio", "fish.builtin.macrokeypad"])
         add_parser.add_argument("--enable-debug", help="Enable event debugging on the event sender",
-                                action='store_true')
-        add_parser.add_argument("--configure", nargs='+', action='extend')
+                                action="store_true")
+        add_parser.add_argument("--configure", nargs="+", action="extend")
         send_parser = subparsers.add_parser("send", exit_on_error=False, help="Send an event")
         id_group = send_parser.add_mutually_exclusive_group(required=True)
         id_group.add_argument("-i", "--sender_id", help="The id of the originating sender", type=int, required=False)
         id_group.add_argument("-n", "--sender_name", help="Specify the sender by its name", type=str, required=False)
         send_parser.add_argument("--function", help="The sender function to be used", type=int, default=0)
-        send_parser.add_argument("--type", default="single", choices=['single', 'release', 'start'])
-        send_parser.add_argument("--args", nargs='+', type=int, action='extend', help="Specify the event arguments")
+        send_parser.add_argument("--type", default="single", choices=["single", "release", "start"])
+        send_parser.add_argument("--args", nargs="+", type=int, action="extend", help="Specify the event arguments")
         # TODO add renaming of events
 
     def execute(self, args) -> bool:
@@ -50,8 +50,8 @@ class EventCommand(Command):
                                 evs.configuration[str(item)] = ""
                         except ValueError as _:
                             logger.error(
-                                'Unable to parse event sender configuration entry %s.'
-                                ' Expected format: <key>=<value>',
+                                "Unable to parse event sender configuration entry %s."
+                                " Expected format: <key>=<value>",
                                 item)
                 evs.debug_enabled = args.enable_debug
                 return True

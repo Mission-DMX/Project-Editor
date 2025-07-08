@@ -332,12 +332,12 @@ class _SenderAddDialog(QDialog):
         layout.addRow("Name: ", self._name_tb)
         self._type_cb = QComboBox(self, editable=False)
         self._type_cb.addItems([
-            'fish.builtin.plain',
-            'fish.builtin.midi',
-            'fish.builtin.midirtp',
-            'fish.builtin.xtouchgpio',
-            'fish.builtin.gpio',
-            'fish.builtin.macrokeypad'
+            "fish.builtin.plain",
+            "fish.builtin.midi",
+            "fish.builtin.midirtp",
+            "fish.builtin.xtouchgpio",
+            "fish.builtin.gpio",
+            "fish.builtin.macrokeypad"
         ])
         layout.addRow("Type: ", self._type_cb)
         layout.addWidget(self._button_box)

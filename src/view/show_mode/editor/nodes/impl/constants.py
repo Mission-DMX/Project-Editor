@@ -36,11 +36,11 @@ class TextPreviewRendererMixin(FilterNode):
 
 class Constants8BitNode(TextPreviewRendererMixin):
     """Filter to represent an 8 bit value."""
-    nodeName = '8_bit_filter'
+    nodeName = "8_bit_filter"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_8BIT, name=name, terminals={
-            'value': {'io': 'out'}
+            "value": {"io": "out"}
         })
 
         try:
@@ -61,11 +61,11 @@ class Constants8BitNode(TextPreviewRendererMixin):
 
 class Constants16BitNode(TextPreviewRendererMixin):
     """Filter to represent a 16 bit value."""
-    nodeName = '16_bit_filter'
+    nodeName = "16_bit_filter"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, name=name, terminals={
-            'value': {'io': 'out'}
+            "value": {"io": "out"}
         })
 
         try:
@@ -86,11 +86,11 @@ class Constants16BitNode(TextPreviewRendererMixin):
 
 class ConstantsFloatNode(TextPreviewRendererMixin):
     """Filter to represent a float/double value."""
-    nodeName = 'Float_filter'
+    nodeName = "Float_filter"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, name=name, terminals={
-            'value': {'io': 'out'}
+            "value": {"io": "out"}
         })
         try:
             self.filter.initial_parameters["value"] = model.initial_parameters["value"]
@@ -113,11 +113,11 @@ class ConstantsColorNode(FilterNode):
     """Filter to represent a color value.
     TODO specify color format
     """
-    nodeName = 'Color_filter'
+    nodeName = "Color_filter"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name, terminals={
-            'value': {'io': 'out'}
+            "value": {"io": "out"}
         })
         try:
             self.filter.initial_parameters["value"] = model.initial_parameters["value"]
@@ -148,7 +148,7 @@ class ConstantsColorNode(FilterNode):
 
 class PanTiltConstant(FilterNode):
     """Filter to represent a pan/tilt position."""
-    nodeName = 'PanTilt_filter'
+    nodeName = "PanTilt_filter"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, name=name,
@@ -224,5 +224,5 @@ class PanTiltConstant(FilterNode):
 
     def outputs_changed(self, eight_bit: bool, sixteen_bit: bool):
         self.filter.filter_configurations["outputs"] = \
-            'both' if eight_bit and sixteen_bit else '8bit' if eight_bit else '16bit'
+            "both" if eight_bit and sixteen_bit else "8bit" if eight_bit else "16bit"
         self.setup_output_terminals()

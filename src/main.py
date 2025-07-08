@@ -16,17 +16,17 @@ if __name__ == "__main__":
     splashscreen.show()
     splashscreen.raise_()
 
-    with open(resource_path(os.path.join("resources", 'pyproject.toml')), encoding="UTF-8") as f:
+    with open(resource_path(os.path.join("resources", "pyproject.toml")), encoding="UTF-8") as f:
         import tomlkit
 
         data = tomlkit.load(f)
     version_string = f"Version: {data['project']['version']}"
 
     app.processEvents()
-    app.setApplicationName(data['project']['name'])
-    app.setApplicationDisplayName(data['tool']['missionDMX']["display-name"])
-    app.setOrganizationName(data['tool']['missionDMX']['organization']['name'])
-    app.setOrganizationDomain(data['tool']['missionDMX']['organization']['domain'])
+    app.setApplicationName(data["project"]["name"])
+    app.setApplicationDisplayName(data["tool"]["missionDMX"]["display-name"])
+    app.setOrganizationName(data["tool"]["missionDMX"]["organization"]["name"])
+    app.setOrganizationDomain(data["tool"]["missionDMX"]["organization"]["domain"])
     app.setDesktopSettingsAware(True)
     from PySide6.QtGui import QIcon
 

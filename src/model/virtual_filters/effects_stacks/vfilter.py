@@ -155,11 +155,11 @@ class EffectsStack(VirtualFilter):
     def deserialize(self):
         self.sockets.clear()
         for k, v in self._filter_configurations.items():
-            is_group = k.startswith('g')
+            is_group = k.startswith("g")
             if is_group:
                 raise NotImplementedError("Deserialization of groups is not yet implemented.")
 
-            universe, channel = k[1:].split('/')
+            universe, channel = k[1:].split("/")
             universe = int(universe)
             channel = int(channel)
             for fixture in self.scene.board_configuration.fixtures:

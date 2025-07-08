@@ -19,10 +19,10 @@ class ImportNode(FilterNode):
                 rename_dict: dict[str, str] = {}
                 rename_data = self.filter.filter_configurations.get("rename_dict")
                 if rename_data:
-                    for item in rename_data.split(','):
+                    for item in rename_data.split(","):
                         if "=" not in item:
                             continue
-                        k, v = item.split('=')
+                        k, v = item.split("=")
                         rename_dict[k] = v
                 for port_name in self.outputs():
                     current_ports.add((port_name, target_filter.out_data_types.get(port_name)))

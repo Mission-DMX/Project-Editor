@@ -28,13 +28,13 @@ class SceneOptimizerModule:
 
         :param f: The universe filter to read.
         """
-        universe_id = f.filter_configurations['universe']
+        universe_id = f.filter_configurations["universe"]
         fde = self._universe_filter_dict.get(universe_id)
         if not fde:
             fde = []
             self._universe_filter_dict[universe_id] = fde
         for k, v in f.filter_configurations.items():
-            if k == 'universe':
+            if k == "universe":
                 continue
             fde.append((str(f.filter_id) + "__" + str(k), v, str(f.channel_links.get(k))))
         self._first_universe_filter_id[universe_id] = f.filter_id
@@ -102,7 +102,7 @@ class SceneOptimizerModule:
         :param scene_element: The scene to place the new filter into.
         """
         for universe, channel_list in self._universe_filter_dict.items():
-            filter_config_parameters = {'universe': universe}
+            filter_config_parameters = {"universe": universe}
             channel_mappings = {}
             for channel_mapping in channel_list:
                 filter_input_channel, universe_channel, foreign_filter_output_channel = channel_mapping
@@ -117,8 +117,8 @@ class SceneOptimizerModule:
             })
             for param_k, param_v in filter_config_parameters.items():
                 ElementTree.SubElement(filter_element, "filterConfiguration", {
-                    'name': str(param_k),
-                    'value': str(param_v)
+                    "name": str(param_k),
+                    "value": str(param_v)
                 })
             for input_ch, output_ch in channel_mappings.items():
                 ElementTree.SubElement(filter_element, "channellink", attrib={

@@ -50,16 +50,16 @@ class CueFilterModel:
         self.cues.clear()
         self.channels.clear()
         if mapping_str:
-            for channel_dev in mapping_str.split(';'):
-                splitted_channel_dev = channel_dev.split(':')
+            for channel_dev in mapping_str.split(";"):
+                splitted_channel_dev = channel_dev.split(":")
                 self.channels.append((splitted_channel_dev[0], DataType.from_filter_str(splitted_channel_dev[1])))
 
         cuelist_definition_str = parameters.get("cuelist")
         cue_names = parameters.get("cue_names")
-        cue_names = cue_names.split(';') if cue_names else []
+        cue_names = cue_names.split(";") if cue_names else []
         tmp_dict = {}
         for e in cue_names:
-            e = e.split(':')
+            e = e.split(":")
             tmp_dict[int(e[1])] = e[0]
         cue_names = tmp_dict
         if cuelist_definition_str:

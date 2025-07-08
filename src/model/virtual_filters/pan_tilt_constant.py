@@ -27,13 +27,13 @@ class PanTiltConstantFilter(VirtualFilter):
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
-            case 'pan8bit':
+            case "pan8bit":
                 return f"{self.filter_id}_8bit_pan:value_upper"
-            case 'tilt8bit':
+            case "tilt8bit":
                 return "{self.filter_id}_8bit_tilt:value_upper"
-            case 'pan16bit':
+            case "pan16bit":
                 return "{self.filter_id}_16bit_pan:value"
-            case 'tilt16bit':
+            case "tilt16bit":
                 return "{self.filter_id}_16bit_tilt:value"
         return None
 
@@ -51,11 +51,11 @@ class PanTiltConstantFilter(VirtualFilter):
             scene=self.scene
         )
         filter._initial_parameters = {
-            'value': str(int((self.tilt if tilt else self.pan) * 65535))}  # Todo: inverse Tilt?
+            "value": str(int((self.tilt if tilt else self.pan) * 65535))}  # Todo: inverse Tilt?
         filter._filter_configurations = {}
         filter._in_data_types = {}
-        filter._out_data_types = {'value': DataType.DT_16_BIT}
-        filter._gui_update_keys = {'value': DataType.DT_16_BIT}
+        filter._out_data_types = {"value": DataType.DT_16_BIT}
+        filter._gui_update_keys = {"value": DataType.DT_16_BIT}
         filter._in_data_types = {}
         filter._channel_links = {}
         filter_list.append(filter)
@@ -68,12 +68,12 @@ class PanTiltConstantFilter(VirtualFilter):
         )
         filter._initial_parameters = {}
         filter._filter_configurations = {}
-        filter._in_data_types = {'value': DataType.DT_16_BIT}
-        filter._out_data_types = {'value_lower': DataType.DT_8_BIT,
-                                  'value_upper': DataType.DT_8_BIT}
+        filter._in_data_types = {"value": DataType.DT_16_BIT}
+        filter._out_data_types = {"value_lower": DataType.DT_8_BIT,
+                                  "value_upper": DataType.DT_8_BIT}
         filter._gui_update_keys = {}
         filter._in_data_types = {}
-        filter._channel_links = {'value': f"{self.filter_id}_16bit_{'tilt' if tilt else 'pan'}:value"}
+        filter._channel_links = {"value": f"{self.filter_id}_16bit_{'tilt' if tilt else 'pan'}:value"}
         filter_list.append(filter)
 
     @property
@@ -119,11 +119,11 @@ class PanTiltConstantFilter(VirtualFilter):
 
     @property
     def sixteen_bit_available(self):
-        return self._filter_configurations['outputs'] == 'both' or self._filter_configurations['outputs'] == '16bit'
+        return self._filter_configurations["outputs"] == "both" or self._filter_configurations["outputs"] == "16bit"
 
     @property
     def eight_bit_available(self):
-        return self._filter_configurations['outputs'] == 'both' or self._filter_configurations['outputs'] == '8bit'
+        return self._filter_configurations["outputs"] == "both" or self._filter_configurations["outputs"] == "8bit"
 
     def update_time_passed(self):
         self._pan = min(max(self._pan + 0.01 * self._pan_delta, 0.0), 1.0)

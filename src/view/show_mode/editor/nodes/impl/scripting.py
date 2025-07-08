@@ -22,7 +22,7 @@ end
 
 
 class LuaFilterNode(FilterNode):
-    nodeName = 'Lua'
+    nodeName = "Lua"
 
     def __init__(self, model, name):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_SCRIPTING_LUA, name=name,
@@ -35,20 +35,20 @@ class LuaFilterNode(FilterNode):
     def _setup_terminals(self):
         self._ensure_parameters()
         legal_inputs: list[str] = []
-        for input_mapping in self.filter.filter_configurations['in_mapping'].split(';'):
+        for input_mapping in self.filter.filter_configurations["in_mapping"].split(";"):
             if not input_mapping:
                 continue
-            channel_name, data_type = input_mapping.split(':')
+            channel_name, data_type = input_mapping.split(":")
             if channel_name in legal_inputs:
                 raise ConfigurationError("Connection key already in use")
             if channel_name not in self.terminals:
                 self.addInput(name=channel_name)
             self.filter.in_data_types[channel_name] = DataType.from_filter_str(data_type)
             legal_inputs.append(channel_name)
-        for output_mapping in self.filter.filter_configurations['out_mapping'].split(';'):
+        for output_mapping in self.filter.filter_configurations["out_mapping"].split(";"):
             if not output_mapping:
                 continue
-            channel_name, data_type = output_mapping.split(':')
+            channel_name, data_type = output_mapping.split(":")
             if channel_name in legal_inputs:
                 raise ConfigurationError("Connection key already in use")
             if channel_name not in self.terminals:

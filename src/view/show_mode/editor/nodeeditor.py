@@ -46,7 +46,7 @@ class NodeEditorWidget(QWidget):
             for remote_filter_channel in filter_.channel_links.values():
                 if not remote_filter_channel:
                     continue
-                filter_name, _ = remote_filter_channel.split(':')
+                filter_name, _ = remote_filter_channel.split(":")
                 required_filters.add(filter_name)
         still_missing_filters = required_filters - loaded_in_filters
         for filter_candidate in self._page.parent_scene.filters:
@@ -70,8 +70,8 @@ class NodeEditorWidget(QWidget):
             for input_channel, output_channel in node.filter.channel_links.items():
                 if not isinstance(output_channel, str) or len(output_channel) == 0:
                     continue
-                remote_name = output_channel.split(':')[0]
-                remote_term = output_channel.split(':')[1]
+                remote_name = output_channel.split(":")[0]
+                remote_term = output_channel.split(":")[1]
                 fc_nodes = self._flowchart.nodes()
                 remote_node = fc_nodes.get(remote_name)
                 if remote_node is None:

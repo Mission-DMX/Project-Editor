@@ -280,7 +280,7 @@ class ShowBrowser:
                     self._input_dialog.textValueSelected.connect(
                         lambda text, scene_to_rename_=scene_to_rename: rename(self, scene_to_rename_, text))
                     self._input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
-                    self._input_dialog.setWindowTitle('Rename Scene')
+                    self._input_dialog.setWindowTitle("Rename Scene")
                     self._input_dialog.open()
                 if isinstance(si.annotated_data, FilterPage):
                     page_to_rename = si.annotated_data
@@ -289,7 +289,7 @@ class ShowBrowser:
                     self._input_dialog.textValueSelected.connect(
                         lambda text, page_to_rename_=page_to_rename: rename(self, page_to_rename_, text))
                     self._input_dialog.setLabelText("Rename filter page '" + page_to_rename.name + "' to:")
-                    self._input_dialog.setWindowTitle('Rename Filter Page')
+                    self._input_dialog.setWindowTitle("Rename Filter Page")
                     self._input_dialog.open()
                 if isinstance(si.annotated_data, UIPage):
                     ui_page = si.annotated_data
@@ -298,7 +298,7 @@ class ShowBrowser:
                     self._input_dialog.textValueSelected.connect(
                         lambda text, ui_page_=ui_page: rename(self, ui_page_, text))
                     self._input_dialog.setLabelText("Rename UI page '" + ui_page.title + "' to:")
-                    self._input_dialog.setWindowTitle('Rename UI Page')
+                    self._input_dialog.setWindowTitle("Rename UI Page")
                     self._input_dialog.open()
 
     def _scene_item_double_clicked(self, item):
@@ -365,7 +365,7 @@ class ShowBrowser:
                 self._input_dialog.textValueSelected.connect(
                     lambda text, parent=parent_to_append_to: add(self, parent, text))
                 self._input_dialog.setLabelText("Please enter the name of the new page.")
-                self._input_dialog.setWindowTitle('Enter Name')
+                self._input_dialog.setWindowTitle("Enter Name")
                 self._input_dialog.open()
 
     def _add_ui_page(self, selected_items: list[QTreeWidgetItem]):

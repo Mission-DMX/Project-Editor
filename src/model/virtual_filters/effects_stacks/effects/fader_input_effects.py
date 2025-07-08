@@ -51,10 +51,10 @@ class ColorInputEffect(ColorEffect):
         filter_id = prefix + "__hsi_fader"
         filter_list.append(Filter(self.get_scene(), filter_id, FilterTypeEnumeration.FILTER_FADER_HSI,
                                   self.get_position(),
-                                  {'set_id': str(self._fader.bank_set.id),
-                                   'column_id': str(self._fader.id),
-                                   'ignore_main_brightness_control': 'true'}))
-        return {'color': filter_id + ':color'}
+                                  {"set_id": str(self._fader.bank_set.id),
+                                   "column_id": str(self._fader.id),
+                                   "ignore_main_brightness_control": "true"}))
+        return {"color": filter_id + ":color"}
 
     def get_serializable_effect_name(self) -> str:
         return "color.InputFader"

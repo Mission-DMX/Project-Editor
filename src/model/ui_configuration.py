@@ -159,7 +159,7 @@ class UIWidget(ABC):
         for entry in self.generate_update_content():
             k = entry[0]
             v = entry[1]
-            if ':' in k:
+            if ":" in k:
                 split_key = k.split(":")
                 target_fid = split_key[0]
                 k = split_key[1]

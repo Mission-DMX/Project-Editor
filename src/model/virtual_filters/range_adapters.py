@@ -13,7 +13,7 @@ class SixteenBitToFloatRange(VirtualFilter):
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
-            case 'value':
+            case "value":
                 return f"{self.filter_id}_float_range:value"
         return None
 
@@ -29,7 +29,7 @@ class SixteenBitToFloatRange(VirtualFilter):
         filter._out_data_types = {}
         filter._gui_update_keys = {}
         filter._in_data_types = {}
-        filter._channel_links = {'value_in': self.channel_links['value_in']}
+        filter._channel_links = {"value_in": self.channel_links["value_in"]}
         filter_list.append(filter)
         filter = Filter(
             filter_id=f"{self.filter_id}_float_range",
@@ -38,14 +38,14 @@ class SixteenBitToFloatRange(VirtualFilter):
         )
         filter._initial_parameters = self.initial_parameters
         filter._filter_configurations = {}
-        filter._in_data_types = {'value_in': DataType.DT_DOUBLE}
-        filter._out_data_types = {'value': DataType.DT_DOUBLE}
-        filter._gui_update_keys = {'lower_bound_in': DataType.DT_16_BIT,
-                                   'upper_bound_in': DataType.DT_16_BIT,
-                                   'lower_bound_out': DataType.DT_DOUBLE,
-                                   'upper_bound_out': DataType.DT_DOUBLE}
+        filter._in_data_types = {"value_in": DataType.DT_DOUBLE}
+        filter._out_data_types = {"value": DataType.DT_DOUBLE}
+        filter._gui_update_keys = {"lower_bound_in": DataType.DT_16_BIT,
+                                   "upper_bound_in": DataType.DT_16_BIT,
+                                   "lower_bound_out": DataType.DT_DOUBLE,
+                                   "upper_bound_out": DataType.DT_DOUBLE}
         filter._in_data_types = {}
-        filter._channel_links = {'value_in': f"{self.filter_id}_16bit_to_float:value"}
+        filter._channel_links = {"value_in": f"{self.filter_id}_16bit_to_float:value"}
         filter_list.append(filter)
 
 
@@ -56,7 +56,7 @@ class EightBitToFloatRange(VirtualFilter):
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
-            case 'value':
+            case "value":
                 return f"{self.filter_id}_float_range:value"
         return None
 
@@ -72,7 +72,7 @@ class EightBitToFloatRange(VirtualFilter):
         filter._out_data_types = {}
         filter._gui_update_keys = {}
         filter._in_data_types = {}
-        filter._channel_links = {'value_in': self.channel_links['value_in']}
+        filter._channel_links = {"value_in": self.channel_links["value_in"]}
         filter_list.append(filter)
         filter = Filter(
             filter_id=f"{self.filter_id}_float_range",
@@ -81,14 +81,14 @@ class EightBitToFloatRange(VirtualFilter):
         )
         filter._initial_parameters = self.initial_parameters
         filter._filter_configurations = {}
-        filter._in_data_types = {'value_in': DataType.DT_DOUBLE}
-        filter._out_data_types = {'value': DataType.DT_DOUBLE}
-        filter._gui_update_keys = {'lower_bound_in': DataType.DT_8_BIT,
-                                   'upper_bound_in': DataType.DT_8_BIT,
-                                   'lower_bound_out': DataType.DT_DOUBLE,
-                                   'upper_bound_out': DataType.DT_DOUBLE}
+        filter._in_data_types = {"value_in": DataType.DT_DOUBLE}
+        filter._out_data_types = {"value": DataType.DT_DOUBLE}
+        filter._gui_update_keys = {"lower_bound_in": DataType.DT_8_BIT,
+                                   "upper_bound_in": DataType.DT_8_BIT,
+                                   "lower_bound_out": DataType.DT_DOUBLE,
+                                   "upper_bound_out": DataType.DT_DOUBLE}
         filter._in_data_types = {}
-        filter._channel_links = {'value_in': f"{self.filter_id}_8bit_to_float:value"}
+        filter._channel_links = {"value_in": f"{self.filter_id}_8bit_to_float:value"}
         filter_list.append(filter)
 
 
@@ -103,7 +103,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
         raise ValueError("Unknown output port")
 
     def instantiate_filters(self, filter_list: list[Filter]):
-        brightness_input = self.channel_links.get('brightness')
+        brightness_input = self.channel_links.get("brightness")
         normalize_from_16bit: bool = False
         if not brightness_input:
             brightness_input = f"{self.filter_id}_global_brightness_input"
@@ -122,7 +122,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
                                  if normalize_from_16bit else FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
                              pos=self.pos,
                              scene=self.scene)
-        conv_filter.channel_links['value_in'] = brightness_input
+        conv_filter.channel_links["value_in"] = brightness_input
         filter_list.append(conv_filter)
         brightness_input = conv_filter_id + ":value"
 
@@ -132,7 +132,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
             scene=self.scene
         )
-        filter_const_zero.initial_parameters['value'] = '0.0'
+        filter_const_zero.initial_parameters["value"] = "0.0"
         filter_list.append(filter_const_zero)
         filter_const_zero_id += ":value"
         # TODO add normalization and conversion only if input isn't already a float
@@ -142,7 +142,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
             scene=self.scene
         )
-        filter_const_norm.initial_parameters['value'] = str(1 / 2 ** 16) if normalize_from_16bit else str(1 / 255)
+        filter_const_norm.initial_parameters["value"] = str(1 / 2 ** 16) if normalize_from_16bit else str(1 / 255)
         filter_list.append(filter_const_norm)
         filter_const_norm_id += ":value"
         brightness_normalization_filter_id = f"{self.filter_id}_brightness_normalization"
@@ -151,9 +151,9 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MAC,
             scene=self.scene
         )
-        brightness_normalization_filter.channel_links['summand'] = filter_const_zero_id
-        brightness_normalization_filter.channel_links['factor2'] = filter_const_norm_id
-        brightness_normalization_filter.channel_links['factor1'] = brightness_input
+        brightness_normalization_filter.channel_links["summand"] = filter_const_zero_id
+        brightness_normalization_filter.channel_links["factor2"] = filter_const_norm_id
+        brightness_normalization_filter.channel_links["factor1"] = brightness_input
         filter_list.append(brightness_normalization_filter)
         brightness_normalization_filter_id += ":value"
 
@@ -163,7 +163,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_FLOAT,
             scene=self.scene
         )
-        color_decomposition_filter.channel_links['input'] = self.channel_links['color_in']
+        color_decomposition_filter.channel_links["input"] = self.channel_links["color_in"]
         filter_list.append(color_decomposition_filter)
 
         brightness_multiplication_filter_id = f"{self.filter_id}_brightness_multiplication"
@@ -172,9 +172,9 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MAC,
             scene=self.scene
         )
-        brightness_multiplication_filter.channel_links['factor1'] = color_decomposition_filter_id + ":i"
-        brightness_multiplication_filter.channel_links['factor2'] = brightness_normalization_filter_id
-        brightness_multiplication_filter.channel_links['summand'] = filter_const_zero_id
+        brightness_multiplication_filter.channel_links["factor1"] = color_decomposition_filter_id + ":i"
+        brightness_multiplication_filter.channel_links["factor2"] = brightness_normalization_filter_id
+        brightness_multiplication_filter.channel_links["summand"] = filter_const_zero_id
         filter_list.append(brightness_multiplication_filter)
         brightness_multiplication_filter_id += ":value"
 
@@ -183,7 +183,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR,
             scene=self.scene
         )
-        color_recomposition_filter.channel_links['h'] = color_decomposition_filter_id + ':h'
-        color_recomposition_filter.channel_links['s'] = color_decomposition_filter_id + ':s'
-        color_recomposition_filter.channel_links['i'] = brightness_multiplication_filter_id
+        color_recomposition_filter.channel_links["h"] = color_decomposition_filter_id + ":h"
+        color_recomposition_filter.channel_links["s"] = color_decomposition_filter_id + ":s"
+        color_recomposition_filter.channel_links["i"] = brightness_multiplication_filter_id
         filter_list.append(color_recomposition_filter)

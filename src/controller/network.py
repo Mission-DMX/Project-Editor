@@ -436,7 +436,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         if not self.is_running:
             return
         msg = proto.Console_pb2.fader_position()
-        msg.column_id = 'main'
+        msg.column_id = "main"
         msg.position = int(min(max(0, new_position), 255) * 65536 / 255)
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_FADER_POSITION,
                                push_direct=push_direct)

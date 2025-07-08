@@ -25,20 +25,20 @@ class PatchingSelect(QtWidgets.QScrollArea):
     def __init__(self, board_configuration: BoardConfiguration, parent):
         super().__init__(parent)
         self._board_configuration = board_configuration
-        cache_path = '/var/cache/missionDMX'
+        cache_path = "/var/cache/missionDMX"
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
-        fixtures_path = os.path.join(cache_path, 'fixtures/')
-        zip_path = os.path.join(cache_path, 'fixtures.zip')
+        fixtures_path = os.path.join(cache_path, "fixtures/")
+        zip_path = os.path.join(cache_path, "fixtures.zip")
         if not os.path.exists(fixtures_path):
             logger.info("Downloading fixture library. Please wait")
-            url = 'https://open-fixture-library.org/download.ofl'
+            url = "https://open-fixture-library.org/download.ofl"
             r = requests.get(url, allow_redirects=True, timeout=5)
             if r.status_code != 200:
                 logger.error("Failed to download fixture library")
                 return
 
-            with open(zip_path, 'wb') as file:
+            with open(zip_path, "wb") as file:
                 file.write(r.content)
             with zipfile.ZipFile(zip_path) as zip_ref:
                 zip_ref.extractall(fixtures_path)
@@ -84,7 +84,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         reset_button.setStyleSheet(Style.PATCH + "background-color: white;")
         reset_button.clicked.connect(self.reset)
         fixture_layout.addWidget(reset_button)
-        for index, mode in enumerate(fixture['modes']):
+        for index, mode in enumerate(fixture["modes"]):
             mode_item = ModeItem(mode)
             mode_item.clicked.connect(lambda *args, _fixture=fixture, _index=index: self._run_patch(_fixture, _index))
             fixture_layout.addWidget(mode_item)

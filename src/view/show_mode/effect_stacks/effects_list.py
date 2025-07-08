@@ -68,7 +68,7 @@ class _EffectSeparator(QWidget):
         if self.isVisible():
             fm = self.fontMetrics()
             text_height = fm.height()
-            text_space = fm.horizontalAdvance(' ')
+            text_space = fm.horizontalAdvance(" ")
             text_width = fm.horizontalAdvance(self._text)
             p.drawText(int(text_space / 2), text_height + 1, self._text)
             p.setBrush(QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC)))

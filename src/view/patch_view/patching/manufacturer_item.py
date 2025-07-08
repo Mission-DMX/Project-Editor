@@ -14,7 +14,7 @@ class ManufacturerItem(QtWidgets.QPushButton):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        manufacturer_label: QtWidgets.QLabel = QtWidgets.QLabel(str(manufacturer['name']), self)
+        manufacturer_label: QtWidgets.QLabel = QtWidgets.QLabel(str(manufacturer["name"]), self)
         layout.addWidget(manufacturer_label)
 
         self.setStyleSheet(Style.PATCH + "background-color: white;")
