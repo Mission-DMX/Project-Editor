@@ -12,7 +12,8 @@ from model import Scene, UIPage
 from model.scene import FilterPage
 
 
-def _add_filter_page_to_element(scene_element: ElementTree.Element, page: FilterPage, parent_page: FilterPage | None) -> None:
+def _add_filter_page_to_element(scene_element: ElementTree.Element, page: FilterPage,
+                                parent_page: FilterPage | None) -> None:
     """
     This function writes the filter pages of a scene or parent page.
     :param scene_element: The XML element to write to
