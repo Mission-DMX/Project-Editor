@@ -58,7 +58,8 @@ def _create_ftdi_location_element(ftdi_location: proto.UniverseControl_pb2.Unive
     })
 
 
-def _create_fixture_element(fixture: UsedFixture, patching_element: ElementTree.Element, assemble_for_fish: bool) -> None:
+def _create_fixture_element(fixture: UsedFixture, patching_element: ElementTree.Element,
+                            assemble_for_fish: bool) -> None:
     """
     add patching information of a fixture to the show file XML structure.
     :param fixture: The Fixture to add
