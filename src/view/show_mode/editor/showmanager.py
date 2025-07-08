@@ -14,6 +14,7 @@ from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import (
     SceneUIPageEditorWidget,
 )
+
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
 from .show_browser.show_browser import ShowBrowser
