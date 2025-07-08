@@ -57,9 +57,9 @@ class FilterSelectionWidget(QTreeWidget):
             return not len(
                 self._allowed_filter_types) > 0 and filter_to_add.filter_type not in self._allowed_filter_types
 
-        def add_filter_item(filter_to_add: Filter, page_item):
+        def add_filter_item(filter_to_add: Filter, page_item) -> AnnotatedTreeWidgetItem:
             nonlocal already_added_filters
-            filter_item = AnnotatedTreeWidgetItem(page_item)
+            filter_item: AnnotatedTreeWidgetItem = AnnotatedTreeWidgetItem(page_item)
             filter_item.setText(0, filter_to_add.filter_id)
             filter_item.annotated_data = filter_to_add
             if filter_to_add.filter_id == self._target_filter_id:

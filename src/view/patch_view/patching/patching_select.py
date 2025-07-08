@@ -77,7 +77,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
 
         return item
 
-    def _generate_fixture_item(self, fixture: Fixture):
+    def _generate_fixture_item(self, fixture: Fixture) -> FixtureItem:
         fixture_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)

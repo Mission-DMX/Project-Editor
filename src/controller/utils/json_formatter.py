@@ -21,7 +21,7 @@ class JSONFormatter(logging.Formatter):
         message = self._prepare_log_dict(record)
         return json.dumps(message, default=str)
 
-    def _prepare_log_dict(self, record: logging.LogRecord):
+    def _prepare_log_dict(self, record: logging.LogRecord) -> dict[str, str | None]:
         always_fields = {"message": record.getMessage(),
                          "timestamp": dt.datetime.fromtimestamp(record.created).isoformat(), }
         if record.exc_info is not None:

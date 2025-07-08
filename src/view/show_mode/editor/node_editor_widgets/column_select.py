@@ -6,15 +6,14 @@ from PySide6.QtWidgets import QWidget
 
 from model import Filter
 from view.utility_widgets.fader_column_selector import FaderColumnSelectorWidget
-
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class ColumnSelect(NodeEditorFilterConfigWidget):
     """This class is an adapter to configure the column select filter with the column selection widget."""
 
-    def _load_parameters(self, parameters: dict[str, str]):
-        return {}
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
+        pass
 
     def _get_parameters(self) -> dict[str, str]:
         return {}

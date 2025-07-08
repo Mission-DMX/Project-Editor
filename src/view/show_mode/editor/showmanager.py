@@ -14,7 +14,6 @@ from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import (
     SceneUIPageEditorWidget,
 )
-
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
 from .show_browser.show_browser import ShowBrowser
@@ -120,7 +119,7 @@ class ShowEditorWidget(QSplitter):
             self._open_page_tab_widget.setCurrentWidget(scene_tab)
         return scene_tab
 
-    def _add_bankset_tab(self, data: dict):
+    def _add_bankset_tab(self, data: dict) -> QWidget | None:
         bankset = data["bankset"]
         if bankset in self._opened_banksets:
             for tab_index in range(self._open_page_tab_widget.count()):
@@ -139,7 +138,7 @@ class ShowEditorWidget(QSplitter):
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
 
-    def _add_uipage_tab(self, data: dict):
+    def _add_uipage_tab(self, data: dict) -> QWidget | None:
         uipage = data["uipage"]
         if uipage in self._opened_uieditors:
             for tab_index in range(self._open_page_tab_widget.count()):

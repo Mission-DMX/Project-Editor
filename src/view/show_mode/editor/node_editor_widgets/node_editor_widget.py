@@ -33,7 +33,7 @@ class NodeEditorFilterConfigWidget(ABC):
         pass
 
     @abstractmethod
-    def _load_parameters(self, parameters: dict[str, str]) -> None:
+    def _load_parameters(self, parameters: dict[str, str]) -> dict:
         """Parse the current filter parameters."""
         pass
 

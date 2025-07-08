@@ -68,7 +68,7 @@ class FlowLayout(QLayout):
         size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
         return size
 
-    def _do_layout(self, rect, test_only):
+    def _do_layout(self, rect, test_only) -> float:
         x = rect.x()
         y = rect.y()
         line_height = 0

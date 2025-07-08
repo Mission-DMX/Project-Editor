@@ -63,7 +63,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._broadcaster.jogwheel_rotated_left.disconnect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.disconnect(self._increase_scroll)
 
-    def _translate_scroll_position(self, absolute_position):
+    def _translate_scroll_position(self, absolute_position) -> float:
         # FIXME scrollbars are always strange and clearly more rules apply here
         maximum = self.horizontalScrollBar().maximum()
         widget_width = self._universe_widget.width()

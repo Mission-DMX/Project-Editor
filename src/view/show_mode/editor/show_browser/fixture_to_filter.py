@@ -81,7 +81,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
 
 def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, universe_filter: Filter, x: float, y: float,
                                      name: str, already_added_filters: list[Filter],
-                                     output_map: dict[ColorSupport | str, str] | None = None):
+                                     output_map: dict[ColorSupport | str, str] | None = None) -> float:
     channel_count = fixture.channel_length
     i = 0
 

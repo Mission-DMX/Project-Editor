@@ -12,10 +12,10 @@ import sys
 from io import BytesIO
 
 if sys.version > "3":
-    def _byte(byte):
+    def _byte(byte) -> bytes:
         return bytes((byte,))
 else:
-    def _byte(byte):
+    def _byte(byte) -> str:
         return chr(byte)
 
 
@@ -52,7 +52,7 @@ def decode_bytes(buf):
     return decode_stream(BytesIO(buf))
 
 
-def _read_one(stream):
+def _read_one(stream) -> int:
     """Read a byte from the file (as an integer)
     raises EOFError if the stream ends while reading bytes.
     """
