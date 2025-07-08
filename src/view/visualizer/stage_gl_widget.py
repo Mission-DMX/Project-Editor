@@ -61,6 +61,7 @@ class Stage3DWidget(QOpenGLWidget):
         in vec3 FragPos;
         uniform vec3 lightPos;
         uniform vec3 viewPos;
+        uniform vec3 color_mixin;
         out vec4 FragColor;
         void main() {
             vec3 color = vec3(0.7, 0.7, 0.8);
@@ -70,6 +71,7 @@ class Stage3DWidget(QOpenGLWidget):
             vec3 diffuse = diff * vec3(1.0);
             vec3 ambient = vec3(0.2);
             vec3 result = (ambient + diffuse) * color;
+            result = result + color_mixin;
             FragColor = vec4(result, 1.0);
         }
         """
@@ -103,6 +105,7 @@ class Stage3DWidget(QOpenGLWidget):
         self._model_matrix_loc = gl.glGetUniformLocation(self._shader_program, b"model")
         self._light_pos_loc = gl.glGetUniformLocation(self._shader_program, b"lightPos")
         self._view_pos_loc = gl.glGetUniformLocation(self._shader_program, b"viewPos")
+        self._shader_color_mixin_loc = gl.glGetUniformLocation(self._shader_program, b"color_mixin")
 
         for obj in self._stage_config.objects:
             self._ensure_model_loaded(obj)
@@ -134,6 +137,7 @@ class Stage3DWidget(QOpenGLWidget):
         cam = self._camera_pos
         gl.glUniform3f(self._view_pos_loc, cam.x(), cam.y(), cam.z())
         gl.glUniform3f(self._light_pos_loc, cam.x(), cam.y(), cam.z())
+        i = 0
 
         # Drawing all objects
         for obj in self._stage_config.objects:
@@ -149,8 +153,13 @@ class Stage3DWidget(QOpenGLWidget):
             # Binding VAO
             if obj.model_path in self._models:
                 m = self._models[obj.model_path]
+                if i % 2 == 0:  # TODO replace with if selected
+                    gl.glUniform3f(self._shader_color_mixin_loc, 0.0, 0.0, 0.4)
+                else:
+                    gl.glUniform3f(self._shader_color_mixin_loc, 0.0, 0.0, 0.0)
                 gl.glBindVertexArray(m.vao)
                 gl.glDrawElements(gl.GL_TRIANGLES, m.index_count, gl.GL_UNSIGNED_INT, None)
+                i += 1
         gl.glBindVertexArray(0)
         gl.glUseProgram(0)
 
