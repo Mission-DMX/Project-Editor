@@ -59,7 +59,12 @@ exclude = ["src/proto", "src/controller/autotrack", "test/", "src/view/utility_w
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "I"]
-ignore = ["E722", "F401"]
+ignore = [
+    "E722",
+    "F401",
+    "UP007", #Pycharm problem
+    "UP038", #Deprecated,
+]
 
 [tool.isort]
 profile = "black"
