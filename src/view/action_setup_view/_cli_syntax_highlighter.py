@@ -22,7 +22,7 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
 
         self._string_format = QTextCharFormat()
         self._string_format.setForeground(QBrush(QColor.fromRgb(0, 0, 0xFF)))
-        self._string_expression = QRegularExpression("\\\".+\\\"")
+        self._string_expression = QRegularExpression('\\".+\\"')
         self._mappings[self._string_expression] = self._string_format
 
         self._comment_format = QTextCharFormat()
