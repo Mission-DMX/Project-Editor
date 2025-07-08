@@ -58,12 +58,13 @@ line-length = 120
 exclude = ["src/proto", "src/controller/autotrack", "test/", "src/view/utility_widgets/wizzards/theater_scene_wizard.py"]
 
 [tool.ruff.lint]
-select = ["E", "F", "UP", "I"]
+select = ["E", "F", "UP", "I", "SIM"]
 ignore = [
     "E722",
     "F401",
     "UP007", #Pycharm problem
     "UP038", #Deprecated,
+    "SIM105", #Slower contextlib.suppress
 ]
 
 [tool.isort]
