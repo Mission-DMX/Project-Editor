@@ -6,7 +6,6 @@ from model import Filter
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
 
-
 def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element, for_fish: bool,
                                     om: SceneOptimizerModule) -> None:
     """Creates a xml element of type filter.
