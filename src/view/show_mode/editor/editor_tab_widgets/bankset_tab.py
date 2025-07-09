@@ -180,12 +180,12 @@ class _BankEditWidget(QWidget):
             column_layout.addWidget(self._text_widgets[i])
             self._top_inverted_widgets.append(QCheckBox("Top line inverted", column_widget))
             self._top_inverted_widgets[i].stateChanged.connect(
-                lambda checked, ci=i: self._top_inverted_changed(ci, checked),
+                lambda _, ci=i: self._top_inverted_changed(ci),
             )
             column_layout.addWidget(self._top_inverted_widgets[i])
             self._bottom_inverted_widgets.append(QCheckBox("Bottom line inverted", column_widget))
             self._bottom_inverted_widgets[i].stateChanged.connect(
-                lambda checked, ci=i: self._bottom_inverted_changed(ci, checked),
+                lambda _, ci=i: self._bottom_inverted_changed(ci),
             )
             column_layout.addWidget(self._bottom_inverted_widgets[i])
             column_layout.addWidget(QLabel("Secondary position"))
@@ -308,11 +308,11 @@ class _BankEditWidget(QWidget):
             if self._bank_item:
                 self._bank_item.update_description_text()
 
-    def _top_inverted_changed(self, index: int, checked: bool) -> None:
+    def _top_inverted_changed(self, index: int) -> None:
         if self._bank and len(self._bank.columns) > index:
             self._bank.columns[index].top_display_line_inverted = self._top_inverted_widgets[index].isChecked()
 
-    def _bottom_inverted_changed(self, index: int, checked: bool) -> None:
+    def _bottom_inverted_changed(self, index: int) -> None:
         if self._bank and len(self._bank.columns) > index:
             self._bank.columns[index].bottom_display_line_inverted = self._bottom_inverted_widgets[
                 index].isChecked()
