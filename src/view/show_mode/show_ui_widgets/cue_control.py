@@ -151,10 +151,12 @@ class CueControlUIWidget(UIWidget):
                 cue_list.addItem(item)
                 cue_list.setItemWidget(item, label)
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         """Implementation of abstract method 'generate_update_content'."""
         return self._command_chain
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget:
             self._player_widget.deleteLater()

@@ -32,9 +32,11 @@ class ButtonsWithValueSubmit(UIWidget):
         self._button_list.set_filter(f, i)
         self.associated_filters["constant"] = f.filter_id
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._button_list.generate_update_content()
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget:
             self._player_widget.deleteLater()

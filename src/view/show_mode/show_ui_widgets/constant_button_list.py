@@ -105,9 +105,11 @@ class ConstantNumberButtonList(UIWidget):
         self._value = new_value
         self.push_update()
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", str(self._value))]
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget:
             self._player_widget.deleteLater()

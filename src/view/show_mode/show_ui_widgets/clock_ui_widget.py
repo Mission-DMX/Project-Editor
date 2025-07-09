@@ -32,9 +32,11 @@ class ClockUIWidget(UIWidget):
         self._widget: QLabel | None = None
         self._timer: QTimer | None = None
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         return []
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._widget is not None:
             self._widget.deleteLater()

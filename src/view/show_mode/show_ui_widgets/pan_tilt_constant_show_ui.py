@@ -34,9 +34,11 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._filter = f
         self._filter.register_observer(self, self.insert_action)
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         return self._command_chain
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget is not None:
             self._player_widget.deleteLater()

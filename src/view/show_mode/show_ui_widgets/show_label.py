@@ -18,10 +18,12 @@ class ShowLabelUIWidget(UIWidget):
         self._conf_widget: QLabel | None = None
         self._edit_widget: QTextEdit | None = None
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         # This is merely a label. We do not need to update anything.
         return []
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget is not None:
             self._player_widget.deleteLater()

@@ -37,6 +37,7 @@ class AutoTrackerUIWidget(UIWidget):
                                                                    self._tracker_player_widget.instance)
         self._finished_initializing = True
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         filter_updates = []
         if not self._finished_initializing:
@@ -55,6 +56,7 @@ class AutoTrackerUIWidget(UIWidget):
             filter_updates.append((tilt_filter_id, str(lc.last_tilt)))
         return filter_updates
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         return self._tracker_player_widget
 

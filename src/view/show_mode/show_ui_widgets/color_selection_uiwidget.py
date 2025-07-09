@@ -38,6 +38,7 @@ class ColorSelectionUIWidget(UIWidget):
         self.associated_filters["constant"] = f.filter_id
         self._value = ColorHSI.from_filter_str(f.initial_parameters.get("value"))
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", self._value.format_for_filter())]
 
@@ -85,6 +86,7 @@ class ColorSelectionUIWidget(UIWidget):
         w.setLayout(layout)
         return w
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget:
             self._player_widget.deleteLater()

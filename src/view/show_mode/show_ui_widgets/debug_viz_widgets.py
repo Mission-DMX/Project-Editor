@@ -44,6 +44,7 @@ class _DebugVizWidget(UIWidget, ABC):
         if self._placeholder_widget is not None:
             self._placeholder_widget.deleteLater()
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         # As we only consume values, we do not need to generate updates
         return []
@@ -177,6 +178,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
         self.configured_dimensions_changed_callback = self._dimensions_changed
         self._show_widget: ColorLabel | None = None
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._show_widget is not None:
             self._show_widget.deleteLater()
@@ -273,6 +275,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
         self._show_widget: _NumberLabel | None = None
         self.configured_dimensions_changed_callback = self._dimensions_changed
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._show_widget is not None:
             self._show_widget.deleteLater()
