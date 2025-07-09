@@ -6,7 +6,7 @@ from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 class CueListNode(FilterNode):
     """Filter to represent any filter fader"""
-    nodeName = "Cues"
+    node_name = "Cues"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
@@ -108,35 +108,35 @@ class ShiftFilterNode(FilterNode):
 
 
 class Shift8BitNode(ShiftFilterNode):
-    nodeName = "filter_shift_8bit"
+    node_name = "filter_shift_8bit"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT, DataType.DT_8_BIT)
 
 
 class Shift16BitNode(ShiftFilterNode):
-    nodeName = "filter_shift_16bit"
+    node_name = "filter_shift_16bit"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT, DataType.DT_16_BIT)
 
 
 class ShiftFloatNode(ShiftFilterNode):
-    nodeName = "filter_shift_float"
+    node_name = "filter_shift_float"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT, DataType.DT_DOUBLE)
 
 
 class ShiftColorNode(ShiftFilterNode):
-    nodeName = "filter_shift_color"
+    node_name = "filter_shift_color"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR, DataType.DT_COLOR)
 
 
 class AutoTrackerNode(FilterNode):
-    nodeName = "AutoTracker"
+    node_name = "AutoTracker"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER, name=name,
@@ -165,7 +165,7 @@ class AutoTrackerNode(FilterNode):
 
 
 class EffectsStackNode(FilterNode):
-    nodeName = "EffectsStack"
+    node_name = "EffectsStack"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK, name=name,
