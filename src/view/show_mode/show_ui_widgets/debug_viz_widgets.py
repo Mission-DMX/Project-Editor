@@ -2,7 +2,7 @@
 from abc import ABC
 from collections.abc import Callable
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
@@ -155,6 +155,7 @@ class ColorLabel(QWidget):
         self._last_color_processed = ColorHSI(h, s, i).to_qt_color()
         self.update()
 
+    @override
     def paintEvent(self, event: QPaintEvent, /) -> None:
         """Redraw the widget"""
         painter = QPainter(self)
@@ -225,6 +226,7 @@ class _NumberLabel(QWidget):
         self._number: float = 0.0
         self._text: str = "0"
 
+    @override
     def paintEvent(self, event: QPaintEvent, /) -> None:
         """Redraw the widget"""
         painter = QPainter(self)

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, QResizeEvent, Qt
@@ -144,6 +144,7 @@ class BoxGridRenderer(QWidget):
         # TODO link scroll bar signals if scroll bar visible
         pass
 
+    @override
     def resizeEvent(self, event: QResizeEvent, /) -> None:
         self._update_scroll_behavior()
         super().resizeEvent(event)
@@ -164,6 +165,7 @@ class BoxGridRenderer(QWidget):
             return None
         return self._boxes[i]
 
+    @override
     def paintEvent(self, event: "QPaintEvent", /) -> None:
         p = QPainter(self)
         p.device()
@@ -203,6 +205,7 @@ class BoxGridRenderer(QWidget):
         if b.additional_render_method is not None:
             b.additional_render_method(p, x, y)
 
+    @override
     def mousePressEvent(self, e: "QMouseEvent") -> None:
         if e.button() == Qt.MouseButton.LeftButton:
             width_adv_per_box = self._box_width + self._border_width
