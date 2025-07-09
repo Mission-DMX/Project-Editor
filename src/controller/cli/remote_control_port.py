@@ -1,6 +1,6 @@
 """Classes for remote connection"""
 from asyncio import IncompleteReadError
-from logging import Logger
+from logging import getLogger
 from socket import AF_INET6, SOCK_STREAM, socket
 from threading import Thread
 
@@ -8,7 +8,7 @@ from controller.cli.cli_context import CLIContext
 from controller.network import NetworkManager
 from model import BoardConfiguration
 
-logger = Logger(__file__)
+logger = getLogger(__name__)
 
 
 class SocketStreamReader:

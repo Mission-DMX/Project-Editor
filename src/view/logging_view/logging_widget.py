@@ -1,6 +1,6 @@
 """widget for logging_view"""
 import json
-import logging
+from logging import getLogger
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
@@ -11,6 +11,8 @@ from model.broadcaster import Broadcaster
 
 from .logging_item_widget import LoggingItemWidget
 from .search import Operation, Search
+
+logger = getLogger(__name__)
 
 
 class LoggingWidget(QtWidgets.QTabWidget):
@@ -73,7 +75,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
 
         self.setLayout(container_layout)
 
-        logging.info("start DMXGui")
+        logger.info("start DMXGui")
 
     def all_log_levels(self, value: bool) -> None:
         """set all log levels"""

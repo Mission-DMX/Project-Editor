@@ -1,9 +1,11 @@
-import logging
+from logging import getLogger
 from xml.etree import ElementTree
 
 import proto.Console_pb2
 from model import Scene
 from model.control_desk import ColorDeskColumn, RawDeskColumn
+
+logger = getLogger(__name__)
 
 
 def lcd_color_to_string(display_color: proto.Console_pb2.lcd_color) -> str:
@@ -47,7 +49,7 @@ def _create_scene_bankset(root_element: ElementTree.Element, scene_element: Elem
                     "encoder_position": str(col.encoder_position),
                 })
             else:
-                logging.error("Unsupported desk column type while saving file.")
+                logger.error("Unsupported desk column type while saving file.")
                 continue
             column_item.attrib["id"] = str(col.id)
             column_item.attrib["display_name"] = str(col.display_name)

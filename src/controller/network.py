@@ -487,8 +487,5 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
 
 def on_error(error: QLocalSocket.LocalSocketError) -> None:
-    """logging current error
-    Args:
-        error: thrown error
-    """
-    logger.error(error, exc_info=True)
+    """Logs QLocalSocket error codes with human-readable information."""
+    logger.error(f"QLocalSocket error occurred: {error.name} ({error.value})")

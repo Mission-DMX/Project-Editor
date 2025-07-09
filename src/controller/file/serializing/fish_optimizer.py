@@ -1,10 +1,10 @@
-import logging
+from logging import getLogger
 from xml.etree import ElementTree
 
 from model import Filter
 from model.filter import DataType, FilterTypeEnumeration
 
-logger = logging.Logger(__file__)
+logger = getLogger(__name__)
 
 
 class SceneOptimizerModule:
