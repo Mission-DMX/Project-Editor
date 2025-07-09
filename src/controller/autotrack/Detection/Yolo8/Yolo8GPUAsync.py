@@ -1,12 +1,14 @@
 # coding=utf-8
-import logging
 import threading
 import time
+from logging import getLogger
 
 import cv2
 import numpy as np
 import onnxruntime as rt
 from Detection.Detector import Detector
+
+logger = getLogger(__name__)
 
 
 class Yolo8GPUAsync(Detector):
@@ -49,7 +51,7 @@ class Yolo8GPUAsync(Detector):
         output0 = results[0]
         end_time = time.time()
         elapsed_time = end_time - start_time
-        logging.getLogger().debug("Yolo8: Elapsed time: %s seconds", elapsed_time)
+        logger.debug("Yolo8: Elapsed time: %s seconds", elapsed_time)
         # outputs = np.array([cv2.transpose(outputs[0])])
         outputs2 = np.array([cv2.transpose(output0[0])])
         return output0[0]

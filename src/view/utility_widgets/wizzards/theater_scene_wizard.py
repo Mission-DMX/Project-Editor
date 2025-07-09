@@ -1,5 +1,5 @@
 # coding=utf-8
-import logging
+
 import os.path
 
 from PySide6.QtCore import Qt
@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWizard,
 )
 
+from logging import getLogger
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene
 from model.channel import Channel
@@ -40,7 +41,7 @@ from view.utility_widgets.wizzards._composable_wizard_page import ComposableWiza
 
 _folder_empty_icon = QIcon(resource_path(os.path.join("resources", "icons", "folder.svg")))
 _folder_full_icon = QIcon(resource_path(os.path.join("resources", "icons", "folder-full.svg")))
-logger = logging.getLogger(__file__)
+logger = getLogger(__file__)
 
 
 def _d_assign(d, v, k):
