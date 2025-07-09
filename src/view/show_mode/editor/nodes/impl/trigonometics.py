@@ -35,7 +35,7 @@ class TrigonometricSineNode(TrigonometricNode):
     """Filter to calculate sine value.
     value = factor_outer*sin((value_in+phase)*factor_inner) + offset
     """
-    nodeName = "sin"
+    node_name = "sin"
 
     def __init__(self, model: Filter , name: str) -> None:
         super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, name=name)
@@ -45,7 +45,7 @@ class TrigonometricCosineNode(TrigonometricNode):
     """Filter to calculate cosine value.
     value = factor_outer*cos((value_in+phase)*factor_inner) + offset
     """
-    nodeName = "cos"
+    node_name = "cos"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN, name=name)
@@ -55,7 +55,7 @@ class TrigonometricTangentNode(TrigonometricNode):
     """Filter to calculate tangent value.
     value = factor_outer*tan((value_in+phase)*factor_inner) + offset
     """
-    nodeName = "tan"
+    node_name = "tan"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_TANGENT, name=name)
@@ -65,7 +65,7 @@ class TrigonometricArcSinNode(TrigonometricNode):
     """Filter to calculate arcSine value.
     value = arcSin(value_in)
     """
-    nodeName = "arcsin"
+    node_name = "arcsin"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_ARCSIN, name=name)
@@ -76,7 +76,7 @@ class TrigonometricArcCosNode(TrigonometricNode):
     """Filter to calculate arcCosine value.
     value = arcCos(value_in)
     """
-    nodeName: str = "arccos"
+    node_name: str = "arccos"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_ARCCOSIN, name=name)
@@ -87,7 +87,7 @@ class TrigonometricArcTanNode(TrigonometricNode):
     """Filter to calculate arcTangent value.
     value = arcTan(value_in)
     """
-    nodeName: str = "arctan"
+    node_name: str = "arctan"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_ARCTANGENT, name=name)

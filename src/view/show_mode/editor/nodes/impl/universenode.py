@@ -1,6 +1,6 @@
 """Universe filter node"""
 from logging import getLogger
-from typing import Any
+from typing import Any, override
 
 from pyqtgraph.flowchart import Terminal
 
@@ -13,7 +13,7 @@ logger = getLogger(__name__)
 
 class UniverseNode(FilterNode):
     """Filter to represent a dmx universe. By default, it has 8 outputs, put more can be added."""
-    nodeName = "Universe"
+    node_name = "Universe"
 
     universe_ids: list[int] = []
 
@@ -54,6 +54,7 @@ class UniverseNode(FilterNode):
             self.filter.default_values["input_1"] = "0"
             self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
 
+    @override
     def addInput(self, name: str = "input", **args: dict[str, Any]) -> None:
         """Allows to add up to 512 input channels."""
         next_input = len(self.inputs())
@@ -85,6 +86,7 @@ class UniverseNode(FilterNode):
         # self.filter.in_data_types["test23"] = DataType.DT_8_BIT
         # return term
 
+    @override
     def removeTerminal(self, term: Terminal) -> None:
         if term.isInput():
             del self.filter.filter_configurations[term.name()]
