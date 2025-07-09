@@ -1,7 +1,7 @@
 """main Window for the Editor"""
 import os.path
 import platform
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QIcon, QKeySequence, QPixmap
@@ -191,7 +191,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
 
-    def closeEvent(self, event: "QCloseEvent", /) -> None:
+    @override
+    def closeEvent(self, event: QCloseEvent, /) -> None:
         # TODO use event.ignore() here is there's still stuff to do
         super().closeEvent(event)
         QApplication.processEvents()

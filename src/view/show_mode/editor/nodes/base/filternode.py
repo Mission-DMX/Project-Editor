@@ -1,5 +1,6 @@
 """Basic filter node"""
 from logging import getLogger
+from typing import override
 
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
@@ -43,6 +44,7 @@ class FilterNode(Node):
         self.graphicsItem().xChanged.connect(self.update_filter_pos)
         self.channel_hints = {}
 
+    @override
     def graphicsItem(self) -> FilterNodeGraphicsItem:
         """Return the GraphicsItem for this node. Subclasses may re-implement
         this method to customize their appearance in the flowchart."""

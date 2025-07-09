@@ -1,4 +1,5 @@
 """Dialogs to display fish exceptions"""
+from typing import override
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QMouseEvent
@@ -63,6 +64,7 @@ class HoverTextBrowser(QtWidgets.QTextBrowser):
                 cursor.setCharFormat(text_format)
                 start_pos += len(word)
 
+    @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """mouse Event for Hover tooltip"""
         cursor = self.cursorForPosition(event.pos())

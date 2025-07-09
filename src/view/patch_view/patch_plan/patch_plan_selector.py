@@ -1,6 +1,6 @@
 """selector for Patching witch holds all Patching Universes"""
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtGui import QContextMenuEvent
@@ -48,6 +48,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         if dialog.exec():
             Universe(dialog.output)
 
+    @override
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         """context menu"""
         for index in range(self.tabBar().count() - 1):

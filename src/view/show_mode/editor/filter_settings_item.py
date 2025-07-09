@@ -1,7 +1,7 @@
 """Module for filter settings editor"""
 import os.path
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import PySide6
 from PySide6.QtCore import Qt
@@ -56,6 +56,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
         self._filter = filter
         self._mb_updated: bool = False
 
+    @override
     def focusOutEvent(self, ev: QFocusEvent) -> None:
         """
         Override to handle buggy behaviour
@@ -66,6 +67,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
         if self.on_update is not None:
             self.on_update()
 
+    @override
     def keyPressEvent(self, ev: QKeyEvent) -> None:
         """
         Override to handle buggy behaviour
@@ -77,6 +79,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
             return
         super().keyPressEvent(ev)
 
+    @override
     def mousePressEvent(self, ev: QMouseEvent) -> None:
         """Handle left mouse button click by opening filter settings dialog"""
         if not self._filter.configuration_supported:
@@ -222,6 +225,7 @@ class FilterSettingsDialog(QDialog):
             self.filter.initial_parameters.update(self._special_widget.parameters)
         self.close()
 
+    @override
     def closeEvent(self, arg__1: PySide6.QtGui.QCloseEvent) -> None:
         if self._special_widget:
             self._special_widget.parent_closed(self._filter_node)

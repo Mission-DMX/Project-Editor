@@ -1,4 +1,5 @@
 import os.path
+from typing import override
 
 from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QSpinBox, QVBoxLayout, QWidget
@@ -20,6 +21,7 @@ class _ColorHelpWidget(QWidget):
         self._data = d
         self.repaint()
 
+    @override
     def paintEvent(self, ev: QPaintEvent) -> None:
         w = self.width()
         h = self.height()

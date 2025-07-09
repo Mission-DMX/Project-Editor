@@ -1,4 +1,6 @@
 """Extended Flowchart to handle creating nodes from file"""
+from typing import override
+
 from pyqtgraph.flowchart import Flowchart
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 from PySide6.QtGui import QBrush, QColor
@@ -22,6 +24,7 @@ class FilterFlowchart(Flowchart):
         """The scene this flowchart represents"""
         return self._page.parent_scene
 
+    @override
     def createNode(self, node_type: int, name: str = None, pos: tuple[int, int] = None) -> FilterNode:
         """Adds a node to the flowchart. Overrides Flowchart behaviour by passing scene to node.
 
@@ -69,6 +72,7 @@ class FilterFlowchart(Flowchart):
         self.addNode(node, filter_.filter_id, filter_.pos)
         return node
 
+    @override
     def addNode(self, node: FilterNode, name: str, pos: tuple[int, int] = None) -> None:
         """Adds a node to the flowchart.
 

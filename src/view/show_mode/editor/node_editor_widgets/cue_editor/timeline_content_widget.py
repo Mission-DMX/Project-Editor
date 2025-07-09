@@ -1,3 +1,5 @@
+from typing import override
+
 import PySide6
 from PySide6 import QtGui
 from PySide6.QtCore import QPoint, Qt, Signal
@@ -45,6 +47,7 @@ class TimelineContentWidget(QWidget):
             self._cue_index = arg
             self._update_7seg_text()
 
+    @override
     def paintEvent(self, ev: QPaintEvent) -> None:
         # TODO we should implement to only redraw required areas based on the hints provided within ev
         w = self.width()
@@ -132,11 +135,13 @@ class TimelineContentWidget(QWidget):
 
         painter.end()
 
+    @override
     def mousePressEvent(self, ev: QMouseEvent) -> None:
         super().mousePressEvent(ev)
         self._drag_begin = (ev.x(), ev.y())
         self.update()
 
+    @override
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self.size_changed.emit(QPoint(self.width(), self.height()))
@@ -209,6 +214,7 @@ class TimelineContentWidget(QWidget):
             txt = " " + txt
         set_seven_seg_display_content(txt, update_from_gui=True)
 
+    @override
     def mouseReleaseEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         super().mouseReleaseEvent(ev)
         if not self.isEnabled():

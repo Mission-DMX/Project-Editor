@@ -1,5 +1,6 @@
 """patch Plan Widget for one Universe"""
 import math
+from typing import override
 
 from PySide6.QtGui import QPainter, QPaintEvent, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QWidget
@@ -25,6 +26,7 @@ class PatchPlanWidget(QWidget):
             pixmap = create_item(i)
             self._chanel_items.append(pixmap)
 
+    @override
     def paintEvent(self, _: QPaintEvent) -> None:
         """paint the widget"""
         painter = QPainter(self)
@@ -42,6 +44,7 @@ class PatchPlanWidget(QWidget):
 
         painter.end()
 
+    @override
     def resizeEvent(self, event: QResizeEvent) -> None:
         """resize the widget"""
         new_cols = max(1, self.width() // item_width())

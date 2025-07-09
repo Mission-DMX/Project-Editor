@@ -1,3 +1,5 @@
+from typing import override
+
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
@@ -63,19 +65,23 @@ class PanTiltConstantContentWidget(QLabel):
         painter.end()
         self.setPixmap(canvas)
 
+    @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
         self._dragged = True
         self.update_pan_tilt(event)
         self.repaint()
 
+    @override
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self._dragged = False
         self.repaint()
 
+    @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self.update_pan_tilt(event)
         self.repaint()
 
+    @override
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.repaint()
 

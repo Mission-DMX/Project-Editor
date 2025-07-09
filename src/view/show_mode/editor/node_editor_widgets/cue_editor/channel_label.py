@@ -1,3 +1,5 @@
+from typing import override
+
 from PySide6 import QtGui
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
@@ -41,6 +43,7 @@ class TimelineChannelLabel(QWidget):
         self.setMinimumHeight(required_height)
         self.update()
 
+    @override
     def paintEvent(self, ev: QPaintEvent) -> None:
         w = self.width()
         h = self.height()

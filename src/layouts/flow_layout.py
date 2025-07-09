@@ -2,6 +2,8 @@
 implementation of flow Layout for Python 3.12
 from https://doc.qt.io/qtforpython-6/examples/example_widgets_layouts_flowlayout.html
 """
+from typing import override
+
 from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
 from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
@@ -24,41 +26,51 @@ class FlowLayout(QLayout):
         while item:
             item = self.takeAt(0)
 
+    @override
     def addItem(self, item: QLayoutItem) -> None:
         self._item_list.append(item)
 
+    @override
     def count(self) -> int:
         return len(self._item_list)
 
+    @override
     def itemAt(self, index: int) -> QLayoutItem | None:
         if 0 <= index < len(self._item_list):
             return self._item_list[index]
 
         return None
 
+    @override
     def takeAt(self, index: int) -> QLayoutItem | None:
         if 0 <= index < len(self._item_list):
             return self._item_list.pop(index)
 
         return None
 
+    @override
     def expandingDirections(self) -> Qt.Orientation:
         return Qt.Orientation(0)
 
+    @override
     def hasHeightForWidth(self) -> bool:
         return True
 
+    @override
     def heightForWidth(self, width: int) -> int:
         height = self._do_layout(QRect(0, 0, width, 0), True)
         return height
 
+    @override
     def setGeometry(self, rect: QRect) -> None:
         super().setGeometry(rect)
         self._do_layout(rect, False)
 
+    @override
     def sizeHint(self) -> QSize:
         return self.minimumSize()
 
+    @override
     def minimumSize(self) -> QSize:
         size = QSize()
 

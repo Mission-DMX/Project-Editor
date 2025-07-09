@@ -1,4 +1,5 @@
 from logging import getLogger
+from typing import override
 
 from PySide6.QtCore import QPoint, QSize, Qt, Signal
 from PySide6.QtGui import QCloseEvent, QMouseEvent
@@ -57,6 +58,7 @@ class UIWidgetHolder(QWidget):
         self.resize(w, h)
         self.repaint()
 
+    @override
     def closeEvent(self, event:QCloseEvent) -> None:
         """Emits closing signal.
 
@@ -70,6 +72,7 @@ class UIWidgetHolder(QWidget):
             pass
         super().closeEvent(event)
 
+    @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Saves the current position on left click.
 
@@ -79,6 +82,7 @@ class UIWidgetHolder(QWidget):
         if event.button() is Qt.MouseButton.LeftButton and self._instance_for_editor:
             self._old_pos = event.globalPos()
 
+    @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """Moves the widget on mouse drag.
 

@@ -1,3 +1,5 @@
+from typing import override
+
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFormat, QTextDocument
 
@@ -30,6 +32,7 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
         self._comment_expression = QRegularExpression("(#.+)|#")
         self._mappings[self._comment_expression] = self._comment_format
 
+    @override
     def highlightBlock(self, text: str, /) -> None:
         """This method gets called for every text block. It sets the formats on it"""
         for pattern, fmt in self._mappings.items():

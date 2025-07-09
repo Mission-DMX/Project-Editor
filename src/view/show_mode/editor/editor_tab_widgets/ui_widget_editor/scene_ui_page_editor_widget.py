@@ -1,4 +1,5 @@
 """A scene can have multiple pages"""
+from typing import override
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QMouseEvent
@@ -27,6 +28,7 @@ class SceneUIPageEditorWidget(QWidget):
 
     # TODO add other add method (for example x-touch button opening the dialog in the middle of the editor
 
+    @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() is Qt.MouseButton.RightButton:
             self._widget_selection_menu(event.pos())
