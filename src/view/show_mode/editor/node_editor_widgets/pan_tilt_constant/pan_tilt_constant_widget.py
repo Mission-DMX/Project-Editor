@@ -75,12 +75,12 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
         return {"pan": self._filter.pan,
                 "tilt": self._filter.tilt}
 
-    def parent_closed(self, filter_node: "FilterNode"):
+    def parent_closed(self, filter_node: "FilterNode") -> None:
         if self._filter.joystick == JoystickList.EVERY_JOYSTICK:
             self._filter.joystick = JoystickList.NO_JOYSTICK
         filter_node.outputs_changed(self.cB8Bit.isChecked(), self.cB16Bit.isChecked())
 
-    def parent_opened(self):
+    def parent_opened(self) -> None:
         if self._filter.joystick == JoystickList.NO_JOYSTICK:
             self._filter.joystick = JoystickList.EVERY_JOYSTICK
         self.cB8Bit.setChecked(self._filter.eight_bit_available)

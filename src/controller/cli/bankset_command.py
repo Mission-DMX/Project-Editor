@@ -20,7 +20,7 @@ class BankSetCommand(Command):
         super().__init__(context, "bank_set")
         self.help_text = "This command displays the help about a certain command."
 
-    def configure_parser(self, parser: ArgumentParser):
+    def configure_parser(self, parser: ArgumentParser) -> None:
         subparsers = parser.add_subparsers(help="Specify what you would like to do", dest="what")
         subparsers.add_parser("commit", exit_on_error=False,
                               help="Commit the changes made to the bank set")

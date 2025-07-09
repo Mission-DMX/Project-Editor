@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from enum import IntFlag, auto
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Never
 
 if TYPE_CHECKING:
     from . import Scene
@@ -18,7 +18,7 @@ class DataType(IntFlag):
     DT_COLOR = auto()
     DT_BOOL = auto()
 
-    def format_for_filters(self):
+    def format_for_filters(self) -> str:
         """This method returns the data type representation commonly used by the fish filters for configuration."""
         if self.value == DataType.DT_8_BIT.value:
             return "8bit"
@@ -214,7 +214,7 @@ class Filter:
         return self._channel_links
 
     @property
-    def initial_parameters(self):
+    def initial_parameters(self) -> dict[str, str]:
         """The initial parameters"""
         return self._initial_parameters
 
@@ -296,7 +296,7 @@ class VirtualFilter(Filter, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> Never:
         """
         This method will be called by the show file serializer when it serializes the show for fish. It places the real
         filters inside the provided filter_list argument.
@@ -309,12 +309,12 @@ class VirtualFilter(Filter, abc.ABC):
         """
         raise NotImplementedError()
 
-    def deserialize(self):
+    def deserialize(self) -> None:
         """This method should be called after the filter configuration has been loaded.
         It might be used to implement the loading of the filter model."""
         pass
 
-    def serialize(self):
+    def serialize(self) -> None:
         """Virtual filter might need to prepare themselves prior to being saved to a show file.
         For example, they might need to compile some information. This method will be called just prior to generating
         the filter element within the show file. Afterward the current state of the v-filter needs to be accessible

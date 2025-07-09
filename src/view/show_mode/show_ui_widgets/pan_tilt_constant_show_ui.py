@@ -21,7 +21,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._player_widget: QWidget | None = None
         self._conf_widget: QWidget | None = None
 
-    def set_filter(self, f: "Filter", i: int):
+    def set_filter(self, f: "Filter", i: int) -> None:
         if not f:
             return
         super().set_filter(f, i)
@@ -40,7 +40,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._player_widget = self.construct_widget(parent)
         return self._player_widget
 
-    def construct_widget(self, parent: QWidget | None):
+    def construct_widget(self, parent: QWidget | None) -> QWidget:
         w = QWidget(parent)
         layout = QVBoxLayout()
 

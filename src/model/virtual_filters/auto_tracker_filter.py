@@ -28,7 +28,7 @@ class AutoTrackerFilter(VirtualFilter):
             case "tilt":
                 return self.get_tilt_filter_id(0)
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         # TODO implement multi tracker support
         filter_list.append(Filter(self.scene, self.get_min_brightness_filter_id(0),
                                   FilterTypeEnumeration.FILTER_CONSTANT_FLOAT))
@@ -58,7 +58,7 @@ class AutoTrackerFilter(VirtualFilter):
             mh_tracker = tracker_id
         return f"{self.filter_id}{mh_tracker.name_prefix}TILT_Constant"
 
-    def get_min_brightness_filter_id(self, tracker_id: int | _MHControlInstance):
+    def get_min_brightness_filter_id(self, tracker_id: int | _MHControlInstance) -> str:
         # TODO upgrade to multi tracker support
         return f"{self.filter_id}__min_brightness"
 

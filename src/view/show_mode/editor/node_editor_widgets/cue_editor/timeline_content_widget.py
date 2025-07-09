@@ -141,7 +141,7 @@ class TimelineContentWidget(QWidget):
         super().resizeEvent(event)
         self.size_changed.emit(QPoint(self.width(), self.height()))
 
-    def compute_resize(self):
+    def compute_resize(self) -> None:
         p = self.parent()
         if p:
             parent_height = p.height()
@@ -154,35 +154,35 @@ class TimelineContentWidget(QWidget):
         self.setMinimumHeight(max(parent_height, int(len(self._channels) * CHANNEL_DISPLAY_HEIGHT) + 2 * 20))
         self.repaint()
 
-    def add_channels(self, channels: list[DataType]):
+    def add_channels(self, channels: list[DataType]) -> None:
         for c in channels:
             self._channels.append(c)
         self.compute_resize()
 
-    def remove_channel(self, i: int):
+    def remove_channel(self, i: int) -> None:
         self._channels.pop(i)
         self.compute_resize()
 
-    def insert_frame(self, f: KeyFrame):
+    def insert_frame(self, f: KeyFrame) -> None:
         self.frames.append(f)
         self._last_clicked_kf_state = None
         self.repaint()
 
-    def zoom_out(self, factor: float = 2.0):
+    def zoom_out(self, factor: float = 2.0) -> None:
         if not self.isEnabled():
             return
         self._last_clicked_kf_state = None
         self._time_zoom *= factor
         self.compute_resize()
 
-    def zoom_in(self, factor: float = 2.0):
+    def zoom_in(self, factor: float = 2.0) -> None:
         if not self.isEnabled():
             return
         self._last_clicked_kf_state = None
         self._time_zoom /= factor
         self.compute_resize()
 
-    def move_cursor_right(self):
+    def move_cursor_right(self) -> None:
         if not self.isEnabled():
             return
         self.cursor_position += self._time_zoom * 10
@@ -190,7 +190,7 @@ class TimelineContentWidget(QWidget):
         self._update_7seg_text()
         self.compute_resize()
 
-    def move_cursor_left(self):
+    def move_cursor_left(self) -> None:
         if not self.isEnabled():
             return
         self.cursor_position -= self._time_zoom * 10
@@ -264,7 +264,7 @@ class TimelineContentWidget(QWidget):
                                                    self.compute_resize)
             self._dialog.open()
 
-    def clear_cue(self):
+    def clear_cue(self) -> None:
         self._channels.clear()
         self.cursor_position = 0.0
         self.frames = []

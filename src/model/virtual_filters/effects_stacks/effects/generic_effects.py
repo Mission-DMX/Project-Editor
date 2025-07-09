@@ -1,4 +1,3 @@
-
 """This file contains effects that provide generic numbers"""
 
 from abc import ABC
@@ -14,7 +13,7 @@ from view.utility_widgets.curve_editor import CurveEditorWidget
 
 
 class GenericEffect(Effect, ABC):
-    def get_output_slot_type(self):
+    def get_output_slot_type(self) -> EffectType:
         return EffectType.GENERIC_NUMBER
 
 
@@ -150,13 +149,13 @@ class FunctionEffect(GenericEffect):
         self._widget.set_wave_config(CurveConfiguration())
         # TODO implement live update option
 
-    def get_human_filter_name(self):
+    def get_human_filter_name(self) -> str:
         return "Function"
 
-    def get_description(self):
+    def get_description(self) -> str:
         return "This effect creates wave forms that it follows."
 
-    def deserialize(self, data: dict[str, str | dict]):
+    def deserialize(self, data: dict[str, str | dict]) -> None:
         from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
         new_config = CurveConfiguration.from_str(data.get("config"))
         self._inputs["input"] = effect_from_deserialization(data["value_input"], self._parent_filter) \

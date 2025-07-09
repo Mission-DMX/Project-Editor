@@ -44,7 +44,7 @@ class FilterPage:
         """parent scene"""
         return self._parent_scene
 
-    def copy(self, new_scene: Scene = None):
+    def copy(self, new_scene: Scene = None) -> Scene:
         """copy of a filter page"""
         if not new_scene:
             new_fp = FilterPage(self._parent_scene)
@@ -112,7 +112,7 @@ class Scene:
             self._filter_pages.append(default_page)
         return self._filter_pages
 
-    def insert_filterpage(self, fp: FilterPage):
+    def insert_filterpage(self, fp: FilterPage) -> None:
         """
         add a filterpage to the scene
         """
@@ -201,7 +201,7 @@ class Scene:
             name_to_try += str(int(name_appendix) + 1)
         return name_to_try
 
-    def append_filter(self, f: Filter, filter_page_index: int = -1):
+    def append_filter(self, f: Filter, filter_page_index: int = -1) -> None:
         """
         Insert a filter in the scene.
         :param f: The filter to add
@@ -218,7 +218,7 @@ class Scene:
         if filter_page_index != -1 and filter_page_index < len(self.pages):
             self._filter_pages[filter_page_index].filters.append(f)
 
-    def remove_filter(self, f: Filter):
+    def remove_filter(self, f: Filter) -> None:
         """Delete a filter."""
         self._filters.remove(f)
         if self._filter_index.get(f.filter_id):
@@ -235,7 +235,7 @@ class Scene:
         for p in self.pages:
             remove_filter_from_page(p)
 
-    def notify_about_filter_rename_action(self, sender: Filter, old_id: str):
+    def notify_about_filter_rename_action(self, sender: Filter, old_id: str) -> None:
         """
         This method checks connections of a filter which should be renamed and updates them accordingly.
         :param sender: The filter that was renamed

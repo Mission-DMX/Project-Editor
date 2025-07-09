@@ -50,7 +50,7 @@ class Constants8BitNode(TextPreviewRendererMixin):
         self.filter.out_data_types["value"] = DataType.DT_8_BIT
         self.filter.gui_update_keys["value"] = DataType.DT_8_BIT
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         try:
             self.filter.initial_parameters["value"] = str(
                 max(min(int(self.filter.initial_parameters["value"]), 255), 0))
@@ -75,7 +75,7 @@ class Constants16BitNode(TextPreviewRendererMixin):
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["value"] = DataType.DT_16_BIT
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         try:
             self.filter.initial_parameters["value"] = str(
                 max(min(int(self.filter.initial_parameters["value"]), 65565), 0))
@@ -100,7 +100,7 @@ class ConstantsFloatNode(TextPreviewRendererMixin):
         self.filter.gui_update_keys["value"] = DataType.DT_DOUBLE
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         try:
             self.filter.initial_parameters["value"] = str(
                 float(self.filter.initial_parameters["value"]))
@@ -138,7 +138,7 @@ class ConstantsColorNode(FilterNode):
         p.setBrush(self._color_brush)
         p.drawRect(x + 3, y + 3, 20, 20)
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         try:
             self._color_brush = QBrush(ColorHSI.from_filter_str(self.filter.initial_parameters["value"]).to_qt_color())
         except ValueError as e:
@@ -190,7 +190,7 @@ class PanTiltConstant(FilterNode):
         p.drawText(x + 3, y + fm.height() + 3, value_pan_str)
         p.drawText(x + 3, y + sheight, value_tilt_str)
 
-    def setup_output_terminals(self):
+    def setup_output_terminals(self) -> None:
         existing_output_keys = list(self.outputs().keys())
         outputs = self.filter.filter_configurations["outputs"]
         match outputs:
@@ -222,7 +222,7 @@ class PanTiltConstant(FilterNode):
                 if "tilt16bit" not in existing_output_keys:
                     self.addOutput("tilt16bit")
 
-    def outputs_changed(self, eight_bit: bool, sixteen_bit: bool):
+    def outputs_changed(self, eight_bit: bool, sixteen_bit: bool) -> None:
         self.filter.filter_configurations["outputs"] = \
             "both" if eight_bit and sixteen_bit else "8bit" if eight_bit else "16bit"
         self.setup_output_terminals()

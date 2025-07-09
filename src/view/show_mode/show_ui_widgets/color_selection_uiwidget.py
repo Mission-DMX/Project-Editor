@@ -28,7 +28,7 @@ class ColorSelectionUIWidget(UIWidget):
         self._config_widget: QWidget | None = None
         self._filter = None
 
-    def set_filter(self, f: Filter, i: int):
+    def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
         super().set_filter(f, i)
@@ -39,7 +39,7 @@ class ColorSelectionUIWidget(UIWidget):
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", self._value.format_for_filter())]
 
-    def push_value(self, new_value: ColorHSI):
+    def push_value(self, new_value: ColorHSI) -> None:
         self._value = new_value
         self.push_update()
 

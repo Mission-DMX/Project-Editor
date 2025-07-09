@@ -22,7 +22,7 @@ class FilterFlowchart(Flowchart):
         """The scene this flowchart represents"""
         return self._page.parent_scene
 
-    def createNode(self, node_type: int, name: str = None, pos: tuple[int, int] = None):
+    def createNode(self, node_type: int, name: str = None, pos: tuple[int, int] = None) -> FilterNode:
         """Adds a node to the flowchart. Overrides Flowchart behaviour by passing scene to node.
 
         Args:
@@ -45,7 +45,8 @@ class FilterFlowchart(Flowchart):
         self.addNode(node, name, pos)
         return node
 
-    def create_node_with_filter(self, filter_: Filter, node_type: int, is_from_different_page: bool = False):
+    def create_node_with_filter(self, filter_: Filter, node_type: int,
+                                is_from_different_page: bool = False) -> FilterNode:
         """Creates a node and adds it to the flowchart.
 
         Args:
@@ -68,7 +69,7 @@ class FilterFlowchart(Flowchart):
         self.addNode(node, filter_.filter_id, filter_.pos)
         return node
 
-    def addNode(self, node: FilterNode, name: str, pos: tuple[int, int] = None):
+    def addNode(self, node: FilterNode, name: str, pos: tuple[int, int] = None) -> None:
         """Adds a node to the flowchart.
 
         Args:
@@ -78,4 +79,4 @@ class FilterFlowchart(Flowchart):
         """
         if isinstance(node, FilterNode) and pos is not None:
             node.filter.pos = pos
-        return super().addNode(node, name, pos)
+        super().addNode(node, name, pos)

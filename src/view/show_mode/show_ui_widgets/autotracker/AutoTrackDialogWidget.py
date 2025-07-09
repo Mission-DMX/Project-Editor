@@ -63,7 +63,7 @@ class AutoTrackDialogWidget(QTabWidget):
         self.video_timer.timeout.connect(self.video_update_all)
         self.video_timer.start(1)
 
-    def video_update_all(self):
+    def video_update_all(self) -> None:
         """
         Update video content for all active tabs.
         """

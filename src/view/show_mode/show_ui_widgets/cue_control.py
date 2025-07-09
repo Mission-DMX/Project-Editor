@@ -82,7 +82,7 @@ class CueControlUIWidget(UIWidget):
         self._model: CueFilterModel | None = None
         self._last_active_cue: int = -1
 
-    def set_filter(self, f: Filter, i: int):
+    def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
         if isinstance(self._filter, CueFilter):
@@ -119,7 +119,7 @@ class CueControlUIWidget(UIWidget):
                 self._filter.filter_configurations.update(self._model.get_as_configuration())
                 self.update_model()
 
-    def update_model(self, clear_model: bool = True):
+    def update_model(self, clear_model: bool = True) -> None:
         """
         reload the cue model after the configuration has changed in the filter.
         :param clear_model: Should the loaded model be unloaded afterward?
@@ -160,7 +160,7 @@ class CueControlUIWidget(UIWidget):
         self._player_widget = self.construct_widget(parent, True)
         return self._player_widget
 
-    def construct_widget(self, parent: QWidget | None, enabled: bool):
+    def construct_widget(self, parent: QWidget | None, enabled: bool) -> QWidget:
         w = QWidget(parent)
         layout = QVBoxLayout()
         toolbar = QToolBar(w)
@@ -199,7 +199,7 @@ class CueControlUIWidget(UIWidget):
         w.setFixedHeight(int(self.configuration.get("widget_height") or "350"))
         return w
 
-    def insert_action(self, action: str | None, state: str | None):
+    def insert_action(self, action: str | None, state: str | None) -> None:
         if not action or not state:
             return
         command = (action, state)
@@ -249,7 +249,7 @@ class CueControlUIWidget(UIWidget):
                     return str(selected_cue_item.annotated_data[1])
         return None
 
-    def update_time_passed(self):
+    def update_time_passed(self) -> None:
         if self._statuslabel is not None:
             self._statuslabel.setText(str(self._cue_state))
         active_cue = self._cue_state.playing_cue

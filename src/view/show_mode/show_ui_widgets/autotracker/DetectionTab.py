@@ -29,13 +29,13 @@ class DetectionTab(GuiTab):
         self.layout.addWidget(self.image_label)
         self.setLayout(self.layout)
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         super().tab_activated()
         if self.yolo8 is None:
             self.yolo8 = Yolo8GPU()
         self.video_update()
 
-    def video_update(self):
+    def video_update(self) -> None:
         frame = self.instance.settings.next_frame
         if frame is None:
             self.image_label.setText("Please open an active Source in the Sources Tab.")
@@ -64,10 +64,10 @@ class DetectionTab(GuiTab):
         detections: list[dict[str, int]] = process(outputs, scale)
         return scale, detections
 
-    def get_confidence_threshold(self):
+    def get_confidence_threshold(self) -> float:
         return float(self.instance.settings.settings["confidence_threshold"].text())
 
-    def move_lights(self, detections: list[dict[str, int]], frame: np.ndarray):
+    def move_lights(self, detections: list[dict[str, int]], frame: np.ndarray) -> None:
         if len(detections) > 0:
             max_detection = max(detections, key=lambda arr: arr["confidence"])
             # h, w, _ = frame.shape

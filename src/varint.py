@@ -19,7 +19,7 @@ else:
         return chr(byte)
 
 
-def encode(number: int):
+def encode(number: int) -> bytes:
     """Pack `number` into varint bytes"""
     buf: bytes = b""
     while True:

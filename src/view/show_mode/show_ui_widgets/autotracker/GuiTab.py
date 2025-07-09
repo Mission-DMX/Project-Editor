@@ -48,13 +48,13 @@ class GuiTab(QWidget):
         else:
             self.tab_deactivated()
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         """
         Called when the tab is activated.
         """
         self.active = True
 
-    def tab_deactivated(self):
+    def tab_deactivated(self) -> None:
         """
         Called when the tab is deactivated.
         """
@@ -74,7 +74,7 @@ class GuiTab(QWidget):
     def id(self, value: int) -> None:
         self._id = value
 
-    def video_update(self):
+    def video_update(self) -> None:
         """
         Abstract method for updating video content within the tab.
         """

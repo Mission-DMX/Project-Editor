@@ -63,23 +63,23 @@ class PanTiltConstantContentWidget(QLabel):
         painter.end()
         self.setPixmap(canvas)
 
-    def mousePressEvent(self, event: QMouseEvent):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         self._dragged = True
         self.update_pan_tilt(event)
         self.repaint()
 
-    def mouseReleaseEvent(self, event: QMouseEvent):
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self._dragged = False
         self.repaint()
 
-    def mouseMoveEvent(self, event: QMouseEvent):
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self.update_pan_tilt(event)
         self.repaint()
 
-    def resizeEvent(self, event: QResizeEvent):
+    def resizeEvent(self, event: QResizeEvent) -> None:
         self.repaint()
 
-    def update_pan_tilt(self, event: QMouseEvent):
+    def update_pan_tilt(self, event: QMouseEvent) -> None:
         if self._filter is not None:
             self._filter.pan_delta = 0.0
             self._filter.tilt_delta = 0.0
@@ -91,7 +91,7 @@ class PanTiltConstantContentWidget(QLabel):
                 self._filter.pan = self.pan
                 self._filter.tilt = self.tilt
 
-    def handle_key_event(self, joystick: JoystickList, val: float, tilt: bool):
+    def handle_key_event(self, joystick: JoystickList, val: float, tilt: bool) -> None:
         if self._filter is None:
             return
         self._filter.set_delta(val, joystick, tilt)

@@ -42,7 +42,7 @@ class PatchPlanWidget(QWidget):
 
         painter.end()
 
-    def resizeEvent(self, event: QResizeEvent):
+    def resizeEvent(self, event: QResizeEvent) -> None:
         """resize the widget"""
         new_cols = max(1, self.width() // item_width())
         if new_cols != self._cols:
@@ -50,12 +50,12 @@ class PatchPlanWidget(QWidget):
             self.update_widget_height()
         super().resizeEvent(event)
 
-    def update_widget_height(self):
+    def update_widget_height(self) -> None:
         """update the widget height"""
         rows = math.ceil(512 / self._cols)
         self.setFixedHeight(rows * item_height())
 
-    def add_fixture(self, fixture: UsedFixture):
+    def add_fixture(self, fixture: UsedFixture) -> None:
         """add a fixture to the widget"""
         new_fixture = UsedFixtureWidget(fixture)
         self._fixtures.append(new_fixture)

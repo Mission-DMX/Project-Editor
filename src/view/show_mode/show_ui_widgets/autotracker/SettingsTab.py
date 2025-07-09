@@ -57,7 +57,7 @@ class SettingsTab(GuiTab):
             layout.addWidget(save_button)
             save_button.clicked.connect(self.save_settings)
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         """
         Save the settings entered in the QLineEdit widgets.
         """
@@ -66,14 +66,14 @@ class SettingsTab(GuiTab):
             value = edit.text()
             filter_config[setting] = value
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         """
         Called when the tab is activated.
         """
         if self.instance:
             self.crop_line_edit.setText(", ".join(map(str, self.instance.settings.crop)))
 
-    def video_update(self):
+    def video_update(self) -> None:
         """
         Abstract method for updating video content within the tab.
         """

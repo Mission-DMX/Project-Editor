@@ -59,7 +59,7 @@ class ListCommand(Command):
                 self.context.print(f"ERROR: The requested container '{args.section}' was not found.")
                 return False
 
-    def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str):
+    def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str) -> None:
         """print the entry of a bank set"""
         # TODO id not string
         preamble = "*" if bs.id == selected_bank_set_id else " "

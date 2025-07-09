@@ -196,7 +196,7 @@ class CurveEditorWidget(QWidget):
             self._offset_dials[curve_name].setValue(self._config.offsets[curve])
         self._loading_values = False
 
-    def set_wave_config(self, wc: CurveConfiguration):
+    def set_wave_config(self, wc: CurveConfiguration) -> None:
         self._config = wc
         self._load_values_from_config()
         self._renderer.curve_config = wc

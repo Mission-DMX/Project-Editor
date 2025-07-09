@@ -46,7 +46,7 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
         show_data.file_path = file_name
 
 
-def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration):
+def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:
     """
     Open the save file dialog if required and save the file.
     :param parent: The parent of the show file
@@ -55,7 +55,7 @@ def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration):
     _select_file(parent, _save_show_file, True, show_data)
 
 
-def show_load_showfile_dialog(parent: QWidget, show_data: BoardConfiguration):
+def show_load_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:
     """
     Display the open file dialog to open a show file and load it if one was successfully selected.
     :param parent: The parent widget of the dialog

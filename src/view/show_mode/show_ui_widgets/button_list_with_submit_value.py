@@ -24,7 +24,7 @@ class ButtonsWithValueSubmit(UIWidget):
         self._player_widget: QWidget | None = None
         self._button_list = ConstantNumberButtonList(self.parent, configuration)
 
-    def set_filter(self, f: Filter, i: int):
+    def set_filter(self, f: Filter, i: int) -> None:
         super().set_filter(f, i)
         self._filter_type = f.filter_type
         self._button_list.set_filter(f, i)
@@ -49,7 +49,7 @@ class ButtonsWithValueSubmit(UIWidget):
         super().copy_base(w)
         return w
 
-    def construct_player_widget(self, parent: QWidget | None):
+    def construct_player_widget(self, parent: QWidget | None) -> None:
         widget = QWidget(parent)
         self._player_widget = QWidget(parent)
         self._player_widget.setMinimumWidth(50)

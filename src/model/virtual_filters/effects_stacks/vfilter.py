@@ -26,7 +26,7 @@ class EffectsStack(VirtualFilter):
         # We only need to resolve ports for explicitly configured outputs
         pass
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         for socket in self.sockets:
             socket_target = socket.target
             universe_filter: Filter = Filter(self.scene,
@@ -144,7 +144,7 @@ class EffectsStack(VirtualFilter):
                 constant_filter.initial_parameters["value"] = "0.0"
                 filter_list.append(constant_filter)
 
-    def serialize(self):
+    def serialize(self) -> None:
         d = self.filter_configurations
         d.clear()
         for s in self.sockets:
@@ -152,7 +152,7 @@ class EffectsStack(VirtualFilter):
             # TODO Encode start addresses in case of group or use uuid of fixture
             d[name] = s.serialize()
 
-    def deserialize(self):
+    def deserialize(self) -> None:
         self.sockets.clear()
         for k, v in self._filter_configurations.items():
             is_group = k.startswith("g")

@@ -50,7 +50,7 @@ class FilterNode(Node):
             self._graphicsItem = FilterNodeGraphicsItem(self)
         return self._graphicsItem
 
-    def connected(self, local_term: Terminal, remote_term: Terminal):
+    def connected(self, local_term: Terminal, remote_term: Terminal) -> None:
         """Handles behaviour if terminal was connected. Adds channel link to filter.
         Could emit signals. See pyqtgraph.flowchart.Node.connected()
 
@@ -81,7 +81,7 @@ class FilterNode(Node):
                          ", ".join(self.filter.in_data_types.keys()),
                          ", ".join(remote_node.filter.out_data_types.keys()))
 
-    def disconnected(self, local_term: Terminal, remote_term: Terminal):
+    def disconnected(self, local_term: Terminal, remote_term: Terminal) -> None:
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.
         Could emit signals. See pyqtgraph.flowchart.Node.disconnected()
 
@@ -92,7 +92,7 @@ class FilterNode(Node):
         if local_term.isInput() and remote_term.isOutput():
             self.filter.channel_links[local_term.name()] = ""
 
-    def rename(self, name: str):
+    def rename(self, name: str) -> None:
         """Handles behaviour if node was renamed. Changes filter.id.
         Could emit signals. See pyqtgraph.flowchart.Node.rename()
 
@@ -119,9 +119,9 @@ class FilterNode(Node):
                 prefix, suffix = filter.channel_links[input_key].split(":")
                 if prefix == old_name:
                     filter.channel_links[input_key] = f"{name}:{suffix}"
-        return super().rename(name)
+        super().rename(name)
 
-    def update_filter_pos(self):
+    def update_filter_pos(self) -> None:
         """Saves nodes position inside the ui to registered filter."""
         pos = self.graphicsItem().pos()
         self._filter.pos = (pos.x(), pos.y())
@@ -131,11 +131,11 @@ class FilterNode(Node):
         """The corresponding filter"""
         return self._filter
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         """Override this method in order to update ports after the settings have changed"""
         pass
 
-    def close(self):
+    def close(self) -> None:
         """Closes the node and removes the linked filter from the scene."""
         self.filter.scene.remove_filter(self.filter)
         super().close()

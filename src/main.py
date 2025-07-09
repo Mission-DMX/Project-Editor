@@ -57,7 +57,7 @@ if __name__ == "__main__":
     logger = logging.getLogger("Project-Editor")
 
 
-    def setup_logging():
+    def setup_logging() -> None:
         """read logging from config file and set up the logger"""
         config_file = resource_path(pathlib.Path(os.path.join("configs", "logging.json")))
         with open(config_file, encoding="utf-8") as f_in:
@@ -70,7 +70,7 @@ if __name__ == "__main__":
             atexit.register(queue_handler.listener.stop)
 
 
-    def setup_asyncio():
+    def setup_asyncio() -> None:
         # Warning: while this change is important, the feature is yet a technical preview in pyside6.6 and the
         #  API may change. The functionality however will stay in place.
         import asyncio
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
 
-    def set_dark_theme(application: QApplication):
+    def set_dark_theme(application: QApplication) -> None:
         """set default dark theme"""
 
         application.setStyle("Fusion")
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         application.setPalette(dark_palette)
 
 
-    def main(application: QApplication):
+    def main(application: QApplication) -> None:
         """Startup"""
         setup_logging()
         logging.basicConfig(level="INFO")

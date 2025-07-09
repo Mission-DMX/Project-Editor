@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 _network_manager_instance: NetworkManager = None
 
 
-def setup_network_manager(nm: NetworkManager, b: Broadcaster):
+def setup_network_manager(nm: NetworkManager, b: Broadcaster) -> None:
     global _network_manager_instance
     _network_manager_instance = nm
     b.request_main_brightness_fader_update.connect(nm.set_main_brightness_fader_position)
@@ -65,7 +65,7 @@ class UIWidget(ABC):
         """
         raise NotImplementedError()
 
-    def set_filter(self, f: Filter, i: int):
+    def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
         self.associated_filters[str(i)] = f.filter_id
@@ -96,7 +96,7 @@ class UIWidget(ABC):
     def associated_filters(self) -> dict[str, str]:
         return self._associated_filters
 
-    def notify_id_rename(self, old_id: str, new_id: str):
+    def notify_id_rename(self, old_id: str, new_id: str) -> None:
         """This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
         in order to implement special behaviour"""
         for slot in self._associated_filters:
@@ -157,7 +157,7 @@ class UIWidget(ABC):
         type in order for the show file saving (and loading) to choose the correct one."""
         return ""
 
-    def push_update(self):
+    def push_update(self) -> None:
         """Use this method to trigger a filter update process"""
         for entry in self.generate_update_content():
             k = entry[0]
@@ -222,13 +222,13 @@ class UIPage:
             new_page._widgets.append(w.copy(new_page))
         return new_page
 
-    def append_widget(self, widget: UIWidget):
+    def append_widget(self, widget: UIWidget) -> None:
         self._widgets.append(widget)
 
-    def push_update(self):
+    def push_update(self) -> None:
         """This method indicates that updates to the running filters should be sent."""
 
-    def remove_widget(self, widget: UIWidget):
+    def remove_widget(self, widget: UIWidget) -> None:
         self._widgets.remove(widget)
 
 

@@ -87,16 +87,16 @@ class SettingsDialog(QDialog):
         except ValueError:
             self._default_main_brightness_tb.setValue(255)
 
-    def apply(self):
+    def apply(self) -> None:
         self._show.show_name = self.show_file_tb.text()
         self._show.notes = self.show_notes_tb.toPlainText()
         self._show.ui_hints["default_main_brightness"] = str(self._default_main_brightness_tb.value())
         self._show.ui_hints[
             "color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
 
-    def ok_button_pressed(self):
+    def ok_button_pressed(self) -> None:
         self.apply()
         self.accept()
 
-    def cancle_button_pressed(self):
+    def cancle_button_pressed(self) -> None:
         self.reject()

@@ -17,7 +17,7 @@ class SixteenBitToFloatRange(VirtualFilter):
                 return f"{self.filter_id}_float_range:value"
         return None
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         filter = Filter(
             filter_id=f"{self.filter_id}_16bit_to_float",
             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT,
@@ -60,7 +60,7 @@ class EightBitToFloatRange(VirtualFilter):
                 return f"{self.filter_id}_float_range:value"
         return None
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         filter = Filter(
             filter_id=f"{self.filter_id}_8bit_to_float",
             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
@@ -102,7 +102,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             return f"{self.filter_id}_color_recomposition:value"
         raise ValueError("Unknown output port")
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         brightness_input = self.channel_links.get("brightness")
         normalize_from_16bit: bool = False
         if not brightness_input:

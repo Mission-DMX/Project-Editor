@@ -129,7 +129,7 @@ class CLIContext:
             self.print("Execution of command failed: " + str(e))
         return False
 
-    def print(self, text: str):
+    def print(self, text: str) -> None:
         """This method can be used by commands to print text to which ever output medium there is.
 
         Arguments:

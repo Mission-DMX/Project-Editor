@@ -53,7 +53,7 @@ class UniverseNode(FilterNode):
             self.filter.default_values["input_1"] = "0"
             self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
 
-    def addInput(self, name: str = "input", **args):
+    def addInput(self, name: str = "input", **args) -> None:
         """Allows to add up to 512 input channels."""
         next_input = len(self.inputs())
         if next_input >= 512:
@@ -84,7 +84,7 @@ class UniverseNode(FilterNode):
         # self.filter.in_data_types["test23"] = DataType.DT_8_BIT
         # return term
 
-    def removeTerminal(self, term: Terminal):
+    def removeTerminal(self, term: Terminal) -> None:
         if term.isInput():
             del self.filter.filter_configurations[term.name()]
-        return super().removeTerminal(term)
+        super().removeTerminal(term)

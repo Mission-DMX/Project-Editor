@@ -98,6 +98,6 @@ class NodeEditorWidget(QWidget):
         """The flowchart of the scene"""
         return self._flowchart
 
-    def refresh(self):
+    def refresh(self) -> None:
         self.layout().removeWidget(self._flowchart.widget().chartWidget.viewDock)
         self._populate_flowchart()

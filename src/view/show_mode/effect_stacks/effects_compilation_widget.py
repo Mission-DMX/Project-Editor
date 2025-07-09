@@ -52,7 +52,7 @@ class EffectCompilationWidget(QWidget):
         self._active_config_widget: QWidget | None = None
         self.update()
 
-    def add_fixture_or_group(self, fg: UsedFixture):
+    def add_fixture_or_group(self, fg: UsedFixture) -> None:
         """This method adds the provided fixture(-group) to the filter by creating and appending a corresponding socket.
         :param fg: The fixture to add"""
         if fg in self._added_fixtures:
@@ -62,11 +62,11 @@ class EffectCompilationWidget(QWidget):
         self._filter.sockets.append(es)
         self.update()
 
-    def update(self):
+    def update(self) -> None:
         self.setMinimumHeight(max(len(self._filter.sockets) * 50, self.minimumHeight()))
         super().update()
 
-    def paintEvent(self, redraw_hint: QPaintEvent):
+    def paintEvent(self, redraw_hint: QPaintEvent) -> None:
         if self._painting_active:
             return
         self._painting_active = True
@@ -242,7 +242,7 @@ class EffectCompilationWidget(QWidget):
         y += 5
         return y
 
-    def load_effect_to_add(self, e: Effect | None):
+    def load_effect_to_add(self, e: Effect | None) -> None:
         """Prior to adding an effect, it needs to be loaded first.
 
         :param e: The effect to load.
@@ -277,7 +277,7 @@ class EffectCompilationWidget(QWidget):
         """
         return len(self._slot_counter) - 1
 
-    def mousePressEvent(self, event: QMouseEvent):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         for x, y, widget in self._config_button_positions:
             if x < event.x() < x + 25 and y < event.y() < y + 25:
                 self._active_config_widget = widget

@@ -43,7 +43,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         for universe in self._board_configuration.universes:
             self._board_configuration.broadcaster.send_universe_value.emit(universe)
 
-    def notify_activate(self):
+    def notify_activate(self) -> None:
         # TODO this obviously breaks given multiple universes but it'll work for now
         for universe_widget in self._universe_widgets:
             universe_widget.notify_activate()

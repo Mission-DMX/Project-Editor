@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 logger = getLogger(__file__)
 
 
-def trigger_factory(trigger_type: str):
+def trigger_factory(trigger_type: str) -> Trigger:
     match trigger_type:
         case "startup":
             return _StartupTrigger()
@@ -58,7 +58,7 @@ class Trigger(QObject):
             self._macro._triggers[self] = new_state
             self.enabled_changed.emit(new_state)
 
-    def set_param(self, key: str, value: str):
+    def set_param(self, key: str, value: str) -> None:
         """set Params of a Trigger"""
         self._configuration[key] = value
 
@@ -72,7 +72,7 @@ class Trigger(QObject):
         """type of the Trigger"""
         return self._type
 
-    def exec(self):
+    def exec(self) -> None:
         """Execute a Trigger"""
         if self._macro is not None:
             pn = get_process_notifier(f"Macro: {self._macro.name}, triggered by {self.name}", 1)
@@ -147,7 +147,7 @@ class Macro:
         """all Triggers of a Macro"""
         return list(self._triggers.keys())
 
-    def add_trigger(self, t: Trigger, active: bool = True):
+    def add_trigger(self, t: Trigger, active: bool = True) -> None:
         """
         Register a new trigger.
 

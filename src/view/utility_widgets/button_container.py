@@ -8,6 +8,6 @@ class ButtonContainer(QWidget):
         self.setLayout(self.button_gl)
         self.button_group = QButtonGroup(parent)
 
-    def add_button(self, button: QWidget):
+    def add_button(self, button: QWidget) -> None:
         self.button_group.addButton(button)
         self.button_gl.addWidget(button)

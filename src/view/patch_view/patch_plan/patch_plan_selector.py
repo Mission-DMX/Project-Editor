@@ -48,7 +48,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         if dialog.exec():
             Universe(dialog.output)
 
-    def contextMenuEvent(self, event: QContextMenuEvent):
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         """context menu"""
         for index in range(self.tabBar().count() - 1):
             if self.tabBar().tabRect(index).contains(event.pos()):

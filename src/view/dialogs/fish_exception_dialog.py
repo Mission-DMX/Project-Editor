@@ -26,7 +26,7 @@ class FishExceptionsDialog(QtWidgets.QDialog):
         layout.addWidget(da)
         self.setLayout(layout)
 
-    def open(self):
+    def open(self) -> None:
         """Opens dialog and automatically keeps it open"""
         self._open_dialogs.append(self)
         self.finished.connect(lambda: self._open_dialogs.remove(self))
@@ -42,7 +42,7 @@ class HoverTextBrowser(QtWidgets.QTextBrowser):
         self.setHtml("""<p>""" + text + """</p>""")
         self.highlight_words()
 
-    def highlight_words(self):
+    def highlight_words(self) -> None:
         """Highlights words in text"""
         cursor = self.textCursor()
         document_text = self.toPlainText()

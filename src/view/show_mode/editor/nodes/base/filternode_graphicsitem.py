@@ -24,7 +24,7 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
         self._node_type_string = self.node.nodeName
         self.additional_rendering_method: Callable[[QPainter], None] | None = None
 
-    def paint(self, p: QPainter, *args):
+    def paint(self, p: QPainter, *args) -> None:
         super().paint(p, *args)
         p.save()
         p.setBrush(FilterNodeGraphicsItem._node_type_brush)

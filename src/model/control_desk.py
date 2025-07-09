@@ -1,6 +1,6 @@
 """models for X-Touch and also for other connected devices like extenders or joystick"""
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Never
 from uuid import uuid4
 
 import proto.Console_pb2
@@ -35,7 +35,7 @@ class DeskColumn(ABC):
         self._upper_text = ""
         self.data_changed_callback = None
 
-    def copy_base(self, dc: "DeskColumn"):
+    def copy_base(self, dc: "DeskColumn") -> None:
         dc._bottom_display_line_inverted = self._bottom_display_line_inverted
         dc._top_display_line_inverted = self._top_display_line_inverted
         dc.display_color = self.display_color
@@ -63,7 +63,7 @@ class DeskColumn(ABC):
         """
 
     @abstractmethod
-    def update_from_message(self, message: proto.Console_pb2.fader_column):
+    def update_from_message(self, message: proto.Console_pb2.fader_column) -> None:
         pass
 
     def _generate_base_column_message(self) -> proto.Console_pb2.fader_column:
@@ -145,7 +145,7 @@ class RawDeskColumn(DeskColumn):
         msg.lower_display_text = self._secondary_text_line
         return msg
 
-    def update_from_message(self, message: proto.Console_pb2.fader_column):
+    def update_from_message(self, message: proto.Console_pb2.fader_column) -> None:
         if not message.raw_data:
             return
         self._fader_position = message.raw_data.fader
@@ -227,7 +227,7 @@ class ColorDeskColumn(DeskColumn):
         base_msg.plain_color.intensity = self.color.intensity
         return base_msg
 
-    def update_from_message(self, message: proto.Console_pb2.fader_column):
+    def update_from_message(self, message: proto.Console_pb2.fader_column) -> None:
         if not message.plain_color:
             return
         self._color = ColorHSI(message.plain_color.hue, message.plain_color.saturation, message.plain_color.intensity)
@@ -270,11 +270,11 @@ class FaderBank:
         for col in self.columns:
             col._pushed_to_device = True
 
-    def add_column(self, col: DeskColumn):
+    def add_column(self, col: DeskColumn) -> None:
         """add a new colum"""
         self.columns.append(col)
 
-    def remove_column(self, col: DeskColumn):
+    def remove_column(self, col: DeskColumn) -> None:
         """removes the specified column from the bank set"""
         self.columns.remove(col)
 
@@ -298,7 +298,7 @@ class FaderBank:
 
 class BanksetIDUpdateListener(ABC):
     @abstractmethod
-    def notify_on_new_id(self, new_id: str):
+    def notify_on_new_id(self, new_id: str) -> Never:
         raise NotImplementedError()
 
 
@@ -426,7 +426,7 @@ class BankSet:
     def id(self) -> str:
         return self._id
 
-    def activate(self, out_of_thread: bool = False):
+    def activate(self, out_of_thread: bool = False) -> None:
         """Calling this method makes this bank set the active one.
         """
         # if BankSet._active_bank_set_id == self.id:
@@ -459,7 +459,7 @@ class BankSet:
         msg.seven_seg_display_data = BankSet._seven_seg_data
         BankSet._fish_connector.send_desk_update_message(msg, update_from_gui=self._gui_controlled)
 
-    def add_bank(self, bank: FaderBank):
+    def add_bank(self, bank: FaderBank) -> None:
         """Update the fader bank on the control desk
 
         Warning: This operation is expensive and might interrupt the interactions of the user. Add all columns to the
@@ -470,7 +470,7 @@ class BankSet:
             col.bank_set = self
         self.update()
 
-    def add_column_to_next_bank(self, f: DeskColumn):
+    def add_column_to_next_bank(self, f: DeskColumn) -> None:
         """This method adds the provided column f to the last not full bank set."""
         if len(self.banks) == 0:
             self.add_bank(FaderBank())
@@ -548,7 +548,7 @@ class BankSet:
                     return c
         return None
 
-    def set_active_column(self, column: DeskColumn):
+    def set_active_column(self, column: DeskColumn) -> None:
         self.active_column = column
 
     def get_column_by_number(self, index: int) -> DeskColumn:
@@ -575,12 +575,12 @@ class BankSet:
         return new_bs
 
 
-def set_network_manager(network_manager: "NetworkManager"):
+def set_network_manager(network_manager: "NetworkManager") -> None:
     """Set the network manager instance to be used by all bank sets and subsequent banks and columns."""
     BankSet._fish_connector = network_manager
 
 
-def set_seven_seg_display_content(content: str, update_from_gui: bool = False):
+def set_seven_seg_display_content(content: str, update_from_gui: bool = False) -> None:
     """Set the content of the 7seg displays of connected X-Touch controllers.
 
     Fish will truncate any text longer than 12 chars and
@@ -590,7 +590,7 @@ def set_seven_seg_display_content(content: str, update_from_gui: bool = False):
     send_independent_update_msg(update_from_gui)
 
 
-def send_independent_update_msg(update_from_gui: bool):
+def send_independent_update_msg(update_from_gui: bool) -> None:
     bs = BankSet.active_bank_set()
     if not bs:
         return
@@ -609,7 +609,7 @@ def send_independent_update_msg(update_from_gui: bool):
     BankSet._fish_connector.send_desk_update_message(msg, update_from_gui)
 
 
-def commit_all_bank_sets():
+def commit_all_bank_sets() -> None:
     """This method calls update on all linked columns.
 
     This is useful in the event of a reconnect to fish as the state of fish is unknown at this point in time.

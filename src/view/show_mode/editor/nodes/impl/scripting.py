@@ -29,7 +29,7 @@ class LuaFilterNode(FilterNode):
                          allowAddOutput=True, terminals={})
         self._setup_terminals()
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self._setup_terminals()
 
     def _setup_terminals(self) -> None:

@@ -23,7 +23,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             self._broadcaster.delete_universe.connect(self.refresh)
             self._broadcaster.add_fixture.connect(lambda _: self.refresh())
 
-    def refresh(self):
+    def refresh(self) -> None:
 
         def location_to_string(
                 location: int |

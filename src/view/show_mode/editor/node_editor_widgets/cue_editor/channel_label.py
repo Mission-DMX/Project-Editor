@@ -15,12 +15,12 @@ class TimelineChannelLabel(QWidget):
         self.sb_offset = 0
         self._update()
 
-    def add_label(self, name: str, channel_type: str):
+    def add_label(self, name: str, channel_type: str) -> None:
         self._names.append(name)
         self._types.append(channel_type)
         self._update()
 
-    def remove_label(self, c_name: str):
+    def remove_label(self, c_name: str) -> int:
         found_i = -1
         for i in range(len(self._names)):
             if self._names[i] == c_name:
@@ -31,7 +31,7 @@ class TimelineChannelLabel(QWidget):
         self._update()
         return found_i
 
-    def clear_labels(self):
+    def clear_labels(self) -> None:
         self._names.clear()
         self._types.clear()
         self._update()
@@ -41,7 +41,7 @@ class TimelineChannelLabel(QWidget):
         self.setMinimumHeight(required_height)
         self.update()
 
-    def paintEvent(self, ev: QPaintEvent):
+    def paintEvent(self, ev: QPaintEvent) -> None:
         w = self.width()
         h = self.height()
         if w == 0 or h == 0:

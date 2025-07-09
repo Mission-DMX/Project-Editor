@@ -70,7 +70,7 @@ class FaderColumnSelectorWidget(QWidget):
     def main_brightness_cb_enabled(self, new_value: bool) -> None:
         self._ignore_main_brightness_checkbox.setEnabled(new_value)
 
-    def set_selected_item(self, set_id: str, column_id: str):
+    def set_selected_item(self, set_id: str, column_id: str) -> None:
         """Use this method to select a specified column.
 
         If there is no matching column, it will simply do nothing.
@@ -93,7 +93,7 @@ class FaderColumnSelectorWidget(QWidget):
                 current_item_to_expand.setExpanded(True)
                 current_item_to_expand = current_item_to_expand.parent()
 
-    def reload_data(self):
+    def reload_data(self) -> None:
         """Refresh the displayed data."""
         self._tree.clear()
         bank_sets_to_search: set[BankSet] = set()
@@ -132,7 +132,7 @@ class FaderColumnSelectorWidget(QWidget):
                 i += 1
             self._tree.insertTopLevelItem(0, set_item)
 
-    def add_base_bank_set(self, bs: BankSet):
+    def add_base_bank_set(self, bs: BankSet) -> None:
         """
         Use this method to add a bank set to the list of force-active sets after construction finished.
 

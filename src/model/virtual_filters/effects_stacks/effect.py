@@ -7,7 +7,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import ItemsView
 from enum import IntFlag
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Never, Self
 
 from PySide6.QtWidgets import QWidget
 
@@ -234,7 +234,7 @@ class Effect(ABC):
             return 0, 0
         return self._parent_filter.pos
 
-    def set_parent_filter(self, f: EffectsStack):
+    def set_parent_filter(self, f: EffectsStack) -> None:
         """This method sets the parent filter, which needs to be of type EffectsStack."""
         self._parent_filter = f
 
@@ -248,7 +248,7 @@ class Effect(ABC):
         return {}
 
     @abstractmethod
-    def deserialize(self, data: dict[str, str]):
+    def deserialize(self, data: dict[str, str]) -> Never:
         """This method is called if a show file is being loaded. It needs to be implemented in order to restore the
         effect. It is responsible to instantiate all of its input effects.
 
@@ -260,7 +260,7 @@ class Effect(ABC):
     def slot_parent(self) -> tuple[Effect, str] | None:
         return self._containing_slot
 
-    def clear_slot(self, slot_id: str):
+    def clear_slot(self, slot_id: str) -> None:
         if slot_id not in self._inputs:
             raise ValueError(f"This filter does not contain an input slot with id {slot_id}.")
         self._inputs[slot_id] = None

@@ -85,7 +85,7 @@ class ConstantNumberButtonList(UIWidget):
         self._filter_type = None
         self._value = 0
 
-    def set_filter(self, f: Filter, i: int):
+    def set_filter(self, f: Filter, i: int) -> None:
         if f is None:
             return
         super().set_filter(f, i)
@@ -122,7 +122,7 @@ class ConstantNumberButtonList(UIWidget):
         super().copy_base(w)
         return w
 
-    def construct_player_widget(self, parent: QWidget | None):
+    def construct_player_widget(self, parent: QWidget | None) -> None:
         self._player_widget = QWidget(parent)
         self._player_widget.setMinimumWidth(50)
         self._player_widget.setMinimumHeight(30)
@@ -138,7 +138,7 @@ class ConstantNumberButtonList(UIWidget):
                 layout.addWidget(button)
         self._player_widget.setLayout(layout)
 
-    def construct_configuration_widget(self, parent: QWidget | None):
+    def construct_configuration_widget(self, parent: QWidget | None) -> None:
         self._configuration_widget = QWidget(parent)
         self._configuration_widget.setMinimumWidth(50)
         self._configuration_widget.setMinimumHeight(30)

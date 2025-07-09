@@ -11,7 +11,7 @@ class ChainingEffectDummy(Effect):
     def serialize(self) -> dict:
         return {}
 
-    def deserialize(self, data: dict[str, str]):
+    def deserialize(self, data: dict[str, str]) -> None:
         pass
 
     # TODO: we need to replace the two dummy classes with something more suited
@@ -28,7 +28,7 @@ class ChainingEffectDummy(Effect):
     def resolve_input_port_name(self, slot_id: str) -> str:
         return ""
 
-    def emplace_filter(self, heading_effects: dict[str, tuple[Effect, int]], filter_list: list[Filter]):
+    def emplace_filter(self, heading_effects: dict[str, tuple[Effect, int]], filter_list: list[Filter]) -> None:
         pass
 
     def get_serializable_effect_name(self) -> str:

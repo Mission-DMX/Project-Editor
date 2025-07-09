@@ -30,7 +30,7 @@ class SourcesTab(GuiTab):
         - `tab_deactivated()`: Called when the tab is deactivated.
     """
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         """
         Called when the tab is activated.
         """
@@ -68,7 +68,7 @@ class SourcesTab(GuiTab):
         self.frame_thread.frame_captured.connect(self.update_frame)
         self.frame_thread.start()
 
-    def load_webcam(self):
+    def load_webcam(self) -> None:
         dlg = WebcamSelector()
         dlg.exec_()
         selected_index = dlg.combo_box.currentIndex()
@@ -78,7 +78,7 @@ class SourcesTab(GuiTab):
         self.video_running = True
         self.video_update()
 
-    def video_update(self):
+    def video_update(self) -> None:
         frame = self.instance.settings.next_frame
         if frame is not None and self.video_running and self.active:
             frame = self.instance.get_preview_pipeline().optimize(frame)
@@ -90,7 +90,7 @@ class SourcesTab(GuiTab):
             ).process(frame)
             self.image_label.setPixmap(cv2qim(frame))
 
-    def video_update_old(self):
+    def video_update_old(self) -> None:
         """
         Update the video content within the tab.
         """
@@ -106,7 +106,7 @@ class SourcesTab(GuiTab):
             ).process(frame)
             self.image_label.setPixmap(cv2qim(frame))
 
-    def show_file_dialog(self):
+    def show_file_dialog(self) -> None:
         """
         Show a file dialog to select a video file.
         """
@@ -127,13 +127,13 @@ class SourcesTab(GuiTab):
             self.video_running = True
             self.video_update()
 
-    def tab_deactivated(self):
+    def tab_deactivated(self) -> None:
         """
         Called when the tab is deactivated.
         """
         super().tab_deactivated()
 
-    def update_frame(self, frame: np.ndarray):
+    def update_frame(self, frame: np.ndarray) -> None:
         self.instance.settings.next_frame = frame
 
 
@@ -158,14 +158,14 @@ class WebcamSelector(QDialog):
 
         self.populate_webcams()
 
-    def populate_webcams(self):
+    def populate_webcams(self) -> None:
         # Use OpenCV to enumerate available webcams
         # num_webcams = len([i for i in range(10) if cv2.VideoCapture(i).isOpened()])
         num_webcams = 5
         for i in range(num_webcams):
             self.combo_box.addItem(f"Webcam {i}")
 
-    def start_webcam(self):
+    def start_webcam(self) -> None:
         selected_index = self.combo_box.currentIndex()
         if selected_index >= 0:
             logger.info(f"Selected webcam {selected_index}")

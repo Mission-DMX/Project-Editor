@@ -19,7 +19,7 @@ class AutoTrackerUIWidget(UIWidget):
         super().__init__(parent_page, configuration)
         self._finished_initializing: bool = False
 
-    def set_filter(self, associated_filter: "Filter", i: int):
+    def set_filter(self, associated_filter: "Filter", i: int) -> None:
         super().set_filter(associated_filter, i)
         if not associated_filter:
             return

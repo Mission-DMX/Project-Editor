@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
 from logging import getLogger
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Never, Union
 
 from model import ColorHSI, DataType
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
@@ -59,7 +59,7 @@ class State(ABC):
         self._transition_type: str = transition_type
 
     @property
-    def transition(self):
+    def transition(self) -> str:
         return self._transition_type
 
     @transition.setter
@@ -74,7 +74,7 @@ class State(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def decode(self, content: str):
+    def decode(self, content: str) -> Never:
         """This method decodes the state configuration from a filter config string."""
         raise NotImplementedError()
 
@@ -107,7 +107,7 @@ class StateEightBit(State):
             self._value = 255
         return f"{int(self._value)}@{self._transition_type}"
 
-    def decode(self, content: str):
+    def decode(self, content: str) -> None:
         c_arr = content.split("@")
         self._value = int(c_arr[0])
         if self._value < 0:
@@ -137,7 +137,7 @@ class StateSixteenBit(State):
             self._value = 65535
         return f"{int(self._value)}@{self._transition_type}"
 
-    def decode(self, content: str):
+    def decode(self, content: str) -> None:
         c_arr = content.split("@")
         self._value = int(c_arr[0])
         if self._value < 0:
@@ -163,7 +163,7 @@ class StateDouble(State):
     def encode(self) -> str:
         return f"{float(self._value)}@{self._transition_type}"
 
-    def decode(self, content: str):
+    def decode(self, content: str) -> None:
         c_arr = content.split("@")
         self._value = float(c_arr[0])
         self._transition_type = c_arr[1]
@@ -185,7 +185,7 @@ class StateColor(State):
     def encode(self) -> str:
         return f"{self._value.format_for_filter()}@{self._transition_type}"
 
-    def decode(self, content: str):
+    def decode(self, content: str) -> None:
         c_arr = content.split("@")
         self._value = ColorHSI.from_filter_str(c_arr[0])
         self._transition_type = c_arr[1]
@@ -248,11 +248,11 @@ class KeyFrame:
 
         return f
 
-    def append_state(self, s: State):
+    def append_state(self, s: State) -> None:
         if s is not None:
             self._states.append(s)
 
-    def delete_from_parent_cue(self):
+    def delete_from_parent_cue(self) -> None:
         """This method deletes the frame from the parent."""
         self._parent._frames.remove(self)
 
@@ -311,7 +311,7 @@ class Cue:
         return (f"{"|".join(frames_str_list)}#{end_handling_str}#"
                 f"{restart_beh_str}#{self.name.replace('#', '')}")
 
-    def from_string_definition(self, definition: str):
+    def from_string_definition(self, definition: str) -> None:
         primary_tokens = definition.split("#")
         frame_definitions = primary_tokens[0].split("|")
         for frame_dev in frame_definitions:
@@ -328,7 +328,7 @@ class Cue:
         if len(primary_tokens) > 3:
             self.name = primary_tokens[3]
 
-    def add_channel(self, name: str, t: str | DataType):
+    def add_channel(self, name: str, t: str | DataType) -> None:
         """Add a channel name to list of names"""
         dt = DataType.from_filter_str(t) if isinstance(t, str) else t
 
@@ -353,11 +353,11 @@ class Cue:
                     kf_s = StateEightBit("edg")
             kf._states.append(kf_s)
 
-    def insert_frame(self, f: KeyFrame):
+    def insert_frame(self, f: KeyFrame) -> None:
         """Add a frame to the cue"""
         self._frames.append(f)
 
-    def remove_channel(self, c: Union["ExternalChannelDefinition", tuple[str, DataType]]):
+    def remove_channel(self, c: Union["ExternalChannelDefinition", tuple[str, DataType]]) -> None:
         target_index = -1
         name = c[0] if isinstance(c, tuple) else c.name
         for i in range(len(self._channel_definitions)):

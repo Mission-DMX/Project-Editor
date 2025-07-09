@@ -223,7 +223,7 @@ class BoardConfiguration:
             for c in candidate_list:
                 c(param)
 
-    def register_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable):
+    def register_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
         """
         Register a new callback for filter update messages.
 
@@ -240,7 +240,7 @@ class BoardConfiguration:
         if c not in callable_list:
             callable_list.append(c)
 
-    def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable):
+    def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
         """
         Remove a previously registered callback.
         :param target_scene: The scene the callback belongs to.
@@ -253,7 +253,7 @@ class BoardConfiguration:
         if c in callable_list:
             callable_list.remove(c)
 
-    def add_macro(self, m: Macro):
+    def add_macro(self, m: Macro) -> None:
         """
         Add a new macro to the show file.
 

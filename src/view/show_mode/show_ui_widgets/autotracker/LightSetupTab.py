@@ -112,13 +112,13 @@ class LightSetupTab(GuiTab):
         # Set the layout for the tab
         self.setLayout(self.layout)
 
-    def btn_frame_pressed(self):
+    def btn_frame_pressed(self) -> None:
         # asyncio.run(self._async_btn_frame_pressed())
         # asyncio.get_event_loop().create_task(self._async_btn_frame_pressed())
         thread = threading.Thread(target=self.worker_thread)
         thread.start()
 
-    def setup_calibration(self):
+    def setup_calibration(self) -> None:
         grid_size = 5
         self._calibration_points = []
         corners = self.instance.settings.lights.corners
@@ -137,7 +137,7 @@ class LightSetupTab(GuiTab):
             2000, self.instance.settings.lights.corners
         )
 
-    def worker_thread(self):
+    def worker_thread(self) -> None:
         # Create a new event loop for this worker thread
         event_loop = asyncio.new_event_loop()
 
@@ -155,7 +155,7 @@ class LightSetupTab(GuiTab):
         event_loop.run_until_complete(my_async_function(self))
         event_loop.close()
 
-    def btn_position_pressed(self):
+    def btn_position_pressed(self) -> None:
         button = self.sender()
         self.instance.settings.lights.corners[self.buttons.index(button)] = [
             self.sliderx1.value(),
@@ -164,7 +164,7 @@ class LightSetupTab(GuiTab):
         logger.info(f"Button {self.buttons.index(button)} gedrückt")
         logger.info(self.instance.settings.lights.corners)
 
-    def slider_changed(self):
+    def slider_changed(self) -> None:
         asyncio.run(self._async_slider())
 
     async def _async_slider(self) -> None:
@@ -180,7 +180,7 @@ class LightSetupTab(GuiTab):
             else:
                 self.light_to_mouse(event)
 
-    def light_to_mouse(self, event: QMouseEvent):
+    def light_to_mouse(self, event: QMouseEvent) -> None:
         click_position = event.pos()
         x, y = click_position.x(), click_position.y()
 
@@ -196,7 +196,7 @@ class LightSetupTab(GuiTab):
     async def _asy_mouse(self, pos: tuple[int, int]) -> None:
         await self.instance.settings.lights.set_position(pos)
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         """
         Called when the tab is activated.
         """
@@ -204,13 +204,13 @@ class LightSetupTab(GuiTab):
 
         self.show_sliders(255, 255)
 
-    def tab_deactivated(self):
+    def tab_deactivated(self) -> None:
         """
         Called when the tab is deactivated.
         """
         super().tab_deactivated()
 
-    def hide_sliders(self):
+    def hide_sliders(self) -> None:
         """
         Hide the crop sliders.
         """
@@ -245,7 +245,7 @@ class LightSetupTab(GuiTab):
 
         self.slider_changed()
 
-    def video_update(self):
+    def video_update(self) -> None:
         """
         Update the video content within the tab.
         """
@@ -255,7 +255,7 @@ class LightSetupTab(GuiTab):
             self.last_image = frame
             self.image_label.setPixmap(cv2qim(frame))
 
-    def calibrate_points(self):
+    def calibrate_points(self) -> None:
         if self.instance.settings.lights.corners:
             self.setup_calibration()
             self._calibration_step = 0
@@ -274,7 +274,7 @@ class LightSetupTab(GuiTab):
             self._calibration_running = False
             self.instance.settings.map = MappingCalibration(self._calibration_points)
 
-    def move_calibration_light(self, pos: int):
+    def move_calibration_light(self, pos: int) -> None:
         x, y = self._calibration_points[pos][0]
         p = [x, y]
         asyncio.run(self._asy_mouse(p))

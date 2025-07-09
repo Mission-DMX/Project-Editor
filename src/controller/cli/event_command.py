@@ -19,7 +19,7 @@ class EventCommand(Command):
         super().__init__(context, "event")
         self.help_text = "Manipulate Events on fish."
 
-    def configure_parser(self, parser: ArgumentParser):
+    def configure_parser(self, parser: ArgumentParser) -> None:
         subparsers = parser.add_subparsers(help="Event management commands", dest="eventactions")
         add_parser = subparsers.add_parser("add-sender", exit_on_error=False, help="Add a new event sender to fish")
         add_parser.add_argument("name", help="The name of the new event sender", type=str)

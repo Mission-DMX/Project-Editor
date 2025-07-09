@@ -52,16 +52,16 @@ class TimelineContainer(QWidget):
     def bankset(self, bs: BankSet) -> None:
         self._keyframes_panel.used_bankset = bs
 
-    def add_channel(self, channel_type: DataType, name: str):
+    def add_channel(self, channel_type: DataType, name: str) -> None:
         self._channel_label.add_label(name, channel_type.format_for_filters())
         self._keyframes_panel.add_channels([channel_type])
 
-    def remove_channel(self, c_name: str):
+    def remove_channel(self, c_name: str) -> None:
         i = self._channel_label.remove_label(c_name)
         if i != -1:
             self._keyframes_panel.remove_channel(i)
 
-    def clear_channels(self):
+    def clear_channels(self) -> None:
         """Removes all channels from the widget"""
         # TODO clear all labels from self._channel_labels_panel_layout
         # TODO reset self._keyframes_panel
@@ -85,19 +85,19 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.frames = c._frames
         self._keyframes_panel.repaint()
 
-    def increase_zoom(self, factor: float = 2.0):
+    def increase_zoom(self, factor: float = 2.0) -> None:
         self._keyframes_panel.zoom_in(factor)
 
-    def decrease_zoom(self, factor: float = 2.0):
+    def decrease_zoom(self, factor: float = 2.0) -> None:
         self._keyframes_panel.zoom_out(factor)
 
-    def move_cursor_left(self):
+    def move_cursor_left(self) -> None:
         self._keyframes_panel.move_cursor_left()
 
-    def move_cursor_right(self):
+    def move_cursor_right(self) -> None:
         self._keyframes_panel.move_cursor_right()
 
-    def record_pressed(self):
+    def record_pressed(self) -> None:
         p = self._keyframes_panel.cursor_position
         f = KeyFrame(self._cue)
         f.timestamp = p

@@ -98,7 +98,7 @@ class FilterNodeLibrary(NodeLibrary):
         super().__init__()
         self.reload()
 
-    def reload(self):
+    def reload(self) -> None:
         self._register_constants_nodes()
         self._register_debug_nodes()
         self._register_adapters_nodes()

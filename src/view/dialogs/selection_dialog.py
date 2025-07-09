@@ -33,10 +33,10 @@ class SelectionDialog(QDialog):
             i += 1
         return selected
 
-    def accept(self):
+    def accept(self) -> None:
         super().accept()
         self.close()
 
-    def reject(self):
+    def reject(self) -> None:
         super().reject()
         self.close()

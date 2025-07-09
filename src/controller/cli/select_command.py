@@ -36,7 +36,7 @@ class SelectCommand(Command):
         super().__init__(context, "select")
         self.help_text = "This command displays the help about a certain command."
 
-    def configure_parser(self, parser: ArgumentParser):
+    def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("what", help="Specify what you would like to select")
         parser.add_argument("item", help="Specify the item you would like to select")
 

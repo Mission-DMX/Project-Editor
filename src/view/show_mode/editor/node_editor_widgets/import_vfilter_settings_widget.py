@@ -157,5 +157,5 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         self._tree_widget.setEnabled(True)
         self._clear_selection_action.setEnabled(False)
 
-    def parent_opened(self):
+    def parent_opened(self) -> None:
         self._populate_widget()

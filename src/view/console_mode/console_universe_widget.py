@@ -84,7 +84,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._universe_widget.scroll(-25, 0)
         self.horizontalScrollBar().setValue(self._translate_scroll_position(self._scroll_position))
 
-    def notify_activate(self):
+    def notify_activate(self) -> None:
         if self._bank_set:
             self._bank_set.activate()
             self._bank_set.update()  # FIXME activate should suffice

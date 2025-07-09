@@ -93,7 +93,7 @@ class EffectsStackEditor(QWidget):
             self._message_box.setText("Currently there are no slots that can accept this effect type.")
             self._message_box.show()
 
-    def eventFilter(self, widget: QWidget, event: QEvent):
+    def eventFilter(self, widget: QWidget, event: QEvent) -> bool:
         if event.type() == QEvent.KeyPress and widget is self._effect_placement_bar:
             key = event.key()
             if key in [Qt.Key_Return, Qt.Key_Enter]:

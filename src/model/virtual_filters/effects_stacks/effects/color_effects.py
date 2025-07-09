@@ -15,7 +15,7 @@ from view.show_mode.effect_stacks.configuration_widgets.color_wheel_configuratio
 
 
 class ColorEffect(Effect, ABC):
-    def get_output_slot_type(self):
+    def get_output_slot_type(self) -> EffectType:
         return EffectType.COLOR
 
 
@@ -147,10 +147,10 @@ class ColorWheelEffect(ColorEffect):
 
         return {"color": fragment_outputs}
 
-    def get_human_filter_name(self):
+    def get_human_filter_name(self) -> str:
         return "Color Wheel"
 
-    def get_description(self):
+    def get_description(self) -> str:
         return "This effect cycles through a color wheel"
 
     @property
@@ -191,7 +191,7 @@ class ColorWheelEffect(ColorEffect):
             d["range-input"] = range_input.serialize()
         return d
 
-    def deserialize(self, data: dict[str, Any]):
+    def deserialize(self, data: dict[str, Any]) -> None:
         from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
         self.fragment_number = data["number-of-fragments"]
         self._min_hue = data["min-hue"]

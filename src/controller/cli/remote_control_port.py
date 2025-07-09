@@ -113,7 +113,7 @@ class Connection:
         self._client_thread = Thread(target=self.run)
         self._client_thread.start()
 
-    def run(self):
+    def run(self) -> None:
         """This method will be called by the client thread in order to handle the client."""
         try:
             logger.info("Got incoming remote CLI connection from %s.", self._remote_address)
@@ -136,7 +136,7 @@ class Connection:
             self._client.close()
         self._connection_map.pop(self._remote_address)
 
-    def stop(self):
+    def stop(self) -> None:
         """Forcefully disconnect and stop the client.
         
         This operation may block until the operating system released the socket.
@@ -173,7 +173,7 @@ class RemoteCLIServer:
         self._server_thread.start()
         logger.warning("Opened up CLI interface on [%s]:%s", interface, port)
 
-    def run(self):
+    def run(self) -> None:
         """This method will be run by the server thread in order to process incoming clients."""
         with socket(AF_INET6, SOCK_STREAM) as s:
             self._server_socket = s
@@ -194,7 +194,7 @@ class RemoteCLIServer:
             s.close()
         logger.info("Exiting CLI server thread")
 
-    def stop(self):
+    def stop(self) -> None:
         """This method stops the server and disconnects all clients.
         
         It may block until the operating system released all resources.

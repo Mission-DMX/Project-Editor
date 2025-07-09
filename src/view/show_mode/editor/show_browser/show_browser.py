@@ -92,7 +92,7 @@ class ShowBrowser:
         self._refresh_filter_browser()
 
     @property
-    def widget(self):
+    def widget(self) -> QWidget:
         return self._widget
 
     @property

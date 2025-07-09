@@ -118,7 +118,7 @@ class EffectsSocket:
         e._containing_slot = (self, target_slot.name)
         return False
 
-    def clear_slot(self, slot_name: str):
+    def clear_slot(self, slot_name: str) -> None:
         match slot_name:
             case _:
                 logger.error("Deleting effects from slot name '%s' is not yet implemented.", slot_name)
@@ -135,7 +135,7 @@ class EffectsSocket:
             data["segments"] = self._segment_socket.serialize()
         return json.dumps(data)
 
-    def deserialize(self, data: str, parent: "EffectsStack"):
+    def deserialize(self, data: str, parent: "EffectsStack") -> None:
         data: dict = json.loads(data)
         self._color_socket = None
         self._segment_socket = None

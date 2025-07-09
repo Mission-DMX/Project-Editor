@@ -14,7 +14,7 @@ class ExceptionsDialog(QDialog):
         layout.addRow("Error", error_msg)
         self.setLayout(layout)
 
-    def open(self):
+    def open(self) -> None:
         """Opens dialog and automatically keeps it open"""
         self._open_dialogs.append(self)
         self.finished.connect(lambda: self._open_dialogs.remove(self))

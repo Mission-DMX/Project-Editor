@@ -352,7 +352,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._default_cue_combo_box.setEnabled(True)
         return target_row
 
-    def select_cue(self, cue_index: int, from_manual_input: bool = False):
+    def select_cue(self, cue_index: int, from_manual_input: bool = False) -> None:
         if cue_index < 0 or cue_index >= len(self._model.cues):
             return
         if 0 <= self._last_selected_cue < len(self._model.cues):
@@ -376,11 +376,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
         else:
             self._cue_list_widget.selectRow(self._last_selected_cue)
 
-    def increase_zoom(self):
+    def increase_zoom(self) -> None:
         self._timeline_container.increase_zoom()
         self._set_zoom_label_text()
 
-    def decrease_zoom(self):
+    def decrease_zoom(self) -> None:
         self._timeline_container.decrease_zoom()
         self._set_zoom_label_text()
 
@@ -469,27 +469,27 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
             .setText(self._timeline_container.cue.duration_formatted)
 
-    def jg_right(self):
+    def jg_right(self) -> None:
         if self._jw_zoom_mode:
             self._timeline_container.increase_zoom(1.25)
             self._set_zoom_label_text()
         else:
             self._timeline_container.move_cursor_right()
 
-    def jg_left(self):
+    def jg_left(self) -> None:
         if self._jw_zoom_mode:
             self._timeline_container.decrease_zoom(1.25)
             self._set_zoom_label_text()
         else:
             self._timeline_container.move_cursor_left()
 
-    def scrub_pressed(self):
+    def scrub_pressed(self) -> None:
         self._jw_zoom_mode = True
 
-    def scrub_released(self):
+    def scrub_released(self) -> None:
         self._jw_zoom_mode = False
 
-    def parent_closed(self, filter_node: "FilterNode"):
+    def parent_closed(self, filter_node: "FilterNode") -> None:
         self._timeline_container.clear_display()
         if self._channels_changed_after_load:
             added_channels = []
@@ -526,7 +526,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._update_ui_widget()
         super().parent_closed(filter_node)
 
-    def parent_opened(self):
+    def parent_opened(self) -> None:
         self._input_dialog = QMessageBox.question(
             self.get_widget(),
             "Preview",

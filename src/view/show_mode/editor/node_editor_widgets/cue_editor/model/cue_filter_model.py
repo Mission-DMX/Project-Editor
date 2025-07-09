@@ -22,13 +22,13 @@ class CueFilterModel:
              "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": self.default_cue}
         return d
 
-    def append_cue(self, c: Cue):
+    def append_cue(self, c: Cue) -> None:
         if c not in self.cues:
             self.cues.append(c)
         for channel in self.channels:
             c.add_channel(channel[0], channel[1])
 
-    def add_channel(self, name: str, dt: DataType):
+    def add_channel(self, name: str, dt: DataType) -> None:
         for cd in self.channels:
             if name == cd[0]:
                 if dt == cd[1]:
@@ -38,12 +38,12 @@ class CueFilterModel:
         for c in self.cues:
             c.add_channel(name, dt)
 
-    def remove_channel(self, c: tuple[str, DataType]):
+    def remove_channel(self, c: tuple[str, DataType]) -> None:
         for cue in self.cues:
             cue.remove_channel(c)
         self.channels.remove(c)
 
-    def load_from_configuration(self, parameters: dict[str, str]):
+    def load_from_configuration(self, parameters: dict[str, str]) -> None:
         self.global_restart_on_end = parameters.get("end_handling") == "start_again"
 
         mapping_str = parameters.get("mapping")

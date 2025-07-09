@@ -191,7 +191,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
 
-    def closeEvent(self, event: "QCloseEvent", /):
+    def closeEvent(self, event: "QCloseEvent", /) -> None:
         # TODO use event.ignore() here is there's still stuff to do
         super().closeEvent(event)
         QApplication.processEvents()
@@ -339,7 +339,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def show_configuration(self) -> BoardConfiguration:
         return self._board_configuration
 
-    def open_show_settings(self):
+    def open_show_settings(self) -> None:
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
 

@@ -17,7 +17,7 @@ class AggregatingFilterNode(FilterNode):
         self._data_type = target_dt
         self.setup_input_terminals()
 
-    def setup_input_terminals(self):
+    def setup_input_terminals(self) -> None:
         required_inputs = set()
         try:
             requested_input_count = int(self.filter.filter_configurations.get("input_count") or "0")
@@ -48,5 +48,5 @@ class AggregatingFilterNode(FilterNode):
             self.filter.in_data_types.pop(i)
             self.filter.default_values.pop(i)
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self.setup_input_terminals()

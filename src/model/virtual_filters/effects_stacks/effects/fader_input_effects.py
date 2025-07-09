@@ -24,7 +24,7 @@ class ColorInputEffect(ColorEffect):
                 "fader_id": self._fader.id if self._fader is not None else self._ids_for_lazy_eval[1],
                 "bankset_id": self._fader.bank_set.id if self._fader is not None else self._ids_for_lazy_eval[0]}
 
-    def deserialize(self, data: dict[str, str]):
+    def deserialize(self, data: dict[str, str]) -> None:
         self._ids_for_lazy_eval = (data.get("bankset_id") or "", data.get("fader_id") or "")
         if self.get_scene() is not None:
             self._resolve_fader()

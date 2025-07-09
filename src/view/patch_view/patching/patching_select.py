@@ -98,11 +98,11 @@ class PatchingSelect(QtWidgets.QScrollArea):
         self.index += 1
         return fixture_item
 
-    def select_fixture(self, index: int):
+    def select_fixture(self, index: int) -> None:
         """select_fixture"""
         self.container.setCurrentIndex(index)
 
-    def reset(self):
+    def reset(self) -> None:
         """reset to start"""
         self.container.setCurrentIndex(self.container.count() - 1)
 

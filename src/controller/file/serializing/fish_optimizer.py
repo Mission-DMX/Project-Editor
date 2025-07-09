@@ -126,7 +126,7 @@ class SceneOptimizerModule:
                     "output_channel_id": str(output_ch)
                 })
 
-    def wrap_up(self, scene_element: ElementTree.Element):
+    def wrap_up(self, scene_element: ElementTree.Element) -> None:
         """This method needs to be called in order to apply the optimization steps that have been staged.
         :param scene_element: The scene XML element to write to."""
         self._emplace_universe_filters(scene_element)

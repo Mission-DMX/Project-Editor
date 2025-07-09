@@ -24,42 +24,42 @@ class FlowLayout(QLayout):
         while item:
             item = self.takeAt(0)
 
-    def addItem(self, item: QLayoutItem):
+    def addItem(self, item: QLayoutItem) -> None:
         self._item_list.append(item)
 
-    def count(self):
+    def count(self) -> int:
         return len(self._item_list)
 
-    def itemAt(self, index: int):
+    def itemAt(self, index: int) -> QLayoutItem | None:
         if 0 <= index < len(self._item_list):
             return self._item_list[index]
 
         return None
 
-    def takeAt(self, index: int):
+    def takeAt(self, index: int) -> QLayoutItem | None:
         if 0 <= index < len(self._item_list):
             return self._item_list.pop(index)
 
         return None
 
-    def expandingDirections(self):
+    def expandingDirections(self) -> Qt.Orientation:
         return Qt.Orientation(0)
 
-    def hasHeightForWidth(self):
+    def hasHeightForWidth(self) -> bool:
         return True
 
-    def heightForWidth(self, width: int):
+    def heightForWidth(self, width: int) -> int:
         height = self._do_layout(QRect(0, 0, width, 0), True)
         return height
 
-    def setGeometry(self, rect: QRect):
+    def setGeometry(self, rect: QRect) -> None:
         super().setGeometry(rect)
         self._do_layout(rect, False)
 
-    def sizeHint(self):
+    def sizeHint(self) -> QSize:
         return self.minimumSize()
 
-    def minimumSize(self):
+    def minimumSize(self) -> QSize:
         size = QSize()
 
         for item in self._item_list:

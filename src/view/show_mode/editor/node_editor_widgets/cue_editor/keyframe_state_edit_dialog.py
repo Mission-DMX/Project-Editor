@@ -93,5 +93,5 @@ class KeyFrameStateEditDialog(QDialog):
         self.close()
         self._repaint_function()
 
-    def choose_color_clicked(self):
+    def choose_color_clicked(self) -> None:
         self._input.open()

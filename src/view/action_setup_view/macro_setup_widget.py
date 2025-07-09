@@ -168,7 +168,7 @@ class MacroSetupWidget(QSplitter):
             self._editor_area.setEnabled(False)
             self._editor_area.document().clear()
 
-    def clear(self):
+    def clear(self) -> None:
         self._macro_list.clear()
         self._trigger_list.clear()
         self._editor_area.clear()

@@ -62,7 +62,7 @@ class SceneUIManagerWidget(QTabWidget):
         self.insertTab(index, page, f"Page {index + 1}")
 
     @property
-    def scene(self):
+    def scene(self) -> Scene:
         """The scene managed by the scene manager"""
         if isinstance(self._scene, Scene):
             return self._scene

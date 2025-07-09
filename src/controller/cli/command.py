@@ -21,7 +21,7 @@ class Command(ABC):
         self._help_text = ""
 
     @abstractmethod
-    def configure_parser(self, parser: ArgumentParser):
+    def configure_parser(self, parser: ArgumentParser) -> None:
         """This method will be called by the CLI context in order to configure the parser
 
         Arguments:

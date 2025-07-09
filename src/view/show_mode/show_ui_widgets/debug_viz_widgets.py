@@ -139,10 +139,10 @@ class ColorLabel(QWidget):
         self._last_color: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self._last_color_processed: QColor = QColor()
 
-    def set_color(self, c: ColorHSI):
+    def set_color(self, c: ColorHSI) -> None:
         self.set_hsi(c.hue, c.saturation, c.intensity)
 
-    def set_hsi(self, h: float, s: float, i: float):
+    def set_hsi(self, h: float, s: float, i: float) -> None:
         """
         Set the color of the color label.
         :param h: The hue value
@@ -155,7 +155,7 @@ class ColorLabel(QWidget):
         self._last_color_processed = ColorHSI(h, s, i).to_qt_color()
         self.update()
 
-    def paintEvent(self, event: QPaintEvent, /):
+    def paintEvent(self, event: QPaintEvent, /) -> None:
         """Redraw the widget"""
         painter = QPainter(self)
         c = self._last_color_processed

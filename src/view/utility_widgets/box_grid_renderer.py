@@ -23,7 +23,7 @@ class BoxGridItem(QObject):
         self._icon: QPixmap | None = None
         self._additional_render_method: Callable | None = None
 
-    def set_icon(self, icon: QPixmap | QIcon | None):
+    def set_icon(self, icon: QPixmap | QIcon | None) -> None:
         """
         Sets the icon of this item. If a QIcon is passed, it will be automatically converted to the correct size.
         If a pixmap is passed, it needs to have the correct size from the beginning on.
@@ -119,7 +119,7 @@ class BoxGridRenderer(QWidget):
         self.update()
         self.repaint()
 
-    def add_label(self, text: str, icon: QIcon | None = None):
+    def add_label(self, text: str, icon: QIcon | None = None) -> None:
         """
         Add a new item based on the provided text.
         :param text: The text of the new item
@@ -129,7 +129,7 @@ class BoxGridRenderer(QWidget):
         b.set_icon(icon)
         self.add_item(b)
 
-    def add_item(self, b: BoxGridItem):
+    def add_item(self, b: BoxGridItem) -> None:
         """
         Add an item object.
         :param b: The BoxGridItem to add.
@@ -144,11 +144,11 @@ class BoxGridRenderer(QWidget):
         # TODO link scroll bar signals if scroll bar visible
         pass
 
-    def resizeEvent(self, event: QResizeEvent, /):
+    def resizeEvent(self, event: QResizeEvent, /) -> None:
         self._update_scroll_behavior()
         super().resizeEvent(event)
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear the contained items."""
         self._boxes.clear()
         self.update()
@@ -164,7 +164,7 @@ class BoxGridRenderer(QWidget):
             return None
         return self._boxes[i]
 
-    def paintEvent(self, event: "QPaintEvent", /):
+    def paintEvent(self, event: "QPaintEvent", /) -> None:
         p = QPainter(self)
         p.device()
 
@@ -203,7 +203,7 @@ class BoxGridRenderer(QWidget):
         if b.additional_render_method is not None:
             b.additional_render_method(p, x, y)
 
-    def mousePressEvent(self, e: "QMouseEvent"):
+    def mousePressEvent(self, e: "QMouseEvent") -> None:
         if e.button() == Qt.MouseButton.LeftButton:
             width_adv_per_box = self._box_width + self._border_width
             height_adv_per_box = self._box_height + self._border_width

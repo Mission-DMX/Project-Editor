@@ -92,7 +92,7 @@ class PatchingDialog(QtWidgets.QDialog):
         """property of used Fixture"""
         return self._patching_information
 
-    def set_error(self, text: str):
+    def set_error(self, text: str) -> None:
         """update Error Label"""
         self._error_label.setText(text)
 

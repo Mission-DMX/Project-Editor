@@ -6,7 +6,7 @@ class ColorMixerVFilter(VirtualFilter):
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         return f"{self.filter_id}:{virtual_port_id}"
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         method = self.filter_configurations.get("method")
         match method:
             case "hsv":

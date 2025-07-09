@@ -61,7 +61,7 @@ class ProcessNotifier:
         doing. This method does not process Qt events and should be called prior to updating the current step number."""
         self._current_step_description = new_description
 
-    def close(self):
+    def close(self) -> None:
         """Clean up the process handler"""
         _close_progress_handler(self)
 

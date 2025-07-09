@@ -89,7 +89,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
             self.dialog = FilterSettingsDialog(self.filter_node)
             self.dialog.show()
 
-    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget | None = ...):
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget | None = ...) -> None:
         if not self._filter.configuration_supported:
             if not self._mb_updated:
                 self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
@@ -216,7 +216,7 @@ class FilterSettingsDialog(QDialog):
         # Todo rework to direct dict action
         self.filter.filter_configurations[key] = value
 
-    def ok_button_pressed(self):
+    def ok_button_pressed(self) -> None:
         if self._special_widget:
             self.filter.filter_configurations.update(self._special_widget.configuration)
             self.filter.initial_parameters.update(self._special_widget.parameters)

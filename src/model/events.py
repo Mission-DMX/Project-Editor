@@ -1,7 +1,10 @@
+from __future__ import annotations
+
+from collections.abc import Callable
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from proto.Events_pb2 import event, event_sender
+import proto.Events_pb2
 from proto.Events_pb2 import event_type as prot_event_type
 
 if TYPE_CHECKING:
@@ -10,14 +13,14 @@ if TYPE_CHECKING:
 
 logger = getLogger(__file__)
 
-_broadcaster_instance: "Broadcaster"
-_network_manager: "NetworkManager"
-_senders: dict[str, "EventSender"] = {}
-_senders_by_id: dict[int, "EventSender"] = {}
+_broadcaster_instance: Broadcaster
+_network_manager: NetworkManager
+_senders: dict[str, proto.Events_pb2.event_sender] = {}
+_senders_by_id: dict[int, proto.Events_pb2.event_sender] = {}
 _persistence_notes: dict[str, dict[tuple[int, int, str], str]] = {}
 
 
-def set_broadcaster_and_network(b: "Broadcaster", nm: "NetworkManager"):
+def set_broadcaster_and_network(b: Broadcaster, nm: NetworkManager) -> Callable[[proto.Events_pb2.event_sender], None]:
     """Set the broadcasting instance"""
     global _broadcaster_instance
     _broadcaster_instance = b
@@ -27,7 +30,7 @@ def set_broadcaster_and_network(b: "Broadcaster", nm: "NetworkManager"):
     return _handle_incoming_sender_update
 
 
-def _handle_incoming_sender_update(msg: "event_sender") -> None:
+def _handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
     """Update the sender model based on the provided message from fish.
     :param msg: The message to use"""
     global _broadcaster_instance
@@ -96,7 +99,7 @@ class EventSender:
 
     # TODO implement event function and argument renaming model
 
-    def send_update(self, auto_commit: bool = True, push_direct: bool = False) -> event_sender:
+    def send_update(self, auto_commit: bool = True, push_direct: bool = False) -> proto.Events_pb2.event_sender:
         """
         Assemble an event_sender message and publish it if auto_commit is enabled.
         While it is possible to override this method, it is advisable to implementing classes
@@ -104,7 +107,7 @@ class EventSender:
         :param auto_commit: Should the message be sent directly?
         :returns: The assembled (and perhaps sent) message
         """
-        msg = event_sender()
+        msg = proto.Events_pb2.event_sender()
         msg.name = self.name
         if self.index_on_fish != -1:
             msg.sender_id = self.index_on_fish
@@ -152,7 +155,8 @@ class XtouchGPIOEventSender(EventSender):
         self.configuration["expression_pedal_threshold"] = str(new_value)
 
 
-def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] = None):
+def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single",
+                 arguments: list[int] = None) -> None:
     """Insert an event in fish.
 
     :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will
@@ -169,7 +173,7 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
     if arguments is None:
         arguments = []
 
-    ev = event()
+    ev = proto.Events_pb2.event()
     ev.sender_id = sender_id
     ev.sender_function = sender_function
     match event_type:
@@ -183,7 +187,7 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
     _network_manager.send_event_message(ev)
 
 
-def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] = None):
+def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] = None) -> None:
     if renaming is None:
         renaming = {}
     sender = get_sender(name)

@@ -58,7 +58,7 @@ def _add_ui_page_to_element(scene_element: ElementTree.Element, ui_page: UIPage)
 
 
 def generate_scene_xml_description(assemble_for_fish_loading: bool, root: ElementTree.Element, scene: Scene,
-                                   pn: ProcessNotifier):
+                                   pn: ProcessNotifier) -> None:
     """
     This method generates the DOM tree for a given scene.
 

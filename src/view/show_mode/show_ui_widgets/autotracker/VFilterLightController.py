@@ -25,24 +25,24 @@ class VFilterLightController(LightController):
         self.last_pan: int = 0
         self.last_tilt: int = 0
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         self._minimum_brightness = 1.0
         self._request_update()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         self._minimum_brightness = 0.0
         self._request_update()
 
-    def set_brightness(self, brightness: float):
+    def set_brightness(self, brightness: float) -> None:
         self._minimum_brightness = brightness
         self._request_update()
 
-    def set_position(self, position: tuple[int, int]):
+    def set_position(self, position: tuple[int, int]) -> None:
         self.last_pan = position[0]
         self.last_tilt = position[1]
         self._request_update()
 
-    def set_color(self, color: str):
+    def set_color(self, color: str) -> None:
         logger.error(
             "Someone wanted to set the moving head color to '%s'. This however is not supported.", color)
 
@@ -52,5 +52,5 @@ class VFilterLightController(LightController):
             return
         self._widget.push_update()
 
-    def set_ui_widget(self, w: AutoTrackerUIWidget):
+    def set_ui_widget(self, w: AutoTrackerUIWidget) -> None:
         self._widget = w

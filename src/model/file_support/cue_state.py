@@ -43,7 +43,7 @@ class CueState:
                )
         return ret
 
-    def update(self, param: proto.FilterMode_pb2.update_parameter):
+    def update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         values = param.parameter_value.split(";")
         self._start_time = datetime.datetime.now() - datetime.timedelta(seconds=float(values[2]))
         self._end_time = datetime.timedelta(seconds=float(values[3]))
@@ -57,7 +57,7 @@ class CueState:
         elif values[0] == "stop":
             self._state = State.STOP
 
-    def time_delta_to_str(self, delta: datetime.timedelta):
+    def time_delta_to_str(self, delta: datetime.timedelta) -> str:
         ret = ""
         if self._end_time >= datetime.timedelta(days=1):
             days = int(delta.total_seconds() / 86400)

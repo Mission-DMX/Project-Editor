@@ -39,7 +39,7 @@ class CueListNode(FilterNode):
         self.filter.default_values["time_scale"] = "1.0"
         self.channel_hints["time"] = " [ms]"
 
-    def parse_and_add_output_channels(self, mappings: str):
+    def parse_and_add_output_channels(self, mappings: str) -> None:
         output_list = []
         for channel_dev in mappings.split(";"):
             if channel_dev:
@@ -88,7 +88,7 @@ class ShiftFilterNode(FilterNode):
         self._data_type = data_type
         self.setup_output_terminals()
 
-    def setup_output_terminals(self):
+    def setup_output_terminals(self) -> None:
         existing_output_keys = [k for k in self.outputs()]
         previous_output_count = len(existing_output_keys)
         new_output_count = int(self.filter.filter_configurations["nr_outputs"])
@@ -103,7 +103,7 @@ class ShiftFilterNode(FilterNode):
                     self.addOutput(channel_name)
                     self.filter.out_data_types[channel_name] = self._data_type
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self.setup_output_terminals()
 
 
@@ -143,7 +143,7 @@ class AutoTrackerNode(FilterNode):
                          allowAddOutput=True, terminals={})
         self.setup_output_terminals()
 
-    def setup_output_terminals(self):
+    def setup_output_terminals(self) -> None:
 
         f = self.filter
         if isinstance(f, AutoTrackerFilter):
@@ -160,7 +160,7 @@ class AutoTrackerNode(FilterNode):
                 self.filter.out_data_types[f"Tracker{i}_Tilt"] = associated_dt
                 self.filter.out_data_types[min_brightness_filter_id] = DataType.DT_DOUBLE
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self.setup_output_terminals()
 
 
@@ -172,9 +172,9 @@ class EffectsStackNode(FilterNode):
                          allowAddOutput=True, terminals={})
         self.setup_output_terminals()
 
-    def setup_output_terminals(self):
+    def setup_output_terminals(self) -> None:
         pass
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         super().update_node_after_settings_changed()
         self.setup_output_terminals()

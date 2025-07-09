@@ -75,7 +75,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
 
         logging.info("start DMXGui")
 
-    def all_log_levels(self, value: bool):
+    def all_log_levels(self, value: bool) -> None:
         """set all log levels"""
         for level in self._levels.values():
             level.setChecked(value)

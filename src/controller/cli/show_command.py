@@ -26,7 +26,7 @@ class ShowCommand(Command):
     def __init__(self, context: CLIContext) -> None:
         super().__init__(context, "showctl")
 
-    def configure_parser(self, parser: argparse.ArgumentParser):
+    def configure_parser(self, parser: argparse.ArgumentParser) -> None:
         """
         Configure the sub parser of the CLI.
 

@@ -120,7 +120,7 @@ class ChannelWidget(QtWidgets.QWidget):
             self._min_button.setStyleSheet(Style.BUTTON)
             self._max_button.setStyleSheet(Style.BUTTON)
 
-    def update_value(self, value: int | str):
+    def update_value(self, value: int | str) -> None:
         """update of a value in """
         value = int(value)
         self._bank_selector._latest_ui_position_update = value

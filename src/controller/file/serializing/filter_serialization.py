@@ -50,7 +50,7 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
 
 
 def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOptimizerModule,
-                                                    scene_element: ElementTree.Element):
+                                                    scene_element: ElementTree.Element) -> None:
     """
     This function writes the channel links of the scene to the XML data.
     This method needs to be called *after* every filter object has been placed as only then all required information
