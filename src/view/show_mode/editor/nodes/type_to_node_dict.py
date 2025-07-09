@@ -96,7 +96,7 @@ from view.show_mode.editor.nodes.import_node import ImportNode
 
 type_to_node: dict[int, str] = {
     FilterTypeEnumeration.VFILTER_COLOR_MIXER: ColorMixerVFilterNode.nodeName,
-    FilterTypeEnumeration.VFILTER_IMPORT: ImportNode.nodeName,
+    FilterTypeEnumeration.VFILTER_IMPORT: ImportNode.node_name,
     FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN: ColorBrightnessMixinNode.nodeName,
     FilterTypeEnumeration.VFILTER_POSITION_CONSTANT: PanTiltConstant.nodeName,
     FilterTypeEnumeration.VFILTER_CUES: CueListNode.nodeName,
