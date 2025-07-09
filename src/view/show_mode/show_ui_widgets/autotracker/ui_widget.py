@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QDialog, QWidget
 
 from model import UIPage, UIWidget
-from view.show_mode.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
+from view.show_mode.show_ui_widgets.autotracker.auto_track_dialog_widget import AutoTrackDialogWidget
 from view.show_mode.show_ui_widgets.autotracker.v_filter_light_controller import VFilterLightController
 
 if TYPE_CHECKING:
