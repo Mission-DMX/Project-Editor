@@ -12,7 +12,7 @@ from proto.Console_pb2 import ButtonCode, ButtonState, button_state_change
 if TYPE_CHECKING:
     from model import BoardConfiguration
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 def trigger_factory(trigger_type: str) -> Trigger:

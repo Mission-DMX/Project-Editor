@@ -20,7 +20,7 @@ from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_consta
 )
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class ConstantUpdateInsertionDialog(_CommandInsertionDialog):

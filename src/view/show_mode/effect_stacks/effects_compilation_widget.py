@@ -14,7 +14,7 @@ from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class EffectCompilationWidget(QWidget):

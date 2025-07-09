@@ -8,7 +8,7 @@ from model.ofl.fixture import ColorSupport, UsedFixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 _additional_filter_depth = 100.0
 _filter_channel_height = 35.0

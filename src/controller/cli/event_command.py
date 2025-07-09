@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
     from controller.cli.cli_context import CLIContext
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class EventCommand(Command):

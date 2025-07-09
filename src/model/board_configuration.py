@@ -14,7 +14,7 @@ from .ofl.fixture import UsedFixture
 from .scene import Scene
 from .universe import Universe
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class BoardConfiguration:

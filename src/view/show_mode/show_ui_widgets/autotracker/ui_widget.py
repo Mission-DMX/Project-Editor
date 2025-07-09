@@ -10,7 +10,7 @@ from view.show_mode.show_ui_widgets.autotracker.v_filter_light_controller import
 if TYPE_CHECKING:
     from model import Filter
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class AutoTrackerUIWidget(UIWidget):

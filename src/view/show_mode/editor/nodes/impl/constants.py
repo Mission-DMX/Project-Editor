@@ -7,7 +7,7 @@ from model import ColorHSI, DataType, Scene
 from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 _text_brush = QBrush(QColor(30, 30, 30, 255))
 _value_box_brush = QBrush(QColor(128, 128, 128, 150))

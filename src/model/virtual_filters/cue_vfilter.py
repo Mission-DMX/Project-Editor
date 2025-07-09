@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from view.show_mode.editor.node_editor_widgets import CueEditor
     from view.show_mode.show_ui_widgets import CueControlUIWidget
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class CueFilter(VirtualFilter):

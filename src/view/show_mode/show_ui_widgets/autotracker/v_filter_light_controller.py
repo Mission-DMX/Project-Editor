@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from model.virtual_filters import AutoTrackerFilter
     from view.show_mode.show_ui_widgets.autotracker.ui_widget import AutoTrackerUIWidget
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class VFilterLightController(LightController):

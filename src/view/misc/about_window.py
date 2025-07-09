@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QMessageBox, QWidget
 
 from utility import resource_path
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 with open(resource_path(os.path.join("resources", "pyproject.toml")), encoding="UTF-8") as f:
     data = tomlkit.load(f)

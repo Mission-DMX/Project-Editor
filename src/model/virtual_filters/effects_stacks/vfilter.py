@@ -10,7 +10,7 @@ from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class EffectsStack(VirtualFilter):

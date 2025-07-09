@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QCheckBox, QTreeWidget, QTreeWidgetItem, QVBoxLayo
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class FaderColumnSelectorWidget(QWidget):

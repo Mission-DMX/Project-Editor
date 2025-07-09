@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from controller.network import NetworkManager
     from model import Broadcaster
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 _broadcaster_instance: Broadcaster
 _network_manager: NetworkManager

@@ -8,7 +8,7 @@ from model import BoardConfiguration, Universe
 from view.patch_view.patch_plan.patch_plan_selector import PatchPlanSelector
 from view.patch_view.patching.patching_select import PatchingSelect
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class PatchMode(QtWidgets.QStackedWidget):

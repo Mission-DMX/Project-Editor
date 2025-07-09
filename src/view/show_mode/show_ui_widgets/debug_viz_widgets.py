@@ -13,7 +13,7 @@ from model import ColorHSI, UIWidget
 if TYPE_CHECKING:
     from model import UIPage
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class _DebugVizWidget(UIWidget, ABC):

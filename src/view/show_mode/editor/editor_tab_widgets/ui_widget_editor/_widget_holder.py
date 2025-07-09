@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 from model import UIWidget
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class UIWidgetHolder(QWidget):

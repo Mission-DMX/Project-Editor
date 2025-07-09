@@ -4,7 +4,7 @@ from logging import getLogger
 from ruamel import yaml
 from ruamel.yaml import YAMLError
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 def yaml_load(file_path: str) -> dict:

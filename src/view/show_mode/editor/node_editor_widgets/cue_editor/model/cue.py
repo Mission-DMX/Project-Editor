@@ -12,7 +12,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_
 if TYPE_CHECKING:
     from view.show_mode.editor.node_editor_widgets.cue_editor.cue_editor_widget import ExternalChannelDefinition
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class EndAction(Enum):

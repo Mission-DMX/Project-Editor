@@ -31,7 +31,7 @@ from proto.Events_pb2 import event
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem, AnnotatedTableWidgetItem
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 _xtouch_gpio_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-gpio.svg")))
 _plain_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-plain.svg")))
 _keypad_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-keypad.svg")))

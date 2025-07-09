@@ -19,7 +19,7 @@ from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 if TYPE_CHECKING:
     from model import BoardConfiguration
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class Category(Enum):

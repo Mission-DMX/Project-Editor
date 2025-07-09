@@ -23,7 +23,7 @@ from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class _CueLabel(QWidget):

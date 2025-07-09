@@ -31,7 +31,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 if TYPE_CHECKING:
     from model.board_configuration import BoardConfiguration
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class _TriggerListItemWidget(QWidget):

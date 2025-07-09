@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 
 from model.curve_configuration import BaseCurve, CurveConfiguration
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 if TYPE_CHECKING:
     pass

@@ -15,7 +15,7 @@ from view.patch_view.patch_plan.patch_plan_widget import PatchPlanWidget
 if TYPE_CHECKING:
     from view.patch_view.patch_mode import PatchMode
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class PatchPlanSelector(QtWidgets.QTabWidget):

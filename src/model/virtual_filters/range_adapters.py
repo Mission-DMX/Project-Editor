@@ -3,7 +3,7 @@ from logging import getLogger
 from model import Scene
 from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class SixteenBitToFloatRange(VirtualFilter):

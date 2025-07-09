@@ -20,7 +20,7 @@ from model.virtual_filters.effects_stacks.effects.segment_effects import Segment
 if TYPE_CHECKING:
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class EffectDummySocket(Effect):
