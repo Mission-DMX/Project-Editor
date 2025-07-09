@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QLabel, QTextEdit, QWidget, QDialog
 from markdown import markdown
+from PySide6.QtWidgets import QDialog, QLabel, QTextEdit, QWidget
 
 from model import UIWidget
 

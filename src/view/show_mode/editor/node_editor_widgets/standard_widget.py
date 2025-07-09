@@ -4,6 +4,7 @@ from logging import getLogger
 from PySide6.QtWidgets import QFormLayout, QLabel, QLineEdit, QWidget
 
 from model import Filter
+
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 logger = getLogger(__name__)

@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt, QPoint
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QLayout,
     QMenu,
     QMessageBox,
     QPushButton,
@@ -20,7 +21,7 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QToolBar,
     QVBoxLayout,
-    QWidget, QLayout,
+    QWidget,
 )
 
 from controller.file.transmitting_to_fish import transmit_to_fish
@@ -32,8 +33,9 @@ from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
-from .model.cue_filter_model import CueFilterModel
+
 from ..node_editor_widget import NodeEditorFilterConfigWidget
+from .model.cue_filter_model import CueFilterModel
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode

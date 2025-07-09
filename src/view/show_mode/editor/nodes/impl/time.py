@@ -1,6 +1,6 @@
 """Filter nodes related to time"""
 from model import DataType
-from model.filter import FilterTypeEnumeration, Filter
+from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 

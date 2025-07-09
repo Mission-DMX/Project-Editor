@@ -1,7 +1,7 @@
 import PySide6
 from PySide6 import QtGui
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPaintEvent, QResizeEvent, QMouseEvent
+from PySide6.QtGui import QBrush, QColor, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QResizeEvent
 from PySide6.QtWidgets import QWidget
 
 from model import DataType

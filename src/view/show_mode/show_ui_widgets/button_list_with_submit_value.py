@@ -2,7 +2,7 @@
 with a new value or predefined one in fish"""
 import sys
 
-from PySide6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget, QDialog
+from PySide6.QtWidgets import QDialog, QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration

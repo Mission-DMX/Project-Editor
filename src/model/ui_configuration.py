@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QWidget, QDialog
+from PySide6.QtWidgets import QDialog, QWidget
 
 if TYPE_CHECKING:
     from controller.network import NetworkManager

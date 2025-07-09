@@ -5,16 +5,26 @@ from typing import TYPE_CHECKING
 
 import PySide6
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPainter, QKeyEvent, QMouseEvent, QFocusEvent
+from PySide6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QPainter
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
-from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget, \
-    QStyleOptionGraphicsItem
+from PySide6.QtWidgets import (
+    QDialog,
+    QFormLayout,
+    QGraphicsItem,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QStyleOptionGraphicsItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model.filter import Filter, FilterTypeEnumeration
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
+
 from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget

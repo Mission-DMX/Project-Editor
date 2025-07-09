@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from PySide6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget, QDialog
+from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QVBoxLayout, QWidget
 
 from controller.joystick.joystick_handling import JoystickHandler
 from model import Filter, UIPage, UIWidget

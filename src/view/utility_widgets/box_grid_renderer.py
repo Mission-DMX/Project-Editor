@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, Qt, QResizeEvent
+from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, QResizeEvent, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 
 if TYPE_CHECKING:

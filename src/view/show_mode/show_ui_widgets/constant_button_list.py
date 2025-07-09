@@ -1,6 +1,7 @@
 import sys
 
 from PySide6.QtWidgets import (
+    QDialog,
     QDoubleSpinBox,
     QHBoxLayout,
     QLabel,
@@ -8,7 +9,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QPushButton,
     QVBoxLayout,
-    QWidget, QDialog,
+    QWidget,
 )
 
 from model import Filter, UIPage, UIWidget

@@ -1,6 +1,14 @@
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtWidgets import QColorDialog, QHBoxLayout, QListWidget, QPushButton, QToolBar, QVBoxLayout, QWidget, \
-    QDialog
+from PySide6.QtWidgets import (
+    QColorDialog,
+    QDialog,
+    QHBoxLayout,
+    QListWidget,
+    QPushButton,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import ColorHSI, Filter, UIPage, UIWidget
 

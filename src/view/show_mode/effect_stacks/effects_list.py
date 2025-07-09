@@ -2,7 +2,7 @@
 Usage: The key indicates the category of the effect and the list all containing effects."""
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPaintEvent, QFont
+from PySide6.QtGui import QBrush, QColor, QFont, QIcon, QPainter, QPaintEvent
 from PySide6.QtWidgets import (
     QCompleter,
     QHBoxLayout,

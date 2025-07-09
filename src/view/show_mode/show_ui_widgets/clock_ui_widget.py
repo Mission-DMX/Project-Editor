@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont, QFontDatabase, QFontMetrics
-from PySide6.QtWidgets import QLabel, QWidget, QDialog
+from PySide6.QtWidgets import QDialog, QLabel, QWidget
 
 from model import UIWidget
 from utility import resource_path

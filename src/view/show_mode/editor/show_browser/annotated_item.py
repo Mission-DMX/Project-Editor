@@ -1,6 +1,6 @@
 from typing import Any
 
-from PySide6.QtWidgets import QListWidgetItem, QTableWidgetItem, QTreeWidgetItem, QListWidget, QTreeWidget
+from PySide6.QtWidgets import QListWidget, QListWidgetItem, QTableWidgetItem, QTreeWidget, QTreeWidgetItem
 
 from model.events import EventSender
 from model.scene import FilterPage

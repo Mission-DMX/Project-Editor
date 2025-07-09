@@ -4,6 +4,7 @@ from logging import getLogger
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
+    QDialog,
     QFormLayout,
     QHBoxLayout,
     QInputDialog,
@@ -12,7 +13,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QToolBar,
     QVBoxLayout,
-    QWidget, QDialog,
+    QWidget,
 )
 
 from model import Filter, UIPage, UIWidget

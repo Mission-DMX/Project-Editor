@@ -1,7 +1,6 @@
 import os
-from collections.abc import dict_items
+from collections.abc import ItemsView, dict_items
 from logging import getLogger
-from typing import ItemsView
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon

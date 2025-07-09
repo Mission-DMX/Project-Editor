@@ -5,7 +5,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
-from PySide6.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget, QDialog
+from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
 
 import proto.FilterMode_pb2
 from model import ColorHSI, UIWidget

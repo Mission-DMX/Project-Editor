@@ -4,7 +4,7 @@ from logging import getLogger
 from PySide6.QtGui import QBrush, QColor, QFontMetrics, QPainter
 
 from model import ColorHSI, DataType
-from model.filter import FilterTypeEnumeration, Filter
+from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 logger = getLogger(__file__)

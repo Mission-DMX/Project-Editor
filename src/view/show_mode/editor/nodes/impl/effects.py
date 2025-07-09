@@ -1,5 +1,5 @@
 from model import DataType, Scene
-from model.filter import FilterTypeEnumeration, Filter
+from model.filter import Filter, FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
