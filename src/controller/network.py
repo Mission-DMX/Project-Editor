@@ -41,7 +41,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     run_mode_changed: QtCore.Signal = QtCore.Signal(int)
     active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
-    def __new__(cls, *args, **kwargs) -> NetworkManager:
+    def __new__(cls) -> NetworkManager:
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance

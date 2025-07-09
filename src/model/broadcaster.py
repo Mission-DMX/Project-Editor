@@ -112,7 +112,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
 
-    def __new__(cls, *args, **kwargs) -> Broadcaster:
+    def __new__(cls) -> Broadcaster:
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance

@@ -133,9 +133,9 @@ class _DebugVizWidget(UIWidget, ABC):
 class ColorLabel(QWidget):
     """A label for displaying colors"""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, parent: QWidget, **kwargs) -> None:
         """Default color is black"""
-        super().__init__(*args, **kwargs)
+        super().__init__(parent, **kwargs)
         self._last_color: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self._last_color_processed: QColor = QColor()
 
@@ -218,9 +218,9 @@ class ColorDebugVizWidget(_DebugVizWidget):
 
 
 class _NumberLabel(QWidget):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, parent: QWidget, **kwargs) -> None:
         """Default number is 0, default mode is without illumination display"""
-        super().__init__(*args, **kwargs)
+        super().__init__(parent, **kwargs)
         self.mode: str = ""
         self._number: float = 0.0
         self._text: str = "0"

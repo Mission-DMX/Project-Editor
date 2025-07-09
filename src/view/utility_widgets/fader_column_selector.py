@@ -1,4 +1,3 @@
-
 """This file provides a widget to browse bank set columns."""
 from logging import getLogger
 
@@ -46,7 +45,7 @@ class FaderColumnSelectorWidget(QWidget):
         self.reload_data()
         # TODO add button to add a new column right in this widget
 
-    def _selection_changed_handler(self, *args) -> None:
+    def _selection_changed_handler(self) -> None:
         item = self._tree.selectedItems()[0]
         if isinstance(item, AnnotatedTreeWidgetItem):
             self.selected_item = item

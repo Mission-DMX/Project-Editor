@@ -138,7 +138,7 @@ class _SenderConfigurationWidget(QScrollArea):
             self._rename_table.setItem(i, 2, s_function_item)
             self._rename_table.setItem(i, 3, args_item)
 
-    def _debug_enabled_checked_changed(self, *args, **kwargs) -> None:
+    def _debug_enabled_checked_changed(self, check: Qt.CheckState) -> None:
         if self._sender is not None:
             self._sender.debug_enabled = self._debug_enabled_checkbox.isChecked()
             self._debug_include_ongoing_checkbox.setEnabled(self._sender.debug_enabled)

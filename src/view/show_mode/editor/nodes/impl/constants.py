@@ -3,7 +3,7 @@ from logging import getLogger
 
 from PySide6.QtGui import QBrush, QColor, QFontMetrics, QPainter
 
-from model import ColorHSI, DataType
+from model import ColorHSI, DataType, Scene
 from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -15,8 +15,13 @@ _value_box_brush = QBrush(QColor(128, 128, 128, 150))
 
 class TextPreviewRendererMixin(FilterNode):
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, model: Filter | Scene,
+                 filter_type: int,
+                 name: str,
+                 terminals: dict[str, dict[str, str]] = None,
+                 allow_add_input: bool = False,
+                 allow_add_output: bool = False) -> None:
+        super().__init__(model, filter_type, name, terminals, allow_add_input, allow_add_output)
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
     def _draw_preview(self, p: QPainter) -> None:
