@@ -9,7 +9,7 @@ from controller.autotrack.Detection.Yolo8.Yolo8GPU import Yolo8GPU
 from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
 from controller.autotrack.ImageOptimizer.BasicOptimizer import CropOptimizer
-from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.gui_tab import GuiTab
 
 logger = getLogger(__name__)
 
