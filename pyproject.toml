@@ -58,7 +58,7 @@ line-length = 120
 exclude = ["src/proto", "src/controller/autotrack", "test/", "src/view/utility_widgets/wizzards/theater_scene_wizard.py"]
 
 [tool.ruff.lint]
-select = ["E", "F", "UP", "I", "SIM"]
+select = ["E", "F", "UP", "I", "SIM", "ANN"]
 ignore = [
     "E722",
     "F401",
@@ -66,6 +66,8 @@ ignore = [
     "UP038", #Deprecated,
     "SIM105", #Slower contextlib.suppress
 ]
+#src = ["src"]
+exclude = ["src/view/logging_view/dmx_data_log.py"]
 
 [tool.isort]
 profile = "black"
