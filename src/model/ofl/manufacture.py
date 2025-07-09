@@ -29,5 +29,5 @@ def generate_manufacturers(fixture_directory: LiteralString) -> list[tuple[Manuf
             # checking if it is a file
             if os.path.isfile(fixture_file):
                 fixtures.append(load_fixture(fixture_file))
-        manufactures.append((cast(Manufacture, ob[o]), fixtures))
+        manufactures.append((cast("Manufacture", ob[o]), fixtures))
     return manufactures

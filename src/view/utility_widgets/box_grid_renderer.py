@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QObject, Signal
@@ -5,7 +6,7 @@ from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, QR
 from PySide6.QtWidgets import QApplication, QWidget
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+
 
     from PySide6.QtGui import QMouseEvent, QPaintEvent
 
