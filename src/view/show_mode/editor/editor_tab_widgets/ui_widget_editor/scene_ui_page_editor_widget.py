@@ -57,7 +57,7 @@ class SceneUIPageEditorWidget(QWidget):
         """
         for _, widget_def in WIDGET_LIBRARY.items():
             action = QAction(widget_def[0], menu)
-            action.triggered.connect(lambda checked=False, widget=widget_def: self._inst_generic_widget(widget, pos))
+            action.triggered.connect(lambda _, widget=widget_def: self._inst_generic_widget(widget, pos))
             menu.addAction(action)
         menu.popup(self.mapToGlobal(pos))
 
