@@ -58,7 +58,7 @@ class _FaderNode(FilterNode):
 class FaderRawNode(_FaderNode):
     """Filter to represent any filter fader"""
 
-    nodeName = "Raw"
+    node_name = "Raw"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_RAW, name=name, terminals={
@@ -72,7 +72,7 @@ class FaderRawNode(_FaderNode):
 
 class FaderHSINode(_FaderNode):
     """Filter to represent a hsi filter fader"""
-    nodeName = "HSI"
+    node_name = "HSI"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name, terminals={
@@ -90,7 +90,7 @@ class FaderHSINode(_FaderNode):
 
 class FaderHSIANode(_FaderNode):
     """Filter to represent a hsia filter fader"""
-    nodeName = "HSI-A"
+    node_name = "HSI-A"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIA, name=name, terminals={
@@ -110,7 +110,7 @@ class FaderHSIANode(_FaderNode):
 
 class FaderHSIUNode(_FaderNode):
     """Filter to represent a hsiu filter fader"""
-    nodeName = "HSI_U"
+    node_name = "HSI_U"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIU, name=name, terminals={
@@ -130,7 +130,7 @@ class FaderHSIUNode(_FaderNode):
 
 class FaderHSIAUNode(_FaderNode):
     """Filter to represent a hasiau filter fader"""
-    nodeName = "HSI-AU"
+    node_name = "HSI-AU"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIAU, name=name, terminals={
@@ -151,7 +151,7 @@ class FaderHSIAUNode(_FaderNode):
 
 class FaderMainBrightness(FilterNode):
     """Filter to the main brightness fader"""
-    nodeName = "global-ilumination"
+    node_name = "global-ilumination"
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS, name=name,
