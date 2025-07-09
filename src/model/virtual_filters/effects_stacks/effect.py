@@ -5,15 +5,15 @@ This file contains the fundamental building blocks for effects.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import ItemsView
 from enum import IntFlag
 from typing import TYPE_CHECKING, Never, Self
 
-from PySide6.QtWidgets import QWidget
-
-from model import Filter, Scene
-
 if TYPE_CHECKING:
+    from collections.abc import ItemsView
+
+    from PySide6.QtWidgets import QWidget
+
+    from model import Filter, Scene
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
 

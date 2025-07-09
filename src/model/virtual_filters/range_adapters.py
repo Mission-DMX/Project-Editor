@@ -1,7 +1,10 @@
 from logging import getLogger
+from typing import TYPE_CHECKING
 
-from model import Scene
 from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
+
+if TYPE_CHECKING:
+    from model import Scene
 
 logger = getLogger(__name__)
 

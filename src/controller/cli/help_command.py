@@ -1,12 +1,13 @@
 """Commands for Help"""
 from __future__ import annotations
 
-from argparse import ArgumentParser, Namespace
 from typing import TYPE_CHECKING
 
 from controller.cli.command import Command
 
 if TYPE_CHECKING:
+    from argparse import ArgumentParser, Namespace
+
     from controller.cli.cli_context import CLIContext
 
 

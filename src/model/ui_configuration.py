@@ -3,9 +3,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QDialog, QWidget
-
 if TYPE_CHECKING:
+    from PySide6.QtWidgets import QDialog, QWidget
+
     from controller.network import NetworkManager
     from model import Broadcaster, Filter
     from model.scene import Scene

@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .filter import Filter
-
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
     from .control_desk import BankSet
+    from .filter import Filter
     from .ui_configuration import UIPage
 
 

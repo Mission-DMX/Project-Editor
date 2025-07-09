@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing
-from collections.abc import Callable
 
 from PySide6.QtCore import QTimer
 
@@ -10,6 +9,8 @@ from model import Broadcaster, Scene
 from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Callable
+
     from view.show_mode.show_ui_widgets import PanTiltConstantControlUIWidget
 
 

@@ -1,10 +1,8 @@
 """
 This file contains a command implementation to control show files, including their running state on fish.
-:author: Doralitze
 """
 from __future__ import annotations
 
-import argparse
 from typing import TYPE_CHECKING
 
 from controller.cli.command import Command
@@ -12,6 +10,7 @@ from controller.file.read import read_document
 from controller.file.transmitting_to_fish import transmit_to_fish
 
 if TYPE_CHECKING:
+    import argparse
     from argparse import ArgumentParser, Namespace
 
     from controller.cli.cli_context import CLIContext

@@ -1,8 +1,12 @@
-from collections.abc import Callable
+
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QWidget
 
 from model.macro import Macro, Trigger, trigger_factory
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class _NewTriggerDialog(QDialog):

@@ -8,16 +8,16 @@ import json
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QWidget
-
-from model import Filter
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
-from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
-from model.virtual_filters.effects_stacks.effects.segment_effects import SegmentEffect
 
 if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
+
+    from model import Filter
+    from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
+    from model.virtual_filters.effects_stacks.effects.segment_effects import SegmentEffect
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
 logger = getLogger(__name__)

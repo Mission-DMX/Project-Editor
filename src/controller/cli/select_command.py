@@ -1,13 +1,14 @@
 """commands for selection"""
 from __future__ import annotations
 
-from argparse import ArgumentParser, Namespace
 from typing import TYPE_CHECKING
 
 from controller.cli.command import Command
 from model.control_desk import BankSet
 
 if TYPE_CHECKING:
+    from argparse import ArgumentParser, Namespace
+
     from controller.cli.cli_context import CLIContext
 
 

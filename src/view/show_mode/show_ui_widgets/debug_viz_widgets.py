@@ -1,16 +1,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+from __future__ import annotations
+
 from abc import ABC
-from collections.abc import Callable
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
 
-import proto.FilterMode_pb2
 from model import ColorHSI, UIWidget
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import proto.FilterMode_pb2
     from model import UIPage
 
 logger = getLogger(__name__)
@@ -19,7 +22,7 @@ logger = getLogger(__name__)
 class _DebugVizWidget(UIWidget, ABC):
     """This class is the foundation for widgets that display the state of remote debug nodes"""
 
-    def __init__(self, parent: "UIPage", configuration: dict[str, str],
+    def __init__(self, parent: UIPage, configuration: dict[str, str],
                  presentation_mode: list[str] | None = None) -> None:
         super().__init__(parent, configuration)
         self._config_widget: QWidget | None = None
@@ -167,7 +170,7 @@ class ColorLabel(QWidget):
 
 
 class ColorDebugVizWidget(_DebugVizWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self.configured_dimensions_changed_callback = self._dimensions_changed
         self._show_widget: ColorLabel | None = None
@@ -194,7 +197,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
             )
             self._show_widget.deleteLater()
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         c = ColorDebugVizWidget(new_parent, self.configuration.copy())
         super().copy_base(c)
         return c
@@ -262,7 +265,7 @@ class _NumberLabel(QWidget):
 
 
 class NumberDebugVizWidget(_DebugVizWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration, ["Plain", "Illumination"])
         self._show_widget: _NumberLabel | None = None
         self.configured_dimensions_changed_callback = self._dimensions_changed
@@ -277,7 +280,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
         self._show_widget.destroyed.connect(self._delete_callback)
         return self._show_widget
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         c = NumberDebugVizWidget(new_parent, self.configuration.copy())
         super().copy_base(c)
         return c

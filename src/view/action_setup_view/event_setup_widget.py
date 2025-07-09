@@ -1,6 +1,6 @@
 import os
-from collections.abc import ItemsView, dict_items
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -30,6 +30,9 @@ from model.events import EventSender, get_sender_by_id, mark_sender_persistent
 from proto.Events_pb2 import event
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem, AnnotatedTableWidgetItem
+
+if TYPE_CHECKING:
+    from collections.abc import ItemsView
 
 logger = getLogger(__name__)
 _xtouch_gpio_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-gpio.svg")))

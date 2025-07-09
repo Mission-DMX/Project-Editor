@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -8,6 +7,8 @@ import proto.Events_pb2
 from proto.Events_pb2 import event_type as prot_event_type
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from controller.network import NetworkManager
     from model import Broadcaster
 

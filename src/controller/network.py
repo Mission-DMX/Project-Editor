@@ -4,13 +4,11 @@ from __future__ import annotations
 import math
 import queue
 import xml.etree.ElementTree as ET
-from collections.abc import Callable
 from logging import getLogger
 from typing import TYPE_CHECKING
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
-from PySide6.QtNetwork import QLocalSocket
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
@@ -24,11 +22,15 @@ import x_touch
 from model import events
 from model.broadcaster import Broadcaster, QObjectSingletonMeta
 from model.filter import FilterTypeEnumeration
-from model.universe import Universe
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from PySide6.QtNetwork import QLocalSocket
+
     from model import Scene
     from model.control_desk import FaderBank
+    from model.universe import Universe
 
 logger = getLogger(__name__)
 

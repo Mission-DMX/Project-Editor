@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import colorsys
+from typing import TYPE_CHECKING
 
-from pydantic import confloat
 from PySide6.QtGui import QColor
+
+if TYPE_CHECKING:
+    from pydantic import confloat
 
 
 class ColorHSI:

@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from pyqtgraph.flowchart.Node import NodeGraphicsItem
 from PySide6 import QtGui
-from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
-
-from model import DataType
 
 if TYPE_CHECKING:
-    from view.show_mode.editor.nodes import FilterNode
+    from collections.abc import Callable
 
+    from PySide6.QtGui import QPainter
+    from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
+
+    from model import DataType
+    from view.show_mode.editor.nodes import FilterNode
 
 class FilterNodeGraphicsItem(NodeGraphicsItem):
     """This class provides a custom renderer for filter nodes"""

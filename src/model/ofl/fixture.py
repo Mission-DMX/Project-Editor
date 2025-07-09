@@ -4,19 +4,21 @@ from __future__ import annotations
 import json
 import random
 from collections import defaultdict
-from collections.abc import Sequence
 from enum import Enum, IntFlag
 from logging import getLogger
 from typing import TYPE_CHECKING, Any, Final, NotRequired, TypedDict
 from uuid import UUID, uuid4
 
 import numpy as np
-from numpy.typing import NDArray
 from PySide6 import QtCore
 
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from numpy.typing import NDArray
+
     from model import BoardConfiguration
 
 logger = getLogger(__name__)
