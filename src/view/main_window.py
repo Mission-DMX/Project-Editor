@@ -1,10 +1,10 @@
 """main Window for the Editor"""
 import os.path
 import platform
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QIcon, QKeySequence, QPixmap
+from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
 from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
@@ -26,9 +26,6 @@ from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
-
-if TYPE_CHECKING:
-    from PySide6.QtGui import QCloseEvent
 
 
 class MainWindow(QtWidgets.QMainWindow):
