@@ -17,7 +17,7 @@ class SceneSwitchButton(QPushButton):
 
     _STYLE_NOT_ACTIVE = None
 
-    def __init__(self, scene: Scene, parent: QWidget = None):
+    def __init__(self, scene: Scene, parent: QWidget = None) -> None:
         super().__init__(parent)
         if SceneSwitchButton._STYLE_NOT_ACTIVE is None:
             SceneSwitchButton._STYLE_NOT_ACTIVE = self.styleSheet()

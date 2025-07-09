@@ -5,7 +5,7 @@ from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidg
 
 class AutotrackerSettingsWidget(NodeEditorFilterConfigWidget):
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__()
         self._widget = QWidget(parent=parent)
         layout = QGridLayout()

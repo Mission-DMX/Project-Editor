@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class FilterPage:
     """Filter page in a Scene"""
 
-    def __init__(self, parent: Scene):
+    def __init__(self, parent: Scene) -> None:
         self._filters: list[Filter] = []
         self._child_pages: list[FilterPage] = []
         self._parent_scene: Scene = parent
@@ -66,7 +66,7 @@ class Scene:
 
     def __init__(self, scene_id: int,
                  human_readable_name: str,
-                 board_configuration: BoardConfiguration):
+                 board_configuration: BoardConfiguration) -> None:
         self._scene_id: int = scene_id
         self._human_readable_name: str = human_readable_name
         self._board_configuration: BoardConfiguration = board_configuration

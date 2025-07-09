@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class HelpCommand(Command):
     """Commands for Help"""
 
-    def __init__(self, context: CLIContext):
+    def __init__(self, context: CLIContext) -> None:
         super().__init__(context, "help")
         self.help_text = "This command displays the help about a certain command."
 

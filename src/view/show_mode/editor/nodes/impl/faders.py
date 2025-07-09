@@ -8,7 +8,7 @@ from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 class _FaderNode(FilterNode):
     def __init__(self, model: Filter | Scene, filter_type: FilterTypeEnumeration, name: str,
-                 terminals: dict[str, dict[str, str]]):
+                 terminals: dict[str, dict[str, str]]) -> None:
         self._bankset_model: BankSet | None = None
         super().__init__(model=model, filter_type=filter_type, name=name, terminals=terminals)
 
@@ -50,7 +50,7 @@ class _FaderNode(FilterNode):
             self._bankset_model.id_update_listeners.remove(self)
         self._update_bankset_listener()
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self._bankset_model is not None:
             self._bankset_model.id_update_listeners.remove(self)
 
@@ -60,7 +60,7 @@ class FaderRawNode(_FaderNode):
 
     nodeName = "Raw"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_RAW, name=name, terminals={
             "primary": {"io": "out"},
             "secondary": {"io": "out"}
@@ -74,7 +74,7 @@ class FaderHSINode(_FaderNode):
     """Filter to represent a hsi filter fader"""
     nodeName = "HSI"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name, terminals={
             "color": {"io": "out"}
         })
@@ -92,7 +92,7 @@ class FaderHSIANode(_FaderNode):
     """Filter to represent a hsia filter fader"""
     nodeName = "HSI-A"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIA, name=name, terminals={
             "color": {"io": "out"},
             "amber": {"io": "out"}
@@ -112,7 +112,7 @@ class FaderHSIUNode(_FaderNode):
     """Filter to represent a hsiu filter fader"""
     nodeName = "HSI_U"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIU, name=name, terminals={
             "color": {"io": "out"},
             "uv": {"io": "out"}
@@ -132,7 +132,7 @@ class FaderHSIAUNode(_FaderNode):
     """Filter to represent a hasiau filter fader"""
     nodeName = "HSI-AU"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIAU, name=name, terminals={
             "color": {"io": "out"},
             "amber": {"io": "out"},
@@ -153,7 +153,7 @@ class FaderMainBrightness(FilterNode):
     """Filter to the main brightness fader"""
     nodeName = "global-ilumination"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS, name=name,
                          terminals={"brightness": {"io": "out"}})
 

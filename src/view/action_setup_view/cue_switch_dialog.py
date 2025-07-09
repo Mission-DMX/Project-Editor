@@ -10,7 +10,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
 
 
 class _InsertCueSwitchDialog(_CommandInsertionDialog):
-    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: Callable):
+    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: Callable) -> None:
         super().__init__(
             parent, macro,
             [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES],

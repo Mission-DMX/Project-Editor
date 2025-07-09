@@ -8,7 +8,7 @@ class ProcessNotifier:
     A process notifier informs the user of the activity and status of background processes.
     """
 
-    def __init__(self, name: str, max_count: int):
+    def __init__(self, name: str, max_count: int) -> None:
         """
         Initialize a new process notifier.
         :param name: The name of the running process

@@ -16,7 +16,7 @@ class UniverseNode(FilterNode):
 
     universe_ids: list[int] = []
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         if isinstance(model, Filter):
             super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
                              terminals={

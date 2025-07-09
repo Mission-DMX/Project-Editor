@@ -22,7 +22,7 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
         return self._widget
 
-    def __init__(self, filter: Filter, parent: QWidget = None):
+    def __init__(self, filter: Filter, parent: QWidget = None) -> None:
         super().__init__()
         self._widget = FaderColumnSelectorWidget(parent=parent, base_set=filter.scene.linked_bankset)
         self._filter = filter

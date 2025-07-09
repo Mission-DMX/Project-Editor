@@ -10,7 +10,7 @@ from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidg
 
 
 class _ColorHelpWidget(QWidget):
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setMinimumWidth(30 * 4)
         self.setMinimumHeight(25 * 4)
@@ -51,7 +51,7 @@ class _ColorHelpWidget(QWidget):
 class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
     _help_data = yaml_load(resource_path(os.path.join("resources", "data", "color_mixing.yml")))
 
-    def __init__(self, filter_: Filter, parent: QWidget = None):
+    def __init__(self, filter_: Filter, parent: QWidget = None) -> None:
         super().__init__()
         self._widget = QWidget(parent=parent)
         self._color_help_widget = _ColorHelpWidget(parent=self._widget)

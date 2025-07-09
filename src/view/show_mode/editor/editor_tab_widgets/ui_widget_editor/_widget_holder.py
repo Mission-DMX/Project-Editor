@@ -15,7 +15,7 @@ class UIWidgetHolder(QWidget):
 
     closing = Signal()
 
-    def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True):
+    def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True) -> None:
         super().__init__(parent)
         self._model: UIWidget = child
         if instance_for_editor:

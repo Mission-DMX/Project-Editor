@@ -6,7 +6,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import C
 
 
 class TimelineChannelLabel(QWidget):
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent=parent)
         self._names: list[str] = []
         self._types: list[str] = []

@@ -13,7 +13,7 @@ class FilterFlowchart(Flowchart):
     """Flowchart that can handle creating nodes from file"""
 
     def __init__(self, page: FilterPage, terminals: dict[str, dict[str, str]] = None, file_path: str = None,
-                 library: NodeLibrary = None):
+                 library: NodeLibrary = None) -> None:
         super().__init__(terminals, page.parent_scene.human_readable_name + "/" + page.name, file_path, library)
         self._page = page
 

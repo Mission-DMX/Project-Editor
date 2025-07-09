@@ -24,7 +24,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (
 
 
 class KeyFrameStateEditDialog(QDialog):
-    def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function: Callable):
+    def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function: Callable) -> None:
         super().__init__(parent=parent)
         self._layout = QFormLayout()
 

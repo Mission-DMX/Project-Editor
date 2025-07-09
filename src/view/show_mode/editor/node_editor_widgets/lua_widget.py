@@ -55,7 +55,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
                 out_maps.append(description)
         return {"in_mapping": ";".join(in_maps), "out_mapping": ";".join(out_maps)}
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__()
         self._widget = QWidget(parent)
         self._channels: dict[str, tuple[bool, DataType]] = dict()

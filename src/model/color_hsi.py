@@ -8,7 +8,8 @@ from PySide6.QtGui import QColor
 class ColorHSI:
     """Color Definition"""
 
-    def __init__(self, hue: confloat(ge=0, le=360), saturation: confloat(ge=0, le=1), intensity: confloat(ge=0, le=1)):
+    def __init__(self, hue: confloat(ge=0, le=360), saturation: confloat(ge=0, le=1),
+                 intensity: confloat(ge=0, le=1)) -> None:
         """ HSI Color
         Args:
             hue: color itself in the form of an angle between [0,360] degrees

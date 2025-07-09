@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QWizardPage
 
 class ComposableWizardPage(QWizardPage):
     def __init__(self, page_activation_function: Callable | None = None, page_cleanup_function: Callable | None = None,
-                 check_completeness_function: Callable | None = None, parent: QWidget | None = None):
+                 check_completeness_function: Callable | None = None, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._page_activation_function: Callable | None = page_activation_function
         self._page_cleanup_function: Callable | None = page_cleanup_function

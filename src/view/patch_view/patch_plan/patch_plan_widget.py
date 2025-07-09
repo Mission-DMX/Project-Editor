@@ -12,7 +12,7 @@ from view.patch_view.patch_plan.used_fixture_widget import UsedFixtureWidget
 class PatchPlanWidget(QWidget):
     """Patch Plan Widget for one Universe"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._chanel_items: list[QPixmap] = []
         self._cols = 1

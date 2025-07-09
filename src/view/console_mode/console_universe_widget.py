@@ -17,7 +17,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
     Buttons allow to change the selected universe.
     """
 
-    def __init__(self, universe: Universe, parent: QWidget = None):
+    def __init__(self, universe: Universe, parent: QWidget = None) -> None:
         """Inits a ManualUniverseEditorWidget.
 
         Args:
@@ -59,7 +59,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._broadcaster.jogwheel_rotated_right.connect(self._increase_scroll)
         self._scroll_position: int = 0
 
-    def __del__(self):
+    def __del__(self) -> None:
         self._bank_set.unlink()
         self._broadcaster.jogwheel_rotated_left.disconnect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.disconnect(self._increase_scroll)

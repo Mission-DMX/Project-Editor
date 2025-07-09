@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QL
 
 
 class SelectionDialog(QDialog):
-    def __init__(self, title: str, message: str, items: list[str], parent: QWidget | None = None):
+    def __init__(self, title: str, message: str, items: list[str], parent: QWidget | None = None) -> None:
         super().__init__(parent)
         form = QFormLayout(self)
         form.addRow(QLabel(message))

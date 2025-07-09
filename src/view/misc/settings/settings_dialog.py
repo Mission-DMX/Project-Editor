@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent: QWidget | None, show: "BoardConfiguration"):
+    def __init__(self, parent: QWidget | None, show: "BoardConfiguration") -> None:
         super().__init__(parent)
         self.setMinimumHeight(300)
         self.setMinimumWidth(300)

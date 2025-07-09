@@ -43,7 +43,7 @@ _rename_icon = QIcon(resource_path(os.path.join("resources", "icons", "rename.sv
 class _SenderConfigurationWidget(QScrollArea):
     """Widget containing the configuration of the current selected event sender."""
 
-    def __init__(self, parent: QWidget | None, b: Broadcaster):
+    def __init__(self, parent: QWidget | None, b: Broadcaster) -> None:
         super().__init__(parent=parent)
         self._sender: events.EventSender | None = None
         layout = QFormLayout()
@@ -171,7 +171,7 @@ class _SenderConfigurationWidget(QScrollArea):
 class _SourceListWidget(QWidget):
     """Content widget for ListWidgetItems of event senders"""
 
-    def __init__(self, parent: QWidget, sender: events.EventSender):
+    def __init__(self, parent: QWidget, sender: events.EventSender) -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         text_layout = QVBoxLayout()
@@ -242,7 +242,7 @@ class _EventLogListWidget(QWidget):
     color: #FF0000;
     """
 
-    def __init__(self, parent: QWidget, ev: event, b: Broadcaster):
+    def __init__(self, parent: QWidget, ev: event, b: Broadcaster) -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self._id_label = QLabel(str(ev.event_id), parent=self)
@@ -320,7 +320,7 @@ class _EventLogListWidget(QWidget):
 class _SenderAddDialog(QDialog):
     """Dialog to configure new event senders."""
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle("Add Event Sender")
@@ -355,7 +355,7 @@ class _SenderAddDialog(QDialog):
 class EventSetupWidget(QSplitter):
     """Widget containing the entire event sender configuration UI."""
 
-    def __init__(self, parent: QWidget | None, b: Broadcaster):
+    def __init__(self, parent: QWidget | None, b: Broadcaster) -> None:
         super().__init__(parent=parent)
         self._selection_panel = QWidget(self)
         layout = QVBoxLayout()

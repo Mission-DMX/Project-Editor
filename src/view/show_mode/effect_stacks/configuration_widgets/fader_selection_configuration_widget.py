@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class FaderSelectionConfigurationWidget(FaderColumnSelectorWidget):
     """This widget enables the user to select a fader as the desired input."""
 
-    def __init__(self, effect: ColorInputEffect):
+    def __init__(self, effect: ColorInputEffect) -> None:
         scene = effect.get_scene()
         bankset = scene.linked_bankset if scene is not None else None
         super().__init__(column_filter=ColorDeskColumn, base_set=bankset)

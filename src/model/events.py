@@ -68,7 +68,7 @@ def _handle_incoming_sender_update(msg: "event_sender") -> None:
 class EventSender:
     """Base class for fish event sender representations. Also used for fish.builtin.plain"""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """Create a new event sender.
         :param name: The name to give it. This cannot be changed later on."""
         self._name: str = name
@@ -140,7 +140,7 @@ def get_all_senders() -> list[EventSender]:
 
 
 class XtouchGPIOEventSender(EventSender):
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
 
     @property

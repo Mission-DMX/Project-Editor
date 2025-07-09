@@ -29,7 +29,7 @@ logger = getLogger(__file__)
 class _CueLabel(QWidget):
     _PLAY_ICON = QIcon(resource_path(os.path.join("resources", "icons", "play.svg"))).pixmap(16, 16)
 
-    def __init__(self, parent: QWidget | None, name: str):
+    def __init__(self, parent: QWidget | None, name: str) -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self._play_label = QLabel()
@@ -59,7 +59,7 @@ class CueControlUIWidget(UIWidget):
     It will automatically migrate older configurations which still had the 'cue_names' parameter.
     """
 
-    def __init__(self, parent: UIPage, configuration: dict[str, str] | None = None):
+    def __init__(self, parent: UIPage, configuration: dict[str, str] | None = None) -> None:
         super().__init__(parent, configuration)
         self._statuslabel = QLabel()
         self._cues: list[tuple[str, int]] = []

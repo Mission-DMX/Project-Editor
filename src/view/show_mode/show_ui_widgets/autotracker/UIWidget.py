@@ -15,7 +15,7 @@ logger = getLogger(__file__)
 
 class AutoTrackerUIWidget(UIWidget):
 
-    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] = None):
+    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] = None) -> None:
         super().__init__(parent_page, configuration)
         self._finished_initializing: bool = False
 

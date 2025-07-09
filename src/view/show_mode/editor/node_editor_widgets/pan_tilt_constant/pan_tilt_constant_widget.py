@@ -18,7 +18,7 @@ logger = getLogger(__name__)
 
 class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
 
-    def __init__(self, filter_: PanTiltConstantFilter, parent: QWidget = None):
+    def __init__(self, filter_: PanTiltConstantFilter, parent: QWidget = None) -> None:
         super().__init__()
         self._filter = filter_
         self._parent_widget = QWidget(parent=parent)

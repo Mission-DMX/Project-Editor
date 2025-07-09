@@ -27,7 +27,7 @@ def _configure_label(w: QLabel) -> QLabel:
 
 
 class ClockUIWidget(UIWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._widget: QLabel | None = None
         self._timer: QTimer | None = None

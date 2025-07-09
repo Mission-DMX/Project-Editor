@@ -11,7 +11,7 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_edi
 class SceneUIManagerWidget(QTabWidget):
     """Widget containing the scene pages"""
 
-    def __init__(self, scene: Scene | FilterPage, parent: QWidget):
+    def __init__(self, scene: Scene | FilterPage, parent: QWidget) -> None:
         super().__init__(parent)
         self.ui_page = None
         self._scene = scene

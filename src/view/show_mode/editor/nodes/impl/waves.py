@@ -11,7 +11,7 @@ class SquareWaveNode(_WaveNode):
     """Filter to generate a square."""
     nodeName = "Square wave"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_WAVES_SQUARE, name=name)
         self.addInput("length")
         self.filter.in_data_types["length"] = DataType.DT_DOUBLE
@@ -22,7 +22,7 @@ class TriangleWaveNode(_WaveNode):
     """Filter to generate a triangle wave."""
     nodeName = "Triangle wave"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_WAVES_TRIANGLE, name=name)
 
 
@@ -30,5 +30,5 @@ class SawtoothWaveNode(_WaveNode):
     """Filter to generate a sawtooth wave."""
     nodeName = "Sawtooth wave"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_WAVES_SAWTOOTH, name=name)

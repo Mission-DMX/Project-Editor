@@ -1,4 +1,6 @@
 """connector for Signals"""
+from __future__ import annotations
+
 from typing import Any
 from xml.etree.ElementTree import Element
 
@@ -18,11 +20,11 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
     """metaclass for a QObject Singleton"""
     instance: Any
 
-    def __init__(cls: type["QObjectSingletonMeta"], name: str, bases: tuple[type, ...], _dict: dict[str, Any]) -> None:
+    def __init__(cls: type[QObjectSingletonMeta], name: str, bases: tuple[type, ...], _dict: dict[str, Any]) -> None:
         super().__init__(name, bases, _dict)
         cls.instance = None
 
-    def __call__(cls: type["QObjectSingletonMeta"], *args: Any, **kw: Any) -> QtCore.QObject:
+    def __call__(cls: type[QObjectSingletonMeta], *args: Any, **kw: Any) -> QtCore.QObject:
         if cls.instance is None:
             cls.instance = super().__call__(*args, **kw)
         return cls.instance
@@ -110,7 +112,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Broadcaster:
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance

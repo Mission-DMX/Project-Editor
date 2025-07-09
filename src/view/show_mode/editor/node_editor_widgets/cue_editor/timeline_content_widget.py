@@ -22,7 +22,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import C
 class TimelineContentWidget(QWidget):
     size_changed = Signal(QPoint)
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent=parent)
         self._last_keyframe_end_point = 0  # Defines the length of the Cue in seconds
         self._time_zoom = 0.01  # Defines how many seconds are a pixel, defaults to 1 pixel = 10ms

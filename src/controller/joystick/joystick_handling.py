@@ -1,4 +1,5 @@
 """Starts a listener for the joystick"""
+from __future__ import annotations
 
 import pyjoystick
 from pyjoystick.sdl2 import Key, run_event_loop
@@ -34,7 +35,7 @@ class JoystickHandler:
                     return
             (Broadcaster()).handle_joystick_event.emit(joystick, key.value, tilt)
 
-    def __new__(cls):
+    def __new__(cls) -> JoystickHandler:
         """Connect a joystick and setup the key bindings"""
         mngr = pyjoystick.ThreadEventManager(event_loop=run_event_loop,
                                              handle_key_event=lambda key: cls.reformat(key)

@@ -21,7 +21,7 @@ from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColum
 
 
 class BankSetTabWidget(QWidget):
-    def __init__(self, parent: QWidget, bankset: BankSet):
+    def __init__(self, parent: QWidget, bankset: BankSet) -> None:
         super().__init__(parent)
         self._bankset: BankSet | None = None
 
@@ -121,7 +121,7 @@ class BankSetTabWidget(QWidget):
 
 
 class _BankItem(QListWidgetItem):
-    def __init__(self, bank: FaderBank, index: int):
+    def __init__(self, bank: FaderBank, index: int) -> None:
         super().__init__("")
         self._bank = bank
         self._index = index
@@ -144,7 +144,7 @@ class _BankItem(QListWidgetItem):
 
 class _BankEditWidget(QWidget):
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self._bank: FaderBank | None = None
         self._bank_item: _BankItem | None = None

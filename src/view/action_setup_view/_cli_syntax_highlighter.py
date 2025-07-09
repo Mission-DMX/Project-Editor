@@ -7,7 +7,7 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
     This class provides syntax highlighting for input CLI commands.
     """
 
-    def __init__(self, document: QTextDocument | None = None):
+    def __init__(self, document: QTextDocument | None = None) -> None:
         super().__init__(document)
         self._mappings = {}
         self._space_format = QTextCharFormat()

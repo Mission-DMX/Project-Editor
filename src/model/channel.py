@@ -7,7 +7,7 @@ class Channel(QtCore.QObject):
 
     updated: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, channel_address: int):
+    def __init__(self, channel_address: int) -> None:
         """Constructs a channel."""
         super().__init__(None)
         if not (0 <= channel_address <= 511):

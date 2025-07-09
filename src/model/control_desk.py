@@ -24,7 +24,7 @@ class DeskColumn(ABC):
     TODO: Also implement U,UA and A types.
     """
 
-    def __init__(self, uid: str = None):
+    def __init__(self, uid: str = None) -> None:
         self.id = uid if uid else _generate_unique_id()
         self.bank_set: BankSet | None = None
         self._bottom_display_line_inverted = False
@@ -119,7 +119,7 @@ class RawDeskColumn(DeskColumn):
         base_dc._secondary_text_line = self._secondary_text_line
         return base_dc
 
-    def __init__(self, _id: str = None):
+    def __init__(self, _id: str = None) -> None:
         super().__init__(_id)
         self._fader_position = 0
         self._encoder_position = 0
@@ -216,7 +216,7 @@ class ColorDeskColumn(DeskColumn):
         base_dc._color = self._color.copy()
         return base_dc
 
-    def __init__(self, _id: str = None):
+    def __init__(self, _id: str = None) -> None:
         super().__init__(_id)
         self._color: ColorHSI = ColorHSI(0.0, 0.0, 0.0)
 
@@ -254,7 +254,7 @@ class FaderBank:
      hence the user can only access up to 8 columns.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.columns: list[DeskColumn] = []
         self._pushed_to_device = False
 
@@ -341,7 +341,7 @@ class BankSet:
         return list(BankSet._linked_bank_sets)
 
     def __init__(self, banks: list[FaderBank] = None, description: str = None, gui_controlled: bool = False,
-                 id: str | None = None):
+                 id: str | None = None) -> None:
         """Construct a bank set object.
         After construction link() needs to be called in order to link the set with the control desk.
 
@@ -373,7 +373,7 @@ class BankSet:
         # The variable below should be set to true if the topology of the bank set was changed by the GUI
         self.update_required = False
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self.pushed_to_fish:
             self.unlink()
         try:

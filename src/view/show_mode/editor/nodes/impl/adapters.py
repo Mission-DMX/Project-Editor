@@ -8,7 +8,7 @@ class Adapter16BitTo8BitNode(FilterNode):
     """Filter to convert a 16 bit value to two 8 bit values."""
     nodeName = "16 bit to 8 bit converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=int(FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT),
                          name=name, terminals={
                 "value": {"io": "in"},
@@ -27,7 +27,7 @@ class Adapter16BitToBoolNode(FilterNode):
     """
     nodeName = "16 bit to bool converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -41,7 +41,7 @@ class Adapter16BitToBoolNode(FilterNode):
 class Adapter16bitToFloat(FilterNode):
     nodeName = "16bit to Float converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -56,7 +56,7 @@ class Adapter16bitToFloat(FilterNode):
 class Adapter8bitToFloat(FilterNode):
     nodeName = "8bit to Float converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -72,7 +72,7 @@ class AdapterColorToRGBNode(FilterNode):
     """Filter to convert a color value to a rgb value."""
     nodeName = "Color to rgb converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGB, name=name,
                          terminals={
                              "value": {"io": "in"},
@@ -91,7 +91,7 @@ class AdapterColorToRGBWNode(FilterNode):
     """Filter to convert a color value to a rgbw value."""
     nodeName = "Color to rgb-w converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBW, name=name,
                          terminals={
                              "value": {"io": "in"},
@@ -112,7 +112,7 @@ class AdapterColorToRGBWANode(FilterNode):
     """Filter to convert a color value to a RGBWA value."""
     nodeName = "Color to rgb-wa converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBWA, name=name,
                          terminals={
                              "value": {"io": "in"},
@@ -135,7 +135,7 @@ class AdapterFloatToColorNode(FilterNode):
     """Filter to convert a float/double value to a color value."""
     nodeName = "Float to color converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR, name=name,
                          terminals={
                              "h": {"io": "in"},
@@ -155,7 +155,7 @@ class AdapterColorToFloatsNode(FilterNode):
     """Filter that splits the HSI values into three individual float channels."""
     nodeName = "Color to Float converter"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_FLOAT, name=name,
                          terminals={
                              "input": {"io": "in"},
@@ -176,7 +176,8 @@ class AdapterFloatToRange(FilterNode):
     nodeName = "float range to float range"
 
     def __init__(self, model: Filter | Scene, name: str,
-                 filter_type: FilterTypeEnumeration = FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE):
+                 filter_type: FilterTypeEnumeration =
+                 FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE) -> None:
         super().__init__(model, int(filter_type), name, terminals={
             "value_in": {"io": "in"},
             "value": {"io": "out"}
@@ -215,7 +216,7 @@ class AdapterFloatTo8BitRange(AdapterFloatToRange):
     """Filter maps a range of float to a range of 8bit"""
     nodeName = "Float range to 8bit"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE, name=name)
         try:
             self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
@@ -228,7 +229,7 @@ class AdapterFloatTo16BitRange(AdapterFloatToRange):
     """Filter maps a range of float to a range of 16bit"""
     nodeName = "Float range to 16bit"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE, name=name)
         try:
             self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
@@ -241,7 +242,7 @@ class Adapter16BitToRangeFloat(AdapterFloatToRange):
     """Filter maps a range of 16bit to a range of float"""
     nodeName = "16bit range to Float"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE,
                          name=name)
         try:
@@ -256,7 +257,7 @@ class Adapter8BitToRangeFloat(AdapterFloatToRange):
     """Filter maps a range of 8bit to a range of float"""
     nodeName = "8bit range to Float"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE,
                          name=name)
         try:
@@ -271,7 +272,7 @@ class CombineTwo8BitToSingle16Bit(FilterNode):
     """Filter that combines two 8bit values to a 16bit one."""
     nodeName = "Dual 8bit to single 16bit"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_DUAL_BYTE_TO_16BIT, name=name,
                          terminals={
                              "lower": {"io": "in"},
@@ -288,7 +289,7 @@ class Map8BitTo16Bit(FilterNode):
     """Filter that maps an 8bit value to a 16bit one."""
     nodeName = "Map 8bit to 16bit"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_8BIT_TO_16BIT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -302,7 +303,7 @@ class Map8BitTo16Bit(FilterNode):
 class ColorBrightnessMixinNode(FilterNode):
     nodeName = "Color Brightness Mixin"
 
-    def __init__(self, model: Filter | Scene, name: str):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
                          name=name, terminals={
                 "out": {"io": "out"},

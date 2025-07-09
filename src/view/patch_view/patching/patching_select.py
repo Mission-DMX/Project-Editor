@@ -23,7 +23,7 @@ logger = getLogger(__name__)
 class PatchingSelect(QtWidgets.QScrollArea):
     """select Manufacturer"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget):
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
         super().__init__(parent)
         self._board_configuration = board_configuration
         cache_path = "/var/cache/missionDMX"

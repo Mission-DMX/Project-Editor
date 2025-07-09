@@ -12,7 +12,7 @@ class EffectsStackFilterConfigWidget(NodeEditorFilterConfigWidget):
 
     """This filter config widget provides a effect stack editor. Otherwise, it is just some glue-code."""
 
-    def __init__(self, f: Filter):
+    def __init__(self, f: Filter) -> None:
         self._widget = EffectsStackEditor(f, None)
 
     def _get_configuration(self) -> dict[str, str]:

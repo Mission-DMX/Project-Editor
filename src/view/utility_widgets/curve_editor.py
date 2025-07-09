@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 class _WaveRenderer(PlotWidget):
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self._curve_configuration: CurveConfiguration = CurveConfiguration()
         self.setYRange(2, -2)
@@ -131,7 +131,7 @@ class _WaveRenderer(PlotWidget):
 
 class CurveEditorWidget(QWidget):
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self._config: CurveConfiguration = CurveConfiguration()
         self._loading_values: bool = False

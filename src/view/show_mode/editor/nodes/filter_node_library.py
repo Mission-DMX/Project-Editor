@@ -94,7 +94,7 @@ from view.show_mode.editor.nodes.import_node import ImportNode
 class FilterNodeLibrary(NodeLibrary):
     """Custom Node Library"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.reload()
 

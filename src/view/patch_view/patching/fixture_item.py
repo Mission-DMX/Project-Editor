@@ -8,7 +8,7 @@ from style import Style
 class FixtureItem(QtWidgets.QPushButton):
     """Widget of a Fixture"""
 
-    def __init__(self, fixture: Fixture):
+    def __init__(self, fixture: Fixture) -> None:
         super().__init__()
         self.setFixedSize(150, 100)
         layout = QtWidgets.QVBoxLayout(self)

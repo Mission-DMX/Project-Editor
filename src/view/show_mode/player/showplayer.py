@@ -11,7 +11,7 @@ from .ui_player_widget import UIPlayerWidget
 class _PlaceholderWidget(QWidget):
     """Placeholder for grid"""
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
         self.setFixedSize(SceneSwitchButton.width, SceneSwitchButton.height)
 
@@ -19,7 +19,7 @@ class _PlaceholderWidget(QWidget):
 class ShowPlayerWidget(QWidget):
     """Widget to remote control fish show mode"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget = None):
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget = None) -> None:
         super().__init__(parent)
         self._board_configuration = board_configuration
 

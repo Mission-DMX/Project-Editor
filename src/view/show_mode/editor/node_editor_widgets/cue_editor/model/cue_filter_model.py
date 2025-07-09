@@ -3,7 +3,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
 
 
 class CueFilterModel:
-    def __init__(self, parameters: dict[str, str] | None = None):
+    def __init__(self, parameters: dict[str, str] | None = None) -> None:
         super().__init__()
         self.cues: list[Cue] = []
         self.channels: list[tuple[str, DataType]] = []  # name, data type

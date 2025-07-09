@@ -17,7 +17,7 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
     _node_type_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 128))
     _data_type_brush = QtGui.QBrush(QtGui.QColor(0, 0, 0, 255))
 
-    def __init__(self, node: "FilterNode"):
+    def __init__(self, node: "FilterNode") -> None:
         super().__init__(node)
         self.setTitleOffset(self.titleOffset() + 10)
         self.setTerminalOffset(self.terminalOffset() + 7)

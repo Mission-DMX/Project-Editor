@@ -11,7 +11,7 @@ class UsedFixtureWidget(QWidget):
         UI Widget of a Used Fixture
     """
 
-    def __init__(self, fixture: UsedFixture):
+    def __init__(self, fixture: UsedFixture) -> None:
         super().__init__()
         self._fixture = fixture
         self._channels_static: list[QPixmap] = []

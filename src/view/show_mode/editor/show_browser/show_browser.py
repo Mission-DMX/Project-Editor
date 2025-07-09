@@ -39,7 +39,7 @@ class ShowBrowser:
     _fader_icon = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
     _uipage_icon = QIcon(resource_path(os.path.join("resources", "icons", "uipage.svg")))
 
-    def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget):
+    def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget) -> None:
         self._recently_created_scene = None
         self._widget = QWidget(parent)
         self._widget.setMaximumWidth(450)

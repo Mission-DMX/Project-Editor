@@ -51,7 +51,7 @@ class _EffectDummy_Socket(Effect):
     def get_serializable_effect_name(self) -> str:
         raise RuntimeError("A dummy socket is not supposed to be serialized")
 
-    def __init__(self, socket: "EffectsSocket", stype: EffectType):
+    def __init__(self, socket: "EffectsSocket", stype: EffectType) -> None:
         super().__init__({"": [stype]})
         self._socket = socket
         self._stype = stype
@@ -71,7 +71,7 @@ class EffectsSocket:
     It furthermore proved the entry-point for show file (de)serialization as well as adding of further effects.
     """
 
-    def __init__(self, target: UsedFixture):
+    def __init__(self, target: UsedFixture) -> None:
         self.target: UsedFixture = target  # TODO also implement support for fixture groups
         self._color_socket: ColorEffect | None = None
         self.has_color_property: bool = target.color_support != ColorSupport.NO_COLOR_SUPPORT

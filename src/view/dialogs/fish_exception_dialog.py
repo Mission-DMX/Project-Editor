@@ -18,7 +18,7 @@ class FishExceptionsDialog(QtWidgets.QDialog):
 
     _open_dialogs: list[QtWidgets.QDialog] = []
 
-    def __init__(self, log: str, reason: str, cause: str):
+    def __init__(self, log: str, reason: str, cause: str) -> None:
         super().__init__()
         self.setWindowTitle("Fish Error")
         layout = QtWidgets.QHBoxLayout(self)
@@ -36,7 +36,7 @@ class FishExceptionsDialog(QtWidgets.QDialog):
 class HoverTextBrowser(QtWidgets.QTextBrowser):
     """Text Browser with tooltip"""
 
-    def __init__(self, text: str):
+    def __init__(self, text: str) -> None:
         super().__init__()
         self.setMouseTracking(True)
         self.setHtml("""<p>""" + text + """</p>""")

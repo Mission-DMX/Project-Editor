@@ -16,7 +16,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_content_widge
 
 
 class TimelineContainer(QWidget):
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self._channel_label = TimelineChannelLabel()

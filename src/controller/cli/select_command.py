@@ -32,7 +32,7 @@ def find_bank_set(identifier: str) -> BankSet | None:
 
 class SelectCommand(Command):
 
-    def __init__(self, context: CLIContext):
+    def __init__(self, context: CLIContext) -> None:
         super().__init__(context, "select")
         self.help_text = "This command displays the help about a certain command."
 

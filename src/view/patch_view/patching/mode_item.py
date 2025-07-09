@@ -8,7 +8,7 @@ from style import Style
 class ModeItem(QtWidgets.QPushButton):
     """Widget of a Fixture"""
 
-    def __init__(self, mode: Mode):
+    def __init__(self, mode: Mode) -> None:
         super().__init__()
         self.setFixedSize(150, 100)
         layout = QtWidgets.QVBoxLayout(self)

@@ -24,7 +24,7 @@ end
 class LuaFilterNode(FilterNode):
     nodeName = "Lua"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_SCRIPTING_LUA, name=name,
                          allowAddOutput=True, terminals={})
         self._setup_terminals()

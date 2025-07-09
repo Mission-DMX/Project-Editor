@@ -27,7 +27,7 @@ from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowse
 class EffectsStackEditor(QWidget):
     """This configuration widget provides an editor enabling the user to compose effect onto sockets."""
 
-    def __init__(self, f: Filter, parent: QWidget | None):
+    def __init__(self, f: Filter, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
         if not isinstance(f, EffectsStack):
             raise ValueError("This filter is supposed to be an instance of the EffectsStack virtual filter.")

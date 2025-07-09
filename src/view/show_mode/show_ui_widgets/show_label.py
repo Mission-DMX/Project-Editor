@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class ShowLabelUIWidget(UIWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._player_widget: QLabel | None = None
         self._conf_widget: QLabel | None = None

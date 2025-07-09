@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class ListCommand(Command):
     """Commands to list show and client state"""
 
-    def __init__(self, context: CLIContext):
+    def __init__(self, context: CLIContext) -> None:
         super().__init__(context, "list")
         self.help_text = "This command displays the content of system collections."
 

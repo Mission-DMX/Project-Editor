@@ -36,7 +36,7 @@ class SourcesTab(GuiTab):
         """
         super().tab_activated()
 
-    def __init__(self, name: str, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager) -> None:
         """
         Initialize a SourcesTab object.
 
@@ -138,7 +138,7 @@ class SourcesTab(GuiTab):
 
 
 class WebcamSelector(QDialog):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Webcam Selector")
         self.setMinimumWidth(300)

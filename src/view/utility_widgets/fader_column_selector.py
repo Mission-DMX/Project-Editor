@@ -17,7 +17,7 @@ class FaderColumnSelectorWidget(QWidget):
     selection_changed = Signal(DeskColumn)
 
     def __init__(self, parent: QWidget | None = None, column_filter: type[DeskColumn] | None = None,
-                 base_set: BankSet | None = None):
+                 base_set: BankSet | None = None) -> None:
         """Construct a new browser widget.
 
         :param parent: The parent widget of this one

@@ -18,7 +18,7 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
 
-    def __init__(self, imp_filter: Filter, parent: QWidget = None):
+    def __init__(self, imp_filter: Filter, parent: QWidget = None) -> None:
         super().__init__()
         self._widget: QWidget | None = None
         self._tree_widget: FilterSelectionWidget | None = None

@@ -30,7 +30,7 @@ class Trigger(QObject):
 
     enabled_changed: Signal = Signal(bool)
 
-    def __init__(self, tr_t: str):
+    def __init__(self, tr_t: str) -> None:
         super().__init__()
         self._macro: Macro | None = None
         self._type: str = tr_t
@@ -85,7 +85,7 @@ class Trigger(QObject):
 class _StartupTrigger(Trigger):
     """Trigger on Startup"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("startup")
         from model import Broadcaster
         Broadcaster().board_configuration_loaded.connect(self.exec)
@@ -94,7 +94,7 @@ class _StartupTrigger(Trigger):
 class _FKeysTrigger(Trigger):
     """Triggers for F-Keys"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("f_keys")
         self._key: int = 0
         self.set_param("button", "0")
@@ -122,7 +122,7 @@ class _FKeysTrigger(Trigger):
 
 
 class Macro:
-    def __init__(self, parent: BoardConfiguration):
+    def __init__(self, parent: BoardConfiguration) -> None:
         """Initialize a new empty macro"""
         self.content: str = ""
         self.name: str = ""

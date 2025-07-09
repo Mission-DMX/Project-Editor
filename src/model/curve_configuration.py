@@ -23,7 +23,7 @@ class CurveConfiguration:
     the gui that interact with fish. Most notably, it is used by the effects stack to define curves for effects.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.frequencies: dict[BaseCurve, float] = {}
         self.amplitudes: dict[BaseCurve, float] = {}
         self.offsets: dict[BaseCurve, float] = {}

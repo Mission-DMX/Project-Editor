@@ -14,7 +14,7 @@ logger = getLogger(__name__)
 
 class PanTiltConstantControlUIWidget(UIWidget):
 
-    def __init__(self, parent: UIPage, configuration: dict[str, str]):
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._command_chain: list[tuple[str, str]] = []  # ??
         self._filter = None

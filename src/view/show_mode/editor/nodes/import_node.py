@@ -5,7 +5,7 @@ from view.show_mode.editor.nodes.base.filternode import FilterNode
 class ImportNode(FilterNode):
     nodeName = "Filter Import"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_IMPORT, name=name,
                          terminals={}, allowAddOutput=True)
         self.update_node_ports()

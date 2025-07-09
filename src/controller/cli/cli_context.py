@@ -69,7 +69,7 @@ def _split_args(line: str) -> list[str]:
 class CLIContext:
     """Context of the Client"""
 
-    def __init__(self, show: BoardConfiguration, networkmgr: NetworkManager, exit_available: bool = False):
+    def __init__(self, show: BoardConfiguration, networkmgr: NetworkManager, exit_available: bool = False) -> None:
         """
         Initialize a new CLI context.
         :param show: The current active show configuration

@@ -14,7 +14,7 @@ class CombinedActionSetupWidget(QTabWidget):
 
     """A tab view for setup of events and action."""
 
-    def __init__(self, parent: QWidget | None, b: Broadcaster, show: "BoardConfiguration"):
+    def __init__(self, parent: QWidget | None, b: Broadcaster, show: "BoardConfiguration") -> None:
         super().__init__(parent=parent)
         self._event_tab = EventSetupWidget(self, b)
         self.addTab(self._event_tab, "Events")

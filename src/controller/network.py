@@ -1,4 +1,5 @@
 """Module to handle connection with real-time software Fish."""
+from __future__ import annotations
 
 import math
 import queue
@@ -40,7 +41,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     run_mode_changed: QtCore.Signal = QtCore.Signal(int)
     active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> NetworkManager:
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance
@@ -375,7 +376,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         )
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
-    def enter_scene(self, scene: "Scene", push_direct: bool = True) -> None:
+    def enter_scene(self, scene: Scene, push_direct: bool = True) -> None:
         """
         Tells fish to load a specific scene
         Args:
@@ -414,7 +415,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         delete_msg = proto.Console_pb2.remove_fader_bank_set(bank_id=fader_bank_id)
         self._enqueue_message(delete_msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_REMOVE_FADER_BANK_SET)
 
-    def send_add_fader_bank_set_message(self, bank_id: str, active_bank_index: int, fader_banks: list["FaderBank"]):
+    def send_add_fader_bank_set_message(self, bank_id: str, active_bank_index: int, fader_banks: list[FaderBank]):
         """This method accumulates the content of a bank set and schedules the required messages for an update."""
         add_set_msg = proto.Console_pb2.add_fader_bank_set(bank_id=bank_id, default_active_fader_bank=active_bank_index)
         for bank in fader_banks:

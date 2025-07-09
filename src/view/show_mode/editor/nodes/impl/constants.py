@@ -15,7 +15,7 @@ _value_box_brush = QBrush(QColor(128, 128, 128, 150))
 
 class TextPreviewRendererMixin(FilterNode):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.graphicsItem().additional_rendering_method = self._draw_preview
 
@@ -38,7 +38,7 @@ class Constants8BitNode(TextPreviewRendererMixin):
     """Filter to represent an 8 bit value."""
     nodeName = "8_bit_filter"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_8BIT, name=name, terminals={
             "value": {"io": "out"}
         })
@@ -63,7 +63,7 @@ class Constants16BitNode(TextPreviewRendererMixin):
     """Filter to represent a 16 bit value."""
     nodeName = "16_bit_filter"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, name=name, terminals={
             "value": {"io": "out"}
         })
@@ -88,7 +88,7 @@ class ConstantsFloatNode(TextPreviewRendererMixin):
     """Filter to represent a float/double value."""
     nodeName = "Float_filter"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, name=name, terminals={
             "value": {"io": "out"}
         })
@@ -115,7 +115,7 @@ class ConstantsColorNode(FilterNode):
     """
     nodeName = "Color_filter"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name, terminals={
             "value": {"io": "out"}
         })
@@ -150,7 +150,7 @@ class PanTiltConstant(FilterNode):
     """Filter to represent a pan/tilt position."""
     nodeName = "PanTilt_filter"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, name=name,
                          terminals={}, allowAddOutput=True)
         try:

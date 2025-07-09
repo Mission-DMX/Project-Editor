@@ -17,7 +17,7 @@ class BoxGridItem(QObject):
     """
     clicked: Signal = Signal()
 
-    def __init__(self, parent: QWidget | None):
+    def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
         self._text: str = ""
         self._icon: QPixmap | None = None
@@ -81,7 +81,7 @@ class BoxGridRenderer(QWidget):
     :see BoxGridItem: for a detailed explanation on individual items.
     """
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._boxes: list[BoxGridItem] = []
         self._box_width = 100

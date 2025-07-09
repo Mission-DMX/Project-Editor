@@ -11,7 +11,7 @@ class _NewTriggerDialog(QDialog):
     Upon Accept this dialog adds the new trigger to the provided macro on its own.
     """
 
-    def __init__(self, parent: QWidget, macro: Macro):
+    def __init__(self, parent: QWidget, macro: Macro) -> None:
         super().__init__(parent)
         self._macro = macro
         self.setModal(True)

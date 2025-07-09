@@ -21,7 +21,7 @@ logger = getLogger(__file__)
 class PatchPlanSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent: "PatchMode"):
+    def __init__(self, board_configuration: BoardConfiguration, parent: "PatchMode") -> None:
         super().__init__(parent=parent)
         self._board_configuration = board_configuration
         self._broadcaster = Broadcaster()

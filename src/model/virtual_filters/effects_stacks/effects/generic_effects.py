@@ -141,7 +141,7 @@ class FunctionEffect(GenericEffect):
                 filter_list.append(f_filter)
         return {"x": latest_acc_filter_id + ":value"}
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__({
             "phase": [EffectType.GENERIC_NUMBER],
             "input": [EffectType.GENERIC_NUMBER],

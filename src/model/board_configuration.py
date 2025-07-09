@@ -20,7 +20,7 @@ logger = getLogger(__file__)
 class BoardConfiguration:
     """Board configuration of a show file."""
 
-    def __init__(self, show_name: str = "", default_active_scene: int = 0, notes: str = ""):
+    def __init__(self, show_name: str = "", default_active_scene: int = 0, notes: str = "") -> None:
         self._show_name: str = show_name
         self._default_active_scene: int = default_active_scene
         self._notes: str = notes

@@ -12,7 +12,7 @@ LOG_RECORD_BUILTIN_ATTRS = {"args", "asctime", "created", "exc_info", "exc_text"
 class JSONFormatter(logging.Formatter):
     """formatter for logging in json """
 
-    def __init__(self, *, fmt_keys: dict[str, str] | None = None, ):
+    def __init__(self, *, fmt_keys: dict[str, str] | None = None, ) -> None:
         super().__init__()
         self.fmt_keys = fmt_keys if fmt_keys is not None else {}
 

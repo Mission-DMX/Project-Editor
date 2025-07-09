@@ -15,7 +15,7 @@ logger = getLogger(__name__)
 
 
 class LightSetupTab(GuiTab):
-    def __init__(self, name: str, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager) -> None:
         super().__init__(name, instance)
         self.layout = QGridLayout()
         self.layout.setSizeConstraint(QLayout.SetMinimumSize)

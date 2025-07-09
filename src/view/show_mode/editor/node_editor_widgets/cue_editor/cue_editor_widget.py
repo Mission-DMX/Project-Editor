@@ -50,7 +50,7 @@ class ExternalChannelDefinition:
     in a named fashion.
     """
 
-    def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet):
+    def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet) -> None:
         self.data_type = data_type
         self.name = name
         self.fader = associated_fader
@@ -93,7 +93,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._model.default_cue = self._default_cue_combo_box.currentIndex() - 1
         return self._model.get_as_configuration()
 
-    def __init__(self, parent: QWidget = None, f: Filter | None = None):
+    def __init__(self, parent: QWidget = None, f: Filter | None = None) -> None:
         super().__init__()
         self._parent_widget = QWidget(parent=parent)
         top_layout = QVBoxLayout()

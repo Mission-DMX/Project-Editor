@@ -18,7 +18,7 @@ class EndAction(Enum):
     START_AGAIN = 1
     NEXT = 2
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.value == EndAction.HOLD.value:
             return "Hold current values"
         if self.value == EndAction.NEXT.value:
@@ -55,7 +55,7 @@ class EndAction(Enum):
 
 class State(ABC):
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         self._transition_type: str = transition_type
 
     @property
@@ -96,7 +96,7 @@ class StateEightBit(State):
         s._value = self._value
         return s
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         super().__init__(transition_type)
         self._value = 0
 
@@ -126,7 +126,7 @@ class StateSixteenBit(State):
         s._value = self._value
         return s
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         super().__init__(transition_type)
         self._value = 0
 
@@ -156,7 +156,7 @@ class StateDouble(State):
         s._value = self._value
         return s
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         super().__init__(transition_type)
         self._value = 0.0
 
@@ -178,7 +178,7 @@ class StateColor(State):
         s._value = self._value.copy()
         return s
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         super().__init__(transition_type)
         self._value = ColorHSI(180.0, 0.0, 0.0)
 
@@ -203,7 +203,7 @@ class StateColor(State):
 
 
 class KeyFrame:
-    def __init__(self, parent_cue: "Cue"):
+    def __init__(self, parent_cue: "Cue") -> None:
         self._states: list[State] = []
         self.timestamp: float = 0.0
         self._parent = parent_cue
@@ -265,7 +265,7 @@ class KeyFrame:
 
 
 class Cue:
-    def __init__(self, definition: str | None = None):
+    def __init__(self, definition: str | None = None) -> None:
         self.end_action = EndAction.HOLD
         self._frames: list[KeyFrame] = []
         self._channel_definitions: list[tuple[str, DataType]] = []

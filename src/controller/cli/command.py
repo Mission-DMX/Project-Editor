@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class Command(ABC):
     """Client Commands"""
 
-    def __init__(self, cli_context: "CLIContext", name: str):
+    def __init__(self, cli_context: "CLIContext", name: str) -> None:
         """
         Create a new command.
         :param cli_context: The context where the command should be registered with

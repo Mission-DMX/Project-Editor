@@ -8,7 +8,7 @@ class TimeNode(FilterNode):
     """Filter to represent time."""
     nodeName = "Time"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, name=name, terminals={
             "value": {"io": "out"}
         })
@@ -21,7 +21,7 @@ class TimeSwitchOnDelay8BitNode(FilterNode):
     """Filter to represent an 8 bit - time on-switch."""
     nodeName = "Switch on delay - 8 bit"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_8BIT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -42,7 +42,7 @@ class TimeSwitchOnDelay16BitNode(FilterNode):
     """Filter to represent a 16 bit - time on-switch."""
     nodeName = "Switch on delay - 16 bit"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_16BIT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -63,7 +63,7 @@ class TimeSwitchOnDelayFloatNode(FilterNode):
     """Filter to represent a float/double - time on-switch."""
     nodeName = "Switch on delay - float"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_ON_DELAY_FLOAT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -84,7 +84,7 @@ class TimeSwitchOffDelay8BitNode(FilterNode):
     """Filter to represent an 8 bit - time off-switch."""
     nodeName = "Switch off delay - 8 bit"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_8BIT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -106,7 +106,7 @@ class TimeSwitchOffDelay16BitNode(FilterNode):
     """Filter to represent a 16 bit - time off-switch."""
     nodeName = "Switch off delay - 16 bit"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_16BIT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -128,7 +128,7 @@ class TimeSwitchOffDelayFloatNode(FilterNode):
     """Filter to represent a float/double - time off-switch."""
     nodeName = "Switch off delay - float"
 
-    def __init__(self, model: Filter, name: str):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TIME_SWITCH_OFF_DELAY_FLOAT, name=name,
                          terminals={
                              "value_in": {"io": "in"},

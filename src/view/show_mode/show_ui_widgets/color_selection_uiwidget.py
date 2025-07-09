@@ -15,7 +15,7 @@ from model import ColorHSI, Filter, UIPage, UIWidget
 
 class ColorSelectionUIWidget(UIWidget):
 
-    def __init__(self, parent: UIPage, configuration: dict[str, str]):
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
 
         self._value: ColorHSI = ColorHSI.from_filter_str("")

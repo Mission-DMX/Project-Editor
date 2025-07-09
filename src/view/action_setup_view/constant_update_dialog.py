@@ -24,7 +24,7 @@ logger = getLogger(__file__)
 
 
 class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
-    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: callable):
+    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: callable) -> None:
         super().__init__(
             parent, macro,
             [

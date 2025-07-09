@@ -8,7 +8,7 @@ class AggregatingFilterNode(FilterNode):
     single output.
     """
 
-    def __init__(self, target_dt: DataType, model: Filter, name: str, filter_type: int):
+    def __init__(self, target_dt: DataType, model: Filter, name: str, filter_type: int) -> None:
         super().__init__(model=model, filter_type=filter_type, name=name)
         self.addOutput("value")
         self.filter.out_data_types["value"] = target_dt

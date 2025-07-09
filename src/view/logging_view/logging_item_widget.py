@@ -10,7 +10,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
     """Widget of a single logging item"""
 
     def __init__(self, parent: QTreeWidget, message: dict, level: str, visible: bool,
-                 visible_change: QtCore.Signal(str, bool)):
+                 visible_change: QtCore.Signal(str, bool)) -> None:
         super().__init__(parent)
         visible_change.connect(self._level_visible_change)
         self._content: dict = message

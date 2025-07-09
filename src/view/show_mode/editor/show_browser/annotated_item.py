@@ -8,7 +8,7 @@ from model.scene import FilterPage
 
 class AnnotatedTreeWidgetItem(QTreeWidgetItem):
 
-    def __init__(self, parent: QTreeWidget):
+    def __init__(self, parent: QTreeWidget) -> None:
         super().__init__(parent)
         self._annotated_data: FilterPage | None = None
 
@@ -23,7 +23,7 @@ class AnnotatedTreeWidgetItem(QTreeWidgetItem):
 
 class AnnotatedListWidgetItem(QListWidgetItem):
 
-    def __init__(self, parent: QListWidget):
+    def __init__(self, parent: QListWidget) -> None:
         super().__init__(parent)
         self._annotated_data: EventSender | None = None
 
@@ -37,7 +37,7 @@ class AnnotatedListWidgetItem(QListWidgetItem):
 
 
 class AnnotatedTableWidgetItem(QTableWidgetItem):
-    def __init__(self, other: Any):
+    def __init__(self, other: Any) -> None:
         super().__init__(other)
         self._annotated_data: tuple[int, int, str] | None = None
 

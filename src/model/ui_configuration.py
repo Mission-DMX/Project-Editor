@@ -22,7 +22,7 @@ def setup_network_manager(nm: NetworkManager, b: Broadcaster):
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
-    def __init__(self, parent_page: UIPage, configuration: dict[str, str] | None = None):
+    def __init__(self, parent_page: UIPage, configuration: dict[str, str] | None = None) -> None:
         """ Set up the basic components of a widget.
 
         Arguments:
@@ -174,7 +174,7 @@ class UIWidget(ABC):
 class UIPage:
     """This class represents a page containing widgets that can be used to control the show."""
 
-    def __init__(self, parent: Scene):
+    def __init__(self, parent: Scene) -> None:
         """Construct a UI Page
 
         Arguments:
@@ -239,7 +239,7 @@ class ShowUI:
     """
     _fish_connector: NetworkManager = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         """This constructor initializes the show UI.
 
         At any given time there may only be one instance of this class running in the player but one might construct

@@ -8,7 +8,7 @@ logger = getLogger(__file__)
 
 class SixteenBitToFloatRange(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE, pos=pos)
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -51,7 +51,7 @@ class SixteenBitToFloatRange(VirtualFilter):
 
 class EightBitToFloatRange(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, pos=pos)
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -94,7 +94,7 @@ class EightBitToFloatRange(VirtualFilter):
 
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, pos=pos)
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:

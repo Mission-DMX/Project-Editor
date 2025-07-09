@@ -32,7 +32,7 @@ class AutoTrackDialogWidget(QTabWidget):
         - `register_tabs(tab_widget, tabs)`: Register tabs in the main window.
     """
 
-    def __init__(self, f: "AutoTrackerFilter", provided_instance: InstanceManager | None):
+    def __init__(self, f: "AutoTrackerFilter", provided_instance: InstanceManager | None) -> None:
         """
         Initialize the main application window.
         """

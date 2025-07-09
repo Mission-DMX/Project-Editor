@@ -12,7 +12,7 @@ logger = getLogger(__name__)
 
 class StandardWidget(NodeEditorFilterConfigWidget):
 
-    def __init__(self, filter_: Filter, parent: QWidget = None):
+    def __init__(self, filter_: Filter, parent: QWidget = None) -> None:
         self._filter = filter_
         self._widget = QWidget(parent)
         self._widget.setFixedSize(250, 250)

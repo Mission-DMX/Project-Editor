@@ -72,7 +72,7 @@ class ConstantNumberButtonList(UIWidget):
         add_button.clicked.connect(add_action)
         return widget
 
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
@@ -154,5 +154,5 @@ class ConstantNumberButtonList(UIWidget):
                 layout.addWidget(button)
         self._configuration_widget.setLayout(layout)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self._model.filter_id if self._model else "Error: No Filter configured.")

@@ -150,7 +150,7 @@ class Filter:
     def __init__(self, scene: Scene, filter_id: str, filter_type: int,
                  pos: tuple[int, int] | tuple[float, float] | None = None,
                  filter_configurations: dict[str, str] | None = None,
-                 initial_parameters: dict[str, str] | None = None):
+                 initial_parameters: dict[str, str] | None = None) -> None:
         # TODO id why as string
         if pos is None:
             pos = [0.0, 0.0]
@@ -266,7 +266,7 @@ class Filter:
             f.deserialize()
         return f
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Filter '{self._filter_id}' from scene '{self.scene}'"
 
 
@@ -278,7 +278,7 @@ class VirtualFilter(Filter, abc.ABC):
     that the show will be serialized for fish.
     """
 
-    def __init__(self, scene: Scene, filter_id: str, filter_type: int, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, filter_type: int, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, filter_type, pos)
 
     @abc.abstractmethod

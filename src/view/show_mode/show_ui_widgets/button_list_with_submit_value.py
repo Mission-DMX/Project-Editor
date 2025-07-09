@@ -18,7 +18,7 @@ class ButtonsWithValueSubmit(UIWidget):
     def get_config_dialog_widget(self, parent:QDialog) -> QWidget:
         return self._button_list.get_config_dialog_widget(parent)
 
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._filter_type = None
         self._player_widget: QWidget | None = None
@@ -79,5 +79,5 @@ class ButtonsWithValueSubmit(UIWidget):
         layout.addWidget(buttons)
         self._player_widget.setLayout(layout)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.configuration.get("constant"))

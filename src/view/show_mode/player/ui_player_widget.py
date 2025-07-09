@@ -7,7 +7,7 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_edi
 
 
 class UIPlayerWidget(QWidget):
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self._scene: Scene | None = None
         self.setLayout(QGridLayout(self))

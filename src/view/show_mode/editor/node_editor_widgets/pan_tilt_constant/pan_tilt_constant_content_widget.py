@@ -9,7 +9,8 @@ from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 
 
 class PanTiltConstantContentWidget(QLabel):
-    def __init__(self, filter: PanTiltConstantFilter | None, parent: QWidget = None, enable_joystick: bool = True):
+    def __init__(self, filter: PanTiltConstantFilter | None,
+                 parent: QWidget = None, enable_joystick: bool = True) -> None:
         super().__init__(parent=parent)
         self.pan = 0
         self.tilt = 0

@@ -10,7 +10,7 @@ class _CommandInsertionDialog(QDialog):
     """This class provides a foundation for command insertion dialogs."""
 
     def __init__(self, parent: QWidget, macro: Macro, supported_filter_list: list[FilterTypeEnumeration],
-                 show: BoardConfiguration, update_callable: callable):
+                 show: BoardConfiguration, update_callable: callable) -> None:
         super().__init__(parent)
 
         self._macro = macro

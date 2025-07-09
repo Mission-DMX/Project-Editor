@@ -12,7 +12,7 @@ class State(Enum):
 
 
 class CueState:
-    def __init__(self, filter_: Filter):
+    def __init__(self, filter_: Filter) -> None:
         self._filter = filter_
         self._state = State.STOP
         self._end_time = datetime.timedelta(seconds=float(20))
@@ -26,7 +26,7 @@ class CueState:
         """Returns the number of the playing cue or -1 if there is none."""
         return self._active_cue if self._state == State.PLAY else -1
 
-    def __str__(self):
+    def __str__(self) -> str:
         ret = ""
         if self._state == State.STOP:
             return "stopped"

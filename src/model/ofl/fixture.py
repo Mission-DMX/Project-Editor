@@ -90,7 +90,7 @@ class ColorSupport(IntFlag):
     HAS_AMBER_SEGMENT = 8
     HAS_UV_SEGMENT = 16
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self == ColorSupport.NO_COLOR_SUPPORT:
             return "No Color Support"
         s = []
@@ -130,7 +130,7 @@ class UsedFixture(QtCore.QObject):
 
     def __init__(self, board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int,
                  parent_universe: int,
-                 start_index: int, uuid: UUID = None, color: str = None):
+                 start_index: int, uuid: UUID = None, color: str = None) -> None:
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[Fixture] = fixture

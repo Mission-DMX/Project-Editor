@@ -15,7 +15,7 @@ logger = getLogger(__file__)
 
 
 class EventCommand(Command):
-    def __init__(self, context: CLIContext):
+    def __init__(self, context: CLIContext) -> None:
         super().__init__(context, "event")
         self.help_text = "Manipulate Events on fish."
 

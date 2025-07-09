@@ -11,7 +11,7 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 class WidgetSetupDialog(QDialog):
     def __init__(self, parent: QWidget, allowed_filters: list[list[FilterTypeEnumeration]], callback: Callable,
-                 pos: QPoint, page: UIPage, swidget: UIWidget):
+                 pos: QPoint, page: UIPage, swidget: UIWidget) -> None:
         """
         Initialize a new widget setup dialog. The purpose of this dialog is to query all required filters for setup and
         registering them with the new widget.

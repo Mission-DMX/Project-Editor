@@ -20,7 +20,7 @@ class FilterNode(Node):
                  name: str,
                  terminals: dict[str, dict[str, str]] = None,
                  allowAddInput: bool = False,
-                 allowAddOutput: bool = False):
+                 allowAddOutput: bool = False) -> None:
         if isinstance(model, Scene):
             if filter_type < 0:
                 self._filter = construct_virtual_filter_instance(scene=model, filter_id=name, filter_type=filter_type)

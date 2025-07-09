@@ -40,7 +40,7 @@ PRESET_LIST: list[tuple[str, str]] = []
 class _EffectSeparator(QWidget):
     """This widget provides a separator between effect categories."""
 
-    def __init__(self, parent: QWidget, text: str):
+    def __init__(self, parent: QWidget, text: str) -> None:
         super().__init__(parent=parent)
         self._children: list[QWidget] = []
         self._text = text
@@ -82,7 +82,7 @@ class _EffectLabel(QWidget):
     button_icon = QIcon.fromTheme("window-new")
 
     def __init__(self, effect_cls: type[Effect], parent: QWidget, separator: _EffectSeparator,
-                 list_widget: "EffectsListWidget"):
+                 list_widget: "EffectsListWidget") -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self.setLayout(layout)
@@ -128,7 +128,7 @@ class EffectsListWidget(QWidget):
 
     effect_selected = Signal(Effect)
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent=parent)
         central_layout = QVBoxLayout()
         self.setLayout(central_layout)

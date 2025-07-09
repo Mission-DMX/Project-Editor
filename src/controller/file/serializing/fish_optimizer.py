@@ -12,7 +12,7 @@ class SceneOptimizerModule:
     This class contains information required for performing post-processing on a single scene.
     """
 
-    def __init__(self, replacing_enabled: bool):
+    def __init__(self, replacing_enabled: bool) -> None:
         self._replacing_enabled = replacing_enabled
         self.channel_override_dict: dict[str, str] = {}
         self.channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []

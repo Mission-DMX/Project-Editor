@@ -25,7 +25,7 @@ class ColorWheelEffect(ColorEffect):
 
     EFFECT_ID = "effect.colors.colorwheel"
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__({"speed": [EffectType.SPEED],
                           "range": [EffectType.GENERIC_NUMBER],
                           "segments": [EffectType.LIGHT_INTENSITY, EffectType.ENABLED_SEGMENTS]})

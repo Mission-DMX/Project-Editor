@@ -16,7 +16,7 @@ class BankSetCommand(Command):
     commands for the Bank Sets
     """
 
-    def __init__(self, context: CLIContext):
+    def __init__(self, context: CLIContext) -> None:
         super().__init__(context, "bank_set")
         self.help_text = "This command displays the help about a certain command."
 

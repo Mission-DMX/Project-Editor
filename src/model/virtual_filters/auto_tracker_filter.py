@@ -4,14 +4,15 @@ from view.show_mode.show_ui_widgets.autotracker.VFilterLightController import VF
 
 
 class _MHControlInstance:
-    def __init__(self, mh_id: int, channel_data_type: DataType.DT_16_BIT | DataType.DT_8_BIT = DataType.DT_16_BIT):
+    def __init__(self, mh_id: int,
+                 channel_data_type: DataType.DT_16_BIT | DataType.DT_8_BIT = DataType.DT_16_BIT) -> None:
         self.datatype: DataType.DT_16_BIT | DataType.DT_8_BIT = channel_data_type
         self.name_prefix: str = f"__MH_{mh_id}__"
 
 
 class AutoTrackerFilter(VirtualFilter):
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_AUTOTRACKER, pos=pos)
         self._control_filters: dict[int, _MHControlInstance] = {}
         self._light_controller: VFilterLightController = VFilterLightController(self)

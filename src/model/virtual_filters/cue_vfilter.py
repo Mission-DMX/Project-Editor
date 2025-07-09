@@ -19,7 +19,7 @@ class CueFilter(VirtualFilter):
     elaboration.
     """
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, filter_type=int(FilterTypeEnumeration.VFILTER_CUES), pos=pos)
         self.in_preview_mode = False
         self.associated_editor_widget: CueEditor | None = None

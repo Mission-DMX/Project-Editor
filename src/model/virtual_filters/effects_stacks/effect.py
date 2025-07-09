@@ -74,7 +74,7 @@ class EffectType(IntFlag):
 
 class Effect(ABC):
 
-    def __init__(self, supported_input_types: dict[str, list[EffectType]]):
+    def __init__(self, supported_input_types: dict[str, list[EffectType]]) -> None:
         super().__init__()
         self._supported_inputs = supported_input_types
         self._inputs: dict[str, Effect | None] = {}

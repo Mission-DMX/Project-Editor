@@ -9,7 +9,7 @@ from model.channel import Channel
 class Universe:
     """DMX universe with 512 channels"""
 
-    def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe):
+    def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe) -> None:
         self._broadcaster = Broadcaster()
         self._universe_proto: proto.UniverseControl_pb2 = universe_proto
         self._channels: Final[list[Channel]] = [Channel(channel_address) for channel_address in range(512)]

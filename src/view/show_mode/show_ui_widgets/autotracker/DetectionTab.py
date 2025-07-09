@@ -15,7 +15,7 @@ logger = getLogger(__name__)
 
 
 class DetectionTab(GuiTab):
-    def __init__(self, name: str, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager) -> None:
         super().__init__(name, instance)
         self.background_frame = None
         self.yolo8 = None

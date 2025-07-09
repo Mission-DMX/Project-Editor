@@ -6,7 +6,7 @@ class ExceptionsDialog(QDialog):
     """Dialog to display generic exception"""
     _open_dialogs: list[QDialog] = []
 
-    def __init__(self, exception: Exception):
+    def __init__(self, exception: Exception) -> None:
         super().__init__()
         self.setWindowTitle("Error")
         layout = QFormLayout(self)

@@ -19,7 +19,8 @@ logger = getLogger(__file__)
 class _DebugVizWidget(UIWidget, ABC):
     """This class is the foundation for widgets that display the state of remote debug nodes"""
 
-    def __init__(self, parent: "UIPage", configuration: dict[str, str], presentation_mode: list[str] | None = None):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str],
+                 presentation_mode: list[str] | None = None) -> None:
         super().__init__(parent, configuration)
         self._config_widget: QWidget | None = None
         self._placeholder_widget: QWidget | None = None
@@ -34,7 +35,7 @@ class _DebugVizWidget(UIWidget, ABC):
             configuration["width"] = "100"
         self.presentation_mode = presentation_mode
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self._config_widget is not None:
             self._config_widget.deleteLater()
         if self._placeholder_widget is not None:
@@ -132,7 +133,7 @@ class _DebugVizWidget(UIWidget, ABC):
 class ColorLabel(QWidget):
     """A label for displaying colors"""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Default color is black"""
         super().__init__(*args, **kwargs)
         self._last_color: tuple[float, float, float] = (0.0, 0.0, 0.0)
@@ -165,7 +166,7 @@ class ColorLabel(QWidget):
 
 
 class ColorDebugVizWidget(_DebugVizWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self.configured_dimensions_changed_callback = self._dimensions_changed
         self._show_widget: ColorLabel | None = None
@@ -217,7 +218,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
 
 
 class _NumberLabel(QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Default number is 0, default mode is without illumination display"""
         super().__init__(*args, **kwargs)
         self.mode: str = ""
@@ -259,7 +260,7 @@ class _NumberLabel(QWidget):
 
 
 class NumberDebugVizWidget(_DebugVizWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration, ["Plain", "Illumination"])
         self._show_widget: _NumberLabel | None = None
         self.configured_dimensions_changed_callback = self._dimensions_changed

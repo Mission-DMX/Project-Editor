@@ -23,7 +23,7 @@ class ShowCommand(Command):
     control over a running show on fish.
     """
 
-    def __init__(self, context: CLIContext):
+    def __init__(self, context: CLIContext) -> None:
         super().__init__(context, "showctl")
 
     def configure_parser(self, parser: argparse.ArgumentParser):

@@ -11,7 +11,7 @@ class FlowLayout(QLayout):
     Layout for floating Widges to width
     """
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
 
         if parent is not None:
@@ -19,7 +19,7 @@ class FlowLayout(QLayout):
 
         self._item_list: list[QLayoutItem] = []
 
-    def __del__(self):
+    def __del__(self) -> None:
         item = self.takeAt(0)
         while item:
             item = self.takeAt(0)

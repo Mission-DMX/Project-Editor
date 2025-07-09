@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class ColorWheelConfigurationWidget(QWidget):
     """This widget enables the user to set up the defaults of the color wheel effect settings."""
 
-    def __init__(self, f: ColorWheelEffect):
+    def __init__(self, f: ColorWheelEffect) -> None:
         super().__init__()
         self._f: ColorWheelEffect = f
         layout = QFormLayout()

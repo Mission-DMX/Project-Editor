@@ -37,7 +37,7 @@ logger = getLogger(__file__)
 class _TriggerListItemWidget(QWidget):
     """Content widget for ListWidgetItems of macro triggers."""
 
-    def __init__(self, parent: QWidget, text: str, t: Trigger):
+    def __init__(self, parent: QWidget, text: str, t: Trigger) -> None:
         super().__init__(parent)
         self._trigger = t
         self._enabled_cb = QCheckBox(self)
@@ -63,7 +63,7 @@ class _TriggerListItemWidget(QWidget):
 class MacroSetupWidget(QSplitter):
     """Widget to configure a selected macro."""
 
-    def __init__(self, parent: QWidget | None, show_config: BoardConfiguration):
+    def __init__(self, parent: QWidget | None, show_config: BoardConfiguration) -> None:
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
         self._show: BoardConfiguration = show_config

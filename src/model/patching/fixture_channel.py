@@ -27,7 +27,7 @@ class FixtureChannel:
     """A channel of a fixture"""
     updated: QtCore.Signal(int) = QtCore.Signal(int)
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self._name: Final[str] = name
         self._type: Final[FixtureChannelType] = self._get_channel_type_from_string()
         self._ignore_black = True

@@ -31,7 +31,7 @@ class CropTab(GuiTab):
         - `video_update()`: Abstract method for updating video content within the tab.
     """
 
-    def __init__(self, name: str, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager) -> None:
         """
         Initialize a CropTab object.
 

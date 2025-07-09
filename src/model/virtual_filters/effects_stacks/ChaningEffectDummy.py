@@ -34,7 +34,7 @@ class ChainingEffectDummy(Effect):
     def get_serializable_effect_name(self) -> str:
         raise RuntimeError("A dummy socket is not supposed to be serialized")
 
-    def __init__(self, e: Effect, socket_name: str, accepted_input_types: list[EffectType]):
+    def __init__(self, e: Effect, socket_name: str, accepted_input_types: list[EffectType]) -> None:
         super().__init__({"": accepted_input_types})
         self._effect = e
         self._sname = socket_name

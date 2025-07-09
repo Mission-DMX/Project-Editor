@@ -14,7 +14,7 @@ from model.ofl.fixture import Fixture, make_used_fixture
 class PatchingInformation:
     """Information for Patching"""
 
-    def __init__(self, fixture: Fixture):
+    def __init__(self, fixture: Fixture) -> None:
         self._fixture: Fixture = fixture
         self.count: int = 0
         self.universe: int = 0

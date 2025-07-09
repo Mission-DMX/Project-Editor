@@ -15,7 +15,7 @@ if typing.TYPE_CHECKING:
 
 class PanTiltConstantFilter(VirtualFilter):
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, pos=pos)
         self._pan: float = 0.8
         self._tilt: float = 0.8

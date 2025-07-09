@@ -11,7 +11,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 class UniverseTreeBrowserWidget(QTreeWidget):
     """This widget displays a browser for the fixtures within the universes."""
 
-    def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False):
+    def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False) -> None:
         super().__init__()
         self._broadcaster = Broadcaster()
         self._show_selection_checkboxes = show_selection_checkboxes
