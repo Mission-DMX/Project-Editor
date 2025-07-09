@@ -12,7 +12,7 @@ class CueListNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
             "time": {"io": "in"},
             "time_scale": {"io": "in"},
-        }, allowAddOutput=True)
+        }, allow_add_output=True)
 
         try:
             mapping_from_file = model.filter_configurations["mapping"]
@@ -56,11 +56,11 @@ class CueListNode(FilterNode):
 
 class ShiftFilterNode(FilterNode):
     def __init__(self, model: Filter, name: str, id: int, data_type: DataType) -> None:
-        super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True, terminals={
+        super().__init__(model=model, filter_type=id, name=name, allow_add_output=True, terminals={
             "input": {"io": "in"},
             "switch_time": {"io": "in"},
             "time": {"io": "in"},
-        } )
+        })
 
         self.filter.in_data_types["input"] = data_type
         self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE
@@ -140,7 +140,7 @@ class AutoTrackerNode(FilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER, name=name,
-                         allowAddOutput=True, terminals={})
+                         allow_add_output=True, terminals={})
         self.setup_output_terminals()
 
     def setup_output_terminals(self) -> None:
@@ -169,7 +169,7 @@ class EffectsStackNode(FilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK, name=name,
-                         allowAddOutput=True, terminals={})
+                         allow_add_output=True, terminals={})
         self.setup_output_terminals()
 
     def setup_output_terminals(self) -> None:

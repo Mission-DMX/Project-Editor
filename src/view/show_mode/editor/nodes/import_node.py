@@ -7,7 +7,7 @@ class ImportNode(FilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_IMPORT, name=name,
-                         terminals={}, allowAddOutput=True)
+                         terminals={}, allow_add_output=True)
         self.update_node_ports()
 
     def update_node_ports(self) -> None:

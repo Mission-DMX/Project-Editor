@@ -157,7 +157,7 @@ class PanTiltConstant(FilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, name=name,
-                         terminals={}, allowAddOutput=True)
+                         terminals={}, allow_add_output=True)
         try:
             self.filter.initial_parameters["pan"] = model.initial_parameters["pan"]
         except:

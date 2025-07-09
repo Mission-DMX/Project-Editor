@@ -2,8 +2,8 @@
 from logging import getLogger
 from typing import override
 
-from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
+from pyqtgraph.flowchart.Flowchart import Node, Terminal
 
 from model import Filter, Scene
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
@@ -20,8 +20,8 @@ class FilterNode(Node):
                  filter_type: int,
                  name: str,
                  terminals: dict[str, dict[str, str]] = None,
-                 allowAddInput: bool = False,
-                 allowAddOutput: bool = False) -> None:
+                 allow_add_input: bool = False,
+                 allow_add_output: bool = False) -> None:
         if isinstance(model, Scene):
             if filter_type < 0:
                 self._filter = construct_virtual_filter_instance(scene=model, filter_id=name, filter_type=filter_type)
@@ -34,7 +34,7 @@ class FilterNode(Node):
             self._filter = None
             logger.warning("Tried creating filter node with unknown model %s", str(type(model)))
 
-        super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
+        super().__init__(name, terminals, allowAddInput=allow_add_input, allowAddOutput=allow_add_output)
 
         self.fsi = FilterSettingsItem(self, self.graphicsItem(),
                                       self._filter) if self._filter.configuration_supported else None

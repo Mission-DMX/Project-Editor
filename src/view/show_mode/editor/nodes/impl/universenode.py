@@ -22,12 +22,12 @@ class UniverseNode(FilterNode):
             super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
                              terminals={
                                  input_link: {"io": "in"} for input_link, _ in model.channel_links.items()},
-                             allowAddInput=True)
+                             allow_add_input=True)
         else:
             super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
                              terminals={
                                  "input_1": {"io": "in"}},
-                             allowAddInput=True)
+                             allow_add_input=True)
 
         try:
             if len(model.filter_configurations) == 0:
