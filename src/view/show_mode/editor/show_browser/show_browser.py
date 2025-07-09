@@ -320,7 +320,7 @@ class ShowBrowser:
             elif isinstance(data, UIPage):
                 self._show.broadcaster.uipage_opened_in_editor_requested.emit({"uipage": data})
 
-    def _universe_item_double_clicked(self, item: QTreeWidgetItem, column: int) -> None:
+    def _universe_item_double_clicked(self, item: QTreeWidgetItem) -> None:
         if not isinstance(item, AnnotatedTreeWidgetItem):
             return
         if isinstance(item.annotated_data, UsedFixture):
