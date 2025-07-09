@@ -84,9 +84,9 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             for fixture_item_index in range(tli.childCount()):
                 fixture_item = tli.child(fixture_item_index)
                 if not isinstance(fixture_item, AnnotatedTreeWidgetItem):
-                    raise ValueError("Expected Annotated Tree Widget Item.")
+                    raise TypeError("Expected Annotated Tree Widget Item.")
                 if not isinstance(fixture_item.annotated_data, UsedFixture):
-                    raise ValueError("Expected data of TreeWidgetItem to be a fixture.")
+                    raise TypeError("Expected data of TreeWidgetItem to be a fixture.")
                 if fixture_item.checkState(0) == Qt.CheckState.Checked:
                     a.append(fixture_item.annotated_data)
         return a
