@@ -99,5 +99,5 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
                                            self._bank_set_control_elements, self)
             layout.addWidget(channel_widget)
             self._universe.channels[fixture.start_index + channel_index].updated.connect(
-                lambda *args, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe))
+                lambda send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe))
         layout.addWidget(QtWidgets.QLabel(fixture.name))
