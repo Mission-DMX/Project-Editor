@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import override
 
 from PySide6.QtWidgets import QWidget
@@ -7,7 +9,6 @@ from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 
 
 class ChainingEffectDummy(Effect):
-
     """The purpose of this class is to provide an Effect if required during rendering"""
 
     def serialize(self) -> dict:
@@ -43,7 +44,8 @@ class ChainingEffectDummy(Effect):
         self._sname = socket_name
         self._accepted_input_types = accepted_input_types
 
-    def attach(self, slot_id: str, e: "Effect") -> bool:
+    @override
+    def attach(self, slot_id: str, e: Effect) -> bool:
         return self._effect.attach(slot_id, e)
 
     def get_human_filter_name(self) -> str:

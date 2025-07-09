@@ -57,6 +57,7 @@ class EffectDummySocket(Effect):
         self._socket = socket
         self._stype = stype
 
+    @override
     def attach(self, slot_id: str, e: Effect) -> bool:
         if not Effect.can_convert_slot(e.get_output_slot_type(), self._stype):
             return False
