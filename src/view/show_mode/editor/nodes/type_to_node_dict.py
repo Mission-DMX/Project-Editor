@@ -152,7 +152,7 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT: ShiftFloatNode.nodeName,
     FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR: ShiftColorNode.nodeName,
     FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS: FaderMainBrightness.nodeName,
-    FilterTypeEnumeration.FILTER_SCRIPTING_LUA: LuaFilterNode.nodeName,
+    FilterTypeEnumeration.FILTER_SCRIPTING_LUA: LuaFilterNode.node_name,
     FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT: Adapter8bitToFloat.nodeName,
     FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT: Adapter16bitToFloat.nodeName,
     FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_FLOAT: AdapterColorToFloatsNode.nodeName,
