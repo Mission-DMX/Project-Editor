@@ -124,10 +124,10 @@ class FilterNodeLibrary(NodeLibrary):
     def _register_debug_nodes(self) -> None:
         """Registers all the debugs nodes."""
         # Add Node -> Debug sub menu
-        self.addNodeType(Debug8BitNode, [("Debug", "Fish-Log",)])
-        self.addNodeType(Debug16BitNode, [("Debug", "Fish-Log",)])
-        self.addNodeType(DebugFloatNode, [("Debug", "Fish-Log",)])
-        self.addNodeType(DebugColorNode, [("Debug", "Fish-Log",)])
+        self.addNodeType(Debug8BitNode, [("Debug", "Fish-Log")])
+        self.addNodeType(Debug16BitNode, [("Debug", "Fish-Log")])
+        self.addNodeType(DebugFloatNode, [("Debug", "Fish-Log")])
+        self.addNodeType(DebugColorNode, [("Debug", "Fish-Log")])
         self.addNodeType(DebugRemote8BitNode, [("Debug",)])
         self.addNodeType(DebugRemote16BitNode, [("Debug",)])
         self.addNodeType(DebugRemoteFloatNode, [("Debug",)])

@@ -60,7 +60,7 @@ class ShiftFilterNode(FilterNode):
             "input": {"io": "in"},
             "switch_time": {"io": "in"},
             "time": {"io": "in"}
-        }, )
+        } )
 
         self.filter.in_data_types["input"] = data_type
         self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE

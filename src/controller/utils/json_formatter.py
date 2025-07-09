@@ -6,13 +6,13 @@ from typing import override
 
 LOG_RECORD_BUILTIN_ATTRS = {"args", "asctime", "created", "exc_info", "exc_text", "filename", "funcName", "levelname",
                             "levelno", "lineno", "module", "msecs", "message", "msg", "name", "pathname", "process",
-                            "processName", "relativeCreated", "stack_info", "thread", "threadName", "taskName", }
+                            "processName", "relativeCreated", "stack_info", "thread", "threadName", "taskName" }
 
 
 class JSONFormatter(logging.Formatter):
     """formatter for logging in json """
 
-    def __init__(self, *, fmt_keys: dict[str, str] | None = None, ) -> None:
+    def __init__(self, *, fmt_keys: dict[str, str] | None = None ) -> None:
         super().__init__()
         self.fmt_keys = fmt_keys if fmt_keys is not None else {}
 
@@ -23,7 +23,7 @@ class JSONFormatter(logging.Formatter):
 
     def _prepare_log_dict(self, record: logging.LogRecord) -> dict[str, str | None]:
         always_fields = {"message": record.getMessage(),
-                         "timestamp": dt.datetime.fromtimestamp(record.created).isoformat(), }
+                         "timestamp": dt.datetime.fromtimestamp(record.created).isoformat() }
         if record.exc_info is not None:
             always_fields["exc_info"] = self.formatException(record.exc_info)
 
