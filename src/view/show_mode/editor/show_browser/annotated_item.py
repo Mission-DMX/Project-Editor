@@ -1,5 +1,3 @@
-from typing import Any
-
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QTableWidgetItem, QTreeWidget, QTreeWidgetItem
 
 from model.events import EventSender
@@ -37,7 +35,7 @@ class AnnotatedListWidgetItem(QListWidgetItem):
 
 
 class AnnotatedTableWidgetItem(QTableWidgetItem):
-    def __init__(self, other: Any) -> None:
+    def __init__(self, other: str) -> None:
         super().__init__(other)
         self._annotated_data: tuple[int, int, str] | None = None
 

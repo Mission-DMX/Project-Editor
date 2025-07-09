@@ -532,7 +532,7 @@ class BankSet:
         return len(self.banks) == 0
 
     @staticmethod
-    def push_messages_now():
+    def push_messages_now() -> None:
         """This method pushes outstanding updates to fish. It should only be called within the Qt event loop."""
         BankSet._fish_connector.push_messages()
 
@@ -563,7 +563,7 @@ class BankSet:
                 i += 1
 
     @staticmethod
-    def handle_column_update_message(message: proto.Console_pb2.fader_column):
+    def handle_column_update_message(message: proto.Console_pb2.fader_column) -> None:
         col = BankSet._active_bank_set.get_column(message.column_id)
         if col:
             col.update_from_message(message)

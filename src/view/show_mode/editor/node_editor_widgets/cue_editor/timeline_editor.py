@@ -138,7 +138,7 @@ class TimelineContainer(QWidget):
         return f"{int(self._keyframes_panel._time_zoom * 10000) / 10000:0>3} Sec/Pixel"
 
     @staticmethod
-    def clear_display():
+    def clear_display() -> None:
         set_seven_seg_display_content(" " * 12, True)
 
     def _keyframe_panel_size_changed(self, new_size: QPoint) -> None:

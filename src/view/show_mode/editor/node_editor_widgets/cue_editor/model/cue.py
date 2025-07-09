@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
@@ -41,7 +43,7 @@ class EndAction(Enum):
             return "next_cue"
 
     @staticmethod
-    def from_format_str(f_str: str):
+    def from_format_str(f_str: str) -> EndAction:
         match f_str:
             case "start_again":
                 return EndAction.START_AGAIN
@@ -84,14 +86,14 @@ class State(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def copy(self) -> "State":
+    def copy(self) -> State:
         """This method needs to return a copy of the state"""
         raise NotImplementedError()
 
 
 class StateEightBit(State):
 
-    def copy(self) -> "State":
+    def copy(self) -> State:
         s = StateEightBit(self._transition_type)
         s._value = self._value
         return s
@@ -121,7 +123,7 @@ class StateEightBit(State):
 
 
 class StateSixteenBit(State):
-    def copy(self) -> "State":
+    def copy(self) -> State:
         s = StateSixteenBit(self._transition_type)
         s._value = self._value
         return s
@@ -151,7 +153,7 @@ class StateSixteenBit(State):
 
 
 class StateDouble(State):
-    def copy(self) -> "State":
+    def copy(self) -> State:
         s = StateDouble(self._transition_type)
         s._value = self._value
         return s
@@ -173,7 +175,7 @@ class StateDouble(State):
 
 
 class StateColor(State):
-    def copy(self) -> "State":
+    def copy(self) -> State:
         s = StateColor(self._transition_type)
         s._value = self._value.copy()
         return s
@@ -203,7 +205,7 @@ class StateColor(State):
 
 
 class KeyFrame:
-    def __init__(self, parent_cue: "Cue") -> None:
+    def __init__(self, parent_cue: Cue) -> None:
         self._states: list[State] = []
         self.timestamp: float = 0.0
         self._parent = parent_cue
@@ -218,7 +220,7 @@ class KeyFrame:
         return f"{self.timestamp}:{"&".join([s.encode() for s in self._states])}"
 
     @staticmethod
-    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: "Cue"):
+    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: Cue) -> str | None:
         parts = f_str.split(":")
         if len(parts) != 2:
             raise ArgumentError("A keyframe definition should contain exactly two elements")
@@ -256,7 +258,7 @@ class KeyFrame:
         """This method deletes the frame from the parent."""
         self._parent._frames.remove(self)
 
-    def copy(self, new_parent: "Cue") -> "KeyFrame":
+    def copy(self, new_parent: Cue) -> KeyFrame:
         kf = KeyFrame(new_parent)
         kf.timestamp = self.timestamp
         for s in self._states:
@@ -357,7 +359,7 @@ class Cue:
         """Add a frame to the cue"""
         self._frames.append(f)
 
-    def remove_channel(self, c: Union["ExternalChannelDefinition", tuple[str, DataType]]) -> None:
+    def remove_channel(self, c: Union[ExternalChannelDefinition, tuple[str, DataType]]) -> None:
         target_index = -1
         name = c[0] if isinstance(c, tuple) else c.name
         for i in range(len(self._channel_definitions)):
@@ -370,7 +372,7 @@ class Cue:
         for f in self._frames:
             f._states.pop(target_index)
 
-    def copy(self) -> "Cue":
+    def copy(self) -> Cue:
         c = Cue()
         c.end_action = self.end_action
         for kf in self._frames:

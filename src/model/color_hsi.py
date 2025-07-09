@@ -1,4 +1,6 @@
 """Color in HSI Form"""
+from __future__ import annotations
+
 import colorsys
 
 from pydantic import confloat
@@ -22,7 +24,7 @@ class ColorHSI:
         self._intensity: confloat(ge=0, le=1) = intensity
 
     @classmethod
-    def from_filter_str(cls, filter_format: str):
+    def from_filter_str(cls, filter_format: str) -> ColorHSI:
         """ HSI Color
 
         This constructor parses the supplied color string and constructs the color object from it.
@@ -81,11 +83,11 @@ class ColorHSI:
         """return color in qt color format"""
         return QColor.fromHslF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)
 
-    def copy(self) -> "ColorHSI":
+    def copy(self) -> ColorHSI:
         """return a copy of The color object"""
         return ColorHSI(self._hue, self._saturation, self._intensity)
 
     @classmethod
-    def from_qt_color(cls, c: QColor):
+    def from_qt_color(cls, c: QColor) -> ColorHSI:
         """ generate a HSI color from qt color format"""
         return ColorHSI(c.hslHueF() * 360.0, c.hslSaturationF(), c.lightnessF())

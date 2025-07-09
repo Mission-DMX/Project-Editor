@@ -1,5 +1,6 @@
 """Universe filter node"""
 from logging import getLogger
+from typing import Any
 
 from pyqtgraph.flowchart import Terminal
 
@@ -53,7 +54,7 @@ class UniverseNode(FilterNode):
             self.filter.default_values["input_1"] = "0"
             self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
 
-    def addInput(self, name: str = "input", **args) -> None:
+    def addInput(self, name: str = "input", **args: dict[str, Any]) -> None:
         """Allows to add up to 512 input channels."""
         next_input = len(self.inputs())
         if next_input >= 512:

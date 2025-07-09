@@ -40,7 +40,7 @@ class DataType(IntFlag):
                                                  DataType.DT_COLOR]]
 
     @staticmethod
-    def from_filter_str(type_definition_string: str):
+    def from_filter_str(type_definition_string: str) -> DataType:
         if isinstance(type_definition_string, DataType):
             return type_definition_string
         match type_definition_string:

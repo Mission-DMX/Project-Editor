@@ -12,7 +12,7 @@ class JoystickHandler:
     joystickMap = {}
 
     @staticmethod
-    def reformat(key: Key):
+    def reformat(key: Key) -> None:
         """Rename the input keys.
         :param key: The input event to rename"""
         if key.keytype == Key.AXIS:

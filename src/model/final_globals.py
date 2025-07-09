@@ -13,7 +13,7 @@ class FinalGlobals:
         return FinalGlobals._screen_width
 
     @staticmethod
-    def set_screen_width(screen_width: int):
+    def set_screen_width(screen_width: int) -> None:
         """set screen width"""
         FinalGlobals._screen_width = screen_width
 
@@ -23,6 +23,6 @@ class FinalGlobals:
         return FinalGlobals._screen_height
 
     @staticmethod
-    def set_screen_height(screen_height: int):
+    def set_screen_height(screen_height: int) -> None:
         """set screen height"""
         FinalGlobals._screen_height = screen_height
