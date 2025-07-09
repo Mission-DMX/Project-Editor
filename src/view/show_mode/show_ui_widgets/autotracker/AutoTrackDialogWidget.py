@@ -11,7 +11,7 @@ from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
 # from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
 from view.show_mode.show_ui_widgets.autotracker.LightSetupTab import LightSetupTab
 from view.show_mode.show_ui_widgets.autotracker.SettingsTab import SettingsTab
-from view.show_mode.show_ui_widgets.autotracker.SourcesTab import SourcesTab
+from view.show_mode.show_ui_widgets.autotracker.sources_tab import SourcesTab
 
 if TYPE_CHECKING:
     from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
