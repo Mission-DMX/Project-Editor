@@ -1,6 +1,8 @@
 
 """This file provides the main control widget for the filter stacking v-filter."""
 
+from typing import override
+
 from PySide6.QtCore import QEvent, Qt
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -93,6 +95,7 @@ class EffectsStackEditor(QWidget):
             self._message_box.setText("Currently there are no slots that can accept this effect type.")
             self._message_box.show()
 
+    @override
     def eventFilter(self, widget: QWidget, event: QEvent) -> bool:
         if event.type() == QEvent.KeyPress and widget is self._effect_placement_bar:
             key = event.key()

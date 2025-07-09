@@ -1,6 +1,7 @@
 """This file contains the widget to stack the effects."""
 
 from logging import getLogger
+from typing import override
 
 from PySide6 import QtCore, QtGui
 from PySide6.QtCore import QRect, Signal
@@ -62,10 +63,12 @@ class EffectCompilationWidget(QWidget):
         self._filter.sockets.append(es)
         self.update()
 
+    @override
     def update(self) -> None:
         self.setMinimumHeight(max(len(self._filter.sockets) * 50, self.minimumHeight()))
         super().update()
 
+    @override
     def paintEvent(self, redraw_hint: QPaintEvent) -> None:
         if self._painting_active:
             return
@@ -269,14 +272,15 @@ class EffectCompilationWidget(QWidget):
 
     def get_maximum_slot_counter(self) -> int:
         """
-        Use this method in order to retrieve the highest available slot index that the currently loaded effect can be
+        Use this method to retrieve the highest available slot index that the currently loaded effect can be
         placed into.
 
-        :returns: The index of the highest slot. Zero based. -1 indicates that there are no slots that can accept the
+        :returns: The index of the highest slot. Zero-based. -1 indicates that there are no slots that can accept the
         effect.
         """
         return len(self._slot_counter) - 1
 
+    @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
         for x, y, widget in self._config_button_positions:
             if x < event.x() < x + 25 and y < event.y() < y + 25:

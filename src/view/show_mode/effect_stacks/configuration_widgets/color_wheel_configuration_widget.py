@@ -1,7 +1,7 @@
 """This file contains the configuration widget for the color wheel effect."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import QDoubleSpinBox, QFormLayout, QSpinBox, QWidget
 
@@ -51,6 +51,7 @@ class ColorWheelConfigurationWidget(QWidget):
         self._minimum_hue.setValue(self._f.min_hue)
         self._maximum_hue.setValue(self._f.max_hue)
 
+    @override
     def setVisible(self, visible: bool) -> None:
         self.load_values_from_effect()
         return super().setVisible(visible)

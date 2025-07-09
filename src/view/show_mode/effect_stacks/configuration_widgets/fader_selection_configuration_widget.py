@@ -1,7 +1,7 @@
 """This file provides the fader input effect configuration widget."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from model.control_desk import ColorDeskColumn, DeskColumn
 from view.utility_widgets.fader_column_selector import FaderColumnSelectorWidget
@@ -20,6 +20,7 @@ class FaderSelectionConfigurationWidget(FaderColumnSelectorWidget):
         self._effect = effect
         super().selection_changed.connect(self._column_selected)
 
+    @override
     def setVisible(self, visible: bool) -> None:
         self.load_values_from_effect()
         return super().setVisible(visible)

@@ -1,3 +1,5 @@
+from typing import override
+
 from PySide6.QtCore import QPoint
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QComboBox, QGridLayout, QWidget
@@ -23,6 +25,7 @@ class UIPlayerWidget(QWidget):
         b.view_to_show_player.connect(self._check_page_update)
         b.uipage_renamed.connect(self._page_renamed)
 
+    @override
     def resizeEvent(self, event: QResizeEvent, /) -> None:
         super().resizeEvent(event)
         self._page_combo_box.pos = QPoint(10, self.height() - 35)
