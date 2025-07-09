@@ -1,8 +1,8 @@
-
 """This file provides the effect (dummy) socket classes.
 An effect socket provides the inputs for a selected fixture. It is therefore the root of effect chaining.
 
 """
+from __future__ import annotations
 
 import json
 from logging import getLogger
@@ -45,18 +45,18 @@ class _EffectDummy_Socket(Effect):
     def resolve_input_port_name(self, slot_id: str) -> str:
         return ""
 
-    def emplace_filter(self, heading_effects: dict[str, tuple["Effect", int]], filter_list: list[Filter]) -> None:
+    def emplace_filter(self, heading_effects: dict[str, tuple[Effect, int]], filter_list: list[Filter]) -> None:
         pass
 
     def get_serializable_effect_name(self) -> str:
         raise RuntimeError("A dummy socket is not supposed to be serialized")
 
-    def __init__(self, socket: "EffectsSocket", stype: EffectType) -> None:
+    def __init__(self, socket: EffectsSocket, stype: EffectType) -> None:
         super().__init__({"": [stype]})
         self._socket = socket
         self._stype = stype
 
-    def attach(self, slot_id: str, e: "Effect") -> bool:
+    def attach(self, slot_id: str, e: Effect) -> bool:
         if not Effect.can_convert_slot(e.get_output_slot_type(), self._stype):
             return False
         return self._socket.place_effect(e, self._stype)
@@ -135,7 +135,7 @@ class EffectsSocket:
             data["segments"] = self._segment_socket.serialize()
         return json.dumps(data)
 
-    def deserialize(self, data: str, parent: "EffectsStack") -> None:
+    def deserialize(self, data: str, parent: EffectsStack) -> None:
         data: dict = json.loads(data)
         self._color_socket = None
         self._segment_socket = None
