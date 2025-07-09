@@ -1,5 +1,5 @@
 """serialization functions"""
-from xml.etree import ElementTree
+import xml.etree.ElementTree as ET
 
 from controller.file.serializing.events_and_macros import _write_event_sender, _write_macro
 from controller.file.serializing.scene_serialization import generate_scene_xml_description
@@ -17,15 +17,16 @@ from model.events import get_all_senders
 
 
 def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
-               assemble_for_fish_loading: bool = False) -> ElementTree.Element:
-    """Creates a xml element from the given board configuration.
+               assemble_for_fish_loading: bool = False) -> ET.Element:
+    """Creates an XML element from the given board configuration.
 
     Args:
         board_configuration: The board configuration to be converted.
-        assemble_for_fish_loading: Pass True if the XML is build for fish. This will skip UI and resolve virtual filters
+        assemble_for_fish_loading: Pass True if the XML is build for fish.
+                                    This will skip the UI and resolve virtual filters
 
     Returns:
-        The xml element containing the board configuration.
+        The XML element containing the board configuration.
         See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information
     """
     pn.current_step_description = "Creating document root."
@@ -52,7 +53,7 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
             _create_physical_location_element(physical=proto.physical_location, parent=universe_element)
 
         if fixtures := board_configuration.fixtures:
-            patching_element = ElementTree.SubElement(universe_element, "patching")
+            patching_element = ET.SubElement(universe_element, "patching")
             for fixture in fixtures:
                 _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
 
@@ -76,8 +77,8 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
     return root
 
 
-def _create_board_configuration_element(board_configuration: BoardConfiguration) -> ElementTree.Element:
-    """Creates a xml element of type scene.
+def _create_board_configuration_element(board_configuration: BoardConfiguration) -> ET.Element:
+    """Creates an XML element of a type scene.
 
     <board_configuration xmlns:p1="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile"
      default_active_scene="0" notes="notes" show_name="Show Name"
@@ -86,7 +87,7 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
     </board_configuration>
     """
     # TODO we're not filling in the version attribute
-    return ElementTree.Element("bord_configuration", attrib={
+    return ET.Element("bord_configuration", attrib={
         "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -96,7 +97,7 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
     })
 
 
-def _create_device_element(device: Device, parent: ElementTree.Element) -> ElementTree.Element:
+def _create_device_element(device: Device, parent: ET.Element) -> ET.Element:
     """TODO implement patching of devices
 
     <device channel="0" name="name" type="type" universe_id="0">

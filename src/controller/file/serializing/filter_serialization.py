@@ -1,12 +1,12 @@
 """XML serialization for Filters"""
-from xml.etree import ElementTree
+import xml.etree.ElementTree as ET
 
 from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 from model import Filter
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
 
-def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element, for_fish: bool,
+def _create_filter_element_for_fish(filter_: Filter, parent: ET.Element, for_fish: bool,
                                     om: SceneOptimizerModule) -> None:
     """Creates a xml element of type filter.
 
@@ -34,7 +34,7 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
         else:
             if isinstance(filter_, VirtualFilter):
                 filter_.serialize()
-        filter_element = ElementTree.SubElement(parent, "filter", attrib={
+        filter_element = ET.SubElement(parent, "filter", attrib={
             "id": str(filter_.filter_id),
             "type": str(filter_.filter_type),
             "pos": f"{filter_.pos[0]},{filter_.pos[1]}",
@@ -50,7 +50,7 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
 
 
 def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOptimizerModule,
-                                                    scene_element: ElementTree.Element) -> None:
+                                                    scene_element: ET.Element) -> None:
     """
     This function writes the channel links of the scene to the XML data.
     This method needs to be called *after* every filter object has been placed as only then all required information
@@ -68,7 +68,7 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOpt
     """
     # TODO check that no optimizations are performed if not fish
     om.wrap_up(scene_element)
-    channel_links_to_be_created: list[tuple[Filter, ElementTree.SubElement]] = om.channel_link_list
+    channel_links_to_be_created: list[tuple[Filter, ET.SubElement]] = om.channel_link_list
     override_port_mapping: dict[str, str] = om.channel_override_dict
     default_nodes: dict[DataType, list] = {}
     time_node = None
@@ -123,13 +123,13 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOpt
                 elif datatype == DataType.DT_COLOR:
                     type = FilterTypeEnumeration.FILTER_CONSTANT_COLOR
                 if default_value == "time":
-                    filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
+                    filter_element = ET.SubElement(scene_element, "filter", attrib={
                         "id": "timedefaultfilter",
                         "type": str(FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT),
                         "pos": "0,0",
                     })
                 else:
-                    filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
+                    filter_element = ET.SubElement(scene_element, "filter", attrib={
                         "id": "const" + str(datatype) + "val" + default_value,
                         "type": str(type),
                         "pos": "0,0",
@@ -137,7 +137,7 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOpt
                     _create_initial_parameters_element(("value", default_value), filter_element)
 
 
-def _create_channel_link_element(channel_link: tuple[str, str], parent: ElementTree.Element) -> ElementTree.Element:
+def _create_channel_link_element(channel_link: tuple[str, str], parent: ET.Element) -> ET.Element:
     """Creates an xml element of type channellink.
 
     <channellink input_channel_id="id" output_channel_id="id">
@@ -145,14 +145,14 @@ def _create_channel_link_element(channel_link: tuple[str, str], parent: ElementT
 
     # Some nodes have input and output named value.
     # Internally, the input is saved as 'value_in', but must be written as 'value'.
-    return ElementTree.SubElement(parent, "channellink", attrib={
+    return ET.SubElement(parent, "channellink", attrib={
         "input_channel_id": str(channel_link[0]),
         "output_channel_id": str(channel_link[1]),
     })
 
 
 def _create_filter_configuration_element(filter_configuration: tuple[str, str],
-                                         parent: ElementTree.Element) -> ElementTree.Element:
+                                         parent: ET.Element) -> ET.Element:
     """Creates a xml element of type filterConfiguration.
 
     <filterConfiguration name="key" value="value">
@@ -160,19 +160,19 @@ def _create_filter_configuration_element(filter_configuration: tuple[str, str],
 
     # if check for Universe node: Filter Configuration is saved backwards to display QLineEdit the right way
     key, value = filter_configuration
-    return ElementTree.SubElement(parent, "filterConfiguration", attrib={
+    return ET.SubElement(parent, "filterConfiguration", attrib={
         "name": str(key),
         "value": str(value),
     })
 
 
 def _create_initial_parameters_element(initial_parameter: tuple[str, str],
-                                       parent: ElementTree.Element) -> ElementTree.Element:
+                                       parent: ET.Element) -> ET.Element:
     """Creates a xml element of type initialParameters.
 
     <initialParameters name="key" value="value">
     """
-    return ElementTree.SubElement(parent, "initialParameters", attrib={
+    return ET.SubElement(parent, "initialParameters", attrib={
         "name": str(initial_parameter[0]),
         "value": str(initial_parameter[1]),
     })

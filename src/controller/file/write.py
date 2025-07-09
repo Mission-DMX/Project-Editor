@@ -6,7 +6,7 @@ Usage:
 """
 import os
 from shutil import copyfile
-from xml.etree import ElementTree
+from xml.etree import ElementTree as ET
 
 from controller.file.serializing.general_serialization import create_xml
 from controller.utils.process_notifications import get_process_notifier
@@ -31,8 +31,8 @@ def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     pn.current_step_description = "Writing to disk."
     pn.current_step_number += 1
     with open(file_name, "w+", encoding="UTF-8") as file:
-        ElementTree.indent(xml)
-        file.write(ElementTree.tostring(xml, encoding="unicode", method="xml"))
+        ET.indent(xml)
+        file.write(ET.tostring(xml, encoding="unicode", method="xml"))
     pn.current_step_number += 1
     pn.close()
     return True

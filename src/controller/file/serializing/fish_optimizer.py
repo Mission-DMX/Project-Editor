@@ -1,5 +1,5 @@
+import xml.etree.ElementTree as ET
 from logging import getLogger
-from xml.etree import ElementTree
 
 from model import Filter
 from model.filter import DataType, FilterTypeEnumeration
@@ -15,7 +15,7 @@ class SceneOptimizerModule:
     def __init__(self, replacing_enabled: bool) -> None:
         self._replacing_enabled = replacing_enabled
         self.channel_override_dict: dict[str, str] = {}
-        self.channel_link_list: list[tuple[Filter, ElementTree.SubElement]] = []
+        self.channel_link_list: list[tuple[Filter, ET.SubElement]] = []
         self._global_time_input_filter: Filter | None = None
         self._main_brightness_input_filter: Filter | None = None
         self._universe_filter_dict: dict[str, list[tuple[str, str, str]]] = {}
@@ -96,7 +96,7 @@ class SceneOptimizerModule:
             self.channel_override_dict[
                 f"{f.filter_id}:{output_channel_name}"] = f"{substitution_filter.filter_id}:{output_channel_name}"
 
-    def _emplace_universe_filters(self, scene_element: ElementTree.Element) -> None:
+    def _emplace_universe_filters(self, scene_element: ET.Element) -> None:
         """
         This method places the replacement for the aggregated universe output filters.
         :param scene_element: The scene to place the new filter into.
@@ -110,23 +110,23 @@ class SceneOptimizerModule:
                 if foreign_filter_output_channel in self.channel_override_dict:
                     foreign_filter_output_channel = self.channel_override_dict.get(foreign_filter_output_channel)
                 channel_mappings[filter_input_channel] = foreign_filter_output_channel
-            filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
+            filter_element = ET.SubElement(scene_element, "filter", attrib={
                 "id": str(self._first_universe_filter_id[universe]),
                 "type": str(FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT),
                 "pos": "0,0",
             })
             for param_k, param_v in filter_config_parameters.items():
-                ElementTree.SubElement(filter_element, "filterConfiguration", {
+                ET.SubElement(filter_element, "filterConfiguration", {
                     "name": str(param_k),
                     "value": str(param_v),
                 })
             for input_ch, output_ch in channel_mappings.items():
-                ElementTree.SubElement(filter_element, "channellink", attrib={
+                ET.SubElement(filter_element, "channellink", attrib={
                     "input_channel_id": str(input_ch),
                     "output_channel_id": str(output_ch),
                 })
 
-    def wrap_up(self, scene_element: ElementTree.Element) -> None:
+    def wrap_up(self, scene_element: ET.Element) -> None:
         """This method needs to be called in order to apply the optimization steps that have been staged.
         :param scene_element: The scene XML element to write to."""
         self._emplace_universe_filters(scene_element)
