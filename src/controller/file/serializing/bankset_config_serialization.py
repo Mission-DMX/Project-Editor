@@ -30,7 +30,7 @@ def lcd_color_to_string(display_color: proto.Console_pb2.lcd_color) -> str:
             return "white"
 
 
-def _create_scene_bankset(root_element: ET.Element, scene_element: ET.Element, scene: Scene) -> None:
+def _create_scene_bankset(root_element: ET.Element, scene: Scene) -> None:
     bs_element = ET.SubElement(root_element, "bankset", attrib={
         "linked_by_default": "true",
         "id": str(scene.linked_bankset.id),

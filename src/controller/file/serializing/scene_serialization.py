@@ -68,7 +68,7 @@ def generate_scene_xml_description(assemble_for_fish_loading: bool, root: ET.Ele
     """
     scene_element = _create_scene_element(scene=scene, parent=root)
     if scene.linked_bankset and not assemble_for_fish_loading:
-        _create_scene_bankset(root, scene_element, scene)
+        _create_scene_bankset(root, scene)
     pn.total_step_count += len(scene.filters)
     om = SceneOptimizerModule(assemble_for_fish_loading)
     for filter_ in scene.filters:
