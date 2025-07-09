@@ -37,7 +37,7 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
         filter_element = ElementTree.SubElement(parent, "filter", attrib={
             "id": str(filter_.filter_id),
             "type": str(filter_.filter_type),
-            "pos": f"{filter_.pos[0]},{filter_.pos[1]}"
+            "pos": f"{filter_.pos[0]},{filter_.pos[1]}",
         })
 
         om.channel_link_list.append((filter_, filter_element))
@@ -126,13 +126,13 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOpt
                     filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
                         "id": "timedefaultfilter",
                         "type": str(FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT),
-                        "pos": "0,0"
+                        "pos": "0,0",
                     })
                 else:
                     filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
                         "id": "const" + str(datatype) + "val" + default_value,
                         "type": str(type),
-                        "pos": "0,0"
+                        "pos": "0,0",
                     })
                     _create_initial_parameters_element(("value", default_value), filter_element)
 
@@ -147,7 +147,7 @@ def _create_channel_link_element(channel_link: tuple[str, str], parent: ElementT
     # Internally, the input is saved as 'value_in', but must be written as 'value'.
     return ElementTree.SubElement(parent, "channellink", attrib={
         "input_channel_id": str(channel_link[0]),
-        "output_channel_id": str(channel_link[1])
+        "output_channel_id": str(channel_link[1]),
     })
 
 
@@ -162,7 +162,7 @@ def _create_filter_configuration_element(filter_configuration: tuple[str, str],
     key, value = filter_configuration
     return ElementTree.SubElement(parent, "filterConfiguration", attrib={
         "name": str(key),
-        "value": str(value)
+        "value": str(value),
     })
 
 
@@ -174,5 +174,5 @@ def _create_initial_parameters_element(initial_parameter: tuple[str, str],
     """
     return ElementTree.SubElement(parent, "initialParameters", attrib={
         "name": str(initial_parameter[0]),
-        "value": str(initial_parameter[1])
+        "value": str(initial_parameter[1]),
     })

@@ -11,7 +11,7 @@ class CueListNode(FilterNode):
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
             "time": {"io": "in"},
-            "time_scale": {"io": "in"}
+            "time_scale": {"io": "in"},
         }, allowAddOutput=True)
 
         try:
@@ -59,7 +59,7 @@ class ShiftFilterNode(FilterNode):
         super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True, terminals={
             "input": {"io": "in"},
             "switch_time": {"io": "in"},
-            "time": {"io": "in"}
+            "time": {"io": "in"},
         } )
 
         self.filter.in_data_types["input"] = data_type

@@ -8,5 +8,5 @@ def _create_ui_hint_element(ui_hint: tuple[str, str], parent: ElementTree.Elemen
     """
     return ElementTree.SubElement(parent, "uihint", attrib={
         "name": str(ui_hint[0]),
-        "value": str(ui_hint[1])
+        "value": str(ui_hint[1]),
     })

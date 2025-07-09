@@ -338,7 +338,7 @@ class _SenderAddDialog(QDialog):
             "fish.builtin.midirtp",
             "fish.builtin.xtouchgpio",
             "fish.builtin.gpio",
-            "fish.builtin.macrokeypad"
+            "fish.builtin.macrokeypad",
         ])
         layout.addRow("Type: ", self._type_cb)
         layout.addWidget(self._button_box)

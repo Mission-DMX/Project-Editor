@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from model import UIPage
 
 _clock_font_id = QFontDatabase.addApplicationFont(
-    resource_path(os.path.join("resources", "fonts", "roboto-mono-latin-700-normal.ttf"))
+    resource_path(os.path.join("resources", "fonts", "roboto-mono-latin-700-normal.ttf")),
 )
 _font_families = QFontDatabase.applicationFontFamilies(_clock_font_id)
 

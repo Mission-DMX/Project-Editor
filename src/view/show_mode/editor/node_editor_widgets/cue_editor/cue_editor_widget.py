@@ -531,7 +531,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self.get_widget(),
             "Preview",
             "Would you like to switch to live preview?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
         if self._input_dialog == QMessageBox.StandardButton.Yes:

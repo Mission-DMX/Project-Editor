@@ -16,7 +16,7 @@ class ArithmeticMACNode(FilterNode):
             "factor1": {"io": "in"},
             "factor2": {"io": "in"},
             "summand": {"io": "in"},
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
         self.filter.in_data_types["factor1"] = DataType.DT_DOUBLE
         self.filter.in_data_types["factor2"] = DataType.DT_DOUBLE
@@ -36,7 +36,7 @@ class ArithmeticFloatTo16BitNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_16BIT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_16_BIT
@@ -51,7 +51,7 @@ class ArithmeticFloatTo8BitNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_8_BIT
@@ -65,7 +65,7 @@ class ArithmeticRoundNode(FilterNode):
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_ROUND, name=name, terminals={
             "value_in": {"io": "in"},
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
@@ -82,7 +82,7 @@ class ArithmeticLogarithmNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_LOGARITHM, name=name,
                          terminals={
                              "value_in": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
@@ -100,7 +100,7 @@ class ArithmeticExponentialNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_EXPONENTIAL, name=name,
                          terminals={
                              "value_in": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
@@ -118,7 +118,7 @@ class ArithmeticMinimumNode(FilterNode):
                          terminals={
                              "param1": {"io": "in"},
                              "param2": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         self.filter.in_data_types["param1"] = DataType.DT_DOUBLE
         self.filter.in_data_types["param2"] = DataType.DT_DOUBLE
@@ -139,7 +139,7 @@ class ArithmeticMaximumNode(FilterNode):
                          terminals={
                              "param1": {"io": "in"},
                              "param2": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         self.filter.in_data_types["param1"] = DataType.DT_DOUBLE
         self.filter.in_data_types["param2"] = DataType.DT_DOUBLE

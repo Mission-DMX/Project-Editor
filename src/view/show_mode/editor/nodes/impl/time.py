@@ -10,7 +10,7 @@ class TimeNode(FilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, name=name, terminals={
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
         self.filter.out_data_types["value"] = DataType.DT_DOUBLE
         self.channel_hints["value"] = " [ms]"
@@ -26,7 +26,7 @@ class TimeSwitchOnDelay8BitNode(FilterNode):
                          terminals={
                              "value_in": {"io": "in"},
                              "time": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
@@ -47,7 +47,7 @@ class TimeSwitchOnDelay16BitNode(FilterNode):
                          terminals={
                              "value_in": {"io": "in"},
                              "time": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
@@ -68,7 +68,7 @@ class TimeSwitchOnDelayFloatNode(FilterNode):
                          terminals={
                              "value_in": {"io": "in"},
                              "time": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]
@@ -89,7 +89,7 @@ class TimeSwitchOffDelay8BitNode(FilterNode):
                          terminals={
                              "value_in": {"io": "in"},
                              "time": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
 
         try:
@@ -111,7 +111,7 @@ class TimeSwitchOffDelay16BitNode(FilterNode):
                          terminals={
                              "value_in": {"io": "in"},
                              "time": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
 
         try:
@@ -133,7 +133,7 @@ class TimeSwitchOffDelayFloatNode(FilterNode):
                          terminals={
                              "value_in": {"io": "in"},
                              "time": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         try:
             self.filter.filter_configurations["delay"] = model.filter_configurations["delay"]

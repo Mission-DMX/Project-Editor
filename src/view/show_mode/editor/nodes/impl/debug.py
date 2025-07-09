@@ -9,7 +9,7 @@ class DebugNode(FilterNode):
 
     def __init__(self, model: Filter, name: str, filter_type: int) -> None:
         super().__init__(model, filter_type, name, terminals={
-            "value": {"io": "in"}
+            "value": {"io": "in"},
         })
 
 

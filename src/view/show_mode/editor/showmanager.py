@@ -36,7 +36,7 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget.setTabsClosable(True)
         self._open_page_tab_widget.addTab(QWidget(), "+")
         plus_button = self._open_page_tab_widget.tabBar().tabButton(
-            self._open_page_tab_widget.count() - 1, QTabBar.ButtonPosition.RightSide
+            self._open_page_tab_widget.count() - 1, QTabBar.ButtonPosition.RightSide,
         )
         if plus_button:
             plus_button.resize(0, 0)
@@ -135,7 +135,7 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget.insertTab(
             self._open_page_tab_widget.tabBar().count() - 1,
             tab,
-            bankset.description
+            bankset.description,
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
 
@@ -154,7 +154,7 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget.insertTab(
             self._open_page_tab_widget.tabBar().count() - 1,
             tab,
-            uipage.scene.human_readable_name + "/UI Page"  # TODO query index
+            uipage.scene.human_readable_name + "/UI Page",  # TODO query index
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
 

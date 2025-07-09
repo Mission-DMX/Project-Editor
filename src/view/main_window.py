@@ -77,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
             (
                 "Actions",
                 MainWidget(CombinedActionSetupWidget(self, self._broadcaster, self._board_configuration), self),
-                self._broadcaster.view_to_action_config.emit
+                self._broadcaster.view_to_action_config.emit,
             ),
         ]
 
@@ -172,19 +172,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("Save Showfile", self._save_show, "S"),
                 ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
                 ("---", None, None),
-                ("Settings", self.open_show_settings, ",")
+                ("Settings", self.open_show_settings, ","),
             ],
             "Edit": [
                 ("&Undo", None, "Z"),  # TODO implement edit history
-                ("&Redo", None, "Shift+Z")
+                ("&Redo", None, "Shift+Z"),
             ],
             # "Show": [
             #    ("Scene Wizard", self._open_scene_setup_wizard, None)
             #    # TODO link wizard that creates a theater scene based on patched fixtures
             # ],
             "Help": [
-                ("&About", self._open_about_window, None)
-            ]
+                ("&About", self._open_about_window, None),
+            ],
         }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())

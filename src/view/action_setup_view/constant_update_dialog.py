@@ -32,9 +32,9 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-                FilterTypeEnumeration.FILTER_CONSTANT_COLOR
+                FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
             ],
-            show, update_callable
+            show, update_callable,
         )
         self._int_tb = QSpinBox()
         self._int_tb.setMinimum(0)

@@ -134,7 +134,7 @@ class LightSetupTab(GuiTab):
 
     async def _async_btn_frame_pressed(self) -> None:
         await self.instance.settings.lights.frame(
-            2000, self.instance.settings.lights.corners
+            2000, self.instance.settings.lights.corners,
         )
 
     def worker_thread(self) -> None:
@@ -147,7 +147,7 @@ class LightSetupTab(GuiTab):
         # Define an asyncio function to run in the worker thread
         async def my_async_function(self_: LightSetupTab) -> None:
             await self_.instance.settings.lights.frame(
-                2000, self_.instance.settings.lights.corners
+                2000, self_.instance.settings.lights.corners,
             )
             logger.info("Asyncio code running in worker thread")
 
@@ -169,7 +169,7 @@ class LightSetupTab(GuiTab):
 
     async def _async_slider(self) -> None:
         await self.instance.settings.lights.set_position(
-            [self.sliderx1.value(), self.sliderx2.value()]
+            [self.sliderx1.value(), self.sliderx2.value()],
         )
         await self.instance.settings.lights.set_brightness(self.slidery1.value())
 

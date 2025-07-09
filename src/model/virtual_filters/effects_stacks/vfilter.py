@@ -167,7 +167,7 @@ class EffectsStack(VirtualFilter):
                     uf = fixture
             if uf is None:
                 logger.warning(
-                    "There is no fixture associated with the address %s/%s", universe, channel + 1
+                    "There is no fixture associated with the address %s/%s", universe, channel + 1,
                 )
                 continue
             s = EffectsSocket(uf)

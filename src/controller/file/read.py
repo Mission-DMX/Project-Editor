@@ -342,7 +342,7 @@ def _append_ui_page(page_def: ElementTree.Element, scene: Scene) -> None:
             corresponding_filter = scene.get_filter_by_id(fid)
             if not corresponding_filter:
                 logger.error("Did not load filter for ui widget with id '%s' from scene '%s' as it does not exist.",
-                             fid, scene
+                             fid, scene,
                              )
                 continue
             filters.append(corresponding_filter)

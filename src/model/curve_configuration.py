@@ -51,7 +51,7 @@ class CurveConfiguration:
             "true" if self.append_features_using_addition else "false",
             ",".join([str(k) + ":" + str(v) for k, v in self.frequencies.items()]),
             ",".join([str(k) + ":" + str(v) for k, v in self.amplitudes.items()]),
-            ",".join([str(k) + ":" + str(v) for k, v in self.offsets.items()])
+            ",".join([str(k) + ":" + str(v) for k, v in self.offsets.items()]),
         ])
 
     @classmethod

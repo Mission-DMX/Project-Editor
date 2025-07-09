@@ -175,17 +175,17 @@ class _BankEditWidget(QWidget):
             column_layout.addWidget(QLabel("Display Text:"))
             self._text_widgets.append(QLineEdit(column_widget))
             self._text_widgets[i].textChanged.connect(
-                lambda text, ci=i: self._display_text_field_changed(ci, text)
+                lambda text, ci=i: self._display_text_field_changed(ci, text),
             )
             column_layout.addWidget(self._text_widgets[i])
             self._top_inverted_widgets.append(QCheckBox("Top line inverted", column_widget))
             self._top_inverted_widgets[i].stateChanged.connect(
-                lambda checked, ci=i: self._top_inverted_changed(ci, checked)
+                lambda checked, ci=i: self._top_inverted_changed(ci, checked),
             )
             column_layout.addWidget(self._top_inverted_widgets[i])
             self._bottom_inverted_widgets.append(QCheckBox("Bottom line inverted", column_widget))
             self._bottom_inverted_widgets[i].stateChanged.connect(
-                lambda checked, ci=i: self._bottom_inverted_changed(ci, checked)
+                lambda checked, ci=i: self._bottom_inverted_changed(ci, checked),
             )
             column_layout.addWidget(self._bottom_inverted_widgets[i])
             column_layout.addWidget(QLabel("Secondary position"))
@@ -193,7 +193,7 @@ class _BankEditWidget(QWidget):
             self._raw_encoder_spin_boxes[i].setMinimum(0)
             self._raw_encoder_spin_boxes[i].setMaximum(2 ** 16 - 1)
             self._raw_encoder_spin_boxes[i].valueChanged.connect(
-                lambda new_value, ci=i: self._raw_encoder_value_changed(ci, new_value)
+                lambda new_value, ci=i: self._raw_encoder_value_changed(ci, new_value),
             )
             column_layout.addWidget(self._raw_encoder_spin_boxes[i])
             column_layout.addWidget(QLabel("Primary position"))
@@ -201,7 +201,7 @@ class _BankEditWidget(QWidget):
             self._raw_fader_spin_boxes[i].setMinimum(0)
             self._raw_fader_spin_boxes[i].setMaximum(2 ** 16 - 1)
             self._raw_fader_spin_boxes[i].valueChanged.connect(
-                lambda new_value, ci=i: self._raw_fader_value_changed(ci, new_value)
+                lambda new_value, ci=i: self._raw_fader_value_changed(ci, new_value),
             )
             column_layout.addWidget(self._raw_fader_spin_boxes[i])
             column_layout.addWidget(QLabel("Hue"))
@@ -209,7 +209,7 @@ class _BankEditWidget(QWidget):
             self._color_hue_dspin_boxes[i].setMinimum(0.0)
             self._color_hue_dspin_boxes[i].setMaximum(360.0)
             self._color_hue_dspin_boxes[i].valueChanged.connect(
-                lambda new_value, ci=i: self._color_hue_value_changed(ci, new_value)
+                lambda new_value, ci=i: self._color_hue_value_changed(ci, new_value),
             )
             column_layout.addWidget(self._color_hue_dspin_boxes[i])
             column_layout.addWidget(QLabel("Saturation"))
@@ -217,7 +217,7 @@ class _BankEditWidget(QWidget):
             self._color_saturation_dspin_boxes[i].setMinimum(0.0)
             self._color_saturation_dspin_boxes[i].setMaximum(1.0)
             self._color_saturation_dspin_boxes[i].valueChanged.connect(
-                lambda new_value, ci=i: self._color_saturation_value_changed(ci, new_value)
+                lambda new_value, ci=i: self._color_saturation_value_changed(ci, new_value),
             )
             column_layout.addWidget(self._color_saturation_dspin_boxes[i])
             column_layout.addWidget(QLabel("Intensity"))
@@ -225,7 +225,7 @@ class _BankEditWidget(QWidget):
             self._color_intensity_dspin_boxes[i].setMinimum(0.0)
             self._color_intensity_dspin_boxes[i].setMaximum(1.0)
             self._color_intensity_dspin_boxes[i].valueChanged.connect(
-                lambda new_value, ci=i: self._color_intensity_value_changed(ci, new_value)
+                lambda new_value, ci=i: self._color_intensity_value_changed(ci, new_value),
             )
             column_layout.addWidget(self._color_intensity_dspin_boxes[i])
             self._color_labels.append(QWidget(column_widget))

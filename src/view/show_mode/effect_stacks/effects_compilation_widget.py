@@ -41,7 +41,7 @@ class EffectCompilationWidget(QWidget):
         self.setMinimumWidth(600)
         self.setSizePolicy(
             QSizePolicy.MinimumExpanding,
-            QSizePolicy.MinimumExpanding
+            QSizePolicy.MinimumExpanding,
         )
         self._pending_effect: Effect | None = None
         self._slot_counter: list[tuple[str, Effect]] = []
@@ -297,7 +297,7 @@ class EffectCompilationWidget(QWidget):
                     parent_effect.clear_slot(slot_name)
                 else:
                     logger.error("The effect '%s' should be deleted but the parent is None. FIXME!",
-                                 effect.get_human_filter_name()
+                                 effect.get_human_filter_name(),
                                  )
                     self.update()
                 return

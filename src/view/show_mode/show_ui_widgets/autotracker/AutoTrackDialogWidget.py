@@ -41,7 +41,7 @@ class AutoTrackDialogWidget(QTabWidget):
             # We're constructing the player widget
             self.instance: InstanceManager = InstanceManager(f)
             tabs = [
-                DetectionTab("Detect", self.instance)
+                DetectionTab("Detect", self.instance),
             ]
         else:
             self.instance = provided_instance

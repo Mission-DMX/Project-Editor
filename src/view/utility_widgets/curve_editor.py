@@ -53,14 +53,14 @@ class _WaveRenderer(PlotWidget):
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SIN] + numpy.multiply(
                 numpy.sin(numpy.multiply(numpy.add(x, base_phase),
                                          2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.SIN])),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SIN]
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SIN],
             ))
             # TODO implement sin config
         if features & BaseCurve.COS:
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.COS] + numpy.multiply(
                 numpy.cos(numpy.multiply(numpy.add(x, base_phase),
                                          2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.COS])),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.COS]
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.COS],
             ))
             # TODO implement cos config
         if features & BaseCurve.TAN:
@@ -68,28 +68,28 @@ class _WaveRenderer(PlotWidget):
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TAN] + numpy.multiply(
                 numpy.tan(numpy.multiply(numpy.add(x, base_phase),
                                          2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.TAN])),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TAN]
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TAN],
             ))
         if features & BaseCurve.ARC_SIN:
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_SIN] + numpy.multiply(
                 numpy.arcsin(numpy.add(x, base_phase)),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_SIN]
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_SIN],
             ))
         if features & BaseCurve.ARC_COS:
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_COS] + numpy.multiply(
                 numpy.arccos(numpy.add(x, base_phase)),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_COS]
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_COS],
             ))
         if features & BaseCurve.ARC_TAN:
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_TAN] + numpy.multiply(
                 numpy.arctan(numpy.add(x, base_phase)),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_TAN]
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_TAN],
             ))
         if features & BaseCurve.SAWTOOTH:
             # TODO sawtooth config, also include option for repeats/speed until 360 (180 = 2)
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SAWTOOTH] + numpy.multiply(
                 numpy.mod(numpy.add(y, base_phase), 180.0),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SAWTOOTH]
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SAWTOOTH],
             ))
         if features & BaseCurve.RECT:
             pulse_width = 180
@@ -97,7 +97,7 @@ class _WaveRenderer(PlotWidget):
             for i in range(int(base_phase * steps / pulse_width), steps, pulse_width):
                 ya[i:i + pulse_width] = 1.0
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.RECT] + numpy.multiply(
-                ya, base_amplitude * self._curve_configuration.amplitudes[BaseCurve.RECT]
+                ya, base_amplitude * self._curve_configuration.amplitudes[BaseCurve.RECT],
             ))
         if features & BaseCurve.TRIANGLE:
             # TODO triangle wave config
@@ -111,7 +111,7 @@ class _WaveRenderer(PlotWidget):
                                                                              i + pulse_width + 1:i + pulse_width * 2])
             y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TRIANGLE] + numpy.multiply(
                 ya,
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TRIANGLE]
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TRIANGLE],
             ))
         try:
             self.setYRange(numpy.max(y) * 1.5, numpy.min(y) * 1.5)

@@ -36,7 +36,7 @@ class BoxGridItem(QObject):
         elif isinstance(icon, QIcon):
             self._icon = icon.pixmap(
                 self.parent().box_width / 2 if isinstance(self.parent(), BoxGridRenderer) else 50,
-                self.parent().box_height / 2 if isinstance(self.parent(), BoxGridRenderer) else 60
+                self.parent().box_height / 2 if isinstance(self.parent(), BoxGridRenderer) else 60,
             )
 
     @property

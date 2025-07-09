@@ -58,7 +58,7 @@ class NodeEditorWidget(QWidget):
                             self._page.parent_scene)
                 self._flowchart.create_node_with_filter(
                     filter_=filter_candidate,
-                    node_type=type_to_node[filter_candidate.filter_type], is_from_different_page=True
+                    node_type=type_to_node[filter_candidate.filter_type], is_from_different_page=True,
                 )
         if len(still_missing_filters) > 0:
             raise Exception(f"Missing filters '{still_missing_filters}' in scene '{self._page.parent_scene}'.")

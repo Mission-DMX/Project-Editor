@@ -116,7 +116,7 @@ class _FKeysTrigger(Trigger):
             from controller.network import NetworkManager
             msg = button_state_change(
                 button=ButtonCode.Value(f"BTN_F{new_value + 1}_F{new_value + 1}"),
-                new_state=ButtonState.BS_ACTIVE
+                new_state=ButtonState.BS_ACTIVE,
             )
             NetworkManager().button_msg_to_x_touch(msg)
 

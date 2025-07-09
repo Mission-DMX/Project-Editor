@@ -49,7 +49,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
         filter_id=f"universe-output_{_sanitize_name(name)}",
         filter_type=11,
         pos=(avg_x, max_y + (_filter_channel_height * fixture.channel_length) / 2),
-        scene=scene
+        scene=scene,
     )
 
     filter.filter_configurations["universe"] = str(fixture.parent_universe)
@@ -204,7 +204,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 scene=fp.parent_scene,
                 filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
                 filter_id=color_input_filter.filter_id + "__brightness_mixin",
-                pos=(color_input_filter.pos[0] - _additional_filter_depth, color_input_filter.pos[1])
+                pos=(color_input_filter.pos[0] - _additional_filter_depth, color_input_filter.pos[1]),
             )
             fp.filters.append(brightness_mixin_filter)
             added_depth = max(added_depth, 2 * _additional_filter_depth)

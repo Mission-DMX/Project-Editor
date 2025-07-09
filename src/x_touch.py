@@ -55,12 +55,12 @@ VIEW_NOT_TEMPERATURE_MSG: proto.Console_pb2.button_state_change = proto.Console_
 
 SAVE_BUTTON_ACTIVE_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_SAVE_SAVE,
-    new_state=proto.Console_pb2.ButtonState.BS_ACTIVE
+    new_state=proto.Console_pb2.ButtonState.BS_ACTIVE,
 )
 
 SAVE_BUTTON_DEACTIVATE_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
     button=proto.Console_pb2.ButtonCode.BTN_SAVE_SAVE,
-    new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+    new_state=proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE,
 )
 
 

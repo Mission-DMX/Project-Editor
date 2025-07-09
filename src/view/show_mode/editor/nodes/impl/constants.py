@@ -45,7 +45,7 @@ class Constants8BitNode(TextPreviewRendererMixin):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_8BIT, name=name, terminals={
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
 
         try:
@@ -70,7 +70,7 @@ class Constants16BitNode(TextPreviewRendererMixin):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, name=name, terminals={
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
 
         try:
@@ -95,7 +95,7 @@ class ConstantsFloatNode(TextPreviewRendererMixin):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, name=name, terminals={
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
         try:
             self.filter.initial_parameters["value"] = model.initial_parameters["value"]
@@ -122,7 +122,7 @@ class ConstantsColorNode(FilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name, terminals={
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
         try:
             self.filter.initial_parameters["value"] = model.initial_parameters["value"]

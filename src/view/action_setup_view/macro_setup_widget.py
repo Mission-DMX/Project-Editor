@@ -179,7 +179,7 @@ class MacroSetupWidget(QSplitter):
         tw = _TriggerListItemWidget(
             self._trigger_list,
             f"[{str(self._trigger_list.count()) if t.enabled else '-'}] {t.name}",
-            t
+            t,
         )
         item.setSizeHint(tw.sizeHint())
         self._trigger_list.addItem(item)

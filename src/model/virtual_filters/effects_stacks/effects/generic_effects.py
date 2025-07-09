@@ -74,7 +74,7 @@ class FunctionEffect(GenericEffect):
             base_phase_filter = Filter(self.get_scene(), f"{prefix}_base_phase",
                                        FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
                                        filter_configurations={}, initial_parameters={
-                    "value": str(wc.base_phase)
+                    "value": str(wc.base_phase),
                 })
             filter_list.append(base_phase_filter)
             base_phase_filter = base_phase_filter.filter_id + ":value"
@@ -106,7 +106,7 @@ class FunctionEffect(GenericEffect):
                 amplitude_filter = Filter(self.get_scene(), f"{prefix}_{curve.name}_amplitude",
                                           FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
                                           filter_configurations={}, initial_parameters={
-                        "value": str(wc.base_amplitude * wc.amplitudes[curve])
+                        "value": str(wc.base_amplitude * wc.amplitudes[curve]),
                     })
                 filter_list.append(amplitude_filter)
                 f_filter.channel_links["factor_outer"] = amplitude_filter.filter_id + ":value"
@@ -115,7 +115,7 @@ class FunctionEffect(GenericEffect):
                     frequency_filter = Filter(self.get_scene(), f"{prefix}_{curve.name}_frequency",
                                               FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, self.get_position(),
                                               filter_configurations={}, initial_parameters={
-                            "value": str(wc.frequencies[curve])
+                            "value": str(wc.frequencies[curve]),
                         })
                     filter_list.append(frequency_filter)
                     f_filter.channel_links["factor_inner"] = frequency_filter.filter_id + ":value"

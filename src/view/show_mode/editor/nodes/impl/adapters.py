@@ -31,7 +31,7 @@ class Adapter16BitToBoolNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL, name=name,
                          terminals={
                              "value_in": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
         self.filter.out_data_types["value"] = DataType.DT_BOOL
@@ -45,7 +45,7 @@ class Adapter16bitToFloat(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
 
         self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
@@ -60,7 +60,7 @@ class Adapter8bitToFloat(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
 
         self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
@@ -78,7 +78,7 @@ class AdapterColorToRGBNode(FilterNode):
                              "value": {"io": "in"},
                              "r": {"io": "out"},
                              "g": {"io": "out"},
-                             "b": {"io": "out"}
+                             "b": {"io": "out"},
                          })
         self.filter.in_data_types["value"] = DataType.DT_COLOR
         self.filter.out_data_types["r"] = DataType.DT_8_BIT
@@ -98,7 +98,7 @@ class AdapterColorToRGBWNode(FilterNode):
                              "r": {"io": "out"},
                              "g": {"io": "out"},
                              "b": {"io": "out"},
-                             "w": {"io": "out"}
+                             "w": {"io": "out"},
                          })
         self.filter.in_data_types["value"] = DataType.DT_COLOR
         self.filter.out_data_types["r"] = DataType.DT_8_BIT
@@ -120,7 +120,7 @@ class AdapterColorToRGBWANode(FilterNode):
                              "g": {"io": "out"},
                              "b": {"io": "out"},
                              "w": {"io": "out"},
-                             "a": {"io": "out"}
+                             "a": {"io": "out"},
                          })
         self.filter.in_data_types["value"] = DataType.DT_COLOR
         self.filter.out_data_types["r"] = DataType.DT_8_BIT
@@ -141,7 +141,7 @@ class AdapterFloatToColorNode(FilterNode):
                              "h": {"io": "in"},
                              "s": {"io": "in"},
                              "i": {"io": "in"},
-                             "value": {"io": "out"}
+                             "value": {"io": "out"},
                          })
         self.filter.in_data_types["h"] = DataType.DT_DOUBLE
         self.filter.in_data_types["s"] = DataType.DT_DOUBLE
@@ -180,7 +180,7 @@ class AdapterFloatToRange(FilterNode):
                  FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE) -> None:
         super().__init__(model, int(filter_type), name, terminals={
             "value_in": {"io": "in"},
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
 
         try:
@@ -309,7 +309,7 @@ class ColorBrightnessMixinNode(FilterNode):
                 "out": {"io": "out"},
                 "color_in": {"io": "in"},
                 "brightness": {"io": "in"},
-            }
+            },
                          )
         self.filter.out_data_types["out"] = DataType.DT_COLOR
         self.filter.in_data_types["color_in"] = DataType.DT_COLOR

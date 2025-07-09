@@ -113,17 +113,17 @@ class SceneOptimizerModule:
             filter_element = ElementTree.SubElement(scene_element, "filter", attrib={
                 "id": str(self._first_universe_filter_id[universe]),
                 "type": str(FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT),
-                "pos": "0,0"
+                "pos": "0,0",
             })
             for param_k, param_v in filter_config_parameters.items():
                 ElementTree.SubElement(filter_element, "filterConfiguration", {
                     "name": str(param_k),
-                    "value": str(param_v)
+                    "value": str(param_v),
                 })
             for input_ch, output_ch in channel_mappings.items():
                 ElementTree.SubElement(filter_element, "channellink", attrib={
                     "input_channel_id": str(input_ch),
-                    "output_channel_id": str(output_ch)
+                    "output_channel_id": str(output_ch),
                 })
 
     def wrap_up(self, scene_element: ElementTree.Element) -> None:

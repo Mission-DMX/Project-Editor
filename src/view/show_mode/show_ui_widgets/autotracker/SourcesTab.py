@@ -86,7 +86,7 @@ class SourcesTab(GuiTab):
             h, w, *_ = frame.shape
 
             frame = CropOptimizer(
-                "crop", (crop[2], h - crop[3], crop[0], w - crop[1])
+                "crop", (crop[2], h - crop[3], crop[0], w - crop[1]),
             ).process(frame)
             self.image_label.setPixmap(cv2qim(frame))
 
@@ -102,7 +102,7 @@ class SourcesTab(GuiTab):
             h, w, *_ = frame.shape
 
             frame = CropOptimizer(
-                "crop", (crop[2], h - crop[3], crop[0], w - crop[1])
+                "crop", (crop[2], h - crop[3], crop[0], w - crop[1]),
             ).process(frame)
             self.image_label.setPixmap(cv2qim(frame))
 

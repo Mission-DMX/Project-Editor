@@ -23,7 +23,7 @@ class _CommandInsertionDialog(QDialog):
         self._scene_selection_cb = QComboBox(self)
         self._scene_selection_cb.setEditable(False)
         self._scene_selection_cb.addItems(
-            [s.human_readable_name if len(s.human_readable_name) > 0 else str(s.scene_id) for s in self._show.scenes]
+            [s.human_readable_name if len(s.human_readable_name) > 0 else str(s.scene_id) for s in self._show.scenes],
         )
         self._scene_selection_cb.setCurrentIndex(-1)
         self._scene_selection_cb.currentIndexChanged.connect(self._scene_selected)

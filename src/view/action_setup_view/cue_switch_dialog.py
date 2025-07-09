@@ -14,7 +14,7 @@ class _InsertCueSwitchDialog(_CommandInsertionDialog):
         super().__init__(
             parent, macro,
             [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES],
-            show, update_callable
+            show, update_callable,
         )
 
         self._cue_selection_cb = QComboBox(self)

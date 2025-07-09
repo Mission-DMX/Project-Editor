@@ -45,7 +45,7 @@ class DetectionTab(GuiTab):
             frame = self.instance.get_preview_pipeline().optimize(frame)
             h, w, *_ = frame.shape
             frame = CropOptimizer(
-                "crop", (crop[2], h - crop[3], crop[0], w - crop[1])
+                "crop", (crop[2], h - crop[3], crop[0], w - crop[1]),
             ).process(frame)
             scale, detections = self.process_frame(frame)
             draw_boxes(frame, detections, scale)

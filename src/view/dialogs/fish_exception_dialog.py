@@ -55,7 +55,7 @@ class HoverTextBrowser(QtWidgets.QTextBrowser):
                     break
                 cursor.setPosition(start_pos)
                 cursor.movePosition(
-                    QtGui.QTextCursor.MoveOperation.Right, QtGui.QTextCursor.MoveMode.KeepAnchor, len(word)
+                    QtGui.QTextCursor.MoveOperation.Right, QtGui.QTextCursor.MoveMode.KeepAnchor, len(word),
                 )
                 text_format = QtGui.QTextCharFormat()
                 text_format.setForeground(QtGui.QColor("blue"))

@@ -16,8 +16,8 @@ class UniverseDialog(QtWidgets.QDialog):
                 remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
                     ip_address="10.0.15.1",
                     port=6454,
-                    universe_on_device=patching_universe_or_id
-                )
+                    universe_on_device=patching_universe_or_id,
+                ),
                 # ftdi_dongle=proto.UniverseControl_pb2.Universe.USBConfig(
                 #    vendor_id=0x0403,
                 #    product_id=0x6001,
@@ -82,8 +82,8 @@ class UniverseDialog(QtWidgets.QDialog):
                 remote_location=proto.UniverseControl_pb2.Universe.ArtNet(
                     ip_address=self._remote_location_widgets[0].text(),
                     port=int(self._remote_location_widgets[1].text()),
-                    universe_on_device=int(self._remote_location_widgets[2].text())
-                )
+                    universe_on_device=int(self._remote_location_widgets[2].text()),
+                ),
             )
         else:
             # ftdi dongle
@@ -93,8 +93,8 @@ class UniverseDialog(QtWidgets.QDialog):
                     vendor_id=int(self._ftdi_widgets[0].text()),
                     product_id=int(self._ftdi_widgets[1].text()),
                     serial=self._ftdi_widgets[2].text(),
-                    device_name=self._ftdi_widgets[3].text()
-                )
+                    device_name=self._ftdi_widgets[3].text(),
+                ),
             )
         self.accept()
 

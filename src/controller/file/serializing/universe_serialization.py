@@ -16,7 +16,7 @@ def _create_universe_element(universe: Universe, parent: ElementTree.Element) ->
     return ElementTree.SubElement(parent, "universe", attrib={
         "id": str(universe.id),
         "name": str(universe.name),
-        "description": str(universe.description)
+        "description": str(universe.description),
     })
 
 
@@ -39,7 +39,7 @@ def _create_artnet_location_element(artnet_location: proto.UniverseControl_pb2.U
     return ElementTree.SubElement(parent, "artnet_location", attrib={
         "ip_address": str(artnet_location.ip_address),
         "udp_port": str(artnet_location.port),
-        "device_universe_id": str(artnet_location.universe_on_device)
+        "device_universe_id": str(artnet_location.universe_on_device),
     })
 
 
@@ -54,7 +54,7 @@ def _create_ftdi_location_element(ftdi_location: proto.UniverseControl_pb2.Unive
         "vendor_id": str(ftdi_location.vendor_id),
         "product_id": str(ftdi_location.product_id),
         "device_name": str(ftdi_location.device_name),
-        "serial_identifier": str(ftdi_location.serial)
+        "serial_identifier": str(ftdi_location.serial),
     })
 
 
@@ -72,5 +72,5 @@ def _create_fixture_element(fixture: UsedFixture, patching_element: ElementTree.
         # Todo add to doku "universe": str(fixture.universe_id),
         "start": str(fixture.start_index),
         "fixture_file": fixture.fixture_file,
-        "mode": str(fixture.mode_index)
+        "mode": str(fixture.mode_index),
     })

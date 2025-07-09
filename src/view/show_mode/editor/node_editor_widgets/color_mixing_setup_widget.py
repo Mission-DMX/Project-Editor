@@ -75,7 +75,7 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
     def _get_configuration(self) -> dict[str, str]:
         return {
             "input_count": str(self._channel_count_spinbox.value()),
-            "method": str(self._method_selection_box.currentText())
+            "method": str(self._method_selection_box.currentText()),
         }
 
     def _load_configuration(self, conf: dict[str, str]) -> None:

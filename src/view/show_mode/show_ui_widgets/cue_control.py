@@ -89,7 +89,7 @@ class CueControlUIWidget(UIWidget):
             self._filter.linked_ui_widgets.remove(self)
         if self._filter is not None:
             f.scene.board_configuration.remove_filter_update_callback(
-                self._filter.scene.scene_id, self._filter.filter_id, self._cue_state.update
+                self._filter.scene.scene_id, self._filter.filter_id, self._cue_state.update,
             )
         super().set_filter(f, i)
         self.associated_filters["cue_filter"] = f.filter_id

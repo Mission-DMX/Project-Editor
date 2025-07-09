@@ -76,7 +76,7 @@ class SocketStreamReader:
 
         result = bytes(buf[: idx + 1])
         self._recv_buffer = b"".join(
-            (memoryview(buf)[(idx + 1):], self._recv_buffer)
+            (memoryview(buf)[(idx + 1):], self._recv_buffer),
         )
         return result
 

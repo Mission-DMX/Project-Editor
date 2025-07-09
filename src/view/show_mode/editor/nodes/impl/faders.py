@@ -63,7 +63,7 @@ class FaderRawNode(_FaderNode):
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_RAW, name=name, terminals={
             "primary": {"io": "out"},
-            "secondary": {"io": "out"}
+            "secondary": {"io": "out"},
         })
 
         self.filter.out_data_types["primary"] = DataType.DT_16_BIT
@@ -76,7 +76,7 @@ class FaderHSINode(_FaderNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name, terminals={
-            "color": {"io": "out"}
+            "color": {"io": "out"},
         })
 
         try:
@@ -95,7 +95,7 @@ class FaderHSIANode(_FaderNode):
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIA, name=name, terminals={
             "color": {"io": "out"},
-            "amber": {"io": "out"}
+            "amber": {"io": "out"},
         })
 
         try:
@@ -115,7 +115,7 @@ class FaderHSIUNode(_FaderNode):
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIU, name=name, terminals={
             "color": {"io": "out"},
-            "uv": {"io": "out"}
+            "uv": {"io": "out"},
         })
 
         try:
@@ -136,7 +136,7 @@ class FaderHSIAUNode(_FaderNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIAU, name=name, terminals={
             "color": {"io": "out"},
             "amber": {"io": "out"},
-            "uv": {"io": "out"}
+            "uv": {"io": "out"},
         })
         try:
             self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[

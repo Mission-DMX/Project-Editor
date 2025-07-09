@@ -104,7 +104,7 @@ class ColorWheelEffect(ColorEffect):
                 if self._inputs["segments"].get_output_slot_type() != EffectType.ENABLED_SEGMENTS
                 else EffectType.ENABLED_SEGMENTS,
                 filter_list,
-                prefix + "__segments_brightness_"
+                prefix + "__segments_brightness_",
             )
             if "intensity" in brightness_channel_names:
                 bg_input_channel_name = brightness_channel_names["intensity"].split(":")[0]

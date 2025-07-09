@@ -82,7 +82,7 @@ class CLIContext:
             BankSetCommand(self),
             ShowCommand(self),
             EventCommand(self),
-            HelpCommand(self)
+            HelpCommand(self),
         ]
         self.selected_bank: BankSet | None = None
         self.selected_column: DeskColumn | None = None

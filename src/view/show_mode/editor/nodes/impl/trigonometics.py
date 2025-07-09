@@ -14,7 +14,7 @@ class TrigonometricNode(FilterNode):
             "factor_inner": {"io": "in"},
             "phase": {"io": "in"},
             "offset": {"io": "in"},
-            "value": {"io": "out"}
+            "value": {"io": "out"},
         })
         self.filter.in_data_types["value_in"] = DataType.DT_DOUBLE
         self.filter.in_data_types["factor_outer"] = DataType.DT_DOUBLE

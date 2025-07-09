@@ -36,7 +36,7 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
     "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]]),
     "debug_number": ("Number Output", NumberDebugVizWidget, [
         [FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT,
-         FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT]])
+         FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT]]),
 }
 
 

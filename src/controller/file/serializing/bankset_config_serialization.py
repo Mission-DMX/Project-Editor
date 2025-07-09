@@ -31,20 +31,20 @@ def lcd_color_to_string(display_color: proto.Console_pb2.lcd_color) -> str:
 def _create_scene_bankset(root_element: ElementTree.Element, scene_element: ElementTree.Element, scene: Scene) -> None:
     bs_element = ElementTree.SubElement(root_element, "bankset", attrib={
         "linked_by_default": "true",
-        "id": str(scene.linked_bankset.id)
+        "id": str(scene.linked_bankset.id),
     })
     for bank in scene.linked_bankset.banks:
         bank_item = ElementTree.SubElement(bs_element, "bank")
         for col in bank.columns:
             if isinstance(col, ColorDeskColumn):
                 column_item = ElementTree.SubElement(bank_item, "hslcolumn", attrib={
-                    "color": col.color.format_for_filter()
+                    "color": col.color.format_for_filter(),
                 })
             elif isinstance(col, RawDeskColumn):
                 column_item = ElementTree.SubElement(bank_item, "rawcolumn", attrib={
                     "secondary_text_line": col.secondary_text_line,
                     "fader_position": str(col.fader_position),
-                    "encoder_position": str(col.encoder_position)
+                    "encoder_position": str(col.encoder_position),
                 })
             else:
                 logging.error("Unsupported desk column type while saving file.")

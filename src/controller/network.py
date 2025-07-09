@@ -72,13 +72,13 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._broadcaster.send_request_dmx_data.connect(self._react_request_dmx_data)
         self._broadcaster.change_run_mode.connect(self.update_state)
         self._broadcaster.view_to_file_editor.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER),
         )
         self._broadcaster.view_to_show_player.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER)
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_FILTER),
         )
         self._broadcaster.view_to_console_mode.connect(
-            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT)
+            lambda: self.update_state(proto.RealTimeControl_pb2.RunMode.RM_DIRECT),
         )
 
         self._broadcaster.load_show_file.connect(self.load_show_file)
@@ -127,7 +127,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         """
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
             msg = proto.DirectMode_pb2.dmx_output(
-                universe_id=universe.universe_proto.id, channel_data=[channel.value for channel in universe.channels]
+                universe_id=universe.universe_proto.id, channel_data=[channel.value for channel in universe.channels],
             )
 
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_DMX_OUTPUT)
@@ -318,7 +318,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                     proto.Console_pb2.ButtonCode.BTN_F5_F5,
                     proto.Console_pb2.ButtonCode.BTN_F6_F6,
                     proto.Console_pb2.ButtonCode.BTN_F7_F7,
-                    proto.Console_pb2.ButtonCode.BTN_F8_F8
+                    proto.Console_pb2.ButtonCode.BTN_F8_F8,
                 ]:
                     self._broadcaster.desk_f_key_pressed.emit(
                         int(msg.button) - int(proto.Console_pb2.ButtonCode.BTN_F1_F1))
@@ -374,7 +374,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         """
         # print(ET.tostring(xml, encoding="utf8", method="xml"))
         msg = proto.FilterMode_pb2.load_show_file(
-            show_data=ET.tostring(xml, encoding="utf8", method="xml"), goto_default_scene=goto_default_scene
+            show_data=ET.tostring(xml, encoding="utf8", method="xml"), goto_default_scene=goto_default_scene,
         )
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
 
@@ -398,7 +398,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                     FilterTypeEnumeration.FILTER_FADER_HSI,
                     FilterTypeEnumeration.FILTER_FADER_HSIA,
                     FilterTypeEnumeration.FILTER_FADER_HSIU,
-                    FilterTypeEnumeration.FILTER_FADER_HSIAU
+                    FilterTypeEnumeration.FILTER_FADER_HSIAU,
                 ]:
                     self.send_gui_update_to_fish(scene.scene_id, f.filter_id, "set", str(scene.linked_bankset.id),
                                                  enque=not push_direct)

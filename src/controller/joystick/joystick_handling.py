@@ -38,7 +38,7 @@ class JoystickHandler:
     def __new__(cls) -> JoystickHandler:
         """Connect a joystick and setup the key bindings"""
         mngr = pyjoystick.ThreadEventManager(event_loop=run_event_loop,
-                                             handle_key_event=lambda key: cls.reformat(key)
+                                             handle_key_event=lambda key: cls.reformat(key),
                                              )
         cls.joystickMap["No Joystick"] = JoystickList.NO_JOYSTICK
         cls.joystickMap["Gamepad Left"] = JoystickList.GAMEPAD_LEFT
