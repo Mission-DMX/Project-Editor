@@ -1,3 +1,5 @@
+from typing import override
+
 from PySide6.QtGui import QAction, QColor
 from PySide6.QtWidgets import (
     QColorDialog,
@@ -89,11 +91,13 @@ class ColorSelectionUIWidget(UIWidget):
         self._player_widget = self._build_base_widget(parent, True)
         return self._player_widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if not self._config_widget:
             self._config_widget = self._build_base_widget(parent, False)
         return self._config_widget
 
+    @override
     def copy(self, new_parent: UIPage) -> UIWidget:
         w = ColorSelectionUIWidget(new_parent, self.configuration)
         self.copy_base(w)
@@ -101,6 +105,7 @@ class ColorSelectionUIWidget(UIWidget):
         w._value = self._value.copy()
         return w
 
+    @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         w = QWidget(parent)
         layout = QVBoxLayout()

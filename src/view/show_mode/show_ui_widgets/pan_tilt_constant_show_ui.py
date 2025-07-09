@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from logging import getLogger
+from typing import override
 
 from PySide6.QtWidgets import QComboBox, QDialog, QLabel, QVBoxLayout, QWidget
 
@@ -21,7 +24,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._player_widget: QWidget | None = None
         self._conf_widget: QWidget | None = None
 
-    def set_filter(self, f: "Filter", i: int) -> None:
+    def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
         super().set_filter(f, i)
@@ -56,6 +59,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         w.setLayout(layout)
         return w
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if self._conf_widget is not None:
             self._conf_widget.deleteLater()
@@ -63,12 +67,14 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._conf_widget.setEnabled(False)
         return self._conf_widget
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    @override
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = PanTiltConstantControlUIWidget(self.parent, self.configuration)
         w.set_filter(self._filter, 0)
         super().copy_base(w)
         return w
 
+    @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return QLabel()
 

@@ -48,6 +48,7 @@ class _DebugVizWidget(UIWidget, ABC):
         # As we only consume values, we do not need to generate updates
         return []
 
+    @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         if self._config_widget is not None:
             self._config_widget.deleteLater()
@@ -113,6 +114,7 @@ class _DebugVizWidget(UIWidget, ABC):
         w.setLayout(layout)
         self._config_widget = w
 
+    @override
     def get_configuration_widget(self, parent: QWidget) -> QWidget:
         if self._placeholder_widget is not None:
             self._placeholder_widget.deleteLater()
@@ -197,6 +199,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
             )
             self._show_widget.deleteLater()
 
+    @override
     def copy(self, new_parent: UIPage) -> UIWidget:
         c = ColorDebugVizWidget(new_parent, self.configuration.copy())
         super().copy_base(c)

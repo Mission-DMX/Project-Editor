@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont, QFontDatabase, QFontMetrics
@@ -41,6 +41,7 @@ class ClockUIWidget(UIWidget):
         self._construct_widget(parent)
         return self._widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         return _configure_label(QLabel("HH:MM:SS"))
 
@@ -57,10 +58,12 @@ class ClockUIWidget(UIWidget):
         text = f"{ct.hour:02}:{ct.minute:02}:{ct.second:02}"
         self._widget.setText(text)
 
+    @override
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         w = ClockUIWidget(new_parent, self.configuration.copy())
         self.copy_base(w)
         return w
 
+    @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return QLabel("No configuration for clock yet.")

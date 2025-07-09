@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import sys
+from typing import override
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -17,7 +20,7 @@ from model.filter import FilterTypeEnumeration
 
 
 class ConstantNumberButtonList(UIWidget):
-
+    @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         # TODO add option to configure images instead of text (to be used as GOBO select or color wheel choice etc.)
         widget = QWidget(parent)
@@ -72,7 +75,7 @@ class ConstantNumberButtonList(UIWidget):
         add_button.clicked.connect(add_action)
         return widget
 
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
@@ -111,12 +114,14 @@ class ConstantNumberButtonList(UIWidget):
         self.construct_player_widget(parent)
         return self._player_widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if not self._configuration_widget:
             self.construct_configuration_widget(parent)
         return self._configuration_widget
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    @override
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = ConstantNumberButtonList(self.parent, self.configuration.copy())
         w.set_filter(self._model, 0)
         super().copy_base(w)
@@ -132,7 +137,7 @@ class ConstantNumberButtonList(UIWidget):
                 name, value = value_name_tuple.split(":")
                 value = float(value) if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(value)
                 button = QPushButton(name, self._player_widget)
-                button.clicked.connect(lambda checked=False, _value=value: self._set_value(_value))
+                button.clicked.connect(lambda _value=value: self._set_value(_value))
                 button.setMinimumWidth(max(30, len(name) * 10))
                 button.setMinimumHeight(30)
                 layout.addWidget(button)

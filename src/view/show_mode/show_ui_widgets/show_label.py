@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, override
 
 from markdown import markdown
 from PySide6.QtWidgets import QDialog, QLabel, QTextEdit, QWidget
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class ShowLabelUIWidget(UIWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._player_widget: QLabel | None = None
         self._conf_widget: QLabel | None = None
@@ -26,6 +28,7 @@ class ShowLabelUIWidget(UIWidget):
         self._player_widget = self._construct_widget(parent)
         return self._player_widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if self._conf_widget is not None:
             self._conf_widget.deleteLater()
@@ -40,11 +43,13 @@ class ShowLabelUIWidget(UIWidget):
         w.setMinimumHeight(10)
         return w
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    @override
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = ShowLabelUIWidget(new_parent, self.configuration.copy())
         super().copy_base(w)
         return w
 
+    @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         if self._edit_widget is not None:
             return self._edit_widget

@@ -1,6 +1,7 @@
 """This file contains a widget with a textfield and a button, extended by a list of buttons to update constants nodes
 with a new value or predefined one in fish"""
 import sys
+from typing import override
 
 from PySide6.QtWidgets import QDialog, QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
@@ -15,6 +16,7 @@ class ButtonsWithValueSubmit(UIWidget):
     provides also (from ConstantNumberButtonList) a button list to send pre-defined values
     """
 
+    @override
     def get_config_dialog_widget(self, parent:QDialog) -> QWidget:
         return self._button_list.get_config_dialog_widget(parent)
 
@@ -39,9 +41,11 @@ class ButtonsWithValueSubmit(UIWidget):
         self.construct_player_widget(parent)
         return self._player_widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         return self._button_list.get_configuration_widget(parent)
 
+    @override
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         fid = self.associated_filters.get("constant")
         w = ButtonsWithValueSubmit(self.parent, self.configuration.copy())

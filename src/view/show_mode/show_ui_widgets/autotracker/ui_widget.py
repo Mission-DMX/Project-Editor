@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import QDialog, QWidget
 
@@ -58,13 +58,16 @@ class AutoTrackerUIWidget(UIWidget):
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         return self._tracker_player_widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         return self._tracker_configuration_widget
 
+    @override
     def copy(self, new_parent: UIPage) -> UIWidget:
         w = AutoTrackerUIWidget(new_parent, self._tracker_player_widget.instance.settings.as_dict())
         w.set_filter(self._associated_filter, 0)
         return w
 
+    @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return self._tracker_player_widget
