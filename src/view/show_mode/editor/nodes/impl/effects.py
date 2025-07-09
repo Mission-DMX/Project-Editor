@@ -1,5 +1,5 @@
 from model import DataType, Scene
-from model.filter import FilterTypeEnumeration
+from model.filter import FilterTypeEnumeration, Filter
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -8,7 +8,7 @@ class CueListNode(FilterNode):
     """Filter to represent any filter fader"""
     nodeName = "Cues"
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
             "time": {"io": "in"},
             "time_scale": {"io": "in"}
@@ -55,7 +55,7 @@ class CueListNode(FilterNode):
 
 
 class ShiftFilterNode(FilterNode):
-    def __init__(self, model, name, id: int, data_type: DataType):
+    def __init__(self, model: Filter, name: str, id: int, data_type: DataType):
         super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True, terminals={
             "input": {"io": "in"},
             "switch_time": {"io": "in"},
@@ -110,35 +110,35 @@ class ShiftFilterNode(FilterNode):
 class Shift8BitNode(ShiftFilterNode):
     nodeName = "filter_shift_8bit"
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str):
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT, DataType.DT_8_BIT)
 
 
 class Shift16BitNode(ShiftFilterNode):
     nodeName = "filter_shift_16bit"
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str):
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT, DataType.DT_16_BIT)
 
 
 class ShiftFloatNode(ShiftFilterNode):
     nodeName = "filter_shift_float"
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str):
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT, DataType.DT_DOUBLE)
 
 
 class ShiftColorNode(ShiftFilterNode):
     nodeName = "filter_shift_color"
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str):
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR, DataType.DT_COLOR)
 
 
 class AutoTrackerNode(FilterNode):
     nodeName = "AutoTracker"
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER, name=name,
                          allowAddOutput=True, terminals={})
         self.setup_output_terminals()
@@ -167,7 +167,7 @@ class AutoTrackerNode(FilterNode):
 class EffectsStackNode(FilterNode):
     nodeName = "EffectsStack"
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK, name=name,
                          allowAddOutput=True, terminals={})
         self.setup_output_terminals()

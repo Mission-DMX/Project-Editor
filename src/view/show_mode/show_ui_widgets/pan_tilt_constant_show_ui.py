@@ -1,6 +1,6 @@
 from logging import getLogger
 
-from PySide6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget, QDialog
 
 from controller.joystick.joystick_handling import JoystickHandler
 from model import Filter, UIPage, UIWidget
@@ -69,7 +69,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         super().copy_base(w)
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return QLabel()
 
     def insert_action(self):

@@ -23,10 +23,9 @@ from model.scene import FilterPage
 from utility import resource_path
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
-
-from ..editing_utils import add_scene_to_show
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
+from ..editing_utils import add_scene_to_show
 
 
 class ShowBrowser:
@@ -123,7 +122,7 @@ class ShowBrowser:
     def _refresh_filter_browser(self) -> None:
         self._filter_browsing_tree.clear()
 
-        def generate_tree_item(fp: FilterPage, parent) -> QTreeWidgetItem:
+        def generate_tree_item(fp: FilterPage, parent: QTreeWidgetItem) -> QTreeWidgetItem:
             item = AnnotatedTreeWidgetItem(parent)
             item.setText(0, fp.name)
             item.annotated_data = fp
@@ -261,7 +260,7 @@ class ShowBrowser:
         self._refresh_scene_browser()
 
     def _rename_scene_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]) -> None:
-        def rename(c, scene: Scene | FilterPage, text) -> None:
+        def rename(c: ShowBrowser, scene: Scene | FilterPage, text: str) -> None:
             if isinstance(scene, Scene):
                 scene.human_readable_name = text
             if isinstance(scene, UIPage):
@@ -301,7 +300,7 @@ class ShowBrowser:
                     self._input_dialog.setWindowTitle("Rename UI Page")
                     self._input_dialog.open()
 
-    def _scene_item_double_clicked(self, item) -> None:
+    def _scene_item_double_clicked(self, item: AnnotatedTreeWidgetItem) -> None:
         if isinstance(item, AnnotatedTreeWidgetItem):
             data = item.annotated_data
             if isinstance(data, Scene):
@@ -344,7 +343,7 @@ class ShowBrowser:
             self._show.broadcaster.scene_created.emit(sc)
 
     def _add_filter_page(self, selected_items: list[QTreeWidgetItem]) -> None:
-        def add(c, scene: Scene | FilterPage, text) -> None:
+        def add(c: ShowBrowser, scene: Scene | FilterPage, text: str) -> None:
             if isinstance(scene, Scene):
                 fp = FilterPage(scene)
                 scene.insert_filterpage(fp)

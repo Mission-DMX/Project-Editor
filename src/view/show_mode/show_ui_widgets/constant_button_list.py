@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QPushButton,
     QVBoxLayout,
-    QWidget,
+    QWidget, QDialog,
 )
 
 from model import Filter, UIPage, UIWidget
@@ -17,7 +17,7 @@ from model.filter import FilterTypeEnumeration
 
 class ConstantNumberButtonList(UIWidget):
 
-    def get_config_dialog_widget(self, parent) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         # TODO add option to configure images instead of text (to be used as GOBO select or color wheel choice etc.)
         widget = QWidget(parent)
         layout = QVBoxLayout()

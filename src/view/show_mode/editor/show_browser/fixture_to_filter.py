@@ -90,7 +90,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
     added_depth = 0
     y_shift = y
 
-    def compute_filter_height(channel_count_: int, filter_index, filter_chan_count=1) -> float:
+    def compute_filter_height(channel_count_: int, filter_index: int, filter_chan_count: int = 1) -> float:
         nonlocal y_shift
         f = float(10 * channel_count_ + filter_index * 45 + y_shift)
         y_shift += _filter_channel_height * filter_chan_count

@@ -1,14 +1,14 @@
-from model import DataType
+from model import DataType, Filter
 from view.show_mode.editor.nodes import FilterNode
 
 
 class AggregatingFilterNode(FilterNode):
     """
-    This filter node class provides a template for nodes with a variable amount of inputs that will be aggregated to a
+    This filter node class provides a template for nodes with a variable number of inputs that will be aggregated to a
     single output.
     """
 
-    def __init__(self, target_dt: DataType, model, name, filter_type):
+    def __init__(self, target_dt: DataType, model: Filter, name: str, filter_type: int):
         super().__init__(model=model, filter_type=filter_type, name=name)
         self.addOutput("value")
         self.filter.out_data_types["value"] = target_dt

@@ -1,3 +1,5 @@
+from typing import Callable
+
 from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import (
     QColorDialog,
@@ -22,7 +24,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (
 
 
 class KeyFrameStateEditDialog(QDialog):
-    def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function):
+    def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function: Callable):
         super().__init__(parent=parent)
         self._layout = QFormLayout()
 

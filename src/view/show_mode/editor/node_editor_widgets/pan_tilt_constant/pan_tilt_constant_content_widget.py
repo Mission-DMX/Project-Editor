@@ -1,5 +1,5 @@
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap
+from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 from qasync import QtGui
 
@@ -75,7 +75,7 @@ class PanTiltConstantContentWidget(QLabel):
         self.update_pan_tilt(event)
         self.repaint()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent):
         self.repaint()
 
     def update_pan_tilt(self, event: QMouseEvent):

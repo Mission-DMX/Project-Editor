@@ -1,6 +1,7 @@
 import asyncio
 from logging import getLogger
 
+import numpy as np
 from PySide6.QtWidgets import QCheckBox, QGridLayout, QLabel, QLayout
 
 from controller.autotrack.Detection.VideoProcessor import draw_boxes, process
@@ -14,7 +15,7 @@ logger = getLogger(__name__)
 
 
 class DetectionTab(GuiTab):
-    def __init__(self, name, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager):
         super().__init__(name, instance)
         self.background_frame = None
         self.yolo8 = None
@@ -52,21 +53,21 @@ class DetectionTab(GuiTab):
             if self.swt_detection.isChecked():
                 self.move_lights(detections, frame)
 
-    def process_frame(self, frame):
+    def process_frame(self, frame: np.ndarray) -> tuple[float, list[dict[str, int]]]:
         h, w, *_ = frame.shape
         length = max(h, w)
         scale = length / 640
 
         self.background_frame = frame
-        outputs = self.yolo8.detect(self.background_frame)
+        outputs: np.ndarray = self.yolo8.detect(self.background_frame)
         # detections = self.get_filtered_detections(outputs, scale, self.get_confidence_threshold())
-        detections = process(outputs, scale)
+        detections: list[dict[str, int]] = process(outputs, scale)
         return scale, detections
 
     def get_confidence_threshold(self):
         return float(self.instance.settings.settings["confidence_threshold"].text())
 
-    def move_lights(self, detections, frame):
+    def move_lights(self, detections: list[dict[str, int]], frame: np.ndarray):
         if len(detections) > 0:
             max_detection = max(detections, key=lambda arr: arr["confidence"])
             # h, w, _ = frame.shape
@@ -77,5 +78,5 @@ class DetectionTab(GuiTab):
             c = self.instance.settings.map.get_point(p)
             asyncio.run(self._asy_mouse(c))
 
-    async def _asy_mouse(self, pos) -> None:
+    async def _asy_mouse(self, pos: tuple[int, int]) -> None:
         await self.instance.settings.lights.set_position(pos)

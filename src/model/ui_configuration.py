@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QDialog
 
 if TYPE_CHECKING:
     from controller.network import NetworkManager
@@ -145,8 +145,9 @@ class UIWidget(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         """This method shall return a widget that will be placed within the configuration dialog"""
+        #TODO warum nutzt nur eine der implementierenden klassen überhaupt das parent objekt?
         raise NotImplementedError()
 
     def get_variante(self) -> str:

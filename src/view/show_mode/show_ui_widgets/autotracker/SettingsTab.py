@@ -19,13 +19,13 @@ class SettingsTab(GuiTab):
         - `video_update()`: Abstract method for updating video content within the tab.
     """
 
-    def __init__(self, name, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager):
         """
         Initialize a SettingsTab object.
 
         Args:
-            name (str): The name of the tab.
-            instance (InstanceManager): An instance manager for managing application instances and settings.
+            name : The name of the tab.
+            instance : An instance manager for managing application instances and settings.
         """
         if isinstance(instance, InstanceManager):
             super().__init__(name, instance)

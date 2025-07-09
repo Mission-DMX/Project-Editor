@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QToolBar,
     QVBoxLayout,
-    QWidget,
+    QWidget, QLayout,
 )
 
 from controller.file.transmitting_to_fish import transmit_to_fish
@@ -32,10 +32,8 @@ from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
-from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
-
-from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .model.cue_filter_model import CueFilterModel
+from ..node_editor_widget import NodeEditorFilterConfigWidget
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -192,7 +190,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             transmit_to_fish(self._filter_instance.scene.board_configuration, False)
             # TODO switch to scene of filter
 
-    def _setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout) -> None:
+    def _setup_zoom_panel(self, cue_settings_container: QWidget, cue_settings_container_layout: QLayout) -> None:
         zoom_panel = QWidget(cue_settings_container)
         zoom_panel_layout = QHBoxLayout()
         zoom_panel.setLayout(zoom_panel_layout)
@@ -206,7 +204,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         zoom_panel_layout.addWidget(decrease_zoom_button)
         cue_settings_container_layout.addRow("Zoom", zoom_panel)
 
-    def _configure_toolbar(self, top_layout) -> None:
+    def _configure_toolbar(self, top_layout: QLayout) -> None:
         toolbar = QToolBar(parent=self._parent_widget)
         toolbar_add_cue_action = QAction("Add Cue", self._parent_widget)
         toolbar_add_cue_action.setStatusTip("Add a new cue to the stack")
@@ -238,7 +236,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def _set_zoom_label_text(self) -> None:
         self._zoom_label.setText(self._timeline_container.format_zoom())
 
-    def _table_context_popup(self, pos) -> None:
+    def _table_context_popup(self, pos: QPoint) -> None:
         self._input_dialog = QMenu()
         self._input_dialog.addAction("Rename Cue", self._rename_selected_cue)
         self._input_dialog.addAction(QIcon.fromTheme("edit-paste"), "Duplicate", self._duplicate_cue_clicked)
@@ -418,7 +416,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._channels_changed_after_load = True
         self._toolbar_remove_channel_action.setEnabled(True)
 
-    def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update) -> None:
+    def _link_column_to_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool) -> None:
         if not self._bankset:
             return
         c = ColorDeskColumn() if channel_type == DataType.DT_COLOR else RawDeskColumn()
@@ -461,7 +459,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._timeline_container.cue.restart_on_another_play_press = \
             self._current_cue_another_play_pressed_checkbox.checkState().Checked
 
-    def _transition_type_changed(self, text) -> None:
+    def _transition_type_changed(self, text: str) -> None:
         self._timeline_container.transition_type = text
 
     def _rec_pressed(self) -> None:
@@ -527,7 +525,16 @@ class CueEditor(NodeEditorFilterConfigWidget):
         super().parent_closed(filter_node)
 
     def parent_opened(self):
-        self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
+        self._input_dialog = QMessageBox.question(
+            self.get_widget(),
+            "Preview",
+            "Would you like to switch to live preview?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        if self._input_dialog == QMessageBox.StandardButton.Yes:
+            self._link_bankset()
+
         self._ui_widget_update_required = False
 
     @property

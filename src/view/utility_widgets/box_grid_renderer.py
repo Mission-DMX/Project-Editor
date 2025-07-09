@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, Qt
+from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, Qt, QResizeEvent
 from PySide6.QtWidgets import QApplication, QWidget
 
 if TYPE_CHECKING:
@@ -80,6 +80,7 @@ class BoxGridRenderer(QWidget):
     Each item (Box) can be accessed by its index using the `item_at` method.
     :see BoxGridItem: for a detailed explanation on individual items.
     """
+
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self._boxes: list[BoxGridItem] = []
@@ -143,7 +144,7 @@ class BoxGridRenderer(QWidget):
         # TODO link scroll bar signals if scroll bar visible
         pass
 
-    def resizeEvent(self, event, /):
+    def resizeEvent(self, event: QResizeEvent, /):
         self._update_scroll_behavior()
         super().resizeEvent(event)
 

@@ -6,7 +6,6 @@ from PySide6.QtWidgets import QWidget
 
 from model import Filter
 from view.utility_widgets.fader_column_selector import FaderColumnSelectorWidget
-
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
@@ -27,7 +26,7 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
         self._widget = FaderColumnSelectorWidget(parent=parent, base_set=filter.scene.linked_bankset)
         self._filter = filter
 
-    def _load_configuration(self, conf) -> None:
+    def _load_configuration(self, conf: dict[str, str]) -> None:
         if "ignore_main_brightness_control" in conf:
             self._widget.main_brightness_cb_enabled = True
             self._widget.ignore_main_brightness = conf.get("ignore_main_brightness_control") == "true"

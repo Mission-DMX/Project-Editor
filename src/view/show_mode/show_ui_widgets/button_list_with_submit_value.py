@@ -2,7 +2,7 @@
 with a new value or predefined one in fish"""
 import sys
 
-from PySide6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget, QDialog
 
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
@@ -15,7 +15,7 @@ class ButtonsWithValueSubmit(UIWidget):
     provides also (from ConstantNumberButtonList) a button list to send pre-defined values
     """
 
-    def get_config_dialog_widget(self, parent) -> QWidget:
+    def get_config_dialog_widget(self, parent:QDialog) -> QWidget:
         return self._button_list.get_config_dialog_widget(parent)
 
     def __init__(self, parent: "UIPage", configuration: dict[str, str]):

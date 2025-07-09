@@ -5,7 +5,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
-from PySide6.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
+from PySide6.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget, QDialog
 
 import proto.FilterMode_pb2
 from model import ColorHSI, UIWidget
@@ -44,7 +44,7 @@ class _DebugVizWidget(UIWidget, ABC):
         # As we only consume values, we do not need to generate updates
         return []
 
-    def get_config_dialog_widget(self, parent: QWidget | None) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         if self._config_widget is not None:
             self._config_widget.deleteLater()
         self._construct_config_widget()

@@ -1,7 +1,7 @@
 """patch Plan Widget for one Universe"""
 import math
 
-from PySide6.QtGui import QPainter, QPixmap
+from PySide6.QtGui import QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QWidget
 
 from model.ofl.fixture import UsedFixture
@@ -42,7 +42,7 @@ class PatchPlanWidget(QWidget):
 
         painter.end()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event:QResizeEvent):
         """resize the widget"""
         new_cols = max(1, self.width() // item_width())
         if new_cols != self._cols:

@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QToolBar,
     QVBoxLayout,
-    QWidget,
+    QWidget, QDialog,
 )
 
 from model import Filter, UIPage, UIWidget
@@ -217,7 +217,7 @@ class CueControlUIWidget(UIWidget):
         w.set_filter(self._filter, 0)
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         if self._dialog_widget:
             return self._dialog_widget
         w = QWidget(parent)

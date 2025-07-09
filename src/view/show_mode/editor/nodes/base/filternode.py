@@ -1,8 +1,8 @@
 """Basic filter node"""
 from logging import getLogger
 
-from pyqtgraph.flowchart.Flowchart import Node, Terminal
 from PySide6.QtGui import QFont
+from pyqtgraph.flowchart.Flowchart import Node, Terminal
 
 from model import Filter, Scene
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
@@ -50,47 +50,47 @@ class FilterNode(Node):
             self._graphicsItem = FilterNodeGraphicsItem(self)
         return self._graphicsItem
 
-    def connected(self, localTerm: Terminal, remoteTerm: Terminal):
+    def connected(self, local_term: Terminal, remote_term: Terminal):
         """Handles behaviour if terminal was connected. Adds channel link to filter.
         Could emit signals. See pyqtgraph.flowchart.Node.connected()
 
         Args:
-            localTerm: The terminal on the node itself.
-            remoteTerm: The terminal of the other node.
+            local_term: The terminal on the node itself.
+            remote_term: The terminal of the other node.
         """
-        remote_node = remoteTerm.node()
+        remote_node = remote_term.node()
 
-        if not localTerm.isInput() or not remoteTerm.isOutput():
+        if not local_term.isInput() or not remote_term.isOutput():
             return
 
         if not isinstance(remote_node, FilterNode):
             logger.warning(
                 "Tried to non-FilterNode nodes. Forced disconnection. Got type: %s and expected: %s instance.",
                 str(type(remote_node)), str(FilterNode.__class__))
-            localTerm.disconnectFrom(remoteTerm)
+            local_term.disconnectFrom(remote_term)
             return
 
         try:
-            if self.filter.in_data_types[localTerm.name()] != remote_node.filter.out_data_types[remoteTerm.name()]:
+            if self.filter.in_data_types[local_term.name()] != remote_node.filter.out_data_types[remote_term.name()]:
                 logger.warning("Tried to connect incompatible filter channels. Forced disconnection.")
-                localTerm.disconnectFrom(remoteTerm)
+                local_term.disconnectFrom(remote_term)
                 return
-            self.filter.channel_links[localTerm.name()] = remote_node.name() + ":" + remoteTerm.name()
+            self.filter.channel_links[local_term.name()] = remote_node.name() + ":" + remote_term.name()
         except KeyError as e:
             logger.error("%s Possible key candidates are: %s\nRemote options are: %s", str(e),
                          ", ".join(self.filter.in_data_types.keys()),
                          ", ".join(remote_node.filter.out_data_types.keys()))
 
-    def disconnected(self, localTerm, remoteTerm):
+    def disconnected(self, local_term: Terminal, remote_term: Terminal):
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.
         Could emit signals. See pyqtgraph.flowchart.Node.disconnected()
 
         Args:
-            localTerm: The terminal on the node itself.
-            remoteTerm: The terminal of the other node.
+            local_term: The terminal on the node itself.
+            remote_term: The terminal of the other node.
         """
-        if localTerm.isInput() and remoteTerm.isOutput():
-            self.filter.channel_links[localTerm.name()] = ""
+        if local_term.isInput() and remote_term.isOutput():
+            self.filter.channel_links[local_term.name()] = ""
 
     def rename(self, name: str):
         """Handles behaviour if node was renamed. Changes filter.id.

@@ -1,6 +1,14 @@
 """commands for the Bank Sets"""
+from __future__ import annotations
+
+from argparse import ArgumentParser, Namespace
+from typing import TYPE_CHECKING
+
 from controller.cli.command import Command
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
+
+if TYPE_CHECKING:
+    from controller.cli.cli_context import CLIContext
 
 
 class BankSetCommand(Command):
@@ -8,11 +16,11 @@ class BankSetCommand(Command):
     commands for the Bank Sets
     """
 
-    def __init__(self, context):
+    def __init__(self, context: CLIContext):
         super().__init__(context, "bank_set")
         self.help_text = "This command displays the help about a certain command."
 
-    def configure_parser(self, parser):
+    def configure_parser(self, parser: ArgumentParser):
         subparsers = parser.add_subparsers(help="Specify what you would like to do", dest="what")
         subparsers.add_parser("commit", exit_on_error=False,
                               help="Commit the changes made to the bank set")
@@ -29,7 +37,7 @@ class BankSetCommand(Command):
         subparsers.add_parser("info", exit_on_error=False, help="Display the selected bank set content")
         subparsers.add_parser("activate", exit_on_error=False, help="Activate the selected bank set")
 
-    def execute(self, args) -> bool:
+    def execute(self, args: Namespace) -> bool:
         """
         execute a Command with Arguments
         Args:

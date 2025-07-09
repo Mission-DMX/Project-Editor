@@ -5,12 +5,12 @@ from view.show_mode.editor.nodes.base.filternode import FilterNode
 class ImportNode(FilterNode):
     nodeName = "Filter Import"
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_IMPORT, name=name,
                          terminals={}, allowAddOutput=True)
         self.update_node_ports()
 
-    def update_node_ports(self):
+    def update_node_ports(self) -> None:
         if self.filter is not None:
             target_filter = self.filter.scene.get_filter_by_id(self.filter.filter_configurations.get("target"))
             if isinstance(target_filter, Filter):
@@ -40,5 +40,5 @@ class ImportNode(FilterNode):
                     self.addOutput(port_name_to_add)
                     self.filter.out_data_types[port_name_to_add] = port_dt_to_add
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self.update_node_ports()

@@ -42,7 +42,7 @@ class VFilterLightController(LightController):
         self.last_tilt = position[1]
         self._request_update()
 
-    def set_color(self, color):
+    def set_color(self, color: str):
         logger.error(
             "Someone wanted to set the moving head color to '%s'. This however is not supported.", color)
 

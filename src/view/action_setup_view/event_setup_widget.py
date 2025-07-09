@@ -1,5 +1,7 @@
 import os
+from collections.abc import dict_items
 from logging import getLogger
+from typing import ItemsView
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
@@ -119,7 +121,7 @@ class _SenderConfigurationWidget(QScrollArea):
 
     def _update_table(self) -> None:
         self._rename_table.clear()
-        rename_items = self._sender.renamed_events.items()
+        rename_items: ItemsView[tuple[int, int, str], str] = self._sender.renamed_events.items()
         self._rename_table.setRowCount(len(rename_items))
 
         for i, k, v in enumerate(rename_items):

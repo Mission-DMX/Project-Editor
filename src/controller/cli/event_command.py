@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -5,17 +7,19 @@ from controller.cli.command import Command
 from model.events import EventSender, get_sender, insert_event
 
 if TYPE_CHECKING:
-    import argparse
+    from argparse import ArgumentParser
+
+    from controller.cli.cli_context import CLIContext
 
 logger = getLogger(__file__)
 
 
 class EventCommand(Command):
-    def __init__(self, context):
+    def __init__(self, context: CLIContext):
         super().__init__(context, "event")
         self.help_text = "Manipulate Events on fish."
 
-    def configure_parser(self, parser: "argparse.ArgumentParser"):
+    def configure_parser(self, parser: ArgumentParser):
         subparsers = parser.add_subparsers(help="Event management commands", dest="eventactions")
         add_parser = subparsers.add_parser("add-sender", exit_on_error=False, help="Add a new event sender to fish")
         add_parser.add_argument("name", help="The name of the new event sender", type=str)

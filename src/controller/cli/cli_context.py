@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import traceback
+from argparse import Namespace
 from typing import TYPE_CHECKING
 
 from controller.cli.bankset_command import BankSetCommand
@@ -110,7 +111,7 @@ class CLIContext:
             args = _split_args(line)
             if len(args) == 0:
                 return True
-            global_args = self.parser.parse_args(args=args)
+            global_args:Namespace = self.parser.parse_args(args=args)
             if self._exit_available and global_args.subparser_name == "exit":
                 self.exit_called = True
             elif global_args.subparser_name == "?":

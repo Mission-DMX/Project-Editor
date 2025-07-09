@@ -1,5 +1,6 @@
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtWidgets import QColorDialog, QHBoxLayout, QListWidget, QPushButton, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QColorDialog, QHBoxLayout, QListWidget, QPushButton, QToolBar, QVBoxLayout, QWidget, \
+    QDialog
 
 from model import ColorHSI, Filter, UIPage, UIWidget
 
@@ -19,7 +20,7 @@ class ColorSelectionUIWidget(UIWidget):
         self._config_widget: QWidget | None = None
         self._filter = None
 
-    def set_filter(self, f: "Filter", i: int):
+    def set_filter(self, f: Filter, i: int):
         if not f:
             return
         super().set_filter(f, i)
@@ -85,14 +86,14 @@ class ColorSelectionUIWidget(UIWidget):
             self._config_widget = self._build_base_widget(parent, False)
         return self._config_widget
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = ColorSelectionUIWidget(new_parent, self.configuration)
         self.copy_base(w)
         w.set_filter(self._filter, 0)
         w._value = self._value.copy()
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         w = QWidget(parent)
         layout = QVBoxLayout()
         toolbar = QToolBar(w)
@@ -103,7 +104,7 @@ class ColorSelectionUIWidget(UIWidget):
         layout.addWidget(preset_list)
         w.setLayout(layout)
 
-        def _add_preset(c_template) -> None:
+        def _add_preset(c_template: QColor) -> None:
             c: ColorHSI = ColorHSI.from_qt_color(c_template)
             self._presets.append(c)
             self.configuration["number_of_presets"] = str(int(self.configuration["number_of_presets"]) + 1)

@@ -1,5 +1,6 @@
 from logging import getLogger
 
+import numpy as np
 from PySide6.QtWidgets import QComboBox, QDialog, QFileDialog, QLabel, QLayout, QPushButton, QVBoxLayout
 
 from controller.autotrack.Helpers.ImageHelper import cv2qim
@@ -35,7 +36,7 @@ class SourcesTab(GuiTab):
         """
         super().tab_activated()
 
-    def __init__(self, name, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager):
         """
         Initialize a SourcesTab object.
 
@@ -132,7 +133,7 @@ class SourcesTab(GuiTab):
         """
         super().tab_deactivated()
 
-    def update_frame(self, frame):
+    def update_frame(self, frame: np.ndarray):
         self.instance.settings.next_frame = frame
 
 

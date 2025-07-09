@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont, QFontDatabase, QFontMetrics
-from PySide6.QtWidgets import QLabel, QWidget
+from PySide6.QtWidgets import QLabel, QWidget, QDialog
 
 from model import UIWidget
 from utility import resource_path
@@ -62,5 +62,5 @@ class ClockUIWidget(UIWidget):
         self.copy_base(w)
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return QLabel("No configuration for clock yet.")

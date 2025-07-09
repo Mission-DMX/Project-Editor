@@ -1,9 +1,8 @@
-
 """This file implements the list widget for effects. Register your effect inside the EFFECT_LIST widget.
 Usage: The key indicates the category of the effect and the list all containing effects."""
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPaintEvent
+from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPaintEvent, QFont
 from PySide6.QtWidgets import (
     QCompleter,
     QHBoxLayout,
@@ -22,7 +21,7 @@ from model.virtual_filters.effects_stacks.effects.color_effects import ColorWhee
 from model.virtual_filters.effects_stacks.effects.fader_input_effects import ColorInputEffect
 from model.virtual_filters.effects_stacks.effects.generic_effects import FunctionEffect
 
-EFFECT_LIST = {
+EFFECT_LIST: dict[str, list[type[Effect]]] = {
     "colors:": [ColorWheelEffect],
     "animations": [FunctionEffect],
     "fader-inputs": [ColorInputEffect],
@@ -47,8 +46,8 @@ class _EffectSeparator(QWidget):
         self._text = text
         self.setFont(self.font())
 
-    def setFont(self, arg__1) -> None:
-        super().setFont(arg__1)
+    def setFont(self, font: QFont) -> None:
+        super().setFont(font)
         fm = self.fontMetrics()
         self.setMinimumHeight(fm.height() + 2)
         self.setMinimumWidth(fm.horizontalAdvance(self._text) + 10)
@@ -82,7 +81,8 @@ class _EffectLabel(QWidget):
 
     button_icon = QIcon.fromTheme("window-new")
 
-    def __init__(self, effect_cls, parent: QWidget, separator: _EffectSeparator, list_widget: "EffectsListWidget"):
+    def __init__(self, effect_cls: type[Effect], parent: QWidget, separator: _EffectSeparator,
+                 list_widget: "EffectsListWidget"):
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self.setLayout(layout)

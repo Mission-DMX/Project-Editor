@@ -31,13 +31,13 @@ class CropTab(GuiTab):
         - `video_update()`: Abstract method for updating video content within the tab.
     """
 
-    def __init__(self, name, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager):
         """
         Initialize a CropTab object.
 
         Args:
-            name (str): The name of the tab.
-            instance (InstanceManager): An instance manager for managing application instances and settings.
+            name : The name of the tab.
+            instance : An instance manager for managing application instances and settings.
         """
         super().__init__(name, instance)
         self.layout = QGridLayout()
@@ -138,13 +138,13 @@ class CropTab(GuiTab):
         self.slidery2.hide()
         self.sliderx2.hide()
 
-    def show_sliders(self, height, width):
+    def show_sliders(self, height: int, width: int) -> None:
         """
         Show and configure the crop sliders.
 
         Args:
-            height (int): The height of the image frame.
-            width (int): The width of the image frame.
+            height : The height of the image frame.
+            width : The width of the image frame.
         """
         self.sliderx1.show()
         self.sliderx1.setMinimum(0)

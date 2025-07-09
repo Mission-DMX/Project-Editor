@@ -1,10 +1,12 @@
+from typing import Callable
+
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLineEdit, QPushButton, QWidget
 
 from model import DataType
 
 
 class ChannelInputDialog(QDialog):
-    def __init__(self, parent: QWidget, ok_function):
+    def __init__(self, parent: QWidget, ok_function: Callable[[str, DataType], None]) -> None:
         super().__init__(parent)
         self._ok_function = ok_function
         self._layout = QFormLayout()

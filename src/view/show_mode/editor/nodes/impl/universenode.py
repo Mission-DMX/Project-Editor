@@ -3,7 +3,7 @@ from logging import getLogger
 
 from pyqtgraph.flowchart import Terminal
 
-from model import DataType, Filter
+from model import DataType, Filter, Scene
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
@@ -16,7 +16,7 @@ class UniverseNode(FilterNode):
 
     universe_ids: list[int] = []
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter | Scene, name: str):
         if isinstance(model, Filter):
             super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
                              terminals={
@@ -53,7 +53,7 @@ class UniverseNode(FilterNode):
             self.filter.default_values["input_1"] = "0"
             self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
 
-    def addInput(self, name="input", **args):
+    def addInput(self, name: str = "input", **args):
         """Allows to add up to 512 input channels."""
         next_input = len(self.inputs())
         if next_input >= 512:
@@ -84,7 +84,7 @@ class UniverseNode(FilterNode):
         # self.filter.in_data_types["test23"] = DataType.DT_8_BIT
         # return term
 
-    def removeTerminal(self, term):
+    def removeTerminal(self, term: Terminal):
         if term.isInput():
             del self.filter.filter_configurations[term.name()]
         return super().removeTerminal(term)

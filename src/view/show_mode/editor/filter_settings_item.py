@@ -5,15 +5,16 @@ from typing import TYPE_CHECKING
 
 import PySide6
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPainter, QKeyEvent, QMouseEvent, QFocusEvent
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
-from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QFormLayout, QGraphicsItem, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget, \
+    QStyleOptionGraphicsItem
 
 from model.filter import Filter, FilterTypeEnumeration
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
-
 from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
@@ -45,7 +46,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
         self._filter = filter
         self._mb_updated: bool = False
 
-    def focusOutEvent(self, ev):
+    def focusOutEvent(self, ev: QFocusEvent) -> None:
         """
         Override to handle buggy behaviour
         Args:
@@ -55,7 +56,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
         if self.on_update is not None:
             self.on_update()
 
-    def keyPressEvent(self, ev):
+    def keyPressEvent(self, ev: QKeyEvent) -> None:
         """
         Override to handle buggy behaviour
         Args:
@@ -66,7 +67,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
             return
         super().keyPressEvent(ev)
 
-    def mousePressEvent(self, ev):
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
         """Handle left mouse button click by opening filter settings dialog"""
         if not self._filter.configuration_supported:
             return
@@ -78,7 +79,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
             self.dialog = FilterSettingsDialog(self.filter_node)
             self.dialog.show()
 
-    def paint(self, painter, option, widget=...):
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget | None = ...):
         if not self._filter.configuration_supported:
             if not self._mb_updated:
                 self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
@@ -197,10 +198,12 @@ class FilterSettingsDialog(QDialog):
 
         return key
 
-    def _ip_value_changed(self, key, value) -> None:
+    def _ip_value_changed(self, key: str, value: str) -> None:
+        # Todo rework to direct dict action
         self.filter.initial_parameters[key] = value
 
-    def _fc_value_changed(self, key, value) -> None:
+    def _fc_value_changed(self, key: str, value: str) -> None:
+        # Todo rework to direct dict action
         self.filter.filter_configurations[key] = value
 
     def ok_button_pressed(self):

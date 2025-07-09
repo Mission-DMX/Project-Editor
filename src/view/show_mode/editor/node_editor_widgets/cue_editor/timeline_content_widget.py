@@ -1,7 +1,7 @@
 import PySide6
 from PySide6 import QtGui
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPaintEvent
+from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPaintEvent, QResizeEvent, QMouseEvent
 from PySide6.QtWidgets import QWidget
 
 from model import DataType
@@ -132,12 +132,12 @@ class TimelineContentWidget(QWidget):
 
         painter.end()
 
-    def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
         super().mousePressEvent(ev)
         self._drag_begin = (ev.x(), ev.y())
         self.update()
 
-    def resizeEvent(self, event: PySide6.QtGui.QResizeEvent) -> None:
+    def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self.size_changed.emit(QPoint(self.width(), self.height()))
 
@@ -159,7 +159,7 @@ class TimelineContentWidget(QWidget):
             self._channels.append(c)
         self.compute_resize()
 
-    def remove_channel(self, i):
+    def remove_channel(self, i: int):
         self._channels.pop(i)
         self.compute_resize()
 

@@ -25,7 +25,10 @@ class UniverseTreeBrowserWidget(QTreeWidget):
 
     def refresh(self):
 
-        def location_to_string(location) -> str:
+        def location_to_string(
+                location: int |
+                          proto.UniverseControl_pb2.Universe.ArtNet |
+                          proto.UniverseControl_pb2.Universe.USBConfig) -> str:
             if isinstance(location, proto.UniverseControl_pb2.Universe.ArtNet):
                 return f"{location.ip_address}:{location.port}/{location.universe_on_device}"
             if isinstance(location, proto.UniverseControl_pb2.Universe.USBConfig):

@@ -1,4 +1,5 @@
 from PySide6.QtCore import QPoint
+from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QComboBox, QGridLayout, QWidget
 
 from model import Broadcaster, Scene
@@ -22,7 +23,7 @@ class UIPlayerWidget(QWidget):
         b.view_to_show_player.connect(self._check_page_update)
         b.uipage_renamed.connect(self._page_renamed)
 
-    def resizeEvent(self, event, /):
+    def resizeEvent(self, event: QResizeEvent, /):
         super().resizeEvent(event)
         self._page_combo_box.pos = QPoint(10, self.height() - 35)
 

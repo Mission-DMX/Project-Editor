@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
+from PySide6.QtWidgets import QLabel, QTextEdit, QWidget, QDialog
 from markdown import markdown
-from PySide6.QtWidgets import QLabel, QTextEdit, QWidget
 
 from model import UIWidget
 
@@ -14,7 +14,7 @@ class ShowLabelUIWidget(UIWidget):
         super().__init__(parent, configuration)
         self._player_widget: QLabel | None = None
         self._conf_widget: QLabel | None = None
-        self._edit_widget : QTextEdit | None = None
+        self._edit_widget: QTextEdit | None = None
 
     def generate_update_content(self) -> list[tuple[str, str]]:
         # This is merely a label. We do not need to update anything.
@@ -45,7 +45,7 @@ class ShowLabelUIWidget(UIWidget):
         super().copy_base(w)
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         if self._edit_widget is not None:
             return self._edit_widget
         w = QTextEdit(parent)

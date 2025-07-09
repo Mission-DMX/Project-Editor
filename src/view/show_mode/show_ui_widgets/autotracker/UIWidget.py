@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QDialog
 
 from model import UIPage, UIWidget
 from view.show_mode.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
@@ -66,5 +66,5 @@ class AutoTrackerUIWidget(UIWidget):
         w.set_filter(self._associated_filter, 0)
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return self._tracker_player_widget
