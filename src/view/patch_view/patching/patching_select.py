@@ -87,14 +87,14 @@ class PatchingSelect(QtWidgets.QScrollArea):
         fixture_layout.addWidget(reset_button)
         for index, mode in enumerate(fixture["modes"]):
             mode_item = ModeItem(mode)
-            mode_item.clicked.connect(lambda *args, _fixture=fixture, _index=index: self._run_patch(_fixture, _index))
+            mode_item.clicked.connect(lambda _, _fixture=fixture, _index=index: self._run_patch(_fixture, _index))
             fixture_layout.addWidget(mode_item)
 
         fixture_widget = QtWidgets.QWidget()
         fixture_widget.setLayout(fixture_layout)
         self.container.addWidget(fixture_widget)
         fixture_item = FixtureItem(fixture)
-        fixture_item.clicked.connect(lambda *args, _index=self.index: self.select_fixture(_index))
+        fixture_item.clicked.connect(lambda _, _index=self.index: self.select_fixture(_index))
         self.index += 1
         return fixture_item
 

@@ -175,7 +175,7 @@ class _BankEditWidget(QWidget):
             column_layout.addWidget(QLabel("Display Text:"))
             self._text_widgets.append(QLineEdit(column_widget))
             self._text_widgets[i].textChanged.connect(
-                lambda text, ci=i: self._display_text_field_changed(ci, text),
+                lambda _, ci=i: self._display_text_field_changed(ci),
             )
             column_layout.addWidget(self._text_widgets[i])
             self._top_inverted_widgets.append(QCheckBox("Top line inverted", column_widget))
@@ -302,7 +302,7 @@ class _BankEditWidget(QWidget):
                 self._color_labels[i].setAutoFillBackground(False)
             self._update_color_label(i)
 
-    def _display_text_field_changed(self, index: int, text: str) -> None:
+    def _display_text_field_changed(self, index: int) -> None:
         if self._bank and len(self._bank.columns) > index:
             self._bank.columns[index].display_name = self._text_widgets[index].text()
             if self._bank_item:
