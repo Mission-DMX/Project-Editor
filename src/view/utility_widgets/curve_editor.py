@@ -22,9 +22,6 @@ from model.curve_configuration import BaseCurve, CurveConfiguration
 
 logger = getLogger(__name__)
 
-if TYPE_CHECKING:
-    pass
-
 
 class _WaveRenderer(PlotWidget):
 
