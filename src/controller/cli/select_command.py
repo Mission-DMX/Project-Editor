@@ -1,6 +1,14 @@
 """commands for selection"""
+from __future__ import annotations
+
+from argparse import ArgumentParser, Namespace
+from typing import TYPE_CHECKING
+
 from controller.cli.command import Command
 from model.control_desk import BankSet
+
+if TYPE_CHECKING:
+    from controller.cli.cli_context import CLIContext
 
 
 def find_bank_set(identifier: str) -> BankSet | None:
@@ -24,15 +32,15 @@ def find_bank_set(identifier: str) -> BankSet | None:
 
 class SelectCommand(Command):
 
-    def __init__(self, context):
+    def __init__(self, context: CLIContext):
         super().__init__(context, "select")
         self.help_text = "This command displays the help about a certain command."
 
-    def configure_parser(self, parser):
+    def configure_parser(self, parser: ArgumentParser):
         parser.add_argument("what", help="Specify what you would like to select")
         parser.add_argument("item", help="Specify the item you would like to select")
 
-    def execute(self, args) -> bool:
+    def execute(self, args: Namespace) -> bool:
         match args.what:
             case "scene":
                 try:

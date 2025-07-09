@@ -1,5 +1,6 @@
 """Client Commands"""
 from abc import ABC, abstractmethod
+from argparse import ArgumentParser, Namespace
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -20,7 +21,7 @@ class Command(ABC):
         self._help_text = ""
 
     @abstractmethod
-    def configure_parser(self, parser):
+    def configure_parser(self, parser: ArgumentParser):
         """This method will be called by the CLI context in order to configure the parser
 
         Arguments:
@@ -28,7 +29,7 @@ class Command(ABC):
         """
 
     @abstractmethod
-    def execute(self, args) -> bool:
+    def execute(self, args: Namespace) -> bool:
         """execute a Command"""
 
     @property

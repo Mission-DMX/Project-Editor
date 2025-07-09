@@ -12,7 +12,7 @@ from controller.file.serializing.universe_serialization import (
     _create_universe_element,
 )
 from controller.utils.process_notifications import ProcessNotifier
-from model import BoardConfiguration
+from model import BoardConfiguration, Device
 from model.events import get_all_senders
 
 
@@ -96,7 +96,7 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
     })
 
 
-def _create_device_element(device, parent: ElementTree.Element) -> ElementTree.Element:
+def _create_device_element(device: Device, parent: ElementTree.Element) -> ElementTree.Element:
     """TODO implement patching of devices
 
     <device channel="0" name="name" type="type" universe_id="0">

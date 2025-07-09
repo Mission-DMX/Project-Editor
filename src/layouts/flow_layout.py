@@ -3,7 +3,7 @@ implementation of flow Layout for Python 3.12
 from https://doc.qt.io/qtforpython-6/examples/example_widgets_layouts_flowlayout.html
 """
 from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
-from PySide6.QtWidgets import QLayout, QSizePolicy
+from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
 
 class FlowLayout(QLayout):
@@ -11,32 +11,32 @@ class FlowLayout(QLayout):
     Layout for floating Widges to width
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget = None):
         super().__init__(parent)
 
         if parent is not None:
             self.setContentsMargins(QMargins(0, 0, 0, 0))
 
-        self._item_list = []
+        self._item_list: list[QLayoutItem] = []
 
     def __del__(self):
         item = self.takeAt(0)
         while item:
             item = self.takeAt(0)
 
-    def addItem(self, item):
+    def addItem(self, item: QLayoutItem):
         self._item_list.append(item)
 
     def count(self):
         return len(self._item_list)
 
-    def itemAt(self, index):
+    def itemAt(self, index: int):
         if 0 <= index < len(self._item_list):
             return self._item_list[index]
 
         return None
 
-    def takeAt(self, index):
+    def takeAt(self, index: int):
         if 0 <= index < len(self._item_list):
             return self._item_list.pop(index)
 
@@ -48,11 +48,11 @@ class FlowLayout(QLayout):
     def hasHeightForWidth(self):
         return True
 
-    def heightForWidth(self, width):
+    def heightForWidth(self, width: int):
         height = self._do_layout(QRect(0, 0, width, 0), True)
         return height
 
-    def setGeometry(self, rect):
+    def setGeometry(self, rect: QRect):
         super().setGeometry(rect)
         self._do_layout(rect, False)
 
@@ -68,7 +68,7 @@ class FlowLayout(QLayout):
         size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
         return size
 
-    def _do_layout(self, rect, test_only) -> float:
+    def _do_layout(self, rect: QRect, test_only: bool) -> float:
         x = rect.x()
         y = rect.y()
         line_height = 0

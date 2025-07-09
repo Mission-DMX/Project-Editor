@@ -90,7 +90,8 @@ class CLIContext:
         self.show = show
         self.network_manager: NetworkManager = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
-        subparsers = self.parser.add_subparsers(help="subcommands help", dest="subparser_name")
+        subparsers: argparse._SubParsersAction = self.parser.add_subparsers(
+            help="subcommands help", dest="subparser_name")
         for c in self.commands:
             c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
         if exit_available:
@@ -111,7 +112,7 @@ class CLIContext:
             args = _split_args(line)
             if len(args) == 0:
                 return True
-            global_args:Namespace = self.parser.parse_args(args=args)
+            global_args: Namespace = self.parser.parse_args(args=args)
             if self._exit_available and global_args.subparser_name == "exit":
                 self.exit_called = True
             elif global_args.subparser_name == "?":

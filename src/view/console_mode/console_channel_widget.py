@@ -1,5 +1,6 @@
 """Widget to edit a channel."""
 from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QWidget
 
 from model.channel import Channel
 from model.control_desk import BankSet
@@ -22,7 +23,7 @@ class ChannelWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, fixture_channel: FixtureChannel, channel: Channel, bank_set: BankSet = None,
-                 bank_set_control_list=None, parent=None):
+                 bank_set_control_list: list[QWidget] = None, parent: QWidget = None):
         """Inits the ChannelWidget.
 
         Args:
@@ -104,7 +105,6 @@ class ChannelWidget(QtWidgets.QWidget):
 
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
-
 
     def _update(self, value: int) -> None:
         """Updates the slider and value label."""

@@ -1,19 +1,27 @@
 """Client Commands"""
+from __future__ import annotations
+
+from argparse import ArgumentParser, Namespace
+from typing import TYPE_CHECKING
+
 from controller.cli.command import Command
 from model.control_desk import BankSet, ColorDeskColumn
+
+if TYPE_CHECKING:
+    from controller.cli.cli_context import CLIContext
 
 
 class ListCommand(Command):
     """Commands to list show and client state"""
 
-    def __init__(self, context):
+    def __init__(self, context: CLIContext):
         super().__init__(context, "list")
         self.help_text = "This command displays the content of system collections."
 
-    def configure_parser(self, parser):
+    def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("section", help="The section of which content should be listed")
 
-    def execute(self, args) -> bool:
+    def execute(self, args: Namespace) -> bool:
         match args.section:
             case "scenes":
                 self.context.print(" ID | Description")
@@ -51,8 +59,9 @@ class ListCommand(Command):
                 self.context.print(f"ERROR: The requested container '{args.section}' was not found.")
                 return False
 
-    def print_bank_set_entry(self, bs, selected_bank_set_id):
+    def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str):
         """print the entry of a bank set"""
+        # TODO id not string
         preamble = "*" if bs.id == selected_bank_set_id else " "
         if bs.is_linked:
             self.context.print(preamble + bs.id + " | " + bs.description)

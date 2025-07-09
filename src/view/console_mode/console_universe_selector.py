@@ -1,6 +1,7 @@
 """select Universe"""
 
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QWidget
 
 from model import BoardConfiguration
 from model.universe import Universe
@@ -10,7 +11,7 @@ from view.console_mode.console_universe_widget import DirectUniverseWidget
 class UniverseSelector(QtWidgets.QTabWidget):
     """select Universe from Tab Widget"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent) -> None:
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
         super().__init__(parent=parent)
         self._board_configuration = board_configuration
         board_configuration.broadcaster.add_universe.connect(self.add_universe)

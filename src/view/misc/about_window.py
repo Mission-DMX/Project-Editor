@@ -1,4 +1,3 @@
-
 """This file provides the about-dialog"""
 import os.path
 from logging import getLogger
@@ -6,7 +5,7 @@ from logging import getLogger
 import tomlkit
 from html2text import html2text
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QWidget
 
 from utility import resource_path
 
@@ -42,7 +41,7 @@ class AboutWindow(QMessageBox):
     This window displays the credits.
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(
             QMessageBox.Icon.Information,
             "<b>About</b>",

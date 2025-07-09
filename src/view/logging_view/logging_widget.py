@@ -5,7 +5,7 @@ import logging
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QCompleter
+from PySide6.QtWidgets import QCompleter, QWidget
 
 from model.broadcaster import Broadcaster
 
@@ -17,7 +17,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
     """widget for logging_view"""
     _loging_level_changed: QtCore.Signal = QtCore.Signal(tuple)
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
 
         select_bar = QtWidgets.QMenuBar()

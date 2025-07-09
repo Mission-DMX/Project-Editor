@@ -1,18 +1,26 @@
 """Commands for Help"""
+from __future__ import annotations
+
+from argparse import ArgumentParser, Namespace
+from typing import TYPE_CHECKING
+
 from controller.cli.command import Command
+
+if TYPE_CHECKING:
+    from controller.cli.cli_context import CLIContext
 
 
 class HelpCommand(Command):
     """Commands for Help"""
 
-    def __init__(self, context):
+    def __init__(self, context: CLIContext):
         super().__init__(context, "help")
         self.help_text = "This command displays the help about a certain command."
 
-    def configure_parser(self, parser):
+    def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("topic", help="Specify the topic you like to hear about", default="", nargs="?")
 
-    def execute(self, args) -> bool:
+    def execute(self, args: Namespace) -> bool:
         match args.topic:
             case "select":
                 self.context.print("Use this command to alter the selected regions within this context.")

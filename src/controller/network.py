@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
+from PySide6.QtNetwork import QLocalSocket
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
@@ -180,8 +181,8 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         msg_bytes = self._socket.readAll()
         while len(msg_bytes) > 0:
             try:
-                msg_type = varint.decode_bytes(msg_bytes[0])
-                msg_len = varint.decode_bytes(msg_bytes[1:])
+                msg_type = varint.decode_bytes(bytes(msg_bytes[0]))
+                msg_len = varint.decode_bytes(bytes(msg_bytes[1:]))
             except EOFError:
                 self.disconnect()
             start = 1 + math.ceil(np.log2(msg_len + 1) / 7)
@@ -481,7 +482,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         return self._last_active_scene
 
 
-def on_error(error) -> None:
+def on_error(error: QLocalSocket.LocalSocketError) -> None:
     """logging current error
     Args:
         error: thrown error

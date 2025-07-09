@@ -7,7 +7,7 @@ from controller.cli.command import Command
 from model.events import EventSender, get_sender, insert_event
 
 if TYPE_CHECKING:
-    from argparse import ArgumentParser
+    from argparse import ArgumentParser, Namespace
 
     from controller.cli.cli_context import CLIContext
 
@@ -39,7 +39,7 @@ class EventCommand(Command):
         send_parser.add_argument("--args", nargs="+", type=int, action="extend", help="Specify the event arguments")
         # TODO add renaming of events
 
-    def execute(self, args) -> bool:
+    def execute(self, args: Namespace) -> bool:
         match args.eventactions:
             case "add-sender":
                 evs = EventSender(args.name)

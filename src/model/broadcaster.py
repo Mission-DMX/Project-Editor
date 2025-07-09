@@ -1,5 +1,5 @@
 """connector for Signals"""
-
+from typing import Any
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
@@ -16,12 +16,13 @@ from .scene import FilterPage, Scene
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
     """metaclass for a QObject Singleton"""
+    instance: Any
 
-    def __init__(cls, name, bases, _dict):
+    def __init__(cls: type["QObjectSingletonMeta"], name: str, bases: tuple[type, ...], _dict: dict[str, Any]) -> None:
         super().__init__(name, bases, _dict)
         cls.instance = None
 
-    def __call__(cls, *args, **kw):
+    def __call__(cls: type["QObjectSingletonMeta"], *args: Any, **kw: Any) -> QtCore.QObject:
         if cls.instance is None:
             cls.instance = super().__call__(*args, **kw)
         return cls.instance
@@ -37,7 +38,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     show_file_loaded: QtCore.Signal = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
     add_universe: QtCore.Signal = QtCore.Signal(object)
-    add_fixture:QtCore.Signal  = QtCore.Signal(object)
+    add_fixture: QtCore.Signal = QtCore.Signal(object)
     send_universe: QtCore.Signal = QtCore.Signal(object)
     send_universe_value: QtCore.Signal = QtCore.Signal(object)
     send_request_dmx_data: QtCore.Signal = QtCore.Signal(object)
@@ -108,6 +109,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
+
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)

@@ -4,6 +4,7 @@ This file contains a command implementation to control show files, including the
 """
 from __future__ import annotations
 
+import argparse
 from typing import TYPE_CHECKING
 
 from controller.cli.command import Command
@@ -11,7 +12,7 @@ from controller.file.read import read_document
 from controller.file.transmitting_to_fish import transmit_to_fish
 
 if TYPE_CHECKING:
-    from argparse import ArgumentParser
+    from argparse import ArgumentParser, Namespace
 
     from controller.cli.cli_context import CLIContext
 
@@ -25,7 +26,7 @@ class ShowCommand(Command):
     def __init__(self, context: CLIContext):
         super().__init__(context, "showctl")
 
-    def configure_parser(self, parser):
+    def configure_parser(self, parser: argparse.ArgumentParser):
         """
         Configure the sub parser of the CLI.
 
@@ -49,7 +50,7 @@ class ShowCommand(Command):
         filtercmd_parser.add_argument("parameterkey", help="The key of the parameter to update")
         filtercmd_parser.add_argument("parametervalue", help="The value to transmit")
 
-    def execute(self, args) -> bool:
+    def execute(self, args: Namespace) -> bool:
         match args.showaction:
             case "commit":
                 return transmit_to_fish(self.context.show, goto_default_scene=args.select_default_scene)

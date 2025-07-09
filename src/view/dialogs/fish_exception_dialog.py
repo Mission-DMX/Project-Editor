@@ -1,6 +1,7 @@
 """Dialogs to display fish exceptions"""
 
 from PySide6 import QtGui, QtWidgets
+from PySide6.QtGui import QMouseEvent
 
 error_dict: dict[str, str] = {
     "E001": "Fish Error: Filter not implemented in Allocation",
@@ -62,7 +63,7 @@ class HoverTextBrowser(QtWidgets.QTextBrowser):
                 cursor.setCharFormat(text_format)
                 start_pos += len(word)
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """mouse Event for Hover tooltip"""
         cursor = self.cursorForPosition(event.pos())
         cursor.select(QtGui.QTextCursor.SelectionType.WordUnderCursor)

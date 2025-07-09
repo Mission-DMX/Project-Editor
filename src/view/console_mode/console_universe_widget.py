@@ -1,5 +1,6 @@
 """directly edit channels of a universe"""
 from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QWidget
 
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet
@@ -16,7 +17,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
     Buttons allow to change the selected universe.
     """
 
-    def __init__(self, universe: Universe, parent=None):
+    def __init__(self, universe: Universe, parent: QWidget = None):
         """Inits a ManualUniverseEditorWidget.
 
         Args:
@@ -50,20 +51,20 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._bank_set = BankSet(gui_controlled=True,
                                  description=f"Console mode Bankset for universe {universe.description}.")
         self._bank_set.activate()
-        self._bank_set_control_elements = []
+        self._bank_set_control_elements: list[QWidget] = []
 
         self.setWidget(self._universe_widget)
         self._universe_widget = self._universe_widget
         self._broadcaster.jogwheel_rotated_left.connect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.connect(self._increase_scroll)
-        self._scroll_position = 0
+        self._scroll_position: int = 0
 
     def __del__(self):
         self._bank_set.unlink()
         self._broadcaster.jogwheel_rotated_left.disconnect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.disconnect(self._increase_scroll)
 
-    def _translate_scroll_position(self, absolute_position) -> float:
+    def _translate_scroll_position(self, absolute_position: int) -> float:
         # FIXME scrollbars are always strange and clearly more rules apply here
         maximum = self.horizontalScrollBar().maximum()
         widget_width = self._universe_widget.width()

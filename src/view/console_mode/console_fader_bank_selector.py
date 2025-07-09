@@ -7,7 +7,8 @@ from model.control_desk import BankSet, FaderBank, RawDeskColumn
 class ConsoleFaderBankSelectorWidget(QComboBox):
     fader_value_changed = Signal(int)
 
-    def __init__(self, bank_set: BankSet, display_text: str, parent: QWidget = None, bank_set_control_list=None):
+    def __init__(self, bank_set: BankSet, display_text: str, parent: QWidget = None,
+                 bank_set_control_list: list[QWidget] = None):
         super().__init__(parent)
         if bank_set_control_list is None:
             bank_set_control_list = []
@@ -42,7 +43,7 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
         self._bank_set.banks[self._bank_index].add_column(self._fader)
         self._bank_set.update()
 
-    def _selection_changed(self, new_index) -> None:
+    def _selection_changed(self, new_index: int) -> None:
         if new_index == 0 and self._fader:
             self._unlink_fader()
         elif new_index == 1:
@@ -67,7 +68,7 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
             self._latest_hardware_position_update = new_value
             self.fader_value_changed.emit(new_value)
 
-    def _update_fader_position(self, new_value) -> None:
+    def _update_fader_position(self, new_value: int) -> None:
         if self._skip_next_update:
             new_value = self._latest_ui_position_update
             self._skip_next_update = False

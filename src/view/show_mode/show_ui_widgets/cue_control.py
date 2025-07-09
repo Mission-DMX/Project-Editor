@@ -65,7 +65,7 @@ class CueControlUIWidget(UIWidget):
         self._cues: list[tuple[str, int]] = []
         self._command_chain: list[tuple[str, str]] = []
 
-        self._filter = None
+        self._filter: Filter | None = None
         self._cue_state = CueState(self._filter)
 
         self._timer = QTimer()
@@ -82,7 +82,7 @@ class CueControlUIWidget(UIWidget):
         self._model: CueFilterModel | None = None
         self._last_active_cue: int = -1
 
-    def set_filter(self, f: "Filter", i: int):
+    def set_filter(self, f: Filter, i: int):
         if not f:
             return
         if isinstance(self._filter, CueFilter):

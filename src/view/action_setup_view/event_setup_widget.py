@@ -194,7 +194,7 @@ class _SourceListWidget(QWidget):
         self.setLayout(layout)
 
 
-def _type_to_string(t) -> str:
+def _type_to_string(t: proto.Events_pb2) -> str:
     """Get the string representation of an event type"""
     if t == proto.Events_pb2.ONGOING_EVENT:
         return "Ongoing"

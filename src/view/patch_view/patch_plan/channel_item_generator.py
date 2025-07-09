@@ -1,5 +1,5 @@
 """ item of the Patching """
-from PySide6.QtGui import QColorConstants, QFont, QPainter, QPixmap
+from PySide6.QtGui import QColor, QColorConstants, QFont, QPainter, QPixmap
 
 _WIDTH = 100
 _HEIGHT = 100
@@ -15,7 +15,7 @@ def item_height():
     return _HEIGHT
 
 
-def create_item(number, color=QColorConstants.White) -> QPixmap:
+def create_item(number:int, color: QColor = QColorConstants.White) -> QPixmap:
     """creates a pixmap of the item"""
     pixmap = QPixmap(_WIDTH, _HEIGHT)
     pixmap.fill(color)

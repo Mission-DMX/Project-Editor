@@ -5,6 +5,7 @@ from logging import getLogger
 
 import requests
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QWidget
 
 from layouts.flow_layout import FlowLayout
 from model import BoardConfiguration
@@ -22,7 +23,7 @@ logger = getLogger(__name__)
 class PatchingSelect(QtWidgets.QScrollArea):
     """select Manufacturer"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent):
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget):
         super().__init__(parent)
         self._board_configuration = board_configuration
         cache_path = "/var/cache/missionDMX"
@@ -97,7 +98,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         self.index += 1
         return fixture_item
 
-    def select_fixture(self, index):
+    def select_fixture(self, index: int):
         """select_fixture"""
         self.container.setCurrentIndex(index)
 

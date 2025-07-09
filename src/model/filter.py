@@ -151,11 +151,13 @@ class Filter:
                  pos: tuple[int, int] | tuple[float, float] | None = None,
                  filter_configurations: dict[str, str] | None = None,
                  initial_parameters: dict[str, str] | None = None):
+        # TODO id why as string
         if pos is None:
             pos = [0.0, 0.0]
+
         self._scene: Scene = scene
         self._filter_id = filter_id
-        self._filter_type = int(filter_type)
+        self._filter_type: int = int(filter_type)
         self._pos: tuple[float, float] | None = pos
         self._channel_links: dict[str, str] = {}
         self._initial_parameters: dict[str, str] = initial_parameters or {}
@@ -181,7 +183,7 @@ class Filter:
         return self._filter_id
 
     @filter_id.setter
-    def filter_id(self, id_) -> None:
+    def filter_id(self, id_: str) -> None:
         old_id: str = self._filter_id
         self._filter_id = id_
         if self.scene:
@@ -194,7 +196,7 @@ class Filter:
         return self._filter_type
 
     @filter_type.setter
-    def filter_type(self, type_) -> None:
+    def filter_type(self, type_: int) -> None:
         self._filter_type = type_
 
     @property

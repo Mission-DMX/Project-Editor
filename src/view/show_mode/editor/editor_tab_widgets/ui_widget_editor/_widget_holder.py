@@ -1,7 +1,7 @@
 from logging import getLogger
 
 from PySide6.QtCore import QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QMouseEvent
+from PySide6.QtGui import QCloseEvent, QMouseEvent
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from model import UIWidget
@@ -57,7 +57,7 @@ class UIWidgetHolder(QWidget):
         self.resize(w, h)
         self.repaint()
 
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event:QCloseEvent) -> None:
         """Emits closing signal.
 
         Args:

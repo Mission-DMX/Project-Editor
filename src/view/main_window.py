@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QIcon, QKeySequence, QPixmap
-from PySide6.QtWidgets import QApplication, QProgressBar
+from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
 from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
     STATUS_ICON_DIRECT_MODE = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
     STATUS_ICON_FILTER_MODE = QIcon(resource_path(os.path.join("resources", "icons", "play.svg")))
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget = None) -> None:
         """Inits the MainWindow.
 
         Args:

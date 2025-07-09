@@ -3,6 +3,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QContextMenuEvent
 from PySide6.QtWidgets import QScrollArea
 
 from model import BoardConfiguration, Universe
@@ -47,7 +48,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         if dialog.exec():
             Universe(dialog.output)
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event: QContextMenuEvent):
         """context menu"""
         for index in range(self.tabBar().count() - 1):
             if self.tabBar().tabRect(index).contains(event.pos()):

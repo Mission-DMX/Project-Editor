@@ -1,19 +1,27 @@
+from __future__ import annotations
+
+import typing
+from collections.abc import Callable
+
 from PySide6.QtCore import QTimer
 
 from controller.joystick.joystick_enum import JoystickList
 from model import Broadcaster, Scene
 from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 
+if typing.TYPE_CHECKING:
+    from view.show_mode.show_ui_widgets import PanTiltConstantControlUIWidget
+
 
 class PanTiltConstantFilter(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, pos=pos)
-        self._pan = 0.8
-        self._tilt = 0.8
+        self._pan: float = 0.8
+        self._tilt: float = 0.8
         self._filter_configurations = {}
-        self._pan_delta = 0.0
-        self._tilt_delta = 0.0
+        self._pan_delta: float = 0.0
+        self._tilt_delta: float = 0.0
         self._joystick = JoystickList.NO_JOYSTICK
         self._broadcaster = Broadcaster()
         self._broadcaster.joystick_selected_event.connect(lambda joystick: self.set_joystick(
@@ -23,7 +31,7 @@ class PanTiltConstantFilter(VirtualFilter):
         self._timer = QTimer()
         self._timer.setInterval(50)
         self._timer.timeout.connect(self.update_time_passed)
-        self.observer = {}
+        self.observer: dict[PanTiltConstantControlUIWidget, Callable[[], None]] = {}
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
@@ -77,37 +85,37 @@ class PanTiltConstantFilter(VirtualFilter):
         filter_list.append(filter)
 
     @property
-    def pan(self):
+    def pan(self) -> float:
         return self._pan
 
     @pan.setter
-    def pan(self, pan) -> None:
+    def pan(self, pan: float) -> None:
         self._pan = pan
         self.notify_observer()
 
     @property
-    def tilt(self):
+    def tilt(self) -> float:
         return self._tilt
 
     @tilt.setter
-    def tilt(self, tilt) -> None:
+    def tilt(self, tilt: float) -> None:
         self._tilt = tilt
         self.notify_observer()
 
     @property
-    def pan_delta(self):
+    def pan_delta(self) -> float:
         return self._pan_delta
 
     @pan_delta.setter
-    def pan_delta(self, pan_delta) -> None:
+    def pan_delta(self, pan_delta: float) -> None:
         self._pan_delta = pan_delta
 
     @property
-    def tilt_delta(self):
+    def tilt_delta(self) -> float:
         return self._tilt_delta
 
     @tilt_delta.setter
-    def tilt_delta(self, tilt_delta) -> None:
+    def tilt_delta(self, tilt_delta: float) -> None:
         self._tilt_delta = tilt_delta
 
     def set_delta(self, delta: float, joystick: JoystickList, tilt: bool):
@@ -125,24 +133,24 @@ class PanTiltConstantFilter(VirtualFilter):
     def eight_bit_available(self):
         return self._filter_configurations["outputs"] == "both" or self._filter_configurations["outputs"] == "8bit"
 
-    def update_time_passed(self):
+    def update_time_passed(self) -> None:
         self._pan = min(max(self._pan + 0.01 * self._pan_delta, 0.0), 1.0)
         self._tilt = min(max(self._tilt + 0.01 * self._tilt_delta, 0.0), 1.0)
         self.notify_observer()
 
-    def register_observer(self, obs, callback):
+    def register_observer(self, obs: PanTiltConstantControlUIWidget, callback: Callable[[], None]) -> None:
         self.observer[obs] = callback
 
-    def notify_observer(self):
+    def notify_observer(self) -> None:
         for obs in self.observer:
             (self.observer[obs])()
 
     @property
-    def joystick(self):
+    def joystick(self) -> JoystickList:
         return self._joystick
 
     @joystick.setter
-    def joystick(self, joystick) -> None:
+    def joystick(self, joystick: JoystickList) -> None:
         if joystick != self._joystick:
             if joystick == JoystickList.NO_JOYSTICK:
                 self._timer.stop()
@@ -153,5 +161,5 @@ class PanTiltConstantFilter(VirtualFilter):
             self._broadcaster.joystick_selected_event.emit(joystick)
             self._joystick = joystick
 
-    def set_joystick(self, joystick):
+    def set_joystick(self, joystick: JoystickList) -> None:
         self.joystick = joystick

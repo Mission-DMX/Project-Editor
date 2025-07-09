@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -8,10 +10,10 @@ if TYPE_CHECKING:
     from model import Broadcaster, Filter
     from model.scene import Scene
 
-_network_manager_instance: "NetworkManager" = None
+_network_manager_instance: NetworkManager = None
 
 
-def setup_network_manager(nm: "NetworkManager", b: "Broadcaster"):
+def setup_network_manager(nm: NetworkManager, b: Broadcaster):
     global _network_manager_instance
     _network_manager_instance = nm
     b.request_main_brightness_fader_update.connect(nm.set_main_brightness_fader_position)
@@ -20,7 +22,7 @@ def setup_network_manager(nm: "NetworkManager", b: "Broadcaster"):
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
-    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] | None = None):
+    def __init__(self, parent_page: UIPage, configuration: dict[str, str] | None = None):
         """ Set up the basic components of a widget.
 
         Arguments:
@@ -63,7 +65,7 @@ class UIWidget(ABC):
         """
         raise NotImplementedError()
 
-    def set_filter(self, f: "Filter", i: int):
+    def set_filter(self, f: Filter, i: int):
         if not f:
             return
         self.associated_filters[str(i)] = f.filter_id
@@ -102,7 +104,7 @@ class UIWidget(ABC):
                 self._associated_filters[slot] = new_id
 
     @property
-    def parent(self) -> "UIPage":
+    def parent(self) -> UIPage:
         """Get the parent page of this widget"""
         return self._parent
 
@@ -132,7 +134,7 @@ class UIWidget(ABC):
     def configuration(self) -> dict[str, str]:
         return self._configuration
 
-    def copy_base(self, w: "UIWidget") -> "UIWidget":
+    def copy_base(self, w: UIWidget) -> UIWidget:
         w._position = self._position
         w._size = self._size
         w._filter_id = self._filter_id
@@ -140,14 +142,14 @@ class UIWidget(ABC):
         return w
 
     @abstractmethod
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         """This method needs to perform a deep copy of the object, excluding generatable state, such as the widgets"""
         raise NotImplementedError()
 
     @abstractmethod
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         """This method shall return a widget that will be placed within the configuration dialog"""
-        #TODO warum nutzt nur eine der implementierenden klassen überhaupt das parent objekt?
+        # TODO warum nutzt nur eine der implementierenden klassen überhaupt das parent objekt?
         raise NotImplementedError()
 
     def get_variante(self) -> str:
@@ -172,7 +174,7 @@ class UIWidget(ABC):
 class UIPage:
     """This class represents a page containing widgets that can be used to control the show."""
 
-    def __init__(self, parent: "Scene"):
+    def __init__(self, parent: Scene):
         """Construct a UI Page
 
         Arguments:
@@ -181,11 +183,11 @@ class UIPage:
         self._widgets: list[UIWidget] = []
         self._parent_scene: Scene = parent
         self._title: str = ""
-        self._player = None
+        self._player: str | None = None
         self.display_update_required = False
 
     @property
-    def scene(self) -> "Scene":
+    def scene(self) -> Scene:
         """Get the scene this page is bound to"""
         return self._parent_scene
 
@@ -194,7 +196,7 @@ class UIPage:
         """Returns true if this page is currently displayed on any player"""
         return self._player is not None
 
-    def activate_on_player(self, player):
+    def activate_on_player(self, player: str) -> None:
         """Set the player this page is displayed on"""
         self._player = player
         # TODO push page to player
@@ -212,7 +214,7 @@ class UIPage:
     def title(self, new_title: str) -> None:
         self._title = new_title
 
-    def copy(self, new_parent: "Scene") -> "UIPage":
+    def copy(self, new_parent: Scene) -> UIPage:
         new_page = UIPage(new_parent)
         new_page._player = self._player
         new_page._title = self._title
@@ -235,7 +237,7 @@ class ShowUI:
 
     The _page_storage variable contains the pages per scene.
     """
-    _fish_connector: "NetworkManager" = None
+    _fish_connector: NetworkManager = None
 
     def __init__(self):
         """This constructor initializes the show UI.

@@ -72,7 +72,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return QLabel()
 
-    def insert_action(self):
+    def insert_action(self) -> None:
         # TODO add support for separated constants
         combined_fid = self.associated_filters["pan_tilt_vfilter_fid"]
         command = (f"{combined_fid}_16bit_pan:value", str(int(self._filter.pan * 65535)))

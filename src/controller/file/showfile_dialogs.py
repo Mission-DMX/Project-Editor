@@ -1,5 +1,6 @@
 """Dialogs for Show File"""
 import os
+from collections.abc import Callable
 
 from PySide6.QtWidgets import QFileDialog, QWidget
 
@@ -8,7 +9,8 @@ from controller.file.write import write_document
 from model import BoardConfiguration
 
 
-def _select_file(parent: QWidget, func, show_save_dialog: bool, show_data: BoardConfiguration) -> None:
+def _select_file(parent: QWidget, func: Callable[[str, BoardConfiguration], None], show_save_dialog: bool,
+                 show_data: BoardConfiguration) -> None:
     """Opens QFileDialog to select a file.
 
     Args:

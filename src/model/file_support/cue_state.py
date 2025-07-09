@@ -2,6 +2,7 @@ import datetime
 from enum import Enum
 
 import proto.FilterMode_pb2
+from model import Filter
 
 
 class State(Enum):
@@ -11,8 +12,8 @@ class State(Enum):
 
 
 class CueState:
-    def __init__(self, filter):
-        self._filter = filter
+    def __init__(self, filter_: Filter):
+        self._filter = filter_
         self._state = State.STOP
         self._end_time = datetime.timedelta(seconds=float(20))
         self._paused_time = datetime.timedelta(seconds=float(0))

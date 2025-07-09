@@ -49,7 +49,7 @@ def _create_filter_element_for_fish(filter_: Filter, parent: ElementTree.Element
             _create_filter_configuration_element(filter_configuration=filter_configuration, parent=filter_element)
 
 
-def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizerModule,
+def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOptimizerModule,
                                                     scene_element: ElementTree.Element):
     """
     This function writes the channel links of the scene to the XML data.
@@ -64,6 +64,7 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish, om: SceneOptimizer
 
     :param om: The optimizer module carrying the information
     :param scene_element: The scene root element (required for the optimizer to finish operations)
+
     """
     # TODO check that no optimizations are performed if not fish
     om.wrap_up(scene_element)
