@@ -126,7 +126,7 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
     if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_IMPORT):
         return ImportVFilterSettingsWidget(filter_)
     if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
-        return ColorMixingSetupWidget(filter_)
+        return ColorMixingSetupWidget()
 
     return None
 

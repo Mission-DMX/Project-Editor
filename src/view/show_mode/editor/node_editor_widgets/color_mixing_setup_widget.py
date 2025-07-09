@@ -5,7 +5,6 @@ from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QSpinBox, QVBoxLayout, QWidget
 
 from controller.utils.yaml import yaml_load
-from model import Filter
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 
@@ -53,7 +52,7 @@ class _ColorHelpWidget(QWidget):
 class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
     _help_data = yaml_load(resource_path(os.path.join("resources", "data", "color_mixing.yml")))
 
-    def __init__(self, filter_: Filter, parent: QWidget = None) -> None:
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__()
         self._widget = QWidget(parent=parent)
         self._color_help_widget = _ColorHelpWidget(parent=self._widget)
