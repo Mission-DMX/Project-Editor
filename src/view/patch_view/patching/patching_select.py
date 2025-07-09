@@ -73,7 +73,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         manufacturer_widget.setLayout(manufacturer_layout)
         self.container.addWidget(manufacturer_widget)
         item = ManufacturerItem(manufacturer[0])
-        item.clicked.connect(lambda *args, _index=self.index: self.select_fixture(_index))
+        item.clicked.connect(lambda _, _index=self.index: self.select_fixture(_index))
         self.index += 1
 
         return item
