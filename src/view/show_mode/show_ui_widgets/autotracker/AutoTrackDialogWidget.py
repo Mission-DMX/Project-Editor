@@ -4,7 +4,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QTabWidget
 
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from view.show_mode.show_ui_widgets.autotracker.CropTab import CropTab
+from view.show_mode.show_ui_widgets.autotracker.crop_tab import CropTab
 from view.show_mode.show_ui_widgets.autotracker.detection_tab import DetectionTab
 from view.show_mode.show_ui_widgets.autotracker.gui_tab import GuiTab
 
