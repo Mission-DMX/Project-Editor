@@ -51,7 +51,7 @@ class DetectionTab(GuiTab):
             draw_boxes(frame, detections, scale)
             self.image_label.setPixmap(cv2qim(frame))
             if self.swt_detection.isChecked():
-                self.move_lights(detections, frame)
+                self.move_lights(detections)
 
     def process_frame(self, frame: np.ndarray) -> tuple[float, list[dict[str, int]]]:
         h, w, *_ = frame.shape
@@ -67,7 +67,7 @@ class DetectionTab(GuiTab):
     def get_confidence_threshold(self) -> float:
         return float(self.instance.settings.settings["confidence_threshold"].text())
 
-    def move_lights(self, detections: list[dict[str, int]], frame: np.ndarray) -> None:
+    def move_lights(self, detections: list[dict[str, int]]) -> None:
         if len(detections) > 0:
             max_detection = max(detections, key=lambda arr: arr["confidence"])
             # h, w, _ = frame.shape
