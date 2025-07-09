@@ -15,7 +15,7 @@ class AutoTrackerFilter(VirtualFilter):
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_AUTOTRACKER, pos=pos)
         self._control_filters: dict[int, _MHControlInstance] = {}
-        self._light_controller: VFilterLightController = VFilterLightController(self)
+        self._light_controller: VFilterLightController = VFilterLightController()
         self.out_data_types["minimum_brightness"] = DataType.DT_DOUBLE
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
