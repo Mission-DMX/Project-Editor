@@ -1,4 +1,3 @@
-
 """This file provides the main control widget for the filter stacking v-filter."""
 
 from typing import override
@@ -72,7 +71,7 @@ class EffectsStackEditor(QWidget):
         global_layout.addWidget(self._right_side_container)
         self._message_box = QMessageBox(self.parent())
 
-    def _fixture_or_group_add_clicked(self, item: QTreeWidgetItem, column: int) -> None:
+    def _fixture_or_group_add_clicked(self, item: QTreeWidgetItem, _: int) -> None:
         if not isinstance(item, AnnotatedTreeWidgetItem):
             return
         if isinstance(item.annotated_data, UsedFixture):
