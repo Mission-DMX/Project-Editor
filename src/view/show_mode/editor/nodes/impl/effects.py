@@ -151,7 +151,7 @@ class AutoTrackerNode(FilterNode):
             if trackers < len(self.terminals) / 3:
                 self.terminals.clear()
             for i in range(int(len(self.terminals) / 3), trackers, 1):
-                min_brightness_filter_id: str = f.get_min_brightness_filter_id(i)
+                min_brightness_filter_id: str = f.get_min_brightness_filter_id()
                 self.addOutput(min_brightness_filter_id)
                 self.addOutput(f"Tracker{i}_Pan")
                 self.addOutput(f"Tracker{i}_Tilt")

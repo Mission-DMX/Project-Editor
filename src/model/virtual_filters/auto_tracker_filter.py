@@ -22,7 +22,7 @@ class AutoTrackerFilter(VirtualFilter):
         # TODO upgrade to multi tracker support
         match virtual_port_id:
             case "minimum_brightness":
-                return self.get_min_brightness_filter_id(0)
+                return self.get_min_brightness_filter_id()
             case "pan":
                 return self.get_pan_filter_id(0)
             case "tilt":
@@ -30,7 +30,7 @@ class AutoTrackerFilter(VirtualFilter):
 
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         # TODO implement multi tracker support
-        filter_list.append(Filter(self.scene, self.get_min_brightness_filter_id(0),
+        filter_list.append(Filter(self.scene, self.get_min_brightness_filter_id(),
                                   FilterTypeEnumeration.FILTER_CONSTANT_FLOAT))
         for tf in self._control_filters.values():
             filter_list.append(Filter(self.scene, self.get_pan_filter_id(tf),
@@ -58,7 +58,7 @@ class AutoTrackerFilter(VirtualFilter):
             mh_tracker = tracker_id
         return f"{self.filter_id}{mh_tracker.name_prefix}TILT_Constant"
 
-    def get_min_brightness_filter_id(self, tracker_id: int | _MHControlInstance) -> str:
+    def get_min_brightness_filter_id(self) -> str:
         # TODO upgrade to multi tracker support
         return f"{self.filter_id}__min_brightness"
 
