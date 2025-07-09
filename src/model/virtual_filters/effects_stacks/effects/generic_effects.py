@@ -1,6 +1,7 @@
 """This file contains effects that provide generic numbers"""
 
 from abc import ABC
+from typing import override
 
 from PySide6.QtWidgets import QWidget
 
@@ -35,6 +36,7 @@ class FunctionEffect(GenericEffect):
     def get_configuration_widget(self) -> QWidget | None:
         return self._widget
 
+    @override
     def resolve_input_port_name(self, slot_id: str) -> str:
         match slot_id:
             case "phase":

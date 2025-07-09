@@ -1,7 +1,7 @@
 """This file contains the effects of type color."""
 
 from abc import ABC
-from typing import Any
+from typing import Any, override
 
 from PySide6.QtWidgets import QWidget
 
@@ -41,6 +41,7 @@ class ColorWheelEffect(ColorEffect):
     def get_configuration_widget(self) -> QWidget | None:
         return self._widget
 
+    @override
     def resolve_input_port_name(self, slot_id: str) -> str:
         match slot_id:
             case "speed":

@@ -1,3 +1,5 @@
+from typing import override
+
 from PySide6.QtWidgets import QWidget
 
 from model import Filter
@@ -25,6 +27,7 @@ class ChainingEffectDummy(Effect):
     def get_output_slot_type(self) -> EffectType:
         return self._effect.get_output_slot_type()
 
+    @override
     def resolve_input_port_name(self, slot_id: str) -> str:
         return ""
 

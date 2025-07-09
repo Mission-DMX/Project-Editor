@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
@@ -42,6 +42,7 @@ class EffectDummySocket(Effect):
     def get_output_slot_type(self) -> EffectType:
         return self._stype
 
+    @override
     def resolve_input_port_name(self, slot_id: str) -> str:
         return ""
 

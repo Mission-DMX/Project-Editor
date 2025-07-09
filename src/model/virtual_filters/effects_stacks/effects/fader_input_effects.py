@@ -1,5 +1,6 @@
 
 """This file defines effects that provide their output based on a selected input fader."""
+from typing import override
 
 from PySide6.QtWidgets import QWidget
 
@@ -42,6 +43,7 @@ class ColorInputEffect(ColorEffect):
             self._resolve_fader()
         return FaderSelectionConfigurationWidget(self)
 
+    @override
     def resolve_input_port_name(self, slot_id: str) -> str:
         return "invalid"  # As we have no inputs, this function does nothing
 
