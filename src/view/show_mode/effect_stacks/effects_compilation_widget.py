@@ -9,7 +9,7 @@ from PySide6.QtGui import QBrush, QColor, QFontMetrics, QMouseEvent, QPainter, Q
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from model.ofl.fixture import UsedFixture
-from model.virtual_filters.effects_stacks.ChaningEffectDummy import ChainingEffectDummy
+from model.virtual_filters.effects_stacks.chaning_effect_dummy import ChainingEffectDummy
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
