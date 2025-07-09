@@ -9,7 +9,7 @@ from model import Broadcaster
 
 
 class JoystickHandler:
-    joystickMap = {}
+    joystick_map = {}
 
     @staticmethod
     def reformat(key: Key) -> None:
@@ -40,8 +40,8 @@ class JoystickHandler:
         mngr = pyjoystick.ThreadEventManager(event_loop=run_event_loop,
                                              handle_key_event=lambda key: cls.reformat(key),
                                              )
-        cls.joystickMap["No Joystick"] = JoystickList.NO_JOYSTICK
-        cls.joystickMap["Gamepad Left"] = JoystickList.GAMEPAD_LEFT
-        cls.joystickMap["Gamepad Right"] = JoystickList.GAMEPAD_RIGHT
-        cls.joystickMap["Joystick"] = JoystickList.JOYSTICK
+        cls.joystick_map["No Joystick"] = JoystickList.NO_JOYSTICK
+        cls.joystick_map["Gamepad Left"] = JoystickList.GAMEPAD_LEFT
+        cls.joystick_map["Gamepad Right"] = JoystickList.GAMEPAD_RIGHT
+        cls.joystick_map["Joystick"] = JoystickList.JOYSTICK
         mngr.start()
