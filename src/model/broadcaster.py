@@ -1,7 +1,7 @@
 """connector for Signals"""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ParamSpec
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
@@ -15,6 +15,8 @@ from controller.joystick.joystick_enum import JoystickList
 from .device import Device
 from .scene import FilterPage, Scene
 
+P = ParamSpec("P")
+
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
     """metaclass for a QObject Singleton"""
@@ -24,7 +26,7 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
         super().__init__(name, bases, _dict)
         cls.instance = None
 
-    def __call__(cls: type[QObjectSingletonMeta], *args: Any, **kw: Any) -> QtCore.QObject:
+    def __call__(cls: type[QObjectSingletonMeta], *args: P.args, **kw: P.kwargs) -> QtCore.QObject:
         if cls.instance is None:
             cls.instance = super().__call__(*args, **kw)
         return cls.instance
