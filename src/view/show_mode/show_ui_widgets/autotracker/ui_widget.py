@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import TYPE_CHECKING, override
+from typing import override, TYPE_CHECKING
 
 from PySide6.QtWidgets import QDialog, QWidget
 
@@ -15,7 +15,7 @@ logger = getLogger(__name__)
 
 class AutoTrackerUIWidget(UIWidget):
 
-    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] = None) -> None:
+    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] | None = None) -> None:
         super().__init__(parent_page, configuration)
         self._finished_initializing: bool = False
 

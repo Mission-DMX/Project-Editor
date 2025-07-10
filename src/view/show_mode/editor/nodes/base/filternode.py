@@ -1,6 +1,6 @@
 """Basic filter node"""
 from logging import getLogger
-from typing import TYPE_CHECKING, override
+from typing import override, TYPE_CHECKING
 
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 
@@ -21,7 +21,7 @@ class FilterNode(Node):
     def __init__(self, model: Filter | Scene,
                  filter_type: int,
                  name: str,
-                 terminals: dict[str, dict[str, str]] = None,
+                 terminals: dict[str, dict[str, str]] | None = None,
                  allow_add_input: bool = False,
                  allow_add_output: bool = False) -> None:
         if isinstance(model, Scene):
@@ -82,8 +82,8 @@ class FilterNode(Node):
             self.filter.channel_links[local_term.name()] = remote_node.name() + ":" + remote_term.name()
         except KeyError as e:
             logger.exception("%s Possible key candidates are: %s\nRemote options are: %s", str(e),
-                         ", ".join(self.filter.in_data_types.keys()),
-                         ", ".join(remote_node.filter.out_data_types.keys()))
+                             ", ".join(self.filter.in_data_types.keys()),
+                             ", ".join(remote_node.filter.out_data_types.keys()))
 
     def disconnected(self, local_term: Terminal, remote_term: Terminal) -> None:
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.

@@ -1,6 +1,6 @@
 """Universe filter node"""
 from logging import getLogger
-from typing import Any, override
+from typing import Any, ClassVar, override
 
 from pyqtgraph.flowchart import Terminal
 
@@ -16,7 +16,7 @@ class UniverseNode(FilterNode):
     """Filter to represent a dmx universe. By default, it has 8 outputs, put more can be added."""
     nodeName = "Universe"  # noqa: N815
 
-    universe_ids: list[int] = []
+    universe_ids: ClassVar[list[int]] = []
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         if isinstance(model, Filter):

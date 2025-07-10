@@ -18,7 +18,7 @@ class TextPreviewRendererMixin(FilterNode):
     def __init__(self, model: Filter | Scene,
                  filter_type: int,
                  name: str,
-                 terminals: dict[str, dict[str, str]] = None,
+                 terminals: dict[str, dict[str, str]] | None = None,
                  allow_add_input: bool = False,
                  allow_add_output: bool = False) -> None:
         super().__init__(model, filter_type, name, terminals, allow_add_input, allow_add_output)
