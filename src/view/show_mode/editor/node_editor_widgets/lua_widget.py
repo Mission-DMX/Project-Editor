@@ -58,7 +58,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
     def __init__(self, parent: QWidget = None) -> None:
         super().__init__()
         self._widget = QWidget(parent)
-        self._channels: dict[str, tuple[bool, DataType]] = dict()
+        self._channels: dict[str, tuple[bool, DataType]] = {}
 
         central_layout = QHBoxLayout()
         side_container = QWidget(self._widget)

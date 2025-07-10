@@ -80,9 +80,9 @@ class EventSender:
         self.type: str = ""
         self._debug_enabled: bool = False
         self.debug_include_ongoing_events: bool = False
-        self.configuration: dict[str, str] = dict()
+        self.configuration: dict[str, str] = {}
         self.persistent: bool = False
-        self.renamed_events: dict[tuple[int, int, str], str] = dict()
+        self.renamed_events: dict[tuple[int, int, str], str] = {}
 
     @property
     def name(self) -> str:

@@ -65,7 +65,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         pass
 
     def _get_parameters(self) -> dict[str, str]:
-        return dict()
+        return {}
 
     def _construct_widget(self) -> None:
         self._widget = QWidget(parent=self._parent)
