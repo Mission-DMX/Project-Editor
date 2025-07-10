@@ -6,7 +6,7 @@ from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 class CueListNode(FilterNode):
     """Filter to represent any filter fader"""
-    node_name = "Cues"
+    nodeName = "Cues"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
@@ -108,35 +108,35 @@ class ShiftFilterNode(FilterNode):
 
 
 class Shift8BitNode(ShiftFilterNode):
-    node_name = "filter_shift_8bit"
+    nodeName = "filter_shift_8bit"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT, DataType.DT_8_BIT)
 
 
 class Shift16BitNode(ShiftFilterNode):
-    node_name = "filter_shift_16bit"
+    nodeName = "filter_shift_16bit"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT, DataType.DT_16_BIT)
 
 
 class ShiftFloatNode(ShiftFilterNode):
-    node_name = "filter_shift_float"
+    nodeName = "filter_shift_float"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT, DataType.DT_DOUBLE)
 
 
 class ShiftColorNode(ShiftFilterNode):
-    node_name = "filter_shift_color"
+    nodeName = "filter_shift_color"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR, DataType.DT_COLOR)
 
 
 class AutoTrackerNode(FilterNode):
-    node_name = "AutoTracker"
+    nodeName = "AutoTracker"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER, name=name,
@@ -165,7 +165,7 @@ class AutoTrackerNode(FilterNode):
 
 
 class EffectsStackNode(FilterNode):
-    node_name = "EffectsStack"
+    nodeName = "EffectsStack"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK, name=name,

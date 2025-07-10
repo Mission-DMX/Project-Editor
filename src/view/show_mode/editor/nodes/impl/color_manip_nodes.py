@@ -3,28 +3,28 @@ from view.show_mode.editor.nodes.base.aggregating_filter_node import Aggregating
 
 
 class ColorMixerHSVNode(AggregatingFilterNode):
-    node_name = "Color Mixer HSV"
+    nodeName = "Color Mixer HSV"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
 
 
 class ColorMixerAdditiveRGBNode(AggregatingFilterNode):
-    node_name = "Color Mixer Additive RGB"
+    nodeName = "Color Mixer Additive RGB"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
 
 
 class ColorMixerNormativeRGBNode(AggregatingFilterNode):
-    node_name = "Color Mixer Normative RGB"
+    nodeName = "Color Mixer Normative RGB"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
 
 
 class ColorMixerVFilterNode(AggregatingFilterNode):
-    node_name = "Color Mixer"
+    nodeName = "Color Mixer"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.VFILTER_COLOR_MIXER)

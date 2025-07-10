@@ -41,7 +41,7 @@ class TextPreviewRendererMixin(FilterNode):
 
 class Constants8BitNode(TextPreviewRendererMixin):
     """Filter to represent an 8 bit value."""
-    node_name = "8_bit_filter"
+    nodeName = "8_bit_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_8BIT, name=name, terminals={
@@ -66,7 +66,7 @@ class Constants8BitNode(TextPreviewRendererMixin):
 
 class Constants16BitNode(TextPreviewRendererMixin):
     """Filter to represent a 16 bit value."""
-    node_name = "16_bit_filter"
+    nodeName = "16_bit_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, name=name, terminals={
@@ -91,7 +91,7 @@ class Constants16BitNode(TextPreviewRendererMixin):
 
 class ConstantsFloatNode(TextPreviewRendererMixin):
     """Filter to represent a float/double value."""
-    node_name = "Float_filter"
+    nodeName = "Float_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, name=name, terminals={
@@ -118,7 +118,7 @@ class ConstantsColorNode(FilterNode):
     """Filter to represent a color value.
     TODO specify color format
     """
-    node_name = "Color_filter"
+    nodeName = "Color_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name, terminals={
@@ -153,7 +153,7 @@ class ConstantsColorNode(FilterNode):
 
 class PanTiltConstant(FilterNode):
     """Filter to represent a pan/tilt position."""
-    node_name = "PanTilt_filter"
+    nodeName = "PanTilt_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, name=name,

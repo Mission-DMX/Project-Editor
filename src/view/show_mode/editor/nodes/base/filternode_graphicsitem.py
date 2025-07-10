@@ -24,7 +24,7 @@ class FilterNodeGraphicsItem(NodeGraphicsItem):
         super().__init__(node)
         self.setTitleOffset(self.titleOffset() + 10)
         self.setTerminalOffset(self.terminalOffset() + 7)
-        self._node_type_string = self.node.node_name
+        self._node_type_string = self.node.nodeName
         self.additional_rendering_method: Callable[[QPainter], None] | None = None
 
     def paint(self, painter: QPainter, *args: QStyleOptionGraphicsItem | QWidget | None) -> None:

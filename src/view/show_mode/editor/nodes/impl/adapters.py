@@ -6,7 +6,7 @@ from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 class Adapter16BitTo8BitNode(FilterNode):
     """Filter to convert a 16 bit value to two 8 bit values."""
-    node_name = "16 bit to 8 bit converter"
+    nodeName = "16 bit to 8 bit converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=int(FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT),
@@ -25,7 +25,7 @@ class Adapter16BitToBoolNode(FilterNode):
     """Filter to convert a 16 bit value to a boolean.
     If input is 0, output is 0, else 1.
     """
-    node_name = "16 bit to bool converter"
+    nodeName = "16 bit to bool converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL, name=name,
@@ -39,7 +39,7 @@ class Adapter16BitToBoolNode(FilterNode):
 
 
 class Adapter16bitToFloat(FilterNode):
-    node_name = "16bit to Float converter"
+    nodeName = "16bit to Float converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT, name=name,
@@ -54,7 +54,7 @@ class Adapter16bitToFloat(FilterNode):
 
 
 class Adapter8bitToFloat(FilterNode):
-    node_name = "8bit to Float converter"
+    nodeName = "8bit to Float converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT, name=name,
@@ -70,7 +70,7 @@ class Adapter8bitToFloat(FilterNode):
 
 class AdapterColorToRGBNode(FilterNode):
     """Filter to convert a color value to a rgb value."""
-    node_name = "Color to rgb converter"
+    nodeName = "Color to rgb converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGB, name=name,
@@ -89,7 +89,7 @@ class AdapterColorToRGBNode(FilterNode):
 
 class AdapterColorToRGBWNode(FilterNode):
     """Filter to convert a color value to a rgbw value."""
-    node_name = "Color to rgb-w converter"
+    nodeName = "Color to rgb-w converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBW, name=name,
@@ -110,7 +110,7 @@ class AdapterColorToRGBWNode(FilterNode):
 
 class AdapterColorToRGBWANode(FilterNode):
     """Filter to convert a color value to a RGBWA value."""
-    node_name = "Color to rgb-wa converter"
+    nodeName = "Color to rgb-wa converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBWA, name=name,
@@ -133,7 +133,7 @@ class AdapterColorToRGBWANode(FilterNode):
 
 class AdapterFloatToColorNode(FilterNode):
     """Filter to convert a float/double value to a color value."""
-    node_name = "Float to color converter"
+    nodeName = "Float to color converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR, name=name,
@@ -153,7 +153,7 @@ class AdapterFloatToColorNode(FilterNode):
 
 class AdapterColorToFloatsNode(FilterNode):
     """Filter that splits the HSI values into three individual float channels."""
-    node_name = "Color to Float converter"
+    nodeName = "Color to Float converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_FLOAT, name=name,
@@ -171,9 +171,9 @@ class AdapterColorToFloatsNode(FilterNode):
 
 
 class AdapterFloatToRange(FilterNode):
-    """Filter maps a range of float to another range of specific type (template)"""
+    """Filter maps a range of floats to another range of specific type (template)"""
 
-    node_name = "float range to float range"
+    nodeName = "float range to float range"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str,
                  filter_type: FilterTypeEnumeration =
@@ -214,7 +214,7 @@ class AdapterFloatToRange(FilterNode):
 
 class AdapterFloatTo8BitRange(AdapterFloatToRange):
     """Filter maps a range of float to a range of 8bit"""
-    node_name = "Float range to 8bit"
+    nodeName = "Float range to 8bit"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE, name=name)
@@ -227,7 +227,7 @@ class AdapterFloatTo8BitRange(AdapterFloatToRange):
 
 class AdapterFloatTo16BitRange(AdapterFloatToRange):
     """Filter maps a range of float to a range of 16bit"""
-    node_name = "Float range to 16bit"
+    nodeName = "Float range to 16bit"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE, name=name)
@@ -240,7 +240,7 @@ class AdapterFloatTo16BitRange(AdapterFloatToRange):
 
 class Adapter16BitToRangeFloat(AdapterFloatToRange):
     """Filter maps a range of 16bit to a range of float"""
-    node_name = "16bit range to Float"
+    nodeName = "16bit range to Float"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE,
@@ -255,7 +255,7 @@ class Adapter16BitToRangeFloat(AdapterFloatToRange):
 
 class Adapter8BitToRangeFloat(AdapterFloatToRange):
     """Filter maps a range of 8bit to a range of floats"""
-    node_name = "8bit range to Float"
+    nodeName = "8bit range to Float"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE,
@@ -270,7 +270,7 @@ class Adapter8BitToRangeFloat(AdapterFloatToRange):
 
 class CombineTwo8BitToSingle16Bit(FilterNode):
     """Filter that combines two 8bit values to a 16bit one."""
-    node_name = "Dual 8bit to single 16bit"
+    nodeName = "Dual 8bit to single 16bit"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_DUAL_BYTE_TO_16BIT, name=name,
@@ -286,8 +286,8 @@ class CombineTwo8BitToSingle16Bit(FilterNode):
 
 
 class Map8BitTo16Bit(FilterNode):
-    """Filter that maps an 8bit value to a 16bit one."""
-    node_name = "Map 8bit to 16bit"
+    """Filter that maps an 8-Bit value to a 16-Bit one."""
+    nodeName = "Map 8bit to 16bit"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_8BIT_TO_16BIT, name=name,
@@ -301,7 +301,7 @@ class Map8BitTo16Bit(FilterNode):
 
 
 class ColorBrightnessMixinNode(FilterNode):
-    node_name = "Color Brightness Mixin"
+    nodeName = "Color Brightness Mixin"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,

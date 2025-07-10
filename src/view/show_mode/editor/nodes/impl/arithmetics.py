@@ -9,7 +9,7 @@ class ArithmeticMACNode(FilterNode):
     """Filter to calculate MAC value.
     value = (factor1 * factor2) + summand
     """
-    node_name = "MAC filter"
+    nodeName = "MAC filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MAC, name=name, terminals={
@@ -30,7 +30,7 @@ class ArithmeticMACNode(FilterNode):
 
 class ArithmeticFloatTo16BitNode(FilterNode):
     """Filter to round a float/double value to a 16 bit value."""
-    node_name = "Float to 16 bit converter"
+    nodeName = "Float to 16 bit converter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_16BIT, name=name,
@@ -45,7 +45,7 @@ class ArithmeticFloatTo16BitNode(FilterNode):
 
 class ArithmeticFloatTo8BitNode(FilterNode):
     """Filter to round a float/double value to an 8 bit value."""
-    node_name = "Float to 8 bit converter"
+    nodeName = "Float to 8 bit converter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT, name=name,
@@ -60,7 +60,7 @@ class ArithmeticFloatTo8BitNode(FilterNode):
 
 class ArithmeticRoundNode(FilterNode):
     """Filter to round a float/double value to a float/double value"""
-    node_name = "Round"
+    nodeName = "Round"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_ROUND, name=name, terminals={
@@ -76,7 +76,7 @@ class ArithmeticLogarithmNode(FilterNode):
     """Filter to calculate a logarithm value.
     value = ln(value_in)
     """
-    node_name = "log"
+    nodeName = "log"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_LOGARITHM, name=name,
@@ -94,7 +94,7 @@ class ArithmeticExponentialNode(FilterNode):
     """Filter to calculate an exponential value.
     value = exp(value_in)
     """
-    node_name = "exp"
+    nodeName = "exp"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_EXPONENTIAL, name=name,
@@ -111,7 +111,7 @@ class ArithmeticMinimumNode(FilterNode):
     """Filter to calculate the minimum of two values.
     value = min(param1, param2)
     """
-    node_name = "min"
+    nodeName = "min"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MINIMUM, name=name,
@@ -132,7 +132,7 @@ class ArithmeticMaximumNode(FilterNode):
     """Filter to calculate the maximum of two values.
     value = max(param1, param2)
     """
-    node_name = "max"
+    nodeName = "max"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MAXIMUM, name=name,
@@ -150,21 +150,21 @@ class ArithmeticMaximumNode(FilterNode):
 
 
 class Sum8BitNode(AggregatingFilterNode):
-    node_name = "8Bit Sum"
+    nodeName = "8Bit Sum"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(DataType.DT_8_BIT, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_8BIT)
 
 
 class Sum16BitNode(AggregatingFilterNode):
-    node_name = "16Bit Sum"
+    nodeName = "16Bit Sum"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(DataType.DT_16_BIT, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_16BIT)
 
 
 class SumFloatNode(AggregatingFilterNode):
-    node_name = "Float Sum"
+    nodeName = "Float Sum"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(DataType.DT_DOUBLE, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_FLOAT)

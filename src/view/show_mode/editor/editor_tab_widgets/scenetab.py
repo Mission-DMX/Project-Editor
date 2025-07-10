@@ -3,13 +3,14 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QToolBar, QVBoxLayout, QWidget
 
 from model import Scene
+from model.scene import FilterPage
 from view.show_mode.editor.nodeeditor import NodeEditorWidget
 
 
 class SceneTabWidget(QWidget):
     """Widget representing a scene as a tab page"""
 
-    def __init__(self, scene: Scene) -> None:
+    def __init__(self, scene: Scene | FilterPage) -> None:
         super().__init__()
         self._scene = scene
         self._layout = QVBoxLayout()

@@ -22,7 +22,7 @@ end
 
 
 class LuaFilterNode(FilterNode):
-    node_name = "Lua"
+    nodeName = "Lua"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_SCRIPTING_LUA, name=name,
