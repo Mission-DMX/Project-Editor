@@ -551,7 +551,7 @@ class BankSet:
     def set_active_column(self, column: DeskColumn) -> None:
         self.active_column = column
 
-    def get_column_by_number(self, index: int) -> DeskColumn:
+    def get_column_by_number(self, index: int) -> DeskColumn | None:
         """This method iterates through the banks and returns column i"""
         i = 0
         # Unfortunately we cannot return the index directly, as the number of columns in a bank is not constant.
@@ -561,6 +561,7 @@ class BankSet:
                     return c
 
                 i += 1
+        return None
 
     @staticmethod
     def handle_column_update_message(message: proto.Console_pb2.fader_column) -> None:

@@ -41,9 +41,8 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
         if not self._widget.selected_item:
             return {}
         column = self._widget.selected_item.annotated_data
-        data = {
+        return {
             "column_id": column.id,
             "set_id": column.bank_set.id if column.bank_set else "",
             "ignore_main_brightness_control": "true" if self._widget.ignore_main_brightness else "false",
         }
-        return data

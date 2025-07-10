@@ -36,12 +36,11 @@ class CueState:
                    self.time_delta_to_str(self._paused_time))
         if self._state == State.PLAY:
             ret = self.time_delta_to_str((datetime.datetime.now() - self._start_time) * self._time_scale)
-        ret = (ret + " / " +
-               self.time_delta_to_str(self._end_time) +
-               " in cue " +
-               str(self._active_cue)
-               )
-        return ret
+        return (ret + " / " +
+                self.time_delta_to_str(self._end_time) +
+                " in cue " +
+                str(self._active_cue)
+                )
 
     def update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         values = param.parameter_value.split(";")

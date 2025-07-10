@@ -18,9 +18,8 @@ class CueFilterModel:
             mapping_str = ";".join([f"{t[0]}:{t[1].format_for_filters()}" for t in self.cues[0].channels])
         else:
             mapping_str = ""
-        d = {"end_handling": "start_again" if self.global_restart_on_end else "hold", "mapping": mapping_str,
-             "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": self.default_cue}
-        return d
+        return {"end_handling": "start_again" if self.global_restart_on_end else "hold", "mapping": mapping_str,
+                "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": self.default_cue}
 
     def append_cue(self, c: Cue) -> None:
         if c not in self.cues:

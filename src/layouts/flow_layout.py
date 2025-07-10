@@ -57,9 +57,8 @@ class FlowLayout(QLayout):
         return True
 
     @override
-    def heightForWidth(self, width: int) -> int:
-        height = self._do_layout(QRect(0, 0, width, 0), True)
-        return height
+    def heightForWidth(self, width: int) -> float:
+        return self._do_layout(QRect(0, 0, width, 0), True)
 
     @override
     def setGeometry(self, rect: QRect) -> None:
