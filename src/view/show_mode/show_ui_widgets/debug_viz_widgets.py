@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 from logging import getLogger
-from typing import TYPE_CHECKING, override
+from typing import override, TYPE_CHECKING
 
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
@@ -223,7 +223,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
             self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
         except ValueError:
             logger.exception("Unable to parse color '%s' from filter '%s:%s'.", param.parameter_value,
-                         param.filter_id, param.parameter_key)
+                             param.filter_id, param.parameter_key)
 
 
 class _NumberLabel(QWidget):
@@ -254,7 +254,7 @@ class _NumberLabel(QWidget):
         return self._number
 
     @number.setter
-    def number(self, new_number: int | float) -> None:
+    def number(self, new_number: float) -> None:
         if new_number == self._number:
             return
         text = f"{new_number:.5f}"
@@ -307,7 +307,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
             self._show_widget.number = float(param.parameter_value)
         except ValueError:
             logger.exception("Unexpected number received from filter '%s:%s': %s", param.filter_id,
-                         param.parameter_key, param.parameter_value)
+                             param.parameter_key, param.parameter_value)
 
     def _delete_callback(self) -> None:
         if self._show_widget is not None:
