@@ -81,7 +81,7 @@ class FilterNode(Node):
                 return
             self.filter.channel_links[local_term.name()] = remote_node.name() + ":" + remote_term.name()
         except KeyError as e:
-            logger.error("%s Possible key candidates are: %s\nRemote options are: %s", str(e),
+            logger.exception("%s Possible key candidates are: %s\nRemote options are: %s", str(e),
                          ", ".join(self.filter.in_data_types.keys()),
                          ", ".join(remote_node.filter.out_data_types.keys()))
 

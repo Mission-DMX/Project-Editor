@@ -85,7 +85,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         schema.validate(file_name)
         pn.current_step_number += 1
     except Exception as error:
-        logger.error("Error while validating show file: %s", error)
+        logger.exception("Error while validating show file: %s", error)
         ExceptionsDialog(error).exec()
         pn.close()
         return False
@@ -150,7 +150,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         fader_value = int(board_configuration.ui_hints.get("default_main_brightness") or "255")
         board_configuration.broadcaster.request_main_brightness_fader_update.emit(fader_value)
     except ValueError as e:
-        logger.error("Unable to parse main brightness setting: %s", e)
+        logger.exception("Unable to parse main brightness setting: %s", e)
 
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name

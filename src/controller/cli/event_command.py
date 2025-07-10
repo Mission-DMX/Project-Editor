@@ -53,7 +53,7 @@ class EventCommand(Command):
                             else:
                                 evs.configuration[str(item)] = ""
                         except ValueError as _:
-                            logger.error(
+                            logger.exception(
                                 "Unable to parse event sender configuration entry %s."
                                 " Expected format: <key>=<value>",
                                 item)

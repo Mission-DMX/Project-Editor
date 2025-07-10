@@ -28,7 +28,7 @@ def read_entire_file_as_str(file_path: str) -> str:
             text = f.read()
     except OSError as e:
         text = "Unknown Debug"
-        logger.error("Unable to load file string from %s. %s", file_path, e)
+        logger.exception("Unable to load file string from %s. %s", file_path, e)
     return text
 
 

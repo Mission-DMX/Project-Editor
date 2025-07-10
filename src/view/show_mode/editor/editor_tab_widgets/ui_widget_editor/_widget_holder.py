@@ -127,4 +127,4 @@ class UIWidgetHolder(QWidget):
             self._child.setVisible(False)
             self._child.setEnabled(False)
         except RuntimeError as e:
-            logger.error("BUG! This widget is already deleted: %s", e)
+            logger.exception("BUG! This widget is already deleted: %s", e)

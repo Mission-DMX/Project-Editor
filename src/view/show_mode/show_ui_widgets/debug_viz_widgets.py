@@ -222,7 +222,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
             hsi_value = param.parameter_value.split(",")
             self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
         except ValueError:
-            logger.error("Unable to parse color '%s' from filter '%s:%s'.", param.parameter_value,
+            logger.exception("Unable to parse color '%s' from filter '%s:%s'.", param.parameter_value,
                          param.filter_id, param.parameter_key)
 
 
@@ -306,7 +306,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
         try:
             self._show_widget.number = float(param.parameter_value)
         except ValueError:
-            logger.error("Unexpected number received from filter '%s:%s': %s", param.filter_id,
+            logger.exception("Unexpected number received from filter '%s:%s': %s", param.filter_id,
                          param.parameter_key, param.parameter_value)
 
     def _delete_callback(self) -> None:

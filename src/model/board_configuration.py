@@ -105,7 +105,7 @@ class BoardConfiguration:
         try:
             del self._universes[universe.id]
         except ValueError:
-            logger.error("Unable to remove universe %s", universe.name)
+            logger.exception("Unable to remove universe %s", universe.name)
 
     def _add_device(self, device: Device) -> None:
         """Adds the device to the board configuration.

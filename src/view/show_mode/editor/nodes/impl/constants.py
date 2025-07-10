@@ -60,7 +60,7 @@ class Constants8BitNode(TextPreviewRendererMixin):
             self.filter.initial_parameters["value"] = str(
                 max(min(int(self.filter.initial_parameters["value"]), 255), 0))
         except ValueError as e:
-            logger.error("Error while checking entered value. %s", e)
+            logger.exception("Error while checking entered value. %s", e)
             self.filter.initial_parameters["value"] = "0"
 
 
@@ -85,7 +85,7 @@ class Constants16BitNode(TextPreviewRendererMixin):
             self.filter.initial_parameters["value"] = str(
                 max(min(int(self.filter.initial_parameters["value"]), 65565), 0))
         except ValueError as e:
-            logger.error("Error while checking entered value. %s", e)
+            logger.exception("Error while checking entered value. %s", e)
             self.filter.initial_parameters["value"] = "0"
 
 
@@ -110,7 +110,7 @@ class ConstantsFloatNode(TextPreviewRendererMixin):
             self.filter.initial_parameters["value"] = str(
                 float(self.filter.initial_parameters["value"]))
         except ValueError as e:
-            logger.error("Error while checking entered value. %s", e)
+            logger.exception("Error while checking entered value. %s", e)
             self.filter.initial_parameters["value"] = "0.0"
 
 
@@ -147,7 +147,7 @@ class ConstantsColorNode(FilterNode):
         try:
             self._color_brush = QBrush(ColorHSI.from_filter_str(self.filter.initial_parameters["value"]).to_qt_color())
         except ValueError as e:
-            logger.error("Error while checking entered value. %s", e)
+            logger.exception("Error while checking entered value. %s", e)
             self.filter.initial_parameters["value"] = "0,0,0"
 
 
