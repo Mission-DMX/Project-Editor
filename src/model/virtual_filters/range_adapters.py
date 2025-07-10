@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -11,7 +13,7 @@ logger = getLogger(__name__)
 
 class SixteenBitToFloatRange(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE, pos=pos)
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -21,40 +23,40 @@ class SixteenBitToFloatRange(VirtualFilter):
         return None
 
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
-        filter = Filter(
+        filter_: Filter = Filter(
             filter_id=f"{self.filter_id}_16bit_to_float",
             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT,
             scene=self.scene,
         )
-        filter._initial_parameters = {}
-        filter._filter_configurations = {}
-        filter._in_data_types = {}
-        filter._out_data_types = {}
-        filter._gui_update_keys = {}
-        filter._in_data_types = {}
-        filter._channel_links = {"value_in": self.channel_links["value_in"]}
-        filter_list.append(filter)
-        filter = Filter(
+        filter_._initial_parameters = {}
+        filter_._filter_configurations = {}
+        filter_._in_data_types = {}
+        filter_._out_data_types = {}
+        filter_._gui_update_keys = {}
+        filter_._in_data_types = {}
+        filter_._channel_links = {"value_in": self.channel_links["value_in"]}
+        filter_list.append(filter_)
+        filter_ = Filter(
             filter_id=f"{self.filter_id}_float_range",
             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE,
             scene=self.scene,
         )
-        filter._initial_parameters = self.initial_parameters
-        filter._filter_configurations = {}
-        filter._in_data_types = {"value_in": DataType.DT_DOUBLE}
-        filter._out_data_types = {"value": DataType.DT_DOUBLE}
-        filter._gui_update_keys = {"lower_bound_in": DataType.DT_16_BIT,
-                                   "upper_bound_in": DataType.DT_16_BIT,
-                                   "lower_bound_out": DataType.DT_DOUBLE,
-                                   "upper_bound_out": DataType.DT_DOUBLE}
-        filter._in_data_types = {}
-        filter._channel_links = {"value_in": f"{self.filter_id}_16bit_to_float:value"}
-        filter_list.append(filter)
+        filter_._initial_parameters = self.initial_parameters
+        filter_._filter_configurations = {}
+        filter_._in_data_types = {"value_in": DataType.DT_DOUBLE}
+        filter_._out_data_types = {"value": DataType.DT_DOUBLE}
+        filter_._gui_update_keys = {"lower_bound_in": DataType.DT_16_BIT,
+                                    "upper_bound_in": DataType.DT_16_BIT,
+                                    "lower_bound_out": DataType.DT_DOUBLE,
+                                    "upper_bound_out": DataType.DT_DOUBLE}
+        filter_._in_data_types = {}
+        filter_._channel_links = {"value_in": f"{self.filter_id}_16bit_to_float:value"}
+        filter_list.append(filter_)
 
 
 class EightBitToFloatRange(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, pos=pos)
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -64,40 +66,40 @@ class EightBitToFloatRange(VirtualFilter):
         return None
 
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
-        filter = Filter(
+        filter_: Filter = Filter(
             filter_id=f"{self.filter_id}_8bit_to_float",
             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
             scene=self.scene,
         )
-        filter._initial_parameters = {}
-        filter._filter_configurations = {}
-        filter._in_data_types = {}
-        filter._out_data_types = {}
-        filter._gui_update_keys = {}
-        filter._in_data_types = {}
-        filter._channel_links = {"value_in": self.channel_links["value_in"]}
-        filter_list.append(filter)
-        filter = Filter(
+        filter_._initial_parameters = {}
+        filter_._filter_configurations = {}
+        filter_._in_data_types = {}
+        filter_._out_data_types = {}
+        filter_._gui_update_keys = {}
+        filter_._in_data_types = {}
+        filter_._channel_links = {"value_in": self.channel_links["value_in"]}
+        filter_list.append(filter_)
+        filter_ = Filter(
             filter_id=f"{self.filter_id}_float_range",
             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE,
             scene=self.scene,
         )
-        filter._initial_parameters = self.initial_parameters
-        filter._filter_configurations = {}
-        filter._in_data_types = {"value_in": DataType.DT_DOUBLE}
-        filter._out_data_types = {"value": DataType.DT_DOUBLE}
-        filter._gui_update_keys = {"lower_bound_in": DataType.DT_8_BIT,
-                                   "upper_bound_in": DataType.DT_8_BIT,
-                                   "lower_bound_out": DataType.DT_DOUBLE,
-                                   "upper_bound_out": DataType.DT_DOUBLE}
-        filter._in_data_types = {}
-        filter._channel_links = {"value_in": f"{self.filter_id}_8bit_to_float:value"}
-        filter_list.append(filter)
+        filter_._initial_parameters = self.initial_parameters
+        filter_._filter_configurations = {}
+        filter_._in_data_types = {"value_in": DataType.DT_DOUBLE}
+        filter_._out_data_types = {"value": DataType.DT_DOUBLE}
+        filter_._gui_update_keys = {"lower_bound_in": DataType.DT_8_BIT,
+                                    "upper_bound_in": DataType.DT_8_BIT,
+                                    "lower_bound_out": DataType.DT_DOUBLE,
+                                    "upper_bound_out": DataType.DT_DOUBLE}
+        filter_._in_data_types = {}
+        filter_._channel_links = {"value_in": f"{self.filter_id}_8bit_to_float:value"}
+        filter_list.append(filter_)
 
 
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, pos=pos)
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:

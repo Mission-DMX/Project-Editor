@@ -54,36 +54,36 @@ class PanTiltConstantFilter(VirtualFilter):
             self.instantiate_16bit_to_8bit_conversion_filter(filter_list, True)
 
     def instantiate_16bit_constant_filter(self, filter_list: list[Filter], tilt: bool) -> None:
-        filter = Filter(
+        filter_ = Filter(
             filter_id=f"{self.filter_id}_16bit_{'tilt' if tilt else 'pan'}",
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
             scene=self.scene,
         )
-        filter._initial_parameters = {
+        filter_._initial_parameters = {
             "value": str(int((self.tilt if tilt else self.pan) * 65535))}  # Todo: inverse Tilt?
-        filter._filter_configurations = {}
-        filter._in_data_types = {}
-        filter._out_data_types = {"value": DataType.DT_16_BIT}
-        filter._gui_update_keys = {"value": DataType.DT_16_BIT}
-        filter._in_data_types = {}
-        filter._channel_links = {}
-        filter_list.append(filter)
+        filter_._filter_configurations = {}
+        filter_._in_data_types = {}
+        filter_._out_data_types = {"value": DataType.DT_16_BIT}
+        filter_._gui_update_keys = {"value": DataType.DT_16_BIT}
+        filter_._in_data_types = {}
+        filter_._channel_links = {}
+        filter_list.append(filter_)
 
     def instantiate_16bit_to_8bit_conversion_filter(self, filter_list: list[Filter], tilt: bool) -> None:
-        filter = Filter(
+        filter_ = Filter(
             filter_id=f"{self.filter_id}_8bit_{'tilt' if tilt else 'pan'}",
             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
             scene=self.scene,
         )
-        filter._initial_parameters = {}
-        filter._filter_configurations = {}
-        filter._in_data_types = {"value": DataType.DT_16_BIT}
-        filter._out_data_types = {"value_lower": DataType.DT_8_BIT,
-                                  "value_upper": DataType.DT_8_BIT}
-        filter._gui_update_keys = {}
-        filter._in_data_types = {}
-        filter._channel_links = {"value": f"{self.filter_id}_16bit_{'tilt' if tilt else 'pan'}:value"}
-        filter_list.append(filter)
+        filter_._initial_parameters = {}
+        filter_._filter_configurations = {}
+        filter_._in_data_types = {"value": DataType.DT_16_BIT}
+        filter_._out_data_types = {"value_lower": DataType.DT_8_BIT,
+                                   "value_upper": DataType.DT_8_BIT}
+        filter_._gui_update_keys = {}
+        filter_._in_data_types = {}
+        filter_._channel_links = {"value": f"{self.filter_id}_16bit_{'tilt' if tilt else 'pan'}:value"}
+        filter_list.append(filter_)
 
     @property
     def pan(self) -> float:

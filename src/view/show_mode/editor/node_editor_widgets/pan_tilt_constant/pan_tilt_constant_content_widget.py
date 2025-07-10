@@ -11,7 +11,7 @@ from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 
 
 class PanTiltConstantContentWidget(QLabel):
-    def __init__(self, filter: PanTiltConstantFilter | None,
+    def __init__(self, filter_: PanTiltConstantFilter | None,
                  parent: QWidget = None, enable_joystick: bool = True) -> None:
         super().__init__(parent=parent)
         self.pan = 0
@@ -23,9 +23,9 @@ class PanTiltConstantContentWidget(QLabel):
         self.prange = 1
         self.trange = 1
 
-        self._filter = filter
+        self._filter = filter_
 
-        if filter is not None:
+        if filter_ is not None:
             self._filter.register_observer(self, self.repaint)
         self.repaint()
         if enable_joystick:

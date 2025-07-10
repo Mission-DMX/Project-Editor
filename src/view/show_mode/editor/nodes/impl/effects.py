@@ -55,8 +55,8 @@ class CueListNode(FilterNode):
 
 
 class ShiftFilterNode(FilterNode):
-    def __init__(self, model: Filter, name: str, id: int, data_type: DataType) -> None:
-        super().__init__(model=model, filter_type=id, name=name, allow_add_output=True, terminals={
+    def __init__(self, model: Filter, name: str, id_: int, data_type: DataType) -> None:
+        super().__init__(model=model, filter_type=id_, name=name, allow_add_output=True, terminals={
             "input": {"io": "in"},
             "switch_time": {"io": "in"},
             "time": {"io": "in"},
@@ -73,7 +73,7 @@ class ShiftFilterNode(FilterNode):
         try:
             if isinstance(model, Scene):
                 # FIXME using the filter type as its ID seams odd
-                found_filter = model.get_filter_by_id(str(id))
+                found_filter = model.get_filter_by_id(str(id_))
                 if found_filter:
                     self.filter.filter_configurations["nr_outputs"] = str(
                         int(found_filter.filter_configurations.get("nr_outputs")))

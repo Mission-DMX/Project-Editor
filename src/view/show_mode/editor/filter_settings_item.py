@@ -46,14 +46,14 @@ class FilterSettingsItem(QGraphicsSvgItem):
     """
     _open_dialogs: list[QDialog] = []
 
-    def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem, filter: Filter) -> None:
+    def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem, filter_: Filter) -> None:
         super().__init__(resource_path(os.path.join("resources", "icons", "settings.svg")), parent)
         self.dialog = None
         self.filter_node = filter_node
         self.on_update = lambda: None
         self.setScale(0.2)
         self.moveBy(parent.boundingRect().width() / 2 - 6, parent.boundingRect().height() - 20)
-        self._filter = filter
+        self._filter = filter_
         self._mb_updated: bool = False
 
     @override

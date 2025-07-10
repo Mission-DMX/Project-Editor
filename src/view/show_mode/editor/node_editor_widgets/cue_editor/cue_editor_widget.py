@@ -299,14 +299,14 @@ class CueEditor(NodeEditorFilterConfigWidget):
     def _rename_selected_cue(self) -> None:
         self._input_dialog = []
         for index in self._indices_from_table_selection(ascending_order=False):
-            id = QInputDialog(self._cue_list_widget)
+            input_dialog = QInputDialog(self._cue_list_widget)
             original_cue_name = self._model.cues[index].name
-            id.setLabelText(f"New name for Cue #{index + 1} ({original_cue_name})")
-            id.setTextValue(original_cue_name)
-            id.setModal(True)
-            id.accepted.connect(lambda d=id, i=index: self._change_cue_name(i, d))
-            id.show()
-            self._input_dialog.append(id)
+            input_dialog.setLabelText(f"New name for Cue #{index + 1} ({original_cue_name})")
+            input_dialog.setTextValue(original_cue_name)
+            input_dialog.setModal(True)
+            input_dialog.accepted.connect(lambda d=input_dialog, i=index: self._change_cue_name(i, d))
+            input_dialog.show()
+            self._input_dialog.append(input_dialog)
 
     def _change_cue_name(self, index: int, new_name: str | QInputDialog) -> None:
         if isinstance(new_name, QInputDialog):

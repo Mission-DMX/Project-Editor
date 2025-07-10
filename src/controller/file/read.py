@@ -33,7 +33,7 @@ def _parse_and_add_bankset(child: ET.Element, loaded_banksets: dict[str, BankSet
     :param loaded_banksets: The list to add the bankset to.
     """
     _id = child.attrib.get("id")
-    bs: BankSet = BankSet(gui_controlled=True, id=_id)
+    bs: BankSet = BankSet(gui_controlled=True, id_=_id)
     for bank_element in child:
         bank = FaderBank()
         if bank_element.tag != "bank":
@@ -226,9 +226,9 @@ def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pa
         if child.tag != "filterid":
             logger.error("Found unknown tag '%s' in filter page.", child.tag)
         else:
-            filter = parent_scene.get_filter_by_id(child.text)
-            if filter:
-                f.filters.append(filter)
+            filter_ = parent_scene.get_filter_by_id(child.text)
+            if filter_:
+                f.filters.append(filter_)
             else:
                 logger.error("Didn't find filter '%s' in scene '%s'.", child.text,
                              parent_scene.human_readable_name)

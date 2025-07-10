@@ -36,7 +36,7 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
     def highlightBlock(self, text: str, /) -> None:
         """This method gets called for every text block. It sets the formats on it"""
         for pattern, fmt in self._mappings.items():
-            iter = pattern.globalMatch(text)
-            while iter.hasNext():
-                match = iter.next()
+            iterator = pattern.globalMatch(text)
+            while iterator.hasNext():
+                match = iterator.next()
                 self.setFormat(match.capturedStart(), match.capturedLength(), fmt)

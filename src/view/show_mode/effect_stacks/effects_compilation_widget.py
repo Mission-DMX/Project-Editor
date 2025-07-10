@@ -36,9 +36,9 @@ class EffectCompilationWidget(QWidget):
     background-blend-mode: screen;
     """
 
-    def __init__(self, filter: EffectsStack, parent: QWidget) -> None:
+    def __init__(self, filter_: EffectsStack, parent: QWidget) -> None:
         super().__init__(parent=parent)
-        self._filter = filter
+        self._filter = filter_
         self.setMinimumWidth(600)
         self.setSizePolicy(
             QSizePolicy.MinimumExpanding,

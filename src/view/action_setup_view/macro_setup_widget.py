@@ -230,12 +230,12 @@ class MacroSetupWidget(QSplitter):
         self._dialog.accepted.connect(self._load_macro)
         self._dialog.show()
 
-    def _create_file_dialog(self, open: bool) -> None:
+    def _create_file_dialog(self, open_: bool) -> None:
         self._dialog = QFileDialog(self)
         self._dialog.setModal(True)
         self._dialog.setNameFilter("Macro (*.macro)")
         self._dialog.setViewMode(QFileDialog.ViewMode.Detail)
-        if open:
+        if open_:
             self._dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
             self._dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
         else:

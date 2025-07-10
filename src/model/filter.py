@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from enum import IntFlag, auto
-from typing import TYPE_CHECKING, Never
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from . import Scene
@@ -296,7 +296,7 @@ class VirtualFilter(Filter, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def instantiate_filters(self, filter_list: list[Filter]) -> Never:
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         """
         This method will be called by the show file serializer when it serializes the show for fish. It places the real
         filters inside the provided filter_list argument.

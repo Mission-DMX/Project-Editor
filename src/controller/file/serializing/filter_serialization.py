@@ -5,6 +5,12 @@ from controller.file.serializing.fish_optimizer import SceneOptimizerModule
 from model import Filter
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
+_TYPE_MAP: dict[DataType, FilterTypeEnumeration] = {
+    DataType.DT_16_BIT: FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+    DataType.DT_DOUBLE: FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+    DataType.DT_COLOR: FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
+}
+
 
 def _create_filter_element_for_fish(filter_: Filter, parent: ET.Element, for_fish: bool,
                                     om: SceneOptimizerModule) -> None:
@@ -115,13 +121,7 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOpt
     if for_fish:
         for datatype, defvalues in default_nodes.items():
             for default_value in defvalues:
-                type = FilterTypeEnumeration.FILTER_CONSTANT_8BIT
-                if datatype == DataType.DT_16_BIT:
-                    type = FilterTypeEnumeration.FILTER_CONSTANT_16_BIT
-                elif datatype == DataType.DT_DOUBLE:
-                    type = FilterTypeEnumeration.FILTER_CONSTANT_FLOAT
-                elif datatype == DataType.DT_COLOR:
-                    type = FilterTypeEnumeration.FILTER_CONSTANT_COLOR
+                type_ = _TYPE_MAP.get(datatype, FilterTypeEnumeration.FILTER_CONSTANT_8BIT)
                 if default_value == "time":
                     filter_element = ET.SubElement(scene_element, "filter", attrib={
                         "id": "timedefaultfilter",
@@ -131,7 +131,7 @@ def create_channel_mappings_for_filter_set_for_fish(for_fish: bool, om: SceneOpt
                 else:
                     filter_element = ET.SubElement(scene_element, "filter", attrib={
                         "id": "const" + str(datatype) + "val" + default_value,
-                        "type": str(type),
+                        "type": str(type_),
                         "pos": "0,0",
                     })
                     _create_initial_parameters_element(("value", default_value), filter_element)

@@ -117,12 +117,12 @@ class FilterNode(Node):
             for next_filter_node in terminal.dependentNodes():
                 if isinstance(next_filter_node, FilterNode):
                     filters_to_update.add(next_filter_node.filter)
-        for filter in filters_to_update:
-            for input_key in filter.channel_links:
+        for filter_ in filters_to_update:
+            for input_key in filter_.channel_links:
                 # FIXME the name is not always present
-                prefix, suffix = filter.channel_links[input_key].split(":")
+                prefix, suffix = filter_.channel_links[input_key].split(":")
                 if prefix == old_name:
-                    filter.channel_links[input_key] = f"{name}:{suffix}"
+                    filter_.channel_links[input_key] = f"{name}:{suffix}"
         super().rename(name)
 
     def update_filter_pos(self) -> None:

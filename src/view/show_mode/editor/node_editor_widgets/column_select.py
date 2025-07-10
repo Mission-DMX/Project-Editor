@@ -22,10 +22,10 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
         return self._widget
 
-    def __init__(self, filter: Filter, parent: QWidget = None) -> None:
+    def __init__(self, filter_: Filter, parent: QWidget = None) -> None:
         super().__init__()
-        self._widget = FaderColumnSelectorWidget(parent=parent, base_set=filter.scene.linked_bankset)
-        self._filter = filter
+        self._widget = FaderColumnSelectorWidget(parent=parent, base_set=filter_.scene.linked_bankset)
+        self._filter = filter_
 
     def _load_configuration(self, conf: dict[str, str]) -> None:
         if "ignore_main_brightness_control" in conf:

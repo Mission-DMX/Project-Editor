@@ -14,13 +14,13 @@ _additional_filter_depth = 100.0
 _filter_channel_height = 35.0
 
 
-def _sanitize_name(input: str | dict) -> str:
-    if isinstance(input, dict):
-        input = input.get("insert")
+def _sanitize_name(input_: str | dict) -> str:
+    if isinstance(input_, dict):
+        input_ = input_.get("insert")
         logger.error("Did not extract channel macro while creating fixture filters.")
-    if input == "universe":
+    if input_ == "universe":
         return "_universe_channel"
-    return input.replace(" ", "_").replace("/", "_").replace("\\", "_")
+    return input_.replace(" ", "_").replace("/", "_").replace("\\", "_")
 
 
 def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, ColorSupport], filter_page: FilterPage,
@@ -36,26 +36,26 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
     avg_count = 0
     max_y = 0.0
 
-    for filter in filter_page.filters:
-        filter_position_x = filter.pos[0] or 0
-        if filter.filter_type not in [FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
-                                      FilterTypeEnumeration.VFILTER_UNIVERSE]:
+    for filter_ in filter_page.filters:
+        filter_position_x = filter_.pos[0] or 0
+        if filter_.filter_type not in [FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
+                                       FilterTypeEnumeration.VFILTER_UNIVERSE]:
             avg_x = filter_position_x
             avg_count += 1
-        max_y = max(max_y, filter.pos[1] or 0)
+        max_y = max(max_y, filter_.pos[1] or 0)
     avg_x /= max(avg_count, 1)
 
-    filter = Filter(
+    filter_ = Filter(
         filter_id=f"universe-output_{_sanitize_name(name)}",
         filter_type=11,
         pos=(avg_x, max_y + (_filter_channel_height * fixture.channel_length) / 2),
         scene=scene,
     )
 
-    filter.filter_configurations["universe"] = str(fixture.parent_universe)
-    already_added_filters = [filter]
+    filter_.filter_configurations["universe"] = str(fixture.parent_universe)
+    already_added_filters = [filter_]
 
-    used_names = set(filter.filter_configurations)
+    used_names = set(filter_.filter_configurations)
 
     for index in range(fixture.channel_length):
         base_name = _sanitize_name(fixture.get_fixture_channel(index).name or str(index))
@@ -66,13 +66,13 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
             selected_name = f"{base_name}_{suffix}"
             suffix += 1
 
-        filter.filter_configurations[selected_name] = str(fixture.start_index + index + 1)
+        filter_.filter_configurations[selected_name] = str(fixture.start_index + index + 1)
         used_names.add(selected_name)
 
-    scene.append_filter(filter)
-    filter_page.filters.append(filter)
+    scene.append_filter(filter_)
+    filter_page.filters.append(filter_)
 
-    added_depth = _check_and_add_auxiliary_filters(fixture, filter_page, filter, avg_x, max_y,
+    added_depth = _check_and_add_auxiliary_filters(fixture, filter_page, filter_, avg_x, max_y,
                                                    name, already_added_filters, output_map)
     for f in already_added_filters:
         f.pos = (f.pos[0] + added_depth, f.pos[1])

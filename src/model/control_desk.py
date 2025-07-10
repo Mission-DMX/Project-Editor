@@ -341,7 +341,7 @@ class BankSet:
         return list(BankSet._linked_bank_sets)
 
     def __init__(self, banks: list[FaderBank] = None, description: str = None, gui_controlled: bool = False,
-                 id: str | None = None) -> None:
+                 id_: str | None = None) -> None:
         """Construct a bank set object.
         After construction link() needs to be called in order to link the set with the control desk.
 
@@ -351,8 +351,9 @@ class BankSet:
         gui_controlled -- Indicates that the set is managed by the gui thread.
         id -- If a specific ID should be used for initialization
         """
-        if id:
-            self._id = id
+        # TODO why is id as string
+        if id_:
+            self._id = id_
         else:
             self._id = _generate_unique_id()
         self.pushed_to_fish = False

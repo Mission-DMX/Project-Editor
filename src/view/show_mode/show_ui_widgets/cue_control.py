@@ -104,13 +104,13 @@ class CueControlUIWidget(UIWidget):
         self._model = None
 
     def _migrate_name_list(self) -> None:
-        cuelist_str = self.configuration.get("cue_names")
-        if cuelist_str:
+        cue_list_str = self.configuration.get("cue_names")
+        if cue_list_str:
             logger.info("Migrating old cue name model")
-            for entry_text in cuelist_str.split(";"):
-                name, id = entry_text.split(":")
-                id = int(id)
-                cue = self._model.cues[id]
+            for entry_text in cue_list_str.split(";"):
+                name, id_string = entry_text.split(":")
+                id_: int = int(id_string)
+                cue = self._model.cues[id_]
                 if len(cue.name) == 0 or cue.name == "":
                     logger.info("Updating cue name %s to %s.", cue.name, name)
                     cue.name = name
