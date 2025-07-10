@@ -199,25 +199,24 @@ class EffectCompilationWidget(QWidget):
                 p.setBrush(old_brush)
                 """
                 p.drawLine(old_x - 3, old_y - 3, old_x - 3, y)
-            else:
-                # render insertion hint for empty slots
-                if self._pending_effect:
-                    can_attach_effect = False
-                    supported_slot_types = effect.get_accepted_input_types()[slot_name]
-                    for supported_target in supported_slot_types:
-                        can_attach_effect |= Effect.can_convert_slot(self._pending_effect.get_output_slot_type(),
-                                                                     supported_target)
-                    if can_attach_effect and slot_name not in rendered_slots:
-                        # render placement hint
-                        slot_counter_str = str(len(self._slot_counter))
-                        x -= 10
-                        slot_counter_str_width = fm.horizontalAdvance(slot_counter_str)
-                        p.fillRect(x - slot_counter_str_width - 6, int(y + socket_height / 2 - text_height / 2 - 3),
-                                   slot_counter_str_width + 6, text_height / 2 + 6, light_blue_brush)
-                        p.drawText(x - slot_counter_str_width - 3, y + socket_height / 2 + 3, slot_counter_str)
-                        rendered_slots.add(slot_name)
-                        dummy_effect = ChainingEffectDummy(effect, slot_name, supported_slot_types)
-                        self._slot_counter.append((slot_name, dummy_effect))
+            # render insertion hint for empty slots
+            elif self._pending_effect:
+                can_attach_effect = False
+                supported_slot_types = effect.get_accepted_input_types()[slot_name]
+                for supported_target in supported_slot_types:
+                    can_attach_effect |= Effect.can_convert_slot(self._pending_effect.get_output_slot_type(),
+                                                                 supported_target)
+                if can_attach_effect and slot_name not in rendered_slots:
+                    # render placement hint
+                    slot_counter_str = str(len(self._slot_counter))
+                    x -= 10
+                    slot_counter_str_width = fm.horizontalAdvance(slot_counter_str)
+                    p.fillRect(x - slot_counter_str_width - 6, int(y + socket_height / 2 - text_height / 2 - 3),
+                               slot_counter_str_width + 6, text_height / 2 + 6, light_blue_brush)
+                    p.drawText(x - slot_counter_str_width - 3, y + socket_height / 2 + 3, slot_counter_str)
+                    rendered_slots.add(slot_name)
+                    dummy_effect = ChainingEffectDummy(effect, slot_name, supported_slot_types)
+                    self._slot_counter.append((slot_name, dummy_effect))
 
         y += socket_height
         return x, y
