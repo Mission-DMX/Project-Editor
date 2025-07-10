@@ -1,7 +1,7 @@
 """connector for Signals"""
 from __future__ import annotations
 
-from typing import Any, ParamSpec
+from typing import Any, ParamSpec, Self
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
@@ -26,7 +26,7 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
         super().__init__(name, bases, _dict)
         cls.instance = None
 
-    def __call__(cls: type[QObjectSingletonMeta], *args: P.args, **kw: P.kwargs) -> QtCore.QObject:
+    def __call__(cls: type[QObjectSingletonMeta], *args: P.args, **kw: P.kwargs) -> QObjectSingletonMeta:
         if cls.instance is None:
             cls.instance = super().__call__(*args, **kw)
         return cls.instance
@@ -114,7 +114,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
 
-    def __new__(cls) -> Broadcaster:
+    def __new__(cls) -> Self:
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance

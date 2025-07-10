@@ -5,7 +5,7 @@ import math
 import queue
 import xml.etree.ElementTree as ET
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
@@ -43,7 +43,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     run_mode_changed: QtCore.Signal = QtCore.Signal(int)
     active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
-    def __new__(cls) -> NetworkManager:
+    def __new__(cls) -> Self:
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance
