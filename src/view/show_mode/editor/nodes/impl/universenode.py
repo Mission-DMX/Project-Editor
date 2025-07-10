@@ -6,6 +6,7 @@ from pyqtgraph.flowchart import Terminal
 
 from model import DataType, Filter, Scene
 from model.filter import FilterTypeEnumeration
+from model.universe import NUMBER_OF_CHANNELS
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 logger = getLogger(__name__)
@@ -56,9 +57,9 @@ class UniverseNode(FilterNode):
 
     @override
     def addInput(self, name: str = "input", **args: dict[str, Any]) -> None:
-        """Allows to add up to 512 input channels."""
+        """Allows adding up to 512 input channels."""
         next_input = len(self.inputs())
-        if next_input >= 512:
+        if next_input >= NUMBER_OF_CHANNELS:
             return
         input_channel = f"{name}_{next_input + 1}"
         self.filter.filter_configurations[input_channel] = str(next_input)

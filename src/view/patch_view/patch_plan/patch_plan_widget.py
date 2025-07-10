@@ -6,6 +6,7 @@ from PySide6.QtGui import QPainter, QPaintEvent, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QWidget
 
 from model.ofl.fixture import UsedFixture
+from model.universe import NUMBER_OF_CHANNELS
 from view.patch_view.patch_plan.channel_item_generator import create_item, item_height, item_width
 from view.patch_view.patch_plan.used_fixture_widget import UsedFixtureWidget
 
@@ -55,7 +56,7 @@ class PatchPlanWidget(QWidget):
 
     def update_widget_height(self) -> None:
         """update the widget height"""
-        rows = math.ceil(512 / self._cols)
+        rows = math.ceil(NUMBER_OF_CHANNELS / self._cols)
         self.setFixedHeight(rows * item_height())
 
     def add_fixture(self, fixture: UsedFixture) -> None:
