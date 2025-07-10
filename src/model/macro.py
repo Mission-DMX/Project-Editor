@@ -48,8 +48,7 @@ class Trigger(QObject):
     def enabled(self) -> bool:
         if self._macro is not None:
             return self._macro._triggers[self]
-        else:
-            return False
+        return False
 
     @enabled.setter
     def enabled(self, new_state: bool) -> None:

@@ -272,7 +272,7 @@ class BoardConfiguration:
             if macro_id >= len(self._macros):
                 return None
             return self._macros[macro_id]
-        elif isinstance(macro_id, str):
+        if isinstance(macro_id, str):
             for m in self._macros:
                 if m.name == macro_id:
                     return m

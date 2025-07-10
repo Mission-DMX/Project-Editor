@@ -138,6 +138,7 @@ class ShowEditorWidget(QSplitter):
             bankset.description,
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
+        return None
 
     def _add_uipage_tab(self, data: dict) -> QWidget | None:
         uipage = data["uipage"]
@@ -157,6 +158,7 @@ class ShowEditorWidget(QSplitter):
             uipage.scene.human_readable_name + "/UI Page",  # TODO query index
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
+        return None
 
     def _remove_tab(self, scene_or_index: Scene | int) -> None:
         """Removes the tab corresponding to the scene or index.

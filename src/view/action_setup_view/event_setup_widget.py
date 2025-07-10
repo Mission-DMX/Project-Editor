@@ -42,6 +42,13 @@ _midi_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource
 _midirtp_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midirtp.svg")))
 _rename_icon = QIcon(resource_path(os.path.join("resources", "icons", "rename.svg")))
 
+_event_type_string: dict[proto.Events_pb2.event_type, str] = {
+    proto.Events_pb2.ONGOING_EVENT: "Ongoing",
+    proto.Events_pb2.START: "Start",
+    proto.Events_pb2.RELEASE: "End",
+    proto.Events_pb2.SINGLE_TRIGGER: "Single",
+}
+
 
 class _SenderConfigurationWidget(QScrollArea):
     """Widget containing the configuration of the current selected event sender."""
@@ -129,7 +136,7 @@ class _SenderConfigurationWidget(QScrollArea):
         for i, k, v in enumerate(rename_items):
             name_item = AnnotatedTableWidgetItem(v)
             name_item.annotated_data = k
-            ev_type_item = QTableWidgetItem(_type_to_string(k[0]))
+            ev_type_item = QTableWidgetItem(_event_type_string.get(k[0], k[0]))
             ev_type_item.setFlags(ev_type_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             s_function_item = QTableWidgetItem(str(k[1]))
             s_function_item.setFlags(
@@ -197,20 +204,6 @@ class _SourceListWidget(QWidget):
         self.setLayout(layout)
 
 
-def _type_to_string(t: proto.Events_pb2) -> str:
-    """Get the string representation of an event type"""
-    if t == proto.Events_pb2.ONGOING_EVENT:
-        return "Ongoing"
-    elif t == proto.Events_pb2.START:
-        return "Start"
-    elif t == proto.Events_pb2.RELEASE:
-        return "End"
-    elif t == proto.Events_pb2.SINGLE_TRIGGER:
-        return "Single"
-    else:
-        return str(t)
-
-
 class _EventLogListWidget(QWidget):
     """Content widget for ListWidgetItems of logged events"""
 
@@ -253,7 +246,7 @@ class _EventLogListWidget(QWidget):
         self._id_label.setStyleSheet(_EventLogListWidget._STYLE_ID_TAG)
         self._sender_label = QLabel(f"[{ev.sender_id}:{ev.sender_function}]", parent=self)
         self._sender_label.setToolTip("Event Sender and function")
-        self._type_label = QLabel(_type_to_string(ev.type), parent=self)
+        self._type_label = QLabel(_event_type_string.get(ev.type, ev.type), parent=self)
         if ev.type == proto.Events_pb2.START:
             self._type_label.setStyleSheet(_EventLogListWidget._STYLE_TAG_START)
         elif ev.type == proto.Events_pb2.RELEASE:

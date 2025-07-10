@@ -21,12 +21,13 @@ class EndAction(Enum):
     NEXT = 2
 
     def __str__(self) -> str:
-        if self.value == EndAction.HOLD.value:
-            return "Hold current values"
-        if self.value == EndAction.NEXT.value:
-            return "Jump to next cue"
-        if self.value == EndAction.START_AGAIN.value:
-            return "Restart cue"
+        match self:
+            case EndAction.HOLD:
+                return "Hold current values"
+            case EndAction.START_AGAIN:
+                return "Jump to next cue"
+            case _:
+                return "Restart cue"
 
         return "Unknown action"
 
@@ -35,12 +36,13 @@ class EndAction(Enum):
         return [str(a) for a in [EndAction.HOLD, EndAction.START_AGAIN, EndAction.NEXT]]
 
     def get_filter_format_str(self) -> str:
-        if self.value == EndAction.HOLD.value:
-            return "hold"
-        elif self.value == EndAction.START_AGAIN.value:
-            return "start_again"
-        else:
-            return "next_cue"
+        match self:
+            case EndAction.HOLD:
+                return "hold"
+            case EndAction.START_AGAIN:
+                return "start_again"
+            case _:
+                return "next_cue"
 
     @staticmethod
     def from_format_str(f_str: str) -> EndAction:

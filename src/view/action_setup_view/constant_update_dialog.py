@@ -87,21 +87,20 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         if self._filter.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                                         FilterTypeEnumeration.FILTER_CONSTANT_16_BIT]:
             return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._int_tb.value()}"
-        elif self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
+        if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
             return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._float_tb.value()}"
-        elif self._filter.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
+        if self._filter.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
             s = (
                 f"showctl filtermsg {self._scene.scene_id} {self.filter_id}_16bit_pan value "
                 f"{int(self._pan_tilt_widget.pan * 65535)}\n"
                 f"showctl filtermsg {self._scene.scene_id} {self.filter_id}_16bit_tilt value "
                 f"{int(self._pan_tilt_widget.tilt * 65535)}")
             return s
-        else:
-            qtc = self._color.to_qt_color()
-            hexcode = f"rgb: {int(qtc.redF() * 255):02X}{int(qtc.greenF() * 255):02X}{int(qtc.blueF() * 255):02X}"
-            s = (f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value "
-                 f"{self._color.format_for_filter()} # {hexcode}")
-            return s
+        qtc = self._color.to_qt_color()
+        hexcode = f"rgb: {int(qtc.redF() * 255):02X}{int(qtc.greenF() * 255):02X}{int(qtc.blueF() * 255):02X}"
+        s = (f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value "
+             f"{self._color.format_for_filter()} # {hexcode}")
+        return s
 
     def on_filter_selected(self) -> None:
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT:
