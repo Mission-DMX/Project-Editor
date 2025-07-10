@@ -1,6 +1,9 @@
+from __future__ import annotations
+
+import datetime
 import os
-from datetime import datetime
 from typing import TYPE_CHECKING, override
+from zoneinfo import ZoneInfo
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont, QFontDatabase, QFontMetrics
@@ -27,7 +30,7 @@ def _configure_label(w: QLabel) -> QLabel:
 
 
 class ClockUIWidget(UIWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._widget: QLabel | None = None
         self._timer: QTimer | None = None
@@ -56,12 +59,12 @@ class ClockUIWidget(UIWidget):
         self._update_label()
 
     def _update_label(self) -> None:
-        ct = datetime.now().time()
+        ct = datetime.datetime.now(tz=ZoneInfo("Europe/Berlin")).time()
         text = f"{ct.hour:02}:{ct.minute:02}:{ct.second:02}"
         self._widget.setText(text)
 
     @override
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = ClockUIWidget(new_parent, self.configuration.copy())
         self.copy_base(w)
         return w

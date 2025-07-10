@@ -3,6 +3,7 @@ import datetime as dt
 import json
 from logging import Formatter, LogRecord
 from typing import override
+from zoneinfo import ZoneInfo
 
 LOG_RECORD_BUILTIN_ATTRS = {"args", "asctime", "created", "exc_info", "exc_text", "filename", "funcName", "levelname",
                             "levelno", "lineno", "module", "msecs", "message", "msg", "name", "pathname", "process",
@@ -23,7 +24,8 @@ class JSONFormatter(Formatter):
 
     def _prepare_log_dict(self, record: LogRecord) -> dict[str, str | None]:
         always_fields = {"message": record.getMessage(),
-                         "timestamp": dt.datetime.fromtimestamp(record.created).isoformat()}
+                         "timestamp": dt.datetime.fromtimestamp(record.created,
+                                                                tz=ZoneInfo("Europe/Berlin")).isoformat()}
         if record.exc_info is not None:
             always_fields["exc_info"] = self.formatException(record.exc_info)
 
