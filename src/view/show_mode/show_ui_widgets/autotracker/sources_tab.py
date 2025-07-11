@@ -168,4 +168,4 @@ class WebcamSelector(QDialog):
     def start_webcam(self) -> None:
         selected_index = self.combo_box.currentIndex()
         if selected_index >= 0:
-            logger.info(f"Selected webcam {selected_index}")
+            logger.info("Selected webcam %s", selected_index)

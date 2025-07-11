@@ -161,7 +161,7 @@ class LightSetupTab(GuiTab):
             self.sliderx1.value(),
             self.sliderx2.value(),
         ]
-        logger.info(f"Button {self.buttons.index(button)} gedrückt")
+        logger.info("Button %s gedrückt", self.buttons.index(button))
         logger.info(self.instance.settings.lights.corners)
 
     def slider_changed(self) -> None:
@@ -185,7 +185,7 @@ class LightSetupTab(GuiTab):
         x, y = click_position.x(), click_position.y()
 
         # Display the position in the console
-        logger.info(f"Mouse clicked at position (x: {x}, y: {y})")
+        logger.info("Mouse clicked at position (x: %d, y: %d)", x, y)
 
         # h, w, _ = self.last_image.shape
 
@@ -269,7 +269,7 @@ class LightSetupTab(GuiTab):
         self._calibration_step = self._calibration_step + 1
         self.move_calibration_light(self._calibration_step)
         logger.info(self._calibration_points)
-        logger.info(f"{self._calibration_step}:{len(self._calibration_points)}")
+        logger.info("%s:%s", self._calibration_step, len(self._calibration_points))
         if self._calibration_step >= len(self._calibration_points) - 1:
             self._calibration_running = False
             self.instance.settings.map = MappingCalibration(self._calibration_points)

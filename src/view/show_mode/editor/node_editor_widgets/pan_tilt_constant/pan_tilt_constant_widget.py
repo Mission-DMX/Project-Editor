@@ -45,7 +45,7 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
                 if key == "outputs":
                     self._filter.filter_configurations["outputs"] = value
                 else:
-                    logger.error(f"Unknown configuration key: {key}")
+                    logger.error("Unknown configuration key: %s", key)
 
                     return False
             except:
