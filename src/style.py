@@ -28,6 +28,8 @@ QPushButton {
 }
 """
 
+SLIDER = ""
+
 LABEL_OKAY = "background-color: rgba(0, 255, 0, 1);"
 LABEL_WARN = "background-color: rgba(255, 127, 0, 1);"
 LABEL_ERROR = "background-color: rgba(255, 0, 0, 1);"
