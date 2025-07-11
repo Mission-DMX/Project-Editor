@@ -96,7 +96,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
         y_shift += _filter_channel_height * filter_chan_count
         return f
 
-    for index, channel in enumerate(fixture._fixture_channels):
+    for index, channel in enumerate(fixture.fixture_channels):
         try:
             if not channel.name:
                 continue
