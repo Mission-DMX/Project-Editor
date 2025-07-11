@@ -80,7 +80,6 @@ class ShowEditorWidget(QSplitter):
 
     def _tab_bar_clicked(self, index: int) -> None:
         """Handles adding/deleting button action.
-        
         Args:
             index: Index of the clicked tab
         """
@@ -93,7 +92,6 @@ class ShowEditorWidget(QSplitter):
 
     def _add_scene_tab(self, page: Scene | FilterPage) -> SceneTabWidget | None:
         """Creates a tab for a scene
-        
         Args:
             page: The scene to be added
         """

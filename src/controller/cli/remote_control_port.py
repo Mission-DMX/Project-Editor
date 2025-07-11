@@ -16,7 +16,7 @@ class SocketStreamReader:
 
     def __init__(self, sock: socket) -> None:
         """Initialize the stream reader
-        
+
         Arguments:
         sock -- the socket to listen on
         """
@@ -41,7 +41,7 @@ class SocketStreamReader:
 
     def readline(self) -> bytes:
         """Read an entire line from the socket stream.
-        
+
         Returns:
         bytearray with line.
         """
@@ -49,10 +49,10 @@ class SocketStreamReader:
 
     def read_until(self, separator: bytes = b"\n") -> bytes:
         """Read from the socket until the escape sequence was found
-        
+
         Arguments:
         separator -- the delimiter to look out for
-        
+
         Returns:
         bytearray with the found content.
         """
@@ -100,7 +100,7 @@ class Connection:
     def __init__(self, client: socket, address: str, connection_map: dict, show: BoardConfiguration,
                  networkmgr: "NetworkManager") -> None:
         """This constructor takes over the connection.
-        
+
         Arguments:
         client -- the connection socket fd.
         address -- the remote address of the connected client.
@@ -138,7 +138,7 @@ class Connection:
 
     def stop(self) -> None:
         """Forcefully disconnect and stop the client.
-        
+
         This operation may block until the operating system released the socket.
         """
         self.context.exit_called = True
@@ -157,7 +157,7 @@ class RemoteCLIServer:
     def __init__(self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::",
                  port: int = 2929) -> None:
         """Construct the handler and opens a port.
-        
+
         Arguments:
         interface -- The interface to bind to. Defaults to all IPv6 interfaces.
         port -- The port to listen on. Defaults to TCP/2929
@@ -196,7 +196,7 @@ class RemoteCLIServer:
 
     def stop(self) -> None:
         """This method stops the server and disconnects all clients.
-        
+
         It may block until the operating system released all resources.
         """
         logger.info("Stopping CLI server")

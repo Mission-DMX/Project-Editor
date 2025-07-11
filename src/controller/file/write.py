@@ -16,11 +16,11 @@ from model import BoardConfiguration
 def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     """Writes the xml element to the specified file.
     See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information.
-    
+
     Args:
         file_name: The (path and) file to which the xml element should be written.
         show_data: The show to save
-        
+
     Returns: True, if successfully, otherwise false with error message.
     """
     pn = get_process_notifier("Saving Showfile", 2)

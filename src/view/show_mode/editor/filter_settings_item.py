@@ -42,7 +42,7 @@ logger = getLogger(__name__)
 
 class FilterSettingsItem(QGraphicsSvgItem):
     """GraphicsItem to handle opening filter settings dialog.
-    
+
     Attributes:
         filter_node: The filter this item belongs to
     """
@@ -135,7 +135,7 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
 
 class FilterSettingsDialog(QDialog):
     """
-    
+
     Attributes:
         filter: The filter whose settings this dialog displays
     """

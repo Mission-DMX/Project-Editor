@@ -70,7 +70,7 @@ class BoardConfiguration:
 
     def _add_scene(self, scene: Scene) -> None:
         """Adds a scene to the list of scenes.
-        
+
         Args:
             scene: The scene to be added.
         """
@@ -79,7 +79,7 @@ class BoardConfiguration:
 
     def _delete_scene(self, scene: Scene) -> None:
         """Removes the passed scene from the list of scenes.
-        
+
         Args:
             scene: The scene to be removed.
         """
@@ -98,7 +98,7 @@ class BoardConfiguration:
 
     def _delete_universe(self, universe: Universe) -> None:
         """Removes the passed universe from the list of universes.
-        
+
         Args:
             universe: The universe to be removed.
         """
@@ -109,7 +109,7 @@ class BoardConfiguration:
 
     def _add_device(self, device: Device) -> None:
         """Adds the device to the board configuration.
-        
+
         Args:
             device: The device to be added.
         """
@@ -117,7 +117,7 @@ class BoardConfiguration:
 
     def _delete_device(self, device: Device) -> None:
         """Removes the passed device from the list of devices.
-        
+
         Args:
             device: The device to be removed.
         """
