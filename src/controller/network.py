@@ -64,7 +64,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._last_active_scene: int = -1
         self._is_running: bool = False
         self._fish_status: str = ""
-        self._server_name = "/tmp/fish.sock"
+        self._server_name = "/tmp/fish.sock"  # noqa: S108 not security relevant
         self._socket.stateChanged.connect(self._on_state_changed)
         self._socket.errorOccurred.connect(on_error)
         self._socket.readyRead.connect(self._on_ready_read)
