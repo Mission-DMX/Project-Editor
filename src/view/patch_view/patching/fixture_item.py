@@ -1,8 +1,8 @@
 """Widget of a Fixture"""
 from PySide6 import QtWidgets
 
+import style
 from model.ofl.fixture import Fixture
-from style import Style
 
 
 class FixtureItem(QtWidgets.QPushButton):
@@ -17,5 +17,5 @@ class FixtureItem(QtWidgets.QPushButton):
         manufacturer_label: QtWidgets.QLabel = QtWidgets.QLabel(str(fixture["name"]), self)
         layout.addWidget(manufacturer_label)
 
-        self.setStyleSheet(Style.PATCH + "background-color: white;")
+        self.setStyleSheet(style.PATCH + "background-color: white;")
         self.setLayout(layout)

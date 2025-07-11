@@ -8,13 +8,13 @@ from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
 from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
+import style
 from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
 from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
-from style import Style
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_universe_selector import UniverseSelector
@@ -292,11 +292,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._last_cycle_time_widget.setText(str(maximum) + " ms")
         match maximum:
             case num if 0 <= num < 15:
-                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_OKAY)
+                self._last_cycle_time_widget.setStyleSheet(style.LABEL_OKAY)
             case num if 15 <= num < 19:
-                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_WARN)
+                self._last_cycle_time_widget.setStyleSheet(style.LABEL_WARN)
             case _:
-                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_ERROR)
+                self._last_cycle_time_widget.setStyleSheet(style.LABEL_ERROR)
 
     def _show_column_dialog(self, index: str) -> None:
         """Dialog modify tho selected Column"""

@@ -47,11 +47,11 @@ if __name__ == "__main__":
 
     from PySide6.QtCore import QEventLoop
 
+    import style
     from controller.cli.remote_control_port import RemoteCLIServer
     from controller.joystick.joystick_handling import JoystickHandler
     from gl_init import opengl_context_init
     from model.final_globals import FinalGlobals
-    from style import Style
     from view.main_window import MainWindow
 
     logger = logging.getLogger("Project-Editor")
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         FinalGlobals.set_screen_width(width)
         FinalGlobals.set_screen_height(height)
         set_dark_theme(application)
-        application.setStyleSheet(Style.APP)
+        application.setStyleSheet(style.APP)
         JoystickHandler()
 
         # TODO we should parse the global application settings and recent project files here

@@ -2,11 +2,11 @@
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QWidget
 
+import style
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet
 from model.ofl.fixture import UsedFixture
 from model.universe import Universe
-from style import Style
 from view.console_mode.console_channel_widget import ChannelWidget
 
 
@@ -33,11 +33,11 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
 
         # Specifying style options. See Style.WIDGET
         self.setObjectName("ManualEditor")
-        self.setStyleSheet(Style.WIDGET)
+        self.setStyleSheet(style.WIDGET)
 
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.setStyleSheet(Style.SCROLL)
+        self.setStyleSheet(style.SCROLL)
 
         self._universe_widget = QtWidgets.QWidget()
         self._universe_widget.setLayout(QtWidgets.QHBoxLayout(self._universe_widget))

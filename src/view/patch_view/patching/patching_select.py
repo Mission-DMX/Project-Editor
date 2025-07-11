@@ -7,11 +7,11 @@ import requests
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QWidget
 
+import style
 from layouts.flow_layout import FlowLayout
 from model import BoardConfiguration
 from model.ofl.fixture import Fixture
 from model.ofl.manufacture import Manufacture, generate_manufacturers
-from style import Style
 from view.dialogs.patching_dialog import PatchingDialog
 from view.patch_view.patching.fixture_item import FixtureItem
 from view.patch_view.patching.manufacturer_item import ManufacturerItem
@@ -63,7 +63,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         manufacturer_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
-        reset_button.setStyleSheet(Style.PATCH + "background-color: white;")
+        reset_button.setStyleSheet(style.PATCH + "background-color: white;")
         reset_button.clicked.connect(self.reset)
         manufacturer_layout.addWidget(reset_button)
         for fixture in manufacturer[1]:
@@ -82,7 +82,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         fixture_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
-        reset_button.setStyleSheet(Style.PATCH + "background-color: white;")
+        reset_button.setStyleSheet(style.PATCH + "background-color: white;")
         reset_button.clicked.connect(self.reset)
         fixture_layout.addWidget(reset_button)
         for index, mode in enumerate(fixture["modes"]):

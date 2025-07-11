@@ -1,8 +1,8 @@
 """Widget of a Manufacturer"""
 from PySide6 import QtWidgets
 
+import style
 from model.ofl.manufacture import Manufacture
-from style import Style
 
 
 class ManufacturerItem(QtWidgets.QPushButton):
@@ -17,5 +17,5 @@ class ManufacturerItem(QtWidgets.QPushButton):
         manufacturer_label: QtWidgets.QLabel = QtWidgets.QLabel(str(manufacturer["name"]), self)
         layout.addWidget(manufacturer_label)
 
-        self.setStyleSheet(Style.PATCH + "background-color: white;")
+        self.setStyleSheet(style.PATCH + "background-color: white;")
         self.setLayout(layout)
