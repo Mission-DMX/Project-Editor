@@ -1,5 +1,7 @@
 """This file contains a widget with a textfield and a button, extended by a list of buttons to update constants nodes
 with a new value or predefined one in fish"""
+from __future__ import annotations
+
 import sys
 from typing import override
 
@@ -20,7 +22,7 @@ class ButtonsWithValueSubmit(UIWidget):
     def get_config_dialog_widget(self, parent:QDialog) -> QWidget:
         return self._button_list.get_config_dialog_widget(parent)
 
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._filter_type = None
         self._player_widget: QWidget | None = None
@@ -48,7 +50,7 @@ class ButtonsWithValueSubmit(UIWidget):
         return self._button_list.get_configuration_widget(parent)
 
     @override
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         fid = self.associated_filters.get("constant")
         w = ButtonsWithValueSubmit(self.parent, self.configuration.copy())
         w.set_filter(Filter(None, fid, self._filter_type, None, None), 0)
