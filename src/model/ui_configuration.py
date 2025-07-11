@@ -280,11 +280,7 @@ class ShowUI:
         Returns:
             The complete list of pages.
         """
-        page_list = []
-        for _, pl in self._page_storage:
-            for p in pl:
-                page_list.append(p)
-        return page_list
+        return [p for _, pl in self._page_storage for p in pl]
 
     # @staticmethod
     # @property

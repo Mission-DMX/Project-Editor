@@ -63,7 +63,8 @@ class SocketStreamReader:
         start = 0
         buf = bytearray(len(self._recv_buffer))
         bytes_read = self._recv_into(memoryview(buf))
-        assert bytes_read == len(buf)
+        if bytes_read != len(buf):
+            raise ValueError("Not enough bytes to read.")
 
         while True:
             idx = buf.find(separator, start)

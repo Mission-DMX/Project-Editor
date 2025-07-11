@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from PySide6.QtWidgets import QWidget
-
-from model import Filter
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
+
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
+
+    from model import Filter
 
 
 class ChainingEffectDummy(Effect):

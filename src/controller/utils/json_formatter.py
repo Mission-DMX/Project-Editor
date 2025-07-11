@@ -36,8 +36,6 @@ class JSONFormatter(Formatter):
                    key, val in self.fmt_keys.items()}
         message.update(always_fields)
 
-        for key, val in record.__dict__.items():
-            if key not in LOG_RECORD_BUILTIN_ATTRS:
-                message[key] = val
+        message.update({key: val for key, val in record.__dict__.items() if key not in LOG_RECORD_BUILTIN_ATTRS})
 
         return message
