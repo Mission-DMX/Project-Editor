@@ -428,7 +428,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             add_set_msg.banks.extend([bank_definition])
         self._enqueue_message(add_set_msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_ADD_FADER_BANK_SET)
         for bank in fader_banks:
-            bank.pushed_to_device = True
+            bank.set_pushed_to_device()
 
     def send_update_column_message(self, msg: proto.Console_pb2.fader_column) -> None:
         """send message to update a column to fish"""

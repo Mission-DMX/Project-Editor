@@ -37,6 +37,10 @@ class DeskColumn(ABC):
         self._upper_text = ""
         self.data_changed_callback = None
 
+    def set_pushed_to_device(self)->None:
+        """set Column pushed to a device"""
+        self._pushed_to_device = True
+
     def copy_base(self, dc: DeskColumn) -> None:
         dc._bottom_display_line_inverted = self._bottom_display_line_inverted
         dc._top_display_line_inverted = self._top_display_line_inverted
@@ -250,27 +254,15 @@ class ColorDeskColumn(DeskColumn):
 
 
 class FaderBank:
-    """Store a bank page of columns the user can switch through.
-
-    Warning: As of the time of this writing, the buttons for scrolling through a bank are not implemented in fish,
-     hence the user can only access up to 8 columns.
-    """
+    """Store a bank page of columns the user can switch through."""
 
     def __init__(self) -> None:
         self.columns: list[DeskColumn] = []
-        self._pushed_to_device = False
 
-    @property
-    def pushed_to_device(self) -> bool:
-        """property for pushed_to_device"""
-        return self._pushed_to_device
-
-    @pushed_to_device.setter
-    def pushed_to_device(self, pushed: bool) -> None:
-        """setter for pushed_to_device"""
-        self._pushed_to_device = pushed
-        for col in self.columns:
-            col._pushed_to_device = True
+    def set_pushed_to_device(self)->None:
+        """set pushed for all columns """
+        for column in self.columns:
+            column.set_pushed_to_device()
 
     def add_column(self, col: DeskColumn) -> None:
         """add a new colum"""
