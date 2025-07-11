@@ -13,13 +13,13 @@ from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberBu
 
 
 class ButtonsWithValueSubmit(UIWidget):
-    """ UI widget for the showmode (extended with ConstantNumberButtonList also for the editor mode)
-    Provides a textfield with a submit button to update a value (of a constant node),
-    provides also (from ConstantNumberButtonList) a button list to send pre-defined values
+    """ UI widget for the show mode (extended with ConstantNumberButtonList also for the editor mode).
+    Provides a textfield with a submit-button to update a value (of a constant node).
+    Provides also (from ConstantNumberButtonList) a button list to send pre-defined values
     """
 
     @override
-    def get_config_dialog_widget(self, parent:QDialog) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return self._button_list.get_config_dialog_widget(parent)
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
