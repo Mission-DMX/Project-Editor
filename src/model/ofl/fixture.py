@@ -149,7 +149,7 @@ class UsedFixture(QtCore.QObject):
         self._color_support: Final[ColorSupport] = color_support
 
         self._color_on_stage: str = color if color else "#" + "".join(
-            [random.choice("0123456789ABCDEF") for _ in range(6)])
+            [random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
         self.parent_universe: int = parent_universe
