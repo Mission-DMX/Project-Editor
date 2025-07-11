@@ -499,10 +499,8 @@ class CueEditor(NodeEditorFilterConfigWidget):
                         filter_node.addTerminal(channel_name, io="out")
                         filter_node.filter.out_data_types[channel_name] = channel_type
                     added_channels.append(channel_name)
-            terms_to_remove = []
-            for name, _ in filter_node.terminals.items():
-                if name in filter_node.outputs() and name not in added_channels:
-                    terms_to_remove.append(name)
+            terms_to_remove = [name for name in filter_node.terminals if
+                               name in filter_node.outputs() and name not in added_channels]
             for name in terms_to_remove:
                 filter_node.removeTerminal(name)
         if self._bankset:

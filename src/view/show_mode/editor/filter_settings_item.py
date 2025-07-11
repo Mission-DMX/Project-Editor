@@ -5,9 +5,7 @@ import os.path
 from logging import getLogger
 from typing import TYPE_CHECKING, ClassVar, override
 
-import PySide6
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QPainter
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 from PySide6.QtWidgets import (
     QDialog,
@@ -27,7 +25,6 @@ from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
 
-from .node_editor_widgets import NodeEditorFilterConfigWidget
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
 from .node_editor_widgets.column_select import ColumnSelect
@@ -35,8 +32,10 @@ from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSet
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
 
 if TYPE_CHECKING:
-    from .nodes import FilterNode
+    from PySide6.QtGui import QCloseEvent, QFocusEvent, QKeyEvent, QMouseEvent, QPainter
 
+    from .node_editor_widgets import NodeEditorFilterConfigWidget
+    from .nodes import FilterNode
 logger = getLogger(__name__)
 
 
@@ -227,7 +226,7 @@ class FilterSettingsDialog(QDialog):
         self.close()
 
     @override
-    def closeEvent(self, arg__1: PySide6.QtGui.QCloseEvent) -> None:
+    def closeEvent(self, arg__1: QCloseEvent) -> None:
         if self._special_widget:
             self._special_widget.parent_closed(self._filter_node)
         else:

@@ -55,7 +55,7 @@ class SceneUIPageEditorWidget(QWidget):
                                             )
         menu.addAction(auto_track_action)
         """
-        for _, widget_def in WIDGET_LIBRARY.items():
+        for widget_def in WIDGET_LIBRARY.values():
             action = QAction(widget_def[0], menu)
             action.triggered.connect(lambda _, widget=widget_def: self._inst_generic_widget(widget, pos))
             menu.addAction(action)

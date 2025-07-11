@@ -23,7 +23,7 @@ class FishExceptionsDialog(QtWidgets.QDialog):
         super().__init__()
         self.setWindowTitle("Fish Error")
         layout = QtWidgets.QHBoxLayout(self)
-        da = HoverTextBrowser(f"""Log:<br>{log}</p>""" f"""<p>Reason:<br>{reason}</p>""" f"<p>Cause:<br>{cause}")
+        da = HoverTextBrowser(f"Log:<br>{log}</p><p>Reason:<br>{reason}</p><p>Cause:<br>{cause}")
         layout.addWidget(da)
         self.setLayout(layout)
 

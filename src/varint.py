@@ -11,7 +11,7 @@ import sys
 # byte-oriented StringIO was moved to io.BytesIO in py3k
 from io import BytesIO
 
-if sys.version > "3":
+if sys.version_info >= (3,):
     def _byte(byte: int) -> bytes:
         return bytes((byte,))
 else:
