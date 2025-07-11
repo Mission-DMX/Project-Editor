@@ -5,7 +5,7 @@ import math
 import queue
 import xml.etree.ElementTree as ET
 from logging import getLogger
-from typing import TYPE_CHECKING, Self
+from typing import Self, TYPE_CHECKING
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
