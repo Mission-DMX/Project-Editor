@@ -1,6 +1,8 @@
 """models for X-Touch and also for other connected devices like extenders or joystick"""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Never
+from typing import TYPE_CHECKING, ClassVar, Never
 from uuid import uuid4
 
 import proto.Console_pb2
@@ -35,7 +37,7 @@ class DeskColumn(ABC):
         self._upper_text = ""
         self.data_changed_callback = None
 
-    def copy_base(self, dc: "DeskColumn") -> None:
+    def copy_base(self, dc: DeskColumn) -> None:
         dc._bottom_display_line_inverted = self._bottom_display_line_inverted
         dc._top_display_line_inverted = self._top_display_line_inverted
         dc.display_color = self.display_color
@@ -43,7 +45,7 @@ class DeskColumn(ABC):
         dc._upper_text = self._upper_text
 
     @abstractmethod
-    def copy(self) -> "DeskColumn":
+    def copy(self) -> DeskColumn:
         pass
 
     def update(self) -> bool:
@@ -107,7 +109,7 @@ class DeskColumn(ABC):
 
 
 class RawDeskColumn(DeskColumn):
-    def copy(self) -> "DeskColumn":
+    def copy(self) -> DeskColumn:
         base_dc = RawDeskColumn(self.id)
         self.copy_base(base_dc)
         base_dc._fader_position = self._fader_position
@@ -210,7 +212,7 @@ class RawDeskColumn(DeskColumn):
 
 
 class ColorDeskColumn(DeskColumn):
-    def copy(self) -> "DeskColumn":
+    def copy(self) -> DeskColumn:
         base_dc = ColorDeskColumn(self.id)
         self.copy_base(base_dc)
         base_dc._color = self._color.copy()
@@ -289,7 +291,7 @@ class FaderBank:
             msg.cols.extend([col._generate_column_message()])  # TODO private Methode
         return msg
 
-    def copy(self) -> "FaderBank":
+    def copy(self) -> FaderBank:
         new_fb = FaderBank()
         for c in self.columns:
             new_fb.columns.append(c.copy())
@@ -311,19 +313,19 @@ class BankSet:
      except for the event that the active bank set will be unlinked.
     In this case fish will enable the bank set with the next lower index.
     """
-    _fish_connector: "NetworkManager" = None
+    _fish_connector: NetworkManager = None
     _active_bank_set_id: str = None
-    _active_bank_set: "BankSet" = None
+    _active_bank_set: BankSet = None
     _seven_seg_data: str = "00          "
-    _linked_bank_sets = []
+    _linked_bank_sets: ClassVar[list[BankSet]] = []
 
     @classmethod
-    def fish_connector(cls) -> "NetworkManager":
+    def fish_connector(cls) -> NetworkManager:
         """Connector of the Bank"""
         return cls._fish_connector
 
     @classmethod
-    def linked_bank_sets(cls) -> list["BankSet"]:
+    def linked_bank_sets(cls) -> list[BankSet]:
         """This method yields the mutable list of bank sets that are currently loaded in fish.
 
         This method should only be used by friend classes.
@@ -331,12 +333,12 @@ class BankSet:
         return cls._linked_bank_sets
 
     @classmethod
-    def active_bank_set(cls) -> "BankSet":
+    def active_bank_set(cls) -> BankSet:
         """current bank set"""
         return cls._active_bank_set
 
     @staticmethod
-    def get_linked_bank_sets() -> list["BankSet"]:
+    def get_linked_bank_sets() -> list[BankSet]:
         """This method returns a copy of the linked bank sets, save to be used by non friend classes."""
         return list(BankSet._linked_bank_sets)
 
@@ -570,14 +572,14 @@ class BankSet:
         if col:
             col.update_from_message(message)
 
-    def copy(self) -> "BankSet":
+    def copy(self) -> BankSet:
         new_bs = BankSet(description=self.description, gui_controlled=self._gui_controlled)
         for b in self.banks:
             new_bs.banks.append(b.copy())
         return new_bs
 
 
-def set_network_manager(network_manager: "NetworkManager") -> None:
+def set_network_manager(network_manager: NetworkManager) -> None:
     """Set the network manager instance to be used by all bank sets and subsequent banks and columns."""
     BankSet._fish_connector = network_manager
 

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from PySide6.QtCore import QObject, Signal
 
@@ -26,7 +26,7 @@ def trigger_factory(trigger_type: str) -> Trigger:
 
 
 class Trigger(QObject):
-    SUPPORTED_TYPES = ["startup", "f_keys"]
+    SUPPORTED_TYPES: Final[list[str]] = ["startup", "f_keys"]
 
     enabled_changed: Signal = Signal(bool)
 

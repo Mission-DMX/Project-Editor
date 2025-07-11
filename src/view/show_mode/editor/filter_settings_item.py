@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os.path
 from logging import getLogger
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 import PySide6
 from PySide6.QtCore import Qt
@@ -46,7 +46,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
     Attributes:
         filter_node: The filter this item belongs to
     """
-    _open_dialogs: list[QDialog] = []
+    _open_dialogs: ClassVar[list[QDialog]] = []
 
     def __init__(self, filter_node: FilterNode, parent: QGraphicsItem, filter_: Filter) -> None:
         super().__init__(resource_path(os.path.join("resources", "icons", "settings.svg")), parent)

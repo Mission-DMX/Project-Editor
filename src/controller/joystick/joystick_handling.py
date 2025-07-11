@@ -1,7 +1,7 @@
 """Starts a listener for the joystick"""
 from __future__ import annotations
 
-from typing import Self
+from typing import Final, Self
 
 import pyjoystick
 from pyjoystick.sdl2 import Key, run_event_loop
@@ -11,7 +11,10 @@ from model import Broadcaster
 
 
 class JoystickHandler:
-    joystick_map = {}
+    joystick_map: Final[dict[str, JoystickList]] = {"No Joystick": JoystickList.NO_JOYSTICK,
+                                                    "Gamepad Left": JoystickList.GAMEPAD_LEFT,
+                                                    "Gamepad Right": JoystickList.GAMEPAD_RIGHT,
+                                                    "Joystick": JoystickList.JOYSTICK}
 
     @staticmethod
     def reformat(key: Key) -> None:
@@ -40,10 +43,5 @@ class JoystickHandler:
     def __new__(cls) -> Self:
         """Connect a joystick and setup the key bindings"""
         mngr = pyjoystick.ThreadEventManager(event_loop=run_event_loop,
-                                             handle_key_event=lambda key: cls.reformat(key),
-                                             )
-        cls.joystick_map["No Joystick"] = JoystickList.NO_JOYSTICK
-        cls.joystick_map["Gamepad Left"] = JoystickList.GAMEPAD_LEFT
-        cls.joystick_map["Gamepad Right"] = JoystickList.GAMEPAD_RIGHT
-        cls.joystick_map["Joystick"] = JoystickList.JOYSTICK
+                                             handle_key_event=lambda key: cls.reformat(key), )
         mngr.start()

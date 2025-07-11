@@ -1,5 +1,5 @@
 """Dialogs to display fish exceptions"""
-from typing import override
+from typing import ClassVar, override
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QMouseEvent
@@ -17,7 +17,7 @@ error_dict: dict[str, str] = {
 class FishExceptionsDialog(QtWidgets.QDialog):
     """Dialog to display fish exceptions"""
 
-    _open_dialogs: list[QtWidgets.QDialog] = []
+    _open_dialogs: ClassVar[list[QtWidgets.QDialog]] = []
 
     def __init__(self, log: str, reason: str, cause: str) -> None:
         super().__init__()
