@@ -1,4 +1,6 @@
 """Module for filter settings editor"""
+from __future__ import annotations
+
 import os.path
 from logging import getLogger
 from typing import TYPE_CHECKING, override
@@ -46,7 +48,7 @@ class FilterSettingsItem(QGraphicsSvgItem):
     """
     _open_dialogs: list[QDialog] = []
 
-    def __init__(self, filter_node: "FilterNode", parent: QGraphicsItem, filter_: Filter) -> None:
+    def __init__(self, filter_node: FilterNode, parent: QGraphicsItem, filter_: Filter) -> None:
         super().__init__(resource_path(os.path.join("resources", "icons", "settings.svg")), parent)
         self.dialog = None
         self.filter_node = filter_node
@@ -138,7 +140,7 @@ class FilterSettingsDialog(QDialog):
         filter: The filter whose settings this dialog displays
     """
 
-    def __init__(self, filter_node: "FilterNode") -> None:
+    def __init__(self, filter_node: FilterNode) -> None:
         super().__init__()
         self._filter_node = filter_node
         self.filter = filter_node.filter
