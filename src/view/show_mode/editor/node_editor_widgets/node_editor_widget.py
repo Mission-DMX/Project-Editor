@@ -10,8 +10,7 @@ if TYPE_CHECKING:
 class NodeEditorFilterConfigWidget(ABC):
     @abstractmethod
     def _get_configuration(self) -> dict[str, str]:
-        """Retreive the filter configuration parameters that should be updated."""
-        pass
+        """Retrieve the filter configuration parameters that should be updated."""
 
     @abstractmethod
     def _load_configuration(self, conf: dict[str, str]) -> None:
@@ -30,12 +29,10 @@ class NodeEditorFilterConfigWidget(ABC):
     @abstractmethod
     def get_widget(self) -> QWidget:
         """Returns the widget that should be displayed"""
-        pass
 
     @abstractmethod
     def _load_parameters(self, parameters: dict[str, str]) -> dict:
         """Parse the current filter parameters."""
-        pass
 
     @abstractmethod
     def _get_parameters(self) -> dict[str, str]:
@@ -62,4 +59,3 @@ class NodeEditorFilterConfigWidget(ABC):
     @abstractmethod
     def parent_opened(self) -> None:
         """This method might be overridden to listen for parent open events."""
-        pass

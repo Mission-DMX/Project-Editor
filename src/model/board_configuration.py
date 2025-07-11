@@ -121,7 +121,6 @@ class BoardConfiguration:
         Args:
             device: The device to be removed.
         """
-        pass
 
     def universe(self, universe_id: int) -> Universe | None:
         """Tries to find a universe by id.

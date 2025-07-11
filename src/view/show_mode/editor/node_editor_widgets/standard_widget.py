@@ -51,16 +51,12 @@ class StandardWidget(NodeEditorFilterConfigWidget):
 
     def _get_configuration(self) -> dict[str, str]:
         """Does nothing"""
-        pass
 
     def _load_configuration(self, conf: dict[str, str]) -> None:
         """Does nothing"""
-        pass
 
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         """Does nothing"""
-        pass
 
     def _get_parameters(self) -> dict[str, str]:
         """Does nothing"""
-        pass

@@ -77,4 +77,3 @@ class SettingsTab(GuiTab):
         """
         Abstract method for updating video content within the tab.
         """
-        pass

@@ -65,7 +65,6 @@ class TimelineContainer(QWidget):
         """Removes all channels from the widget"""
         # TODO clear all labels from self._channel_labels_panel_layout
         # TODO reset self._keyframes_panel
-        pass
 
     @property
     def cue(self) -> Cue:

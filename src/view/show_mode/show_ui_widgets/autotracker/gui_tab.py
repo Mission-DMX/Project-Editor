@@ -78,4 +78,3 @@ class GuiTab(QWidget):
         """
         Abstract method for updating video content within the tab.
         """
-        pass
