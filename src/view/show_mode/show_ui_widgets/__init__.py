@@ -15,6 +15,7 @@ from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
 from view.show_mode.show_ui_widgets.macro_buttons_ui_widget import MacroButtonUIWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
+from view.show_mode.show_ui_widgets.sequencer_control import SequencerControlUIWidget
 from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
 
 """
@@ -36,6 +37,11 @@ WIDGET_LIBRARY: dict[str, tuple[str, Type[UIWidget], list[list[FilterTypeEnumera
     "Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]]),
     "pantiltconstant": (
     "Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
+    "sequencercontrol": (
+        "Sequence Listing",
+        SequencerControlUIWidget,
+        [[FilterTypeEnumeration.VFILTER_SEQUENCER, FilterTypeEnumeration.FILTER_SEQUENCER]]
+    ),
     "label": ("Text Label", ShowLabelUIWidget, []),
     "clock": ("BF Clock", ClockUIWidget, []),
     "macrobuttons": ("Macro Buttons", MacroButtonUIWidget, []),
