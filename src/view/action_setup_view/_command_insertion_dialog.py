@@ -75,7 +75,7 @@ class _CommandInsertionDialog(QDialog):
         This method needs to be implemented in order to get the command that should be inserted.
         :returns: a string without leading new line.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def on_filter_selected(self) -> None:
         """
@@ -84,4 +84,4 @@ class _CommandInsertionDialog(QDialog):
         are now guaranteed to be not None. This method may be called multiple times
         (exactly if the user changes the selected filter).
         """
-        raise NotImplementedError()
+        raise NotImplementedError

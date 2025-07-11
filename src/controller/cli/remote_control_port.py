@@ -26,7 +26,7 @@ class SocketStreamReader:
 
     def read(self, num_bytes: int = -1) -> bytes:
         """This method is here to comply with the stream interface but never, hence not implemented"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def read_exactly(self, num_bytes: int) -> bytes:
         """Read num_bytes from the socket."""

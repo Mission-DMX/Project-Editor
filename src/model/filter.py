@@ -293,7 +293,7 @@ class VirtualFilter(Filter, abc.ABC):
         of an instantiated filter.
         :returns: The resolved real filter and output port combination or None if the input was invalid.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abc.abstractmethod
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
@@ -307,7 +307,7 @@ class VirtualFilter(Filter, abc.ABC):
         method will be called prior to resolving filter addresses. Instead, instantiated filters need to contain the
         configured channel mappings.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def deserialize(self) -> None:
         """This method should be called after the filter configuration has been loaded.

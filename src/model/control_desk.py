@@ -301,7 +301,7 @@ class FaderBank:
 class BanksetIDUpdateListener(ABC):
     @abstractmethod
     def notify_on_new_id(self, new_id: str) -> Never:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class BankSet:

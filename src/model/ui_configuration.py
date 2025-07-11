@@ -53,7 +53,7 @@ class UIWidget(ABC):
         Returns:
             A fully set up QWidget instance
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
@@ -63,7 +63,7 @@ class UIWidget(ABC):
         Returns:
             A fully set up QWidget instance
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def set_filter(self, f: Filter, i: int) -> None:
         if not f:
@@ -144,13 +144,13 @@ class UIWidget(ABC):
     @abstractmethod
     def copy(self, new_parent: UIPage) -> UIWidget:
         """This method needs to perform a deep copy of the object, excluding generatable state, such as the widgets"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         """This method shall return a widget that will be placed within the configuration dialog"""
         # TODO warum nutzt nur eine der implementierenden klassen überhaupt das parent objekt?
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_variante(self) -> str:
         """This method needs to be overridden if there are multiple fitting widgets for a filter

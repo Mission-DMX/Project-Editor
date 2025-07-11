@@ -75,22 +75,22 @@ class State(ABC):
     @abstractmethod
     def encode(self) -> str:
         """This method returns the state encodes in the filter format"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def decode(self, content: str) -> Never:
         """This method decodes the state configuration from a filter config string."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def get_data_type(self) -> DataType:
         """This method needs to return the filter data type."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def copy(self) -> State:
         """This method needs to return a copy of the state"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class StateEightBit(State):

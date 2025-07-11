@@ -91,7 +91,7 @@ class Effect(ABC):
 
         :returns: the procured widget or none
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_accepted_input_types(self) -> dict[str, list[EffectType]]:
         """
@@ -105,7 +105,7 @@ class Effect(ABC):
     def get_output_slot_type(self) -> EffectType:
         """This method needs to return the slot that this effect provides.
         :returns: The EffectType that this effect imposes"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def resolve_input_port_name(self, slot_id: str) -> str:
@@ -115,7 +115,7 @@ class Effect(ABC):
         :param slot_id: The slot id to resolve the name for
         :returns: The human-readable name of the slot
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def emplace_filter(self, filter_list: list[Filter], name_prefix: str) -> dict[str, str | list[str]]:
@@ -156,7 +156,7 @@ class Effect(ABC):
                             generating unique ids.
         :returns: a dictionary indicating which outputs can be used by the calling instance.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_human_filter_name(self) -> str:
         """This method is used in order to retrieve a human-readable name of the effect"""
@@ -170,7 +170,7 @@ class Effect(ABC):
 
         :returns: A unique identifier for the effect
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_description(self) -> str:
         """This method may be used in order to return a human-readable description of the effect"""

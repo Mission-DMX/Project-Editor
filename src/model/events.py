@@ -42,15 +42,15 @@ def _handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
             case "fish.builtin.plain" | "undef":
                 ev = EventSender(msg.name)
             case "fish.builtin.midi":
-                raise NotImplementedError()
+                raise NotImplementedError
             case "fish.builtin.midirtp":
-                raise NotImplementedError()
+                raise NotImplementedError
             case "fish.builtin.xtouchgpio":
                 ev = XtouchGPIOEventSender(msg.name)
             case "fish.builtin.gpio":
-                raise NotImplementedError()
+                raise NotImplementedError
             case "fish.builtin.macrokeypad":
-                raise NotImplementedError()
+                raise NotImplementedError
             case _:
                 logger.error("Unexpaected event sender type: '%s'", msg.type)
                 return
