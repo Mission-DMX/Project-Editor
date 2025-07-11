@@ -3,11 +3,22 @@ name: Testing
 on: [ pull_request ]
 
 jobs:
-  test:
+  test_on_pr:
+    if: github.base_ref != 'main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Test with ruff
         uses: astral-sh/ruff-action@v3
+
+  test_on_main_pr:
+    if: github.base_ref != 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test with ruff
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: 'check --extend-select ERA'
 
 
