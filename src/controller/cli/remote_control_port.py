@@ -202,9 +202,7 @@ class RemoteCLIServer:
         logger.info("Stopping CLI server")
         self._stopped = True
         self._server_socket.close()
-        to_be_stopped: list[Connection] = []
-        for k_addr in self._connected_clients:
-            to_be_stopped.append(self._connected_clients[k_addr])
+        to_be_stopped: list[Connection] = [self._connected_clients[k_addr] for k_addr in self._connected_clients]
         for c in to_be_stopped:
             c.stop()
             logger.info("CLI clients from %s disconnected.", c.remote_address)

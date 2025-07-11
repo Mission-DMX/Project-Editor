@@ -55,10 +55,8 @@ class LuaFilterNode(FilterNode):
                 self.addOutput(name=channel_name)
             self.filter.out_data_types[channel_name] = DataType.from_filter_str(data_type)
             legal_inputs.append(channel_name)
-        terms_to_remove = []
-        for term in self.terminals:
-            if term not in legal_inputs:
-                terms_to_remove.append(term)
+
+        terms_to_remove = [term for term in self.terminals if term not in legal_inputs]
         for term in terms_to_remove:
             self.removeTerminal(term)
             try:

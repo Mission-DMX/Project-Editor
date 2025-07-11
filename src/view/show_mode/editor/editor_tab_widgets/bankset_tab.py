@@ -136,9 +136,7 @@ class _BankItem(QListWidgetItem):
         self._bank = b
 
     def update_description_text(self) -> None:
-        text_items: list[str] = []
-        for col in self._bank.columns:
-            text_items.append(col.display_name)
+        text_items: list[str] = [col.display_name for col in self._bank.columns]
         self.setText(str(self._index) + ": " + ", ".join(text_items))
 
 

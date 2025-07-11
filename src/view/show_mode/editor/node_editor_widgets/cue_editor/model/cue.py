@@ -213,9 +213,7 @@ class KeyFrame:
         self._parent = parent_cue
 
     def get_data_types(self) -> list[DataType]:
-        data_types = []
-        for s in self._states:
-            data_types.append(s.get_data_type())
+        data_types = [s.get_data_type() for s in self._states]
         return data_types
 
     def format_filter_str(self) -> str:

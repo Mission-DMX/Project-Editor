@@ -31,12 +31,12 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         self._last_selected_item: QTreeWidgetItem | None = None
 
     def _get_configuration(self) -> dict[str, str]:
-        renaming_data = []
-        for orig_channel_name in self._new_name_item_dict:
-            renaming_data.append(f"{orig_channel_name}={self._new_name_item_dict.get(orig_channel_name).text()
-            if self._enabled_cb_dict[orig_channel_name].checkState() == Qt.CheckState.Checked
-            else ""}",
-                                 )
+        renaming_data = [
+            f"{name}={self._new_name_item_dict[name].text()}"
+            if self._enabled_cb_dict[name].checkState() == Qt.CheckState.Checked
+            else f"{name}="
+            for name in self._new_name_item_dict
+        ]
         selected_filter = self._tree_widget.selected_filter
         return {
             "target": selected_filter.filter_id if selected_filter is not None else "",
