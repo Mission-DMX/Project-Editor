@@ -101,32 +101,32 @@ class TimelineContainer(QWidget):
         f = KeyFrame(self._cue)
         f.timestamp = p
 
-        for i, c in enumerate(self._cue.channels):
-            match c[1]:
+        for i, chanel in enumerate(self._cue.channels):
+            match chanel[1]:
                 case DataType.DT_8_BIT:
                     s = StateEightBit(self._current_transition_type)
                     if self.bankset:
-                        c = self.bankset.get_column_by_number(i)
-                        if isinstance(c, RawDeskColumn):
-                            s._value = int((c.fader_position * 256) / 65536)
+                        column = self.bankset.get_column_by_number(i)
+                        if isinstance(column, RawDeskColumn):
+                            s._value = int((column.fader_position * 256) / 65536)
                 case DataType.DT_16_BIT:
                     s = StateSixteenBit(self._current_transition_type)
                     if self.bankset:
-                        c = self.bankset.get_column_by_number(i)
-                        if isinstance(c, RawDeskColumn):
-                            s._value = c.fader_position
+                        column = self.bankset.get_column_by_number(i)
+                        if isinstance(column, RawDeskColumn):
+                            s._value = column.fader_position
                 case DataType.DT_DOUBLE:
                     s = StateDouble(self._current_transition_type)
                     if self.bankset:
-                        c = self.bankset.get_column_by_number(i)
-                        if isinstance(c, RawDeskColumn):
-                            s._value = c.fader_position / 65536
+                        column = self.bankset.get_column_by_number(i)
+                        if isinstance(column, RawDeskColumn):
+                            s._value = column.fader_position / 65536
                 case DataType.DT_COLOR:
                     s = StateColor(self._current_transition_type)
                     if self.bankset:
-                        c = self.bankset.get_column_by_number(i)
-                        if isinstance(c, ColorDeskColumn):
-                            s.color = c.color
+                        column = self.bankset.get_column_by_number(i)
+                        if isinstance(column, ColorDeskColumn):
+                            s.color = column.color
                 case _:
                     s = StateEightBit(self._current_transition_type)
             f.append_state(s)

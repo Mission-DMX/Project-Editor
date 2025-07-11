@@ -176,12 +176,11 @@ class FilterSettingsDialog(QDialog):
             if len(self.filter.filter_configurations) > 0:
                 layout.addRow("Filter Configurations", QLabel(""))
                 for key, value in self.filter.filter_configurations.items():
+                    display_key = self._add_patch_info(key, value) if add_patch_info else key
                     line_edit = QLineEdit()
                     line_edit.setText(value)
                     line_edit.textChanged.connect(lambda new_value, _key=key: self._fc_value_changed(_key, new_value))
-                    if add_patch_info:
-                        key = self._add_patch_info(key, value)
-                    layout.addRow(key, line_edit)
+                    layout.addRow(display_key, line_edit)
         self._ok_button = QPushButton("Ok")
         self._ok_button.pressed.connect(self.ok_button_pressed)
 
