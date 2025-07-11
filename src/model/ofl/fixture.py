@@ -132,7 +132,7 @@ class UsedFixture(QtCore.QObject):
 
     def __init__(self, board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int,
                  parent_universe: int,
-                 start_index: int, uuid: UUID = None, color: str = None) -> None:
+                 start_index: int, uuid: UUID | None = None, color: str | None = None) -> None:
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[Fixture] = fixture

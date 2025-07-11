@@ -157,7 +157,7 @@ class XtouchGPIOEventSender(EventSender):
 
 
 def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single",
-                 arguments: list[int] = None) -> None:
+                 arguments: list[int] | None = None) -> None:
     """Insert an event in fish.
 
     :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will
@@ -188,7 +188,7 @@ def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "si
     _network_manager.send_event_message(ev)
 
 
-def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] = None) -> None:
+def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] | None = None) -> None:
     if renaming is None:
         renaming = {}
     sender = get_sender(name)

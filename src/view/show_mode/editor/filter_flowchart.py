@@ -14,8 +14,8 @@ from .nodes.base.filternode import FilterNode
 class FilterFlowchart(Flowchart):
     """Flowchart that can handle creating nodes from file"""
 
-    def __init__(self, page: FilterPage, terminals: dict[str, dict[str, str]] = None, file_path: str = None,
-                 library: NodeLibrary = None) -> None:
+    def __init__(self, page: FilterPage, terminals: dict[str, dict[str, str]] | None = None,
+                 file_path: str | None = None, library: NodeLibrary = None) -> None:
         super().__init__(terminals, page.parent_scene.human_readable_name + "/" + page.name, file_path, library)
         self._page = page
 
@@ -25,7 +25,7 @@ class FilterFlowchart(Flowchart):
         return self._page.parent_scene
 
     @override
-    def createNode(self, node_type: int, name: str = None, pos: tuple[int, int] = None) -> FilterNode:
+    def createNode(self, node_type: int, name: str | None = None, pos: tuple[int, int] | None = None) -> FilterNode:
         """Adds a node to the flowchart. Overrides Flowchart behaviour by passing scene to node.
 
         Args:
@@ -73,7 +73,7 @@ class FilterFlowchart(Flowchart):
         return node
 
     @override
-    def addNode(self, node: FilterNode, name: str, pos: tuple[int, int] = None) -> None:
+    def addNode(self, node: FilterNode, name: str, pos: tuple[int, int] | None = None) -> None:
         """Adds a node to the flowchart.
 
         Args:

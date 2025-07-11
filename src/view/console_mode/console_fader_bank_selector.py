@@ -8,7 +8,7 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
     fader_value_changed = Signal(int)
 
     def __init__(self, bank_set: BankSet, display_text: str, parent: QWidget = None,
-                 bank_set_control_list: list[QWidget] = None) -> None:
+                 bank_set_control_list: list[QWidget] | None = None) -> None:
         super().__init__(parent)
         if bank_set_control_list is None:
             bank_set_control_list = []

@@ -23,7 +23,7 @@ class ChannelWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, fixture_channel: FixtureChannel, channel: Channel, bank_set: BankSet = None,
-                 bank_set_control_list: list[QWidget] = None, parent: QWidget = None) -> None:
+                 bank_set_control_list: list[QWidget] | None = None, parent: QWidget = None) -> None:
         """Inits the ChannelWidget.
 
         Args:
