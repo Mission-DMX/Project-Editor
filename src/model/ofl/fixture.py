@@ -1,6 +1,7 @@
 # coding=utf-8
 """Fixture Definitions from OFL """
 import json
+import os
 import random
 from collections import defaultdict
 from collections.abc import Sequence
@@ -108,6 +109,9 @@ class ColorSupport(IntFlag):
 
 def load_fixture(file) -> Fixture:
     """load fixture from OFL json"""
+    if not os.path.isfile(file):
+        logger.error(f"Fixture definition {file} not found.")
+        return None
     with open(file, "r", encoding='UTF-8') as f:
         ob: json = json.load(f)
     return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),

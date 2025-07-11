@@ -22,8 +22,6 @@ class ShowLabelUIWidget(UIWidget):
         return []
 
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._player_widget is not None:
-            self._player_widget.deleteLater()
         self._player_widget = self._construct_widget(parent)
         return self._player_widget
 

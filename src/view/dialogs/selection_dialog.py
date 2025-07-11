@@ -22,6 +22,7 @@ class SelectionDialog(QDialog):
         form.addRow(button_box)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
+        self.setModal(True)
 
     @property
     def selected_items(self) -> list[str]:

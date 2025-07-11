@@ -6,7 +6,8 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model import ColorHSI, DataType
-from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
+from model.filter_data.transfer_function import TransferFunction
+from model.filter_data.utility import format_seconds
 
 if TYPE_CHECKING:
     pass
@@ -58,6 +59,7 @@ class State(ABC):
 
     def __init__(self, transition_type: str):
         self._transition_type: str = transition_type
+        self._value = None
 
     @property
     def transition(self):
@@ -208,6 +210,7 @@ class KeyFrame:
         self._states: list[State] = []
         self.timestamp: float = 0.0
         self._parent = parent_cue
+        self.only_on_channel: str | None = None
 
     def get_data_types(self) -> list[DataType]:
         l = []
@@ -345,15 +348,15 @@ class Cue:
         for kf in self._frames:
             match dt:
                 case DataType.DT_COLOR:
-                    kf_s = StateColor("edg")
+                    kf_s = StateColor(TransferFunction.EDGE.value)
                 case DataType.DT_8_BIT:
-                    kf_s = StateEightBit("edg")
+                    kf_s = StateEightBit(TransferFunction.EDGE.value)
                 case DataType.DT_DOUBLE:
-                    kf_s = StateDouble("edg")
+                    kf_s = StateDouble(TransferFunction.EDGE.value)
                 case DataType.DT_16_BIT:
-                    kf_s = StateSixteenBit("edg")
+                    kf_s = StateSixteenBit(TransferFunction.EDGE.value)
                 case _:
-                    kf_s = StateEightBit("edg")
+                    kf_s = StateEightBit(TransferFunction.EDGE.value)
             kf._states.append(kf_s)
 
     def insert_frame(self, f: KeyFrame):
