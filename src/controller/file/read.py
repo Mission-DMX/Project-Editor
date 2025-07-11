@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 from logging import getLogger
 
 import xmlschema
+from defusedxml.ElementTree import parse
 
 import proto.Console_pb2
 import proto.UniverseControl_pb2
@@ -92,7 +93,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     board_configuration.broadcaster.clear_board_configuration.emit()
     pn.current_step_number += 1
-    tree = ET.parse(file_name)
+    tree = parse(file_name)
     root = tree.getroot()
 
     prefix = ""
