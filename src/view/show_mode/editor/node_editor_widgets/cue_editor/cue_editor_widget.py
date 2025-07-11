@@ -29,12 +29,12 @@ from model import DataType, Filter
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from model.virtual_filters.cue_vfilter import CueFilter
+from src.view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 
-from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .model.cue_filter_model import CueFilterModel
 
 if TYPE_CHECKING:

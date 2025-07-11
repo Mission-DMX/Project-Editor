@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QListWidget, QTextEdit, QToolBar, QVBoxLayout, QWidget
 
 from model import DataType
+from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
-from ..show_browser.annotated_item import AnnotatedListWidgetItem
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
