@@ -5,7 +5,7 @@ import math
 import queue
 import xml.etree.ElementTree as ET
 from logging import getLogger
-from typing import TYPE_CHECKING, Self
+from typing import Self, TYPE_CHECKING
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
@@ -241,7 +241,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                     case _:
                         logger.warning("Received not implemented message type: %s", msg_type)
             except:
-                logger.error("Failed to parse message.", exc_info=True)
+                logger.error("Failed to parse message.")
         self.push_messages()
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
@@ -490,4 +490,4 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
 def on_error(error: QLocalSocket.LocalSocketError) -> None:
     """Logs QLocalSocket error codes with human-readable information."""
-    logger.error(f"QLocalSocket error occurred: {error.name} ({error.value})")
+    logger.error("QLocalSocket error occurred: %s (%s)", error.name, error.value)
