@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import QDialog, QWidget
 

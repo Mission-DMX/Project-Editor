@@ -1,6 +1,6 @@
 """Basic filter node"""
 from logging import getLogger
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 

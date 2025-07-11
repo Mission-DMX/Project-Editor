@@ -408,7 +408,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             QMessageBox.critical(self._parent_widget, "Failed to add channel",
                                  f"Unable to add the requested channel {channel_name}. "
                                  "Channel names must be unique within "
-                                 f"this filter.<br/>Detailed message: {str(e)}")
+                                 f"this filter.<br/>Detailed message: {e}")
             return
         if self._filter_instance is not None and self._filter_instance.in_preview_mode:
             self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)

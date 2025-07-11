@@ -35,7 +35,7 @@ class _NewTriggerDialog(QDialog):
 
         self._fbutton_cb = QComboBox(self)
         self._fbutton_cb.setEditable(False)
-        self._fbutton_cb.addItems([f"F{str(i + 1)}" for i in range(8)])
+        self._fbutton_cb.addItems([f"F{i + 1}" for i in range(8)])
         self._fbutton_cb.setEnabled(False)
         layout.addRow("Internal Macro Button", self._fbutton_cb)
 
