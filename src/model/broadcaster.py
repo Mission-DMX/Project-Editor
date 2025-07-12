@@ -1,4 +1,5 @@
 """connector for Signals"""
+
 from __future__ import annotations
 
 from typing import Any, ParamSpec, Self
@@ -10,7 +11,6 @@ import proto.DirectMode_pb2
 import proto.Events_pb2
 import proto.FilterMode_pb2
 import proto.RealTimeControl_pb2
-from controller.joystick.joystick_enum import JoystickList
 
 from .device import Device
 from .scene import FilterPage, Scene
@@ -20,6 +20,7 @@ P = ParamSpec("P")
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
     """metaclass for a QObject Singleton"""
+
     instance: Any
 
     def __init__(cls: type[QObjectSingletonMeta], name: str, bases: tuple[type, ...], _dict: dict[str, Any]) -> None:
@@ -104,8 +105,8 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
     desk_f_key_pressed: QtCore.Signal = QtCore.Signal(int)
 
-    handle_joystick_event: QtCore.Signal = QtCore.Signal(JoystickList, float, bool)
-    joystick_selected_event: QtCore.Signal = QtCore.Signal(JoystickList)
+    handle_joystick_event: QtCore.Signal = QtCore.Signal(object, float, bool)
+    joystick_selected_event: QtCore.Signal = QtCore.Signal(object)
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(proto.FilterMode_pb2.update_parameter)
     active_scene_switched: QtCore.Signal = QtCore.Signal(int)
