@@ -36,6 +36,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, 
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 
 from .model.cue_filter_model import CueFilterModel
+from .yes_no_dialog import YesNoDialog
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -58,7 +59,6 @@ class ExternalChannelDefinition:
 
 
 class CueEditor(NodeEditorFilterConfigWidget):
-
     def _get_parameters(self) -> dict[str, str]:
         # TODO implement
         return {}
@@ -399,16 +399,22 @@ class CueEditor(NodeEditorFilterConfigWidget):
 
     def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False) -> None:
         if channel_name in ("time", "time_scale"):
-            QMessageBox.critical(self._parent_widget, "Failed to add channel",
-                                 "Unfortunately, 'time' and 'time_scale' is a reserved keyword for this filter.")
+            QMessageBox.critical(
+                self._parent_widget,
+                "Failed to add channel",
+                "Unfortunately, 'time' and 'time_scale' is a reserved keyword for this filter.",
+            )
             return
         try:
             self._model.add_channel(channel_name, channel_type)
         except ValueError as e:
-            QMessageBox.critical(self._parent_widget, "Failed to add channel",
-                                 f"Unable to add the requested channel {channel_name}. "
-                                 "Channel names must be unique within "
-                                 f"this filter.<br/>Detailed message: {e}")
+            QMessageBox.critical(
+                self._parent_widget,
+                "Failed to add channel",
+                f"Unable to add the requested channel {channel_name}. "
+                "Channel names must be unique within "
+                f"this filter.<br/>Detailed message: {e}",
+            )
             return
         if self._filter_instance is not None and self._filter_instance.in_preview_mode:
             self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
@@ -432,8 +438,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
         all cues.
         """
-        self._input_dialog = SelectionDialog("Remove Channels", "Please select Channels to remove.",
-                                             [c[0] for c in self._model.channels], self._parent_widget)
+        self._input_dialog = SelectionDialog(
+            "Remove Channels",
+            "Please select Channels to remove.",
+            [c[0] for c in self._model.channels],
+            self._parent_widget,
+        )
         self._input_dialog.accepted.connect(self._remove_channels_button_pressed_final)
         self._input_dialog.show()
 
@@ -458,16 +468,18 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 2).setText(str(action))
 
     def _cue_play_pressed_restart_changed(self) -> None:
-        self._timeline_container.cue.restart_on_another_play_press = \
+        self._timeline_container.cue.restart_on_another_play_press = (
             self._current_cue_another_play_pressed_checkbox.checkState().Checked
+        )
 
     def _transition_type_changed(self, text: str) -> None:
         self._timeline_container.transition_type = text
 
     def _rec_pressed(self) -> None:
         self._timeline_container.record_pressed()
-        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
-            .setText(self._timeline_container.cue.duration_formatted)
+        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1).setText(
+            self._timeline_container.cue.duration_formatted
+        )
 
     def jg_right(self) -> None:
         if self._jw_zoom_mode:
@@ -499,8 +511,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
                         filter_node.addTerminal(channel_name, io="out")
                         filter_node.filter.out_data_types[channel_name] = channel_type
                     added_channels.append(channel_name)
-            terms_to_remove = [name for name in filter_node.terminals if
-                               name in filter_node.outputs() and name not in added_channels]
+            terms_to_remove = [
+                name for name in filter_node.terminals if name in filter_node.outputs() and name not in added_channels
+            ]
             for name in terms_to_remove:
                 filter_node.removeTerminal(name)
         if self._bankset:
@@ -525,15 +538,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         super().parent_closed(filter_node)
 
     def parent_opened(self) -> None:
-        self._input_dialog = QMessageBox.question(
-            self.get_widget(),
-            "Preview",
-            "Would you like to switch to live preview?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        self._input_dialog = YesNoDialog(
+            self.get_widget(), "Would you like to switch to live preview?", self._link_bankset
         )
-
-        if self._input_dialog == QMessageBox.StandardButton.Yes:
-            self._link_bankset()
 
         self._ui_widget_update_required = False
 
@@ -544,8 +551,9 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if len(self._model.cues) == 0:
             return channel_list
         for name, c_type in self._model.cues[0].channels:
-            channel_list.append(ExternalChannelDefinition(c_type, name,
-                                                          self._bs_to_channel_mapping.get(name), self._bankset))
+            channel_list.append(
+                ExternalChannelDefinition(c_type, name, self._bs_to_channel_mapping.get(name), self._bankset)
+            )
         return channel_list
 
     def _update_ui_widget(self) -> None:

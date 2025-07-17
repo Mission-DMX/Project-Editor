@@ -1,6 +1,7 @@
 import datetime
 from enum import Enum
-from zoneinfo import ZoneInfo
+
+from tzlocal import get_localzone
 
 import proto.FilterMode_pb2
 from model import Filter
@@ -20,7 +21,7 @@ class CueState:
         self._paused_time = datetime.timedelta(seconds=float(0))
         self._active_cue = 0
         self._time_scale = 1
-        self._start_time = datetime.datetime.now(tz=ZoneInfo("Europe/Berlin"))
+        self._start_time = datetime.datetime.now(tz=get_localzone())
 
     @property
     def playing_cue(self) -> int:
@@ -33,21 +34,16 @@ class CueState:
             return "stopped"
 
         if self._state == State.PAUSE:
-            ret = ("paused at " +
-                   self.time_delta_to_str(self._paused_time))
+            ret = "paused at " + self.time_delta_to_str(self._paused_time)
         if self._state == State.PLAY:
             ret = self.time_delta_to_str(
-                (datetime.datetime.now(tz=ZoneInfo("Europe/Berlin")) - self._start_time) * self._time_scale)
-        return (ret + " / " +
-                self.time_delta_to_str(self._end_time) +
-                " in cue " +
-                str(self._active_cue)
-                )
+                (datetime.datetime.now(tz=get_localzone()) - self._start_time) * self._time_scale
+            )
+        return ret + " / " + self.time_delta_to_str(self._end_time) + " in cue " + str(self._active_cue)
 
     def update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         values = param.parameter_value.split(";")
-        self._start_time = datetime.datetime.now(tz=ZoneInfo("Europe/Berlin")) - datetime.timedelta(
-            seconds=float(values[2]))
+        self._start_time = datetime.datetime.now(tz=get_localzone()) - datetime.timedelta(seconds=float(values[2]))
         self._end_time = datetime.timedelta(seconds=float(values[3]))
         self._active_cue = int(values[1])
         self._time_scale = float(values[4])

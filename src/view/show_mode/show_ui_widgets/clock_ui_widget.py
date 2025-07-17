@@ -3,11 +3,11 @@ from __future__ import annotations
 import datetime
 import os
 from typing import TYPE_CHECKING, override
-from zoneinfo import ZoneInfo
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont, QFontDatabase, QFontMetrics
 from PySide6.QtWidgets import QDialog, QLabel, QWidget
+from tzlocal import get_localzone
 
 from model import UIWidget
 from utility import resource_path
@@ -59,7 +59,7 @@ class ClockUIWidget(UIWidget):
         self._update_label()
 
     def _update_label(self) -> None:
-        ct = datetime.datetime.now(tz=ZoneInfo("Europe/Berlin")).time()
+        ct = datetime.datetime.now(tz=get_localzone()).time()
         text = f"{ct.hour:02}:{ct.minute:02}:{ct.second:02}"
         self._widget.setText(text)
 

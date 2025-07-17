@@ -151,8 +151,9 @@ class MacroSetupWidget(QSplitter):
             if not isinstance(selected_items[0], AnnotatedListWidgetItem):
                 logger.error("Expected AnnotatedListWidgetItem with macro. Got %s instead.", selected_items[0])
             if len(selected_items) > 1:
-                logger.warning("Expected only one selected macro. Got %s instead. Using the first.",
-                               len(selected_items))
+                logger.warning(
+                    "Expected only one selected macro. Got %s instead. Using the first.", len(selected_items)
+                )
             self._selected_macro = selected_items[0].annotated_data
         self._trigger_list.clear()
         if self._selected_macro is not None:
@@ -250,7 +251,7 @@ class MacroSetupWidget(QSplitter):
         if not isinstance(self._dialog, QFileDialog):
             logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
         for f_path in self._dialog.selectedFiles():
-            with open(f_path) as f:
+            with open(f_path, "r", encoding="UTF-8") as f:
                 m = Macro(self._show)
                 m.name = os.path.splitext(os.path.basename(f_path))[0]
                 m.content = f.read()
@@ -267,7 +268,7 @@ class MacroSetupWidget(QSplitter):
         file_name = self._dialog.selectedFiles()[0]
         if os.path.splitext(file_name)[1] != ".macro":
             file_name += ".macro"
-        with open(file_name, "w") as f:
+        with open(file_name, "w", encoding="UTF-8") as f:
             f.write(self._selected_macro.content)
 
     def _insert_cue_switch_clicked(self) -> None:
@@ -282,6 +283,7 @@ class MacroSetupWidget(QSplitter):
 
     def _insert_constant_update_clicked(self) -> None:
         if self._selected_macro is not None:
-            self._dialog = ConstantUpdateInsertionDialog(self, self._selected_macro, self._show,
-                                                         self._macro_content_changed)
+            self._dialog = ConstantUpdateInsertionDialog(
+                self, self._selected_macro, self._show, self._macro_content_changed
+            )
             self._dialog.show()

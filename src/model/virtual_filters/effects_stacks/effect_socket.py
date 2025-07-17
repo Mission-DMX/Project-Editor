@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-class EffectDummySocket(Effect):
+class _EffectDummySocket(Effect):
     """The purpose of this class is to provide an Effect if required during rendering"""
 
     def serialize(self) -> dict:
@@ -103,7 +103,7 @@ class EffectsSocket:
         if socket_typ == EffectType.ENABLED_SEGMENTS and self._segment_socket:
             return self._segment_socket
         # TODO implement other slot types
-        return EffectDummySocket(self, socket_typ)
+        return _EffectDummySocket(self, socket_typ)
 
     def place_effect(self, e: Effect, target_slot: EffectType) -> bool:
         if not Effect.can_convert_slot(e.get_output_slot_type(), target_slot):

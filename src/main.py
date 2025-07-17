@@ -16,7 +16,7 @@ if __name__ == "__main__":
     splashscreen.show()
     splashscreen.raise_()
 
-    with open(resource_path(os.path.join("resources", "pyproject.toml")), encoding="UTF-8") as f:
+    with open(resource_path(os.path.join("resources", "pyproject.toml")), "r", encoding="UTF-8") as f:
         import tomlkit
 
         data = tomlkit.load(f)
@@ -34,8 +34,9 @@ if __name__ == "__main__":
 
     from PySide6.QtGui import QColor, QPalette
 
-    splashscreen.showMessage(version_string, alignment=Qt.AlignmentFlag.AlignCenter,
-                             color=QColor.fromRgb(125, 125, 125))
+    splashscreen.showMessage(
+        version_string, alignment=Qt.AlignmentFlag.AlignCenter, color=QColor.fromRgb(125, 125, 125)
+    )
     app.processEvents()
 
     import atexit
@@ -56,11 +57,10 @@ if __name__ == "__main__":
 
     logger = logging.getLogger("Project-Editor")
 
-
     def setup_logging() -> None:
         """read logging from config file and set up the logger"""
         config_file = resource_path(pathlib.Path(os.path.join("configs", "logging.json")))
-        with open(config_file, encoding="utf-8") as f_in:
+        with open(config_file, "r", encoding="utf-8") as f_in:
             config = json.load(f_in)
 
         logging.config.dictConfig(config)
@@ -69,15 +69,14 @@ if __name__ == "__main__":
             queue_handler.listener.start()
             atexit.register(queue_handler.listener.stop)
 
-
     def setup_asyncio() -> None:
         # Warning: while this change is important, the feature is yet a technical preview in pyside6.6 and the
         #  API may change. The functionality however will stay in place.
         import asyncio
 
         from PySide6.QtAsyncio import QAsyncioEventLoopPolicy
-        asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
+        asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
     def set_dark_theme(application: QApplication) -> None:
         """set default dark theme"""
@@ -103,7 +102,6 @@ if __name__ == "__main__":
         dark_palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.HighlightedText, QColor(100, 100, 100))
 
         application.setPalette(dark_palette)
-
 
     def main(application: QApplication) -> None:
         """Startup"""
@@ -131,6 +129,7 @@ if __name__ == "__main__":
             show_file_path = sys.argv[1]
             if os.path.isfile(show_file_path):
                 from controller.file.read import read_document
+
                 read_document(show_file_path, widget.show_configuration)
                 widget.show_configuration.broadcaster.show_file_loaded.emit()
                 application.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
@@ -140,7 +139,6 @@ if __name__ == "__main__":
         return_code = application.exec()
         cli_server.stop()
         sys.exit(return_code)
-
 
     # Only start if __main__
     main(app)

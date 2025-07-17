@@ -125,7 +125,7 @@ class Connection:
             reader = SocketStreamReader(self._client)
             while not self.context.exit_called:
                 self._client.send(b"> ")
-                line = reader.readline().decode().replace("\r", "").replace("\n", "")
+                line = reader.readline().decode("utf-8").replace("\r", "").replace("\n", "")
                 if line == "@echo off":
                     reader.echo = False
                 else:

@@ -81,7 +81,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     try:
         pn.current_step_description = "Load file from disk."
-        with open(resource_path(os.path.join("resources", "ShowFileSchema.xsd")), encoding="UTF-8") as schema_file:
+        with open(resource_path(os.path.join("resources", "ShowFileSchema.xsd")), "r", encoding="UTF-8") as schema_file:
             schema = xmlschema.XMLSchema(schema_file)
         schema.validate(file_name)
         pn.current_step_number += 1
@@ -134,8 +134,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
             case "macro":
                 _parse_and_add_macro(child, board_configuration)
             case _:
-                logger.warning("Show %s contains unknown element: %s",
-                               board_configuration.show_name, child.tag)
+                logger.warning("Show %s contains unknown element: %s", board_configuration.show_name, child.tag)
         pn.total_step_count += 1
 
     pn.total_step_count += len(scene_defs_to_be_parsed)
@@ -222,7 +221,10 @@ def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pa
             case _:
                 logger.warning(
                     "Found attribute %s=%s while parsing filter page for scene %s",
-                    key, value, parent_scene.human_readable_name)
+                    key,
+                    value,
+                    parent_scene.human_readable_name,
+                )
     for child in element:
         if child.tag != "filterid":
             logger.error("Found unknown tag '%s' in filter page.", child.tag)
@@ -231,14 +233,14 @@ def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pa
             if filter_:
                 f.filters.append(filter_)
             else:
-                logger.error("Didn't find filter '%s' in scene '%s'.", child.text,
-                             parent_scene.human_readable_name)
+                logger.error("Didn't find filter '%s' in scene '%s'.", child.text, parent_scene.human_readable_name)
         # TODO load comments
     return True
 
 
-def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfiguration,
-                 loaded_banksets: dict[str, BankSet]) -> None:
+def _parse_scene(
+    scene_element: ET.Element, board_configuration: BoardConfiguration, loaded_banksets: dict[str, BankSet]
+) -> None:
     """
     Load a scene from the show file data structure.
     :param scene_element: The XML element to use
@@ -255,12 +257,10 @@ def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfigurat
                 scene_id = int(value)
             case _:
                 logger.warning(
-                    "Found attribute %s=%s while parsing scene for show %s",
-                    key, value, board_configuration.show_name)
+                    "Found attribute %s=%s while parsing scene for show %s", key, value, board_configuration.show_name
+                )
 
-    scene = Scene(scene_id=scene_id,
-                  human_readable_name=human_readable_name,
-                  board_configuration=board_configuration)
+    scene = Scene(scene_id=scene_id, human_readable_name=human_readable_name, board_configuration=board_configuration)
 
     filter_pages = []
     ui_page_elements = []
@@ -273,8 +273,7 @@ def _parse_scene(scene_element: ET.Element, board_configuration: BoardConfigurat
             case "uipage":
                 ui_page_elements.append(child)
             case _:
-                logger.warning("Scene %s contains unknown element: %s",
-                               human_readable_name, child.tag)
+                logger.warning("Scene %s contains unknown element: %s", human_readable_name, child.tag)
 
     i: int = 0
     instantiated_pages: list[FilterPage] = []
@@ -342,9 +341,11 @@ def _append_ui_page(page_def: ET.Element, scene: Scene) -> None:
         for fid in fids:
             corresponding_filter = scene.get_filter_by_id(fid)
             if not corresponding_filter:
-                logger.error("Did not load filter for ui widget with id '%s' from scene '%s' as it does not exist.",
-                             fid, scene,
-                             )
+                logger.error(
+                    "Did not load filter for ui widget with id '%s' from scene '%s' as it does not exist.",
+                    fid,
+                    scene,
+                )
                 continue
             filters.append(corresponding_filter)
         if widget_cdef is None:
@@ -381,8 +382,8 @@ def _parse_filter(filter_element: ET.Element, scene: Scene) -> None:
                 pos = (float(value.split(",")[0]), float(value.split(",")[1]))
             case _:
                 logger.warning(
-                    "Found attribute %s=%s while parsing filter for scene %s",
-                    key, value, scene.human_readable_name)
+                    "Found attribute %s=%s while parsing filter for scene %s", key, value, scene.human_readable_name
+                )
 
     if filter_type < 0:
         filter_ = construct_virtual_filter_instance(scene, filter_type, filter_id, pos=pos)
@@ -441,14 +442,14 @@ def _parse_initial_parameters(initial_parameters_element: ET.Element, filter_: F
             case "value":
                 ip_value = value
             case _:
-                logger.warning("Found attribute %s=%s while parsing initial parameter for filter %s",
-                               key, value, filter_.filter_id)
+                logger.warning(
+                    "Found attribute %s=%s while parsing initial parameter for filter %s", key, value, filter_.filter_id
+                )
 
     filter_.initial_parameters[ip_key] = ip_value
 
 
-def _parse_filter_configuration(filter_configuration_element: ET.Element, filter_: Filter,
-                                fc: dict[str, str]) -> None:
+def _parse_filter_configuration(filter_configuration_element: ET.Element, filter_: Filter, fc: dict[str, str]) -> None:
     """
     Load the configuration of a filter.
     :param filter_configuration_element: The XML data to load the configuration from
@@ -464,8 +465,12 @@ def _parse_filter_configuration(filter_configuration_element: ET.Element, filter
             case "value":
                 fc_value = value
             case _:
-                logger.warning("Found attribute %s=%s while parsing filter configuration for filter %s",
-                               key, value, filter_.filter_id)
+                logger.warning(
+                    "Found attribute %s=%s while parsing filter configuration for filter %s",
+                    key,
+                    value,
+                    filter_.filter_id,
+                )
 
     fc[fc_key] = fc_value
 
@@ -488,8 +493,12 @@ def _parse_universe(universe_element: ET.Element, board_configuration: BoardConf
             case "description":
                 description = value
             case _:
-                logger.warning("Found attribute %s=%s while parsing universe for show %s",
-                               key, value, board_configuration.show_name)
+                logger.warning(
+                    "Found attribute %s=%s while parsing universe for show %s",
+                    key,
+                    value,
+                    board_configuration.show_name,
+                )
 
     if universe_id is None:
         logger.error("Could not parse universe element, id attribute is missing")
@@ -501,10 +510,9 @@ def _parse_universe(universe_element: ET.Element, board_configuration: BoardConf
     if physical is None and artnet is None and ftdi is None:
         logger.warning("Could not parse any location for universe %s", universe_id)
 
-    universe_proto = proto.UniverseControl_pb2.Universe(id=universe_id,
-                                                        physical_location=physical,
-                                                        remote_location=artnet,
-                                                        ftdi_dongle=ftdi)
+    universe_proto = proto.UniverseControl_pb2.Universe(
+        id=universe_id, physical_location=physical, remote_location=artnet, ftdi_dongle=ftdi
+    )
 
     universe = Universe(universe_proto)
     universe.name = name
@@ -543,8 +551,9 @@ def _parse_artnet_location(location_element: ET.Element) -> proto.UniverseContro
             case _:
                 logger.warning("Found attribute %s=%s while parsing artnet location", key, value)
 
-    return proto.UniverseControl_pb2.Universe.ArtNet(ip_address=ip_address, port=udp_port,
-                                                     universe_on_device=device_universe_id)
+    return proto.UniverseControl_pb2.Universe.ArtNet(
+        ip_address=ip_address, port=udp_port, universe_on_device=device_universe_id
+    )
 
 
 def _parse_ftdi_location(location_element: ET.Element) -> proto.UniverseControl_pb2.Universe.USBConfig:
@@ -570,14 +579,12 @@ def _parse_ftdi_location(location_element: ET.Element) -> proto.UniverseControl_
             case _:
                 logger.warning("Found attribute %s=%s while parsing ftdi location", key, value)
 
-    return proto.UniverseControl_pb2.Universe.USBConfig(product_id=product_id,
-                                                        vendor_id=vendor_id,
-                                                        device_name=device_name,
-                                                        serial=serial_identifier)
+    return proto.UniverseControl_pb2.Universe.USBConfig(
+        product_id=product_id, vendor_id=vendor_id, device_name=device_name, serial=serial_identifier
+    )
 
 
-def _parse_patching(board_configuration: BoardConfiguration, location_element: ET.Element,
-                    universe_id: int) -> None:
+def _parse_patching(board_configuration: BoardConfiguration, location_element: ET.Element, universe_id: int) -> None:
     """
     Load patching information from XML data.
     :param location_element: The XML data to load from
@@ -587,8 +594,13 @@ def _parse_patching(board_configuration: BoardConfiguration, location_element: E
     fixtures_path = "/var/cache/missionDMX/fixtures"  # TODO config file
 
     for child in location_element:
-        make_used_fixture(board_configuration, load_fixture(os.path.join(fixtures_path, child.attrib["fixture_file"])),
-                          int(child.attrib["mode"]), universe_id, int(child.attrib["start"]))
+        make_used_fixture(
+            board_configuration,
+            load_fixture(os.path.join(fixtures_path, child.attrib["fixture_file"])),
+            int(child.attrib["mode"]),
+            universe_id,
+            int(child.attrib["start"]),
+        )
 
     # TODO load fixture name from file
 
@@ -633,8 +645,13 @@ def _parse_and_add_event_source(elm: ET.Element) -> None:
             case "configuration":
                 evs.configuration[str(child.attrib["name"])] = str(child.attrib["value"])
             case "eventRename":
-                evs.renamed_events[(int(child.attrib["eventType"]), int(child.attrib["senderFunction"]),
-                                    str(child.attrib["arguments"]))] = child.text
+                evs.renamed_events[
+                    (
+                        int(child.attrib["eventType"]),
+                        int(child.attrib["senderFunction"]),
+                        str(child.attrib["arguments"]),
+                    )
+                ] = child.text
             case _:
                 logger.error("Unexpected child in event source definition: %s.", child.tag)
     mark_sender_persistent(name, evs.renamed_events)
