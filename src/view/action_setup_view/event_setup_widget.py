@@ -173,8 +173,9 @@ class _SenderConfigurationWidget(QScrollArea):
         self._broadcaster.event_rename_action_occurred.emit(self._sender.index_on_fish)
 
     def _rename_event_occurred(self, s_id: int) -> None:
-        if not self._own_rename_issued and self._sender is not None and self._sender.index_on_fish == s_id:
-            self._update_table()
+        if not self._own_rename_issued:
+            if self._sender is not None and self._sender.index_on_fish == s_id:
+                self._update_table()
         else:
             self._own_rename_issued = False
 
