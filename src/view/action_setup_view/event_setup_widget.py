@@ -140,7 +140,8 @@ class _SenderConfigurationWidget(QScrollArea):
             ev_type_item.setFlags(ev_type_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             s_function_item = QTableWidgetItem(str(k[1]))
             s_function_item.setFlags(
-                s_function_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+                s_function_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable
+            )
             args_item = QTableWidgetItem(k[2])
             args_item.setFlags(args_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             self._rename_table.setItem(i, 0, name_item)
@@ -328,14 +329,16 @@ class _SenderAddDialog(QDialog):
         self._name_tb.setPlaceholderText("Enter sender name here")
         layout.addRow("Name: ", self._name_tb)
         self._type_cb = QComboBox(self, editable=False)
-        self._type_cb.addItems([
-            "fish.builtin.plain",
-            "fish.builtin.midi",
-            "fish.builtin.midirtp",
-            "fish.builtin.xtouchgpio",
-            "fish.builtin.gpio",
-            "fish.builtin.macrokeypad",
-        ])
+        self._type_cb.addItems(
+            [
+                "fish.builtin.plain",
+                "fish.builtin.midi",
+                "fish.builtin.midirtp",
+                "fish.builtin.xtouchgpio",
+                "fish.builtin.gpio",
+                "fish.builtin.macrokeypad",
+            ]
+        )
         layout.addRow("Type: ", self._type_cb)
         layout.addWidget(self._button_box)
         self.setLayout(layout)
