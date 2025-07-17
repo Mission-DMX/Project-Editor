@@ -63,10 +63,11 @@ class TimelineContentWidget(QWidget):
         # render transitions
 
         channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
-        for i, _ in enumerate(self._channels):
+        for i in range(len(self._channels)):
             if (i % 2) == 0:
-                painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
-                                 channel_background_color)
+                painter.fillRect(
+                    0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT, channel_background_color
+                )
 
         marker_color = QColor.fromRgb(255, 255, 0) if self.isEnabled() else QColor.fromRgb(128, 128, 0)
         marker_brush = QBrush(marker_color)
@@ -154,8 +155,13 @@ class TimelineContentWidget(QWidget):
         else:
             parent_height = 150
             parent_width = 150
-        self.setMinimumWidth(max(parent_width, int(self._last_keyframe_end_point / self._time_zoom),
-                                 int(self.cursor_position / self._time_zoom)))
+        self.setMinimumWidth(
+            max(
+                parent_width,
+                int(self._last_keyframe_end_point / self._time_zoom),
+                int(self.cursor_position / self._time_zoom),
+            )
+        )
         self.setMinimumHeight(max(parent_height, int(len(self._channels) * CHANNEL_DISPLAY_HEIGHT) + 2 * 20))
         self.repaint()
 
@@ -266,8 +272,7 @@ class TimelineContentWidget(QWidget):
                         break
             self.used_bankset.push_messages_now()
         if double_click_issued:
-            self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state,
-                                                   self.compute_resize)
+            self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state, self.compute_resize)
             self._dialog.open()
 
     def clear_cue(self) -> None:
