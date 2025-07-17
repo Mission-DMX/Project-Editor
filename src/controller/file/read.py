@@ -81,7 +81,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     try:
         pn.current_step_description = "Load file from disk."
-        with open(resource_path(os.path.join("resources", "ShowFileSchema.xsd")), encoding="UTF-8") as schema_file:
+        with open(resource_path(os.path.join("resources", "ShowFileSchema.xsd")), "r", encoding="UTF-8") as schema_file:
             schema = xmlschema.XMLSchema(schema_file)
         schema.validate(file_name)
         pn.current_step_number += 1

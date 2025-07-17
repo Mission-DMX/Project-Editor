@@ -26,6 +26,7 @@ logger = getLogger(__name__)
 
 class Category(Enum):
     """Category of Fixtures"""
+
     BARREL_SCANNER = "Barrel Scanner"
     BLINDER = "Blinder"
     COLOR_CHANGER = "Color Changer"
@@ -56,7 +57,8 @@ class Category(Enum):
 
 
 class Mode(TypedDict):
-    """ possible Modes of a fixture"""
+    """possible Modes of a fixture"""
+
     name: str
     shortName: str
     #    rdmPersonalityIndex: int
@@ -66,6 +68,7 @@ class Mode(TypedDict):
 
 class Fixture(TypedDict):
     """a Fixture from OFL"""
+
     name: str
     shortName: NotRequired[str]
     categories: set[Category]
@@ -85,6 +88,7 @@ class Fixture(TypedDict):
 
 class ColorSupport(IntFlag):
     """Color Support of Fixture"""
+
     NO_COLOR_SUPPORT = 0
     COLD_AND_WARM_WHITE = 1
     HAS_RGB_SUPPORT = 2
@@ -111,15 +115,20 @@ class ColorSupport(IntFlag):
 
 def load_fixture(file: str) -> Fixture:
     """load fixture from OFL JSON"""
-    with open(file, encoding="UTF-8") as f:
+    with open(file, "r", encoding="UTF-8") as f:
         ob: dict[str, Any] = json.load(f)
-    return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
-                   categories=ob.get("categories", set()), modes=ob.get("modes", []),
-                   fileName=file.split("/fixtures/")[1])
+    return Fixture(
+        name=ob["name"],
+        comment=try_load(ob, "comment"),
+        shortName=try_load(ob, "shortName"),
+        categories=ob.get("categories", set()),
+        modes=ob.get("modes", []),
+        fileName=file.split("/fixtures/")[1],
+    )
 
 
 def try_load(ob: dict[str, str], name: str) -> str:
-    """ try to load not required JSON parts"""
+    """try to load not required JSON parts"""
     try:
         return ob[name]
     except KeyError:
@@ -127,12 +136,20 @@ def try_load(ob: dict[str, str], name: str) -> str:
 
 
 class UsedFixture(QtCore.QObject):
-    """ Fixture in use with a specific mode"""
+    """Fixture in use with a specific mode"""
+
     static_data_changed: QtCore.Signal = QtCore.Signal()
 
-    def __init__(self, board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int,
-                 parent_universe: int,
-                 start_index: int, uuid: UUID | None = None, color: str | None = None) -> None:
+    def __init__(
+        self,
+        board_configuration: BoardConfiguration,
+        fixture: Fixture,
+        mode_index: int,
+        parent_universe: int,
+        start_index: int,
+        uuid: UUID | None = None,
+        color: str | None = None,
+    ) -> None:
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[Fixture] = fixture
@@ -148,8 +165,9 @@ class UsedFixture(QtCore.QObject):
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
-        self._color_on_stage: str = color if color else "#" + "".join(
-            [random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+        self._color_on_stage: str = (
+            color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])
+        )  # noqa: S311 not a secret
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
         self.parent_universe: int = parent_universe
@@ -248,9 +266,9 @@ class UsedFixture(QtCore.QObject):
         """get a segment by type"""
         return tuple((self._segment_map[segment_type] + self.start_index).tolist())
 
-    def _generate_fixture_channels(self) -> tuple[
-        list[FixtureChannel], dict[FixtureChannelType, NDArray[np.int_]], ColorSupport]:
-
+    def _generate_fixture_channels(
+        self,
+    ) -> tuple[list[FixtureChannel], dict[FixtureChannelType, NDArray[np.int_]], ColorSupport]:
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
@@ -270,15 +288,19 @@ class UsedFixture(QtCore.QObject):
         if segment_map[FixtureChannelType.WHITE]:
             found_color |= ColorSupport.HAS_WHITE_SEGMENT
 
-        return fixture_channels, {key: np.array(segment_map[key], dtype=np.int_) for key in
-                                  FixtureChannelType}, found_color
+        return (
+            fixture_channels,
+            {key: np.array(segment_map[key], dtype=np.int_) for key in FixtureChannelType},
+            found_color,
+        )
 
     def get_fixture_channel(self, index: int) -> FixtureChannel:
         """get a fixture channel by index"""
         return self._fixture_channels[index]
 
 
-def make_used_fixture(board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int, universe_id: int,
-                      start_index: int) -> UsedFixture:
+def make_used_fixture(
+    board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int, universe_id: int, start_index: int
+) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
     return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
