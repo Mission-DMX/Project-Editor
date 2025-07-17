@@ -65,16 +65,33 @@ exclude = [
     "src/view/logging_view/dmx_data_log.py"]
 
 [tool.ruff.lint]
-select = ["E", "F", "UP", "I", "SIM", "ANN", "COM", "N", "LOG"]
+select = ["ALL"]
 ignore = [
     "E722",
     "F401",
     "UP007", #Pycharm problem
     "UP038", #Deprecated,
     "SIM105", #Slower contextlib.suppress
+    "TRY", "PLC0415", "ARG002", #TODO ich weiß noch nicht
+    "TRY003", #TODO own error classes
+    "SLF", #TODO private acesses
+    "C901", "PLR", #TODO remve complexity
+    "PLR2004", #TODO magic numbers
+    "PLW0603", "PLW0602", #TODO remove global
+    "D", #TODO Dockstrings
+    "EM", #TODO discuss: code is less readable
+    "FBT", #TODO discuss: beter readable code
+    "BLE001", # bilnd exceptions are fine at the moment
+    "TD", #TODO TODO formating
+    "FIX", #TODOs are okay at the moment
+    "ERA001", #commented-out code is okay at the moment
+    "PTH", #pathlib maybe slower
+    "COM812" #for ruff format
 ]
-#src = ["src"]
-exclude = ["src/view/logging_view/dmx_data_log.py"]
+
+[tool.ruff.format]
+docstring-code-format = true
+line-ending = "lf"
 
 [tool.isort]
 profile = "black"
@@ -91,7 +108,7 @@ load-plugins = "pylint_protobuf"
 max-line-length = 120
 
 [tool.pylint]
-ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/']
+ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/', "src/view/utility_widgets/wizzards/theater_scene_wizard.py"]
 generated-members = ['proto/']
 source-roots = ["src"]
 
