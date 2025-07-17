@@ -1,4 +1,5 @@
 """Classes for remote connection"""
+
 from asyncio import IncompleteReadError
 from logging import getLogger
 from socket import AF_INET6, SOCK_STREAM, socket
@@ -77,7 +78,7 @@ class SocketStreamReader:
 
         result = bytes(buf[: idx + 1])
         self._recv_buffer = b"".join(
-            (memoryview(buf)[(idx + 1):], self._recv_buffer),
+            (memoryview(buf)[(idx + 1) :], self._recv_buffer),
         )
         return result
 
@@ -98,8 +99,9 @@ class SocketStreamReader:
 class Connection:
     """This class handles a remote CLI connection."""
 
-    def __init__(self, client: socket, address: str, connection_map: dict, show: BoardConfiguration,
-                 networkmgr: "NetworkManager") -> None:
+    def __init__(
+        self, client: socket, address: str, connection_map: dict, show: BoardConfiguration, networkmgr: "NetworkManager"
+    ) -> None:
         """This constructor takes over the connection.
 
         Arguments:
@@ -121,7 +123,7 @@ class Connection:
             reader = SocketStreamReader(self._client)
             while not self.context.exit_called:
                 self._client.send(b"> ")
-                line = reader.readline().decode().replace("\r", "").replace("\n", "")
+                line = reader.readline().decode("utf-8").replace("\r", "").replace("\n", "")
                 if line == "@echo off":
                     reader.echo = False
                 else:
@@ -155,8 +157,9 @@ class Connection:
 class RemoteCLIServer:
     """This class handles the control port. Only IPv6 connections are supported."""
 
-    def __init__(self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::",
-                 port: int = 2929) -> None:
+    def __init__(
+        self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::", port: int = 2929
+    ) -> None:
         """Construct the handler and opens a port.
 
         Arguments:
@@ -185,9 +188,9 @@ class RemoteCLIServer:
                 try:
                     client, remote_address = s.accept()
                     remote_address = str(remote_address)
-                    self._connected_clients[remote_address] = Connection(client, remote_address,
-                                                                         self._connected_clients,
-                                                                         self._show, self._network_manager)
+                    self._connected_clients[remote_address] = Connection(
+                        client, remote_address, self._connected_clients, self._show, self._network_manager
+                    )
                 except TimeoutError:
                     pass
                 except OSError as e:
