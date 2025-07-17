@@ -87,7 +87,8 @@ ignore = [
     "FIX", #TODOs are okay at the moment
     "ERA001", #commented-out code is okay at the moment
     "PTH", #pathlib maybe slower
-    "COM812" #for ruff format
+    "COM812", #for ruff format
+    "UP015", #disable for adding "r" to open
 ]
 
 [tool.ruff.format]
