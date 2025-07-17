@@ -56,7 +56,13 @@ distribution = false
 
 [tool.ruff]
 line-length = 120
-exclude = ["src/proto", "src/controller/autotrack", "test/", "src/view/utility_widgets/wizzards/theater_scene_wizard.py"]
+exclude = [
+    "update_version.py",
+    "src/proto",
+    "src/controller/autotrack",
+    "test/",
+    "src/view/utility_widgets/wizzards/theater_scene_wizard.py",
+    "src/view/logging_view/dmx_data_log.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "I", "SIM", "ANN", "COM", "N", "LOG"]
