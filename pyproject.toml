@@ -33,6 +33,7 @@ dependencies = [
     "onnxruntime-openvino>=1.21.0",
     "pydantic>=2.11.7",
     "defusedxml>=0.7.1",
+    "tzlocal>=5.3.1",
 ]
 
 [dependency-groups]
