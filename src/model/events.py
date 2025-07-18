@@ -34,8 +34,6 @@ def set_broadcaster_and_network(b: Broadcaster, nm: NetworkManager) -> Callable[
 def _handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
     """Update the sender model based on the provided message from fish.
     :param msg: The message to use"""
-    global _broadcaster_instance
-    global _senders
     ev = _senders.get(msg.name)
     if ev is None:
         match msg.type:
@@ -116,7 +114,6 @@ class EventSender:
         msg.gui_debug_enabled = self._debug_enabled
         msg.configuration.update(self.configuration)
         if auto_commit:
-            global _network_manager
             _network_manager.send_event_sender_update(msg, push_direct=push_direct)
         return msg
 
@@ -156,8 +153,9 @@ class XtouchGPIOEventSender(EventSender):
         self.configuration["expression_pedal_threshold"] = str(new_value)
 
 
-def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single",
-                 arguments: list[int] | None = None) -> None:
+def insert_event(
+    sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] | None = None
+) -> None:
     """Insert an event in fish.
 
     :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will
