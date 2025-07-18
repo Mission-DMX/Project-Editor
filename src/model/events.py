@@ -1,41 +1,24 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING
 
 import proto.Events_pb2
+from controller.network import NetworkManager
+from model import Broadcaster
 from proto.Events_pb2 import event_type as prot_event_type
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from controller.network import NetworkManager
-    from model import Broadcaster
 
 logger = getLogger(__name__)
 
-_broadcaster_instance: Broadcaster
-_network_manager: NetworkManager
+_broadcaster_instance: Broadcaster = Broadcaster()
+_network_manager: NetworkManager = NetworkManager()
 _senders: dict[str, proto.Events_pb2.event_sender] = {}
 _senders_by_id: dict[int, proto.Events_pb2.event_sender] = {}
 _persistence_notes: dict[str, dict[tuple[int, int, str], str]] = {}
 
 
-def set_broadcaster_and_network(b: Broadcaster, nm: NetworkManager) -> Callable[[proto.Events_pb2.event_sender], None]:
-    """Set the broadcasting instance"""
-    global _broadcaster_instance
-    _broadcaster_instance = b
-    global _network_manager
-    _network_manager = nm
-    logger.debug("Successfully set up network and signal broadcaster")
-    return _handle_incoming_sender_update
-
-
-def _handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
+def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
     """Update the sender model based on the provided message from fish.
     :param msg: The message to use"""
-    global _broadcaster_instance
-    global _senders
     ev = _senders.get(msg.name)
     if ev is None:
         match msg.type:
@@ -67,6 +50,9 @@ def _handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
     ev.configuration.update(msg.configuration)
     if _broadcaster_instance is not None:
         _broadcaster_instance.event_sender_model_updated.emit()
+
+
+_broadcaster_instance.event_sender_update.connect(handle_incoming_sender_update)
 
 
 class EventSender:
@@ -116,7 +102,6 @@ class EventSender:
         msg.gui_debug_enabled = self._debug_enabled
         msg.configuration.update(self.configuration)
         if auto_commit:
-            global _network_manager
             _network_manager.send_event_sender_update(msg, push_direct=push_direct)
         return msg
 
@@ -156,8 +141,9 @@ class XtouchGPIOEventSender(EventSender):
         self.configuration["expression_pedal_threshold"] = str(new_value)
 
 
-def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single",
-                 arguments: list[int] | None = None) -> None:
+def insert_event(
+    sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] | None = None
+) -> None:
     """Insert an event in fish.
 
     :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will

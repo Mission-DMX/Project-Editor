@@ -1,4 +1,5 @@
 """connector for Signals"""
+
 from __future__ import annotations
 
 from typing import Any, ParamSpec, Self
@@ -10,16 +11,13 @@ import proto.DirectMode_pb2
 import proto.Events_pb2
 import proto.FilterMode_pb2
 import proto.RealTimeControl_pb2
-from controller.joystick.joystick_enum import JoystickList
-
-from .device import Device
-from .scene import FilterPage, Scene
 
 P = ParamSpec("P")
 
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
     """metaclass for a QObject Singleton"""
+
     instance: Any
 
     def __init__(cls: type[QObjectSingletonMeta], name: str, bases: tuple[type, ...], _dict: dict[str, Any]) -> None:
@@ -37,7 +35,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(proto.RealTimeControl_pb2.RunMode.ValueType)  # TODO Remove
-    change_active_scene: QtCore.Signal = QtCore.Signal(Scene)
+    change_active_scene: QtCore.Signal = QtCore.Signal(object)
     load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
     show_file_loaded: QtCore.Signal = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
@@ -50,14 +48,14 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     ################################################################
     clear_board_configuration: QtCore.Signal = QtCore.Signal()
     board_configuration_loaded: QtCore.Signal = QtCore.Signal(str)
-    scene_created: QtCore.Signal = QtCore.Signal(Scene)
-    scene_open_in_editor_requested: QtCore.Signal = QtCore.Signal(FilterPage)
+    scene_created: QtCore.Signal = QtCore.Signal(object)
+    scene_open_in_editor_requested: QtCore.Signal = QtCore.Signal(object)  # FilterPage
     bankset_open_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
     uipage_opened_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
-    delete_scene: QtCore.Signal = QtCore.Signal(Scene)
+    delete_scene: QtCore.Signal = QtCore.Signal(object)
     delete_universe: QtCore.Signal = QtCore.Signal(object)
-    device_created: QtCore.Signal = QtCore.Signal(Device)
-    delete_device: QtCore.Signal = QtCore.Signal(Device)
+    device_created: QtCore.Signal = QtCore.Signal(object)  # device
+    delete_device: QtCore.Signal = QtCore.Signal(object)  # device
     event_sender_model_updated: QtCore.Signal = QtCore.Signal()
     fish_event_received: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event)
     event_rename_action_occurred: QtCore.Signal = QtCore.Signal(int)  # int: the id of the sender where the rename was
@@ -104,8 +102,8 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
     desk_f_key_pressed: QtCore.Signal = QtCore.Signal(int)
 
-    handle_joystick_event: QtCore.Signal = QtCore.Signal(JoystickList, float, bool)
-    joystick_selected_event: QtCore.Signal = QtCore.Signal(JoystickList)
+    handle_joystick_event: QtCore.Signal = QtCore.Signal(object, float, bool)
+    joystick_selected_event: QtCore.Signal = QtCore.Signal(object)
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(proto.FilterMode_pb2.update_parameter)
     active_scene_switched: QtCore.Signal = QtCore.Signal(int)
@@ -113,6 +111,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
+    event_sender_update: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event_sender)
 
     def __new__(cls) -> Self:
         if not hasattr(cls, "instance") or cls.instance is None:
