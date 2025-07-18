@@ -1,37 +1,22 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING
 
 import proto.Events_pb2
+from controller.network import NetworkManager
+from model import Broadcaster
 from proto.Events_pb2 import event_type as prot_event_type
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from controller.network import NetworkManager
-    from model import Broadcaster
 
 logger = getLogger(__name__)
 
-_broadcaster_instance: Broadcaster
-_network_manager: NetworkManager
+_broadcaster_instance: Broadcaster = Broadcaster()
+_network_manager: NetworkManager = NetworkManager()
 _senders: dict[str, proto.Events_pb2.event_sender] = {}
 _senders_by_id: dict[int, proto.Events_pb2.event_sender] = {}
 _persistence_notes: dict[str, dict[tuple[int, int, str], str]] = {}
 
 
-def set_broadcaster_and_network(b: Broadcaster, nm: NetworkManager) -> Callable[[proto.Events_pb2.event_sender], None]:
-    """Set the broadcasting instance"""
-    global _broadcaster_instance
-    _broadcaster_instance = b
-    global _network_manager
-    _network_manager = nm
-    logger.debug("Successfully set up network and signal broadcaster")
-    return _handle_incoming_sender_update
-
-
-def _handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
+def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
     """Update the sender model based on the provided message from fish.
     :param msg: The message to use"""
     ev = _senders.get(msg.name)
@@ -65,6 +50,9 @@ def _handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
     ev.configuration.update(msg.configuration)
     if _broadcaster_instance is not None:
         _broadcaster_instance.event_sender_model_updated.emit()
+
+
+_broadcaster_instance.event_sender_update.connect(handle_incoming_sender_update)
 
 
 class EventSender:

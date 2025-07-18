@@ -111,6 +111,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
+    event_sender_update: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event_sender)
 
     def __new__(cls) -> Self:
         if not hasattr(cls, "instance") or cls.instance is None:

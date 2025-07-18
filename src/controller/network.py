@@ -20,13 +20,10 @@ import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
 import x_touch
-from model import events
 from model.broadcaster import Broadcaster, QObjectSingletonMeta
 from model.filter import FilterTypeEnumeration
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from PySide6.QtNetwork import QLocalSocket
 
     from model import Scene
@@ -54,9 +51,6 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         super().__init__()
         logger.info("generate new Network Manager")
         self._broadcaster: Broadcaster = Broadcaster()
-        self.sender_message_callback: Callable[[proto.Events_pb2.event_sender], None] = (
-            events.set_broadcaster_and_network(self._broadcaster, self)
-        )
         self._socket: QtNetwork.QLocalSocket = QtNetwork.QLocalSocket()
         self._message_queue: queue.Queue[tuple[bytes, proto.MessageTypes_pb2.MsgType]] = queue.Queue()
 
@@ -232,10 +226,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                     case proto.MessageTypes_pb2.MSGT_EVENT_SENDER_UPDATE:
                         message: proto.Events_pb2.event_sender = proto.Events_pb2.event_sender()
                         message.ParseFromString(bytes(msg))
-                        if self.sender_message_callback is not None:
-                            self.sender_message_callback(message)
-                        else:
-                            logger.warning("Discarded event_sender update due to missing callback.")
+                        self._broadcaster.event_sender_update.emit(message)
                     case proto.MessageTypes_pb2.MSGT_EVENT:
                         message: proto.Events_pb2.event_sender = proto.Events_pb2.event()
                         message.ParseFromString(bytes(msg))
