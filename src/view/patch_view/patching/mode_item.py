@@ -1,4 +1,5 @@
-"""Widget of a Mode"""
+"""Widget of a Fixture Mode."""
+
 from PySide6 import QtWidgets
 
 import style
@@ -6,9 +7,10 @@ from model.ofl.fixture import Mode
 
 
 class ModeItem(QtWidgets.QPushButton):
-    """Widget of a Fixture"""
+    """Widget of a Fixture Mode."""
 
     def __init__(self, mode: Mode) -> None:
+        """Widget of a Fixture Mode."""
         super().__init__()
         self.setFixedSize(150, 100)
         layout = QtWidgets.QVBoxLayout(self)

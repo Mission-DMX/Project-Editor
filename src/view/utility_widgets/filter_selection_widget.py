@@ -10,8 +10,9 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 class FilterSelectionWidget(QTreeWidget):
     selected_filter_changed: Signal = Signal(str)
 
-    def __init__(self, parent: QWidget | None, scene: Scene | None,
-                 allowed_filter_types: list[FilterTypeEnumeration] | None) -> None:
+    def __init__(
+        self, parent: QWidget | None, scene: Scene | None, allowed_filter_types: list[FilterTypeEnumeration] | None
+    ) -> None:
         super().__init__(parent)
         self._scene = scene
         self._target_filter_id: str | None = None
@@ -54,8 +55,9 @@ class FilterSelectionWidget(QTreeWidget):
         self._last_selected_item = None
 
         def is_filter_addable(filter_to_add: Filter) -> bool:
-            return not len(
-                self._allowed_filter_types) > 0 and filter_to_add.filter_type not in self._allowed_filter_types
+            return (
+                not len(self._allowed_filter_types) > 0 and filter_to_add.filter_type not in self._allowed_filter_types
+            )
 
         def add_filter_item(filter_to_add: Filter, page_item: AnnotatedTreeWidgetItem) -> AnnotatedTreeWidgetItem:
             nonlocal already_added_filters
@@ -116,6 +118,7 @@ class FilterSelectionWidget(QTreeWidget):
         self.selected_filter_changed.emit(self._target_filter_id)
 
     def set_scene(self, scene: Scene | None) -> None:
+        """Set the current Scene."""
         self._scene = scene
         if self._scene is not None:
             self.populate_widget()

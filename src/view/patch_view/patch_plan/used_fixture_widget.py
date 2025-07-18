@@ -1,4 +1,5 @@
-"""A Used Fixture in the patching view"""
+"""UI Widget of a Used Fixture."""
+
 from PySide6.QtGui import QColorConstants, QFont, QPainter, QPixmap
 from PySide6.QtWidgets import QWidget
 
@@ -7,11 +8,10 @@ from view.patch_view.patch_plan.channel_item_generator import create_item
 
 
 class UsedFixtureWidget(QWidget):
-    """
-        UI Widget of a Used Fixture
-    """
+    """A Used Fixture in the patching view."""
 
     def __init__(self, fixture: UsedFixture) -> None:
+        """UI Widget of a Used Fixture."""
         super().__init__()
         self._fixture = fixture
         self._channels_static: list[QPixmap] = []
@@ -22,12 +22,12 @@ class UsedFixtureWidget(QWidget):
 
     @property
     def pixmap(self) -> list[QPixmap]:
-        """pixmap of the widget"""
+        """Pixmap's for each channel of the Fixture."""
         return self._channels_static
 
     @property
     def start_index(self) -> int:
-        """start index of the fixture"""
+        """Start index of the fixture."""
         return self._fixture.start_index
 
     def _build_static_pixmap(self, channel_id: int) -> QPixmap:

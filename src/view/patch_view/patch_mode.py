@@ -1,4 +1,5 @@
-"""Patching Mode"""
+"""Patching Mode."""
+
 from logging import getLogger
 
 from PySide6 import QtWidgets
@@ -12,9 +13,10 @@ logger = getLogger(__name__)
 
 
 class PatchMode(QtWidgets.QStackedWidget):
-    """Patching Mode"""
+    """Patching Mode."""
 
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
+        """Patching Mode."""
         super().__init__(parent)
         self._board_configuration = board_configuration
         self.addWidget(PatchPlanSelector(board_configuration, self))
@@ -29,7 +31,7 @@ class PatchMode(QtWidgets.QStackedWidget):
         self._board_configuration.broadcaster.send_universe.emit(universe)
 
     def _connection_changed(self, connected: bool) -> None:
-        """connection to fish is changed"""
+        """React to changes in connection status to fish."""
         if connected:
             for universe in self._board_configuration.universes:
                 self._board_configuration.broadcaster.send_universe.emit(universe)

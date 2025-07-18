@@ -1,27 +1,32 @@
-"""selector for Patching witch holds all Patching Universes"""
+"""Selector for Patching witch holds all Patching Universes."""
+
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtGui import QContextMenuEvent
 from PySide6.QtWidgets import QScrollArea
 
 from model import BoardConfiguration, Universe
 from model.broadcaster import Broadcaster
-from model.ofl.fixture import UsedFixture
 from view.dialogs.universe_dialog import UniverseDialog
 from view.patch_view.patch_plan.patch_plan_widget import PatchPlanWidget
 
 if TYPE_CHECKING:
+    from PySide6.QtGui import QContextMenuEvent
+
+    from model.ofl.fixture import UsedFixture
     from view.patch_view.patch_mode import PatchMode
 
 logger = getLogger(__name__)
 
 
 class PatchPlanSelector(QtWidgets.QTabWidget):
-    """selector for Patching witch holds all Patching Universes"""
+    """Selector for Patching witch holds all Patching Universes."""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent: "PatchMode") -> None:
+    def __init__(self, board_configuration: BoardConfiguration, parent: PatchMode) -> None:
+        """Selector for Patching witch holds all Patching Universes."""
         super().__init__(parent=parent)
         self._board_configuration = board_configuration
         self._broadcaster = Broadcaster()
@@ -42,15 +47,13 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         widget.add_fixture(fixture)
 
     def _generate_universe(self) -> None:
-        """add a new Universe to universe Selector"""
-
+        """Add a new Universe to universe Selector."""
         dialog = UniverseDialog(self._board_configuration.next_universe_id())
         if dialog.exec():
             Universe(dialog.output)
 
     @override
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        """context menu"""
         for index in range(self.tabBar().count() - 1):
             if self.tabBar().tabRect(index).contains(event.pos()):
                 menu = QtWidgets.QMenu(self)

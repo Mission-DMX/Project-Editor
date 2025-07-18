@@ -1,4 +1,5 @@
-"""select Manufacturer"""
+"""Select for Patching with Manufacturer and Fixtures."""
+
 import os
 import zipfile
 from logging import getLogger
@@ -21,9 +22,10 @@ logger = getLogger(__name__)
 
 
 class PatchingSelect(QtWidgets.QScrollArea):
-    """select Manufacturer"""
+    """Select for Patching with Manufacturer and Fixtures."""
 
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
+        """Select for Patching with Manufacturer and Fixtures."""
         super().__init__(parent)
         self._board_configuration = board_configuration
         cache_path = "/var/cache/missionDMX"
@@ -99,24 +101,22 @@ class PatchingSelect(QtWidgets.QScrollArea):
         return fixture_item
 
     def select_fixture(self, index: int) -> None:
-        """select_fixture"""
+        """Select a fixture by index."""
         self.container.setCurrentIndex(index)
 
     def reset(self) -> None:
-        """reset to start"""
+        """Reset to start."""
         self.container.setCurrentIndex(self.container.count() - 1)
 
     def _run_patch(self, fixture: Fixture, index: int) -> None:
-        """run the patching dialog"""
+        """Run the patching dialog."""
         dialog = PatchingDialog(self._board_configuration, (fixture, index))
         dialog.finished.connect(lambda: self._patch(dialog))
 
         dialog.open()
 
     def _patch(self, form: PatchingDialog) -> None:
-        """
-            patch fixtures from PatchingDialog
-        """
+        """Patch fixtures from PatchingDialog."""
         if form.result():
             form.generate_fixtures()
         self._board_configuration.broadcaster.view_leave_patching.emit()

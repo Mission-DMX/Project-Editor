@@ -1,4 +1,5 @@
-"""Widget of a Manufacturer"""
+"""Widget of a Manufacturer."""
+
 from PySide6 import QtWidgets
 
 import style
@@ -6,9 +7,10 @@ from model.ofl.manufacture import Manufacture
 
 
 class ManufacturerItem(QtWidgets.QPushButton):
-    """Widget of a Manufacturer"""
+    """Widget of a Manufacturer."""
 
     def __init__(self, manufacturer: Manufacture) -> None:
+        """Widget of a Manufacturer."""
         super().__init__()
         self.setFixedSize(150, 100)
         layout = QtWidgets.QVBoxLayout(self)

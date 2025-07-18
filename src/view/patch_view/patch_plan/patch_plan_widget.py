@@ -1,4 +1,5 @@
-"""patch Plan Widget for one Universe"""
+"""Patch Plan Widget for one Universe."""
+
 import math
 from typing import override
 
@@ -12,9 +13,10 @@ from view.patch_view.patch_plan.used_fixture_widget import UsedFixtureWidget
 
 
 class PatchPlanWidget(QWidget):
-    """Patch Plan Widget for one Universe"""
+    """Patch Plan Widget for one Universe."""
 
     def __init__(self) -> None:
+        """Patch Plan Widget for one Universe."""
         super().__init__()
         self._chanel_items: list[QPixmap] = []
         self._cols = 1
@@ -22,14 +24,14 @@ class PatchPlanWidget(QWidget):
         self._fixtures: list[UsedFixtureWidget] = []
 
     def _init_items(self) -> None:
-        """initiate Channel Items"""
+        """Initiate Channel Items."""
         for i in range(1, 513):
             pixmap = create_item(i)
             self._chanel_items.append(pixmap)
 
     @override
     def paintEvent(self, _: QPaintEvent) -> None:
-        """paint the widget"""
+        """Paint the widget."""
         painter = QPainter(self)
         cols = self.width() // item_width()
         for i, channel_item in enumerate(self._chanel_items):
@@ -47,7 +49,7 @@ class PatchPlanWidget(QWidget):
 
     @override
     def resizeEvent(self, event: QResizeEvent) -> None:
-        """resize the widget"""
+        """Resize the widget."""
         new_cols = max(1, self.width() // item_width())
         if new_cols != self._cols:
             self._cols = new_cols
@@ -55,12 +57,12 @@ class PatchPlanWidget(QWidget):
         super().resizeEvent(event)
 
     def update_widget_height(self) -> None:
-        """update the widget height"""
+        """Update the widget height."""
         rows = math.ceil(NUMBER_OF_CHANNELS / self._cols)
         self.setFixedHeight(rows * item_height())
 
     def add_fixture(self, fixture: UsedFixture) -> None:
-        """add a fixture to the widget"""
+        """Add a fixture to the widget."""
         new_fixture = UsedFixtureWidget(fixture)
         self._fixtures.append(new_fixture)
         self.update()

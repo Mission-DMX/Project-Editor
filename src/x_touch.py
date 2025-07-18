@@ -1,4 +1,4 @@
-"""All messages send to the x-touch"""
+"""All messages send to the x-touch."""
 
 from __future__ import annotations
 
@@ -78,9 +78,16 @@ SAVE_BUTTON_DEACTIVATE_MSG: proto.Console_pb2.button_state_change = proto.Consol
 
 
 class XTouchMessages:
-    """messages to the XTouch"""
+    """Messages to the XTouch."""
 
     def __init__(self, broadcaster: Broadcaster, send: callable) -> None:
+        """Messages to the XTouch.
+
+        Args:
+            broadcaster: current broadcaster
+            send: function to send messages
+
+        """
         self._broadcaster = broadcaster
 
         # listen on updates
