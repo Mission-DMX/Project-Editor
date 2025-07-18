@@ -1,5 +1,7 @@
 """This file provides the ShowBrowser widget."""
+
 import os.path
+from functools import partial
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QIcon
@@ -23,6 +25,7 @@ from model.scene import FilterPage
 from utility import resource_path
 from view.show_mode.editor.editing_utils import add_scene_to_show
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
+from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 
 from .annotated_item import AnnotatedTreeWidgetItem
@@ -65,8 +68,9 @@ class ShowBrowser:
         self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Scene", lambda: self._add_element_pressed())
         self._tool_bar.addAction(QIcon.fromTheme("document-properties"), "Edit", lambda: self._edit_element_pressed())
         self._tool_bar.addAction(QIcon.fromTheme("view-refresh"), "Refresh", lambda: self._refresh_all())
-        self._tool_bar.addAction(QIcon.fromTheme("document-send"), "Send showfile to fish",
-                                 lambda: self._upload_showfile())
+        self._tool_bar.addAction(
+            QIcon.fromTheme("document-send"), "Send showfile to fish", lambda: self._upload_showfile()
+        )
 
         self._toolbar_edit_action = self._tool_bar.actions()[1]
         self._toolbar_edit_action.setEnabled(False)
@@ -238,16 +242,14 @@ class ShowBrowser:
         menu.show()
 
     def _delete_scenes_from_context_menu(self, items: list[AnnotatedTreeWidgetItem]) -> None:
-        self._input_dialog = QMessageBox()
-        self._input_dialog.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel)
-        self._input_dialog.setDefaultButton(QMessageBox.StandardButton.Cancel)
-        self._input_dialog.accepted.connect(lambda i=items: self._delete_scenes_from_context_menu_accepted(i))
-        self._input_dialog.rejected.connect(lambda: self._input_dialog.close())
-        self._input_dialog.setIcon(QMessageBox.Icon.Warning)
-        self._input_dialog.setWindowTitle("Are you sure?")
-        self._input_dialog.setText(
-            f"Do you really want to delete the scene {", ".join([f"'{item.text(1)}'" for item in items])}?")
-        self._input_dialog.show()
+        self._input_dialog = YesNoDialog(
+            self.widget,
+            "Are you sure?",
+            f"Do you really want to delete the scene {', '.join([f"'{item.text(1)}'" for item in items])}",
+            partial(self._delete_scenes_from_context_menu_accepted, items),
+            QMessageBox.Icon.Warning,
+            False,
+        )
 
     def _delete_scenes_from_context_menu_accepted(self, items: list[AnnotatedTreeWidgetItem]) -> None:
         if self._input_dialog:
@@ -278,7 +280,8 @@ class ShowBrowser:
                     self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
                     self._input_dialog.textValueSelected.connect(
-                        lambda text, scene_to_rename_=scene_to_rename: rename(self, scene_to_rename_, text))
+                        lambda text, scene_to_rename_=scene_to_rename: rename(self, scene_to_rename_, text)
+                    )
                     self._input_dialog.setLabelText("Rename scene '" + scene_to_rename.human_readable_name + "' to:")
                     self._input_dialog.setWindowTitle("Rename Scene")
                     self._input_dialog.open()
@@ -287,7 +290,8 @@ class ShowBrowser:
                     self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
                     self._input_dialog.textValueSelected.connect(
-                        lambda text, page_to_rename_=page_to_rename: rename(self, page_to_rename_, text))
+                        lambda text, page_to_rename_=page_to_rename: rename(self, page_to_rename_, text)
+                    )
                     self._input_dialog.setLabelText("Rename filter page '" + page_to_rename.name + "' to:")
                     self._input_dialog.setWindowTitle("Rename Filter Page")
                     self._input_dialog.open()
@@ -296,7 +300,8 @@ class ShowBrowser:
                     self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
                     self._input_dialog.textValueSelected.connect(
-                        lambda text, ui_page_=ui_page: rename(self, ui_page_, text))
+                        lambda text, ui_page_=ui_page: rename(self, ui_page_, text)
+                    )
                     self._input_dialog.setLabelText("Rename UI page '" + ui_page.title + "' to:")
                     self._input_dialog.setWindowTitle("Rename UI Page")
                     self._input_dialog.open()
@@ -325,8 +330,9 @@ class ShowBrowser:
             return
         if isinstance(item.annotated_data, UsedFixture):
             current_widget = self._editor_tab_widget.currentWidget()
-            if (isinstance(current_widget, SceneTabWidget) and
-                    place_fixture_filters_in_scene(item.annotated_data, current_widget.filter_page)):
+            if isinstance(current_widget, SceneTabWidget) and place_fixture_filters_in_scene(
+                item.annotated_data, current_widget.filter_page
+            ):
                 current_widget.refresh()
 
     def _upload_showfile(self) -> None:
@@ -363,7 +369,8 @@ class ShowBrowser:
                 self._input_dialog = QInputDialog(self.widget)
                 self._input_dialog.setInputMode(QInputDialog.TextInput)
                 self._input_dialog.textValueSelected.connect(
-                    lambda text, parent=parent_to_append_to: add(self, parent, text))
+                    lambda text, parent=parent_to_append_to: add(self, parent, text)
+                )
                 self._input_dialog.setLabelText("Please enter the name of the new page.")
                 self._input_dialog.setWindowTitle("Enter Name")
                 self._input_dialog.open()
