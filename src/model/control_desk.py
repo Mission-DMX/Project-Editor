@@ -1,4 +1,5 @@
 """models for X-Touch and also for other connected devices like extenders or joystick"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -37,7 +38,7 @@ class DeskColumn(ABC):
         self._upper_text = ""
         self.data_changed_callback = None
 
-    def set_pushed_to_device(self)->None:
+    def set_pushed_to_device(self) -> None:
         """set Column pushed to a device"""
         self._pushed_to_device = True
 
@@ -62,7 +63,7 @@ class DeskColumn(ABC):
 
     @abstractmethod
     def _generate_column_message(self) -> proto.Console_pb2.fader_column:
-        """This method will be called internally by update in order to obtain the definition of the column
+        """Update will call this method internally to get the definition of the column
 
         Returns:
         The corresponding protobuf message
@@ -140,14 +141,26 @@ class RawDeskColumn(DeskColumn):
         msg.raw_data.fader = self._fader_position
         msg.raw_data.rotary_position = self._encoder_position
         msg.raw_data.meter_leds = 0
-        msg.raw_data.select = proto.Console_pb2.ButtonState.BS_ACTIVE \
-            if self._select_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b1 = proto.Console_pb2.ButtonState.BS_ACTIVE \
-            if self._b1_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b2 = proto.Console_pb2.ButtonState.BS_ACTIVE \
-            if self._b2_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
-        msg.raw_data.b3 = proto.Console_pb2.ButtonState.BS_ACTIVE \
-            if self._b3_button_led_active else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        msg.raw_data.select = (
+            proto.Console_pb2.ButtonState.BS_ACTIVE
+            if self._select_button_led_active
+            else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        )
+        msg.raw_data.b1 = (
+            proto.Console_pb2.ButtonState.BS_ACTIVE
+            if self._b1_button_led_active
+            else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        )
+        msg.raw_data.b2 = (
+            proto.Console_pb2.ButtonState.BS_ACTIVE
+            if self._b2_button_led_active
+            else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        )
+        msg.raw_data.b3 = (
+            proto.Console_pb2.ButtonState.BS_ACTIVE
+            if self._b3_button_led_active
+            else proto.Console_pb2.ButtonState.BS_SET_LED_NOT_ACTIVE
+        )
         msg.lower_display_text = self._secondary_text_line
         return msg
 
@@ -259,8 +272,8 @@ class FaderBank:
     def __init__(self) -> None:
         self.columns: list[DeskColumn] = []
 
-    def set_pushed_to_device(self)->None:
-        """set pushed for all columns """
+    def set_pushed_to_device(self) -> None:
+        """set pushed for all columns"""
         for column in self.columns:
             column.set_pushed_to_device()
 
@@ -305,6 +318,7 @@ class BankSet:
      except for the event that the active bank set will be unlinked.
     In this case fish will enable the bank set with the next lower index.
     """
+
     _fish_connector: NetworkManager = None
     _active_bank_set_id: str = None
     _active_bank_set: BankSet = None
@@ -334,8 +348,13 @@ class BankSet:
         """This method returns a copy of the linked bank sets, save to be used by non friend classes."""
         return list(BankSet._linked_bank_sets)
 
-    def __init__(self, banks: list[FaderBank] | None = None, description: str | None = None,
-                 gui_controlled: bool = False, id_: str | None = None) -> None:
+    def __init__(
+        self,
+        banks: list[FaderBank] | None = None,
+        description: str | None = None,
+        gui_controlled: bool = False,
+        id_: str | None = None,
+    ) -> None:
         """Construct a bank set object.
         After construction link() needs to be called in order to link the set with the control desk.
 
@@ -419,19 +438,22 @@ class BankSet:
 
     @property
     def id(self) -> str:
+        """ID of a control_desk."""
         return self._id
 
     def activate(self, out_of_thread: bool = False) -> None:
-        """Calling this method makes this bank set the active one.
-        """
+        """Calling this method makes this bank set the active one."""
         # if BankSet._active_bank_set_id == self.id:
         #    return
         self._gui_controlled = not out_of_thread
         BankSet._active_bank_set_id = self.id
         BankSet._active_bank_set = self
         text = "Bank: " + self.description
-        BankSet._seven_seg_data = (str(self.active_bank % 100) if self.active_bank > 9 else "0" + str(
-            self.active_bank)) + text[-10:] + (" " * (10 - len(text)))
+        BankSet._seven_seg_data = (
+            (str(self.active_bank % 100) if self.active_bank > 9 else "0" + str(self.active_bank))
+            + text[-10:]
+            + (" " * (10 - len(text)))
+        )
         self._send_desk_update_message()
         if self._gui_controlled:
             self.push_messages_now()
