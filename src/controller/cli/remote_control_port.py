@@ -6,10 +6,13 @@ from asyncio import IncompleteReadError
 from logging import getLogger
 from socket import AF_INET6, SOCK_STREAM, socket
 from threading import Thread
+from typing import TYPE_CHECKING
 
 from controller.cli.cli_context import CLIContext
-from controller.network import NetworkManager
-from model import BoardConfiguration
+
+if TYPE_CHECKING:
+    from controller.network import NetworkManager
+    from model import BoardConfiguration
 
 logger = getLogger(__name__)
 
