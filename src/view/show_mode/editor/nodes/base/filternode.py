@@ -1,14 +1,16 @@
-# coding=utf-8
 """Basic filter node"""
 from logging import getLogger
+from typing import TYPE_CHECKING, override
 
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
-from PySide6.QtGui import QFont
 
 from model import Filter, Scene
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
+
+if TYPE_CHECKING:
+    from PySide6.QtGui import QFont
 
 logger = getLogger(__name__)
 
@@ -19,9 +21,9 @@ class FilterNode(Node):
     def __init__(self, model: Filter | Scene,
                  filter_type: int,
                  name: str,
-                 terminals: dict[str, dict[str, str]] = None,
-                 allowAddInput: bool = False,
-                 allowAddOutput: bool = False):
+                 terminals: dict[str, dict[str, str]] | None = None,
+                 allow_add_input: bool = False,
+                 allow_add_output: bool = False) -> None:
         if isinstance(model, Scene):
             if filter_type < 0:
                 self._filter = construct_virtual_filter_instance(scene=model, filter_id=name, filter_type=filter_type)
@@ -34,7 +36,7 @@ class FilterNode(Node):
             self._filter = None
             logger.warning("Tried creating filter node with unknown model %s", str(type(model)))
 
-        super().__init__(name, terminals, allowAddInput=allowAddInput, allowAddOutput=allowAddOutput)
+        super().__init__(name, terminals, allowAddInput=allow_add_input, allowAddOutput=allow_add_output)
 
         self.fsi = FilterSettingsItem(self, self.graphicsItem(),
                                       self._filter) if self._filter.configuration_supported else None
@@ -44,6 +46,7 @@ class FilterNode(Node):
         self.graphicsItem().xChanged.connect(self.update_filter_pos)
         self.channel_hints = {}
 
+    @override
     def graphicsItem(self) -> FilterNodeGraphicsItem:
         """Return the GraphicsItem for this node. Subclasses may re-implement
         this method to customize their appearance in the flowchart."""
@@ -51,49 +54,49 @@ class FilterNode(Node):
             self._graphicsItem = FilterNodeGraphicsItem(self)
         return self._graphicsItem
 
-    def connected(self, localTerm: Terminal, remoteTerm: Terminal):
+    def connected(self, local_term: Terminal, remote_term: Terminal) -> None:
         """Handles behaviour if terminal was connected. Adds channel link to filter.
         Could emit signals. See pyqtgraph.flowchart.Node.connected()
 
         Args:
-            localTerm: The terminal on the node itself.
-            remoteTerm: The terminal of the other node.
+            local_term: The terminal on the node itself.
+            remote_term: The terminal of the other node.
         """
-        remote_node = remoteTerm.node()
+        remote_node = remote_term.node()
 
-        if not localTerm.isInput() or not remoteTerm.isOutput():
+        if not local_term.isInput() or not remote_term.isOutput():
             return
 
         if not isinstance(remote_node, FilterNode):
             logger.warning(
                 "Tried to non-FilterNode nodes. Forced disconnection. Got type: %s and expected: %s instance.",
                 str(type(remote_node)), str(FilterNode.__class__))
-            localTerm.disconnectFrom(remoteTerm)
+            local_term.disconnectFrom(remote_term)
             return
 
         try:
-            if not self.filter.in_data_types[localTerm.name()] == remote_node.filter.out_data_types[remoteTerm.name()]:
+            if self.filter.in_data_types[local_term.name()] != remote_node.filter.out_data_types[remote_term.name()]:
                 logger.warning("Tried to connect incompatible filter channels. Forced disconnection.")
-                localTerm.disconnectFrom(remoteTerm)
+                local_term.disconnectFrom(remote_term)
                 return
-            self.filter.channel_links[localTerm.name()] = remote_node.name() + ":" + remoteTerm.name()
+            self.filter.channel_links[local_term.name()] = remote_node.name() + ":" + remote_term.name()
         except KeyError as e:
-            logger.error("%s Possible key candidates are: %s\nRemote options are: %s", str(e),
-                         ", ".join(self.filter.in_data_types.keys()),
-                         ", ".join(remote_node.filter.out_data_types.keys()))
+            logger.exception("%s Possible key candidates are: %s\nRemote options are: %s", str(e),
+                             ", ".join(self.filter.in_data_types.keys()),
+                             ", ".join(remote_node.filter.out_data_types.keys()))
 
-    def disconnected(self, localTerm, remoteTerm):
+    def disconnected(self, local_term: Terminal, remote_term: Terminal) -> None:
         """Handles behaviour if terminal was disconnected. Removes channel link from filter.
         Could emit signals. See pyqtgraph.flowchart.Node.disconnected()
 
         Args:
-            localTerm: The terminal on the node itself.
-            remoteTerm: The terminal of the other node.
+            local_term: The terminal on the node itself.
+            remote_term: The terminal of the other node.
         """
-        if localTerm.isInput() and remoteTerm.isOutput():
-            self.filter.channel_links[localTerm.name()] = ""
+        if local_term.isInput() and remote_term.isOutput():
+            self.filter.channel_links[local_term.name()] = ""
 
-    def rename(self, name: str):
+    def rename(self, name: str) -> None:
         """Handles behaviour if node was renamed. Changes filter.id.
         Could emit signals. See pyqtgraph.flowchart.Node.rename()
 
@@ -114,15 +117,15 @@ class FilterNode(Node):
             for next_filter_node in terminal.dependentNodes():
                 if isinstance(next_filter_node, FilterNode):
                     filters_to_update.add(next_filter_node.filter)
-        for filter in filters_to_update:
-            for input_key in filter.channel_links.keys():
+        for filter_ in filters_to_update:
+            for input_key in filter_.channel_links:
                 # FIXME the name is not always present
-                prefix, suffix = filter.channel_links[input_key].split(":")
+                prefix, suffix = filter_.channel_links[input_key].split(":")
                 if prefix == old_name:
-                    filter.channel_links[input_key] = f"{name}:{suffix}"
-        return super().rename(name)
+                    filter_.channel_links[input_key] = f"{name}:{suffix}"
+        super().rename(name)
 
-    def update_filter_pos(self):
+    def update_filter_pos(self) -> None:
         """Saves nodes position inside the ui to registered filter."""
         pos = self.graphicsItem().pos()
         self._filter.pos = (pos.x(), pos.y())
@@ -132,11 +135,10 @@ class FilterNode(Node):
         """The corresponding filter"""
         return self._filter
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         """Override this method in order to update ports after the settings have changed"""
-        pass
 
-    def close(self):
+    def close(self) -> None:
         """Closes the node and removes the linked filter from the scene."""
         self.filter.scene.remove_filter(self.filter)
         super().close()

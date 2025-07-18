@@ -1,15 +1,22 @@
-# coding=utf-8
+from typing import override
+
 import PySide6
 from PySide6 import QtGui
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QPainter, QPainterPath, QPaintEvent
+from PySide6.QtGui import QBrush, QColor, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QResizeEvent
 from PySide6.QtWidgets import QWidget
 
 from model import DataType
 from model.control_desk import BankSet, ColorDeskColumn, RawDeskColumn, set_seven_seg_display_content
 from view.show_mode.editor.node_editor_widgets.cue_editor.keyframe_state_edit_dialog import KeyFrameStateEditDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (KeyFrame, State, StateColor, StateDouble,
-                                                                            StateEightBit, StateSixteenBit)
+from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (
+    KeyFrame,
+    State,
+    StateColor,
+    StateDouble,
+    StateEightBit,
+    StateSixteenBit,
+)
 from view.show_mode.editor.node_editor_widgets.cue_editor.utility import format_seconds
 from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import CHANNEL_DISPLAY_HEIGHT
 
@@ -17,7 +24,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import C
 class TimelineContentWidget(QWidget):
     size_changed = Signal(QPoint)
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent=parent)
         self._last_keyframe_end_point = 0  # Defines the length of the Cue in seconds
         self._time_zoom = 0.01  # Defines how many seconds are a pixel, defaults to 1 pixel = 10ms
@@ -35,11 +42,12 @@ class TimelineContentWidget(QWidget):
         return self._cue_index
 
     @cue_index.setter
-    def cue_index(self, arg: int):
+    def cue_index(self, arg: int) -> None:
         if arg > 0:
             self._cue_index = arg
             self._update_7seg_text()
 
+    @override
     def paintEvent(self, ev: QPaintEvent) -> None:
         # TODO we should implement to only redraw required areas based on the hints provided within ev
         w = self.width()
@@ -53,18 +61,15 @@ class TimelineContentWidget(QWidget):
         painter.fillRect(0, 0, w, h, QColor.fromRgb(0x3A, 0x3A, 0x3A))
 
         # render transitions
-        i = 0
-        channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
-        for _ in self._channels:
-            if (i % 2) == 0:
-                painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
-                                 channel_background_color)
-            i += 1
 
-        if self.isEnabled():
-            marker_color = QColor.fromRgb(0xFF, 0xFF, 0x00)
-        else:
-            marker_color = QColor.fromRgb(0x80, 0x80, 0x00)
+        channel_background_color = QColor.fromRgb(0x4A, 0x4A, 0x4A)
+        for i in range(len(self._channels)):
+            if (i % 2) == 0:
+                painter.fillRect(
+                    0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT, channel_background_color
+                )
+
+        marker_color = QColor.fromRgb(255, 255, 0) if self.isEnabled() else QColor.fromRgb(128, 128, 0)
         marker_brush = QBrush(marker_color)
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         kf_line_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
@@ -131,16 +136,18 @@ class TimelineContentWidget(QWidget):
 
         painter.end()
 
-    def mousePressEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
+    @override
+    def mousePressEvent(self, ev: QMouseEvent) -> None:
         super().mousePressEvent(ev)
         self._drag_begin = (ev.x(), ev.y())
         self.update()
 
-    def resizeEvent(self, event: PySide6.QtGui.QResizeEvent) -> None:
+    @override
+    def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self.size_changed.emit(QPoint(self.width(), self.height()))
 
-    def compute_resize(self):
+    def compute_resize(self) -> None:
         p = self.parent()
         if p:
             parent_height = p.height()
@@ -148,40 +155,45 @@ class TimelineContentWidget(QWidget):
         else:
             parent_height = 150
             parent_width = 150
-        self.setMinimumWidth(max(parent_width, int(self._last_keyframe_end_point / self._time_zoom),
-                                 int(self.cursor_position / self._time_zoom)))
+        self.setMinimumWidth(
+            max(
+                parent_width,
+                int(self._last_keyframe_end_point / self._time_zoom),
+                int(self.cursor_position / self._time_zoom),
+            )
+        )
         self.setMinimumHeight(max(parent_height, int(len(self._channels) * CHANNEL_DISPLAY_HEIGHT) + 2 * 20))
         self.repaint()
 
-    def add_channels(self, channels: list[DataType]):
+    def add_channels(self, channels: list[DataType]) -> None:
         for c in channels:
             self._channels.append(c)
         self.compute_resize()
 
-    def remove_channel(self, i):
+    def remove_channel(self, i: int) -> None:
         self._channels.pop(i)
         self.compute_resize()
 
-    def insert_frame(self, f: KeyFrame):
+    def insert_frame(self, f: KeyFrame) -> None:
         self.frames.append(f)
         self._last_clicked_kf_state = None
         self.repaint()
 
-    def zoom_out(self, factor: float = 2.0):
+    def zoom_out(self, factor: float = 2.0) -> None:
         if not self.isEnabled():
             return
         self._last_clicked_kf_state = None
         self._time_zoom *= factor
         self.compute_resize()
 
-    def zoom_in(self, factor: float = 2.0):
+    def zoom_in(self, factor: float = 2.0) -> None:
         if not self.isEnabled():
             return
         self._last_clicked_kf_state = None
         self._time_zoom /= factor
         self.compute_resize()
 
-    def move_cursor_right(self):
+    def move_cursor_right(self) -> None:
         if not self.isEnabled():
             return
         self.cursor_position += self._time_zoom * 10
@@ -189,7 +201,7 @@ class TimelineContentWidget(QWidget):
         self._update_7seg_text()
         self.compute_resize()
 
-    def move_cursor_left(self):
+    def move_cursor_left(self) -> None:
         if not self.isEnabled():
             return
         self.cursor_position -= self._time_zoom * 10
@@ -199,8 +211,8 @@ class TimelineContentWidget(QWidget):
         self._update_7seg_text()
         self.compute_resize()
 
-    def _update_7seg_text(self):
-        txt = format_seconds(self.cursor_position).replace(':', '').replace('.', '')
+    def _update_7seg_text(self) -> None:
+        txt = format_seconds(self.cursor_position).replace(":", "").replace(".", "")
         while len(txt) < 10:
             txt = "0" + txt
         txt = str(self._cue_index % 100) + txt
@@ -208,6 +220,7 @@ class TimelineContentWidget(QWidget):
             txt = " " + txt
         set_seven_seg_display_content(txt, update_from_gui=True)
 
+    @override
     def mouseReleaseEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
         super().mouseReleaseEvent(ev)
         if not self.isEnabled():
@@ -217,10 +230,7 @@ class TimelineContentWidget(QWidget):
             self.cursor_position = clicked_timeslot
             self._update_7seg_text()
         else:
-            if 20 <= ((ev.y() - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40:
-                state_width = 10
-            else:
-                state_width = 1
+            state_width = 10 if 20 <= (ev.y() - 20) % CHANNEL_DISPLAY_HEIGHT <= 40 else 1
             clicked_timeslot_lower = (ev.x() - state_width) * self._time_zoom
             clicked_timeslot_upper = (ev.x() + state_width) * self._time_zoom
             for kf in self.frames:
@@ -229,7 +239,7 @@ class TimelineContentWidget(QWidget):
                     break
         self.repaint()
 
-    def _clicked_on_keyframe(self, kf: KeyFrame, y: int):
+    def _clicked_on_keyframe(self, kf: KeyFrame, y: int) -> None:
         state_index = int((y - 20) / CHANNEL_DISPLAY_HEIGHT)
         states = kf._states
         double_click_issued = False
@@ -262,11 +272,10 @@ class TimelineContentWidget(QWidget):
                         break
             self.used_bankset.push_messages_now()
         if double_click_issued:
-            self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state,
-                                                   self.compute_resize)
+            self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state, self.compute_resize)
             self._dialog.open()
 
-    def clear_cue(self):
+    def clear_cue(self) -> None:
         self._channels.clear()
         self.cursor_position = 0.0
         self.frames = []

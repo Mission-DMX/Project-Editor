@@ -1,18 +1,19 @@
-# coding=utf-8
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QWidget
-
 if TYPE_CHECKING:
+    from PySide6.QtWidgets import QDialog, QWidget
+
     from controller.network import NetworkManager
     from model import Broadcaster, Filter
     from model.scene import Scene
 
-_network_manager_instance: "NetworkManager" = None
+_network_manager_instance: NetworkManager = None
 
 
-def setup_network_manager(nm: "NetworkManager", b: "Broadcaster"):
+def setup_network_manager(nm: NetworkManager, b: Broadcaster) -> None:
     global _network_manager_instance
     _network_manager_instance = nm
     b.request_main_brightness_fader_update.connect(nm.set_main_brightness_fader_position)
@@ -21,7 +22,7 @@ def setup_network_manager(nm: "NetworkManager", b: "Broadcaster"):
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
-    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] | None = None):
+    def __init__(self, parent_page: UIPage, configuration: dict[str, str] | None = None) -> None:
         """ Set up the basic components of a widget.
 
         Arguments:
@@ -52,7 +53,7 @@ class UIWidget(ABC):
         Returns:
             A fully set up QWidget instance
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
@@ -62,9 +63,9 @@ class UIWidget(ABC):
         Returns:
             A fully set up QWidget instance
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def set_filter(self, f: "Filter", i: int):
+    def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
         self.associated_filters[str(i)] = f.filter_id
@@ -72,38 +73,38 @@ class UIWidget(ABC):
     @property
     def filter_ids(self) -> list[str]:
         """Get the id of the linked filter"""
-        l: list[str | None] = [None] * len(self._associated_filters)
-        i = 0
-        for k, v in self._associated_filters.items():
+        linked_filters: list[str | None] = [None] * len(self._associated_filters)
+
+        for i, k, v in enumerate(self._associated_filters.items()):
             try:
                 ik = int(k)
             except ValueError:
                 ik = i
-            if l[ik] is not None:
-                l[ik] = v
+            if linked_filters[ik] is not None:
+                linked_filters[ik] = v
             else:
-                for j in range(len(l)):
-                    if l[j] is None:
-                        l[j] = v
+                for j in range(len(linked_filters)):
+                    if linked_filters[j] is None:
+                        linked_filters[j] = v
                         break
-            i += 1
-        while None in l:
-            l.remove(None)
-        return l
+
+        while None in linked_filters:
+            linked_filters.remove(None)
+        return linked_filters
 
     @property
     def associated_filters(self) -> dict[str, str]:
         return self._associated_filters
 
-    def notify_id_rename(self, old_id: str, new_id: str):
+    def notify_id_rename(self, old_id: str, new_id: str) -> None:
         """This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
         in order to implement special behaviour"""
-        for slot in self._associated_filters.keys():
+        for slot in self._associated_filters:
             if self._associated_filters[slot] == old_id:
                 self._associated_filters[slot] = new_id
 
     @property
-    def parent(self) -> "UIPage":
+    def parent(self) -> UIPage:
         """Get the parent page of this widget"""
         return self._parent
 
@@ -113,7 +114,7 @@ class UIWidget(ABC):
         return self._position
 
     @position.setter
-    def position(self, new_position: tuple[int, int]):
+    def position(self, new_position: tuple[int, int]) -> None:
         """Update the position of the widget on the UI page"""
         self._position = new_position
         self.parent.display_update_required = True
@@ -124,7 +125,7 @@ class UIWidget(ABC):
         return self._size
 
     @size.setter
-    def size(self, new_size: tuple[int, int]):
+    def size(self, new_size: tuple[int, int]) -> None:
         """Update the size of the widget"""
         self._size = new_size
         self.parent.display_update_required = True
@@ -133,7 +134,7 @@ class UIWidget(ABC):
     def configuration(self) -> dict[str, str]:
         return self._configuration
 
-    def copy_base(self, w: "UIWidget") -> "UIWidget":
+    def copy_base(self, w: UIWidget) -> UIWidget:
         w._position = self._position
         w._size = self._size
         w._filter_id = self._filter_id
@@ -141,26 +142,27 @@ class UIWidget(ABC):
         return w
 
     @abstractmethod
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         """This method needs to perform a deep copy of the object, excluding generatable state, such as the widgets"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         """This method shall return a widget that will be placed within the configuration dialog"""
-        raise NotImplementedError()
+        # TODO warum nutzt nur eine der implementierenden klassen überhaupt das parent objekt?
+        raise NotImplementedError
 
     def get_variante(self) -> str:
         """This method needs to be overridden if there are multiple fitting widgets for a filter
         type in order for the show file saving (and loading) to choose the correct one."""
         return ""
 
-    def push_update(self):
+    def push_update(self) -> None:
         """Use this method to trigger a filter update process"""
         for entry in self.generate_update_content():
             k = entry[0]
             v = entry[1]
-            if ':' in k:
+            if ":" in k:
                 split_key = k.split(":")
                 target_fid = split_key[0]
                 k = split_key[1]
@@ -172,7 +174,7 @@ class UIWidget(ABC):
 class UIPage:
     """This class represents a page containing widgets that can be used to control the show."""
 
-    def __init__(self, parent: "Scene"):
+    def __init__(self, parent: Scene) -> None:
         """Construct a UI Page
 
         Arguments:
@@ -181,11 +183,11 @@ class UIPage:
         self._widgets: list[UIWidget] = []
         self._parent_scene: Scene = parent
         self._title: str = ""
-        self._player = None
+        self._player: str | None = None
         self.display_update_required = False
 
     @property
-    def scene(self) -> "Scene":
+    def scene(self) -> Scene:
         """Get the scene this page is bound to"""
         return self._parent_scene
 
@@ -194,7 +196,7 @@ class UIPage:
         """Returns true if this page is currently displayed on any player"""
         return self._player is not None
 
-    def activate_on_player(self, player):
+    def activate_on_player(self, player: str) -> None:
         """Set the player this page is displayed on"""
         self._player = player
         # TODO push page to player
@@ -209,10 +211,10 @@ class UIPage:
         return self._title
 
     @title.setter
-    def title(self, new_title: str):
+    def title(self, new_title: str) -> None:
         self._title = new_title
 
-    def copy(self, new_parent: "Scene") -> "UIPage":
+    def copy(self, new_parent: Scene) -> UIPage:
         new_page = UIPage(new_parent)
         new_page._player = self._player
         new_page._title = self._title
@@ -220,13 +222,13 @@ class UIPage:
             new_page._widgets.append(w.copy(new_page))
         return new_page
 
-    def append_widget(self, widget: UIWidget):
+    def append_widget(self, widget: UIWidget) -> None:
         self._widgets.append(widget)
 
-    def push_update(self):
+    def push_update(self) -> None:
         """This method indicates that updates to the running filters should be sent."""
 
-    def remove_widget(self, widget: UIWidget):
+    def remove_widget(self, widget: UIWidget) -> None:
         self._widgets.remove(widget)
 
 
@@ -235,9 +237,9 @@ class ShowUI:
 
     The _page_storage variable contains the pages per scene.
     """
-    _fish_connector: "NetworkManager" = None
+    _fish_connector: NetworkManager = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         """This constructor initializes the show UI.
 
         At any given time there may only be one instance of this class running in the player but one might construct
@@ -253,7 +255,7 @@ class ShowUI:
         return self._active_scene
 
     @active_scene.setter
-    def active_scene(self, scene: int):
+    def active_scene(self, scene: int) -> None:
         """Set the current active scene.
 
         Warning: setting this property will actually update the current active scene, if this UI is the active one.
@@ -278,11 +280,7 @@ class ShowUI:
         Returns:
             The complete list of pages.
         """
-        page_list = []
-        for _, pl in self._page_storage:
-            for p in pl:
-                page_list.append(p)
-        return page_list
+        return [p for _, pl in self._page_storage for p in pl]
 
     # @staticmethod
     # @property

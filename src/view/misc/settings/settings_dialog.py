@@ -1,15 +1,24 @@
-# coding=utf-8
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QSpinBox, QTabWidget,
-                               QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QLineEdit,
+    QSpinBox,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 if TYPE_CHECKING:
     from model import BoardConfiguration
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent: QWidget | None, show: "BoardConfiguration"):
+    def __init__(self, parent: QWidget | None, show: "BoardConfiguration") -> None:
         super().__init__(parent)
         self.setMinimumHeight(300)
         self.setMinimumWidth(300)
@@ -67,27 +76,27 @@ class SettingsDialog(QDialog):
         return self._show
 
     @show_file.setter
-    def show_file(self, new_show: "BoardConfiguration"):
+    def show_file(self, new_show: "BoardConfiguration") -> None:
         self._show = new_show
         self.show_file_tb.setText(new_show.show_name)
         self.show_notes_tb.setText(new_show.notes)
         self._brightness_mixin_enbled_cb.setChecked(
             str(new_show.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true")
         try:
-            self._default_main_brightness_tb.setValue(int(new_show.ui_hints.get('default_main_brightness') or '255'))
+            self._default_main_brightness_tb.setValue(int(new_show.ui_hints.get("default_main_brightness") or "255"))
         except ValueError:
             self._default_main_brightness_tb.setValue(255)
 
-    def apply(self):
+    def apply(self) -> None:
         self._show.show_name = self.show_file_tb.text()
         self._show.notes = self.show_notes_tb.toPlainText()
-        self._show.ui_hints['default_main_brightness'] = str(self._default_main_brightness_tb.value())
+        self._show.ui_hints["default_main_brightness"] = str(self._default_main_brightness_tb.value())
         self._show.ui_hints[
             "color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
 
-    def ok_button_pressed(self):
+    def ok_button_pressed(self) -> None:
         self.apply()
         self.accept()
 
-    def cancle_button_pressed(self):
+    def cancle_button_pressed(self) -> None:
         self.reject()

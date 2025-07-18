@@ -1,25 +1,28 @@
-# coding=utf-8
 import asyncio
 import threading
+from logging import getLogger
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QPushButton, QSlider
 
 from controller.autotrack.Calibration.MappingCalibration import MappingCalibration
 from controller.autotrack.Helpers.ImageHelper import cv2qim
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.gui_tab import GuiTab
+
+logger = getLogger(__name__)
 
 
 class LightSetupTab(GuiTab):
-    def __init__(self, name, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager) -> None:
         super().__init__(name, instance)
         self.layout = QGridLayout()
         self.layout.setSizeConstraint(QLayout.SetMinimumSize)
         self.image_label = QLabel()
 
         self._calibration_running = False
-        self._calibration_step = 0
+        self._calibration_step: int = 0
         self._calibration_points = [
             [(75.16666666666667, 54.0), (187, 176)],
             [(75.16666666666667, 47.0), (152, 272)],
@@ -109,13 +112,13 @@ class LightSetupTab(GuiTab):
         # Set the layout for the tab
         self.setLayout(self.layout)
 
-    def btn_frame_pressed(self):
+    def btn_frame_pressed(self) -> None:
         # asyncio.run(self._async_btn_frame_pressed())
         # asyncio.get_event_loop().create_task(self._async_btn_frame_pressed())
         thread = threading.Thread(target=self.worker_thread)
         thread.start()
 
-    def setup_calibration(self):
+    def setup_calibration(self) -> None:
         grid_size = 5
         self._calibration_points = []
         corners = self.instance.settings.lights.corners
@@ -127,14 +130,14 @@ class LightSetupTab(GuiTab):
             for j in range(grid_size):
                 item = [((1 + i) * w + x, (1 + j) * h + y), (0, 0)]
                 self._calibration_points.append(item)
-        print(self._calibration_points)
+        logger.info(self._calibration_points)
 
-    async def _async_btn_frame_pressed(self):
+    async def _async_btn_frame_pressed(self) -> None:
         await self.instance.settings.lights.frame(
-            2000, self.instance.settings.lights.corners
+            2000, self.instance.settings.lights.corners,
         )
 
-    def worker_thread(self):
+    def worker_thread(self) -> None:
         # Create a new event loop for this worker thread
         event_loop = asyncio.new_event_loop()
 
@@ -142,47 +145,47 @@ class LightSetupTab(GuiTab):
         asyncio.set_event_loop(event_loop)
 
         # Define an asyncio function to run in the worker thread
-        async def my_async_function(self):
-            await self.instance.settings.lights.frame(
-                2000, self.instance.settings.lights.corners
+        async def my_async_function(self_: LightSetupTab) -> None:
+            await self_.instance.settings.lights.frame(
+                2000, self_.instance.settings.lights.corners,
             )
-            print("Asyncio code running in worker thread")
+            logger.info("Asyncio code running in worker thread")
 
         # Run the asyncio function
         event_loop.run_until_complete(my_async_function(self))
         event_loop.close()
 
-    def btn_position_pressed(self):
+    def btn_position_pressed(self) -> None:
         button = self.sender()
         self.instance.settings.lights.corners[self.buttons.index(button)] = [
             self.sliderx1.value(),
             self.sliderx2.value(),
         ]
-        print(f"Button {self.buttons.index(button)} gedrückt")
-        print(self.instance.settings.lights.corners)
+        logger.info("Button %s gedrückt", self.buttons.index(button))
+        logger.info(self.instance.settings.lights.corners)
 
-    def slider_changed(self):
+    def slider_changed(self) -> None:
         asyncio.run(self._async_slider())
 
-    async def _async_slider(self):
+    async def _async_slider(self) -> None:
         await self.instance.settings.lights.set_position(
-            [self.sliderx1.value(), self.sliderx2.value()]
+            [self.sliderx1.value(), self.sliderx2.value()],
         )
         await self.instance.settings.lights.set_brightness(self.slidery1.value())
 
-    def mouse_clicked(self, event):
+    def mouse_clicked(self, event: QMouseEvent) -> None:
         if self.last_image is not None:
             if self._calibration_running:
                 self.mouse_calibration(event)
             else:
                 self.light_to_mouse(event)
 
-    def light_to_mouse(self, event):
+    def light_to_mouse(self, event: QMouseEvent) -> None:
         click_position = event.pos()
         x, y = click_position.x(), click_position.y()
 
         # Display the position in the console
-        print(f"Mouse clicked at position (x: {x}, y: {y})")
+        logger.info("Mouse clicked at position (x: %d, y: %d)", x, y)
 
         # h, w, _ = self.last_image.shape
 
@@ -190,10 +193,10 @@ class LightSetupTab(GuiTab):
         c = self.instance.settings.map.get_point((x, y))
         asyncio.run(self._asy_mouse(c))
 
-    async def _asy_mouse(self, pos):
+    async def _asy_mouse(self, pos: tuple[int, int]) -> None:
         await self.instance.settings.lights.set_position(pos)
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         """
         Called when the tab is activated.
         """
@@ -201,13 +204,13 @@ class LightSetupTab(GuiTab):
 
         self.show_sliders(255, 255)
 
-    def tab_deactivated(self):
+    def tab_deactivated(self) -> None:
         """
         Called when the tab is deactivated.
         """
         super().tab_deactivated()
 
-    def hide_sliders(self):
+    def hide_sliders(self) -> None:
         """
         Hide the crop sliders.
         """
@@ -216,13 +219,13 @@ class LightSetupTab(GuiTab):
         self.slidery2.hide()
         self.sliderx2.hide()
 
-    def show_sliders(self, height, width):
+    def show_sliders(self, height: int, width: int) -> None:
         """
         Show and configure the crop sliders.
 
         Args:
-            height (int): The height of the image frame.
-            width (int): The width of the image frame.
+            height : The height of the image frame.
+            width : The width of the image frame.
         """
         self.sliderx1.show()
         self.sliderx1.setMinimum(0)
@@ -242,7 +245,7 @@ class LightSetupTab(GuiTab):
 
         self.slider_changed()
 
-    def video_update(self):
+    def video_update(self) -> None:
         """
         Update the video content within the tab.
         """
@@ -252,26 +255,26 @@ class LightSetupTab(GuiTab):
             self.last_image = frame
             self.image_label.setPixmap(cv2qim(frame))
 
-    def calibrate_points(self):
+    def calibrate_points(self) -> None:
         if self.instance.settings.lights.corners:
             self.setup_calibration()
             self._calibration_step = 0
             self._calibration_running = True
             self.move_calibration_light(0)
 
-    def mouse_calibration(self, event):
+    def mouse_calibration(self, event: QMouseEvent) -> None:
         click_position = event.pos()
         x, y = click_position.x(), click_position.y()
         self._calibration_points[self._calibration_step][1] = (x, y)
         self._calibration_step = self._calibration_step + 1
         self.move_calibration_light(self._calibration_step)
-        print(self._calibration_points)
-        print(f"{self._calibration_step}:{len(self._calibration_points)}")
+        logger.info(self._calibration_points)
+        logger.info("%s:%s", self._calibration_step, len(self._calibration_points))
         if self._calibration_step >= len(self._calibration_points) - 1:
             self._calibration_running = False
             self.instance.settings.map = MappingCalibration(self._calibration_points)
 
-    def move_calibration_light(self, pos):
+    def move_calibration_light(self, pos: int) -> None:
         x, y = self._calibration_points[pos][0]
         p = [x, y]
         asyncio.run(self._asy_mouse(p))

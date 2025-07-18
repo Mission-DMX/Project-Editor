@@ -1,7 +1,9 @@
-# coding=utf-8
 """Context of the Client"""
+from __future__ import annotations
+
 import argparse
 import traceback
+from argparse import Namespace
 from typing import TYPE_CHECKING
 
 from controller.cli.bankset_command import BankSetCommand
@@ -19,7 +21,7 @@ if TYPE_CHECKING:
 
 def _split_args(line: str) -> list[str]:
     """Split a line into individual arguments."""
-    l = []
+    arguments = []
     in_string: bool = False
     current_arg = ""
     in_escape: bool = False
@@ -28,46 +30,44 @@ def _split_args(line: str) -> list[str]:
             if c == '"' and not in_escape:
                 in_string = False
                 continue
-            if c == '\\':
+            if c == "\\":
                 in_escape = not in_escape
             if not in_escape:
                 current_arg += c
-            else:
-                if c == 't':
-                    current_arg += '\t'
-                    in_string = False
-                elif c == 'n':
-                    current_arg += '\n'
-                    in_escape = False
-                elif c == 'r':
-                    current_arg += '\r'
-                    in_escape = False
-                elif c == '"':
-                    current_arg += c
-                    in_escape = False
-        else:
-            if c == '"':
-                in_string = True
+            elif c == "t":
+                current_arg += "\t"
+                in_string = False
+            elif c == "n":
+                current_arg += "\n"
                 in_escape = False
-            elif c == '#':
-                if current_arg != '':
-                    l.append(current_arg)
-                break
-            elif c in (' ', '\t'):
-                if current_arg != '':
-                    l.append(current_arg)
-                    current_arg = ''
-            else:
+            elif c == "r":
+                current_arg += "\r"
+                in_escape = False
+            elif c == '"':
                 current_arg += c
-    if current_arg != '':
-        l.append(current_arg)
-    return l
+                in_escape = False
+        elif c == '"':
+            in_string = True
+            in_escape = False
+        elif c == "#":
+            if current_arg != "":
+                arguments.append(current_arg)
+            break
+        elif c in (" ", "\t"):
+            if current_arg != "":
+                arguments.append(current_arg)
+                current_arg = ""
+        else:
+            current_arg += c
+    if current_arg != "":
+        arguments.append(current_arg)
+    return arguments
 
 
 class CLIContext:
     """Context of the Client"""
 
-    def __init__(self, show: "BoardConfiguration", networkmgr: "NetworkManager", exit_available: bool = False):
+    def __init__(self, show: BoardConfiguration, networkmgr: NetworkManager, exit_available: bool = False) -> None:
         """
         Initialize a new CLI context.
         :param show: The current active show configuration
@@ -80,15 +80,16 @@ class CLIContext:
             BankSetCommand(self),
             ShowCommand(self),
             EventCommand(self),
-            HelpCommand(self)
+            HelpCommand(self),
         ]
-        self.selected_bank: "BankSet" | None = None
-        self.selected_column: "DeskColumn" | None = None
-        self.selected_scene: "Scene" | None = None
+        self.selected_bank: BankSet | None = None
+        self.selected_column: DeskColumn | None = None
+        self.selected_scene: Scene | None = None
         self.show = show
-        self.networkmgr: "NetworkManager" = networkmgr
+        self.network_manager: NetworkManager = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
-        subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
+        subparsers: argparse._SubParsersAction = self.parser.add_subparsers(
+            help="subcommands help", dest="subparser_name")
         for c in self.commands:
             c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
         if exit_available:
@@ -109,7 +110,7 @@ class CLIContext:
             args = _split_args(line)
             if len(args) == 0:
                 return True
-            global_args = self.parser.parse_args(args=args)
+            global_args: Namespace = self.parser.parse_args(args=args)
             if self._exit_available and global_args.subparser_name == "exit":
                 self.exit_called = True
             elif global_args.subparser_name == "?":
@@ -126,13 +127,13 @@ class CLIContext:
             self.print("Execution of command failed: " + str(e))
         return False
 
-    def print(self, text: str):
+    def print(self, text: str) -> None:
         """This method can be used by commands to print text to which ever output medium there is.
 
         Arguments:
         text -- The line to be printed
         """
-        self.return_text += text + '\n'
+        self.return_text += text + "\n"
 
     def fetch_print_buffer(self) -> str:
         """This method returns the stored output buffer and clears it.

@@ -1,11 +1,12 @@
-# coding=utf-8
+from collections.abc import Callable
+
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLineEdit, QPushButton, QWidget
 
 from model import DataType
 
 
 class ChannelInputDialog(QDialog):
-    def __init__(self, parent: QWidget, ok_function):
+    def __init__(self, parent: QWidget, ok_function: Callable[[str, DataType], None]) -> None:
         super().__init__(parent)
         self._ok_function = ok_function
         self._layout = QFormLayout()
@@ -20,6 +21,6 @@ class ChannelInputDialog(QDialog):
         self._layout.addRow("", self._ok_button)
         self.setLayout(self._layout)
 
-    def _ok_pressed(self):
+    def _ok_pressed(self) -> None:
         self._ok_function(self._channel_name.text(), DataType.from_filter_str(self._type_box.currentText()))
         self.close()

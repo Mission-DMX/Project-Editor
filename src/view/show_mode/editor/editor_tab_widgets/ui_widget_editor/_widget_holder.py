@@ -1,13 +1,14 @@
 from logging import getLogger
+from typing import override
 
 from PySide6.QtCore import QPoint, QSize, Qt, Signal
-from PySide6.QtGui import QMouseEvent
+from PySide6.QtGui import QCloseEvent, QMouseEvent
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from model import UIWidget
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class UIWidgetHolder(QWidget):
@@ -15,7 +16,7 @@ class UIWidgetHolder(QWidget):
 
     closing = Signal()
 
-    def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True):
+    def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True) -> None:
         super().__init__(parent)
         self._model: UIWidget = child
         if instance_for_editor:
@@ -44,15 +45,12 @@ class UIWidgetHolder(QWidget):
         super().move(self._model.position[0], self._model.position[1])
         self._edit_dialog = None
 
-    def update_size(self):
+    def update_size(self) -> None:
         self.setMinimumWidth(100)
         self.setMinimumHeight(30)
 
         child_layout = self._child.layout()
-        if child_layout:
-            minimum_size = child_layout.totalMinimumSize()
-        else:
-            minimum_size = QSize(250, 100)
+        minimum_size = child_layout.minimumSize() if child_layout else QSize(250, 100)
         w = max(minimum_size.width() + 50, self.minimumWidth())
         h = max(minimum_size.height() + 50, self.minimumHeight())
         self._label.resize(w, 20)
@@ -60,7 +58,8 @@ class UIWidgetHolder(QWidget):
         self.resize(w, h)
         self.repaint()
 
-    def closeEvent(self, event) -> None:
+    @override
+    def closeEvent(self, event:QCloseEvent) -> None:
         """Emits closing signal.
 
         Args:
@@ -73,6 +72,7 @@ class UIWidgetHolder(QWidget):
             pass
         super().closeEvent(event)
 
+    @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Saves the current position on left click.
 
@@ -82,6 +82,7 @@ class UIWidgetHolder(QWidget):
         if event.button() is Qt.MouseButton.LeftButton and self._instance_for_editor:
             self._old_pos = event.globalPos()
 
+    @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """Moves the widget on mouse drag.
 
@@ -105,11 +106,11 @@ class UIWidgetHolder(QWidget):
     def widget(self) -> UIWidget:
         return self._model
 
-    def move(self, new_pos: QPoint):
+    def move(self, new_pos: QPoint) -> None:
         super().move(new_pos)
         self._model.position = (new_pos.x(), new_pos.y())
 
-    def _show_edit_dialog(self):
+    def _show_edit_dialog(self) -> None:
         if not self._edit_dialog:
             self._edit_dialog = QDialog(self)
             layout = QVBoxLayout()
@@ -118,7 +119,7 @@ class UIWidgetHolder(QWidget):
             self._edit_dialog.setLayout(layout)
         self._edit_dialog.show()
 
-    def unregister(self):
+    def unregister(self) -> None:
         """Clean up the stored widget and remove it from the parent canvas."""
         # setting the parent to None is required!
         try:
@@ -126,4 +127,4 @@ class UIWidgetHolder(QWidget):
             self._child.setVisible(False)
             self._child.setEnabled(False)
         except RuntimeError as e:
-            logger.error("BUG! This widget is already deleted: %s", e)
+            logger.exception("BUG! This widget is already deleted: %s", e)

@@ -1,11 +1,12 @@
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, Qt
+from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, QResizeEvent, Qt
 from PySide6.QtWidgets import QApplication, QWidget
 
 if TYPE_CHECKING:
-    from typing import Callable
+
 
     from PySide6.QtGui import QMouseEvent, QPaintEvent
 
@@ -17,13 +18,13 @@ class BoxGridItem(QObject):
     """
     clicked: Signal = Signal()
 
-    def __init__(self, parent: QWidget | None):
+    def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
         self._text: str = ""
         self._icon: QPixmap | None = None
         self._additional_render_method: Callable | None = None
 
-    def set_icon(self, icon: QPixmap | QIcon | None):
+    def set_icon(self, icon: QPixmap | QIcon | None) -> None:
         """
         Sets the icon of this item. If a QIcon is passed, it will be automatically converted to the correct size.
         If a pixmap is passed, it needs to have the correct size from the beginning on.
@@ -36,7 +37,7 @@ class BoxGridItem(QObject):
         elif isinstance(icon, QIcon):
             self._icon = icon.pixmap(
                 self.parent().box_width / 2 if isinstance(self.parent(), BoxGridRenderer) else 50,
-                self.parent().box_height / 2 if isinstance(self.parent(), BoxGridRenderer) else 60
+                self.parent().box_height / 2 if isinstance(self.parent(), BoxGridRenderer) else 60,
             )
 
     @property
@@ -80,7 +81,8 @@ class BoxGridRenderer(QWidget):
     Each item (Box) can be accessed by its index using the `item_at` method.
     :see BoxGridItem: for a detailed explanation on individual items.
     """
-    def __init__(self, parent: QWidget | None = None):
+
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._boxes: list[BoxGridItem] = []
         self._box_width = 100
@@ -98,7 +100,7 @@ class BoxGridRenderer(QWidget):
         return self._box_width
 
     @box_width.setter
-    def box_width(self, new_value: int):
+    def box_width(self, new_value: int) -> None:
         """Set the width of individual items."""
         self._box_width = max(new_value, 0)
         self.setMinimumWidth(self._box_width + self._scroll_bar_size)
@@ -111,14 +113,14 @@ class BoxGridRenderer(QWidget):
         return self._box_height
 
     @box_height.setter
-    def box_height(self, new_value: int):
+    def box_height(self, new_value: int) -> None:
         """Set the height of individual items."""
         self._box_height = max(0, new_value)
         self.setMinimumHeight(self._box_height)
         self.update()
         self.repaint()
 
-    def add_label(self, text: str, icon: QIcon | None = None):
+    def add_label(self, text: str, icon: QIcon | None = None) -> None:
         """
         Add a new item based on the provided text.
         :param text: The text of the new item
@@ -128,7 +130,7 @@ class BoxGridRenderer(QWidget):
         b.set_icon(icon)
         self.add_item(b)
 
-    def add_item(self, b: BoxGridItem):
+    def add_item(self, b: BoxGridItem) -> None:
         """
         Add an item object.
         :param b: The BoxGridItem to add.
@@ -138,16 +140,17 @@ class BoxGridRenderer(QWidget):
         self.update()
         self.repaint()
 
-    def _update_scroll_behavior(self):
+    def _update_scroll_behavior(self) -> None:
         # TODO display scroll bar if boxes > height
         # TODO link scroll bar signals if scroll bar visible
         pass
 
-    def resizeEvent(self, event, /):
+    @override
+    def resizeEvent(self, event: QResizeEvent, /) -> None:
         self._update_scroll_behavior()
         super().resizeEvent(event)
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear the contained items."""
         self._boxes.clear()
         self.update()
@@ -163,7 +166,8 @@ class BoxGridRenderer(QWidget):
             return None
         return self._boxes[i]
 
-    def paintEvent(self, event: "QPaintEvent", /):
+    @override
+    def paintEvent(self, event: "QPaintEvent", /) -> None:
         p = QPainter(self)
         p.device()
 
@@ -190,7 +194,7 @@ class BoxGridRenderer(QWidget):
         # TODO render scroll bar
         p.end()
 
-    def _draw_box(self, p: QPainter, b: BoxGridItem, x: int, y: int):
+    def _draw_box(self, p: QPainter, b: BoxGridItem, x: int, y: int) -> None:
         """Draws a box. At the given location."""
         p.setBrush(self._fg_brush)
         p.drawRect(x, y, self._box_width, self._box_height)
@@ -202,7 +206,8 @@ class BoxGridRenderer(QWidget):
         if b.additional_render_method is not None:
             b.additional_render_method(p, x, y)
 
-    def mousePressEvent(self, e: "QMouseEvent"):
+    @override
+    def mousePressEvent(self, e: "QMouseEvent") -> None:
         if e.button() == Qt.MouseButton.LeftButton:
             width_adv_per_box = self._box_width + self._border_width
             height_adv_per_box = self._box_height + self._border_width

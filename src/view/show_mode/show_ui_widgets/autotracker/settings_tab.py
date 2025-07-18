@@ -1,8 +1,7 @@
-# coding=utf-8
 from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QLineEdit, QPushButton
 
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.gui_tab import GuiTab
 
 
 class SettingsTab(GuiTab):
@@ -20,13 +19,13 @@ class SettingsTab(GuiTab):
         - `video_update()`: Abstract method for updating video content within the tab.
     """
 
-    def __init__(self, name, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager) -> None:
         """
         Initialize a SettingsTab object.
 
         Args:
-            name (str): The name of the tab.
-            instance (InstanceManager): An instance manager for managing application instances and settings.
+            name : The name of the tab.
+            instance : An instance manager for managing application instances and settings.
         """
         if isinstance(instance, InstanceManager):
             super().__init__(name, instance)
@@ -58,7 +57,7 @@ class SettingsTab(GuiTab):
             layout.addWidget(save_button)
             save_button.clicked.connect(self.save_settings)
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         """
         Save the settings entered in the QLineEdit widgets.
         """
@@ -67,15 +66,14 @@ class SettingsTab(GuiTab):
             value = edit.text()
             filter_config[setting] = value
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         """
         Called when the tab is activated.
         """
         if self.instance:
             self.crop_line_edit.setText(", ".join(map(str, self.instance.settings.crop)))
 
-    def video_update(self):
+    def video_update(self) -> None:
         """
         Abstract method for updating video content within the tab.
         """
-        pass

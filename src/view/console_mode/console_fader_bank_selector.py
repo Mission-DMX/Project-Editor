@@ -1,4 +1,3 @@
-# coding=utf-8
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QWidget
 
@@ -8,7 +7,8 @@ from model.control_desk import BankSet, FaderBank, RawDeskColumn
 class ConsoleFaderBankSelectorWidget(QComboBox):
     fader_value_changed = Signal(int)
 
-    def __init__(self, bank_set: BankSet, display_text: str, parent: QWidget = None, bank_set_control_list=None):
+    def __init__(self, bank_set: BankSet, display_text: str, parent: QWidget = None,
+                 bank_set_control_list: list[QWidget] | None = None) -> None:
         super().__init__(parent)
         if bank_set_control_list is None:
             bank_set_control_list = []
@@ -29,7 +29,7 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
         self._bank_set_control_list.append(self)
         self._skip_next_update = False
 
-    def _insert_fader_column(self):
+    def _insert_fader_column(self) -> None:
         self._skip_next_update = True
         if self._fader:
             self._unlink_fader()
@@ -43,7 +43,7 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
         self._bank_set.banks[self._bank_index].add_column(self._fader)
         self._bank_set.update()
 
-    def _selection_changed(self, new_index):
+    def _selection_changed(self, new_index: int) -> None:
         if new_index == 0 and self._fader:
             self._unlink_fader()
         elif new_index == 1:
@@ -58,17 +58,17 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
             self._insert_fader_column()
         self._bank_set.push_messages_now()
 
-    def _unlink_fader(self):
+    def _unlink_fader(self) -> None:
         self._bank_set.banks[self._bank_index].remove_column(self._fader)
         self._fader = None
 
-    def _data_changed_from_fader(self):
+    def _data_changed_from_fader(self) -> None:
         if self._fader:
             new_value = round((self._fader.fader_position * 256) / 65536)
             self._latest_hardware_position_update = new_value
             self.fader_value_changed.emit(new_value)
 
-    def _update_fader_position(self, new_value):
+    def _update_fader_position(self, new_value: int) -> None:
         if self._skip_next_update:
             new_value = self._latest_ui_position_update
             self._skip_next_update = False

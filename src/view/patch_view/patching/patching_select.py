@@ -1,4 +1,3 @@
-# coding=utf-8
 """select Manufacturer"""
 import os
 import zipfile
@@ -6,12 +5,13 @@ from logging import getLogger
 
 import requests
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QWidget
 
+import style
 from layouts.flow_layout import FlowLayout
 from model import BoardConfiguration
 from model.ofl.fixture import Fixture
 from model.ofl.manufacture import Manufacture, generate_manufacturers
-from style import Style
 from view.dialogs.patching_dialog import PatchingDialog
 from view.patch_view.patching.fixture_item import FixtureItem
 from view.patch_view.patching.manufacturer_item import ManufacturerItem
@@ -23,23 +23,23 @@ logger = getLogger(__name__)
 class PatchingSelect(QtWidgets.QScrollArea):
     """select Manufacturer"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent):
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
         super().__init__(parent)
         self._board_configuration = board_configuration
-        cache_path = '/var/cache/missionDMX'
+        cache_path = "/var/cache/missionDMX"
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
-        fixtures_path = os.path.join(cache_path, 'fixtures/')
-        zip_path = os.path.join(cache_path, 'fixtures.zip')
+        fixtures_path = os.path.join(cache_path, "fixtures/")
+        zip_path = os.path.join(cache_path, "fixtures.zip")
         if not os.path.exists(fixtures_path):
             logger.info("Downloading fixture library. Please wait")
-            url = 'https://open-fixture-library.org/download.ofl'
+            url = "https://open-fixture-library.org/download.ofl"
             r = requests.get(url, allow_redirects=True, timeout=5)
             if r.status_code != 200:
                 logger.error("Failed to download fixture library")
                 return
 
-            with open(zip_path, 'wb') as file:
+            with open(zip_path, "wb") as file:
                 file.write(r.content)
             with zipfile.ZipFile(zip_path) as zip_ref:
                 zip_ref.extractall(fixtures_path)
@@ -63,7 +63,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         manufacturer_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
-        reset_button.setStyleSheet(Style.PATCH + "background-color: white;")
+        reset_button.setStyleSheet(style.PATCH + "background-color: white;")
         reset_button.clicked.connect(self.reset)
         manufacturer_layout.addWidget(reset_button)
         for fixture in manufacturer[1]:
@@ -73,36 +73,36 @@ class PatchingSelect(QtWidgets.QScrollArea):
         manufacturer_widget.setLayout(manufacturer_layout)
         self.container.addWidget(manufacturer_widget)
         item = ManufacturerItem(manufacturer[0])
-        item.clicked.connect(lambda *args, _index=self.index: self.select_fixture(_index))
+        item.clicked.connect(lambda _, _index=self.index: self.select_fixture(_index))
         self.index += 1
 
         return item
 
-    def _generate_fixture_item(self, fixture: Fixture):
+    def _generate_fixture_item(self, fixture: Fixture) -> FixtureItem:
         fixture_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
-        reset_button.setStyleSheet(Style.PATCH + "background-color: white;")
+        reset_button.setStyleSheet(style.PATCH + "background-color: white;")
         reset_button.clicked.connect(self.reset)
         fixture_layout.addWidget(reset_button)
-        for index, mode in enumerate(fixture['modes']):
+        for index, mode in enumerate(fixture["modes"]):
             mode_item = ModeItem(mode)
-            mode_item.clicked.connect(lambda *args, _fixture=fixture, _index=index: self._run_patch(_fixture, _index))
+            mode_item.clicked.connect(lambda _, _fixture=fixture, _index=index: self._run_patch(_fixture, _index))
             fixture_layout.addWidget(mode_item)
 
         fixture_widget = QtWidgets.QWidget()
         fixture_widget.setLayout(fixture_layout)
         self.container.addWidget(fixture_widget)
         fixture_item = FixtureItem(fixture)
-        fixture_item.clicked.connect(lambda *args, _index=self.index: self.select_fixture(_index))
+        fixture_item.clicked.connect(lambda _, _index=self.index: self.select_fixture(_index))
         self.index += 1
         return fixture_item
 
-    def select_fixture(self, index):
+    def select_fixture(self, index: int) -> None:
         """select_fixture"""
         self.container.setCurrentIndex(index)
 
-    def reset(self):
+    def reset(self) -> None:
         """reset to start"""
         self.container.setCurrentIndex(self.container.count() - 1)
 

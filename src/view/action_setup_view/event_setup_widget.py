@@ -1,11 +1,28 @@
 import os
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QPushButton, QScrollArea, QSplitter, QTableWidget,
-                               QTableWidgetItem, QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QScrollArea,
+    QSplitter,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 import proto.Events_pb2
 from model import Broadcaster, events
@@ -14,7 +31,10 @@ from proto.Events_pb2 import event
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem, AnnotatedTableWidgetItem
 
-logger = getLogger(__file__)
+if TYPE_CHECKING:
+    from collections.abc import ItemsView
+
+logger = getLogger(__name__)
 _xtouch_gpio_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-gpio.svg")))
 _plain_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-plain.svg")))
 _keypad_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-keypad.svg")))
@@ -22,12 +42,18 @@ _midi_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource
 _midirtp_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midirtp.svg")))
 _rename_icon = QIcon(resource_path(os.path.join("resources", "icons", "rename.svg")))
 
+_event_type_string: dict[proto.Events_pb2.event_type, str] = {
+    proto.Events_pb2.ONGOING_EVENT: "Ongoing",
+    proto.Events_pb2.START: "Start",
+    proto.Events_pb2.RELEASE: "End",
+    proto.Events_pb2.SINGLE_TRIGGER: "Single",
+}
+
 
 class _SenderConfigurationWidget(QScrollArea):
-
     """Widget containing the configuration of the current selected event sender."""
 
-    def __init__(self, parent: QWidget | None, b: Broadcaster):
+    def __init__(self, parent: QWidget | None, b: Broadcaster) -> None:
         super().__init__(parent=parent)
         self._sender: events.EventSender | None = None
         layout = QFormLayout()
@@ -69,13 +95,13 @@ class _SenderConfigurationWidget(QScrollArea):
         return self._sender
 
     @sender.setter
-    def sender(self, new_sender: events.EventSender | None):
+    def sender(self, new_sender: events.EventSender | None) -> None:
         if new_sender == self._sender:
             return
         self._sender = new_sender
         self._update_widgets_on_new_sender(new_sender)
 
-    def _update_widgets_on_new_sender(self, new_sender: events.EventSender | None):
+    def _update_widgets_on_new_sender(self, new_sender: events.EventSender | None) -> None:
         if new_sender is not None:
             self._name_label.setText(new_sender.name)
             self._index_label.setText(str(new_sender.index_on_fish))
@@ -102,41 +128,41 @@ class _SenderConfigurationWidget(QScrollArea):
             self._rename_table.setRowCount(0)
             self._rename_table.setEnabled(False)
 
-    def _update_table(self):
+    def _update_table(self) -> None:
         self._rename_table.clear()
-        rename_items = self._sender.renamed_events.items()
+        rename_items: ItemsView[tuple[int, int, str], str] = self._sender.renamed_events.items()
         self._rename_table.setRowCount(len(rename_items))
-        i = 0
-        for k, v in rename_items:
+
+        for i, k, v in enumerate(rename_items):
             name_item = AnnotatedTableWidgetItem(v)
             name_item.annotated_data = k
-            ev_type_item = QTableWidgetItem(_type_to_string(k[0]))
+            ev_type_item = QTableWidgetItem(_event_type_string.get(k[0], k[0]))
             ev_type_item.setFlags(ev_type_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             s_function_item = QTableWidgetItem(str(k[1]))
             s_function_item.setFlags(
-                s_function_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
+                s_function_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable
+            )
             args_item = QTableWidgetItem(k[2])
             args_item.setFlags(args_item.flags() & ~Qt.ItemFlag.ItemIsEditable & ~Qt.ItemFlag.ItemIsSelectable)
             self._rename_table.setItem(i, 0, name_item)
             self._rename_table.setItem(i, 1, ev_type_item)
             self._rename_table.setItem(i, 2, s_function_item)
             self._rename_table.setItem(i, 3, args_item)
-            i += 1
 
-    def _debug_enabled_checked_changed(self, *args, **kwargs):
+    def _debug_enabled_checked_changed(self) -> None:
         if self._sender is not None:
             self._sender.debug_enabled = self._debug_enabled_checkbox.isChecked()
             self._debug_include_ongoing_checkbox.setEnabled(self._sender.debug_enabled)
 
-    def _debug_include_ongoing_changed(self):
+    def _debug_include_ongoing_changed(self) -> None:
         if self._sender is not None:
             self._sender.debug_include_ongoing_events = self._debug_include_ongoing_checkbox.isChecked()
 
-    def _persistence_changed(self):
+    def _persistence_changed(self) -> None:
         if self._sender is not None:
             self._sender.persistent = self._persistence_checkbox.isChecked()
 
-    def _rename_table_cell_changed(self, row: int, column: int):
+    def _rename_table_cell_changed(self, row: int, column: int) -> None:
         if self._sender is None:
             return
         item = self._rename_table.item(row, column)
@@ -146,20 +172,18 @@ class _SenderConfigurationWidget(QScrollArea):
         self._own_rename_issued = True
         self._broadcaster.event_rename_action_occurred.emit(self._sender.index_on_fish)
 
-    def _rename_event_occurred(self, s_id: int):
+    def _rename_event_occurred(self, s_id: int) -> None:
         if not self._own_rename_issued:
-            if self._sender is not None:
-                if self._sender.index_on_fish == s_id:
-                    self._update_table()
+            if self._sender is not None and self._sender.index_on_fish == s_id:
+                self._update_table()
         else:
             self._own_rename_issued = False
 
 
 class _SourceListWidget(QWidget):
-
     """Content widget for ListWidgetItems of event senders"""
 
-    def __init__(self, parent: QWidget, sender: events.EventSender):
+    def __init__(self, parent: QWidget, sender: events.EventSender) -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         text_layout = QVBoxLayout()
@@ -180,20 +204,6 @@ class _SourceListWidget(QWidget):
         text_layout.addWidget(self._id_label)
         layout.addLayout(text_layout)
         self.setLayout(layout)
-
-
-def _type_to_string(t):
-    """Get the string representation of an event type"""
-    if t == proto.Events_pb2.ONGOING_EVENT:
-        return "Ongoing"
-    elif t == proto.Events_pb2.START:
-        return "Start"
-    elif t == proto.Events_pb2.RELEASE:
-        return "End"
-    elif t == proto.Events_pb2.SINGLE_TRIGGER:
-        return "Single"
-    else:
-        return str(t)
 
 
 class _EventLogListWidget(QWidget):
@@ -230,7 +240,7 @@ class _EventLogListWidget(QWidget):
     color: #FF0000;
     """
 
-    def __init__(self, parent: QWidget, ev: event, b: Broadcaster):
+    def __init__(self, parent: QWidget, ev: event, b: Broadcaster) -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self._id_label = QLabel(str(ev.event_id), parent=self)
@@ -238,7 +248,7 @@ class _EventLogListWidget(QWidget):
         self._id_label.setStyleSheet(_EventLogListWidget._STYLE_ID_TAG)
         self._sender_label = QLabel(f"[{ev.sender_id}:{ev.sender_function}]", parent=self)
         self._sender_label.setToolTip("Event Sender and function")
-        self._type_label = QLabel(_type_to_string(ev.type), parent=self)
+        self._type_label = QLabel(_event_type_string.get(ev.type, ev.type), parent=self)
         if ev.type == proto.Events_pb2.START:
             self._type_label.setStyleSheet(_EventLogListWidget._STYLE_TAG_START)
         elif ev.type == proto.Events_pb2.RELEASE:
@@ -278,7 +288,7 @@ class _EventLogListWidget(QWidget):
         self._broadcaster.event_rename_action_occurred.connect(self._rename_occurred)
         self._update_name_label()
 
-    def _add_rename_entry(self):
+    def _add_rename_entry(self) -> None:
         sender = get_sender_by_id(self._event.sender_id)
         if sender is None:
             return
@@ -288,12 +298,12 @@ class _EventLogListWidget(QWidget):
     def _get_event_tuple(self) -> tuple[int, int, str]:
         return int(self._event.type), self._event.sender_function, "".join([chr(c) for c in self._event.arguments])
 
-    def _rename_occurred(self, sid: int):
+    def _rename_occurred(self, sid: int) -> None:
         if sid != self._event.sender_id:
             return
         self._update_name_label()
 
-    def _update_name_label(self):
+    def _update_name_label(self) -> None:
         sender = get_sender_by_id(self._event.sender_id)
         name = sender.renamed_events.get(self._get_event_tuple())
         if name is not None:
@@ -306,16 +316,13 @@ class _EventLogListWidget(QWidget):
 
 
 class _SenderAddDialog(QDialog):
-
     """Dialog to configure new event senders."""
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle("Add Event Sender")
-        self._button_box = QDialogButtonBox(
-            (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        )
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.rejected.connect(self.close)
         self._button_box.accepted.connect(self._apply)
         layout = QFormLayout()
@@ -323,19 +330,21 @@ class _SenderAddDialog(QDialog):
         self._name_tb.setPlaceholderText("Enter sender name here")
         layout.addRow("Name: ", self._name_tb)
         self._type_cb = QComboBox(self, editable=False)
-        self._type_cb.addItems([
-            'fish.builtin.plain',
-            'fish.builtin.midi',
-            'fish.builtin.midirtp',
-            'fish.builtin.xtouchgpio',
-            'fish.builtin.gpio',
-            'fish.builtin.macrokeypad'
-        ])
+        self._type_cb.addItems(
+            [
+                "fish.builtin.plain",
+                "fish.builtin.midi",
+                "fish.builtin.midirtp",
+                "fish.builtin.xtouchgpio",
+                "fish.builtin.gpio",
+                "fish.builtin.macrokeypad",
+            ]
+        )
         layout.addRow("Type: ", self._type_cb)
         layout.addWidget(self._button_box)
         self.setLayout(layout)
 
-    def _apply(self):
+    def _apply(self) -> None:
         evs = EventSender(self._name_tb.text())
         evs.type = self._type_cb.currentText()
         mark_sender_persistent(evs.name)
@@ -344,10 +353,9 @@ class _SenderAddDialog(QDialog):
 
 
 class EventSetupWidget(QSplitter):
-
     """Widget containing the entire event sender configuration UI."""
 
-    def __init__(self, parent: QWidget | None, b: Broadcaster):
+    def __init__(self, parent: QWidget | None, b: Broadcaster) -> None:
         super().__init__(parent=parent)
         self._selection_panel = QWidget(self)
         layout = QVBoxLayout()
@@ -392,7 +400,7 @@ class EventSetupWidget(QSplitter):
         self._broadcaster = b
         self._dialog: QDialog | None = None
 
-    def _update_sender_list(self):
+    def _update_sender_list(self) -> None:
         self._sender_list.clear()
         for sender in events.get_all_senders():
             item = AnnotatedListWidgetItem(self._sender_list)
@@ -402,7 +410,7 @@ class EventSetupWidget(QSplitter):
             self._sender_list.addItem(item)
             self._sender_list.setItemWidget(item, item_widget)
 
-    def _sender_selected(self):
+    def _sender_selected(self) -> None:
         item_list = self._sender_list.selectedItems()
         if len(item_list) == 0:
             return
@@ -411,14 +419,13 @@ class EventSetupWidget(QSplitter):
             raise ValueError("Expected out item implementation")
         self._configuration_widget.sender = item.annotated_data
 
-    def _add_sender_pressed(self):
+    def _add_sender_pressed(self) -> None:
         self._dialog = _SenderAddDialog(self)
         self._dialog.open()
 
-    def _event_received(self, e: event):
-        if e.type == proto.Events_pb2.ONGOING_EVENT:
-            if not get_sender_by_id(e.sender_id).debug_include_ongoing_events:
-                return
+    def _event_received(self, e: event) -> None:
+        if e.type == proto.Events_pb2.ONGOING_EVENT and not get_sender_by_id(e.sender_id).debug_include_ongoing_events:
+            return
         item = AnnotatedListWidgetItem(self._event_log)
         w = _EventLogListWidget(self._event_log, e, self._broadcaster)
         item.setSizeHint(w.sizeHint())
@@ -426,5 +433,5 @@ class EventSetupWidget(QSplitter):
         self._event_log.addItem(item)
         self._event_log.setItemWidget(item, w)
 
-    def _clear_log_pressed(self):
+    def _clear_log_pressed(self) -> None:
         self._event_log.clear()

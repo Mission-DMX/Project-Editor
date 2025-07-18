@@ -1,4 +1,3 @@
-# coding=utf-8
 """Show player to remote control fish show mode"""
 from PySide6.QtWidgets import QWidget
 
@@ -12,7 +11,7 @@ from .ui_player_widget import UIPlayerWidget
 class _PlaceholderWidget(QWidget):
     """Placeholder for grid"""
 
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
         self.setFixedSize(SceneSwitchButton.width, SceneSwitchButton.height)
 
@@ -20,7 +19,7 @@ class _PlaceholderWidget(QWidget):
 class ShowPlayerWidget(QWidget):
     """Widget to remote control fish show mode"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget = None):
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget = None) -> None:
         super().__init__(parent)
         self._board_configuration = board_configuration
 
@@ -52,7 +51,7 @@ class ShowPlayerWidget(QWidget):
         row = index - column * self._max_rows
         return column, row
 
-    def _add_scene(self, scene: Scene):
+    def _add_scene(self, scene: Scene) -> None:
         """Adds a scene to the player.
 
         Args:
@@ -66,7 +65,7 @@ class ShowPlayerWidget(QWidget):
         else:
             self._reload()
 
-    def _remove_scene(self, scene: Scene):
+    def _remove_scene(self, scene: Scene) -> None:
         """Removes a scene from the player.
 
         Args:
@@ -79,13 +78,12 @@ class ShowPlayerWidget(QWidget):
                 self._reload()
                 break
 
-    def _reload(self):
+    def _reload(self) -> None:
         """Reloads all scene widgets by filling up emtpty spaces"""
-        index = 0
         max_height = 0
         last_height = 0
         last_width = 0
-        for scene_widget in self._grid:
+        for index, scene_widget in enumerate(self._grid):
             column, row = self._index_to_position(index)
             height = row * scene_widget.height + 5
             last_height = scene_widget.height
@@ -93,7 +91,6 @@ class ShowPlayerWidget(QWidget):
             last_width = column * scene_widget.width + 5
             scene_widget.move(last_width, height)
             last_width += scene_widget.width
-            index += 1
         max_height += last_height
         # self._ui_container.move(0, max_height + 5)
         self._ui_container.move(last_width + 5, 5)
@@ -101,11 +98,8 @@ class ShowPlayerWidget(QWidget):
         uipage_container_height = self.height() - 10 - max_height
         self._ui_container.resize(uipage_container_width, uipage_container_height)
 
-    def _switch_scene(self, scene: Scene | int):
-        if isinstance(scene, Scene):
-            scene_index = scene.scene_id
-        else:
-            scene_index = scene
+    def _switch_scene(self, scene: Scene | int) -> None:
+        scene_index = scene.scene_id if isinstance(scene, Scene) else scene
         if scene_index == self._scene_index:
             return
 

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Channels of a Fixture"""
 from enum import IntFlag
 from typing import Final
@@ -28,7 +27,7 @@ class FixtureChannel:
     """A channel of a fixture"""
     updated: QtCore.Signal(int) = QtCore.Signal(int)
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self._name: Final[str] = name
         self._type: Final[FixtureChannelType] = self._get_channel_type_from_string()
         self._ignore_black = True
@@ -54,7 +53,7 @@ class FixtureChannel:
         return self._ignore_black
 
     @ignore_black.setter
-    def ignore_black(self, ignore_black: bool):
+    def ignore_black(self, ignore_black: bool) -> None:
         self._ignore_black = ignore_black
 
     def _get_channel_type_from_string(self) -> FixtureChannelType:

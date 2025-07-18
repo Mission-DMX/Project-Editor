@@ -1,7 +1,8 @@
-# coding=utf-8
 """Dialogs to display fish exceptions"""
+from typing import ClassVar, override
 
 from PySide6 import QtGui, QtWidgets
+from PySide6.QtGui import QMouseEvent
 
 error_dict: dict[str, str] = {
     "E001": "Fish Error: Filter not implemented in Allocation",
@@ -16,17 +17,17 @@ error_dict: dict[str, str] = {
 class FishExceptionsDialog(QtWidgets.QDialog):
     """Dialog to display fish exceptions"""
 
-    _open_dialogs: list[QtWidgets.QDialog] = []
+    _open_dialogs: ClassVar[list[QtWidgets.QDialog]] = []
 
-    def __init__(self, log: str, reason: str, cause: str):
+    def __init__(self, log: str, reason: str, cause: str) -> None:
         super().__init__()
         self.setWindowTitle("Fish Error")
         layout = QtWidgets.QHBoxLayout(self)
-        da = HoverTextBrowser(f"""Log:<br>{log}</p>""" f"""<p>Reason:<br>{reason}</p>""" f"<p>Cause:<br>{cause}")
+        da = HoverTextBrowser(f"Log:<br>{log}</p><p>Reason:<br>{reason}</p><p>Cause:<br>{cause}")
         layout.addWidget(da)
         self.setLayout(layout)
 
-    def open(self):
+    def open(self) -> None:
         """Opens dialog and automatically keeps it open"""
         self._open_dialogs.append(self)
         self.finished.connect(lambda: self._open_dialogs.remove(self))
@@ -36,13 +37,13 @@ class FishExceptionsDialog(QtWidgets.QDialog):
 class HoverTextBrowser(QtWidgets.QTextBrowser):
     """Text Browser with tooltip"""
 
-    def __init__(self, text: str):
+    def __init__(self, text: str) -> None:
         super().__init__()
         self.setMouseTracking(True)
         self.setHtml("""<p>""" + text + """</p>""")
         self.highlight_words()
 
-    def highlight_words(self):
+    def highlight_words(self) -> None:
         """Highlights words in text"""
         cursor = self.textCursor()
         document_text = self.toPlainText()
@@ -55,7 +56,7 @@ class HoverTextBrowser(QtWidgets.QTextBrowser):
                     break
                 cursor.setPosition(start_pos)
                 cursor.movePosition(
-                    QtGui.QTextCursor.MoveOperation.Right, QtGui.QTextCursor.MoveMode.KeepAnchor, len(word)
+                    QtGui.QTextCursor.MoveOperation.Right, QtGui.QTextCursor.MoveMode.KeepAnchor, len(word),
                 )
                 text_format = QtGui.QTextCharFormat()
                 text_format.setForeground(QtGui.QColor("blue"))
@@ -63,7 +64,8 @@ class HoverTextBrowser(QtWidgets.QTextBrowser):
                 cursor.setCharFormat(text_format)
                 start_pos += len(word)
 
-    def mouseMoveEvent(self, event):
+    @override
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """mouse Event for Hover tooltip"""
         cursor = self.cursorForPosition(event.pos())
         cursor.select(QtGui.QTextCursor.SelectionType.WordUnderCursor)

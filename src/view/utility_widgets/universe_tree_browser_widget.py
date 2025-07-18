@@ -1,5 +1,3 @@
-# coding=utf-8
-
 """This file provides the universe browser widget."""
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeWidget
@@ -13,7 +11,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 class UniverseTreeBrowserWidget(QTreeWidget):
     """This widget displays a browser for the fixtures within the universes."""
 
-    def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False):
+    def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False) -> None:
         super().__init__()
         self._broadcaster = Broadcaster()
         self._show_selection_checkboxes = show_selection_checkboxes
@@ -25,9 +23,12 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             self._broadcaster.delete_universe.connect(self.refresh)
             self._broadcaster.add_fixture.connect(lambda _: self.refresh())
 
-    def refresh(self):
+    def refresh(self) -> None:
 
-        def location_to_string(location):
+        def location_to_string(
+                location: int |
+                          proto.UniverseControl_pb2.Universe.ArtNet |
+                          proto.UniverseControl_pb2.Universe.USBConfig) -> str:
             if isinstance(location, proto.UniverseControl_pb2.Universe.ArtNet):
                 return f"{location.ip_address}:{location.port}/{location.universe_on_device}"
             if isinstance(location, proto.UniverseControl_pb2.Universe.USBConfig):
@@ -42,10 +43,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
         if self._show:
             for universe in self._show.universes:
                 item = AnnotatedTreeWidgetItem(self)
-                if self._show_selection_checkboxes:
-                    column_offset = 1
-                else:
-                    column_offset = 0
+                column_offset = 1 if self._show_selection_checkboxes else 0
                 item.setText(0 + column_offset, str(universe.id))
                 item.setText(1 + column_offset, str(universe.name))
                 item.setText(2 + column_offset, location_to_string(universe.location))
@@ -54,10 +52,8 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                 item.annotated_data = universe
                 self.insertTopLevelItem(i, item)
                 placed_fixtures = set()
-                last_fixture_object: AnnotatedTreeWidgetItem | None = None
-                last_fixture: UsedFixture | None = None
                 for fixture in self._show.fixtures:
-                    last_fixture_object = AnnotatedTreeWidgetItem(item)
+                    last_fixture_object: AnnotatedTreeWidgetItem = AnnotatedTreeWidgetItem(item)
                     if self._show_selection_checkboxes:
                         last_fixture_object.setCheckState(0, Qt.CheckState.Unchecked)
                     last_fixture_object.setText(0 + column_offset,
@@ -88,9 +84,9 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             for fixture_item_index in range(tli.childCount()):
                 fixture_item = tli.child(fixture_item_index)
                 if not isinstance(fixture_item, AnnotatedTreeWidgetItem):
-                    raise ValueError("Expected Annotated Tree Widget Item.")
+                    raise TypeError("Expected Annotated Tree Widget Item.")
                 if not isinstance(fixture_item.annotated_data, UsedFixture):
-                    raise ValueError("Expected data of TreeWidgetItem to be a fixture.")
+                    raise TypeError("Expected data of TreeWidgetItem to be a fixture.")
                 if fixture_item.checkState(0) == Qt.CheckState.Checked:
                     a.append(fixture_item.annotated_data)
         return a

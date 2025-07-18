@@ -1,11 +1,11 @@
-# coding=utf-8
 """YAML handler"""
+
 from logging import getLogger
 
 from ruamel import yaml
 from ruamel.yaml import YAMLError
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 def yaml_load(file_path: str) -> dict:
@@ -16,10 +16,10 @@ def yaml_load(file_path: str) -> dict:
     :returns: The dictionary defined in the file or an empty one in case of any issue.
     """
     d = {}
-    with open(file_path, 'r', encoding='UTF-8') as f:
+    with open(file_path, "r", encoding="UTF-8") as f:
         try:
-            d = yaml.YAML(typ='safe').load(f.read())
+            d = yaml.YAML(typ="safe").load(f.read())
         except YAMLError as e:
-            logger.error("Failed to parse YAML file %s. %s", file_path, e)
+            logger.exception("Failed to parse YAML file %s. %s", file_path, e)
             d = {}
     return d

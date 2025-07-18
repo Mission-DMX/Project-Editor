@@ -1,4 +1,3 @@
-# coding=utf-8
 """A Used Fixture in the patching view"""
 from PySide6.QtGui import QColorConstants, QFont, QPainter, QPixmap
 from PySide6.QtWidgets import QWidget
@@ -12,7 +11,7 @@ class UsedFixtureWidget(QWidget):
         UI Widget of a Used Fixture
     """
 
-    def __init__(self, fixture: UsedFixture):
+    def __init__(self, fixture: UsedFixture) -> None:
         super().__init__()
         self._fixture = fixture
         self._channels_static: list[QPixmap] = []

@@ -1,19 +1,18 @@
-# coding=utf-8
-
 """This file provides the about-dialog"""
+
 import os.path
 from logging import getLogger
 
 import tomlkit
 from html2text import html2text
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QWidget
 
 from utility import resource_path
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
-with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
+with open(resource_path(os.path.join("resources", "pyproject.toml")), "r", encoding="UTF-8") as f:
     data = tomlkit.load(f)
 
 
@@ -26,15 +25,15 @@ def read_entire_file_as_str(file_path: str) -> str:
     """
     # TODO in toml
     try:
-        with open(file_path, 'r', encoding='UTF-8') as f:
+        with open(file_path, "r", encoding="UTF-8") as f:
             text = f.read()
-    except IOError as e:
+    except OSError as e:
         text = "Unknown Debug"
-        logger.error("Unable to load file string from %s. %s", file_path, e)
+        logger.exception("Unable to load file string from %s. %s", file_path, e)
     return text
 
 
-VERSION_STR = data['project']['version']
+VERSION_STR = data["project"]["version"]
 CONTRIBUTORS_STR = html2text(read_entire_file_as_str(resource_path(os.path.join("resources", "contributors.html"))))
 
 
@@ -43,16 +42,16 @@ class AboutWindow(QMessageBox):
     This window displays the credits.
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(
-            QMessageBox.Icon.Information,
-            "<b>About</b>",
-            f"<i>MissionDMX</i> - Version {VERSION_STR}",
-            parent=parent)
+            QMessageBox.Icon.Information, "<b>About</b>", f"<i>MissionDMX</i> - Version {VERSION_STR}", parent=parent
+        )
         self.setStandardButtons(QMessageBox.StandardButton.Close)
-        self.setInformativeText('<br>The Manual for this software can be found by clicking the help button or by '
-                                'visiting <a href="https://github.com/Mission-DMX/Docs/blob/main/Editor/Readme.md">'
-                                'the online manual</a>.<br>Copyright (c) the MissionDMX contributors')
+        self.setInformativeText(
+            "<br>The Manual for this software can be found by clicking the help button or by "
+            'visiting <a href="https://github.com/Mission-DMX/Docs/blob/main/Editor/Readme.md">'
+            "the online manual</a>.<br>Copyright (c) the MissionDMX contributors"
+        )
         self.setDetailedText(CONTRIBUTORS_STR)
         self.setMinimumWidth(800)
         self.setMinimumHeight(600)

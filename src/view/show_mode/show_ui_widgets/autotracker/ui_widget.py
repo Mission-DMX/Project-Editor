@@ -1,27 +1,25 @@
-# coding=utf-8
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QDialog, QWidget
 
 from model import UIPage, UIWidget
-from view.show_mode.show_ui_widgets.autotracker.AutoTrackDialogWidget import AutoTrackDialogWidget
-from view.show_mode.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
+from view.show_mode.show_ui_widgets.autotracker.auto_track_dialog_widget import AutoTrackDialogWidget
+from view.show_mode.show_ui_widgets.autotracker.v_filter_light_controller import VFilterLightController
 
 if TYPE_CHECKING:
     from model import Filter
-    from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class AutoTrackerUIWidget(UIWidget):
 
-    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] = None):
+    def __init__(self, parent_page: "UIPage", configuration: dict[str, str] | None = None) -> None:
         super().__init__(parent_page, configuration)
         self._finished_initializing: bool = False
 
-    def set_filter(self, associated_filter: "Filter", i: int):
+    def set_filter(self, associated_filter: "Filter", i: int) -> None:
         super().set_filter(associated_filter, i)
         if not associated_filter:
             return
@@ -39,6 +37,7 @@ class AutoTrackerUIWidget(UIWidget):
                                                                    self._tracker_player_widget.instance)
         self._finished_initializing = True
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         filter_updates = []
         if not self._finished_initializing:
@@ -57,16 +56,20 @@ class AutoTrackerUIWidget(UIWidget):
             filter_updates.append((tilt_filter_id, str(lc.last_tilt)))
         return filter_updates
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         return self._tracker_player_widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         return self._tracker_configuration_widget
 
+    @override
     def copy(self, new_parent: UIPage) -> UIWidget:
         w = AutoTrackerUIWidget(new_parent, self._tracker_player_widget.instance.settings.as_dict())
         w.set_filter(self._associated_filter, 0)
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    @override
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return self._tracker_player_widget

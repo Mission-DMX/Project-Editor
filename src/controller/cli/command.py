@@ -1,6 +1,6 @@
-# coding=utf-8
 """Client Commands"""
 from abc import ABC, abstractmethod
+from argparse import ArgumentParser, Namespace
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class Command(ABC):
     """Client Commands"""
 
-    def __init__(self, cli_context: "CLIContext", name: str):
+    def __init__(self, cli_context: "CLIContext", name: str) -> None:
         """
         Create a new command.
         :param cli_context: The context where the command should be registered with
@@ -21,7 +21,7 @@ class Command(ABC):
         self._help_text = ""
 
     @abstractmethod
-    def configure_parser(self, parser):
+    def configure_parser(self, parser: ArgumentParser) -> None:
         """This method will be called by the CLI context in order to configure the parser
 
         Arguments:
@@ -29,7 +29,7 @@ class Command(ABC):
         """
 
     @abstractmethod
-    def execute(self, args) -> bool:
+    def execute(self, args: Namespace) -> bool:
         """execute a Command"""
 
     @property
@@ -50,6 +50,6 @@ class Command(ABC):
         return self._help_text
 
     @help.setter
-    def help(self, new_help: str):
+    def help(self, new_help: str) -> None:
         """Set a new help text"""
         self._help_text = str(new_help)

@@ -1,4 +1,3 @@
-# coding=utf-8
 """ Dialog for Patching Fixture"""
 
 import re
@@ -15,7 +14,7 @@ from model.ofl.fixture import Fixture, make_used_fixture
 class PatchingInformation:
     """Information for Patching"""
 
-    def __init__(self, fixture):
+    def __init__(self, fixture: Fixture) -> None:
         self._fixture: Fixture = fixture
         self.count: int = 0
         self.universe: int = 0
@@ -41,7 +40,7 @@ class PatchingDialog(QtWidgets.QDialog):
         layout_fixture = QtWidgets.QHBoxLayout()
         self._select_mode = QtWidgets.QComboBox()
         self._select_mode.currentIndexChanged.connect(self._update_used_fixture)
-        layout_fixture.addWidget(QtWidgets.QLabel(fixture[0]['name']))
+        layout_fixture.addWidget(QtWidgets.QLabel(fixture[0]["name"]))
         layout_fixture.addWidget(self._select_mode)
 
         patching_layout = QtWidgets.QHBoxLayout()
@@ -84,8 +83,8 @@ class PatchingDialog(QtWidgets.QDialog):
         self._ok.clicked.connect(self._accept)
         _cancel.clicked.connect(self._reject)
 
-        for mode in self._patching_information.fixture['modes']:
-            self._select_mode.addItem(mode['name'])
+        for mode in self._patching_information.fixture["modes"]:
+            self._select_mode.addItem(mode["name"])
         self._select_mode.setCurrentIndex(fixture[1])
 
     @property
@@ -93,7 +92,7 @@ class PatchingDialog(QtWidgets.QDialog):
         """property of used Fixture"""
         return self._patching_information
 
-    def set_error(self, text: str):
+    def set_error(self, text: str) -> None:
         """update Error Label"""
         self._error_label.setText(text)
 
@@ -104,7 +103,7 @@ class PatchingDialog(QtWidgets.QDialog):
         """generate a used Fixture list from Patching information"""
 
         start_index = self.patching_information.channel
-        for index in range(self.patching_information.count):
+        for _ in range(self.patching_information.count):
             used_fixture = make_used_fixture(self._board_configuration, self._patching_information.fixture,
                                              self._select_mode.currentIndex(),
                                              self.patching_information.universe, start_index)
@@ -129,7 +128,7 @@ class PatchingDialog(QtWidgets.QDialog):
             patching = "1"
         if patching[0] == "@":
             patching = "1" + patching
-        spliter = list(filter(None, re.split('[@/]|-', patching)))
+        spliter = list(filter(None, re.split("[@/]|-", patching)))
         spliter += [0] * (4 - len(spliter))
         spliter = list(map(int, spliter))
         self._patching_information.count = spliter[0]
