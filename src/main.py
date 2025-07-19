@@ -43,7 +43,6 @@ if __name__ == "__main__":
     import json
     import logging.config
     import logging.handlers
-    import pathlib
     import sys
 
     from PySide6.QtCore import QEventLoop
@@ -58,8 +57,8 @@ if __name__ == "__main__":
     logger = logging.getLogger("Project-Editor")
 
     def setup_logging() -> None:
-        """read logging from config file and set up the logger"""
-        config_file = resource_path(pathlib.Path(os.path.join("configs", "logging.json")))
+        """Read logging from a config file and set up the logger."""
+        config_file = resource_path(os.path.join("configs", "logging.json"))
         with open(config_file, "r", encoding="utf-8") as f_in:
             config = json.load(f_in)
 
@@ -70,8 +69,9 @@ if __name__ == "__main__":
             atexit.register(queue_handler.listener.stop)
 
     def setup_asyncio() -> None:
-        # Warning: while this change is important, the feature is yet a technical preview in pyside6.6 and the
-        #  API may change. The functionality however will stay in place.
+        """Set up the asyncio event loop."""
+        # Warning: while this change is important, the feature is yet a technical preview in pyside6.6, and the
+        #  API may change. The functionality, however, will stay in place.
         import asyncio
 
         from PySide6.QtAsyncio import QAsyncioEventLoopPolicy
@@ -79,8 +79,7 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
     def set_dark_theme(application: QApplication) -> None:
-        """set default dark theme"""
-
+        """Set default dark theme."""
         application.setStyle("Fusion")
         dark_palette = QPalette()
         dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
@@ -104,7 +103,7 @@ if __name__ == "__main__":
         application.setPalette(dark_palette)
 
     def main(application: QApplication) -> None:
-        """Startup"""
+        """Startup."""
         setup_logging()
         logging.basicConfig(level="INFO")
         opengl_context_init()
