@@ -7,8 +7,13 @@ from utility import resource_path
 logger = logging.getLogger(__file__)
 
 DEFAULT_MODEL_PATHS = {
-    "truss": resource_path(os.path.join("resources", "data", "models", "truss.obj")),
-    #"moving_head": resource_path(os.path.join("resources", "data", "models", "moving_head.obj")),
+    # TODO there are multiple variants of trusses (2-point, 3-point, 4-point, different lengths, different sizes)
+    "truss": resource_path(os.path.join("resources", "3dmodels", "truss.obj")),
+    "truss-cross": resource_path(os.path.join("resources", "3dmodels", "truss_cross.obj")),
+    # TODO these are part of the general moving head model, therefore this dict should address this
+    "moving_head_base": resource_path(os.path.join("resources", "3dmodels", "mh_base.obj")),
+    "moving_head_arm": resource_path(os.path.join("resources", "3dmodels", "mh_arm.obj")),
+    "moving_head_light": resource_path(os.path.join("resources", "3dmodels", "mh_light.obj")),
 }
 
 class StageObject:

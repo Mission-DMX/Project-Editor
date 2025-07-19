@@ -6,6 +6,8 @@ authors = [
     { name = "CorsCodini", email = "cors.codini@web.de" },
     { name = "Niklas Naumann", email = "niklas.naumann@student.uni-luebeck.de" },
     { name = "Doralitze", email = "doralitze@chaotikum.org" },
+    { name = "Ludwig Rahlff"},
+    { name = "Joell Keanu"},
 ]
 
 requires-python = "==3.13.*"
