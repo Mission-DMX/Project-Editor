@@ -2,7 +2,7 @@ objects:
 - id: truss1
   type: truss
   position:
-    x: 0.0
+    x: 30.0
     y: 30.0
     z: 0.0
   rotation:
@@ -22,7 +22,7 @@ objects:
 - id: truss3
   type: truss
   position:
-    x: 0.0
+    x: -30.0
     y: -30.0
     z: 0.0
   rotation:
