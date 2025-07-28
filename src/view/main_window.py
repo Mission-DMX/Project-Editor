@@ -342,8 +342,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_show_settings(self) -> None:
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
-    
-    def _open_patch_plan_export_dialog(self):
+
+    def _open_patch_plan_export_dialog(self) -> None:
         self._theatre_scene_setup_wizard = PatchPlanExportWizard(self, self._board_configuration)
         self._theatre_scene_setup_wizard.show()
 

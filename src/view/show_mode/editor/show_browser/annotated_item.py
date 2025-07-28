@@ -1,6 +1,5 @@
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QTableWidgetItem, QTreeWidget, QTreeWidgetItem
 
-from model.events import EventSender
 from model.scene import FilterPage
 
 
@@ -23,7 +22,7 @@ class AnnotatedListWidgetItem(QListWidgetItem):
 
     def __init__(self, parent: QListWidget) -> None:
         super().__init__(parent)
-        self._annotated_data: EventSender | None = None
+        self._annotated_data: object | None = None
 
     @property
     def annotated_data(self) -> object | None:

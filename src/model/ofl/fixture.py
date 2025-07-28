@@ -314,12 +314,8 @@ class UsedFixture(QtCore.QObject):
         """get a fixture channel by index"""
         return self._fixture_channels[index]
 
-    def __str__(self):
-        return "Fixture {} at {}/{}".format(
-            self.name_on_stage or self.name,
-            self.parent_universe,
-            self.start_index
-        )
+    def __str__(self) -> str:
+        return f"Fixture {self.name_on_stage or self.name} at {self.parent_universe}/{self.start_index}"
 
 
 def make_used_fixture(
