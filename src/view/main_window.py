@@ -21,6 +21,7 @@ from view.console_mode.console_universe_selector import UniverseSelector
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
+from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
 from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
@@ -175,10 +176,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Undo", None, "Z"),  # TODO implement edit history
                 ("&Redo", None, "Shift+Z"),
             ],
-            # "Show": [
+             "Tools": [
             #    ("Scene Wizard", self._open_scene_setup_wizard, None)
             #    # TODO link wizard that creates a theater scene based on patched fixtures
-            # ],
+                 ("Patch Plan Export", self._open_patch_plan_export_dialog, None),
+             ],
             "Help": [
                 ("&About", self._open_about_window, None),
             ],
@@ -340,6 +342,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_show_settings(self) -> None:
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
+    
+    def _open_patch_plan_export_dialog(self):
+        self._theatre_scene_setup_wizard = PatchPlanExportWizard(self, self._board_configuration)
+        self._theatre_scene_setup_wizard.show()
 
     def _open_scene_setup_wizard(self) -> None:
         self._theatre_scene_setup_wizard = TheaterSceneWizard(self, self.show_configuration)
