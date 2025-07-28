@@ -68,7 +68,13 @@ class Mode(TypedDict):
 
 
 class Fixture(TypedDict):
-    """a Fixture from OFL"""
+    """
+    a Fixture from OFL.
+
+    physical units:
+        dimensions: WDH in mm
+        power: W
+    """
 
     name: str
     shortName: NotRequired[str]
@@ -85,6 +91,8 @@ class Fixture(TypedDict):
     #    templateChannels
     modes: list[Mode]
     fileName: str
+    power: float
+    dimensions: tuple[int, int, int]
 
 
 class ColorSupport(IntFlag):
@@ -118,6 +126,7 @@ def load_fixture(file: str) -> Fixture:
     """load fixture from OFL JSON"""
     with open(file, "r", encoding="UTF-8") as f:
         ob: dict[str, Any] = json.load(f)
+    physical_data = ob.get("physical") or {}
     return Fixture(
         name=ob["name"],
         comment=try_load(ob, "comment"),
@@ -125,6 +134,8 @@ def load_fixture(file: str) -> Fixture:
         categories=ob.get("categories", set()),
         modes=ob.get("modes", []),
         fileName=file.split("/fixtures/")[1],
+        power=physical_data.get("power") or 0,
+        dimensions=physical_data.get("dimensions") or (10, 10, 10)
     )
 
 
@@ -178,6 +189,10 @@ class UsedFixture(QtCore.QObject):
     def uuid(self) -> UUID:
         """uuid of the fixture"""
         return self._uuid
+
+    @property
+    def power(self) -> float:
+        return self._fixture.get("power")
 
     @property
     def name(self) -> str:
@@ -298,6 +313,13 @@ class UsedFixture(QtCore.QObject):
     def get_fixture_channel(self, index: int) -> FixtureChannel:
         """get a fixture channel by index"""
         return self._fixture_channels[index]
+
+    def __str__(self):
+        return "Fixture {} at {}/{}".format(
+            self.name_on_stage or self.name,
+            self.parent_universe,
+            self.start_index
+        )
 
 
 def make_used_fixture(

@@ -26,11 +26,11 @@ class AnnotatedListWidgetItem(QListWidgetItem):
         self._annotated_data: EventSender | None = None
 
     @property
-    def annotated_data(self) -> EventSender | None:
+    def annotated_data(self) -> object | None:
         return self._annotated_data
 
     @annotated_data.setter
-    def annotated_data(self, new_data: EventSender) -> None:
+    def annotated_data(self, new_data: object) -> None:
         self._annotated_data = new_data
 
 
