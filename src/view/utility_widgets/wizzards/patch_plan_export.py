@@ -1,19 +1,27 @@
 import csv
+import os.path
 from collections import Counter
 from logging import getLogger
-import os.path
 from pathlib import Path
 
-from PySide6.QtWidgets import QWidget, QWizard, QFormLayout, QHBoxLayout, QLineEdit, QPushButton, QSpinBox, \
-    QListWidget, QFileDialog
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QFormLayout,
+    QHBoxLayout,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QSpinBox,
+    QWidget,
+    QWizard,
+)
 
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration
 from model.ofl.fixture import UsedFixture
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
-
 
 logger = getLogger(__name__)
 
