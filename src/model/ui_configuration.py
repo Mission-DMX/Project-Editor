@@ -168,6 +168,10 @@ class UIWidget(ABC):
                 target_fid = self.filter_ids[0]
             _network_manager_instance.send_gui_update_to_fish(self.parent.scene.scene_id, target_fid, k, v)
 
+    def close(self):
+        """Implement this method to react on the widget being removed from the widget holder."""
+        pass
+
 
 class UIPage:
     """This class represents a page containing widgets that can be used to control the show."""

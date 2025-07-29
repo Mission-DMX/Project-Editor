@@ -70,6 +70,7 @@ class UIWidgetHolder(QWidget):
             event: The closing event.
         """
         self.closing.emit()
+        self._model.close()
         try:
             self._model.parent.widgets.remove(self._model)
         except ValueError:

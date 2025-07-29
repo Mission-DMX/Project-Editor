@@ -45,7 +45,7 @@ class BoardConfiguration:
         self._broadcaster.device_created.connect(self._add_device)
         self._broadcaster.delete_device.connect(self._delete_device)
 
-        self._filter_update_msg_register: dict[tuple[int, str], list[Callable]] = {}
+        self._filter_update_msg_register: dict[tuple[int, str], set[Callable]] = {}
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
     def _clear(self):
@@ -237,10 +237,10 @@ class BoardConfiguration:
         """
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
-            callable_list = []
+            callable_list = set()
             self._filter_update_msg_register[(target_scene, target_filter_id)] = callable_list
         if c not in callable_list:
-            callable_list.append(c)
+            callable_list.add(c)
 
     def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable):
         """
