@@ -1,7 +1,7 @@
-# coding=utf-8
 """select Universe"""
 
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QWidget
 
 from model import BoardConfiguration
 from model.universe import Universe
@@ -12,7 +12,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 class UniverseSelector(QtWidgets.QTabWidget):
     """select Universe from Tab Widget"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent) -> None:
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
         super().__init__(parent=parent)
         self._board_configuration = board_configuration
         board_configuration.broadcaster.add_universe.connect(self.add_universe)
@@ -47,7 +47,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         for universe in self._board_configuration.universes:
             self._board_configuration.broadcaster.send_universe_value.emit(universe)
 
-    def notify_activate(self):
+    def notify_activate(self) -> None:
         # TODO this obviously breaks given multiple universes but it'll work for now
         for universe_widget in self._universe_widgets:
             universe_widget.notify_activate()

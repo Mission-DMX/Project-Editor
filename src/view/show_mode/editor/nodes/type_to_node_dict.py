@@ -1,17 +1,97 @@
-# coding=utf-8
 """Module containing and exporting all available filter nodes"""
-from view.show_mode.editor.nodes.impl.adapters import *
-from view.show_mode.editor.nodes.impl.arithmetics import *
-from view.show_mode.editor.nodes.impl.color_manip_nodes import *
-from view.show_mode.editor.nodes.impl.constants import *
-from view.show_mode.editor.nodes.impl.debug import *
-from view.show_mode.editor.nodes.impl.effects import *
-from view.show_mode.editor.nodes.impl.faders import *
-from view.show_mode.editor.nodes.impl.scripting import *
-from view.show_mode.editor.nodes.impl.time import *
-from view.show_mode.editor.nodes.impl.trigonometics import *
+from model.filter import FilterTypeEnumeration
+from view.show_mode.editor.nodes.impl.adapters import (
+                                                       Adapter8bitToFloat,
+                                                       Adapter8BitToRangeFloat,
+                                                       Adapter16BitTo8BitNode,
+                                                       Adapter16BitToBoolNode,
+                                                       Adapter16bitToFloat,
+                                                       Adapter16BitToRangeFloat,
+                                                       AdapterColorToFloatsNode,
+                                                       AdapterColorToRGBNode,
+                                                       AdapterColorToRGBWANode,
+                                                       AdapterColorToRGBWNode,
+                                                       AdapterFloatTo8BitRange,
+                                                       AdapterFloatTo16BitRange,
+                                                       AdapterFloatToColorNode,
+                                                       AdapterFloatToRange,
+                                                       ColorBrightnessMixinNode,
+                                                       CombineTwo8BitToSingle16Bit,
+                                                       Map8BitTo16Bit,
+)
+from view.show_mode.editor.nodes.impl.arithmetics import (
+                                                       ArithmeticExponentialNode,
+                                                       ArithmeticFloatTo8BitNode,
+                                                       ArithmeticFloatTo16BitNode,
+                                                       ArithmeticLogarithmNode,
+                                                       ArithmeticMACNode,
+                                                       ArithmeticMaximumNode,
+                                                       ArithmeticMinimumNode,
+                                                       ArithmeticRoundNode,
+                                                       Sum8BitNode,
+                                                       Sum16BitNode,
+                                                       SumFloatNode,
+)
+from view.show_mode.editor.nodes.impl.color_manip_nodes import (
+                                                       ColorMixerAdditiveRGBNode,
+                                                       ColorMixerHSVNode,
+                                                       ColorMixerNormativeRGBNode,
+                                                       ColorMixerVFilterNode,
+)
+from view.show_mode.editor.nodes.impl.constants import (
+                                                       Constants8BitNode,
+                                                       Constants16BitNode,
+                                                       ConstantsColorNode,
+                                                       ConstantsFloatNode,
+                                                       PanTiltConstant,
+)
+from view.show_mode.editor.nodes.impl.debug import (
+                                                       Debug8BitNode,
+                                                       Debug16BitNode,
+                                                       DebugColorNode,
+                                                       DebugFloatNode,
+                                                       DebugRemote8BitNode,
+                                                       DebugRemote16BitNode,
+                                                       DebugRemoteColorNode,
+                                                       DebugRemoteFloatNode,
+)
+from view.show_mode.editor.nodes.impl.effects import (
+                                                       AutoTrackerNode,
+                                                       CueListNode,
+                                                       EffectsStackNode,
+                                                       Shift8BitNode,
+                                                       Shift16BitNode,
+                                                       ShiftColorNode,
+                                                       ShiftFloatNode,
+)
+from view.show_mode.editor.nodes.impl.faders import (
+                                                       FaderHSIANode,
+                                                       FaderHSIAUNode,
+                                                       FaderHSINode,
+                                                       FaderHSIUNode,
+                                                       FaderMainBrightness,
+                                                       FaderRawNode,
+)
+from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
+from view.show_mode.editor.nodes.impl.time import (
+                                                       TimeNode,
+                                                       TimeSwitchOffDelay8BitNode,
+                                                       TimeSwitchOffDelay16BitNode,
+                                                       TimeSwitchOffDelayFloatNode,
+                                                       TimeSwitchOnDelay8BitNode,
+                                                       TimeSwitchOnDelay16BitNode,
+                                                       TimeSwitchOnDelayFloatNode,
+)
+from view.show_mode.editor.nodes.impl.trigonometics import (
+                                                       TrigonometricArcCosNode,
+                                                       TrigonometricArcSinNode,
+                                                       TrigonometricArcTanNode,
+                                                       TrigonometricCosineNode,
+                                                       TrigonometricSineNode,
+                                                       TrigonometricTangentNode,
+)
 from view.show_mode.editor.nodes.impl.universenode import UniverseNode
-from view.show_mode.editor.nodes.impl.waves import *
+from view.show_mode.editor.nodes.impl.waves import SawtoothWaveNode, SquareWaveNode, TriangleWaveNode
 from view.show_mode.editor.nodes.import_node import ImportNode
 
 type_to_node: dict[int, str] = {

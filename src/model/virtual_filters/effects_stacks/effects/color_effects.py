@@ -1,9 +1,7 @@
-# coding=utf-8
-
 """This file contains the effects of type color."""
 
 from abc import ABC
-from typing import Any
+from typing import Any, override
 
 from PySide6.QtWidgets import QWidget
 
@@ -11,12 +9,13 @@ from model import Filter
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.effects_stacks.adapters import emplace_with_adapter
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
-from view.show_mode.effect_stacks.configuration_widgets.color_wheel_configuration_widget import \
-    ColorWheelConfigurationWidget
+from view.show_mode.effect_stacks.configuration_widgets.color_wheel_configuration_widget import (
+    ColorWheelConfigurationWidget,
+)
 
 
 class ColorEffect(Effect, ABC):
-    def get_output_slot_type(self):
+    def get_output_slot_type(self) -> EffectType:
         return EffectType.COLOR
 
 
@@ -26,7 +25,7 @@ class ColorWheelEffect(ColorEffect):
 
     EFFECT_ID = "effect.colors.colorwheel"
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__({"speed": [EffectType.SPEED],
                           "range": [EffectType.GENERIC_NUMBER],
                           "segments": [EffectType.LIGHT_INTENSITY, EffectType.ENABLED_SEGMENTS]})
@@ -42,6 +41,7 @@ class ColorWheelEffect(ColorEffect):
     def get_configuration_widget(self) -> QWidget | None:
         return self._widget
 
+    @override
     def resolve_input_port_name(self, slot_id: str) -> str:
         match slot_id:
             case "speed":
@@ -97,7 +97,7 @@ class ColorWheelEffect(ColorEffect):
             filter_list.append(
                 Filter(self.get_scene(), brightness_channel_names, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
                        initial_parameters={"value": "1.0"}))
-            brightness_channel_names = {'0': brightness_channel_names + ":value"}
+            brightness_channel_names = {"0": brightness_channel_names + ":value"}
         else:
             brightness_channel_names = emplace_with_adapter(
                 self._inputs["segments"],
@@ -105,20 +105,20 @@ class ColorWheelEffect(ColorEffect):
                 if self._inputs["segments"].get_output_slot_type() != EffectType.ENABLED_SEGMENTS
                 else EffectType.ENABLED_SEGMENTS,
                 filter_list,
-                prefix + "__segments_brightness_"
+                prefix + "__segments_brightness_",
             )
-            if 'intensity' in brightness_channel_names.keys():
-                bg_input_channel_name = brightness_channel_names['intensity'].split(':')[0]
+            if "intensity" in brightness_channel_names:
+                bg_input_channel_name = brightness_channel_names["intensity"].split(":")[0]
                 bg_byte_to_float = Filter(self.get_scene(), bg_input_channel_name + "_map_conv_float",
                                           FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT)
-                bg_byte_to_float.channel_links['value_in'] = brightness_channel_names['intensity']
+                bg_byte_to_float.channel_links["value_in"] = brightness_channel_names["intensity"]
                 filter_list.append(bg_byte_to_float)
                 bg_mapping_filter = Filter(self.get_scene(), bg_input_channel_name + "_map_output",
                                            FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE,
-                                           initial_parameters={'upper_bound_in': '255.0', 'limit_range': '1'})
-                bg_mapping_filter.channel_links['value_in'] = bg_byte_to_float.filter_id + ':value'
+                                           initial_parameters={"upper_bound_in": "255.0", "limit_range": "1"})
+                bg_mapping_filter.channel_links["value_in"] = bg_byte_to_float.filter_id + ":value"
                 filter_list.append(bg_mapping_filter)
-                brightness_channel_names = {'0': bg_mapping_filter.filter_id + ':value'}
+                brightness_channel_names = {"0": bg_mapping_filter.filter_id + ":value"}
 
         for frag_index in range(max(self.fragment_number, 1)):
             time_fraction_filter_name = f"{prefix}__time_fraction_{frag_index}"
@@ -148,10 +148,10 @@ class ColorWheelEffect(ColorEffect):
 
         return {"color": fragment_outputs}
 
-    def get_human_filter_name(self):
+    def get_human_filter_name(self) -> str:
         return "Color Wheel"
 
-    def get_description(self):
+    def get_description(self) -> str:
         return "This effect cycles through a color wheel"
 
     @property
@@ -159,7 +159,7 @@ class ColorWheelEffect(ColorEffect):
         return self._number_of_fragments
 
     @fragment_number.setter
-    def fragment_number(self, new_fragment_count: int):
+    def fragment_number(self, new_fragment_count: int) -> None:
         self._number_of_fragments = max(new_fragment_count, 1)
 
     @property
@@ -167,7 +167,7 @@ class ColorWheelEffect(ColorEffect):
         return self._min_hue
 
     @min_hue.setter
-    def min_hue(self, new_value: float):
+    def min_hue(self, new_value: float) -> None:
         self._min_hue = new_value % 360.0
 
     @property
@@ -175,7 +175,7 @@ class ColorWheelEffect(ColorEffect):
         return self._max_hue
 
     @max_hue.setter
-    def max_hue(self, new_value: float):
+    def max_hue(self, new_value: float) -> None:
         self._max_hue = new_value % 360.0
 
     def serialize(self) -> dict:
@@ -192,9 +192,9 @@ class ColorWheelEffect(ColorEffect):
             d["range-input"] = range_input.serialize()
         return d
 
-    def deserialize(self, data: dict[str, Any]):
+    def deserialize(self, data: dict[str, Any]) -> None:
         from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
-        self.fragment_number = data['number-of-fragments']
+        self.fragment_number = data["number-of-fragments"]
         self._min_hue = data["min-hue"]
         self._max_hue = data["max-hue"]
         self._default_speed = data["default-speed"]

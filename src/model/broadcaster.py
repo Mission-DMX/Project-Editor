@@ -1,6 +1,7 @@
-# coding=utf-8
 """connector for Signals"""
+from __future__ import annotations
 
+from typing import Any, ParamSpec, Self
 from xml.etree.ElementTree import Element
 
 from PySide6 import QtCore
@@ -14,15 +15,18 @@ from controller.joystick.joystick_enum import JoystickList
 from .device import Device
 from .scene import FilterPage, Scene
 
+P = ParamSpec("P")
+
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
     """metaclass for a QObject Singleton"""
+    instance: Any
 
-    def __init__(cls, name, bases, _dict):
+    def __init__(cls: type[QObjectSingletonMeta], name: str, bases: tuple[type, ...], _dict: dict[str, Any]) -> None:
         super().__init__(name, bases, _dict)
         cls.instance = None
 
-    def __call__(cls, *args, **kw):
+    def __call__(cls: type[QObjectSingletonMeta], *args: P.args, **kw: P.kwargs) -> QObjectSingletonMeta:
         if cls.instance is None:
             cls.instance = super().__call__(*args, **kw)
         return cls.instance
@@ -40,7 +44,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     begin_show_file_parsing: QtCore.Signal = QtCore.Signal()
     end_show_file_parsing: QtCore.Signal = QtCore.Signal()
     add_universe: QtCore.Signal = QtCore.Signal(object)
-    add_fixture:QtCore.Signal  = QtCore.Signal(object)
+    add_fixture: QtCore.Signal = QtCore.Signal(object)
     send_universe: QtCore.Signal = QtCore.Signal(object)
     send_universe_value: QtCore.Signal = QtCore.Signal(object)
     send_request_dmx_data: QtCore.Signal = QtCore.Signal(object)
@@ -111,7 +115,8 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
-    def __new__(cls, *args, **kwargs):
+
+    def __new__(cls) -> Self:
         if not hasattr(cls, "instance") or cls.instance is None:
-            cls.instance = super(Broadcaster, cls).__new__(cls)
+            cls.instance = super().__new__(cls)
         return cls.instance

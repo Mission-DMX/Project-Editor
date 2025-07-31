@@ -1,4 +1,3 @@
-# coding=utf-8
 from enum import IntFlag
 
 
@@ -24,7 +23,7 @@ class CurveConfiguration:
     the gui that interact with fish. Most notably, it is used by the effects stack to define curves for effects.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.frequencies: dict[BaseCurve, float] = {}
         self.amplitudes: dict[BaseCurve, float] = {}
         self.offsets: dict[BaseCurve, float] = {}
@@ -52,7 +51,7 @@ class CurveConfiguration:
             "true" if self.append_features_using_addition else "false",
             ",".join([str(k) + ":" + str(v) for k, v in self.frequencies.items()]),
             ",".join([str(k) + ":" + str(v) for k, v in self.amplitudes.items()]),
-            ",".join([str(k) + ":" + str(v) for k, v in self.offsets.items()])
+            ",".join([str(k) + ":" + str(v) for k, v in self.offsets.items()]),
         ])
 
     @classmethod
@@ -66,16 +65,16 @@ class CurveConfiguration:
         cc = CurveConfiguration()
         if config is None or len(config) == 0:
             return cc
-        config = config.split(';')
+        config = config.split(";")
         opset = int(config[0])
         cc.selected_features = BaseCurve(int(config[1]))
         cc.base_phase = float(config[2])
         cc.base_amplitude = float(config[3])
         cc.append_features_using_addition = config[4] == "true"
 
-        def decode_common_props(target: dict[BaseCurve, float], source: str):
-            for entry in source.split(','):
-                k, v = entry.split(':')
+        def decode_common_props(target: dict[BaseCurve, float], source: str) -> None:
+            for entry in source.split(","):
+                k, v = entry.split(":")
                 k = BaseCurve(int(k))
                 v = float(v)
                 target[k] = v

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Public classes and methods from the model package"""
 
 from .board_configuration import BoardConfiguration

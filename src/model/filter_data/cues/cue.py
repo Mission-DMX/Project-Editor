@@ -1,18 +1,19 @@
-# coding=utf-8
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Never, Union
 
 from model import ColorHSI, DataType
 from model.filter_data.transfer_function import TransferFunction
 from model.filter_data.utility import format_seconds
 
 if TYPE_CHECKING:
-    pass
+    from view.show_mode.editor.node_editor_widgets.cue_editor.cue_editor_widget import ExternalChannelDefinition
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class EndAction(Enum):
@@ -20,13 +21,14 @@ class EndAction(Enum):
     START_AGAIN = 1
     NEXT = 2
 
-    def __str__(self):
-        if self.value == EndAction.HOLD.value:
-            return "Hold current values"
-        if self.value == EndAction.NEXT.value:
-            return "Jump to next cue"
-        if self.value == EndAction.START_AGAIN.value:
-            return "Restart cue"
+    def __str__(self) -> str:
+        match self:
+            case EndAction.HOLD:
+                return "Hold current values"
+            case EndAction.START_AGAIN:
+                return "Jump to next cue"
+            case _:
+                return "Restart cue"
 
         return "Unknown action"
 
@@ -35,15 +37,16 @@ class EndAction(Enum):
         return [str(a) for a in [EndAction.HOLD, EndAction.START_AGAIN, EndAction.NEXT]]
 
     def get_filter_format_str(self) -> str:
-        if self.value == EndAction.HOLD.value:
-            return "hold"
-        elif self.value == EndAction.START_AGAIN.value:
-            return "start_again"
-        else:
-            return "next_cue"
+        match self:
+            case EndAction.HOLD:
+                return "hold"
+            case EndAction.START_AGAIN:
+                return "start_again"
+            case _:
+                return "next_cue"
 
     @staticmethod
-    def from_format_str(f_str: str):
+    def from_format_str(f_str: str) -> EndAction:
         match f_str:
             case "start_again":
                 return EndAction.START_AGAIN
@@ -57,16 +60,16 @@ class EndAction(Enum):
 
 class State(ABC):
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         self._transition_type: str = transition_type
         self._value = None
 
     @property
-    def transition(self):
+    def transition(self) -> str:
         return self._transition_type
 
     @transition.setter
-    def transition(self, new_value: str):
+    def transition(self, new_value: str) -> None:
         if new_value not in ["edg", "lin", "sig", "e_i", "e_o"]:
             raise ArgumentError(f"Unsupported transition type: {new_value}")
         self._transition_type = new_value
@@ -74,32 +77,32 @@ class State(ABC):
     @abstractmethod
     def encode(self) -> str:
         """This method returns the state encodes in the filter format"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
-    def decode(self, content: str):
+    def decode(self, content: str) -> Never:
         """This method decodes the state configuration from a filter config string."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def get_data_type(self) -> DataType:
         """This method needs to return the filter data type."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
-    def copy(self) -> "State":
+    def copy(self) -> State:
         """This method needs to return a copy of the state"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class StateEightBit(State):
 
-    def copy(self) -> "State":
+    def copy(self) -> State:
         s = StateEightBit(self._transition_type)
         s._value = self._value
         return s
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         super().__init__(transition_type)
         self._value = 0
 
@@ -110,7 +113,7 @@ class StateEightBit(State):
             self._value = 255
         return f"{int(self._value)}@{self._transition_type}"
 
-    def decode(self, content: str):
+    def decode(self, content: str) -> None:
         c_arr = content.split("@")
         self._value = int(c_arr[0])
         if self._value < 0:
@@ -124,12 +127,12 @@ class StateEightBit(State):
 
 
 class StateSixteenBit(State):
-    def copy(self) -> "State":
+    def copy(self) -> State:
         s = StateSixteenBit(self._transition_type)
         s._value = self._value
         return s
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         super().__init__(transition_type)
         self._value = 0
 
@@ -140,7 +143,7 @@ class StateSixteenBit(State):
             self._value = 65535
         return f"{int(self._value)}@{self._transition_type}"
 
-    def decode(self, content: str):
+    def decode(self, content: str) -> None:
         c_arr = content.split("@")
         self._value = int(c_arr[0])
         if self._value < 0:
@@ -154,19 +157,19 @@ class StateSixteenBit(State):
 
 
 class StateDouble(State):
-    def copy(self) -> "State":
+    def copy(self) -> State:
         s = StateDouble(self._transition_type)
         s._value = self._value
         return s
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         super().__init__(transition_type)
         self._value = 0.0
 
     def encode(self) -> str:
         return f"{float(self._value)}@{self._transition_type}"
 
-    def decode(self, content: str):
+    def decode(self, content: str) -> None:
         c_arr = content.split("@")
         self._value = float(c_arr[0])
         self._transition_type = c_arr[1]
@@ -176,19 +179,19 @@ class StateDouble(State):
 
 
 class StateColor(State):
-    def copy(self) -> "State":
+    def copy(self) -> State:
         s = StateColor(self._transition_type)
         s._value = self._value.copy()
         return s
 
-    def __init__(self, transition_type: str):
+    def __init__(self, transition_type: str) -> None:
         super().__init__(transition_type)
         self._value = ColorHSI(180.0, 0.0, 0.0)
 
     def encode(self) -> str:
         return f"{self._value.format_for_filter()}@{self._transition_type}"
 
-    def decode(self, content: str):
+    def decode(self, content: str) -> None:
         c_arr = content.split("@")
         self._value = ColorHSI.from_filter_str(c_arr[0])
         self._transition_type = c_arr[1]
@@ -201,36 +204,33 @@ class StateColor(State):
         return self._value
 
     @color.setter
-    def color(self, value: ColorHSI):
+    def color(self, value: ColorHSI) -> None:
         self._value = value
 
 
 class KeyFrame:
-    def __init__(self, parent_cue: "Cue"):
+    def __init__(self, parent_cue: Cue) -> None:
         self._states: list[State] = []
         self.timestamp: float = 0.0
         self._parent = parent_cue
         self.only_on_channel: str | None = None
 
     def get_data_types(self) -> list[DataType]:
-        l = []
-        for s in self._states:
-            l.append(s.get_data_type())
-        return l
+        return [s.get_data_type() for s in self._states]
 
     def format_filter_str(self) -> str:
         return f"{self.timestamp}:{"&".join([s.encode() for s in self._states])}"
 
     @staticmethod
-    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: "Cue"):
-        parts = f_str.split(':')
+    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: Cue) -> str | None:
+        parts = f_str.split(":")
         if len(parts) != 2:
             raise ArgumentError("A keyframe definition should contain exactly two elements")
         f = KeyFrame(parent_cue)
         f.timestamp = float(parts[0])
-        i = 0
-        for state_dev in parts[1].split('&'):
-            state_dev_parts = state_dev.split('@')
+
+        for i, state_dev in enumerate(parts[1].split("&")):
+            state_dev_parts = state_dev.split("@")
             if i >= len(channel_data_types):
                 if i == 0 and len(channel_data_types) == 0:
                     return None
@@ -249,18 +249,18 @@ class KeyFrame:
                     raise ArgumentError(f"Unsupported filter data type: {state_dev_parts[1]}")
             s_entry.decode(state_dev)
             f._states.append(s_entry)
-            i += 1
+
         return f
 
-    def append_state(self, s: State):
+    def append_state(self, s: State) -> None:
         if s is not None:
             self._states.append(s)
 
-    def delete_from_parent_cue(self):
+    def delete_from_parent_cue(self) -> None:
         """This method deletes the frame from the parent."""
         self._parent._frames.remove(self)
 
-    def copy(self, new_parent: "Cue") -> "KeyFrame":
+    def copy(self, new_parent: Cue) -> KeyFrame:
         kf = KeyFrame(new_parent)
         kf.timestamp = self.timestamp
         for s in self._states:
@@ -269,7 +269,7 @@ class KeyFrame:
 
 
 class Cue:
-    def __init__(self, definition: str | None = None):
+    def __init__(self, definition: str | None = None) -> None:
         self.end_action = EndAction.HOLD
         self._frames: list[KeyFrame] = []
         self._channel_definitions: list[tuple[str, DataType]] = []
@@ -315,7 +315,7 @@ class Cue:
         return (f"{"|".join(frames_str_list)}#{end_handling_str}#"
                 f"{restart_beh_str}#{self.name.replace('#', '')}")
 
-    def from_string_definition(self, definition: str):
+    def from_string_definition(self, definition: str) -> None:
         primary_tokens = definition.split("#")
         frame_definitions = primary_tokens[0].split("|")
         for frame_dev in frame_definitions:
@@ -332,12 +332,10 @@ class Cue:
         if len(primary_tokens) > 3:
             self.name = primary_tokens[3]
 
-    def add_channel(self, name: str, t: str | DataType):
+    def add_channel(self, name: str, t: str | DataType) -> None:
         """Add a channel name to list of names"""
-        if isinstance(t, str):
-            dt = DataType.from_filter_str(t)
-        else:
-            dt = t
+        dt = DataType.from_filter_str(t) if isinstance(t, str) else t
+
         for cd in self._channel_definitions:
             if cd[0] == name:
                 if cd[1] == dt:
@@ -359,16 +357,13 @@ class Cue:
                     kf_s = StateEightBit(TransferFunction.EDGE.value)
             kf._states.append(kf_s)
 
-    def insert_frame(self, f: KeyFrame):
+    def insert_frame(self, f: KeyFrame) -> None:
         """Add a frame to the cue"""
         self._frames.append(f)
 
-    def remove_channel(self, c: "ExternalChannelDefinition | tuple[str, DataType]"):
+    def remove_channel(self, c: Union[ExternalChannelDefinition, tuple[str, DataType]]) -> None:
         target_index = -1
-        if isinstance(c, tuple):
-            name = c[0]
-        else:
-            name = c.name
+        name = c[0] if isinstance(c, tuple) else c.name
         for i in range(len(self._channel_definitions)):
             if self._channel_definitions[i][0] == name:
                 self._channel_definitions.pop(i)
@@ -379,7 +374,7 @@ class Cue:
         for f in self._frames:
             f._states.pop(target_index)
 
-    def copy(self) -> "Cue":
+    def copy(self) -> Cue:
         c = Cue()
         c.end_action = self.end_action
         for kf in self._frames:

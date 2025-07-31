@@ -1,4 +1,3 @@
-# coding=utf-8
 """dialog for change of Temperature"""
 import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -28,7 +27,7 @@ class TemperatureDialog(QtWidgets.QDialog):
 
         self.setLayout(layout)
 
-    def _calculate_color(self):
+    def _calculate_color(self) -> None:
         temperature = float(self.temperature.text()) / 100
         color = QtGui.QColor()
         color.setRed(int(_calculate_red(temperature)))

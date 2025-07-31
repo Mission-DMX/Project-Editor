@@ -1,11 +1,11 @@
-# coding=utf-8
 """Widget to edit a channel."""
 from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QWidget
 
+import style
 from model.channel import Channel
 from model.control_desk import BankSet
 from model.patching.fixture_channel import FixtureChannel
-from style import Style
 from view.console_mode.console_fader_bank_selector import ConsoleFaderBankSelectorWidget
 
 
@@ -23,7 +23,7 @@ class ChannelWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, fixture_channel: FixtureChannel, channel: Channel, bank_set: BankSet = None,
-                 bank_set_control_list=None, parent=None):
+                 bank_set_control_list: list[QWidget] | None = None, parent: QWidget = None) -> None:
         """Inits the ChannelWidget.
 
         Args:
@@ -71,7 +71,7 @@ class ChannelWidget(QtWidgets.QWidget):
         # Button to set the channel to the max value 255
         self._max_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Max", self)
         self._max_button.setFixedSize(element_size, element_size)
-        self._max_button.setStyleSheet(Style.BUTTON)
+        self._max_button.setStyleSheet(style.BUTTON)
         self._max_button.clicked.connect(lambda: self.update_value(255))
 
         # Slider to change the value and display the current value graphically
@@ -82,13 +82,13 @@ class ChannelWidget(QtWidgets.QWidget):
         self._slider.setMinimum(0)
         self._slider.setMaximum(255)
         self._slider.setFixedSize(element_size, slider_len)
-        self._slider.setStyleSheet(Style.SLIDER)
+        self._slider.setStyleSheet(style.SLIDER)
         self._slider.valueChanged.connect(self.update_value)
 
         # Button to set the channel to the min value 0
         self._min_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Min", self)
         self._min_button.setFixedSize(element_size, element_size)
-        self._min_button.setStyleSheet(Style.ACTIVE_BUTTON)
+        self._min_button.setStyleSheet(style.ACTIVE_BUTTON)
         self._min_button.clicked.connect(lambda: self.update_value(0))
 
         self._channel.updated.connect(self._update)
@@ -106,22 +106,21 @@ class ChannelWidget(QtWidgets.QWidget):
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
-
     def _update(self, value: int) -> None:
         """Updates the slider and value label."""
         self._slider.setValue(value)
         self._value_editor.setValue(value)
         if value == 0:
-            self._min_button.setStyleSheet(Style.ACTIVE_BUTTON)
-            self._max_button.setStyleSheet(Style.BUTTON)
+            self._min_button.setStyleSheet(style.ACTIVE_BUTTON)
+            self._max_button.setStyleSheet(style.BUTTON)
         elif value == 255:
-            self._max_button.setStyleSheet(Style.ACTIVE_BUTTON)
-            self._min_button.setStyleSheet(Style.BUTTON)
+            self._max_button.setStyleSheet(style.ACTIVE_BUTTON)
+            self._min_button.setStyleSheet(style.BUTTON)
         else:
-            self._min_button.setStyleSheet(Style.BUTTON)
-            self._max_button.setStyleSheet(Style.BUTTON)
+            self._min_button.setStyleSheet(style.BUTTON)
+            self._max_button.setStyleSheet(style.BUTTON)
 
-    def update_value(self, value: int | str):
+    def update_value(self, value: int | str) -> None:
         """update of a value in """
         value = int(value)
         self._bank_selector._latest_ui_position_update = value

@@ -3,10 +3,10 @@ from logging import getLogger
 
 from PySide6.QtGui import QSurfaceFormat
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
-def opengl_context_init():
+def opengl_context_init() -> None:
     fmt = QSurfaceFormat()
     fmt.setDepthBufferSize(24)
     fmt.setStencilBufferSize(8)

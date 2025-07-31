@@ -1,5 +1,4 @@
-# coding=utf-8
-from typing import Callable
+from collections.abc import Callable
 
 from PySide6.QtCore import QPoint
 from PySide6.QtWidgets import QDialog, QPushButton, QStackedLayout, QVBoxLayout, QWidget
@@ -12,7 +11,7 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 class WidgetSetupDialog(QDialog):
     def __init__(self, parent: QWidget, allowed_filters: list[list[FilterTypeEnumeration]], callback: Callable,
-                 pos: QPoint, page: UIPage, swidget: UIWidget):
+                 pos: QPoint, page: UIPage, swidget: UIWidget) -> None:
         """
         Initialize a new widget setup dialog. The purpose of this dialog is to query all required filters for setup and
         registering them with the new widget.
@@ -51,7 +50,7 @@ class WidgetSetupDialog(QDialog):
         self.setMinimumHeight(600)
         self.show()
 
-    def _select_pressed(self, *args, **kwargs):
+    def _select_pressed(self) -> None:
         """This method handles the filter selection and finishing of the dialog."""
         self._page_index += 1
         if self._page_index == len(self._fsw):

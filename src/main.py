@@ -1,4 +1,3 @@
-# coding=utf-8
 """GUI and control elements for the software."""
 
 if __name__ == "__main__":
@@ -17,17 +16,17 @@ if __name__ == "__main__":
     splashscreen.show()
     splashscreen.raise_()
 
-    with open(resource_path(os.path.join("resources", 'pyproject.toml')), 'r', encoding="UTF-8") as f:
+    with open(resource_path(os.path.join("resources", "pyproject.toml")), "r", encoding="UTF-8") as f:
         import tomlkit
 
         data = tomlkit.load(f)
     version_string = f"Version: {data['project']['version']}"
 
     app.processEvents()
-    app.setApplicationName(data['project']['name'])
-    app.setApplicationDisplayName(data['tool']['missionDMX']["display-name"])
-    app.setOrganizationName(data['tool']['missionDMX']['organization']['name'])
-    app.setOrganizationDomain(data['tool']['missionDMX']['organization']['domain'])
+    app.setApplicationName(data["project"]["name"])
+    app.setApplicationDisplayName(data["tool"]["missionDMX"]["display-name"])
+    app.setOrganizationName(data["tool"]["missionDMX"]["organization"]["name"])
+    app.setOrganizationDomain(data["tool"]["missionDMX"]["organization"]["domain"])
     app.setDesktopSettingsAware(True)
     from PySide6.QtGui import QIcon
 
@@ -35,8 +34,9 @@ if __name__ == "__main__":
 
     from PySide6.QtGui import QColor, QPalette
 
-    splashscreen.showMessage(version_string, alignment=Qt.AlignmentFlag.AlignCenter,
-                             color=QColor.fromRgb(125, 125, 125))
+    splashscreen.showMessage(
+        version_string, alignment=Qt.AlignmentFlag.AlignCenter, color=QColor.fromRgb(125, 125, 125)
+    )
     app.processEvents()
 
     import atexit
@@ -48,20 +48,19 @@ if __name__ == "__main__":
 
     from PySide6.QtCore import QEventLoop
 
+    import style
     from controller.cli.remote_control_port import RemoteCLIServer
     from controller.joystick.joystick_handling import JoystickHandler
     from gl_init import opengl_context_init
     from model.final_globals import FinalGlobals
-    from style import Style
     from view.main_window import MainWindow
 
     logger = logging.getLogger("Project-Editor")
 
-
-    def setup_logging():
+    def setup_logging() -> None:
         """read logging from config file and set up the logger"""
         config_file = resource_path(pathlib.Path(os.path.join("configs", "logging.json")))
-        with open(config_file, encoding="utf-8") as f_in:
+        with open(config_file, "r", encoding="utf-8") as f_in:
             config = json.load(f_in)
 
         logging.config.dictConfig(config)
@@ -70,17 +69,16 @@ if __name__ == "__main__":
             queue_handler.listener.start()
             atexit.register(queue_handler.listener.stop)
 
-
-    def setup_asyncio():
+    def setup_asyncio() -> None:
         # Warning: while this change is important, the feature is yet a technical preview in pyside6.6 and the
         #  API may change. The functionality however will stay in place.
         import asyncio
 
         from PySide6.QtAsyncio import QAsyncioEventLoopPolicy
+
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
-
-    def set_dark_theme(application: QApplication):
+    def set_dark_theme(application: QApplication) -> None:
         """set default dark theme"""
 
         application.setStyle("Fusion")
@@ -105,8 +103,7 @@ if __name__ == "__main__":
 
         application.setPalette(dark_palette)
 
-
-    def main(application: QApplication):
+    def main(application: QApplication) -> None:
         """Startup"""
         setup_logging()
         logging.basicConfig(level="INFO")
@@ -117,7 +114,7 @@ if __name__ == "__main__":
         FinalGlobals.set_screen_width(width)
         FinalGlobals.set_screen_height(height)
         set_dark_theme(application)
-        application.setStyleSheet(Style.APP)
+        application.setStyleSheet(style.APP)
         JoystickHandler()
 
         # TODO we should parse the global application settings and recent project files here
@@ -132,6 +129,7 @@ if __name__ == "__main__":
             show_file_path = sys.argv[1]
             if os.path.isfile(show_file_path):
                 from controller.file.read import read_document
+
                 read_document(show_file_path, widget.show_configuration)
                 application.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
             else:
@@ -140,7 +138,6 @@ if __name__ == "__main__":
         return_code = application.exec()
         cli_server.stop()
         sys.exit(return_code)
-
 
     # Only start if __main__
     main(app)

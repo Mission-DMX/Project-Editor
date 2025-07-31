@@ -1,11 +1,12 @@
-# coding=utf-8
 """Universe filter node"""
 from logging import getLogger
+from typing import Any, ClassVar, override
 
 from pyqtgraph.flowchart import Terminal
 
-from model import DataType, Filter
+from model import DataType, Filter, Scene
 from model.filter import FilterTypeEnumeration
+from model.universe import NUMBER_OF_CHANNELS
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 logger = getLogger(__name__)
@@ -13,21 +14,21 @@ logger = getLogger(__name__)
 
 class UniverseNode(FilterNode):
     """Filter to represent a dmx universe. By default, it has 8 outputs, put more can be added."""
-    nodeName = 'Universe'
+    nodeName = "Universe"  # noqa: N815
 
-    universe_ids: list[int] = []
+    universe_ids: ClassVar[list[int]] = []
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         if isinstance(model, Filter):
             super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
                              terminals={
-                                 input_link: {'io': 'in'} for input_link, _ in model.channel_links.items()},
-                             allowAddInput=True)
+                                 input_link: {"io": "in"} for input_link, _ in model.channel_links.items()},
+                             allow_add_input=True)
         else:
             super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name,
                              terminals={
-                                 "input_1": {'io': 'in'}},
-                             allowAddInput=True)
+                                 "input_1": {"io": "in"}},
+                             allow_add_input=True)
 
         try:
             if len(model.filter_configurations) == 0:
@@ -35,14 +36,14 @@ class UniverseNode(FilterNode):
                 self.filter.in_data_types["input_1"] = DataType.DT_8_BIT
                 self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
             else:
-                for key in self.filter.filter_configurations.keys():
+                for key in self.filter.filter_configurations:
                     if self.filter != model:
                         self.filter.filter_configurations[key] = model.filter_configurations[key]
                     if key != "universe":
                         input_channel = key
                         self.filter.in_data_types[input_channel] = DataType.DT_8_BIT
-                        if key not in self.terminals.keys():
-                            term = super().addInput(key)
+                        if key not in self.terminals:
+                            super().addInput(key)
                         else:
                             t: Terminal = self.terminals[key]
                             if not t.isInput():
@@ -54,10 +55,11 @@ class UniverseNode(FilterNode):
             self.filter.default_values["input_1"] = "0"
             self.filter.filter_configurations["universe"] = str(int(self.name()[9:]) + 1)
 
-    def addInput(self, name="input", **args):
-        """Allows to add up to 512 input channels."""
+    @override
+    def addInput(self, name: str = "input", **args: dict[str, Any]) -> None:
+        """Allows adding up to 512 input channels."""
         next_input = len(self.inputs())
-        if next_input >= 512:
+        if next_input >= NUMBER_OF_CHANNELS:
             return
         input_channel = f"{name}_{next_input + 1}"
         self.filter.filter_configurations[input_channel] = str(next_input)
@@ -85,7 +87,8 @@ class UniverseNode(FilterNode):
         # self.filter.in_data_types["test23"] = DataType.DT_8_BIT
         # return term
 
-    def removeTerminal(self, term):
+    @override
+    def removeTerminal(self, term: Terminal) -> None:
         if term.isInput():
             del self.filter.filter_configurations[term.name()]
-        return super().removeTerminal(term)
+        super().removeTerminal(term)

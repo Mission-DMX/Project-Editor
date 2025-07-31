@@ -1,4 +1,3 @@
-# coding=utf-8
 """Widget to create multiple scenes and manage filters.
 
 Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
@@ -12,8 +11,9 @@ from controller.file.transmitting_to_fish import transmit_to_fish
 from model.board_configuration import BoardConfiguration, Broadcaster, Scene
 from model.scene import FilterPage
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
-from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import \
-    SceneUIPageEditorWidget
+from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import (
+    SceneUIPageEditorWidget,
+)
 
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
@@ -36,7 +36,7 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget.setTabsClosable(True)
         self._open_page_tab_widget.addTab(QWidget(), "+")
         plus_button = self._open_page_tab_widget.tabBar().tabButton(
-            self._open_page_tab_widget.count() - 1, QTabBar.ButtonPosition.RightSide
+            self._open_page_tab_widget.count() - 1, QTabBar.ButtonPosition.RightSide,
         )
         if plus_button:
             plus_button.resize(0, 0)
@@ -68,7 +68,7 @@ class ShowEditorWidget(QSplitter):
         board_configuration.broadcaster.uipage_opened_in_editor_requested.connect(self._add_uipage_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
 
-    def _select_scene_to_be_removed(self):
+    def _select_scene_to_be_removed(self) -> None:
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
         if ok_button_pressed and 0 <= scene_index < self._open_page_tab_widget.tabBar().count() - 2:
             self._board_configuration.broadcaster.delete_scene()
@@ -78,9 +78,8 @@ class ShowEditorWidget(QSplitter):
         """toolbar for node_mode"""
         return self._toolbar
 
-    def _tab_bar_clicked(self, index: int):
+    def _tab_bar_clicked(self, index: int) -> None:
         """Handles adding/deleting button action.
-        
         Args:
             index: Index of the clicked tab
         """
@@ -88,12 +87,11 @@ class ShowEditorWidget(QSplitter):
         if index == self._open_page_tab_widget.tabBar().count() - 1:
             self._add_button_clicked()
 
-    def _add_button_clicked(self):
+    def _add_button_clicked(self) -> None:
         add_scene_to_show(self, self._board_configuration)
 
     def _add_scene_tab(self, page: Scene | FilterPage) -> SceneTabWidget | None:
         """Creates a tab for a scene
-        
         Args:
             page: The scene to be added
         """
@@ -103,10 +101,9 @@ class ShowEditorWidget(QSplitter):
         if page in self._opened_pages:
             for tab_index in range(self._open_page_tab_widget.count()):
                 tab = self._open_page_tab_widget.widget(tab_index)
-                if isinstance(tab, SceneTabWidget):
-                    if tab.scene == page:
-                        self._open_page_tab_widget.setCurrentIndex(tab_index)
-                        return tab
+                if isinstance(tab, SceneTabWidget) and tab.scene == page:
+                    self._open_page_tab_widget.setCurrentIndex(tab_index)
+                    return tab
             return None
 
         # Each scene is represented by its own editor
@@ -121,15 +118,14 @@ class ShowEditorWidget(QSplitter):
             self._open_page_tab_widget.setCurrentWidget(scene_tab)
         return scene_tab
 
-    def _add_bankset_tab(self, data: dict):
+    def _add_bankset_tab(self, data: dict) -> QWidget | None:
         bankset = data["bankset"]
         if bankset in self._opened_banksets:
             for tab_index in range(self._open_page_tab_widget.count()):
                 tab = self._open_page_tab_widget.widget(tab_index)
-                if isinstance(tab, BankSetTabWidget):
-                    if tab.bankset == bankset:
-                        self._open_page_tab_widget.setCurrentIndex(tab_index)
-                        return tab
+                if isinstance(tab, BankSetTabWidget) and tab.bankset == bankset:
+                    self._open_page_tab_widget.setCurrentIndex(tab_index)
+                    return tab
             return None
 
         self._opened_banksets.add(bankset)
@@ -137,19 +133,19 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget.insertTab(
             self._open_page_tab_widget.tabBar().count() - 1,
             tab,
-            bankset.description
+            bankset.description,
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
+        return None
 
-    def _add_uipage_tab(self, data: dict):
+    def _add_uipage_tab(self, data: dict) -> QWidget | None:
         uipage = data["uipage"]
         if uipage in self._opened_uieditors:
             for tab_index in range(self._open_page_tab_widget.count()):
                 tab = self._open_page_tab_widget.widget(tab_index)
-                if isinstance(tab, SceneUIPageEditorWidget):
-                    if tab.ui_page == uipage:
-                        self._open_page_tab_widget.setCurrentIndex(tab_index)
-                        return tab
+                if isinstance(tab, SceneUIPageEditorWidget) and tab.ui_page == uipage:
+                    self._open_page_tab_widget.setCurrentIndex(tab_index)
+                    return tab
             return None
 
         self._opened_uieditors.add(uipage)
@@ -157,11 +153,12 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget.insertTab(
             self._open_page_tab_widget.tabBar().count() - 1,
             tab,
-            uipage.scene.human_readable_name + "/UI Page"  # TODO query index
+            uipage.scene.human_readable_name + "/UI Page",  # TODO query index
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
+        return None
 
-    def _remove_tab(self, scene_or_index: Scene | int):
+    def _remove_tab(self, scene_or_index: Scene | int) -> None:
         """Removes the tab corresponding to the scene or index.
 
         Args:

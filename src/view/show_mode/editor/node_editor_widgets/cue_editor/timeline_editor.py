@@ -21,7 +21,7 @@ def _get_column_from_name(channel_name: str) -> DeskColumn | None:
 
 
 class TimelineContainer(QWidget):
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self._channel_label = TimelineChannelLabel(parent)
@@ -56,7 +56,7 @@ class TimelineContainer(QWidget):
         return self._current_transition_type
 
     @transition_type.setter
-    def transition_type(self, new_value: str):
+    def transition_type(self, new_value: str) -> None:
         self._current_transition_type = new_value
 
     @property
@@ -64,23 +64,22 @@ class TimelineContainer(QWidget):
         return self._keyframes_panel.used_bankset
 
     @bankset.setter
-    def bankset(self, bs: BankSet):
+    def bankset(self, bs: BankSet) -> None:
         self._keyframes_panel.used_bankset = bs
 
-    def add_channel(self, channel_type: DataType, name: str):
+    def add_channel(self, channel_type: DataType, name: str) -> None:
         self._channel_label.add_label(name, channel_type.format_for_filters())
         self._keyframes_panel.add_channels([(channel_type, name)])
 
-    def remove_channel(self, c_name: str):
+    def remove_channel(self, c_name: str) -> None:
         i = self._channel_label.remove_label(c_name)
         if i != -1:
             self._keyframes_panel.remove_channel(i)
 
-    def clear_channels(self):
+    def clear_channels(self) -> None:
         """Removes all channels from the widget"""
         # TODO clear all labels from self._channel_labels_panel_layout
         # TODO reset self._keyframes_panel
-        pass
 
     @property
     def cue(self) -> Cue:
@@ -88,7 +87,7 @@ class TimelineContainer(QWidget):
         return self._cue
 
     @cue.setter
-    def cue(self, c: Cue):
+    def cue(self, c: Cue) -> None:
         self._cue = c
         # TODO clear keyframes_panel
         self._keyframes_panel.clear_cue()
@@ -104,19 +103,19 @@ class TimelineContainer(QWidget):
             self._keyframes_panel.cue_index = 0
         self._keyframes_panel.repaint()
 
-    def increase_zoom(self, factor: float = 2.0):
+    def increase_zoom(self, factor: float = 2.0) -> None:
         self._keyframes_panel.zoom_in(factor)
 
-    def decrease_zoom(self, factor: float = 2.0):
+    def decrease_zoom(self, factor: float = 2.0) -> None:
         self._keyframes_panel.zoom_out(factor)
 
-    def move_cursor_left(self):
+    def move_cursor_left(self) -> None:
         self._keyframes_panel.move_cursor_left()
 
-    def move_cursor_right(self):
+    def move_cursor_right(self) -> None:
         self._keyframes_panel.move_cursor_right()
 
-    def record_pressed(self):
+    def record_pressed(self) -> None:
         if self._cue is None:
             logger.error("Cue is None. Disable rec buttons in this case.")
             return
@@ -138,14 +137,12 @@ class TimelineContainer(QWidget):
             f.append_state(self._generate_state_from_channel(c, i))
             self._keyframes_panel.insert_frame(f)
 
-    def _generate_combined_frame(self, p):
+    def _generate_combined_frame(self, p) -> None:
         f = KeyFrame(self._cue)
         f.timestamp = p
-        i = 0
-        for c in self._cue.channels:
-            s = self._generate_state_from_channel(c, i)
+        for i, channel in enumerate(self._cue.channels):
+            s = self._generate_state_from_channel(channel, i)
             f.append_state(s)
-            i += 1
         self._keyframes_panel.insert_frame(f)
 
     def _generate_state_from_channel(self, channel, i):
@@ -183,10 +180,10 @@ class TimelineContainer(QWidget):
         return f"{int(self._keyframes_panel._time_zoom * 10000) / 10000:0>3} Sec/Pixel"
 
     @staticmethod
-    def clear_display():
+    def clear_display() -> None:
         set_seven_seg_display_content(" " * 12, True)
 
-    def _keyframe_panel_size_changed(self, new_size: QPoint):
+    def _keyframe_panel_size_changed(self, new_size: QPoint) -> None:
         if new_size.y() != self._channel_label.height():
             self._channel_label.setMinimumHeight(max(new_size.y(), self._channel_label.height()))
             self._channel_label.update()

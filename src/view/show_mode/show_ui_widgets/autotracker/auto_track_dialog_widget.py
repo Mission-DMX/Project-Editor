@@ -1,17 +1,17 @@
-# coding=utf-8
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QTabWidget
 
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from view.show_mode.show_ui_widgets.autotracker.CropTab import CropTab
-from view.show_mode.show_ui_widgets.autotracker.DetectionTab import DetectionTab
-from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.crop_tab import CropTab
+from view.show_mode.show_ui_widgets.autotracker.detection_tab import DetectionTab
+from view.show_mode.show_ui_widgets.autotracker.gui_tab import GuiTab
+
 # from view.show_mode.editor.show_ui_widgets.autotracker.DetectionTab import DetectionTab
-from view.show_mode.show_ui_widgets.autotracker.LightSetupTab import LightSetupTab
-from view.show_mode.show_ui_widgets.autotracker.SettingsTab import SettingsTab
-from view.show_mode.show_ui_widgets.autotracker.SourcesTab import SourcesTab
+from view.show_mode.show_ui_widgets.autotracker.light_setup_tab import LightSetupTab
+from view.show_mode.show_ui_widgets.autotracker.settings_tab import SettingsTab
+from view.show_mode.show_ui_widgets.autotracker.sources_tab import SourcesTab
 
 if TYPE_CHECKING:
     from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
@@ -32,20 +32,20 @@ class AutoTrackDialogWidget(QTabWidget):
         - `register_tabs(tab_widget, tabs)`: Register tabs in the main window.
     """
 
-    def __init__(self, f: "AutoTrackerFilter", provided_instance: InstanceManager | None):
+    def __init__(self, f: "AutoTrackerFilter", provided_instance: InstanceManager | None) -> None:
         """
         Initialize the main application window.
         """
         super().__init__()
         if not provided_instance:
             # We're constructing the player widget
-            self.instance = InstanceManager(f)
+            self.instance: InstanceManager = InstanceManager(f)
             tabs = [
-                DetectionTab("Detect", self.instance)
+                DetectionTab("Detect", self.instance),
             ]
         else:
             self.instance = provided_instance
-            tabs = [
+            tabs: list[GuiTab] = [
                 SourcesTab("Sources", self.instance),
                 SettingsTab("Settings", self.instance),
                 CropTab("Crop", self.instance),
@@ -63,7 +63,7 @@ class AutoTrackDialogWidget(QTabWidget):
         self.video_timer.timeout.connect(self.video_update_all)
         self.video_timer.start(1)
 
-    def video_update_all(self):
+    def video_update_all(self) -> None:
         """
         Update video content for all active tabs.
         """
@@ -73,7 +73,7 @@ class AutoTrackDialogWidget(QTabWidget):
                 tab.video_update()
         # TODO call generate_update_content from ui widget
 
-    def tab_changed(self, index):
+    def tab_changed(self, index: int) -> None:
         """
         Handle tab change events.
 
@@ -85,18 +85,17 @@ class AutoTrackDialogWidget(QTabWidget):
             if isinstance(tab, GuiTab):
                 tab.tab_changed(index)
 
-    def register_tabs(self, tab_widget, tabs):
+    def register_tabs(self, tabs: list[GuiTab]) -> None:
         """
         Register tabs in the main window.
 
         Args:
-            tab_widget (QTabWidget): The tab widget to register tabs in.
-            tabs (list): A list of tab objects to register.
+            tabs : A list of tab objects to register.
         """
         first = True
         for tab in tabs:
-            tab_widget.addTab(tab, tab.name)
-            tab.id = tab_widget.count() - 1
+            self.addTab(tab, tab.name)
+            tab.id = self.count() - 1
             if first:
                 tab.tab_activated()
                 first = False

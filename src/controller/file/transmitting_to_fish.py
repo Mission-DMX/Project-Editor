@@ -1,4 +1,3 @@
-# coding=utf-8
 """Transmitting data as XML to Fish"""
 
 from controller.file.serializing.general_serialization import create_xml

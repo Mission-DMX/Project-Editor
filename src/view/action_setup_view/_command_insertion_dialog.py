@@ -18,11 +18,10 @@ def escape_argument(argument: str) -> str:
 
 
 class _CommandInsertionDialog(QDialog):
-
     """This class provides a foundation for command insertion dialogs."""
 
     def __init__(self, parent: QWidget, macro: Macro, supported_filter_list: list[FilterTypeEnumeration],
-                 show: BoardConfiguration, update_callable: callable):
+                 show: BoardConfiguration, update_callable: callable) -> None:
         super().__init__(parent)
 
         self._macro = macro
@@ -35,7 +34,7 @@ class _CommandInsertionDialog(QDialog):
         self._scene_selection_cb = QComboBox(self)
         self._scene_selection_cb.setEditable(False)
         self._scene_selection_cb.addItems(
-            [s.human_readable_name if len(s.human_readable_name) > 0 else str(s.scene_id) for s in self._show.scenes]
+            [s.human_readable_name if len(s.human_readable_name) > 0 else str(s.scene_id) for s in self._show.scenes],
         )
         self._scene_selection_cb.setCurrentIndex(-1)
         self._scene_selection_cb.currentIndexChanged.connect(self._scene_selected)
@@ -44,9 +43,7 @@ class _CommandInsertionDialog(QDialog):
         self._filter_selection.setEnabled(False)
         self._filter_selection.selected_filter_changed.connect(self._filter_selected)
 
-        self._button_box = QDialogButtonBox(
-            (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        )
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.rejected.connect(self.close)
         self._button_box.accepted.connect(self._apply)
         self._button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
@@ -62,7 +59,7 @@ class _CommandInsertionDialog(QDialog):
 
         self.setLayout(layout)
 
-    def _scene_selected(self):
+    def _scene_selected(self) -> None:
         if self._scene_selection_cb.count() == 0:
             return
         scene_index = self._scene_selection_cb.currentIndex()
@@ -79,7 +76,7 @@ class _CommandInsertionDialog(QDialog):
             self.on_filter_selected()
             self._button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
-    def _apply(self):
+    def _apply(self) -> None:
         self._macro.content += "\n" + self.get_command()
         self._update_callable()
         self.close()
@@ -89,13 +86,13 @@ class _CommandInsertionDialog(QDialog):
         This method needs to be implemented in order to get the command that should be inserted.
         :returns: a string without leading new line.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def on_filter_selected(self):
+    def on_filter_selected(self) -> None:
         """
         This method gets called once the user selected the desired filter.
         Use this method to implement custom behavior. self.filter and self.filter_id
         are now guaranteed to be not None. This method may be called multiple times
         (exactly if the user changes the selected filter).
         """
-        raise NotImplementedError()
+        raise NotImplementedError

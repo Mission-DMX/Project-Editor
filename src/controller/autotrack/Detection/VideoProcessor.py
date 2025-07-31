@@ -133,7 +133,7 @@ def get_filtered_detections(outputs, scale: int, confidence_threshold: float):
     return detections
 
 
-def process(outputs, scale):
+def process(outputs: np.ndarray, scale: float) -> list[dict[str, int]]:
     scores = []
     boxes = []
     for i in range(8400):
@@ -141,11 +141,11 @@ def process(outputs, scale):
         boxes.append([outputs[0][i], outputs[1][i], outputs[2][i], outputs[3][i]])
     result_boxes = _apply_nms(boxes, scores)
     print(f"Humans found: {result_boxes}")
-    detections = []
+    detections: list[dict[str, int]] = []
     for i in range(len(result_boxes)):
         index = result_boxes[i]
         box = boxes[index]
-        detection = {
+        detection: dict[str, int] = {
             "class_id": 0,
             "class_name": CLASSES[0],
             "confidence": scores[index],

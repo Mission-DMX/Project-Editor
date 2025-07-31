@@ -1,5 +1,5 @@
 from model import DataType, Scene
-from model.filter import FilterTypeEnumeration
+from model.filter import Filter, FilterTypeEnumeration
 from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -7,13 +7,13 @@ from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 class CueListNode(FilterNode):
     """Filter to represent any filter fader"""
-    nodeName = "Cues"
+    nodeName = "Cues"  # noqa: N815
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_CUES, name=name, terminals={
-            'time': {'io': 'in'},
-            'time_scale': {'io': 'in'}
-        }, allowAddOutput=True)
+            "time": {"io": "in"},
+            "time_scale": {"io": "in"},
+        }, allow_add_output=True)
 
         try:
             mapping_from_file = model.filter_configurations["mapping"]
@@ -37,14 +37,14 @@ class CueListNode(FilterNode):
         self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]
         self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
         self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
-        self.filter.default_values['time_scale'] = '1.0'
+        self.filter.default_values["time_scale"] = "1.0"
         self.channel_hints["time"] = " [ms]"
 
-    def parse_and_add_output_channels(self, mappings: str):
+    def parse_and_add_output_channels(self, mappings: str) -> None:
         output_list = []
-        for channel_dev in mappings.split(';'):
+        for channel_dev in mappings.split(";"):
             if channel_dev:
-                splitted_channel_dev = channel_dev.split(':')
+                splitted_channel_dev = channel_dev.split(":")
                 if len(splitted_channel_dev) > 1:
                     channel_name = splitted_channel_dev[0]
                     channel_type = DataType.from_filter_str(splitted_channel_dev[1])
@@ -56,25 +56,25 @@ class CueListNode(FilterNode):
 
 
 class ShiftFilterNode(FilterNode):
-    def __init__(self, model, name, id: int, data_type: DataType):
-        super().__init__(model=model, filter_type=id, name=name, allowAddOutput=True, terminals={
-            'input': {'io': 'in'},
-            'switch_time': {'io': 'in'},
-            'time': {'io': 'in'}
-        }, )
+    def __init__(self, model: Filter, name: str, id_: int, data_type: DataType) -> None:
+        super().__init__(model=model, filter_type=id_, name=name, allow_add_output=True, terminals={
+            "input": {"io": "in"},
+            "switch_time": {"io": "in"},
+            "time": {"io": "in"},
+        })
 
         self.filter.in_data_types["input"] = data_type
         self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.default_values['time'] = '0'
-        self.filter.default_values['switch_time'] = '1000'
+        self.filter.default_values["time"] = "0"
+        self.filter.default_values["switch_time"] = "1000"
         self.channel_hints["switch_time"] = " [ms]"
         self.channel_hints["time"] = " [ms]"
 
         try:
             if isinstance(model, Scene):
                 # FIXME using the filter type as its ID seams odd
-                found_filter = model.get_filter_by_id(str(id))
+                found_filter = model.get_filter_by_id(str(id_))
                 if found_filter:
                     self.filter.filter_configurations["nr_outputs"] = str(
                         int(found_filter.filter_configurations.get("nr_outputs")))
@@ -89,8 +89,8 @@ class ShiftFilterNode(FilterNode):
         self._data_type = data_type
         self.setup_output_terminals()
 
-    def setup_output_terminals(self):
-        existing_output_keys = [k for k in self.outputs().keys()]
+    def setup_output_terminals(self) -> None:
+        existing_output_keys = list(self.outputs())
         previous_output_count = len(existing_output_keys)
         new_output_count = int(self.filter.filter_configurations["nr_outputs"])
         if previous_output_count > new_output_count:
@@ -104,47 +104,47 @@ class ShiftFilterNode(FilterNode):
                     self.addOutput(channel_name)
                     self.filter.out_data_types[channel_name] = self._data_type
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self.setup_output_terminals()
 
 
 class Shift8BitNode(ShiftFilterNode):
-    nodeName = "filter_shift_8bit"
+    nodeName = "filter_shift_8bit"  # noqa: N815
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT, DataType.DT_8_BIT)
 
 
 class Shift16BitNode(ShiftFilterNode):
-    nodeName = "filter_shift_16bit"
+    nodeName = "filter_shift_16bit"  # noqa: N815
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT, DataType.DT_16_BIT)
 
 
 class ShiftFloatNode(ShiftFilterNode):
-    nodeName = "filter_shift_float"
+    nodeName = "filter_shift_float"  # noqa: N815
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT, DataType.DT_DOUBLE)
 
 
 class ShiftColorNode(ShiftFilterNode):
-    nodeName = "filter_shift_color"
+    nodeName = "filter_shift_color"  # noqa: N815
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR, DataType.DT_COLOR)
 
 
 class AutoTrackerNode(FilterNode):
-    nodeName = "AutoTracker"
+    nodeName = "AutoTracker"  # noqa: N815
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER, name=name,
-                         allowAddOutput=True, terminals={})
+                         allow_add_output=True, terminals={})
         self.setup_output_terminals()
 
-    def setup_output_terminals(self):
+    def setup_output_terminals(self) -> None:
 
         f = self.filter
         if isinstance(f, AutoTrackerFilter):
@@ -152,7 +152,7 @@ class AutoTrackerNode(FilterNode):
             if trackers < len(self.terminals) / 3:
                 self.terminals.clear()
             for i in range(int(len(self.terminals) / 3), trackers, 1):
-                min_brightness_filter_id: str = f.get_min_brightness_filter_id(i)
+                min_brightness_filter_id: str = f.get_min_brightness_filter_id()
                 self.addOutput(min_brightness_filter_id)
                 self.addOutput(f"Tracker{i}_Pan")
                 self.addOutput(f"Tracker{i}_Tilt")
@@ -161,23 +161,23 @@ class AutoTrackerNode(FilterNode):
                 self.filter.out_data_types[f"Tracker{i}_Tilt"] = associated_dt
                 self.filter.out_data_types[min_brightness_filter_id] = DataType.DT_DOUBLE
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self.setup_output_terminals()
 
 
 class EffectsStackNode(FilterNode):
-    nodeName = "EffectsStack"
+    nodeName = "EffectsStack"  # noqa: N815
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK, name=name,
-                         allowAddOutput=True, terminals={})
+                         allow_add_output=True, terminals={})
         self.setup_output_terminals()
 
-    def setup_output_terminals(self):
+    def setup_output_terminals(self) -> None:
         # TODO
         pass
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         super().update_node_after_settings_changed()
         self.setup_output_terminals()
 
@@ -185,11 +185,11 @@ class EffectsStackNode(FilterNode):
 class SequencerNode(FilterNode):
     nodeName = "Sequencer"
 
-    def __init__(self, model, name):
+    def __init__(self, model, name) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER, name=name, terminals={
             'time': {'io': 'in'},
             'time_scale': {'io': 'in'}
-        }, allowAddOutput=True)
+        }, allow_add_output=True)
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
         self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE

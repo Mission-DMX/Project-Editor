@@ -1,4 +1,5 @@
 import re
+from typing import override
 
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFormat, QTextDocument
@@ -8,7 +9,8 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
     """
     This class provides syntax highlighting for input CLI commands.
     """
-    def __init__(self, document: QTextDocument | None = None):
+
+    def __init__(self, document: QTextDocument | None = None) -> None:
         super().__init__(document)
         self._mappings = {}
         self._space_format = QTextCharFormat()
@@ -41,10 +43,11 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
         self._variable_expression = QRegularExpression("(?<=[^\\\\])(\\$\\w+)")
         self._mappings[self._variable_expression] = self._variable_format
 
-    def highlightBlock(self, text, /):
+    @override
+    def highlightBlock(self, text: str, /) -> None:
         """This method gets called for every text block. It sets the formats on it"""
         for pattern, fmt in self._mappings.items():
-            iter = pattern.globalMatch(text)
-            while iter.hasNext():
-                match = iter.next()
+            iterator = pattern.globalMatch(text)
+            while iterator.hasNext():
+                match = iterator.next()
                 self.setFormat(match.capturedStart(), match.capturedLength(), fmt)

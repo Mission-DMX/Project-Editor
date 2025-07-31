@@ -1,13 +1,25 @@
-# pylint: skip-file
-# coding=utf-8
-import logging
 import os.path
+from logging import getLogger
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QPushButton, QRadioButton, QScrollArea, QVBoxLayout, QWidget,
-                               QWizard)
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QCheckBox,
+    QComboBox,
+    QFormLayout,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+    QWizard,
+)
 
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene
@@ -27,13 +39,14 @@ from view.utility_widgets.wizzards._composable_wizard_page import ComposableWiza
 
 _folder_empty_icon = QIcon(resource_path(os.path.join("resources", "icons", "folder.svg")))
 _folder_full_icon = QIcon(resource_path(os.path.join("resources", "icons", "folder-full.svg")))
-logger = logging.getLogger(__file__)
+logger = getLogger(__file__)
 
 
 def _d_assign(d, v, k):
     d[v] = k
 
-#TODO komplett überarbeiten
+
+# TODO komplett überarbeiten
 class TheaterSceneWizard(QWizard):
     def __init__(self, parent: QWidget, show: BoardConfiguration):
         super().__init__(parent)
@@ -192,10 +205,10 @@ class TheaterSceneWizard(QWizard):
 
             # Map position Channels
             for type_ in [("Pan", f.get_segment_in_universe_by_type(
-                FixtureChannelType.PAN)), ("Tilt", f.get_segment_in_universe_by_type(
+                    FixtureChannelType.PAN)), ("Tilt", f.get_segment_in_universe_by_type(
                 FixtureChannelType.TILT)),  # TODO public and not np
                           ("Animation Speed", f.get_segment_in_universe_by_type(
-                FixtureChannelType.SPEED))]:
+                              FixtureChannelType.SPEED))]:
                 mode = type_[0]
                 for _ in type_[1]:
                     item = AnnotatedListWidgetItem(self._fixture_feature_list)
@@ -209,9 +222,9 @@ class TheaterSceneWizard(QWizard):
                 FixtureChannelType.UV) + f.get_segment_in_universe_by_type(
                 FixtureChannelType.WHITE) + f.get_segment_in_universe_by_type(
                 FixtureChannelType.GREEN) + f.get_segment_in_universe_by_type(
-                FixtureChannelType.BLUE) +                                      f.get_segment_in_universe_by_type(
-                                          FixtureChannelType.RED) + f.get_segment_in_universe_by_type(
-                FixtureChannelType.AMBER) +f.get_segment_in_universe_by_type(
+                FixtureChannelType.BLUE) + f.get_segment_in_universe_by_type(
+                FixtureChannelType.RED) + f.get_segment_in_universe_by_type(
+                FixtureChannelType.AMBER) + f.get_segment_in_universe_by_type(
                 FixtureChannelType.PAN) + f.get_segment_in_universe_by_type(
                 FixtureChannelType.TILT) +
                                       f.get_segment_in_universe_by_type(
@@ -404,7 +417,7 @@ class TheaterSceneWizard(QWizard):
         return True
 
     def _link_output_filters(self, bankset_link_map, cue_link_map: dict[str, str], output_map, scene):
-        for c in self._channels: # TODO  channels have no fixtures
+        for c in self._channels:  # TODO  channels have no fixtures
             for fd in c["fixtures"]:
                 fixture = fd[0]
                 if not isinstance(fixture, UsedFixture):

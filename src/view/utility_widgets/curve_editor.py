@@ -1,27 +1,30 @@
-# coding=utf-8
 """This file contains a widget that allows the editing and visualization of parameters of a trigonometric curve."""
 
 from logging import getLogger
 from math import pi
-from typing import TYPE_CHECKING
 
-import numpy
+import numpy as np
 from pyqtgraph import PlotWidget, mkPen
 from PySide6.QtGui import QPalette
-from PySide6.QtWidgets import (QCheckBox, QDoubleSpinBox, QFormLayout, QLabel, QRadioButton, QTabWidget, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QDoubleSpinBox,
+    QFormLayout,
+    QLabel,
+    QRadioButton,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model.curve_configuration import BaseCurve, CurveConfiguration
 
-logger = getLogger(__file__)
-
-if TYPE_CHECKING:
-    pass
+logger = getLogger(__name__)
 
 
 class _WaveRenderer(PlotWidget):
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self._curve_configuration: CurveConfiguration = CurveConfiguration()
         self.setYRange(2, -2)
@@ -30,84 +33,71 @@ class _WaveRenderer(PlotWidget):
         self._data_line.setPen(mkPen(width=3, color="#CC00AA"))
         self.setBackground(QPalette().color(QPalette.ColorGroup.Normal, QPalette.ColorRole.Window))
 
-    def replot(self):
+    def replot(self) -> None:
         steps = 3600
-        x = numpy.linspace(0.0, 360.0, steps, dtype=numpy.float32)
+        x = np.linspace(0.0, 360.0, steps, dtype=np.float32)
         if self._curve_configuration.append_features_using_addition:
-            y = numpy.zeros(steps, dtype=numpy.float32)
-            concat_method = numpy.add
+            y = np.zeros(steps, dtype=np.float32)
+            concat_method = np.add
         else:
-            y = numpy.ones(steps, dtype=numpy.float32)
-            concat_method = numpy.multiply
+            y = np.ones(steps, dtype=np.float32)
+            concat_method = np.multiply
         base_phase = self._curve_configuration.base_phase
         base_amplitude = self._curve_configuration.base_amplitude
         features = self._curve_configuration.selected_features
         if features & BaseCurve.SIN:
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SIN] + numpy.multiply(
-                numpy.sin(numpy.multiply(numpy.add(x, base_phase),
-                                         2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.SIN])),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SIN]
-            ))
-            # TODO implement sin config
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SIN] + np.multiply(np.sin(
+                np.multiply(np.add(x, base_phase),
+                            2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.SIN])),
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SIN] ))  # TODO implement sin config
         if features & BaseCurve.COS:
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.COS] + numpy.multiply(
-                numpy.cos(numpy.multiply(numpy.add(x, base_phase),
-                                         2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.COS])),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.COS]
-            ))
-            # TODO implement cos config
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.COS] + np.multiply(np.cos(
+                np.multiply(np.add(x, base_phase),
+                            2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.COS])),
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.COS] ))  # TODO implement cos config
         if features & BaseCurve.TAN:
             # TODO tan config
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TAN] + numpy.multiply(
-                numpy.tan(numpy.multiply(numpy.add(x, base_phase),
-                                         2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.TAN])),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TAN]
-            ))
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TAN] + np.multiply(np.tan(
+                np.multiply(np.add(x, base_phase),
+                            2 * pi / 360.0 * self._curve_configuration.frequencies[BaseCurve.TAN])),
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TAN] ))
         if features & BaseCurve.ARC_SIN:
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_SIN] + numpy.multiply(
-                numpy.arcsin(numpy.add(x, base_phase)),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_SIN]
-            ))
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_SIN] + np.multiply(
+                np.arcsin(np.add(x, base_phase)),
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_SIN] ))
         if features & BaseCurve.ARC_COS:
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_COS] + numpy.multiply(
-                numpy.arccos(numpy.add(x, base_phase)),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_COS]
-            ))
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_COS] + np.multiply(
+                np.arccos(np.add(x, base_phase)),
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_COS] ))
         if features & BaseCurve.ARC_TAN:
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_TAN] + numpy.multiply(
-                numpy.arctan(numpy.add(x, base_phase)),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_TAN]
-            ))
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.ARC_TAN] + np.multiply(
+                np.arctan(np.add(x, base_phase)),
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.ARC_TAN] ))
         if features & BaseCurve.SAWTOOTH:
             # TODO sawtooth config, also include option for repeats/speed until 360 (180 = 2)
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SAWTOOTH] + numpy.multiply(
-                numpy.mod(numpy.add(y, base_phase), 180.0),
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SAWTOOTH]
-            ))
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.SAWTOOTH] + np.multiply(
+                np.mod(np.add(y, base_phase), 180.0),
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.SAWTOOTH] ))
         if features & BaseCurve.RECT:
             pulse_width = 180
-            ya = numpy.zeros(steps, dtype=numpy.float32)
+            ya = np.zeros(steps, dtype=np.float32)
             for i in range(int(base_phase * steps / pulse_width), steps, pulse_width):
                 ya[i:i + pulse_width] = 1.0
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.RECT] + numpy.multiply(
-                ya, base_amplitude * self._curve_configuration.amplitudes[BaseCurve.RECT]
-            ))
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.RECT] + np.multiply(ya,
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.RECT] ))
         if features & BaseCurve.TRIANGLE:
             # TODO triangle wave config
             pulse_width = 180
-            ya = numpy.zeros(steps, dtype=numpy.float32)
-            signal = numpy.mod(numpy.add(y, base_phase), pulse_width)
+            ya = np.zeros(steps, dtype=np.float32)
+            signal = np.mod(np.add(y, base_phase), pulse_width)
             for i in range(0, steps, pulse_width * 2):
                 ya[i:i + pulse_width] = signal[i:i + pulse_width]
-                ya[i + pulse_width + 1:i + pulse_width * 2] = numpy.subtract(1,
-                                                                             signal[
+                ya[i + pulse_width + 1:i + pulse_width * 2] = np.subtract(1, signal[
                                                                              i + pulse_width + 1:i + pulse_width * 2])
-            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TRIANGLE] + numpy.multiply(
-                ya,
-                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TRIANGLE]
-            ))
+            y = concat_method(y, self._curve_configuration.offsets[BaseCurve.TRIANGLE] + np.multiply(ya,
+                base_amplitude * self._curve_configuration.amplitudes[BaseCurve.TRIANGLE] ))
         try:
-            self.setYRange(numpy.max(y) * 1.5, numpy.min(y) * 1.5)
+            self.setYRange(np.max(y) * 1.5, np.min(y) * 1.5)
         except Exception as e:
             logger.exception(e)
         self._data_line.setData(x, y)
@@ -117,14 +107,14 @@ class _WaveRenderer(PlotWidget):
         return self._curve_configuration
 
     @curve_config.setter
-    def curve_config(self, new_config: CurveConfiguration):
+    def curve_config(self, new_config: CurveConfiguration) -> None:
         self._curve_configuration = new_config
         self.replot()
 
 
 class CurveEditorWidget(QWidget):
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self._config: CurveConfiguration = CurveConfiguration()
         self._loading_values: bool = False
@@ -175,7 +165,7 @@ class CurveEditorWidget(QWidget):
 
         self.setLayout(layout)
 
-    def _load_values_from_config(self):
+    def _load_values_from_config(self) -> None:
         self._loading_values = True
         self._base_amplitude_edit.setValue(self._config.base_amplitude)
         self._base_phase_edit.setValue(self._config.base_phase)
@@ -189,7 +179,7 @@ class CurveEditorWidget(QWidget):
             self._offset_dials[curve_name].setValue(self._config.offsets[curve])
         self._loading_values = False
 
-    def set_wave_config(self, wc: CurveConfiguration):
+    def set_wave_config(self, wc: CurveConfiguration) -> None:
         self._config = wc
         self._load_values_from_config()
         self._renderer.curve_config = wc
@@ -197,7 +187,7 @@ class CurveEditorWidget(QWidget):
     def get_wave_config(self) -> CurveConfiguration:
         return self._config
 
-    def _update_values_from_gui(self):
+    def _update_values_from_gui(self) -> None:
         if self._loading_values:
             return
         self._config.base_phase = self._base_phase_edit.value()

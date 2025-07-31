@@ -1,8 +1,8 @@
-from typing import Callable
+from collections.abc import Callable
 
-from PySide6.QtWidgets import QComboBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QWidget
 
-from model import BoardConfiguration, Scene
+from model import BoardConfiguration
 from model.filter import FilterTypeEnumeration
 from model.filter_data.cues.cue import Cue
 from model.macro import Macro
@@ -11,11 +11,11 @@ from view.action_setup_view._command_insertion_dialog import escape_argument as 
 
 
 class _InsertCueSwitchDialog(_CommandInsertionDialog):
-    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: Callable):
+    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: Callable) -> None:
         super().__init__(
             parent, macro,
             [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES],
-            show, update_callable
+            show, update_callable,
         )
 
         self._cue_selection_cb = QComboBox(self)
@@ -28,7 +28,7 @@ class _InsertCueSwitchDialog(_CommandInsertionDialog):
         return (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} run_cue "
                 f"{self._cue_selection_cb.currentIndex()}  # switch to cue '{esc(self._cue_selection_cb.currentText())}' ")
 
-    def on_filter_selected(self):
+    def on_filter_selected(self) -> None:
         self._cue_selection_cb.setEnabled(True)
         self._cue_selection_cb.clear()
         cue_model: list[Cue] = [

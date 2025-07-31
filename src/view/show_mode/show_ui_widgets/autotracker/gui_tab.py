@@ -1,7 +1,6 @@
-# coding=utf-8
-from abc import abstractmethod
-
 from PySide6.QtWidgets import QWidget
+
+from controller.autotrack.Helpers.InstanceManager import InstanceManager
 
 
 class GuiTab(QWidget):
@@ -23,7 +22,7 @@ class GuiTab(QWidget):
         - `video_update()`: Abstract method for updating video content within the tab.
     """
 
-    def __init__(self, name, instance):
+    def __init__(self, name: str, instance: InstanceManager) -> None:
         """
         Initialize a GuiTab object.
 
@@ -32,12 +31,12 @@ class GuiTab(QWidget):
             instance: An instance associated with the tab.
         """
         super().__init__()
-        self._id = -1
+        self._id: int = -1
         self.name = name
         self.instance = instance
         self.active = False
 
-    def tab_changed(self, index):
+    def tab_changed(self, index: int) -> None:
         """
         Callback when the active tab is changed.
 
@@ -49,20 +48,20 @@ class GuiTab(QWidget):
         else:
             self.tab_deactivated()
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         """
         Called when the tab is activated.
         """
         self.active = True
 
-    def tab_deactivated(self):
+    def tab_deactivated(self) -> None:
         """
         Called when the tab is deactivated.
         """
         self.active = False
 
     @property
-    def id(self):
+    def id(self) -> int:
         """
         Get or set the tab's internal identifier.
 
@@ -72,11 +71,10 @@ class GuiTab(QWidget):
         return self._id
 
     @id.setter
-    def id(self, value):
+    def id(self, value: int) -> None:
         self._id = value
 
-    @abstractmethod
-    def video_update(self):
+    def video_update(self) -> None:
         """
         Abstract method for updating video content within the tab.
         """

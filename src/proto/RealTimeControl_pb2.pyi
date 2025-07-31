@@ -1,33 +1,14 @@
-import UniverseControl_pb2 as _UniverseControl_pb2
-import DirectMode_pb2 as _DirectMode_pb2
-import FilterMode_pb2 as _FilterMode_pb2
-import Console_pb2 as _Console_pb2
+import proto.UniverseControl_pb2 as _UniverseControl_pb2
+import proto.DirectMode_pb2 as _DirectMode_pb2
+import proto.FilterMode_pb2 as _FilterMode_pb2
+import proto.Console_pb2 as _Console_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
-from UniverseControl_pb2 import Universe
-from UniverseControl_pb2 import universes_list
-from UniverseControl_pb2 import request_universe_list
-from UniverseControl_pb2 import delete_universe
-from DirectMode_pb2 import dmx_output
-from DirectMode_pb2 import request_dmx_data
-from FilterMode_pb2 import enter_scene
-from FilterMode_pb2 import load_show_file
-from FilterMode_pb2 import update_parameter
-from FilterMode_pb2 import ShowFileApplyState
-from Console_pb2 import button_state_change
-from Console_pb2 import fader_position
-from Console_pb2 import rotary_encoder_change
-from Console_pb2 import remove_fader_bank_set
-from Console_pb2 import desk_update
-from Console_pb2 import fader_column
-from Console_pb2 import add_fader_bank_set
-from Console_pb2 import ButtonState
-from Console_pb2 import ButtonCode
-from Console_pb2 import lcd_color
+
 BS_ACTIVE: _Console_pb2.ButtonState
 BS_BUTTON_PRESSED: _Console_pb2.ButtonState
 BS_BUTTON_RELEASED: _Console_pb2.ButtonState

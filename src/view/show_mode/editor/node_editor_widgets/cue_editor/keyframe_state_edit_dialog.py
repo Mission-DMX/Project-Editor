@@ -1,14 +1,24 @@
 # coding=utf-8
+from collections.abc import Callable
+
 from PySide6.QtGui import QColor, QIcon
-from PySide6.QtWidgets import (QColorDialog, QComboBox, QDialog, QDoubleSpinBox, QFormLayout, QPushButton, QSpinBox,
-                               QWidget)
+from PySide6.QtWidgets import (
+    QColorDialog,
+    QComboBox,
+    QDialog,
+    QDoubleSpinBox,
+    QFormLayout,
+    QPushButton,
+    QSpinBox,
+    QWidget,
+)
 
 from model import ColorHSI
 from model.filter_data.cues.cue import KeyFrame, State, StateColor, StateDouble, StateEightBit, StateSixteenBit
 
 
 class KeyFrameStateEditDialog(QDialog):
-    def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function):
+    def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function: Callable) -> None:
         super().__init__(parent=parent)
         self._layout = QFormLayout()
 
@@ -59,8 +69,8 @@ class KeyFrameStateEditDialog(QDialog):
         self._state = s
         self._repaint_function = repaint_function
 
-    def _ok_pressed(self):
-        if isinstance(self._input, QSpinBox) or isinstance(self._input, QDoubleSpinBox):
+    def _ok_pressed(self) -> None:
+        if isinstance(self._input, (QSpinBox, QDoubleSpinBox)):
             self._state._value = self._input.value()
         else:
             c = self._input.currentColor().toHsl()
@@ -72,10 +82,10 @@ class KeyFrameStateEditDialog(QDialog):
         self._repaint_function()
         self.close()
 
-    def _delete_pressed(self):
+    def _delete_pressed(self) -> None:
         self._keyframe.delete_from_parent_cue()
         self.close()
         self._repaint_function()
 
-    def choose_color_clicked(self):
+    def choose_color_clicked(self) -> None:
         self._input.open()

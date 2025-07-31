@@ -1,4 +1,3 @@
-# coding=utf-8
 """Node editor widgets"""
 
 from .column_select import ColumnSelect

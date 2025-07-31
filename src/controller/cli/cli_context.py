@@ -1,7 +1,10 @@
 # coding=utf-8
 """Context of the Client"""
+from __future__ import annotations
+
 import argparse
 import traceback
+from argparse import Namespace
 from typing import TYPE_CHECKING
 
 from controller.cli.bankset_command import BankSetCommand
@@ -73,7 +76,7 @@ def _split_args(line: str) -> list[str]:
 class CLIContext:
     """Context of the Client"""
 
-    def __init__(self, show: "BoardConfiguration", networkmgr: "NetworkManager", exit_available: bool = False):
+    def __init__(self, show: BoardConfiguration, networkmgr: NetworkManager, exit_available: bool = False) -> None:
         """
         Initialize a new CLI context.
         :param show: The current active show configuration
@@ -91,17 +94,18 @@ class CLIContext:
             PrintCommand(self),
             SetCommand(self),
             IfCommand(self),
-            HelpCommand(self)
+            HelpCommand(self),
         ]
-        self.selected_bank: "BankSet" | None = None
-        self.selected_column: "DeskColumn" | None = None
-        self.selected_scene: "Scene" | None = None
+        self.selected_bank: BankSet | None = None
+        self.selected_column: DeskColumn | None = None
+        self.selected_scene: Scene | None = None
         self.stack = set()
         self.variables: dict[str, str] = {}
         self.show = show
-        self.networkmgr: "NetworkManager" = networkmgr
+        self.network_manager: NetworkManager = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
-        subparsers = self.parser.add_subparsers(help='subcommands help', dest="subparser_name")
+        subparsers: argparse._SubParsersAction = self.parser.add_subparsers(
+            help="subcommands help", dest="subparser_name")
         for c in self._commands:
             c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
         if exit_available:
@@ -139,7 +143,7 @@ class CLIContext:
             args = self._replace_variables(args)
             if len(args) == 0:
                 return True
-            global_args = self.parser.parse_args(args=args)
+            global_args: Namespace = self.parser.parse_args(args=args)
             if self._exit_available and global_args.subparser_name == "exit":
                 self.exit_called = True
             elif global_args.subparser_name == "?":
@@ -156,13 +160,13 @@ class CLIContext:
             self.print("Execution of command failed: " + str(e))
         return False
 
-    def print(self, text: str):
+    def print(self, text: str) -> None:
         """This method can be used by commands to print text to which ever output medium there is.
 
         Arguments:
         text -- The line to be printed
         """
-        self.return_text += text + '\n'
+        self.return_text += text + "\n"
 
     def fetch_print_buffer(self) -> str:
         """This method returns the stored output buffer and clears it.

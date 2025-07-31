@@ -1,7 +1,15 @@
 from logging import getLogger
 
-from PySide6.QtWidgets import (QColorDialog, QDoubleSpinBox, QHBoxLayout, QLabel, QPushButton, QSpinBox, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (
+    QColorDialog,
+    QDoubleSpinBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import BoardConfiguration, ColorHSI
 from model.filter import FilterTypeEnumeration
@@ -12,11 +20,11 @@ from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_consta
     PanTiltConstantContentWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
-    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: callable):
+    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: callable) -> None:
         super().__init__(
             parent, macro,
             [
@@ -24,9 +32,9 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-                FilterTypeEnumeration.FILTER_CONSTANT_COLOR
-             ],
-            show, update_callable
+                FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
+            ],
+            show, update_callable,
         )
         self._int_tb = QSpinBox()
         self._int_tb.setMinimum(0)
@@ -81,16 +89,18 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         elif self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
             return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {self._float_tb.value()}"
         elif self._filter.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
-            s = (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)}_16bit_pan value {int(self._pan_tilt_widget.pan * 65535)}\n"
-                 f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)}_16bit_tilt value {int(self._pan_tilt_widget.tilt * 65535)}")
-            return s
+            return (
+                f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)}_16bit_pan "
+                f"value {int(self._pan_tilt_widget.pan * 65535)}\n"
+                f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)}_16bit_tilt "
+                f"value {int(self._pan_tilt_widget.tilt * 65535)}"
+            )
         else:
             qtc = self._color.to_qt_color()
             hexcode = f"rgb: {int(qtc.redF() * 255):02X}{int(qtc.greenF() * 255):02X}{int(qtc.blueF() * 255):02X}"
-            s = f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {esc(self._color.format_for_filter())} # {hexcode}"
-            return s
+            return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {esc(self._color.format_for_filter())} # {hexcode}"
 
-    def on_filter_selected(self):
+    def on_filter_selected(self) -> None:
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT:
             self._int_tb.setMaximum(255)
             self._int_tb.setEnabled(True)
@@ -109,6 +119,6 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
             self._color_panel.setEnabled(True)
             self.custom_layout.setCurrentIndex(3)
 
-    def _select_color(self):
+    def _select_color(self) -> None:
         self._color = ColorHSI.from_qt_color(self._color_picker.selectedColor())
         self._color_label.set_color(self._color)

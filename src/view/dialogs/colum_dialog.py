@@ -1,4 +1,3 @@
-# coding=utf-8
 """modify a colum of XTouch"""
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
@@ -50,19 +49,19 @@ class ColumnDialog(QtWidgets.QDialog):
         self._broadcaster.view_to_color.connect(self._to_color)
         self._broadcaster.view_to_temperature.connect(self._to_temperature)
 
-    def _select_color(self):
+    def _select_color(self) -> None:
         color = self.color_d.currentColor()
         self._column.color = ColorHSI(color.hue(), color.hslSaturationF(), color.toHsl().lightnessF())
         BankSet.push_messages_now()
 
-    def _to_color(self):
+    def _to_color(self) -> None:
         self.temperature_d.close()
         if not self.color_d.isVisible():
             self.color_d.show()
         else:
             self.color_d.close()
 
-    def _to_temperature(self):
+    def _to_temperature(self) -> None:
         self.color_d.close()
         if not self.temperature_d.isVisible():
             self.temperature_d.show()
