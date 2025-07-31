@@ -267,7 +267,11 @@ class ColorDeskColumn(DeskColumn):
 
 
 class FaderBank:
-    """Store a bank page of columns the user can switch through."""
+    """Store a bank page of columns the user can switch through.
+
+    Warning: As of the time of this writing, the buttons for scrolling through a bank are not implemented in fish,
+    hence the user can only access up to 8 columns.
+    """
 
     def __init__(self) -> None:
         self.columns: list[DeskColumn] = []
