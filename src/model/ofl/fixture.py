@@ -129,22 +129,14 @@ def load_fixture(file: str) -> Fixture:
     physical_data = ob.get("physical") or {}
     return Fixture(
         name=ob["name"],
-        comment=try_load(ob, "comment"),
-        shortName=try_load(ob, "shortName"),
+        comment=ob.get("comment", ""),
+        shortName=ob.get("shortName", ""),
         categories=ob.get("categories", set()),
         modes=ob.get("modes", []),
         fileName=file.split("/fixtures/")[1],
         power=physical_data.get("power") or 0,
-        dimensions=physical_data.get("dimensions") or (10, 10, 10)
+        dimensions=physical_data.get("dimensions") or (10, 10, 10),
     )
-
-
-def try_load(ob: dict[str, str], name: str) -> str:
-    """try to load not required JSON parts"""
-    try:
-        return ob[name]
-    except KeyError:
-        return ""
 
 
 class UsedFixture(QtCore.QObject):
