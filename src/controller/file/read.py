@@ -3,6 +3,7 @@
 import os
 import xml.etree.ElementTree as ET
 from logging import getLogger
+from uuid import UUID
 
 import xmlschema
 from defusedxml.ElementTree import parse
@@ -600,6 +601,8 @@ def _parse_patching(board_configuration: BoardConfiguration, location_element: E
             int(child.attrib["mode"]),
             universe_id,
             int(child.attrib["start"]),
+            UUID(child.attrib.get("id")) if child.attrib.get("id") else None,
+            child.attrib.get("color"),
         )
 
     # TODO load fixture name from file

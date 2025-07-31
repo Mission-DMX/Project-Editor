@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 
 import numpy as np
 from PySide6 import QtCore
+from PySide6.QtGui import QColor
 
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
@@ -149,8 +150,9 @@ class UsedFixture(QtCore.QObject):
         parent_universe: int,
         start_index: int,
         uuid: UUID | None = None,
-        color: str | None = None,
+        color_on_stage: str | None = None,
     ) -> None:
+        """Fixture in use with a specific mode"""
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[Fixture] = fixture
@@ -166,8 +168,8 @@ class UsedFixture(QtCore.QObject):
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
-        self._color_on_stage: str = (
-            color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+        self._color_on_stage: QColor = QColor(
+            color_on_stage if color_on_stage else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
         )
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
@@ -239,13 +241,13 @@ class UsedFixture(QtCore.QObject):
         return tuple(self._fixture_channels)
 
     @property
-    def color_on_stage(self) -> str:
+    def color_on_stage(self) -> QColor:
         """color of the fixture on stage"""
         return self._color_on_stage
 
     @color_on_stage.setter
     def color_on_stage(self, color: str) -> None:
-        self._color_on_stage = color
+        self._color_on_stage = QColor(color)
         self.static_data_changed.emit()
 
     @property
@@ -301,7 +303,13 @@ class UsedFixture(QtCore.QObject):
 
 
 def make_used_fixture(
-    board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int, universe_id: int, start_index: int
+    board_configuration: BoardConfiguration,
+    fixture: Fixture,
+    mode_index: int,
+    universe_id: int,
+    start_index: int,
+    uuid: UUID | None = None,
+    color: str | None = None,
 ) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
-    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index, uuid, color)
