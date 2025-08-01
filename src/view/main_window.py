@@ -1,7 +1,7 @@
 """main Window for the Editor"""
 import os.path
 import platform
-from typing import override
+from typing import override, TYPE_CHECKING
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
@@ -27,6 +27,9 @@ from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
+
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWizard
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -121,7 +124,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_console_mode.emit()
         self._about_window = None
         self._settings_dialog = None
-        self._theatre_scene_setup_wizard = None
+        self._utility_wizard: QWizard | None = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
 
@@ -344,9 +347,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self._settings_dialog.show()
 
     def _open_patch_plan_export_dialog(self) -> None:
-        self._theatre_scene_setup_wizard = PatchPlanExportWizard(self, self._board_configuration)
-        self._theatre_scene_setup_wizard.show()
+        self._utility_wizard = PatchPlanExportWizard(self, self._board_configuration)
+        self._utility_wizard.finished.connect(self._cleanup_wizard)
+        self._utility_wizard.show()
 
     def _open_scene_setup_wizard(self) -> None:
-        self._theatre_scene_setup_wizard = TheaterSceneWizard(self, self.show_configuration)
-        self._theatre_scene_setup_wizard.show()
+        self._utility_wizard = TheaterSceneWizard(self, self.show_configuration)
+        self._utility_wizard.finished.connect(self._cleanup_wizard)
+        self._utility_wizard.show()
+
+    def _cleanup_wizard(self):
+        if self._utility_wizard is not None:
+            self._utility_wizard.deleteLater()
+            self._utility_wizard = None

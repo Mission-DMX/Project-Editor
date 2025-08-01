@@ -91,8 +91,8 @@ class Fixture(TypedDict):
     #    templateChannels
     modes: list[Mode]
     fileName: str
-    power: float
-    dimensions: tuple[int, int, int]
+    physical_power: float
+    physical_dimensions: tuple[int, int, int]
 
 
 class ColorSupport(IntFlag):
@@ -134,8 +134,8 @@ def load_fixture(file: str) -> Fixture:
         categories=ob.get("categories", set()),
         modes=ob.get("modes", []),
         fileName=file.split("/fixtures/")[1],
-        power=physical_data.get("power", 0),
-        dimensions=physical_data.get("dimensions", (10, 10, 10)),
+        physical_power=physical_data.get("power", 0),
+        physical_dimensions = physical_data.get("dimensions", (10, 10, 10)),
     )
 
 
@@ -184,7 +184,12 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def power(self) -> float:
-        return self._fixture.get("power")
+        """
+        Get the fixture maximum continious power draw (not accounting for capacitor charging as well as lamp warm up) in W.
+
+        :returns: [float] The power draw in Watt.
+        """
+        return self._fixture.get("physical_power")
 
     @property
     def name(self) -> str:
@@ -307,6 +312,7 @@ class UsedFixture(QtCore.QObject):
         return self._fixture_channels[index]
 
     def __str__(self) -> str:
+        """Get a human-readable description of the fixture in the show file."""
         return f"Fixture {self.name_on_stage or self.name} at {self.parent_universe}/{self.start_index}"
 
 

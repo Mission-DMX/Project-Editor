@@ -1,3 +1,7 @@
+"""
+This file provides a wizard to automatically export the configured patch plan as a spreadsheet.
+"""
+
 import csv
 import os.path
 from collections import Counter
@@ -27,7 +31,13 @@ logger = getLogger(__name__)
 
 
 class PatchPlanExportWizard(QWizard):
+    """
+    This wizard guides the user to export the patching configuration as a CSV file, providing a power distribution
+    guide in the process.
+    """
+
     def __init__(self, parent: QWidget, show_data: BoardConfiguration) -> None:
+        """Instantiate a new wizard object"""
         super().__init__(parent)
         self.setModal(True)
         self.setMinimumSize(600, 300)
@@ -81,13 +91,19 @@ class PatchPlanExportWizard(QWizard):
         self._show = show_data
 
     def _select_export_location(self) -> None:
+        """This button callback prompts the user to select an CSV file export destination."""
         self._file_selection_dialog.show()
 
     def _export_location_selected(self, file_name: str) -> None:
+        """This callback applies the path of the user-selected location into the text box."""
         self._export_location_tb.setText(file_name)
         self._first_page.completeChanged.emit()
 
-    def _load_fixture_list(self, page: ComposableWizardPage) -> None:
+    def _load_fixture_list(self, _: ComposableWizardPage) -> None:
+        """
+        This method loads all available fixtures into the list widget,
+        prompting the user to select the one desired for export.
+        """
         for fixture in self._show.fixtures:
             item = AnnotatedListWidgetItem(self._fixture_list)
             item.setText(str(fixture))
@@ -95,14 +111,14 @@ class PatchPlanExportWizard(QWizard):
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(Qt.CheckState.Checked)
 
-    def _commit_changes(self, page: ComposableWizardPage) -> bool:
+    def _commit_changes(self, _: ComposableWizardPage) -> bool:
+        """After the user finished the wizard, the export will be generated using this method."""
         pn = get_process_notifier("Export Fixtures to CSV list", 3)
         pn.current_step_description = "Loading Fixtures"
         pn.current_step_number = 0
         fixtures: list[UsedFixture] = []
         phase_association: dict[UsedFixture, int] = {}
-        phases = Counter()
-        number_of_phases = self._number_phases_sb.value()
+        phases: Counter[int] = Counter()
 
         for i in range(self._fixture_list.count()):
             item = self._fixture_list.item(i)
@@ -115,32 +131,23 @@ class PatchPlanExportWizard(QWizard):
             if item.checkState() == Qt.CheckState.Checked:
                 fixtures.append(item.annotated_data)
 
-        fixtures.sort(key=lambda f: f.power, reverse=True)
         pn.current_step_description = "Schedule Phases"
         pn.current_step_number += 1
-
-        for fixture in fixtures:
-            selected_phase = 0
-            for i in range(number_of_phases):
-                if phases[i] < phases[selected_phase]:
-                    selected_phase = i
-            phase_association[fixture] = selected_phase
-            phases[selected_phase] += fixture.power
-            if fixture.power == 0:
-                logger.warning("Fixture %s reported power requirement of %sW. This seams odd.",
-                               str(fixture), str(fixture.power))
+        self._schedule_phases(fixtures, phase_association, phases)
 
         pn.current_step_description = "Write File"
         pn.current_step_number += 1
+        self._write_csv_file(fixtures, phase_association, phases)
 
+        pn.current_step_number += 1
+        pn.close()
+
+        return True
+
+    def _write_csv_file(self, fixtures: list[UsedFixture], phase_association: dict[UsedFixture, int],
+                        phases: Counter[int]) -> None:
+        """Given a fixture list with its phase schedule, this method writes the CSV file."""
         fixtures.sort(key=lambda f: f.universe_id * 512 + f.start_index)
-        for phase_index, phase_load in phases.items():
-            if phase_load > 2400:
-                logger.warning(
-                    "Phase L%s exceeds 2.4kW. It totals to %sW. Please check that the phase is not overloaded. "
-                    "Keep in mind larger initial currents!", str(phase_index + 1), str(phase_load)
-                )
-
         with open(self._export_location_tb.text(), "w", newline="") as csv_file:
             logger.info("Exporting Fixtures as CSV to %s.", csv_file.name)
             writer = csv.writer(csv_file, delimiter=";")
@@ -158,7 +165,30 @@ class PatchPlanExportWizard(QWizard):
                     str(phases[fixture_phase]),
                 ])
 
-        pn.current_step_number += 1
-        pn.close()
+    def _schedule_phases(self, fixtures: list[UsedFixture], phase_association: dict[UsedFixture, int],
+                         phases: Counter[int]) -> None:
+        """
+        This method distributes the fixtures on the available power phases.
 
-        return True
+        :param fixtures: The fixture list to use
+        :param phase_association: The mapping of fixtures to their phases. This dictionary will be filled in.
+        :param phases: The load on each power phase in Watt.
+        """
+        number_of_phases = self._number_phases_sb.value()
+        fixtures.sort(key=lambda f: f.physical_power, reverse=True)
+        for fixture in fixtures:
+            selected_phase = 0
+            for i in range(number_of_phases):
+                if phases[i] < phases[selected_phase]:
+                    selected_phase = i
+            phase_association[fixture] = selected_phase
+            phases[selected_phase] += fixture.power
+            if fixture.power == 0:
+                logger.warning("Fixture %s reported power requirement of %sW. This seams odd.",
+                               str(fixture), str(fixture.power))
+        for phase_index, phase_load in phases.items():
+            if phase_load > 2400:
+                logger.warning(
+                    "Phase L%s exceeds 2.4kW. It totals to %sW. Please check that the phase is not overloaded. "
+                    "Keep in mind larger initial currents!", str(phase_index + 1), str(phase_load)
+                )
