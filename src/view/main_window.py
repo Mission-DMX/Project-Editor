@@ -1,11 +1,11 @@
 """main Window for the Editor"""
 import os.path
 import platform
-from typing import override, TYPE_CHECKING
+from typing import override
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
-from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
+from PySide6.QtWidgets import QApplication, QProgressBar, QWidget, QWizard
 
 import proto.RealTimeControl_pb2
 import style
@@ -27,9 +27,6 @@ from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
-
-if TYPE_CHECKING:
-    from PySide6.QtWidgets import QWizard
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -356,7 +353,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._utility_wizard.finished.connect(self._cleanup_wizard)
         self._utility_wizard.show()
 
-    def _cleanup_wizard(self):
+    def _cleanup_wizard(self) -> None:
         if self._utility_wizard is not None:
             self._utility_wizard.deleteLater()
             self._utility_wizard = None

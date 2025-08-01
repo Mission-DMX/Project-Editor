@@ -185,7 +185,8 @@ class UsedFixture(QtCore.QObject):
     @property
     def power(self) -> float:
         """
-        Get the fixture maximum continious power draw (not accounting for capacitor charging as well as lamp warm up) in W.
+        Get the fixture maximum continuous power draw (not accounting for capacitor charging
+        as well as lamp warm up) in W.
 
         :returns: [float] The power draw in Watt.
         """
