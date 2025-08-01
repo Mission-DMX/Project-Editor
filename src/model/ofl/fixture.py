@@ -134,8 +134,8 @@ def load_fixture(file: str) -> Fixture:
         categories=ob.get("categories", set()),
         modes=ob.get("modes", []),
         fileName=file.split("/fixtures/")[1],
-        power=physical_data.get("power") or 0,
-        dimensions=physical_data.get("dimensions") or (10, 10, 10),
+        power=physical_data.get("power", 0),
+        dimensions=physical_data.get("dimensions", (10, 10, 10)),
     )
 
 
