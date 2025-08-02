@@ -1,13 +1,18 @@
 """Classes for remote connection"""
 
+from __future__ import annotations
+
 from asyncio import IncompleteReadError
 from logging import getLogger
 from socket import AF_INET6, SOCK_STREAM, socket
 from threading import Thread
+from typing import TYPE_CHECKING
 
 from controller.cli.cli_context import CLIContext
-from controller.network import NetworkManager
-from model import BoardConfiguration
+
+if TYPE_CHECKING:
+    from controller.network import NetworkManager
+    from model import BoardConfiguration
 
 logger = getLogger(__name__)
 
@@ -100,7 +105,7 @@ class Connection:
     """This class handles a remote CLI connection."""
 
     def __init__(
-        self, client: socket, address: str, connection_map: dict, show: BoardConfiguration, networkmgr: "NetworkManager"
+        self, client: socket, address: str, connection_map: dict, show: BoardConfiguration, networkmgr: NetworkManager
     ) -> None:
         """This constructor takes over the connection.
 

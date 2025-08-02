@@ -3,27 +3,20 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
+from controller.network import NetworkManager
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog, QWidget
 
-    from controller.network import NetworkManager
-    from model import Broadcaster, Filter
+    from model import Filter
     from model.scene import Scene
-
-_network_manager_instance: NetworkManager = None
-
-
-def setup_network_manager(nm: NetworkManager, b: Broadcaster) -> None:
-    global _network_manager_instance
-    _network_manager_instance = nm
-    b.request_main_brightness_fader_update.connect(nm.set_main_brightness_fader_position)
 
 
 class UIWidget(ABC):
     """This class represents a link between an interactable widget on a page and the corresponding filter."""
 
     def __init__(self, parent_page: UIPage, configuration: dict[str, str] | None = None) -> None:
-        """ Set up the basic components of a widget.
+        """Set up the basic components of a widget.
 
         Arguments:
             fid -- The id of the corresponding filter.
@@ -36,6 +29,7 @@ class UIWidget(ABC):
         else:
             self._configuration = {}
         self._parent = parent_page
+        self._network_manager = NetworkManager()
 
     @abstractmethod
     def generate_update_content(self) -> list[tuple[str, str]]:
@@ -168,7 +162,7 @@ class UIWidget(ABC):
                 k = split_key[1]
             else:
                 target_fid = self.filter_ids[0]
-            _network_manager_instance.send_gui_update_to_fish(self.parent.scene.scene_id, target_fid, k, v)
+            self._network_manager.send_gui_update_to_fish(self.parent.scene.scene_id, target_fid, k, v)
 
     def close(self):
         """Implement this method to react on the widget being removed from the widget holder."""
@@ -241,6 +235,7 @@ class ShowUI:
 
     The _page_storage variable contains the pages per scene.
     """
+
     _fish_connector: NetworkManager = None
 
     def __init__(self) -> None:

@@ -1,6 +1,6 @@
 [project]
 name = "Project-Editor"
-version = "1.1.0"
+version = "1.1.1"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
     { name = "CorsCodini", email = "cors.codini@web.de" },
@@ -78,7 +78,6 @@ ignore = [
     "SLF", #TODO private acesses
     "C901", "PLR", #TODO remve complexity
     "PLR2004", #TODO magic numbers
-    "PLW0603", "PLW0602", #TODO remove global
     "D", #TODO Dockstrings
     "EM", #TODO discuss: code is less readable
     "FBT", #TODO discuss: beter readable code
@@ -88,8 +87,8 @@ ignore = [
     "ERA001", #commented-out code is okay at the moment
     "PTH", #pathlib maybe slower
     "COM812", #for ruff format
-    "UP015", #disable for adding "r" to open
-]
+    "UP015", ] #disable for adding "r" to open
+
 
 [tool.ruff.format]
 docstring-code-format = true

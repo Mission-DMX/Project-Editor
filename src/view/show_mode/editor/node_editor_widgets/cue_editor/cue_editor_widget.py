@@ -1,4 +1,6 @@
 # coding=utf-8
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -390,7 +392,7 @@ class CueEditor(PreviewEditWidget):
 
     def parent_opened(self) -> None:
         self._input_dialog = YesNoDialog(
-            self.get_widget(), "Would you like to switch to live preview?", self._link_bankset
+            self.get_widget(), "Preview", "Would you like to switch to live preview?", self._link_bankset
         )
 
         self._ui_widget_update_required = False
