@@ -44,7 +44,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
     def _generate_universe(self) -> None:
         """add a new Universe to universe Selector"""
 
-        dialog = UniverseDialog(self._board_configuration.next_universe_id())
+        dialog = UniverseDialog(self._board_configuration.next_universe_id(), self)
         if dialog.exec():
             Universe(dialog.output)
 
@@ -66,7 +66,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
 
     def _rename_universe(self, index: int) -> None:
         universe_id = list(self._patch_planes.keys())[index]
-        dialog = UniverseDialog(self._board_configuration.universe(universe_id).universe_proto)
+        dialog = UniverseDialog(self._board_configuration.universe(universe_id).universe_proto, self)
         if dialog.exec():
             self._board_configuration.universe(universe_id).universe_proto = dialog.output
             self._broadcaster.send_universe.emit(self._board_configuration.universe(index))
