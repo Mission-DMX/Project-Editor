@@ -104,11 +104,11 @@ class OflFixture(BaseModel):
     modes: list[FixtureMode]
     """DMX modes defining channel orders for different configurations."""
 
-    fixtureKey: str
-    """Unique key for the fixture (usually a slug)."""
+    # fixtureKey: str
+    # """Unique key for the fixture (usually a slug)."""
 
-    manufacturerKey: str
-    """Slug identifying the manufacturer."""
+    # manufacturerKey: str
+    # """Slug identifying the manufacturer."""
 
     # oflURL: HttpUrl
     # """Link to the fixture's page on the Open Fixture Library website."""
