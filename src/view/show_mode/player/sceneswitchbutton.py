@@ -32,6 +32,7 @@ class SceneSwitchButton(QPushButton):
         """Handles behaviour when scene button was clicked"""
         # transmit_to_fish(self._scene.board_configuration)
         self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene)
+        # FIXME: Incorrect switching between scenes?
 
     def _active_scene_switched(self, new_scene_id: int) -> None:
         if new_scene_id == self._scene.scene_id:

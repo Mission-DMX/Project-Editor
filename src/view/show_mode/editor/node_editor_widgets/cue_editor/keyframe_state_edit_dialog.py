@@ -1,3 +1,4 @@
+# coding=utf-8
 from collections.abc import Callable
 
 from PySide6.QtGui import QColor, QIcon
@@ -13,14 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from model import ColorHSI
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (
-    KeyFrame,
-    State,
-    StateColor,
-    StateDouble,
-    StateEightBit,
-    StateSixteenBit,
-)
+from model.filter_data.cues.cue import KeyFrame, State, StateColor, StateDouble, StateEightBit, StateSixteenBit
 
 
 class KeyFrameStateEditDialog(QDialog):

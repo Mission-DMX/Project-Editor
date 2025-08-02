@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
+from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 
 
 class ConstantNumberButtonList(UIWidget):
@@ -144,6 +145,8 @@ class ConstantNumberButtonList(UIWidget):
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
         self._player_widget.setLayout(layout)
+        if isinstance(parent, UIWidgetHolder):
+            parent.update_size()
 
     def construct_configuration_widget(self, parent: QWidget | None) -> None:
         self._configuration_widget = QWidget(parent)
@@ -160,6 +163,8 @@ class ConstantNumberButtonList(UIWidget):
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
         self._configuration_widget.setLayout(layout)
+        if isinstance(parent, UIWidgetHolder):
+            parent.update_size()
 
     def __str__(self) -> str:
         return str(self._model.filter_id if self._model else "Error: No Filter configured.")

@@ -19,9 +19,9 @@ from PySide6.QtWidgets import (
 
 from model import Filter, UIPage, UIWidget
 from model.file_support.cue_state import CueState
+from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.virtual_filters.cue_vfilter import CueFilter
 from utility import resource_path
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 logger = getLogger(__name__)

@@ -64,6 +64,7 @@ class UniverseDialog(QtWidgets.QDialog):
 
         self._ok.clicked.connect(self.ok)
         self._cancel.clicked.connect(self.cancel)
+        self.setModal(True)
 
     def _change_widget(self) -> None:
         if self._switch_button.text() == "ftdi dongle":

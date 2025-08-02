@@ -1,8 +1,10 @@
+# coding=utf-8
 """Fixture Definitions from OFL."""
 
 from __future__ import annotations
 
 import json
+import os
 import random
 from collections import defaultdict
 from enum import IntFlag
@@ -55,6 +57,9 @@ class ColorSupport(IntFlag):
 
 def load_fixture(file: str) -> OflFixture:
     """load fixture from OFL JSON"""
+    if not os.path.isfile(file):
+        logger.error(f"Fixture definition {file} not found.")
+        return None
     with open(file, "r", encoding="UTF-8") as f:
         ob: dict = json.load(f)
     ob.update({"fileName": file.split("/fixtures/")[1]})

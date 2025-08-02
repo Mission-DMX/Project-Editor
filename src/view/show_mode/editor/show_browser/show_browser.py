@@ -1,3 +1,5 @@
+# coding=utf-8
+
 """This file provides the ShowBrowser widget."""
 
 import os.path
@@ -105,11 +107,6 @@ class ShowBrowser:
 
     @board_configuration.setter
     def board_configuration(self, b: BoardConfiguration | None) -> None:
-        if not self._show and b:
-            b.broadcaster.add_universe.connect(lambda: self._universe_browsing_tree.refresh())
-            b.broadcaster.delete_universe.connect(lambda: self._universe_browsing_tree.refresh())
-            # TODO listen to scene delete signal
-            b.broadcaster.add_fixture.connect(lambda: self._universe_browsing_tree.refresh())
         self._show = b
         self._universe_browsing_tree._show = b
         self._refresh_all()

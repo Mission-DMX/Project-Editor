@@ -56,13 +56,14 @@ from view.show_mode.editor.nodes.impl.debug import (
                                                        DebugRemoteFloatNode,
 )
 from view.show_mode.editor.nodes.impl.effects import (
-                                                       AutoTrackerNode,
-                                                       CueListNode,
-                                                       EffectsStackNode,
-                                                       Shift8BitNode,
-                                                       Shift16BitNode,
-                                                       ShiftColorNode,
-                                                       ShiftFloatNode,
+    AutoTrackerNode,
+    CueListNode,
+    EffectsStackNode,
+    Shift8BitNode,
+    Shift16BitNode,
+    ShiftColorNode,
+    ShiftFloatNode,
+    SequencerNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
                                                        FaderHSIANode,
@@ -74,13 +75,14 @@ from view.show_mode.editor.nodes.impl.faders import (
 )
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
-                                                       TimeNode,
-                                                       TimeSwitchOffDelay8BitNode,
-                                                       TimeSwitchOffDelay16BitNode,
-                                                       TimeSwitchOffDelayFloatNode,
-                                                       TimeSwitchOnDelay8BitNode,
-                                                       TimeSwitchOnDelay16BitNode,
-                                                       TimeSwitchOnDelayFloatNode,
+    TimeNode,
+    TimeSwitchOffDelay8BitNode,
+    TimeSwitchOffDelay16BitNode,
+    TimeSwitchOffDelayFloatNode,
+    TimeSwitchOnDelay8BitNode,
+    TimeSwitchOnDelay16BitNode,
+    TimeSwitchOnDelayFloatNode,
+    EventCounterFilterNode,
 )
 from view.show_mode.editor.nodes.impl.trigonometics import (
                                                        TrigonometricArcCosNode,
@@ -95,6 +97,7 @@ from view.show_mode.editor.nodes.impl.waves import SawtoothWaveNode, SquareWaveN
 from view.show_mode.editor.nodes.import_node import ImportNode
 
 type_to_node: dict[int, str] = {
+    FilterTypeEnumeration.VFILTER_SEQUENCER: SequencerNode.nodeName,
     FilterTypeEnumeration.VFILTER_COLOR_MIXER: ColorMixerVFilterNode.nodeName,
     FilterTypeEnumeration.VFILTER_IMPORT: ImportNode.nodeName,
     FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN: ColorBrightnessMixinNode.nodeName,
@@ -173,4 +176,5 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT: DebugRemote16BitNode.nodeName,
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT: DebugRemoteFloatNode.nodeName,
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL: DebugRemoteColorNode.nodeName,
+    FilterTypeEnumeration.FILTER_EVENT_COUNTER: EventCounterFilterNode.nodeName,
 }

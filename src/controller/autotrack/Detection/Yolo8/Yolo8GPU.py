@@ -15,15 +15,15 @@ logger = getLogger(__name__)
 
 class Yolo8GPU(Detector):
     """
-    The `Yolo8` class is a detector that uses the YOLOv8 model for object detection.
+    The `Yolo8` class is a detector that uses the YOLOv8 models for object detection.
 
     Attributes:
-        model (cv2.dnn.Net): The YOLOv8 model.
+        model (cv2.dnn.Net): The YOLOv8 models.
 
     Methods:
         - `__init__()`: Initialize the Yolo8 object.
         - `detect(frame)`: Detect objects in a given frame.
-        - `loadModel()`: Load the YOLOv8 model from the ONNX file.
+        - `loadModel()`: Load the YOLOv8 models from the ONNX file.
     """
 
     def __init__(self):
@@ -61,7 +61,7 @@ class Yolo8GPU(Detector):
 
     def loadModel(self):
         """
-        Load the Yolo8 model from the ONNX file.
+        Load the Yolo8 models from the ONNX file.
         """
         # self.model = cv2.dnn.readNetFromONNX("./Detection/Yolo8/models/yolov8n.onnx")
         self.model = rt.InferenceSession(

@@ -1,3 +1,4 @@
+# coding=utf-8
 """This file contains the switching vFilter implementation for the cue filter."""
 from logging import getLogger
 from typing import TYPE_CHECKING
@@ -6,24 +7,19 @@ from model import Filter, Scene
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
 if TYPE_CHECKING:
-    from view.show_mode.editor.node_editor_widgets import CueEditor
+    from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import PreviewEditWidget
     from view.show_mode.show_ui_widgets import CueControlUIWidget
 
 logger = getLogger(__name__)
 
 
-class CueFilter(VirtualFilter):
-    """
-    This class implements a switch for the cue filter. In case of enabled live preview it links the faders of the
-    temporary bank set to the outputs of the filter. Otherwise, it will simply instantiate a plain cue filter on
-    elaboration.
-    """
-
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
-        super().__init__(scene, filter_id, filter_type=int(FilterTypeEnumeration.VFILTER_CUES), pos=pos)
+class PreviewFilter(VirtualFilter):
+    def __init__(self, scene: Scene, filter_id: str, filter_type: FilterTypeEnumeration, inst_filter_type: FilterTypeEnumeration, pos: tuple[int] | None = None) -> None:
+        super().__init__(scene, filter_id, filter_type=int(filter_type), pos=pos)
         self.in_preview_mode = False
-        self.associated_editor_widget: CueEditor | None = None
+        self.associated_editor_widget: PreviewEditWidget | None = None
         self._channel_mapping: dict[str, str] = {}
+        self._inst_filter_type: FilterTypeEnumeration = inst_filter_type
         self.linked_ui_widgets: list[CueControlUIWidget] = []
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -41,8 +37,11 @@ class CueFilter(VirtualFilter):
             for channel in self.associated_editor_widget.channels:
                 fader_filter_id = f"{self.filter_id}__{channel.name}"
                 if channel.fader is None:
-                    logger.error(
-                        "The preview is enabled but no logger was assigned for channel '%s'.", channel.name)
+                    if channel.enabled:
+                        logger.error(
+                            "The preview is enabled but no fader was assigned for channel '{}'.",
+                            channel.name
+                        )
                     fader_filter = Filter(self.scene, fader_filter_id,
                                           filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR
                                           if channel.data_type == DataType.DT_COLOR
@@ -81,7 +80,7 @@ class CueFilter(VirtualFilter):
                 self._channel_mapping[channel.name] = fader_filter_id
                 filter_list.append(fader_filter)
         else:
-            f = Filter(self.scene, self.filter_id, FilterTypeEnumeration.FILTER_TYPE_CUES, self.pos)
+            f = Filter(self.scene, self.filter_id, self._inst_filter_type, self.pos)
             f.filter_configurations.update(self.filter_configurations)
             f.channel_links.update(self.channel_links)
             f.gui_update_keys.update(self.gui_update_keys)
@@ -89,3 +88,15 @@ class CueFilter(VirtualFilter):
             f.in_data_types.update(self.in_data_types)
             f.default_values.update(self.default_values)
             filter_list.append(f)
+
+
+class CueFilter(PreviewFilter):
+    """
+    This class implements a switch for the cue filter. In case of enabled live preview it links the faders of the
+    temporary bank set to the outputs of the filter. Otherwise, it will simply instantiate a plain cue filter on
+    elaboration.
+    """
+
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
+        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_CUES,
+                         FilterTypeEnumeration.FILTER_TYPE_CUES, pos=pos)

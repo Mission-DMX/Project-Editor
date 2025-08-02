@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import annotations
 
 from logging import getLogger
@@ -107,8 +108,21 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             return f"{self.filter_id}_color_recomposition:value"
         raise ValueError("Unknown output port")
 
+    def _instantiate_black_constant(self, filter_list: list[Filter]) -> None:
+        logger.warning("Instantiating black constant for brightness mixing %s due to missing color input", self.filter_id)
+        c = Filter(
+            filter_id=f"{self.filter_id}_color_recomposition",
+            filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
+            scene=self.scene
+        )
+        c.initial_parameters['value'] = "0,0,0"
+        filter_list.append(c)
+
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
-        brightness_input = self.channel_links.get("brightness")
+        if self.channel_links.get("color_in") is None:
+            self._instantiate_black_constant(filter_list)
+            return
+        brightness_input = self.channel_links.get('brightness')
         normalize_from_16bit: bool = False
         if not brightness_input:
             brightness_input = f"{self.filter_id}_global_brightness_input"

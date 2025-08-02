@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, QResizeEvent, Qt
@@ -14,15 +14,16 @@ if TYPE_CHECKING:
 class BoxGridItem(QObject):
     """
     This class represents a box button. It features a text and an optional icon.
-    On click, a signal 'clicked' will be emitted.
+    On click, a signal 'clicked' will be emitted, which provides the data of the item.
     """
-    clicked: Signal = Signal()
+    clicked: Signal = Signal(Any)
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
         self._text: str = ""
         self._icon: QPixmap | None = None
         self._additional_render_method: Callable | None = None
+        self._data: Any | None = None
 
     def set_icon(self, icon: QPixmap | QIcon | None) -> None:
         """
@@ -64,6 +65,15 @@ class BoxGridItem(QObject):
     def additional_render_method(self, method: Callable) -> None:
         self._additional_render_method = method
 
+    @property
+    def data(self) -> Any:
+        """Store arbitrary data associated with this item."""
+        return self._data
+
+    @data.setter
+    def data(self, data: Any) -> None:
+        self._data = data
+
 
 class BoxGridRenderer(QWidget):
     """
@@ -92,6 +102,8 @@ class BoxGridRenderer(QWidget):
         self._border_width = 10
         self.setMinimumWidth(self._box_width + self._scroll_bar_size)
         self.setMinimumHeight(self._box_height)
+        self.setMaximumHeight(65565)
+        self.setMaximumWidth(65565)
         self._fg_brush = QBrush(QColor(0xdc, 0x66, 0x01))
 
     @property
@@ -218,4 +230,5 @@ class BoxGridRenderer(QWidget):
             box_index = int(int(y / height_adv_per_box) * boxes_per_row + int(x / width_adv_per_box))
             if box_index < len(self._boxes):
                 e.accept()
-                self._boxes[box_index].clicked.emit()
+                box = self._boxes[box_index]
+                box.clicked.emit(box.data)

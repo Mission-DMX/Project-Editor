@@ -1,3 +1,4 @@
+# coding=utf-8
 """simple non-blocking Yes No Dialog"""
 
 from collections.abc import Callable
@@ -56,6 +57,8 @@ class YesNoDialog(QDialog):
     def _yes__button_pressed(self) -> None:
         self.close()
         self._success_action()
+        self.deleteLater()
 
     def _no_button_pressed(self) -> None:
         self.close()
+        self.deleteLater()

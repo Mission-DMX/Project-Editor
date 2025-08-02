@@ -1,3 +1,4 @@
+# coding=utf-8
 """Client Commands"""
 from __future__ import annotations
 
@@ -47,6 +48,14 @@ class ListCommand(Command):
                     for c in bank.columns:
                         self.context.print(
                             f"{"Color" if isinstance(c, ColorDeskColumn) else "Number"} - {c.display_name}")
+                return True
+            case "macros":
+                for m in self.context.show.macros:
+                    self.context.print(m.name)
+                return True
+            case "variables":
+                for k, v in self.context.variables.items():
+                    self.context.print(f"{k}={v}")
                 return True
             case "bank_sets":
                 self.context.print(" Bank Set ID                         | Description ")

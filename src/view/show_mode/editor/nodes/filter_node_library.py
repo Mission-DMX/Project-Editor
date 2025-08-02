@@ -1,3 +1,4 @@
+# coding=utf-8
 """Custom Node Library"""
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
@@ -59,6 +60,7 @@ from view.show_mode.editor.nodes.impl.effects import (
     Shift16BitNode,
     ShiftColorNode,
     ShiftFloatNode,
+    SequencerNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
     FaderHSIANode,
@@ -71,6 +73,7 @@ from view.show_mode.editor.nodes.impl.faders import (
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
     TimeNode,
+    EventCounterFilterNode,
     TimeSwitchOffDelay8BitNode,
     TimeSwitchOffDelay16BitNode,
     TimeSwitchOffDelayFloatNode,
@@ -188,6 +191,7 @@ class FilterNodeLibrary(NodeLibrary):
         """Registers all the time nodes."""
         # Add Node -> Time sub menu
         self.addNodeType(TimeNode, [("Time",)])
+        self.addNodeType(EventCounterFilterNode, [("Time",)])
         self.addNodeType(TimeSwitchOnDelay8BitNode, [("Time",)])
         self.addNodeType(TimeSwitchOnDelay16BitNode, [("Time",)])
         self.addNodeType(TimeSwitchOnDelayFloatNode, [("Time",)])
@@ -213,6 +217,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ShiftFloatNode, [("Effects",)])
         self.addNodeType(ShiftColorNode, [("Effects",)])
         self.addNodeType(EffectsStackNode, [("Effects",)])
+        self.addNodeType(SequencerNode, [("Effects",)])
 
     def _register_scripting_nodes(self) -> None:
         self.addNodeType(LuaFilterNode, [("Script",)])

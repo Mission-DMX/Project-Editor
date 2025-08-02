@@ -34,6 +34,8 @@ def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
                 raise NotImplementedError
             case "fish.builtin.macrokeypad":
                 raise NotImplementedError
+            case "fish.builtin.audioextract":
+                ev = AudioExtractEventSender(msg.name)
             case _:
                 logger.error("Unexpaected event sender type: '%s'", msg.type)
                 return
@@ -72,6 +74,10 @@ class EventSender:
 
     @property
     def name(self) -> str:
+        """
+        The human-readable name of the event sender.
+        This should be unique as it is possible to search for senders by name.
+        """
         return self._name
 
     @property
@@ -141,9 +147,48 @@ class XtouchGPIOEventSender(EventSender):
         self.configuration["expression_pedal_threshold"] = str(new_value)
 
 
-def insert_event(
-    sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] | None = None
-) -> None:
+class AudioExtractEventSender(EventSender):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+    @property
+    def audio_device(self) -> str:
+        """The alsa device node or pulse device name"""
+        return self.configuration.get("dev") or "default"
+
+    @audio_device.setter
+    def audio_device(self, new_value: str):
+        self.configuration["dev"] = new_value
+
+    @property
+    def high_cut(self) -> int:
+        """High cutoff frequency of beat detection."""
+        return int(self.configuration.get("high_cut") or "100")
+
+    @high_cut.setter
+    def high_cut(self, new_value: int):
+        self.configuration["high_cut"] = str(new_value)
+
+    @property
+    def low_cut(self) -> int:
+        """Low cutoff frequency of beat detection."""
+        return int(self.configuration.get("low_cut") or "10")
+
+    @low_cut.setter
+    def low_cut(self, new_value: int):
+        self.configuration["low_cut"] = str(new_value)
+
+    @property
+    def magnitude(self) -> float:
+        """Trigger magnitude of beat detection."""
+        return float(self.configuration.get("magnitude") or "10")
+
+    @magnitude.setter
+    def magnitude(self, new_value: float):
+        self.configuration["magnitude"] = str(new_value)
+
+
+def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] | None = None) -> None:
     """Insert an event in fish.
 
     :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will

@@ -131,7 +131,6 @@ if __name__ == "__main__":
                 from controller.file.read import read_document
 
                 read_document(show_file_path, widget.show_configuration)
-                widget.show_configuration.broadcaster.show_file_loaded.emit()
                 application.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
             else:
                 logger.warning("Failed to open show file '%s' as it does not seam to be a file.", show_file_path)
