@@ -1,22 +1,28 @@
 """select Manufacturer"""
+
+from __future__ import annotations
+
 import os
 import zipfile
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 import requests
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import QWidget
 
 import style
 from layouts.flow_layout import FlowLayout
-from model import BoardConfiguration
-from model.ofl.fixture import Fixture
 from model.ofl.manufacture import Manufacture, generate_manufacturers
 from view.dialogs.patching_dialog import PatchingDialog
 from view.patch_view.patching.fixture_item import FixtureItem
 from view.patch_view.patching.manufacturer_item import ManufacturerItem
 from view.patch_view.patching.mode_item import ModeItem
 
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
+
+    from model import BoardConfiguration
+    from model.ofl.ofl_fixture import OflFixture
 logger = getLogger(__name__)
 
 
@@ -44,7 +50,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
             with zipfile.ZipFile(zip_path) as zip_ref:
                 zip_ref.extractall(fixtures_path)
             logger.info("Fixture lib downloaded and installed.")
-        manufacturers: list[tuple[Manufacture, list[Fixture]]] = generate_manufacturers(fixtures_path)
+        manufacturers: list[tuple[Manufacture, list[OflFixture]]] = generate_manufacturers(fixtures_path)
         self.index = 0
         self.container = QtWidgets.QStackedWidget()
         manufacturers_layout = FlowLayout()
@@ -59,7 +65,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         self.setWidget(self.container)
         self.container.setCurrentIndex(self.container.count() - 1)
 
-    def _generate_manufacturer_item(self, manufacturer: tuple[Manufacture, list[Fixture]]) -> ManufacturerItem:
+    def _generate_manufacturer_item(self, manufacturer: tuple[Manufacture, list[OflFixture]]) -> ManufacturerItem:
         manufacturer_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
@@ -78,14 +84,14 @@ class PatchingSelect(QtWidgets.QScrollArea):
 
         return item
 
-    def _generate_fixture_item(self, fixture: Fixture) -> FixtureItem:
+    def _generate_fixture_item(self, fixture: OflFixture) -> FixtureItem:
         fixture_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
         reset_button.setStyleSheet(style.PATCH + "background-color: white;")
         reset_button.clicked.connect(self.reset)
         fixture_layout.addWidget(reset_button)
-        for index, mode in enumerate(fixture["modes"]):
+        for index, mode in enumerate(fixture.modes):
             mode_item = ModeItem(mode)
             mode_item.clicked.connect(lambda _, _fixture=fixture, _index=index: self._run_patch(_fixture, _index))
             fixture_layout.addWidget(mode_item)
@@ -106,7 +112,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
         """reset to start"""
         self.container.setCurrentIndex(self.container.count() - 1)
 
-    def _run_patch(self, fixture: Fixture, index: int) -> None:
+    def _run_patch(self, fixture: OflFixture, index: int) -> None:
         """run the patching dialog"""
         dialog = PatchingDialog(self._board_configuration, (fixture, index))
         dialog.finished.connect(lambda: self._patch(dialog))
@@ -115,7 +121,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
 
     def _patch(self, form: PatchingDialog) -> None:
         """
-            patch fixtures from PatchingDialog
+        patch fixtures from PatchingDialog
         """
         if form.result():
             form.generate_fixtures()

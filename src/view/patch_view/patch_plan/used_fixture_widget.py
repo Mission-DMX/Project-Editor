@@ -1,5 +1,7 @@
 """A Used Fixture in the patching view"""
-from PySide6.QtGui import QColorConstants, QFont, QPainter, QPixmap
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColorConstants, QFont, QMouseEvent, QPainter, QPixmap
 from PySide6.QtWidgets import QWidget
 
 from model.ofl.fixture import UsedFixture
@@ -8,7 +10,7 @@ from view.patch_view.patch_plan.channel_item_generator import create_item
 
 class UsedFixtureWidget(QWidget):
     """
-        UI Widget of a Used Fixture
+    UI Widget of a Used Fixture
     """
 
     def __init__(self, fixture: UsedFixture) -> None:
@@ -16,6 +18,7 @@ class UsedFixtureWidget(QWidget):
         self._fixture = fixture
         self._channels_static: list[QPixmap] = []
         fixture.static_data_changed.connect(self._build_static_pixmap)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
 
         for chanel_index in range(fixture.channel_length):
             self._channels_static.append(self._build_static_pixmap(chanel_index))
