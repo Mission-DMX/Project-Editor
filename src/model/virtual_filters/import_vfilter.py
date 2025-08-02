@@ -1,15 +1,14 @@
-# coding=utf-8
-from model import Filter
+from model import Filter, Scene
 from model.filter import FilterTypeEnumeration, VirtualFilter
 
 
 class ImportVFilter(VirtualFilter):
 
-    def __init__(self, scene: "Scene", filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_IMPORT, pos=pos)
-        if "target" not in self.filter_configurations.keys():
+        if "target" not in self.filter_configurations:
             self.filter_configurations["target"] = ""
-        if "rename_dict" not in self.filter_configurations.keys():
+        if "rename_dict" not in self.filter_configurations:
             self.filter_configurations["rename_dict"] = ""
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -29,6 +28,6 @@ class ImportVFilter(VirtualFilter):
                     break
         return f"{target_filter_id}:{virtual_port_id}"
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         # Nothing to do here as were simply forwarding the filter.
         pass

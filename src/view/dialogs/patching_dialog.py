@@ -1,5 +1,4 @@
-# coding=utf-8
-""" Dialog for Patching Fixture"""
+"""Dialog for Patching Fixture"""
 
 import re
 from dataclasses import dataclass
@@ -8,31 +7,33 @@ import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from model import BoardConfiguration
-from model.ofl.fixture import Fixture, make_used_fixture
+from model.ofl.fixture import make_used_fixture
+from model.ofl.ofl_fixture import OflFixture
 
 
 @dataclass
 class PatchingInformation:
     """Information for Patching"""
 
-    def __init__(self, fixture):
-        self._fixture: Fixture = fixture
+    def __init__(self, fixture: OflFixture) -> None:
+        self._fixture: OflFixture = fixture
         self.count: int = 0
         self.universe: int = 0
         self.channel: int = 0
         self.offset: int = 0
 
     @property
-    def fixture(self) -> Fixture:
-        """ property of the Fixture       """
+    def fixture(self) -> OflFixture:
+        """property of the Fixture"""
         return self._fixture
 
 
 class PatchingDialog(QtWidgets.QDialog):
-    """ Dialog for Patching Fixture """
+    """Dialog for Patching Fixture"""
 
-    def __init__(self, board_configuration: BoardConfiguration, fixture: tuple[Fixture, int],
-                 parent: object = None) -> None:
+    def __init__(
+        self, board_configuration: BoardConfiguration, fixture: tuple[OflFixture, int], parent: object = None
+    ) -> None:
         super().__init__(parent)
         # Create widgets
         self._board_configuration = board_configuration
@@ -41,7 +42,7 @@ class PatchingDialog(QtWidgets.QDialog):
         layout_fixture = QtWidgets.QHBoxLayout()
         self._select_mode = QtWidgets.QComboBox()
         self._select_mode.currentIndexChanged.connect(self._update_used_fixture)
-        layout_fixture.addWidget(QtWidgets.QLabel(fixture[0]['name']))
+        layout_fixture.addWidget(QtWidgets.QLabel(fixture[0].name))
         layout_fixture.addWidget(self._select_mode)
 
         patching_layout = QtWidgets.QHBoxLayout()
@@ -51,7 +52,9 @@ class PatchingDialog(QtWidgets.QDialog):
                 r"([1-9]\d{0,2})?"
                 r"(@[1-9]\d{0,2}"
                 r"(-(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1}))"
-                r"(\/(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1})))?)?)?"))
+                r"(\/(([5][0]\d)|(51[0-2])|([1-4]\d{1,2})|([1-9]\d{0,1})))?)?)?"
+            )
+        )
 
         self._patching = QtWidgets.QLineEdit("")
         self._patching.setValidator(validator)
@@ -84,8 +87,8 @@ class PatchingDialog(QtWidgets.QDialog):
         self._ok.clicked.connect(self._accept)
         _cancel.clicked.connect(self._reject)
 
-        for mode in self._patching_information.fixture['modes']:
-            self._select_mode.addItem(mode['name'])
+        for mode in self._patching_information.fixture.modes:
+            self._select_mode.addItem(mode.name)
         self._select_mode.setCurrentIndex(fixture[1])
 
     @property
@@ -93,7 +96,7 @@ class PatchingDialog(QtWidgets.QDialog):
         """property of used Fixture"""
         return self._patching_information
 
-    def set_error(self, text: str):
+    def set_error(self, text: str) -> None:
         """update Error Label"""
         self._error_label.setText(text)
 
@@ -104,10 +107,14 @@ class PatchingDialog(QtWidgets.QDialog):
         """generate a used Fixture list from Patching information"""
 
         start_index = self.patching_information.channel
-        for index in range(self.patching_information.count):
-            used_fixture = make_used_fixture(self._board_configuration, self._patching_information.fixture,
-                                             self._select_mode.currentIndex(),
-                                             self.patching_information.universe, start_index)
+        for _ in range(self.patching_information.count):
+            used_fixture = make_used_fixture(
+                self._board_configuration,
+                self._patching_information.fixture,
+                self._select_mode.currentIndex(),
+                self.patching_information.universe,
+                start_index,
+            )
 
             if self._patching_information.offset == 0:
                 start_index += used_fixture.channel_length
@@ -129,14 +136,14 @@ class PatchingDialog(QtWidgets.QDialog):
             patching = "1"
         if patching[0] == "@":
             patching = "1" + patching
-        spliter = list(filter(None, re.split('[@/]|-', patching)))
+        spliter = list(filter(None, re.split("[@/]|-", patching)))
         spliter += [0] * (4 - len(spliter))
         spliter = list(map(int, spliter))
         self._patching_information.count = spliter[0]
         self._patching_information.universe = spliter[1] - 1 if spliter[1] > 0 else 0
         self._patching_information.channel = spliter[2] - 1 if spliter[2] > 0 else 0
         self._patching_information.offset = spliter[3]
-        channel_count = len(self._patching_information.fixture["modes"][self._select_mode.currentIndex()]["channels"])
+        channel_count = len(self._patching_information.fixture.modes[self._select_mode.currentIndex()].channels)
 
         self._ok.setEnabled(False)
         if not self._board_configuration.universe(self._patching_information.universe):
@@ -157,8 +164,9 @@ class PatchingDialog(QtWidgets.QDialog):
             self._error_label.setText("not enough channels")
             return
 
-        if np.isin(occupied,
-                   self._board_configuration.get_occupied_channels(self._patching_information.universe)).any():
+        if np.isin(
+            occupied, self._board_configuration.get_occupied_channels(self._patching_information.universe)
+        ).any():
             self._error_label.setText("channels already occupied")
             return
 

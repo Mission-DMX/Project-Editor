@@ -1,10 +1,9 @@
-# coding=utf-8
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QLabel, QLayout, QSlider
 
 from controller.autotrack.Helpers.ImageHelper import cv2qim, draw_overlay
 from controller.autotrack.Helpers.InstanceManager import InstanceManager
-from view.show_mode.show_ui_widgets.autotracker.GuiTab import GuiTab
+from view.show_mode.show_ui_widgets.autotracker.gui_tab import GuiTab
 
 
 class CropTab(GuiTab):
@@ -32,13 +31,13 @@ class CropTab(GuiTab):
         - `video_update()`: Abstract method for updating video content within the tab.
     """
 
-    def __init__(self, name, instance: InstanceManager):
+    def __init__(self, name: str, instance: InstanceManager) -> None:
         """
         Initialize a CropTab object.
 
         Args:
-            name (str): The name of the tab.
-            instance (InstanceManager): An instance manager for managing application instances and settings.
+            name : The name of the tab.
+            instance : An instance manager for managing application instances and settings.
         """
         super().__init__(name, instance)
         self.layout = QGridLayout()
@@ -66,7 +65,7 @@ class CropTab(GuiTab):
         # Set the layout for the tab
         self.setLayout(self.layout)
 
-    def slider_changed(self):
+    def slider_changed(self) -> None:
         """
         Handle changes in the crop sliders.
         """
@@ -109,7 +108,7 @@ class CropTab(GuiTab):
             self.slidery2.value(),
         )
 
-    def tab_activated(self):
+    def tab_activated(self) -> None:
         """
         Called when the tab is activated.
         """
@@ -124,13 +123,13 @@ class CropTab(GuiTab):
         h, w, _ = frame.shape
         self.show_sliders(h, w)
 
-    def tab_deactivated(self):
+    def tab_deactivated(self) -> None:
         """
         Called when the tab is deactivated.
         """
         super().tab_deactivated()
 
-    def hide_sliders(self):
+    def hide_sliders(self) -> None:
         """
         Hide the crop sliders.
         """
@@ -139,13 +138,13 @@ class CropTab(GuiTab):
         self.slidery2.hide()
         self.sliderx2.hide()
 
-    def show_sliders(self, height, width):
+    def show_sliders(self, height: int, width: int) -> None:
         """
         Show and configure the crop sliders.
 
         Args:
-            height (int): The height of the image frame.
-            width (int): The width of the image frame.
+            height : The height of the image frame.
+            width : The width of the image frame.
         """
         self.sliderx1.show()
         self.sliderx1.setMinimum(0)
@@ -165,8 +164,7 @@ class CropTab(GuiTab):
 
         self.slider_changed()
 
-    def video_update(self):
+    def video_update(self) -> None:
         """
         Abstract method for updating video content within the tab.
         """
-        pass

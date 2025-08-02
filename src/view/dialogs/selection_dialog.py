@@ -1,10 +1,9 @@
-# coding=utf-8
 from PySide6.QtGui import QStandardItem, QStandardItemModel, Qt
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QListView, QWidget
 
 
 class SelectionDialog(QDialog):
-    def __init__(self, title: str, message: str, items: list[str], parent: QWidget | None = None):
+    def __init__(self, title: str, message: str, items: list[str], parent: QWidget | None = None) -> None:
         super().__init__(parent)
         form = QFormLayout(self)
         form.addRow(QLabel(message))
@@ -34,10 +33,10 @@ class SelectionDialog(QDialog):
             i += 1
         return selected
 
-    def accept(self):
+    def accept(self) -> None:
         super().accept()
         self.close()
 
-    def reject(self):
+    def reject(self) -> None:
         super().reject()
         self.close()

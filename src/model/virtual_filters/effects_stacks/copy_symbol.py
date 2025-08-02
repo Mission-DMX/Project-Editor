@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """
 This file contains the copy symbol placeholders for the effects stack system.
@@ -14,7 +13,7 @@ from model.virtual_filters.effects_stacks.effect import Effect
 
 class EffectCopySymbolColorEffect:
     """A copy symbol for color effects."""
-    def __init__(self, target: Effect):
+    def __init__(self, target: Effect) -> None:
         self._target: Effect = target
         # TODO this object should return placeholders that insert the correct channel mapping once the target is in
         #  place. We need to figure out how we should do this the best way. Maybe insert all returned placeholders as

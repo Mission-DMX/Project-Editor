@@ -1,10 +1,19 @@
-# coding=utf-8
-
 """This file provides the main control widget for the filter stacking v-filter."""
 
+from typing import override
+
 from PySide6.QtCore import QEvent, Qt
-from PySide6.QtWidgets import (QHBoxLayout, QMessageBox, QScrollArea, QSpinBox, QSplitter, QStackedWidget,
-                               QTreeWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QMessageBox,
+    QScrollArea,
+    QSpinBox,
+    QSplitter,
+    QStackedWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import Filter
 from model.ofl.fixture import UsedFixture
@@ -19,7 +28,7 @@ from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowse
 class EffectsStackEditor(QWidget):
     """This configuration widget provides an editor enabling the user to compose effect onto sockets."""
 
-    def __init__(self, f: Filter, parent: QWidget | None):
+    def __init__(self, f: Filter, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
         if not isinstance(f, EffectsStack):
             raise ValueError("This filter is supposed to be an instance of the EffectsStack virtual filter.")
@@ -62,13 +71,13 @@ class EffectsStackEditor(QWidget):
         global_layout.addWidget(self._right_side_container)
         self._message_box = QMessageBox(self.parent())
 
-    def _fixture_or_group_add_clicked(self, item: QTreeWidgetItem, column: int):
+    def _fixture_or_group_add_clicked(self, item: QTreeWidgetItem, _: int) -> None:
         if not isinstance(item, AnnotatedTreeWidgetItem):
             return
         if isinstance(item.annotated_data, UsedFixture):
             self._compilation_widget.add_fixture_or_group(item.annotated_data)
 
-    def _effect_add_button_clicked(self, e: Effect):
+    def _effect_add_button_clicked(self, e: Effect) -> None:
         self._compilation_widget.load_effect_to_add(e)
         e.set_parent_filter(self._filter)
         avail_slots = self._compilation_widget.get_maximum_slot_counter()
@@ -85,7 +94,8 @@ class EffectsStackEditor(QWidget):
             self._message_box.setText("Currently there are no slots that can accept this effect type.")
             self._message_box.show()
 
-    def eventFilter(self, widget: QWidget, event: QEvent):
+    @override
+    def eventFilter(self, widget: QWidget, event: QEvent) -> bool:
         if event.type() == QEvent.KeyPress and widget is self._effect_placement_bar:
             key = event.key()
             if key in [Qt.Key_Return, Qt.Key_Enter]:
@@ -99,7 +109,7 @@ class EffectsStackEditor(QWidget):
                 return True
         return False
 
-    def _effect_added(self, e: Effect):
+    def _effect_added(self, e: Effect) -> None:
         self._effect_placement_bar.setEnabled(False)
         self._effect_placement_bar.setVisible(False)
         self._effect_placement_bar.clearFocus()
@@ -121,7 +131,7 @@ class EffectsStackEditor(QWidget):
         w.setMinimumHeight(max(w.minimumHeight(), 60))
         return index
 
-    def _effect_config_widget_changed(self, w: QWidget):
+    def _effect_config_widget_changed(self, w: QWidget) -> None:
         if w is None:
             return
         index = self._config_widget_dict.get(w)

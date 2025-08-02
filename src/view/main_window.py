@@ -1,21 +1,23 @@
-# coding=utf-8
 """main Window for the Editor"""
+
+from __future__ import annotations
+
 import os.path
 import platform
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QIcon, QKeySequence, QPixmap
-from PySide6.QtWidgets import QApplication, QProgressBar
+from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
+from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
+import style
 from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
 from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
-from style import Style
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_universe_selector import UniverseSelector
@@ -26,11 +28,12 @@ from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
+from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
 from view.visualizer.visualizer_widget import StageVisualizerWidget
 
 if TYPE_CHECKING:
-    from PySide6.QtGui import QCloseEvent
+    from PySide6.QtWidgets import QWizard
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -39,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
     STATUS_ICON_DIRECT_MODE = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
     STATUS_ICON_FILTER_MODE = QIcon(resource_path(os.path.join("resources", "icons", "play.svg")))
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget = None) -> None:
         """Inits the MainWindow.
 
         Args:
@@ -55,14 +58,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
-        from model.ui_configuration import setup_network_manager
-
-        setup_network_manager(self._fish_connector, self._broadcaster)
-
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
-            ("Console Mode", MainWidget(UniverseSelector(self._board_configuration, self), self),
-             lambda: self._to_widget(0)),
+            (
+                "Console Mode",
+                MainWidget(UniverseSelector(self._board_configuration, self), self),
+                lambda: self._to_widget(0),
+            ),
             (
                 "Editor Mode",
                 MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
@@ -73,13 +75,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 MainWidget(ShowPlayerWidget(self._board_configuration, self), self),
                 self._broadcaster.view_to_show_player.emit,
             ),
-            ("Patch", MainWidget(PatchMode(self._board_configuration, self), self),
-             self._broadcaster.view_to_patch_menu.emit),
+            (
+                "Patch",
+                MainWidget(PatchMode(self._board_configuration, self), self),
+                self._broadcaster.view_to_patch_menu.emit,
+            ),
             ("Debug", debug_console, lambda: self._to_widget(4)),
             (
                 "Actions",
                 MainWidget(CombinedActionSetupWidget(self, self._broadcaster, self._board_configuration), self),
-                self._broadcaster.view_to_action_config.emit
+                self._broadcaster.view_to_action_config.emit,
             ),
             ("Visualizer", MainWidget(StageVisualizerWidget(self._board_configuration, self._broadcaster, self), self),
              self._broadcaster.view_to_visualizer.emit),
@@ -95,7 +100,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self._toolbar.addAction(mode_button)
 
         # data_log_window = DmxDataLogWidget(self._broadcaster)
-        # self._toolbar.addAction(QtGui.QAction("dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
+        # self._toolbar.addAction(QtGui.QAction(
+        # "dmx_output", self._toolbar, triggered=(lambda: data_log_window.show())))
 
         self.setCentralWidget(self._widgets)
 
@@ -129,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._about_window = None
         self._settings_dialog = None
-        self._theatre_scene_setup_wizard = None
+        self._utility_wizard: QWizard | None = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
 
@@ -165,46 +171,56 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Disconnect", self._fish_connector.disconnect, None),
                 ("Change", self._change_server_name, None),
                 ("---", None, None),
-                ("&Filter Mode",
-                 lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_FILTER), None),
-                ("&Direct Mode",
-                 lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_DIRECT), None),
+                (
+                    "&Filter Mode",
+                    lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_FILTER),
+                    None,
+                ),
+                (
+                    "&Direct Mode",
+                    lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_DIRECT),
+                    None,
+                ),
                 ("---", None, None),
-                ("Stop", lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_STOP),
-                 None),
+                (
+                    "Stop",
+                    lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_STOP),
+                    None,
+                ),
             ],
             "File": [
                 ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
                 ("Save Showfile", self._save_show, "S"),
                 ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
                 ("---", None, None),
-                ("Settings", self.open_show_settings, ",")
+                ("Settings", self.open_show_settings, ","),
             ],
             "Edit": [
                 ("&Undo", None, "Z"),  # TODO implement edit history
-                ("&Redo", None, "Shift+Z")
+                ("&Redo", None, "Shift+Z"),
             ],
-            #"Show": [
-            #    ("Scene Wizard", self._open_scene_setup_wizard, None)
-            #    # TODO link wizard that creates a theater scene based on patched fixtures
-            #],
+            "Tools": [
+                # ("Scene Wizard", self._open_scene_setup_wizard, None),
+                ("Patch Plan Export", self._open_patch_plan_export_dialog, None),
+            ],
             "Help": [
-                ("&About", self._open_about_window, None)
-            ]
+                ("&About", self._open_about_window, None),
+            ],
         }
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
 
-    def closeEvent(self, event: "QCloseEvent", /):
+    @override
+    def closeEvent(self, event: QCloseEvent, /) -> None:
         # TODO use event.ignore() here is there's still stuff to do
         super().closeEvent(event)
         QApplication.processEvents()
         self._broadcaster.application_closing.emit()
         QApplication.processEvents()
 
-    def _start_connection(self):  # TODO rework to signals
+    def _start_connection(self) -> None:  # TODO rework to signals
         self._fish_connector.start(True)
 
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
@@ -252,8 +268,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._status_current_scene_label = QtWidgets.QLabel("")
         self._fish_connector.active_scene_on_fish_changed.connect(
             lambda i: self._status_current_scene_label.setText(
-                f"[{i}] {self._board_configuration.get_scene_by_id(i).human_readable_name if
-                i != -1 and self._board_configuration.get_scene_by_id(i) is not None else ''}"))
+                f"[{i}] {
+                    self._board_configuration.get_scene_by_id(i).human_readable_name
+                    if i != -1 and self._board_configuration.get_scene_by_id(i) is not None
+                    else ''
+                }"
+            )
+        )
         status_bar.addWidget(self._status_current_scene_label)
 
         self._label_state_update = QtWidgets.QLabel("", status_bar)  # TODO start Value
@@ -270,12 +291,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector.last_cycle_time_update.connect(self._update_last_cycle_time)
         status_bar.addWidget(self._last_cycle_time_widget)
 
-    def _proccess_status_listener(self):
+    def _proccess_status_listener(self) -> None:
         c, m = get_global_process_state()
         self._status_pbar.setVisible(c != m)
         self._status_pbar.setValue(int((c / m) * 100))
 
-    def _fish_run_mode_changed(self, new_run_mode: int):
+    def _fish_run_mode_changed(self, new_run_mode: int) -> None:
         if new_run_mode == proto.RealTimeControl_pb2.RunMode.RM_FILTER:
             self._status_current_scene_label.setVisible(True)
             self._status_runmode.setPixmap(MainWindow.STATUS_ICON_FILTER_MODE.pixmap(16, 16))
@@ -283,7 +304,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._status_current_scene_label.setVisible(False)
             self._status_runmode.setPixmap(MainWindow.STATUS_ICON_DIRECT_MODE.pixmap(16, 16))
 
-    def _fish_state_update(self, connected: bool):
+    def _fish_state_update(self, connected: bool) -> None:
         if connected:
             self._label_state_update.setText("Connected")
             self._last_cycle_time_widget.setVisible(True)
@@ -291,7 +312,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._label_state_update.setText("Not Connected")
             self._last_cycle_time_widget.setVisible(False)
 
-    def _update_last_cycle_time(self, new_value: int):
+    def _update_last_cycle_time(self, new_value: int) -> None:
         """update plot of fish last cycle Time"""
         self._last_cycle_time = self._last_cycle_time[1:]  # Remove the first y element.
         self._last_cycle_time.append(new_value)  # Add a new value
@@ -300,17 +321,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self._last_cycle_time_widget.setText(str(maximum) + " ms")
         match maximum:
             case num if 0 <= num < 15:
-                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_OKAY)
+                self._last_cycle_time_widget.setStyleSheet(style.LABEL_OKAY)
             case num if 15 <= num < 19:
-                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_WARN)
+                self._last_cycle_time_widget.setStyleSheet(style.LABEL_WARN)
             case _:
-                self._last_cycle_time_widget.setStyleSheet(Style.LABEL_ERROR)
+                self._last_cycle_time_widget.setStyleSheet(style.LABEL_ERROR)
 
-    def _show_column_dialog(self, index: str):
+    def _show_column_dialog(self, index: str) -> None:
         """Dialog modify tho selected Column"""
         active_bank_set = BankSet.active_bank_set()
         column = active_bank_set.get_column(index)
-        if not active_bank_set.active_column == column:
+        if active_bank_set.active_column != column:
             if active_bank_set.active_column:
                 self._broadcaster.view_change_colum_select.emit()
             active_bank_set.set_active_column(column)
@@ -319,7 +340,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 column_dialog.finished.connect(BankSet.push_messages_now)
                 column_dialog.show()
 
-    def _is_column_dialog(self):
+    def _is_column_dialog(self) -> None:
         if not BankSet.active_bank_set():
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
@@ -328,16 +349,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
 
-    def _save_show(self):
+    def _save_show(self) -> None:
         if self._board_configuration:
             if self._board_configuration.file_path:
                 _save_show_file(self._board_configuration.file_path, self._board_configuration)
             else:
                 show_save_showfile_dialog(self, self._board_configuration)
 
-    def _open_about_window(self):
+    def _open_about_window(self) -> None:
         if not self._about_window:
             from view.misc.about_window import AboutWindow
+
             self._about_window = AboutWindow(self)
         self._about_window.show()
 
@@ -345,10 +367,21 @@ class MainWindow(QtWidgets.QMainWindow):
     def show_configuration(self) -> BoardConfiguration:
         return self._board_configuration
 
-    def open_show_settings(self):
+    def open_show_settings(self) -> None:
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
 
-    def _open_scene_setup_wizard(self):
-        self._theatre_scene_setup_wizard = TheaterSceneWizard(self, self.show_configuration)
-        self._theatre_scene_setup_wizard.show()
+    def _open_patch_plan_export_dialog(self) -> None:
+        self._utility_wizard = PatchPlanExportWizard(self, self._board_configuration)
+        self._utility_wizard.finished.connect(self._cleanup_wizard)
+        self._utility_wizard.show()
+
+    def _open_scene_setup_wizard(self) -> None:
+        self._utility_wizard = TheaterSceneWizard(self, self.show_configuration)
+        self._utility_wizard.finished.connect(self._cleanup_wizard)
+        self._utility_wizard.show()
+
+    def _cleanup_wizard(self) -> None:
+        if self._utility_wizard is not None:
+            self._utility_wizard.deleteLater()
+            self._utility_wizard = None

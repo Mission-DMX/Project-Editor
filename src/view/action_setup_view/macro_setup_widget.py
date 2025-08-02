@@ -1,10 +1,24 @@
+from __future__ import annotations
+
 import os
 from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (QCheckBox, QDialog, QFileDialog, QHBoxLayout, QLabel, QListWidget, QMessageBox,
-                               QPlainTextEdit, QSplitter, QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QDialog,
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QMessageBox,
+    QPlainTextEdit,
+    QSplitter,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import Broadcaster
 from model.macro import Macro, Trigger
@@ -17,13 +31,13 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 if TYPE_CHECKING:
     from model.board_configuration import BoardConfiguration
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class _TriggerListItemWidget(QWidget):
     """Content widget for ListWidgetItems of macro triggers."""
 
-    def __init__(self, parent: QWidget, text: str, t: Trigger):
+    def __init__(self, parent: QWidget, text: str, t: Trigger) -> None:
         super().__init__(parent)
         self._trigger = t
         self._enabled_cb = QCheckBox(self)
@@ -40,7 +54,7 @@ class _TriggerListItemWidget(QWidget):
         self.setLayout(layout)
         # TODO implement rename functionality
 
-    def _check_changed(self):
+    def _check_changed(self) -> None:
         new_state = self._enabled_cb.isChecked()
         if new_state != self._trigger.enabled:
             self._trigger.enabled = new_state
@@ -49,10 +63,10 @@ class _TriggerListItemWidget(QWidget):
 class MacroSetupWidget(QSplitter):
     """Widget to configure a selected macro."""
 
-    def __init__(self, parent: QWidget | None, show_config: "BoardConfiguration"):
+    def __init__(self, parent: QWidget | None, show_config: BoardConfiguration) -> None:
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
-        self._show: "BoardConfiguration" = show_config
+        self._show: BoardConfiguration = show_config
         self._selected_macro: Macro | None = None
         self._macro_panel: QWidget = QWidget(self)
         self._dialog: QDialog | None = None
@@ -129,7 +143,7 @@ class MacroSetupWidget(QSplitter):
         self._broadcaster.clear_board_configuration.connect(self.clear)
         self._broadcaster.macro_added_to_show_file.connect(self._macro_added)
 
-    def _selected_macro_changed(self):
+    def _selected_macro_changed(self) -> None:
         selected_items = self._macro_list.selectedItems()
         if len(selected_items) < 1:
             self._selected_macro = None
@@ -137,8 +151,9 @@ class MacroSetupWidget(QSplitter):
             if not isinstance(selected_items[0], AnnotatedListWidgetItem):
                 logger.error("Expected AnnotatedListWidgetItem with macro. Got %s instead.", selected_items[0])
             if len(selected_items) > 1:
-                logger.warning("Expected only one selected macro. Got %s instead. Using the first.",
-                               len(selected_items))
+                logger.warning(
+                    "Expected only one selected macro. Got %s instead. Using the first.", len(selected_items)
+                )
             self._selected_macro = selected_items[0].annotated_data
         self._trigger_list.clear()
         if self._selected_macro is not None:
@@ -154,24 +169,24 @@ class MacroSetupWidget(QSplitter):
             self._editor_area.setEnabled(False)
             self._editor_area.document().clear()
 
-    def clear(self):
+    def clear(self) -> None:
         self._macro_list.clear()
         self._trigger_list.clear()
         self._editor_area.clear()
 
-    def _trigger_added(self, t: Trigger):
+    def _trigger_added(self, t: Trigger) -> None:
         item = AnnotatedListWidgetItem(self._trigger_list)
         item.annotated_data = t
         tw = _TriggerListItemWidget(
             self._trigger_list,
             f"[{str(self._trigger_list.count()) if t.enabled else '-'}] {t.name}",
-            t
+            t,
         )
         item.setSizeHint(tw.sizeHint())
         self._trigger_list.addItem(item)
         self._trigger_list.setItemWidget(item, tw)
 
-    def _macro_added(self, new_macros_id: int):
+    def _macro_added(self, new_macros_id: int) -> None:
         m = self._show.get_macro(new_macros_id)
         if m is None:
             logger.error("Did not expect the newly created macro with index %s to not exist.", new_macros_id)
@@ -182,23 +197,23 @@ class MacroSetupWidget(QSplitter):
         if self._macro_list.count() == 1:
             self._macro_list.setCurrentIndex(self._macro_list.model().index(0, 0))
 
-    def _add_macro_pressed(self):
+    def _add_macro_pressed(self) -> None:
         m = Macro(self._show)
         m.name = "New Macro"
         self._show.add_macro(m)
 
-    def _add_new_trigger_pressed(self):
+    def _add_new_trigger_pressed(self) -> None:
         if self._selected_macro is None:
             return
         self._dialog = _NewTriggerDialog(self, self._selected_macro)
         self._dialog.added_callable = self._trigger_added
         self._dialog.show()
 
-    def _editor_area_text_changed(self):
+    def _editor_area_text_changed(self) -> None:
         if self._selected_macro is not None:
             self._selected_macro.content = self._editor_area.toPlainText()
 
-    def _run_macro_pressed(self):
+    def _run_macro_pressed(self) -> None:
         if self._selected_macro is None:
             return
         logger.info("Running macro %s from manual trigger.", self._selected_macro.name)
@@ -211,17 +226,17 @@ class MacroSetupWidget(QSplitter):
         self._dialog.setIcon(QMessageBox.Icon.Information if success else QMessageBox.Icon.Critical)
         self._dialog.show()
 
-    def _import_macro_clicked(self):
+    def _import_macro_clicked(self) -> None:
         self._create_file_dialog(True)
         self._dialog.accepted.connect(self._load_macro)
         self._dialog.show()
 
-    def _create_file_dialog(self, open: bool):
+    def _create_file_dialog(self, open_: bool) -> None:
         self._dialog = QFileDialog(self)
         self._dialog.setModal(True)
         self._dialog.setNameFilter("Macro (*.macro)")
         self._dialog.setViewMode(QFileDialog.ViewMode.Detail)
-        if open:
+        if open_:
             self._dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
             self._dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
         else:
@@ -232,42 +247,43 @@ class MacroSetupWidget(QSplitter):
         else:
             self._dialog.setDirectory(os.path.expanduser("~"))
 
-    def _load_macro(self):
+    def _load_macro(self) -> None:
         if not isinstance(self._dialog, QFileDialog):
             logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
         for f_path in self._dialog.selectedFiles():
-            with open(f_path, "r") as f:
+            with open(f_path, "r", encoding="UTF-8") as f:
                 m = Macro(self._show)
                 m.name = os.path.splitext(os.path.basename(f_path))[0]
                 m.content = f.read()
                 self._show.add_macro(m)
 
-    def _export_macro_clicked(self):
+    def _export_macro_clicked(self) -> None:
         self._create_file_dialog(False)
         self._dialog.accepted.connect(self._export_macro)
         self._dialog.show()
 
-    def _export_macro(self):
+    def _export_macro(self) -> None:
         if not isinstance(self._dialog, QFileDialog):
             logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
         file_name = self._dialog.selectedFiles()[0]
-        if not os.path.splitext(file_name)[1] == ".macro":
+        if os.path.splitext(file_name)[1] != ".macro":
             file_name += ".macro"
-        with open(file_name, "w") as f:
+        with open(file_name, "w", encoding="UTF-8") as f:
             f.write(self._selected_macro.content)
 
-    def _insert_cue_switch_clicked(self):
+    def _insert_cue_switch_clicked(self) -> None:
         if self._selected_macro is None:
             return
         self._dialog = _InsertCueSwitchDialog(self, self._selected_macro, self._show, self._macro_content_changed)
         self._dialog.show()
 
-    def _macro_content_changed(self):
+    def _macro_content_changed(self) -> None:
         if self._selected_macro is not None:
             self._editor_area.document().setPlainText(self._selected_macro.content)
 
-    def _insert_constant_update_clicked(self):
+    def _insert_constant_update_clicked(self) -> None:
         if self._selected_macro is not None:
-            self._dialog = ConstantUpdateInsertionDialog(self, self._selected_macro, self._show,
-                                                         self._macro_content_changed)
+            self._dialog = ConstantUpdateInsertionDialog(
+                self, self._selected_macro, self._show, self._macro_content_changed
+            )
             self._dialog.show()

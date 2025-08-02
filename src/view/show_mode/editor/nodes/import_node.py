@@ -1,17 +1,16 @@
-# coding=utf-8
 from model.filter import DataType, Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class ImportNode(FilterNode):
-    nodeName = "Filter Import"
+    nodeName = "Filter Import"  # noqa: N815
 
-    def __init__(self, model, name):
+    def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_IMPORT, name=name,
-                         terminals={}, allowAddOutput=True)
+                         terminals={}, allow_add_output=True)
         self.update_node_ports()
 
-    def update_node_ports(self):
+    def update_node_ports(self) -> None:
         if self.filter is not None:
             target_filter = self.filter.scene.get_filter_by_id(self.filter.filter_configurations.get("target"))
             if isinstance(target_filter, Filter):
@@ -20,10 +19,10 @@ class ImportNode(FilterNode):
                 rename_dict: dict[str, str] = {}
                 rename_data = self.filter.filter_configurations.get("rename_dict")
                 if rename_data:
-                    for item in rename_data.split(','):
+                    for item in rename_data.split(","):
                         if "=" not in item:
                             continue
-                        k, v = item.split('=')
+                        k, v = item.split("=")
                         rename_dict[k] = v
                 for port_name in self.outputs():
                     current_ports.add((port_name, target_filter.out_data_types.get(port_name)))
@@ -41,5 +40,5 @@ class ImportNode(FilterNode):
                     self.addOutput(port_name_to_add)
                     self.filter.out_data_types[port_name_to_add] = port_dt_to_add
 
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self.update_node_ports()

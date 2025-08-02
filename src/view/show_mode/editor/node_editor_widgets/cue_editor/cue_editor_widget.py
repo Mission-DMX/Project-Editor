@@ -1,31 +1,49 @@
-# coding=utf-8
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog, QFormLayout, QHBoxLayout, QInputDialog,
-                               QLabel, QMenu, QMessageBox, QPushButton, QScrollArea, QTableWidget, QTableWidgetItem,
-                               QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QFormLayout,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLayout,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import DataType, Filter
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from model.virtual_filters.cue_vfilter import CueFilter
+from src.view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue, EndAction
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
-from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 
-from ..node_editor_widget import NodeEditorFilterConfigWidget
 from .model.cue_filter_model import CueFilterModel
+from .yes_no_dialog import YesNoDialog
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes.base.filternode import FilterNode
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class ExternalChannelDefinition:
@@ -35,7 +53,7 @@ class ExternalChannelDefinition:
     in a named fashion.
     """
 
-    def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet):
+    def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet) -> None:
         self.data_type = data_type
         self.name = name
         self.fader = associated_fader
@@ -43,19 +61,18 @@ class ExternalChannelDefinition:
 
 
 class CueEditor(NodeEditorFilterConfigWidget):
-
     def _get_parameters(self) -> dict[str, str]:
         # TODO implement
         return {}
 
-    def _load_parameters(self, conf: dict[str, str]):
+    def _load_parameters(self, conf: dict[str, str]) -> None:
         # TODO implement
         pass
 
     def get_widget(self) -> QWidget:
         return self._parent_widget
 
-    def _load_configuration(self, parameters: dict[str, str]):
+    def _load_configuration(self, parameters: dict[str, str]) -> None:
         self._model.load_from_configuration(parameters)
 
         for c in self._model.cues:
@@ -78,7 +95,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._model.default_cue = self._default_cue_combo_box.currentIndex() - 1
         return self._model.get_as_configuration()
 
-    def __init__(self, parent: QWidget = None, f: Filter | None = None):
+    def __init__(self, parent: QWidget = None, f: Filter | None = None) -> None:
         super().__init__()
         self._parent_widget = QWidget(parent=parent)
         top_layout = QVBoxLayout()
@@ -155,7 +172,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         else:
             logger.error("Cue editor widget received invalid filter: %s.", f)
 
-    def _link_bankset(self):
+    def _link_bankset(self) -> None:
         self._broadcaster = Broadcaster()
         self._broadcaster.desk_media_rec_pressed.connect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
@@ -177,7 +194,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             transmit_to_fish(self._filter_instance.scene.board_configuration, False)
             # TODO switch to scene of filter
 
-    def _setup_zoom_panel(self, cue_settings_container, cue_settings_container_layout):
+    def _setup_zoom_panel(self, cue_settings_container: QWidget, cue_settings_container_layout: QLayout) -> None:
         zoom_panel = QWidget(cue_settings_container)
         zoom_panel_layout = QHBoxLayout()
         zoom_panel.setLayout(zoom_panel_layout)
@@ -191,7 +208,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         zoom_panel_layout.addWidget(decrease_zoom_button)
         cue_settings_container_layout.addRow("Zoom", zoom_panel)
 
-    def _configure_toolbar(self, top_layout):
+    def _configure_toolbar(self, top_layout: QLayout) -> None:
         toolbar = QToolBar(parent=self._parent_widget)
         toolbar_add_cue_action = QAction("Add Cue", self._parent_widget)
         toolbar_add_cue_action.setStatusTip("Add a new cue to the stack")
@@ -220,10 +237,10 @@ class CueEditor(NodeEditorFilterConfigWidget):
         toolbar.addAction(self._gui_rec_action)
         top_layout.addWidget(toolbar)
 
-    def _set_zoom_label_text(self):
+    def _set_zoom_label_text(self) -> None:
         self._zoom_label.setText(self._timeline_container.format_zoom())
 
-    def _table_context_popup(self, pos):
+    def _table_context_popup(self, pos: QPoint) -> None:
         self._input_dialog = QMenu()
         self._input_dialog.addAction("Rename Cue", self._rename_selected_cue)
         self._input_dialog.addAction(QIcon.fromTheme("edit-paste"), "Duplicate", self._duplicate_cue_clicked)
@@ -244,13 +261,13 @@ class CueEditor(NodeEditorFilterConfigWidget):
         processed_indices.sort(reverse=not ascending_order)
         return processed_indices
 
-    def _duplicate_cue_clicked(self):
+    def _duplicate_cue_clicked(self) -> None:
         for index in self._indices_from_table_selection():
             new_cue = self._model.cues[index].copy()
             self.add_cue(new_cue, new_cue.name)
             self._ui_widget_update_required = True
 
-    def _swap_table_rows(self, i1: int, i2: int):
+    def _swap_table_rows(self, i1: int, i2: int) -> None:
         row1: list[tuple[QTableWidgetItem, int]] = []
         row2: list[tuple[QTableWidgetItem, int]] = []
         for column_index in range(self._cue_list_widget.columnCount()):
@@ -261,7 +278,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         for item in row2:
             self._cue_list_widget.setItem(i1, item[1], item[0])
 
-    def _move_cue_up_clicked(self):
+    def _move_cue_up_clicked(self) -> None:
         for index in self._indices_from_table_selection():
             if index == 0:
                 continue
@@ -271,7 +288,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._swap_table_rows(index - 1, index)
         self._ui_widget_update_required = True
 
-    def _move_cue_down_clicked(self):
+    def _move_cue_down_clicked(self) -> None:
         for index in self._indices_from_table_selection():
             if index >= self._cue_list_widget.rowCount() - 1:
                 continue
@@ -281,32 +298,31 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._swap_table_rows(index + 1, index)
         self._ui_widget_update_required = True
 
-    def _rename_selected_cue(self):
+    def _rename_selected_cue(self) -> None:
         self._input_dialog = []
         for index in self._indices_from_table_selection(ascending_order=False):
-            id = QInputDialog(self._cue_list_widget)
+            input_dialog = QInputDialog(self._cue_list_widget)
             original_cue_name = self._model.cues[index].name
-            id.setLabelText(f"New name for Cue #{index + 1} ({original_cue_name})")
-            id.setTextValue(original_cue_name)
-            id.setModal(True)
-            id.accepted.connect(lambda d=id, i=index: self._change_cue_name(i, d))
-            id.show()
-            self._input_dialog.append(id)
+            input_dialog.setLabelText(f"New name for Cue #{index + 1} ({original_cue_name})")
+            input_dialog.setTextValue(original_cue_name)
+            input_dialog.setModal(True)
+            input_dialog.accepted.connect(lambda d=input_dialog, i=index: self._change_cue_name(i, d))
+            input_dialog.show()
+            self._input_dialog.append(input_dialog)
 
-    def _change_cue_name(self, index: int, new_name: str | QInputDialog):
+    def _change_cue_name(self, index: int, new_name: str | QInputDialog) -> None:
         if isinstance(new_name, QInputDialog):
             d: QInputDialog | None = new_name
             new_name = new_name.textValue()
         else:
             d = None
         self._model.cues[index].name = new_name
-        self._cue_list_widget.item(index, 0).setText(f"{index +1 } '{new_name}'")
+        self._cue_list_widget.item(index, 0).setText(f"{index + 1} '{new_name}'")
         if isinstance(self._input_dialog, list) and d is not None:
             self._input_dialog.remove(d)
             d.deleteLater()
-            if len(self._input_dialog) == 0:
-                if isinstance(self._parent_widget, QDialog):
-                    self._parent_widget.activateWindow()
+            if len(self._input_dialog) == 0 and isinstance(self._parent_widget, QDialog):
+                self._parent_widget.activateWindow()
         self._ui_widget_update_required = True
 
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
@@ -338,7 +354,7 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._default_cue_combo_box.setEnabled(True)
         return target_row
 
-    def select_cue(self, cue_index: int, from_manual_input: bool = False):
+    def select_cue(self, cue_index: int, from_manual_input: bool = False) -> None:
         if cue_index < 0 or cue_index >= len(self._model.cues):
             return
         if 0 <= self._last_selected_cue < len(self._model.cues):
@@ -355,27 +371,27 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._gui_rec_action.setEnabled(True)
         self._current_cue_another_play_pressed_checkbox.setEnabled(True)
 
-    def _cue_list_selection_changed(self):
+    def _cue_list_selection_changed(self) -> None:
         items_list = self._cue_list_widget.selectedIndexes()
         if len(items_list) > 0:
             self.select_cue(items_list[0].row(), from_manual_input=False)
         else:
             self._cue_list_widget.selectRow(self._last_selected_cue)
 
-    def increase_zoom(self):
+    def increase_zoom(self) -> None:
         self._timeline_container.increase_zoom()
         self._set_zoom_label_text()
 
-    def decrease_zoom(self):
+    def decrease_zoom(self) -> None:
         self._timeline_container.decrease_zoom()
         self._set_zoom_label_text()
 
-    def _add_cue_button_clicked(self):
+    def _add_cue_button_clicked(self) -> None:
         new_index = self.add_cue(Cue())
         self._ui_widget_update_required = True
         self.select_cue(new_index)
 
-    def _add_channel_button_pressed(self):
+    def _add_channel_button_pressed(self) -> None:
         """This button queries the user for a channel type and adds it to the filter and all cues.
 
         The default for all cues is a 0 keyframe at the start.
@@ -383,50 +399,57 @@ class CueEditor(NodeEditorFilterConfigWidget):
         self._input_dialog = ChannelInputDialog(self._parent_widget, self._add_channel)
         self._input_dialog.show()
 
-    def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False):
-        if channel_name in ('time', 'time_scale'):
-            QMessageBox.critical(self._parent_widget, "Failed to add channel",
-                                 "Unfortunately, 'time' and 'time_scale' is a reserved keyword for this filter.")
+    def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False) -> None:
+        if channel_name in ("time", "time_scale"):
+            QMessageBox.critical(
+                self._parent_widget,
+                "Failed to add channel",
+                "Unfortunately, 'time' and 'time_scale' is a reserved keyword for this filter.",
+            )
             return
         try:
             self._model.add_channel(channel_name, channel_type)
         except ValueError as e:
-            QMessageBox.critical(self._parent_widget, "Failed to add channel",
-                                 f"Unable to add the requested channel {channel_name}. Channel names must be unique within "
-                                 f"this filter.<br/>Detailed message: {str(e)}")
+            QMessageBox.critical(
+                self._parent_widget,
+                "Failed to add channel",
+                f"Unable to add the requested channel {channel_name}. "
+                "Channel names must be unique within "
+                f"this filter.<br/>Detailed message: {e}",
+            )
             return
-        if self._filter_instance is not None:
-            if self._filter_instance.in_preview_mode:
-                self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
+        if self._filter_instance is not None and self._filter_instance.in_preview_mode:
+            self._link_column_to_channel(channel_name, channel_type, is_part_of_mass_update)
         self._timeline_container.add_channel(channel_type, channel_name)
         BankSet.push_messages_now()
         if not is_part_of_mass_update:
             self._channels_changed_after_load = True
         self._toolbar_remove_channel_action.setEnabled(True)
 
-    def _link_column_to_channel(self, channel_name, channel_type, is_part_of_mass_update):
+    def _link_column_to_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool) -> None:
         if not self._bankset:
             return
-        if channel_type == DataType.DT_COLOR:
-            c = ColorDeskColumn()
-        else:
-            c = RawDeskColumn()
+        c = ColorDeskColumn() if channel_type == DataType.DT_COLOR else RawDeskColumn()
         c.display_name = channel_name
         self._bankset.add_column_to_next_bank(c)
         self._bs_to_channel_mapping[channel_name] = c
         if not is_part_of_mass_update:
             self._bankset.update()
 
-    def _remove_channel_button_pressed(self):
+    def _remove_channel_button_pressed(self) -> None:
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
         all cues.
         """
-        self._input_dialog = SelectionDialog("Remove Channels", "Please select Channels to remove.",
-                                             [c[0] for c in self._model.channels], self._parent_widget)
+        self._input_dialog = SelectionDialog(
+            "Remove Channels",
+            "Please select Channels to remove.",
+            [c[0] for c in self._model.channels],
+            self._parent_widget,
+        )
         self._input_dialog.accepted.connect(self._remove_channels_button_pressed_final)
         self._input_dialog.show()
 
-    def _remove_channels_button_pressed_final(self):
+    def _remove_channels_button_pressed_final(self) -> None:
         if not isinstance(self._input_dialog, SelectionDialog):
             return
         selected_channels = self._input_dialog.selected_items
@@ -441,57 +464,58 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._channels_changed_after_load = True
         self._toolbar_remove_channel_action.setEnabled(len(self._model.cues) > 0 and len(self._model.channels) > 0)
 
-    def _cue_end_action_changed(self):
+    def _cue_end_action_changed(self) -> None:
         action = EndAction(self._current_cue_end_action_select_widget.currentIndex())
         self._timeline_container.cue.end_action = action
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 2).setText(str(action))
 
-    def _cue_play_pressed_restart_changed(self):
-        self._timeline_container.cue.restart_on_another_play_press = \
+    def _cue_play_pressed_restart_changed(self) -> None:
+        self._timeline_container.cue.restart_on_another_play_press = (
             self._current_cue_another_play_pressed_checkbox.checkState().Checked
+        )
 
-    def _transition_type_changed(self, text):
+    def _transition_type_changed(self, text: str) -> None:
         self._timeline_container.transition_type = text
 
-    def _rec_pressed(self):
+    def _rec_pressed(self) -> None:
         self._timeline_container.record_pressed()
-        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
-            .setText(self._timeline_container.cue.duration_formatted)
+        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1).setText(
+            self._timeline_container.cue.duration_formatted
+        )
 
-    def jg_right(self):
+    def jg_right(self) -> None:
         if self._jw_zoom_mode:
             self._timeline_container.increase_zoom(1.25)
             self._set_zoom_label_text()
         else:
             self._timeline_container.move_cursor_right()
 
-    def jg_left(self):
+    def jg_left(self) -> None:
         if self._jw_zoom_mode:
             self._timeline_container.decrease_zoom(1.25)
             self._set_zoom_label_text()
         else:
             self._timeline_container.move_cursor_left()
 
-    def scrub_pressed(self):
+    def scrub_pressed(self) -> None:
         self._jw_zoom_mode = True
 
-    def scrub_released(self):
+    def scrub_released(self) -> None:
         self._jw_zoom_mode = False
 
-    def parent_closed(self, filter_node: "FilterNode"):
+    def parent_closed(self, filter_node: FilterNode) -> None:
         self._timeline_container.clear_display()
         if self._channels_changed_after_load:
             added_channels = []
             if len(self._model.cues) > 0:
                 for channel_name, channel_type in self._model.cues[0].channels:
                     if channel_name not in filter_node.outputs():
-                        filter_node.addTerminal(channel_name, io='out')
+                        filter_node.addTerminal(channel_name, io="out")
                         filter_node.filter.out_data_types[channel_name] = channel_type
                     added_channels.append(channel_name)
-            terms_to_remove = []
-            for name, _ in filter_node.terminals.items():
-                if name in filter_node.outputs() and name not in added_channels:
-                    terms_to_remove.append(name)
+            terms_to_remove = [
+                name for name in filter_node.terminals if name in filter_node.outputs() and name not in added_channels
+            ]
             for name in terms_to_remove:
                 filter_node.removeTerminal(name)
         if self._bankset:
@@ -515,8 +539,11 @@ class CueEditor(NodeEditorFilterConfigWidget):
             self._update_ui_widget()
         super().parent_closed(filter_node)
 
-    def parent_opened(self):
-        self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
+    def parent_opened(self) -> None:
+        self._input_dialog = YesNoDialog(
+            self.get_widget(), "Preview", "Would you like to switch to live preview?", self._link_bankset
+        )
+
         self._ui_widget_update_required = False
 
     @property
@@ -526,11 +553,12 @@ class CueEditor(NodeEditorFilterConfigWidget):
         if len(self._model.cues) == 0:
             return channel_list
         for name, c_type in self._model.cues[0].channels:
-            channel_list.append(ExternalChannelDefinition(c_type, name,
-                                                          self._bs_to_channel_mapping.get(name), self._bankset))
+            channel_list.append(
+                ExternalChannelDefinition(c_type, name, self._bs_to_channel_mapping.get(name), self._bankset)
+            )
         return channel_list
 
-    def _update_ui_widget(self):
+    def _update_ui_widget(self) -> None:
         if isinstance(self._filter_instance, CueFilter):
             for widget in self._filter_instance.linked_ui_widgets:
                 widget.update_model()

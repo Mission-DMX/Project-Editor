@@ -1,4 +1,3 @@
-# coding=utf-8
 """This file contains the switching vFilter implementation for the cue filter."""
 from logging import getLogger
 from typing import TYPE_CHECKING
@@ -10,7 +9,7 @@ if TYPE_CHECKING:
     from view.show_mode.editor.node_editor_widgets import CueEditor
     from view.show_mode.show_ui_widgets import CueControlUIWidget
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class CueFilter(VirtualFilter):
@@ -20,12 +19,12 @@ class CueFilter(VirtualFilter):
     elaboration.
     """
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, filter_type=int(FilterTypeEnumeration.VFILTER_CUES), pos=pos)
         self.in_preview_mode = False
-        self.associated_editor_widget: "CueEditor" | None = None
+        self.associated_editor_widget: CueEditor | None = None
         self._channel_mapping: dict[str, str] = {}
-        self.linked_ui_widgets: list["CueControlUIWidget"] = []
+        self.linked_ui_widgets: list[CueControlUIWidget] = []
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if self.in_preview_mode:
@@ -35,7 +34,7 @@ class CueFilter(VirtualFilter):
         # just return the output ports as-is
         return f"{self.filter_id}:{virtual_port_id}"
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         if self.in_preview_mode:
             if self.associated_editor_widget is None:
                 raise RuntimeError("The preview mode has been enabled but no editor was assigned. This is a bug.")

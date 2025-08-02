@@ -1,37 +1,36 @@
-# coding=utf-8
-
 """This file provides the effect (dummy) socket classes.
 An effect socket provides the inputs for a selected fixture. It is therefore the root of effect chaining.
 
 """
+from __future__ import annotations
 
 import json
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from PySide6.QtWidgets import QWidget
-
-from model import Filter
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_factory import effect_from_deserialization
-from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
-from model.virtual_filters.effects_stacks.effects.segment_effects import SegmentEffect
 
 if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
+
+    from model import Filter
+    from model.virtual_filters.effects_stacks.effects.color_effects import ColorEffect
+    from model.virtual_filters.effects_stacks.effects.segment_effects import SegmentEffect
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
-class _EffectDummy_Socket(Effect):
+class _EffectDummySocket(Effect):
     """The purpose of this class is to provide an Effect if required during rendering"""
 
     def serialize(self) -> dict:
         logger.error("A dummy effect should never be serialized. Something went wrong.")
         return {}
 
-    def deserialize(self, data: dict[str, str]):
+    def deserialize(self, data: dict[str, str]) -> None:
         pass
 
     def get_configuration_widget(self) -> QWidget | None:
@@ -43,21 +42,23 @@ class _EffectDummy_Socket(Effect):
     def get_output_slot_type(self) -> EffectType:
         return self._stype
 
+    @override
     def resolve_input_port_name(self, slot_id: str) -> str:
         return ""
 
-    def emplace_filter(self, heading_effects: dict[str, tuple["Effect", int]], filter_list: list[Filter]):
+    def emplace_filter(self, heading_effects: dict[str, tuple[Effect, int]], filter_list: list[Filter]) -> None:
         pass
 
     def get_serializable_effect_name(self) -> str:
         raise RuntimeError("A dummy socket is not supposed to be serialized")
 
-    def __init__(self, socket: "EffectsSocket", stype: EffectType):
+    def __init__(self, socket: EffectsSocket, stype: EffectType) -> None:
         super().__init__({"": [stype]})
         self._socket = socket
         self._stype = stype
 
-    def attach(self, slot_id: str, e: "Effect") -> bool:
+    @override
+    def attach(self, slot_id: str, e: Effect) -> bool:
         if not Effect.can_convert_slot(e.get_output_slot_type(), self._stype):
             return False
         return self._socket.place_effect(e, self._stype)
@@ -72,7 +73,7 @@ class EffectsSocket:
     It furthermore proved the entry-point for show file (de)serialization as well as adding of further effects.
     """
 
-    def __init__(self, target: UsedFixture):
+    def __init__(self, target: UsedFixture) -> None:
         self.target: UsedFixture = target  # TODO also implement support for fixture groups
         self._color_socket: ColorEffect | None = None
         self.has_color_property: bool = target.color_support != ColorSupport.NO_COLOR_SUPPORT
@@ -102,7 +103,7 @@ class EffectsSocket:
         if socket_typ == EffectType.ENABLED_SEGMENTS and self._segment_socket:
             return self._segment_socket
         # TODO implement other slot types
-        return _EffectDummy_Socket(self, socket_typ)
+        return _EffectDummySocket(self, socket_typ)
 
     def place_effect(self, e: Effect, target_slot: EffectType) -> bool:
         if not Effect.can_convert_slot(e.get_output_slot_type(), target_slot):
@@ -119,7 +120,7 @@ class EffectsSocket:
         e._containing_slot = (self, target_slot.name)
         return False
 
-    def clear_slot(self, slot_name: str):
+    def clear_slot(self, slot_name: str) -> None:
         match slot_name:
             case _:
                 logger.error("Deleting effects from slot name '%s' is not yet implemented.", slot_name)
@@ -136,7 +137,7 @@ class EffectsSocket:
             data["segments"] = self._segment_socket.serialize()
         return json.dumps(data)
 
-    def deserialize(self, data: str, parent: "EffectsStack"):
+    def deserialize(self, data: str, parent: EffectsStack) -> None:
         data: dict = json.loads(data)
         self._color_socket = None
         self._segment_socket = None

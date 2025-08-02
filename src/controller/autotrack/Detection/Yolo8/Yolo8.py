@@ -1,11 +1,13 @@
 # coding=utf-8
-import logging
 import time
+from logging import getLogger
 
 import cv2
 import numpy as np
 
 from controller.autotrack.Detection.Detector import Detector
+
+logger = getLogger(__name__)
 
 
 class Yolo8(Detector):
@@ -45,7 +47,7 @@ class Yolo8(Detector):
         outputs = self.model.forward()
         end_time = time.time()
         elapsed_time = end_time - start_time
-        logging.getLogger().debug("Yolo8: Elapsed time: %s seconds", elapsed_time)
+        logger.debug("Yolo8: Elapsed time: %s seconds", elapsed_time)
         outputs = np.array([cv2.transpose(outputs[0])])
         return outputs
 

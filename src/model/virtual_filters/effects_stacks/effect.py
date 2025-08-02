@@ -1,18 +1,19 @@
-# coding=utf-8
 # pylint: disable=implicit-flag-alias
 """
 This file contains the fundamental building blocks for effects.
 """
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import IntFlag
-from typing import TYPE_CHECKING
-
-from PySide6.QtWidgets import QWidget
-
-from model import Filter, Scene
+from typing import TYPE_CHECKING, Never, Self
 
 if TYPE_CHECKING:
+    from collections.abc import ItemsView
+
+    from PySide6.QtWidgets import QWidget
+
+    from model import Filter, Scene
     from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
 
@@ -73,14 +74,14 @@ class EffectType(IntFlag):
 
 class Effect(ABC):
 
-    def __init__(self, supported_input_types: dict[str, list[EffectType]]):
+    def __init__(self, supported_input_types: dict[str, list[EffectType]]) -> None:
         super().__init__()
         self._supported_inputs = supported_input_types
-        self._inputs: dict[str, "Effect" or None] = {}
-        for slot_name in supported_input_types.keys():
+        self._inputs: dict[str, Effect | None] = {}
+        for slot_name in supported_input_types:
             self._inputs[slot_name] = None
-        self._parent_filter: "EffectsStack" | None = None
-        self._containing_slot: tuple["Effect", str] | None = None
+        self._parent_filter: EffectsStack | None = None
+        self._containing_slot: tuple[Effect, str] | None = None
 
     @abstractmethod
     def get_configuration_widget(self) -> QWidget | None:
@@ -90,7 +91,7 @@ class Effect(ABC):
 
         :returns: the procured widget or none
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_accepted_input_types(self) -> dict[str, list[EffectType]]:
         """
@@ -104,7 +105,7 @@ class Effect(ABC):
     def get_output_slot_type(self) -> EffectType:
         """This method needs to return the slot that this effect provides.
         :returns: The EffectType that this effect imposes"""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def resolve_input_port_name(self, slot_id: str) -> str:
@@ -114,7 +115,7 @@ class Effect(ABC):
         :param slot_id: The slot id to resolve the name for
         :returns: The human-readable name of the slot
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def emplace_filter(self, filter_list: list[Filter], name_prefix: str) -> dict[str, str | list[str]]:
@@ -155,7 +156,7 @@ class Effect(ABC):
                             generating unique ids.
         :returns: a dictionary indicating which outputs can be used by the calling instance.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_human_filter_name(self) -> str:
         """This method is used in order to retrieve a human-readable name of the effect"""
@@ -169,7 +170,7 @@ class Effect(ABC):
 
         :returns: A unique identifier for the effect
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_description(self) -> str:
         """This method may be used in order to return a human-readable description of the effect"""
@@ -179,17 +180,16 @@ class Effect(ABC):
     def can_convert_slot(cls, candidate: EffectType, target: EffectType) -> bool:
         if candidate == target:
             return True
-        if candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY, EffectType.GOBO_SELECTION,
-                                                                 EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]:
-            return True
+        return candidate == EffectType.GENERIC_NUMBER and target in [EffectType.LIGHT_INTENSITY,
+                                                                     EffectType.GOBO_SELECTION,
+                                                                     EffectType.ZOOM_FOCUS, EffectType.SHUTTER_STROBE]
         # TODO add more capabilities once adapters are implemented
-        return False
 
-    def slot_definitions(self) -> "dict_items[str, Effect | None]":
-        """This method return the effects that have been added to this effect as an input as well as empty slots"""
+    def slot_definitions(self) -> ItemsView[str, Self | None]:
+        """This method returns the effects that have been added to this effect as an input as well as empty slots"""
         return self._inputs.items()
 
-    def attach(self, slot_id: str, e: "Effect") -> bool:
+    def attach(self, slot_id: str, e: Effect) -> bool:
         """This method gets called in order to attach an effect to an input slot.
 
         :param slot_id: The slot that should be populated
@@ -203,7 +203,7 @@ class Effect(ABC):
             found_working |= Effect.can_convert_slot(target_slot_type, candidate)
         if not found_working:
             return False
-        if not slot_id in self._inputs.keys():
+        if slot_id not in self._inputs:
             raise ValueError("The requested slot id is not present within this filter.")
         self._inputs[slot_id] = e
         e._containing_slot = (self, slot_id)
@@ -234,7 +234,7 @@ class Effect(ABC):
             return 0, 0
         return self._parent_filter.pos
 
-    def set_parent_filter(self, f: "EffectsStack"):
+    def set_parent_filter(self, f: EffectsStack) -> None:
         """This method sets the parent filter, which needs to be of type EffectsStack."""
         self._parent_filter = f
 
@@ -248,7 +248,7 @@ class Effect(ABC):
         return {}
 
     @abstractmethod
-    def deserialize(self, data: dict[str, str]):
+    def deserialize(self, data: dict[str, str]) -> Never:
         """This method is called if a show file is being loaded. It needs to be implemented in order to restore the
         effect. It is responsible to instantiate all of its input effects.
 
@@ -257,10 +257,10 @@ class Effect(ABC):
         raise NotImplementedError("The class did not implement the deserialize method.")
 
     @property
-    def slot_parent(self) -> tuple["Effect", str] | None:
+    def slot_parent(self) -> tuple[Effect, str] | None:
         return self._containing_slot
 
-    def clear_slot(self, slot_id: str):
-        if slot_id not in self._inputs.keys():
+    def clear_slot(self, slot_id: str) -> None:
+        if slot_id not in self._inputs:
             raise ValueError(f"This filter does not contain an input slot with id {slot_id}.")
         self._inputs[slot_id] = None

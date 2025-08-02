@@ -1,25 +1,26 @@
-from typing import Callable
+
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QWidget
 
 from model.macro import Macro, Trigger, trigger_factory
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 class _NewTriggerDialog(QDialog):
-
     """
     Dialog to add new macro triggers.
     Upon Accept this dialog adds the new trigger to the provided macro on its own.
     """
 
-    def __init__(self, parent: QWidget, macro: Macro):
+    def __init__(self, parent: QWidget, macro: Macro) -> None:
         super().__init__(parent)
         self._macro = macro
         self.setModal(True)
         self.setWindowTitle(f"Add Trigger to Macro {macro.name}")
-        self._button_box = QDialogButtonBox(
-            (QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        )
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.rejected.connect(self.close)
         self._button_box.accepted.connect(self._apply)
         layout = QFormLayout()
@@ -34,7 +35,7 @@ class _NewTriggerDialog(QDialog):
 
         self._fbutton_cb = QComboBox(self)
         self._fbutton_cb.setEditable(False)
-        self._fbutton_cb.addItems([f"F{str(i + 1)}" for i in range(8)])
+        self._fbutton_cb.addItems([f"F{i + 1}" for i in range(8)])
         self._fbutton_cb.setEnabled(False)
         layout.addRow("Internal Macro Button", self._fbutton_cb)
 
@@ -42,7 +43,7 @@ class _NewTriggerDialog(QDialog):
         self.setLayout(layout)
         self.added_callable: Callable | None = None
 
-    def _apply(self):
+    def _apply(self) -> None:
         type_str = self._type_cb.currentText()
         t = trigger_factory(type_str)
         t.name = self._name_tb.text() or "New Trigger"
@@ -53,5 +54,5 @@ class _NewTriggerDialog(QDialog):
         if self.added_callable is not None:
             self.added_callable(t)
 
-    def _type_changed(self):
+    def _type_changed(self) -> None:
         self._fbutton_cb.setEnabled(self._type_cb.currentText() == "f_keys")

@@ -1,8 +1,5 @@
-# coding=utf-8
-
 """This file provides a widget to browse bank set columns."""
 from logging import getLogger
-from typing import Type
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QCheckBox, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
@@ -10,7 +7,7 @@ from PySide6.QtWidgets import QCheckBox, QTreeWidget, QTreeWidgetItem, QVBoxLayo
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class FaderColumnSelectorWidget(QWidget):
@@ -18,8 +15,8 @@ class FaderColumnSelectorWidget(QWidget):
 
     selection_changed = Signal(DeskColumn)
 
-    def __init__(self, parent: QWidget | None = None, column_filter: Type[DeskColumn] | None = None,
-                 base_set: BankSet | None = None):
+    def __init__(self, parent: QWidget | None = None, column_filter: type[DeskColumn] | None = None,
+                 base_set: BankSet | None = None) -> None:
         """Construct a new browser widget.
 
         :param parent: The parent widget of this one
@@ -28,7 +25,8 @@ class FaderColumnSelectorWidget(QWidget):
         """
         super().__init__()
         self._filter = column_filter
-        self._base_sets: list[BankSet] = base_set if isinstance(base_set, list) else [base_set] if isinstance(base_set, BankSet) else []
+        self._base_sets: list[BankSet] = base_set if isinstance(base_set, list) \
+            else [base_set] if isinstance(base_set, BankSet) else []
         self._item_index: dict[str, dict[str, AnnotatedTreeWidgetItem]] = {}
 
         layout = QVBoxLayout()
@@ -47,7 +45,7 @@ class FaderColumnSelectorWidget(QWidget):
         self.reload_data()
         # TODO add button to add a new column right in this widget
 
-    def _selection_changed_handler(self, *args):
+    def _selection_changed_handler(self) -> None:
         item = self._tree.selectedItems()[0]
         if isinstance(item, AnnotatedTreeWidgetItem):
             self.selected_item = item
@@ -59,7 +57,7 @@ class FaderColumnSelectorWidget(QWidget):
         return self._ignore_main_brightness_checkbox.isChecked()
 
     @ignore_main_brightness.setter
-    def ignore_main_brightness(self, new_value: bool):
+    def ignore_main_brightness(self, new_value: bool) -> None:
         self._ignore_main_brightness_checkbox.setChecked(new_value)
 
     @property
@@ -68,10 +66,10 @@ class FaderColumnSelectorWidget(QWidget):
         return self._ignore_main_brightness_checkbox.isEnabled()
 
     @main_brightness_cb_enabled.setter
-    def main_brightness_cb_enabled(self, new_value: bool):
+    def main_brightness_cb_enabled(self, new_value: bool) -> None:
         self._ignore_main_brightness_checkbox.setEnabled(new_value)
 
-    def set_selected_item(self, set_id: str, column_id: str):
+    def set_selected_item(self, set_id: str, column_id: str) -> None:
         """Use this method to select a specified column.
 
         If there is no matching column, it will simply do nothing.
@@ -94,7 +92,7 @@ class FaderColumnSelectorWidget(QWidget):
                 current_item_to_expand.setExpanded(True)
                 current_item_to_expand = current_item_to_expand.parent()
 
-    def reload_data(self):
+    def reload_data(self) -> None:
         """Refresh the displayed data."""
         self._tree.clear()
         bank_sets_to_search: set[BankSet] = set()
@@ -133,7 +131,7 @@ class FaderColumnSelectorWidget(QWidget):
                 i += 1
             self._tree.insertTopLevelItem(0, set_item)
 
-    def add_base_bank_set(self, bs: BankSet):
+    def add_base_bank_set(self, bs: BankSet) -> None:
         """
         Use this method to add a bank set to the list of force-active sets after construction finished.
 

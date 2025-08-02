@@ -1,9 +1,9 @@
-# coding=utf-8
 """selector for Patching witch holds all Patching Universes"""
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QContextMenuEvent
 from PySide6.QtWidgets import QScrollArea
 
 from model import BoardConfiguration, Universe
@@ -15,13 +15,13 @@ from view.patch_view.patch_plan.patch_plan_widget import PatchPlanWidget
 if TYPE_CHECKING:
     from view.patch_view.patch_mode import PatchMode
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class PatchPlanSelector(QtWidgets.QTabWidget):
     """selector for Patching witch holds all Patching Universes"""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent: "PatchMode"):
+    def __init__(self, board_configuration: BoardConfiguration, parent: "PatchMode") -> None:
         super().__init__(parent=parent)
         self._board_configuration = board_configuration
         self._broadcaster = Broadcaster()
@@ -37,7 +37,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self.tabBarClicked.connect(self._tab_clicked)
         self.tabBar().setCurrentIndex(0)
 
-    def _add_fixture(self, fixture: UsedFixture):
+    def _add_fixture(self, fixture: UsedFixture) -> None:
         widget: PatchPlanWidget = self._patch_planes[fixture.parent_universe]
         widget.add_fixture(fixture)
 
@@ -48,15 +48,16 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         if dialog.exec():
             Universe(dialog.output)
 
-    def contextMenuEvent(self, event):
+    @override
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         """context menu"""
         for index in range(self.tabBar().count() - 1):
             if self.tabBar().tabRect(index).contains(event.pos()):
                 menu = QtWidgets.QMenu(self)
 
-                rename_universe = QtGui.QAction('rename Universe', self)
+                rename_universe = QtGui.QAction("rename Universe", self)
                 # delete_scene = QtGui.QAction('delete Scene', self)
-                rename_universe.triggered.connect(lambda: self._rename_universe(index))
+                rename_universe.triggered.connect(lambda index_=index: self._rename_universe(index_))
                 # delete_scene.triggered.connect(lambda: self._remove_scene(index))
                 menu.addAction(rename_universe)
                 # menu.addAction(delete_scene)
@@ -70,7 +71,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
             self._board_configuration.universe(universe_id).universe_proto = dialog.output
             self._broadcaster.send_universe.emit(self._board_configuration.universe(index))
 
-    def _add_universe(self, universe: Universe):
+    def _add_universe(self, universe: Universe) -> None:
         index = self.tabBar().count() - 1
         patch_plan = QScrollArea()
         patch_plan.setWidgetResizable(True)
@@ -81,7 +82,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self._patch_planes.update({universe.id: widget})
         self.insertTab(index, patch_plan, str(universe.name))
 
-    def _remove_universe(self, universe: Universe):
+    def _remove_universe(self, universe: Universe) -> None:
         del self._patch_planes[universe.id]
         self.removeTab(universe.id)
         logger.info("Removing patching tab %s", universe.id)

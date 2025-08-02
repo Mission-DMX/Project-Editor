@@ -1,6 +1,7 @@
-# coding=utf-8
+from typing import override
+
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap
+from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap, QResizeEvent
 from PySide6.QtWidgets import QLabel, QSizePolicy, QWidget
 from qasync import QtGui
 
@@ -10,7 +11,8 @@ from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 
 
 class PanTiltConstantContentWidget(QLabel):
-    def __init__(self, filter: PanTiltConstantFilter | None, parent: QWidget = None, enable_joystick: bool = True):
+    def __init__(self, filter_: PanTiltConstantFilter | None,
+                 parent: QWidget = None, enable_joystick: bool = True) -> None:
         super().__init__(parent=parent)
         self.pan = 0
         self.tilt = 0
@@ -21,9 +23,9 @@ class PanTiltConstantContentWidget(QLabel):
         self.prange = 1
         self.trange = 1
 
-        self._filter = filter
+        self._filter = filter_
 
-        if filter is not None:
+        if filter_ is not None:
             self._filter.register_observer(self, self.repaint)
         self.repaint()
         if enable_joystick:
@@ -63,23 +65,27 @@ class PanTiltConstantContentWidget(QLabel):
         painter.end()
         self.setPixmap(canvas)
 
-    def mousePressEvent(self, event: QMouseEvent):
+    @override
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         self._dragged = True
         self.update_pan_tilt(event)
         self.repaint()
 
-    def mouseReleaseEvent(self, event: QMouseEvent):
+    @override
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self._dragged = False
         self.repaint()
 
-    def mouseMoveEvent(self, event: QMouseEvent):
+    @override
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self.update_pan_tilt(event)
         self.repaint()
 
-    def resizeEvent(self, event):
+    @override
+    def resizeEvent(self, event: QResizeEvent) -> None:
         self.repaint()
 
-    def update_pan_tilt(self, event: QMouseEvent):
+    def update_pan_tilt(self, event: QMouseEvent) -> None:
         if self._filter is not None:
             self._filter.pan_delta = 0.0
             self._filter.tilt_delta = 0.0
@@ -91,7 +97,7 @@ class PanTiltConstantContentWidget(QLabel):
                 self._filter.pan = self.pan
                 self._filter.tilt = self.tilt
 
-    def handle_key_event(self, joystick: JoystickList, val: float, tilt: bool):
+    def handle_key_event(self, joystick: JoystickList, val: float, tilt: bool) -> None:
         if self._filter is None:
             return
         self._filter.set_delta(val, joystick, tilt)

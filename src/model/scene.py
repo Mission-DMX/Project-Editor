@@ -1,22 +1,22 @@
-# coding=utf-8
 """Scene module"""
-from typing import TYPE_CHECKING, Optional
+from __future__ import annotations
 
-from .filter import Filter
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
     from .control_desk import BankSet
+    from .filter import Filter
     from .ui_configuration import UIPage
 
 
 class FilterPage:
     """Filter page in a Scene"""
 
-    def __init__(self, parent: "Scene"):
+    def __init__(self, parent: Scene) -> None:
         self._filters: list[Filter] = []
-        self._child_pages: list["FilterPage"] = []
-        self._parent_scene: "Scene" = parent
+        self._child_pages: list[FilterPage] = []
+        self._parent_scene: Scene = parent
         self._name: str = ""
 
     @property
@@ -25,7 +25,7 @@ class FilterPage:
         return self._name
 
     @name.setter
-    def name(self, new_name: str):
+    def name(self, new_name: str) -> None:
         self._name = str(new_name)
 
     @property
@@ -34,16 +34,16 @@ class FilterPage:
         return self._filters
 
     @property
-    def child_pages(self) -> list["FilterPage"]:
+    def child_pages(self) -> list[FilterPage]:
         """list of child pages"""
         return self._child_pages
 
     @property
-    def parent_scene(self) -> "Scene":
+    def parent_scene(self) -> Scene:
         """parent scene"""
         return self._parent_scene
 
-    def copy(self, new_scene: "Scene" = None):
+    def copy(self, new_scene: Scene = None) -> Scene:
         """copy of a filter page"""
         if not new_scene:
             new_fp = FilterPage(self._parent_scene)
@@ -65,15 +65,15 @@ class Scene:
 
     def __init__(self, scene_id: int,
                  human_readable_name: str,
-                 board_configuration: "BoardConfiguration"):
+                 board_configuration: BoardConfiguration) -> None:
         self._scene_id: int = scene_id
         self._human_readable_name: str = human_readable_name
-        self._board_configuration: "BoardConfiguration" = board_configuration
+        self._board_configuration: BoardConfiguration = board_configuration
         self._filters: list[Filter] = []
         self._filter_index: dict[str, Filter] = {}
         self._filter_pages: list[FilterPage] = []
-        self._associated_bankset: Optional["BankSet"] = None
-        self._ui_pages: list["UIPage"] = []
+        self._associated_bankset: BankSet | None = None
+        self._ui_pages: list[UIPage] = []
 
     @property
     def scene_id(self) -> int:
@@ -86,12 +86,12 @@ class Scene:
         return self._human_readable_name
 
     @human_readable_name.setter
-    def human_readable_name(self, human_readable_name: str):
+    def human_readable_name(self, human_readable_name: str) -> None:
         """Sets the human-readable name of the scene displayed by the ui"""
         self._human_readable_name = human_readable_name
 
     @property
-    def board_configuration(self) -> "BoardConfiguration":
+    def board_configuration(self) -> BoardConfiguration:
         """The board configuration the scene is part of"""
         return self._board_configuration
 
@@ -111,26 +111,25 @@ class Scene:
             self._filter_pages.append(default_page)
         return self._filter_pages
 
-    def insert_filterpage(self, fp: FilterPage):
+    def insert_filterpage(self, fp: FilterPage) -> None:
         """
         add a filterpage to the scene
         """
         self._filter_pages.append(fp)
 
     @property
-    def linked_bankset(self) -> Optional["BankSet"]:
+    def linked_bankset(self) -> BankSet | None:
         """associated_bankset"""
         return self._associated_bankset
 
     @linked_bankset.setter
-    def linked_bankset(self, new_bs: "BankSet"):
-        if self._associated_bankset:
-            if self._associated_bankset.is_linked:
-                self._associated_bankset.unlink()
+    def linked_bankset(self, new_bs: BankSet) -> None:
+        if self._associated_bankset and self._associated_bankset.is_linked:
+            self._associated_bankset.unlink()
         self._associated_bankset = new_bs
 
     @property
-    def ui_pages(self) -> list["UIPage"]:
+    def ui_pages(self) -> list[UIPage]:
         """list of UIPages"""
         return self._ui_pages
 
@@ -148,7 +147,7 @@ class Scene:
             return False
         return True
 
-    def copy(self, existing_scenes: list["Scene"]) -> "Scene":
+    def copy(self, existing_scenes: list[Scene]) -> Scene:
         """
         This method returns a copy of the scene, jet containing a new unique ID.
 
@@ -201,7 +200,7 @@ class Scene:
             name_to_try += str(int(name_appendix) + 1)
         return name_to_try
 
-    def append_filter(self, f: Filter, filter_page_index: int = -1):
+    def append_filter(self, f: Filter, filter_page_index: int = -1) -> None:
         """
         Insert a filter in the scene.
         :param f: The filter to add
@@ -215,17 +214,16 @@ class Scene:
         f.filter_id = self.ensure_name_uniqueness(f.filter_id)
         self._filters.append(f)
         self._filter_index[f.filter_id] = f
-        if filter_page_index != -1:
-            if filter_page_index < len(self.pages):
-                self._filter_pages[filter_page_index].filters.append(f)
+        if filter_page_index != -1 and filter_page_index < len(self.pages):
+            self._filter_pages[filter_page_index].filters.append(f)
 
-    def remove_filter(self, f: Filter):
+    def remove_filter(self, f: Filter) -> None:
         """Delete a filter."""
         self._filters.remove(f)
         if self._filter_index.get(f.filter_id):
             self._filter_index.pop(f.filter_id)
 
-        def remove_filter_from_page(p: FilterPage):
+        def remove_filter_from_page(p: FilterPage) -> None:
             try:
                 p.filters.remove(f)
             except ValueError:
@@ -236,7 +234,7 @@ class Scene:
         for p in self.pages:
             remove_filter_from_page(p)
 
-    def notify_about_filter_rename_action(self, sender: Filter, old_id: str):
+    def notify_about_filter_rename_action(self, sender: Filter, old_id: str) -> None:
         """
         This method checks connections of a filter which should be renamed and updates them accordingly.
         :param sender: The filter that was renamed

@@ -1,4 +1,3 @@
-# coding=utf-8
 """write fixture to file"""
 from logging import getLogger
 from typing import Union
@@ -9,25 +8,25 @@ from model.ofl.fixture import ColorSupport, UsedFixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 _additional_filter_depth = 100.0
 _filter_channel_height = 35.0
 
 
-def _sanitize_name(input: str | dict) -> str:
-    if isinstance(input, dict):
-        input = input.get("insert")
+def _sanitize_name(input_: str | dict) -> str:
+    if isinstance(input_, dict):
+        input_ = input_.get("insert")
         logger.error("Did not extract channel macro while creating fixture filters.")
-    if input == 'universe':
-        return '_universe_channel'
-    return input.replace(" ", "_").replace("/", "_").replace("\\", "_")
+    if input_ == "universe":
+        return "_universe_channel"
+    return input_.replace(" ", "_").replace("/", "_").replace("\\", "_")
 
 
 def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, ColorSupport], filter_page: FilterPage,
                                    output_map: dict[Union[
                                        ColorSupport, str], str] | None = None) -> bool:
-    #TODO output_map do nothing
+    # TODO output_map do nothing
     if isinstance(fixture, tuple):
         fixture = fixture[0]
 
@@ -37,36 +36,43 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
     avg_count = 0
     max_y = 0.0
 
-    for filter in filter_page.filters:
-        filter_position_x = filter.pos[0] or 0
-        if filter.filter_type not in [FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
-                                      FilterTypeEnumeration.VFILTER_UNIVERSE]:
+    for filter_ in filter_page.filters:
+        filter_position_x = filter_.pos[0] or 0
+        if filter_.filter_type not in [FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
+                                       FilterTypeEnumeration.VFILTER_UNIVERSE]:
             avg_x = filter_position_x
             avg_count += 1
-        max_y = max(max_y, filter.pos[1] or 0)
+        max_y = max(max_y, filter_.pos[1] or 0)
     avg_x /= max(avg_count, 1)
 
-    filter = Filter(
+    filter_ = Filter(
         filter_id=f"universe-output_{_sanitize_name(name)}",
         filter_type=11,
         pos=(avg_x, max_y + (_filter_channel_height * fixture.channel_length) / 2),
-        scene=scene
+        scene=scene,
     )
 
-    filter.filter_configurations["universe"] = str(fixture.parent_universe)
-    already_added_filters = [filter]
-    i = 0
+    filter_.filter_configurations["universe"] = str(fixture.parent_universe)
+    already_added_filters = [filter_]
+
+    used_names = set(filter_.filter_configurations)
+
     for index in range(fixture.channel_length):
-        selected_input_name = _sanitize_name(fixture.get_fixture_channel(index).name or str(index))
-        if selected_input_name in filter.filter_configurations.keys():
-            selected_input_name += str(i)
-        filter.filter_configurations[selected_input_name] = str(fixture.start_index + index + 1)
-        i += 1
+        base_name = _sanitize_name(fixture.get_fixture_channel(index).name or str(index))
+        selected_name = base_name
+        suffix = 1
 
-    scene.append_filter(filter)
-    filter_page.filters.append(filter)
+        while selected_name in used_names:
+            selected_name = f"{base_name}_{suffix}"
+            suffix += 1
 
-    added_depth = _check_and_add_auxiliary_filters(fixture, filter_page, filter, avg_x, max_y,
+        filter_.filter_configurations[selected_name] = str(fixture.start_index + index + 1)
+        used_names.add(selected_name)
+
+    scene.append_filter(filter_)
+    filter_page.filters.append(filter_)
+
+    added_depth = _check_and_add_auxiliary_filters(fixture, filter_page, filter_, avg_x, max_y,
                                                    name, already_added_filters, output_map)
     for f in already_added_filters:
         f.pos = (f.pos[0] + added_depth, f.pos[1])
@@ -75,7 +81,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
 
 def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, universe_filter: Filter, x: float, y: float,
                                      name: str, already_added_filters: list[Filter],
-                                     output_map: dict[ColorSupport | str, str] | None = None):
+                                     output_map: dict[ColorSupport | str, str] | None = None) -> float:
     channel_count = fixture.channel_length
     i = 0
 
@@ -84,13 +90,13 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
     added_depth = 0
     y_shift = y
 
-    def compute_filter_height(channel_count_: int, filter_index, filter_chan_count=1) -> float:
+    def compute_filter_height(channel_count_: int, filter_index: int, filter_chan_count: int = 1) -> float:
         nonlocal y_shift
         f = float(10 * channel_count_ + filter_index * 45 + y_shift)
         y_shift += _filter_channel_height * filter_chan_count
         return f
 
-    for index, channel in enumerate(fixture._fixture_channels):
+    for index, channel in enumerate(fixture.fixture_channels):
         try:
             if not channel.name:
                 continue
@@ -192,18 +198,18 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
             universe_filter.pos = (x + 11, pos[1])
 
     if not global_dimmer_found and str(
-            fp.parent_scene.board_configuration.ui_hints.get('color-mixin-auto-add-disabled')).lower() != 'true':
+            fp.parent_scene.board_configuration.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true":
         for color_input_filter in color_inputs:
             brightness_mixin_filter = construct_virtual_filter_instance(
                 scene=fp.parent_scene,
                 filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
                 filter_id=color_input_filter.filter_id + "__brightness_mixin",
-                pos=(color_input_filter.pos[0] - _additional_filter_depth, color_input_filter.pos[1])
+                pos=(color_input_filter.pos[0] - _additional_filter_depth, color_input_filter.pos[1]),
             )
             fp.filters.append(brightness_mixin_filter)
             added_depth = max(added_depth, 2 * _additional_filter_depth)
             fp.parent_scene.append_filter(brightness_mixin_filter)
-            color_input_filter.channel_links['value'] = brightness_mixin_filter.filter_id + ":out"
+            color_input_filter.channel_links["value"] = brightness_mixin_filter.filter_id + ":out"
             if output_map is not None:
                 update_list = []
                 for k, v in output_map.items():

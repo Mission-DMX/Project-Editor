@@ -1,6 +1,8 @@
-# encoding=utf-8
 """Extended Flowchart to handle creating nodes from file"""
+from typing import override
+
 from pyqtgraph.flowchart import Flowchart
+from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 from PySide6.QtGui import QBrush, QColor
 
 from model import Filter, Scene
@@ -12,8 +14,9 @@ from .nodes.base.filternode import FilterNode
 class FilterFlowchart(Flowchart):
     """Flowchart that can handle creating nodes from file"""
 
-    def __init__(self, page: FilterPage, terminals=None, filePath=None, library=None):
-        super().__init__(terminals, page.parent_scene.human_readable_name + "/" + page.name, filePath, library)
+    def __init__(self, page: FilterPage, terminals: dict[str, dict[str, str]] | None = None,
+                 file_path: str | None = None, library: NodeLibrary = None) -> None:
+        super().__init__(terminals, page.parent_scene.human_readable_name + "/" + page.name, file_path, library)
         self._page = page
 
     @property
@@ -21,16 +24,17 @@ class FilterFlowchart(Flowchart):
         """The scene this flowchart represents"""
         return self._page.parent_scene
 
-    def createNode(self, nodeType, name=None, pos=None):
+    @override
+    def createNode(self, node_type: int, name: str | None = None, pos: tuple[int, int] | None = None) -> FilterNode:
         """Adds a node to the flowchart. Overrides Flowchart behaviour by passing scene to node.
 
         Args:
-            nodeType: The type of the node.
+            node_type: The type of the node.
             name: The name of the node.
             pos: The position of the node
         """
         if name is None:
-            name = nodeType
+            name = node_type
             index = 0
             page_name = (self._page.name + ".") if self._page.name != "default" else ""
             while True:
@@ -39,12 +43,13 @@ class FilterFlowchart(Flowchart):
                     name = tmp
                     break
                 index += 1
-        node: FilterNode = self.library.getNodeType(nodeType)(self._page.parent_scene, name)
+        node: FilterNode = self.library.getNodeType(node_type)(self._page.parent_scene, name)
         self._page.filters.append(node.filter)
         self.addNode(node, name, pos)
         return node
 
-    def create_node_with_filter(self, filter_: Filter, node_type, is_from_different_page: bool = False):
+    def create_node_with_filter(self, filter_: Filter, node_type: int,
+                                is_from_different_page: bool = False) -> FilterNode:
         """Creates a node and adds it to the flowchart.
 
         Args:
@@ -67,7 +72,8 @@ class FilterFlowchart(Flowchart):
         self.addNode(node, filter_.filter_id, filter_.pos)
         return node
 
-    def addNode(self, node, name, pos=None):
+    @override
+    def addNode(self, node: FilterNode, name: str, pos: tuple[int, int] | None = None) -> None:
         """Adds a node to the flowchart.
 
         Args:
@@ -77,4 +83,4 @@ class FilterFlowchart(Flowchart):
         """
         if isinstance(node, FilterNode) and pos is not None:
             node.filter.pos = pos
-        return super().addNode(node, name, pos)
+        super().addNode(node, name, pos)

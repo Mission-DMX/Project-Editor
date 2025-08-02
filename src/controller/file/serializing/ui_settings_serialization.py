@@ -1,12 +1,12 @@
-from xml.etree import ElementTree
+import xml.etree.ElementTree as ET
 
 
-def _create_ui_hint_element(ui_hint: tuple[str, str], parent: ElementTree.Element) -> ElementTree.Element:
+def _create_ui_hint_element(ui_hint: tuple[str, str], parent: ET.Element) -> ET.Element:
     """Creates an xml element of type uihint.
 
     <uihint name="key" value="value"/>
     """
-    return ElementTree.SubElement(parent, "uihint", attrib={
+    return ET.SubElement(parent, "uihint", attrib={
         "name": str(ui_hint[0]),
-        "value": str(ui_hint[1])
+        "value": str(ui_hint[1]),
     })
