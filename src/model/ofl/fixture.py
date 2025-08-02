@@ -5,14 +5,15 @@ from __future__ import annotations
 import json
 import random
 from collections import defaultdict
-from enum import Enum, IntFlag
+from enum import IntFlag
 from logging import getLogger
-from typing import TYPE_CHECKING, Any, Final, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Final
 from uuid import UUID, uuid4
 
 import numpy as np
 from PySide6 import QtCore
 
+from model.ofl.ofl_fixture import FixtureMode, OflFixture
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -23,76 +24,6 @@ if TYPE_CHECKING:
     from model import BoardConfiguration
 
 logger = getLogger(__name__)
-
-
-class Category(Enum):
-    """Category of Fixtures"""
-
-    BARREL_SCANNER = "Barrel Scanner"
-    BLINDER = "Blinder"
-    COLOR_CHANGER = "Color Changer"
-    DIMMER = "Dimmer"
-    EFFECT = "Effect"
-    FAN = "Fan"
-    FLOWER = "Flower"
-    HAZER = "Hazer"
-    LASER = "Laser"
-    MATRIX = "Matrix"
-    MOVING_HEAD = "Moving Head"
-    PIXEL_BAR = "Pixel Bar"
-    SCANNER = "Scanner"
-    SMOKE = "Smoke"
-    STAND = "Stand"
-    STROBE = "Strobe"
-    OTHER = "Other"
-
-
-# class Capabilities:
-#    dmxRange: tuple[int, int]
-
-
-# class Channel(TypedDict):
-#    defaultValue: str
-#    highlightValue: str
-#    capabilities: list[Capabilities]
-
-
-class Mode(TypedDict):
-    """possible Modes of a fixture"""
-
-    name: str
-    shortName: str
-    #    rdmPersonalityIndex: int
-    #    physical: Physical
-    channels: list[str]
-
-
-class Fixture(TypedDict):
-    """
-    a Fixture from OFL.
-
-    physical units:
-        dimensions: WDH in mm
-        power: W
-    """
-
-    name: str
-    shortName: NotRequired[str]
-    categories: set[Category]
-    #    meta: MetaData
-    comment: NotRequired[str]
-    #    links: Links
-    #    helpWanted
-    #    rdm
-    #    physical
-    #    matrix: Matrix
-    #    wheels
-    #    availableChannels
-    #    templateChannels
-    modes: list[Mode]
-    fileName: str
-    physical_power: float
-    physical_dimensions: tuple[int, int, int]
 
 
 class ColorSupport(IntFlag):
@@ -122,21 +53,12 @@ class ColorSupport(IntFlag):
         return "+".join(s)
 
 
-def load_fixture(file: str) -> Fixture:
+def load_fixture(file: str) -> OflFixture:
     """load fixture from OFL JSON"""
     with open(file, "r", encoding="UTF-8") as f:
-        ob: dict[str, Any] = json.load(f)
-    physical_data = ob.get("physical") or {}
-    return Fixture(
-        name=ob["name"],
-        comment=ob.get("comment", ""),
-        shortName=ob.get("shortName", ""),
-        categories=ob.get("categories", set()),
-        modes=ob.get("modes", []),
-        fileName=file.split("/fixtures/")[1],
-        physical_power=physical_data.get("power", 0),
-        physical_dimensions = physical_data.get("dimensions", (10, 10, 10)),
-    )
+        ob: dict = json.load(f)
+    ob.update({"fileName": file.split("/fixtures/")[1]})
+    return OflFixture.model_validate(ob)
 
 
 class UsedFixture(QtCore.QObject):
@@ -147,7 +69,7 @@ class UsedFixture(QtCore.QObject):
     def __init__(
         self,
         board_configuration: BoardConfiguration,
-        fixture: Fixture,
+        fixture: OflFixture,
         mode_index: int,
         parent_universe: int,
         start_index: int,
@@ -156,7 +78,7 @@ class UsedFixture(QtCore.QObject):
     ) -> None:
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
-        self._fixture: Final[Fixture] = fixture
+        self._fixture: Final[OflFixture] = fixture
         self._uuid: Final[UUID] = uuid if uuid else uuid4()
 
         self._start_index: int = start_index
@@ -190,27 +112,27 @@ class UsedFixture(QtCore.QObject):
 
         :returns: [float] The power draw in Watt.
         """
-        return self._fixture.get("physical_power")
+        return self._fixture.physical.power
 
     @property
     def name(self) -> str:
         """name of the fixture"""
-        return self._fixture.get("name")
+        return self._fixture.name
 
     @property
     def short_name(self) -> str:
         """short name of the fixture"""
-        return self._fixture.get("shortName")
+        return self._fixture.shortName
 
     @property
     def comment(self) -> str:
         """comment of the fixture"""
-        return self._fixture.get("comment")
+        return self._fixture.comment
 
     @property
-    def mode(self) -> Mode:
+    def mode(self) -> FixtureMode:
         """mode of the fixture"""
-        return self._fixture.get("modes")[self._mode_index]
+        return self._fixture.modes[self._mode_index]
 
     @property
     def start_index(self) -> int:
@@ -220,7 +142,7 @@ class UsedFixture(QtCore.QObject):
     @property
     def fixture_file(self) -> str:
         """file of the fixture"""
-        return self._fixture.get("fileName")
+        return self._fixture.fileName
 
     @property
     def mode_index(self) -> int:
@@ -286,7 +208,7 @@ class UsedFixture(QtCore.QObject):
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
-        for index, channel_name in enumerate(self.mode["channels"]):
+        for index, channel_name in enumerate(self.mode.channels):
             channel = FixtureChannel(channel_name)
             fixture_channels.append(channel)
             for channel_type in channel.type_as_list:
@@ -318,7 +240,7 @@ class UsedFixture(QtCore.QObject):
 
 
 def make_used_fixture(
-    board_configuration: BoardConfiguration, fixture: Fixture, mode_index: int, universe_id: int, start_index: int
+    board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
 ) -> UsedFixture:
     """generate a new Used Fixture from a fixture"""
     return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
