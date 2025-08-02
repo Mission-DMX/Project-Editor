@@ -67,8 +67,9 @@ class PatchPlanExportWizard(QWizard):
         # TODO allow weights to prioritize putting near fixtures on the same phase at the expense of uneven load
         self._first_page.setLayout(layout)
 
-        self._fixture_selection_page = ComposableWizardPage(page_activation_function=self._load_fixture_list,
-                                                            check_completeness_function=self._commit_changes)
+        self._fixture_selection_page = ComposableWizardPage(
+            page_activation_function=self._load_fixture_list, check_completeness_function=self._commit_changes
+        )
         self._fixture_selection_page.setTitle("Fixture Selection")
         self._fixture_selection_page.setSubTitle("Please select the fixtures that you would like to export")
         layout = QHBoxLayout()
@@ -144,29 +145,42 @@ class PatchPlanExportWizard(QWizard):
 
         return True
 
-    def _write_csv_file(self, fixtures: list[UsedFixture], phase_association: dict[UsedFixture, int],
-                        phases: Counter[int]) -> None:
+    def _write_csv_file(
+        self, fixtures: list[UsedFixture], phase_association: dict[UsedFixture, int], phases: Counter[int]
+    ) -> None:
         """Given a fixture list with its phase schedule, this method writes the CSV file."""
         fixtures.sort(key=lambda f: f.universe_id * 512 + f.start_index)
         with open(self._export_location_tb.text(), "w", newline="") as csv_file:
             logger.info("Exporting Fixtures as CSV to %s.", csv_file.name)
             writer = csv.writer(csv_file, delimiter=";")
-            writer.writerow(["Fixture Name", "Fixture Type", "Universe", "Address", "Phase", "Fixture Power [W]",
-                             "Total Phase Load [W]"])
+            writer.writerow(
+                [
+                    "Fixture Name",
+                    "Fixture Type",
+                    "Universe",
+                    "Address",
+                    "Phase",
+                    "Fixture Power [W]",
+                    "Total Phase Load [W]",
+                ]
+            )
             for fixture in fixtures:
                 fixture_phase = phase_association[fixture]
-                writer.writerow([
-                    fixture.name_on_stage or fixture.name,
-                    fixture.fixture_file,
-                    str(fixture.universe_id),
-                    str(fixture.start_index),
-                    f"L{fixture_phase + 1}",
-                    str(fixture.power),
-                    str(phases[fixture_phase]),
-                ])
+                writer.writerow(
+                    [
+                        fixture.name_on_stage or fixture.name,
+                        fixture.fixture_file,
+                        str(fixture.universe_id),
+                        str(fixture.start_index),
+                        f"L{fixture_phase + 1}",
+                        str(fixture.power),
+                        str(phases[fixture_phase]),
+                    ]
+                )
 
-    def _schedule_phases(self, fixtures: list[UsedFixture], phase_association: dict[UsedFixture, int],
-                         phases: Counter[int]) -> None:
+    def _schedule_phases(
+        self, fixtures: list[UsedFixture], phase_association: dict[UsedFixture, int], phases: Counter[int]
+    ) -> None:
         """
         This method distributes the fixtures on the available power phases.
 
@@ -175,7 +189,7 @@ class PatchPlanExportWizard(QWizard):
         :param phases: The load on each power phase in Watt.
         """
         number_of_phases = self._number_phases_sb.value()
-        fixtures.sort(key=lambda f: f.physical_power, reverse=True)
+        fixtures.sort(key=lambda f: f.physical.power, reverse=True)
         for fixture in fixtures:
             selected_phase = 0
             for i in range(number_of_phases):
@@ -184,11 +198,14 @@ class PatchPlanExportWizard(QWizard):
             phase_association[fixture] = selected_phase
             phases[selected_phase] += fixture.power
             if fixture.power == 0:
-                logger.warning("Fixture %s reported power requirement of %sW. This seams odd.",
-                               str(fixture), str(fixture.power))
+                logger.warning(
+                    "Fixture %s reported power requirement of %sW. This seams odd.", str(fixture), str(fixture.power)
+                )
         for phase_index, phase_load in phases.items():
             if phase_load > 2400:
                 logger.warning(
                     "Phase L%s exceeds 2.4kW. It totals to %sW. Please check that the phase is not overloaded. "
-                    "Keep in mind larger initial currents!", str(phase_index + 1), str(phase_load)
+                    "Keep in mind larger initial currents!",
+                    str(phase_index + 1),
+                    str(phase_load),
                 )
