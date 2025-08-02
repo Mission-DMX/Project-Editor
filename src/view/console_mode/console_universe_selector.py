@@ -23,8 +23,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
             for universe in self._board_configuration.universes:
                 self.add_universe(universe)
 
-        self._dialog = YesNoDialog(self, self._automap,
-                                   text="Would you like to automatically map all channels to bank sets?")
+        self._dialog = YesNoDialog(self, "Would you like to automatically map all channels to bank sets?", self._automap)
 
     def add_universe(self, universe: Universe) -> None:
         """

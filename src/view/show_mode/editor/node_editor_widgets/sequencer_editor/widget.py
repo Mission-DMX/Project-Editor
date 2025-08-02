@@ -360,4 +360,4 @@ class SequencerEditor(PreviewEditWidget):
             self._transition_widget_map[self._selected_transition].update_labels(self._selected_transition)
 
     def parent_opened(self):
-        self._input_dialog = YesNoDialog(self.get_widget(), self._link_bankset)
+        self._input_dialog = YesNoDialog(self.get_widget(), "Would you like to switch to live preview now?", self._link_bankset)
