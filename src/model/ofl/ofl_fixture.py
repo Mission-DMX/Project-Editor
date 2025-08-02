@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict
 logger = getLogger(__name__)
 
 
-class _MatrixChannelInsert(BaseModel):
+class MatrixChannelInsert(BaseModel):
     insert: Literal["matrixChannels"]
     repeatFor: str | list[str]
 
@@ -32,13 +32,13 @@ class FixtureMode(BaseModel):
 
     #    rdmPersonalityIndex: int
     #    physical: Physical
-    channels: list[str | _MatrixChannelInsert | None]
+    channels: list[str | MatrixChannelInsert | None]
     """List of channel names used in this mode."""
 
     model_config = ConfigDict(frozen=True)
 
 
-class _FixturePhysicalBulb(BaseModel):
+class FixturePhysicalBulb(BaseModel):
     """Physical attributes of the fixture's light source."""
 
     type: str = ""
@@ -53,7 +53,7 @@ class _FixturePhysicalBulb(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class _FixturePhysical(BaseModel):
+class FixturePhysical(BaseModel):
     """Physical properties of the fixture housing and electronics."""
 
     dimensions: tuple[float, float, float] = [0.0, 0.0, 0.0]
@@ -68,7 +68,7 @@ class _FixturePhysical(BaseModel):
     DMXconnector: str = ""
     """Type of DMX connector (e.g. '3-pin', '5-pin')."""
 
-    bulb: _FixturePhysicalBulb = _FixturePhysicalBulb()
+    bulb: FixturePhysicalBulb = FixturePhysicalBulb()
     """Details about the built-in light source."""
 
     model_config = ConfigDict(frozen=True)
@@ -116,7 +116,7 @@ class OflFixture(BaseModel):
     # links: FixtureLinks = FixtureLinks()
     # """Optional set of external links such as manuals and videos."""
 
-    physical: _FixturePhysical = _FixturePhysical()
+    physical: FixturePhysical = FixturePhysical()
     """Physical data including weight, size, and connector type."""
 
     fileName: str
