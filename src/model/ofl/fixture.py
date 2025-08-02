@@ -1,4 +1,4 @@
-"""Fixture Definitions from OFL"""
+"""Fixture Definitions from OFL."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ logger = getLogger(__name__)
 
 
 class ColorSupport(IntFlag):
-    """Color Support of Fixture"""
+    """Color Support of fixture."""
 
     NO_COLOR_SUPPORT = 0
     COLD_AND_WARM_WHITE = 1
@@ -62,7 +62,7 @@ def load_fixture(file: str) -> OflFixture:
 
 
 class UsedFixture(QtCore.QObject):
-    """Fixture in use with a specific mode"""
+    """Fixture in use with a specific mode."""
 
     static_data_changed: QtCore.Signal = QtCore.Signal()
 
@@ -107,51 +107,48 @@ class UsedFixture(QtCore.QObject):
     @property
     def power(self) -> float:
         """
-        Get the fixture maximum continuous power draw (not accounting for capacitor charging
-        as well as lamp warm up) in W.
-
-        :returns: [float] The power draw in Watt.
+        Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W.
         """
         return self._fixture.physical.power
 
     @property
     def name(self) -> str:
-        """name of the fixture"""
+        """Name of theFixture."""
         return self._fixture.name
 
     @property
     def short_name(self) -> str:
-        """short name of the fixture"""
+        """Short name of theFixture."""
         return self._fixture.shortName
 
     @property
     def comment(self) -> str:
-        """comment of the fixture"""
+        """Comment of theFixture."""
         return self._fixture.comment
 
     @property
     def mode(self) -> FixtureMode:
-        """mode of the fixture"""
+        """Mode of theFixture."""
         return self._fixture.modes[self._mode_index]
 
     @property
     def start_index(self) -> int:
-        """start index of the fixture in the universe"""
+        """Start index of theFixture in the Universe indexed by 0."""
         return self._start_index
 
     @property
     def fixture_file(self) -> str:
-        """file of the fixture"""
+        """File of the fixture."""
         return self._fixture.fileName
 
     @property
     def mode_index(self) -> int:
-        """index of the mode in the fixture"""
+        """Index of the mode in the fixture."""
         return self._mode_index
 
     @property
     def universe_id(self) -> int:
-        """id of the universe"""
+        """Id of the universe for the fixture."""
         return self._universe_id
 
     @universe_id.setter
@@ -160,22 +157,22 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def channel_length(self) -> int:
-        """get the number of channels in the fixture"""
+        """Number of channels of the fixture."""
         return len(self._fixture_channels)
 
     @property
     def channel_indexes(self) -> list[int]:
-        """index of the channels in the fixture"""
+        """Index of the channels in the fixture."""
         return list(range(self._start_index, self._start_index + len(self._fixture_channels)))
 
     @property
     def fixture_channels(self) -> tuple[FixtureChannel, ...]:
-        """fixture channels of the fixture"""
+        """Fixture channels of the fixture."""
         return tuple(self._fixture_channels)
 
     @property
     def color_on_stage(self) -> str:
-        """color of the fixture on stage"""
+        """Color of the fixture on stage."""
         return self._color_on_stage
 
     @color_on_stage.setter
@@ -185,7 +182,7 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def name_on_stage(self) -> str:
-        """name of the fixture on stage"""
+        """Name of the fixture on stage."""
         return self._name_on_stage
 
     @name_on_stage.setter
@@ -195,11 +192,11 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def color_support(self) -> ColorSupport:
-        """color support of the fixture"""
+        """Color support of the fixture."""
         return self._color_support
 
     def get_segment_in_universe_by_type(self, segment_type: FixtureChannelType) -> Sequence[int]:
-        """get a segment by type"""
+        """Get a segment by type."""
         return tuple((self._segment_map[segment_type] + self.start_index).tolist())
 
     def _generate_fixture_channels(
@@ -231,7 +228,7 @@ class UsedFixture(QtCore.QObject):
         )
 
     def get_fixture_channel(self, index: int) -> FixtureChannel:
-        """get a fixture channel by index"""
+        """Get a fixture channel by index."""
         return self._fixture_channels[index]
 
     def __str__(self) -> str:
@@ -242,5 +239,5 @@ class UsedFixture(QtCore.QObject):
 def make_used_fixture(
     board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
 ) -> UsedFixture:
-    """generate a new Used Fixture from a fixture"""
+    """Generate a new Used Fixture from a oflFixture."""
     return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
