@@ -57,10 +57,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
-        from model.ui_configuration import setup_network_manager
-
-        setup_network_manager(self._fish_connector, self._broadcaster)
-
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
             (
