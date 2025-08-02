@@ -198,8 +198,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Redo", None, "Shift+Z"),
             ],
             "Tools": [
-                #    ("Scene Wizard", self._open_scene_setup_wizard, None)
-                #    # TODO link wizard that creates a theater scene based on patched fixtures
+                # ("Scene Wizard", self._open_scene_setup_wizard, None),
                 ("Patch Plan Export", self._open_patch_plan_export_dialog, None),
             ],
             "Help": [
