@@ -19,6 +19,7 @@ class SequencerControlUIWidget(UIWidget):
         w.setMinimumWidth(300)
         w.setMinimumHeight(100)
         layout = QVBoxLayout()
+        layout.addWidget(QLabel(str(", ".join(self.filter_ids))))
         layout.addWidget(QLabel("Current Active Sequences:"))
         list_widget = QListWidget()
         if for_player:

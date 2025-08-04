@@ -69,7 +69,7 @@ class UIWidget(ABC):
         """Get the id of the linked filter"""
         linked_filters: list[str | None] = [None] * len(self._associated_filters)
 
-        for i, k, v in enumerate(self._associated_filters.items()):
+        for i, (k, v) in enumerate(self._associated_filters.items()):
             try:
                 ik = int(k)
             except ValueError:
