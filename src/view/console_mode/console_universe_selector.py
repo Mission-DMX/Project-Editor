@@ -26,7 +26,8 @@ class UniverseSelector(QtWidgets.QTabWidget):
                 self.add_universe(universe)
 
         self.tabBar().setVisible(False)
-        initial_label = QLabel("Please Create Universe to use Quick Console.")
+        initial_label = QLabel("Please Create Universe and patch some Fixtures to use Quick Console.")
+        initial_label.setWordWrap(True)
         initial_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         initial_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.addTab(initial_label, "")
