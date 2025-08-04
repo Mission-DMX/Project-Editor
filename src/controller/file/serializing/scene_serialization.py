@@ -1,4 +1,3 @@
-# coding=utf-8
 """Serialization of Scenes to XML."""
 import xml.etree.ElementTree as ET
 
@@ -39,7 +38,7 @@ def _add_ui_page_to_element(scene_element: ET.Element, ui_page: UIPage) -> None:
     :param ui_page: The UI page to add
     """
     page_element = ET.SubElement(scene_element, "uipage", attrib={
-        'title': str(ui_page.title),
+        "title": str(ui_page.title),
     })
     from view.show_mode.show_ui_widgets import get_widget_key
     for widget in ui_page.widgets:

@@ -9,13 +9,13 @@ class SequencerFilterModel:
 
     def load_configuration(self, d: dict[str, str]):
         self.channels.clear()
-        for c_str in d["channels"].split(';'):
+        for c_str in d["channels"].split(";"):
             if len(c_str) == 0:
                 continue
             c = SequencerChannel.from_filter_str(c_str)
             self.channels.append(c)
         self.transitions.clear()
-        for t_str in d["transitions"].split(';'):
+        for t_str in d["transitions"].split(";"):
             if len(t_str) == 0:
                 continue
             t = Transition.from_filter_str(t_str, self.channels)
@@ -23,8 +23,8 @@ class SequencerFilterModel:
 
     def get_configuration(self):
         return {
-            "channels": ';'.join([c.format_for_filter() for c in self.channels]),
-            "transitions": ';'.join([t.format_for_filter() for t in self.transitions])
+            "channels": ";".join([c.format_for_filter() for c in self.channels]),
+            "transitions": ";".join([t.format_for_filter() for t in self.transitions])
         }
 
     def remove_channels(self, selected_items: list[str] | list[SequencerChannel]):

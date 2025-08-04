@@ -13,7 +13,7 @@ logger = getLogger(__file__)
 class SequenceKeyFrame:
     def __init__(self, target_channel: SequencerChannel):
         if target_channel is None:
-            logger.error('target_channel is None')
+            logger.error("target_channel is None")
         self.channel: SequencerChannel = target_channel
         self.target_value: int | float | ColorHSI = 0
         self.duration: float = 0.0
@@ -25,7 +25,7 @@ class SequenceKeyFrame:
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "SequenceKeyFrame":
-        args = s.split(':')
+        args = s.split(":")
         channel_name = args[0]
         found_channel: SequencerChannel | None = None
         if isinstance(channels, list):
@@ -109,11 +109,11 @@ class Transition:
                 new_dict[c.name] = c
             channels = new_dict
         t = Transition()
-        first_delim = s.find('#')
-        event_def = s[:first_delim].split(':')
+        first_delim = s.find("#")
+        event_def = s[:first_delim].split(":")
         t._trigger_event = (int(event_def[0]), int(event_def[1]), "")
         s = s[first_delim+1:]
-        first_delim = s.find('#')
+        first_delim = s.find("#")
         t.name = s[:first_delim]
         s = s[first_delim + 1:]
         for arg in s.split("#"):

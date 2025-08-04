@@ -1,4 +1,3 @@
-# coding=utf-8
 from typing import override
 
 import PySide6
@@ -240,11 +239,10 @@ class TimelineContentWidget(QWidget):
                     if kf.only_on_channel is None:
                         self._clicked_on_keyframe(kf, y)
                         break
-                    else:
-                        channel_index = self._get_channel_index(kf.only_on_channel)
-                        if channel_index * CHANNEL_DISPLAY_HEIGHT <= y - 20 <= (channel_index + 1) * CHANNEL_DISPLAY_HEIGHT:
-                            self._clicked_on_keyframe(kf, y)
-                            break
+                    channel_index = self._get_channel_index(kf.only_on_channel)
+                    if channel_index * CHANNEL_DISPLAY_HEIGHT <= y - 20 <= (channel_index + 1) * CHANNEL_DISPLAY_HEIGHT:
+                        self._clicked_on_keyframe(kf, y)
+                        break
         self.repaint()
 
     def _clicked_on_keyframe(self, kf: KeyFrame, y: int) -> None:

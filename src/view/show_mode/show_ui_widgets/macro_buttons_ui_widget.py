@@ -4,8 +4,20 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit,
-                               QListWidget, QMessageBox, QPushButton, QSpinBox, QWidget)
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMessageBox,
+    QPushButton,
+    QSpinBox,
+    QWidget,
+)
 
 from model import UIWidget
 from utility import resource_path
@@ -38,7 +50,7 @@ class _AddMacroActionDialog(QDialog):
         self._text_tb = QLineEdit(self)
         layout.addRow("Display Text: ", self._text_tb)
         # TODO add Icon selection from show media storage
-        self._button_box = QDialogButtonBox((QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel))
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.accepted.connect(self._ok_button_pressed)
         self._button_box.rejected.connect(self._cancel_button_pressed)
         layout.addWidget(self._button_box)

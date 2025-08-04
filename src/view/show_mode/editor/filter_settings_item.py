@@ -1,4 +1,3 @@
-# coding=utf-8
 """Module for filter settings editor"""
 from __future__ import annotations
 

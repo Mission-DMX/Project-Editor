@@ -1,4 +1,3 @@
-# coding=utf-8
 from __future__ import annotations
 
 from logging import getLogger
@@ -385,7 +384,7 @@ class CueEditor(PreviewEditWidget):
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
             .setText(self._timeline_container.cue.duration_formatted)
 
-    def parent_closed(self, filter_node: "FilterNode") -> None:
+    def parent_closed(self, filter_node: FilterNode) -> None:
         if self._ui_widget_update_required:
             self._update_ui_widget()
         super().parent_closed(filter_node)

@@ -166,7 +166,6 @@ class UIWidget(ABC):
 
     def close(self):
         """Implement this method to react on the widget being removed from the widget holder."""
-        pass
 
 
 class UIPage:

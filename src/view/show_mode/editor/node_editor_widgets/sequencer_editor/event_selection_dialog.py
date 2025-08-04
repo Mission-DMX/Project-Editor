@@ -1,6 +1,14 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit, QSpinBox, QTreeWidget,
-                               QTreeWidgetItem, QWidget)
+from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QLineEdit,
+    QSpinBox,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QWidget,
+)
 
 from model import events
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Filter nodes related to time"""
 from model import DataType, Scene
 from model.filter import Filter, FilterTypeEnumeration
@@ -23,9 +22,9 @@ class EventCounterFilterNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_EVENT_COUNTER, name=name, terminals={
-            'time': {'io': 'in'},
-            'bpm': {'io': 'out'},
-            'freq': {'io': 'out'}
+            "time": {"io": "in"},
+            "bpm": {"io": "out"},
+            "freq": {"io": "out"}
         })
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
         self.filter.out_data_types["bpm"] = DataType.DT_16_BIT

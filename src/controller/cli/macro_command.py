@@ -19,14 +19,13 @@ class MacroCommand(Command):
     def configure_parser(self, parser: "ArgumentParser"):
         """:see Command.configure_parser:"""
         subparsers = parser.add_subparsers(help="macro commands", dest="macroaction")
-        exec_parser: "ArgumentParser" = subparsers.add_parser("exec", help="Execute a macro", exit_on_error=False)
+        exec_parser: ArgumentParser = subparsers.add_parser("exec", help="Execute a macro", exit_on_error=False)
         exec_parser.add_argument("macro", help="The macro to execute")
         # TODO implement export sub command
         # TODO implement import sub command
         # TODO implement create sub command
         # TODO implement rename sub command
         # TODO implement append sub command
-        pass
 
     def execute(self, args) -> bool:
         """:see Command.execute:"""

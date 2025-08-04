@@ -25,12 +25,12 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
 
         self._string_format = QTextCharFormat()
         self._string_format.setForeground(QBrush(QColor.fromRgb(0, 0, 0xFF)))
-        self._string_expression = QRegularExpression("\\\".+\\\"")
+        self._string_expression = QRegularExpression('\\".+\\"')
         self._mappings[self._string_expression] = self._string_format
 
         self._escape_format = QTextCharFormat()
         self._escape_format.setForeground(QBrush(QColor.fromRgb(0xFF, 0xA5, 0)))
-        self._escape_expression = QRegularExpression("\\\\[tnr$\"]")
+        self._escape_expression = QRegularExpression('\\\\[tnr$"]')
         self._mappings[self._escape_expression] = self._escape_format
 
         self._comment_format = QTextCharFormat()

@@ -11,8 +11,10 @@ from model.filter_data.sequencer.transition import Transition
 from proto import Console_pb2
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (ExternalChannelDefinition,
-                                                                                      PreviewEditWidget)
+from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (
+    ExternalChannelDefinition,
+    PreviewEditWidget,
+)
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.channel_label import ChannelLabel
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.event_selection_dialog import EventSelectionDialog
@@ -360,4 +362,9 @@ class SequencerEditor(PreviewEditWidget):
             self._transition_widget_map[self._selected_transition].update_labels(self._selected_transition)
 
     def parent_opened(self):
-        self._input_dialog = YesNoDialog(self.get_widget(), "Would you like to switch to live preview now?", self._link_bankset)
+        self._input_dialog = YesNoDialog(
+            self.get_widget(),
+            "Live Preview",
+            "Would you like to switch to live preview now?",
+            self._link_bankset
+        )

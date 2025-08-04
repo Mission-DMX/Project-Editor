@@ -1,4 +1,3 @@
-# coding=utf-8
 """simple non-blocking Yes No Dialog"""
 
 from collections.abc import Callable

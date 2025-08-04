@@ -1,4 +1,3 @@
-# coding=utf-8
 """Custom Node Library"""
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
@@ -56,11 +55,11 @@ from view.show_mode.editor.nodes.impl.effects import (
     AutoTrackerNode,
     CueListNode,
     EffectsStackNode,
+    SequencerNode,
     Shift8BitNode,
     Shift16BitNode,
     ShiftColorNode,
     ShiftFloatNode,
-    SequencerNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
     FaderHSIANode,
@@ -72,8 +71,8 @@ from view.show_mode.editor.nodes.impl.faders import (
 )
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
-    TimeNode,
     EventCounterFilterNode,
+    TimeNode,
     TimeSwitchOffDelay8BitNode,
     TimeSwitchOffDelay16BitNode,
     TimeSwitchOffDelayFloatNode,

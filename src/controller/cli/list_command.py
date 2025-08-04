@@ -1,4 +1,3 @@
-# coding=utf-8
 """Client Commands"""
 from __future__ import annotations
 

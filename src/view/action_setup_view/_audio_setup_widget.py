@@ -79,8 +79,8 @@ class AudioSetupWidget(QWidget):
     def _get_input_devices(self):
         self._device_list.clear()
         try:
-            results = subprocess.run(['pactl', 'list', 'sources'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        except FileNotFoundError as e:
+            results = subprocess.run(["pactl", "list", "sources"], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except FileNotFoundError:
             logger.error("Reading sources failed: Command 'pactl' not found. Is it in path?")
             return
         if results.returncode != 0:
@@ -106,18 +106,18 @@ class AudioSetupWidget(QWidget):
             channels = 1
             samplerate = 44100
         for line in results.stdout.decode().splitlines():
-            if line.startswith('Source'):
+            if line.startswith("Source"):
 
                 found_source = True
                 add_source()
-            if line.strip().startswith('Name: '):
-                name = line.strip()[len('Name: '):]
-            if line.strip().startswith('Description: '):
-                description = line.strip()[len('Description: '):]
+            if line.strip().startswith("Name: "):
+                name = line.strip()[len("Name: "):]
+            if line.strip().startswith("Description: "):
+                description = line.strip()[len("Description: "):]
             if line.strip().startswith('audio.channels = "'):
-                channels = int(line.strip()[len('audio.channels: '):].replace('"', ''))
+                channels = int(line.strip()[len("audio.channels: "):].replace('"', ""))
             if line.strip().startswith('audio.samplerate = "'):
-                samplerate = int(line.strip()[len('audio.samplerate: '):].replace('"', ''))
+                samplerate = int(line.strip()[len("audio.samplerate: "):].replace('"', ""))
         if found_source:
             add_source()
         return

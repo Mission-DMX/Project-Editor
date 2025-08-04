@@ -56,14 +56,14 @@ from view.show_mode.editor.nodes.impl.debug import (
                                                        DebugRemoteFloatNode,
 )
 from view.show_mode.editor.nodes.impl.effects import (
-    AutoTrackerNode,
-    CueListNode,
-    EffectsStackNode,
-    Shift8BitNode,
-    Shift16BitNode,
-    ShiftColorNode,
-    ShiftFloatNode,
-    SequencerNode,
+                                                       AutoTrackerNode,
+                                                       CueListNode,
+                                                       EffectsStackNode,
+                                                       SequencerNode,
+                                                       Shift8BitNode,
+                                                       Shift16BitNode,
+                                                       ShiftColorNode,
+                                                       ShiftFloatNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
                                                        FaderHSIANode,
@@ -75,14 +75,14 @@ from view.show_mode.editor.nodes.impl.faders import (
 )
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
-    TimeNode,
-    TimeSwitchOffDelay8BitNode,
-    TimeSwitchOffDelay16BitNode,
-    TimeSwitchOffDelayFloatNode,
-    TimeSwitchOnDelay8BitNode,
-    TimeSwitchOnDelay16BitNode,
-    TimeSwitchOnDelayFloatNode,
-    EventCounterFilterNode,
+                                                       EventCounterFilterNode,
+                                                       TimeNode,
+                                                       TimeSwitchOffDelay8BitNode,
+                                                       TimeSwitchOffDelay16BitNode,
+                                                       TimeSwitchOffDelayFloatNode,
+                                                       TimeSwitchOnDelay8BitNode,
+                                                       TimeSwitchOnDelay16BitNode,
+                                                       TimeSwitchOnDelayFloatNode,
 )
 from view.show_mode.editor.nodes.impl.trigonometics import (
                                                        TrigonometricArcCosNode,

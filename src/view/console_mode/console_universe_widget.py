@@ -1,4 +1,3 @@
-# coding=utf-8
 """directly edit channels of a universe"""
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QWidget

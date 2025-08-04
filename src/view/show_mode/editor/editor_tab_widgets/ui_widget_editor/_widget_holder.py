@@ -21,6 +21,7 @@ class UIWidgetHolder(QWidget):
         self._model: UIWidget = child
         if instance_for_editor:
             self._child = child.get_configuration_widget(self)
+            self._child.setEnabled(False)
         else:
             self._child = child.get_player_widget(self)
             self._child.setEnabled(True)

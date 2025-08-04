@@ -1,9 +1,9 @@
 """select Universe"""
 
+from av.audio import layout
 from PySide6 import QtWidgets
 from PySide6.QtGui import QAction, Qt
-from PySide6.QtWidgets import QWidget, QLabel, QSizePolicy, QPushButton, QHBoxLayout
-from av.audio import layout
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget
 
 from model import BoardConfiguration
 from model.universe import Universe

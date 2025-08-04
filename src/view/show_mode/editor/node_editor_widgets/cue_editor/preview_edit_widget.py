@@ -82,7 +82,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
 
         :returns: A list of ExternalChannelDefinition objects
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def channels(self) -> list[ExternalChannelDefinition]:

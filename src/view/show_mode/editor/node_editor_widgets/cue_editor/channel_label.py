@@ -1,5 +1,4 @@
-# coding=utf-8
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui
 from PySide6.QtGui import QColor, QPainter, QPaintEvent

@@ -13,8 +13,7 @@ def escape_argument(argument: str) -> str:
     s = s.replace("\t", "\\t")
     if " " in s:
         return '"' + s + '"'
-    else:
-        return s
+    return s
 
 
 class _CommandInsertionDialog(QDialog):

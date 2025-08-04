@@ -1,4 +1,3 @@
-# coding=utf-8
 """Context of the Client"""
 from __future__ import annotations
 
@@ -33,22 +32,22 @@ def _split_args(line: str) -> list[str]:
             if c == '"' and not in_escape:
                 in_string = False
                 continue
-            if c == '\\':
+            if c == "\\":
                 in_escape = not in_escape
             if not in_escape:
                 current_arg += c
             else:
                 match c:
-                    case 't':
-                        current_arg += '\t'
+                    case "t":
+                        current_arg += "\t"
                         in_string = False
-                    case  'n':
-                        current_arg += '\n'
+                    case  "n":
+                        current_arg += "\n"
                         in_escape = False
-                    case 'r':
-                        current_arg += '\r'
+                    case "r":
+                        current_arg += "\r"
                         in_escape = False
-                    case '$':
+                    case "$":
                         current_arg += "\\$"
                         in_escape = False
                     case '"':
@@ -58,17 +57,17 @@ def _split_args(line: str) -> list[str]:
             if c == '"':
                 in_string = True
                 in_escape = False
-            elif c == '#':
-                if current_arg != '':
+            elif c == "#":
+                if current_arg != "":
                     l.append(current_arg)
                 break
-            elif c in (' ', '\t'):
-                if current_arg != '':
+            elif c in (" ", "\t"):
+                if current_arg != "":
                     l.append(current_arg)
-                    current_arg = ''
+                    current_arg = ""
             else:
                 current_arg += c
-    if current_arg != '':
+    if current_arg != "":
         l.append(current_arg)
     return l
 

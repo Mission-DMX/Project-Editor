@@ -151,5 +151,4 @@ class IfCommand(Command):
                 rhs = arg
         if bool_eval(rhs):
             return self.context.exec_command(" ".join(command))
-        else:
-            return True
+        return True

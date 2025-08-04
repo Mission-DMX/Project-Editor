@@ -1,4 +1,3 @@
-# coding=utf-8
 from typing import override
 
 from PySide6.QtCore import QPoint

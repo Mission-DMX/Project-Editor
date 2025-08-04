@@ -187,15 +187,15 @@ class SequencerNode(FilterNode):
 
     def __init__(self, model, name) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER, name=name, terminals={
-            'time': {'io': 'in'},
-            'time_scale': {'io': 'in'}
+            "time": {"io": "in"},
+            "time_scale": {"io": "in"}
         }, allow_add_output=True)
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
         self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
 
         try:
-            for c_str in self.filter.filter_configurations["channels"].split(';'):
+            for c_str in self.filter.filter_configurations["channels"].split(";"):
                 c = SequencerChannel.from_filter_str(c_str)
                 self.addOutput(c.name)
                 self.filter.out_data_types[c.name] = c.data_type

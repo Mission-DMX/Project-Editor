@@ -1,4 +1,3 @@
-# coding=utf-8
 from collections.abc import Callable
 
 from PySide6.QtGui import QColor, QIcon

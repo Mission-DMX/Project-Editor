@@ -1,4 +1,3 @@
-# coding=utf-8
 
 """
 This file provides a factory for v-filter instances. The primary use case is for restoring efforts after loading a
@@ -73,4 +72,3 @@ def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id:
             return SequencerFilter(scene, filter_id, pos=pos)
         case _:
             raise ValueError(f"The requested filter type {filter_type} is not yet implemented.")
-    pass
