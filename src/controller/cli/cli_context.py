@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 def _split_args(line: str) -> list[str]:
     """Split a line into individual arguments."""
-    l = []
+    argument_list: list[str] = []
     in_string: bool = False
     current_arg = ""
     in_escape: bool = False
@@ -59,17 +59,17 @@ def _split_args(line: str) -> list[str]:
                 in_escape = False
             elif c == "#":
                 if current_arg != "":
-                    l.append(current_arg)
+                    argument_list.append(current_arg)
                 break
             elif c in (" ", "\t"):
                 if current_arg != "":
-                    l.append(current_arg)
+                    argument_list.append(current_arg)
                     current_arg = ""
             else:
                 current_arg += c
     if current_arg != "":
-        l.append(current_arg)
-    return l
+        argument_list.append(current_arg)
+    return argument_list
 
 
 class CLIContext:

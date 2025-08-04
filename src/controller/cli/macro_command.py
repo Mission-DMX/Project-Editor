@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from controller.cli.command import Command
 
 if TYPE_CHECKING:
-    from argparse import ArgumentParser
+    from argparse import ArgumentParser, Namespace
 
     from controller.cli.cli_context import CLIContext
 
@@ -12,11 +12,11 @@ class MacroCommand(Command):
 
     """Purpose of this command is management and execution of other macros."""
 
-    def __init__(self, context: "CLIContext"):
+    def __init__(self, context: "CLIContext") -> None:
         """:see Command.__init__:"""
         super().__init__(context, "macro")
 
-    def configure_parser(self, parser: "ArgumentParser"):
+    def configure_parser(self, parser: "ArgumentParser") -> None:
         """:see Command.configure_parser:"""
         subparsers = parser.add_subparsers(help="macro commands", dest="macroaction")
         exec_parser: ArgumentParser = subparsers.add_parser("exec", help="Execute a macro", exit_on_error=False)
@@ -27,12 +27,14 @@ class MacroCommand(Command):
         # TODO implement rename sub command
         # TODO implement append sub command
 
-    def execute(self, args) -> bool:
+    def execute(self, args: "Namespace") -> bool:
         """:see Command.execute:"""
         match args.macroaction:
             case "exec":
                 if args.macro in self.context.stack:
-                    self.context.print(f"ERROR: The macro '{args.macro}' is already in call stack. Recursion is not supported.")
+                    self.context.print(
+                        f"ERROR: The macro '{args.macro}' is already in call stack. Recursion is not supported."
+                    )
                     return False
                 for m in self.context.show.macros:
                     if m.name == args.macro:
@@ -47,3 +49,4 @@ class MacroCommand(Command):
                 return False
             case _:
                 self.context.print("Unknown macro action")
+                return False
