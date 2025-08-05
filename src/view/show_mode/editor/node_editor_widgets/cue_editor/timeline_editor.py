@@ -5,11 +5,11 @@ from PySide6.QtWidgets import QHBoxLayout, QScrollArea, QWidget
 
 from model import DataType
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn, set_seven_seg_display_content
-from model.filter_data.cues.cue import Cue, KeyFrame, StateColor, StateDouble, StateEightBit, StateSixteenBit
+from model.filter_data.cues.cue import Cue, KeyFrame, State, StateColor, StateDouble, StateEightBit, StateSixteenBit
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_label import TimelineChannelLabel
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_content_widget import TimelineContentWidget
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 def _get_column_from_name(channel_name: str) -> DeskColumn | None:
@@ -124,32 +124,33 @@ class TimelineContainer(QWidget):
         else:
             self._generate_combined_frame(p)
 
-    def _generate_frames(self, p):
+    def _generate_frames(self, time_point: float) -> None:
+        """Generate key frames at a specified cursor time point for each channel."""
         for c in self._cue.channels:
             channel_name = c[0]
             if not self._channel_label.active_channels.get(channel_name):
                 continue
             f = KeyFrame(self._cue)
-            f.timestamp = p
+            f.timestamp = time_point
             f.only_on_channel = channel_name
             i = _get_column_from_name(channel_name)
             f.append_state(self._generate_state_from_channel(c, i))
             self._keyframes_panel.insert_frame(f)
 
-    def _generate_combined_frame(self, p) -> None:
+    def _generate_combined_frame(self, time_point: float) -> None:
         f = KeyFrame(self._cue)
-        f.timestamp = p
+        f.timestamp = time_point
         for i, channel in enumerate(self._cue.channels):
             s = self._generate_state_from_channel(channel, i)
             f.append_state(s)
         self._keyframes_panel.insert_frame(f)
 
-    def _generate_state_from_channel(self, channel, i):
+    def _generate_state_from_channel(self, channel: tuple[str, DataType], channel_index: int) -> State:
         if self.bankset:
-            if isinstance(i, int):
-                column = self.bankset.get_column_by_number(i)
-            elif isinstance(i, DeskColumn):
-                column = i
+            if isinstance(channel_index, int):
+                column = self.bankset.get_column_by_number(channel_index)
+            elif isinstance(channel_index, DeskColumn):
+                column = channel_index
             else:
                 column = None
         else:

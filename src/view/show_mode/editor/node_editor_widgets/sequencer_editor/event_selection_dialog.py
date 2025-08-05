@@ -15,7 +15,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class EventSelectionDialog(QDialog):
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle("Select Event")
@@ -44,15 +44,15 @@ class EventSelectionDialog(QDialog):
         button_box.rejected.connect(self.reject)
         self.setLayout(layout)
 
-    def accept(self):
+    def accept(self) -> None:
         super().accept()
         self.close()
 
-    def reject(self):
+    def reject(self) -> None:
         super().reject()
         self.close()
 
-    def _fill_event_tree(self):
+    def _fill_event_tree(self) -> None:
         for event_sender in events.get_all_senders():
             sender_item = QTreeWidgetItem(self._event_tree)
             sender_item.setFlags(sender_item.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEditable)
@@ -66,7 +66,7 @@ class EventSelectionDialog(QDialog):
             sender_item.setExpanded(True)
             self._event_tree.addTopLevelItem(sender_item)
 
-    def _event_selected_from_tree(self):
+    def _event_selected_from_tree(self) -> None:
         if len(self._event_tree.selectedItems()) < 1:
             return
         selected_item = self._event_tree.selectedItems()[0]
@@ -79,11 +79,11 @@ class EventSelectionDialog(QDialog):
         self._function_tb.setValue(event[1])
         self._argument_tb.setText(event[2])
 
-    def _sender_value_changed(self):
+    def _sender_value_changed(self) -> None:
         self.selected_event = (self._sender_tb.value(), self.selected_event[1], self.selected_event[2])
 
-    def _function_value_changed(self):
+    def _function_value_changed(self) -> None:
         self.selected_event = (self.selected_event[0], self._function_tb.value(), self.selected_event[2])
 
-    def _arguments_changed(self):
+    def _arguments_changed(self) -> None:
         self.selected_event = (self.selected_event[0], self.selected_event[1], self._argument_tb.text())

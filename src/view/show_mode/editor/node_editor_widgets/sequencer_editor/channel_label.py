@@ -38,7 +38,7 @@ class ChannelLabel(QWidget):
     padding: 3px;
     """
 
-    def __init__(self, channel: "SequencerChannel", parent=None):
+    def __init__(self, channel: "SequencerChannel", parent: QWidget | None = None) -> None:
         QWidget.__init__(self, parent)
         layout = QHBoxLayout(self)
         dtype_label = QLabel(self)

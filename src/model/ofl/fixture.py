@@ -54,10 +54,10 @@ class ColorSupport(IntFlag):
         return "+".join(s)
 
 
-def load_fixture(file: str) -> OflFixture:
+def load_fixture(file: str) -> OflFixture | None:
     """load fixture from OFL JSON"""
     if not os.path.isfile(file):
-        logger.error(f"Fixture definition {file} not found.")
+        logger.error("Fixture definition %s not found.", file)
         return None
     with open(file, "r", encoding="UTF-8") as f:
         ob: dict = json.load(f)

@@ -1,12 +1,17 @@
+from typing import TYPE_CHECKING
+
 from PySide6.QtWidgets import QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
 from model import UIWidget
 from proto import FilterMode_pb2
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 
+if TYPE_CHECKING:
+    from model import UIPage
+
 
 class SequencerControlUIWidget(UIWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
@@ -26,7 +31,11 @@ class SequencerControlUIWidget(UIWidget):
         if for_player:
             self.close()
             self._player_list = list_widget
-            self.parent.scene.board_configuration.register_filter_update_callback(self.parent.scene.scene_id, self.filter_ids[0], self._update_received)
+            self.parent.scene.board_configuration.register_filter_update_callback(
+                self.parent.scene.scene_id,
+                self.filter_ids[0],
+                self._update_received
+            )
         layout.addWidget(list_widget)
         w.setLayout(layout)
         return w
@@ -48,7 +57,7 @@ class SequencerControlUIWidget(UIWidget):
         # TODO should we provide configuration options?
         return QWidget(parent=parent)
 
-    def _update_received(self, param: FilterMode_pb2.update_parameter):
+    def _update_received(self, param: FilterMode_pb2.update_parameter) -> None:
         if self._player_list is not None and param.parameter_key == "active_transition_list":
             transition_name_list = set(param.parameter_value.split(";"))
             item_rows_to_remove = []
@@ -67,7 +76,11 @@ class SequencerControlUIWidget(UIWidget):
                 item.setText(missing_transition)
                 self._player_list.addItem(item)
 
-    def close(self):
+    def close(self) -> None:
         if self._player_list is None:
             return
-        self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id, self.filter_ids[0], self._update_received)
+        self.parent.scene.board_configuration.remove_filter_update_callback(
+            self.parent.scene.scene_id,
+            self.filter_ids[0],
+            self._update_received
+        )

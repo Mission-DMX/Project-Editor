@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
-    QLayout,
     QMenu,
     QMessageBox,
     QPushButton,
@@ -27,7 +26,6 @@ from PySide6.QtWidgets import (
 )
 
 from controller.file.transmitting_to_fish import transmit_to_fish
-from model import DataType, Filter
 from model.control_desk import BankSet
 from model.filter_data.cues.cue import Cue, EndAction
 from model.filter_data.cues.cue_filter_model import CueFilterModel
@@ -40,6 +38,9 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 from .preview_edit_widget import ExternalChannelDefinition, PreviewEditWidget
 
 if TYPE_CHECKING:
+    from PySide6.QtWidgets import QLayout
+
+    from model import DataType, Filter
     from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 logger = getLogger(__name__)
@@ -140,7 +141,7 @@ class CueEditor(PreviewEditWidget):
         self._channels_changed_after_load = False
         self._ui_widget_update_required = False
 
-    def _configure_toolbar(self, top_layout) -> None:
+    def _configure_toolbar(self, top_layout: QLayout) -> None:
         toolbar = QToolBar(parent=self._parent_widget)
         toolbar_add_cue_action = QAction("Add Cue", self._parent_widget)
         toolbar_add_cue_action.setShortcut("Ctrl+N")
@@ -164,7 +165,7 @@ class CueEditor(PreviewEditWidget):
         toolbar.addAction(self._gui_rec_action)
         top_layout.addWidget(toolbar)
 
-    def _table_context_popup(self, pos) -> None:
+    def _table_context_popup(self, pos: QPoint) -> None:
         self._input_dialog = QMenu()
         self._input_dialog.addAction("Rename Cue", self._rename_selected_cue)
         self._input_dialog.addAction(QIcon.fromTheme("edit-paste"), "Duplicate", self._duplicate_cue_clicked)
@@ -341,7 +342,7 @@ class CueEditor(PreviewEditWidget):
             self._channels_changed_after_load = True
         self._toolbar_remove_channel_action.setEnabled(True)
 
-    def _remove_channel_button_pressed(self):
+    def _remove_channel_button_pressed(self) -> None:
         """This button queries the user for a channel to be removed and removes it from the filter output as well as
         all cues.
         """

@@ -589,11 +589,10 @@ class BankSet:
         Use this method to get all columns in the set.
         :returns: A list of all columns.
         """
-        l = []
+        column_list: list[DeskColumn] = []
         for b in self.banks:
-            for c in b.columns:
-                l.append(c)
-        return l
+            column_list.extend(b.columns)
+        return column_list
 
     @staticmethod
     def handle_column_update_message(message: proto.Console_pb2.fader_column) -> None:

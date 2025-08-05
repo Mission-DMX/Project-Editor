@@ -13,7 +13,13 @@ logger = getLogger(__name__)
 
 
 class PreviewFilter(VirtualFilter):
-    def __init__(self, scene: Scene, filter_id: str, filter_type: FilterTypeEnumeration, inst_filter_type: FilterTypeEnumeration, pos: tuple[int] | None = None) -> None:
+    def __init__(self,
+                 scene: Scene,
+                 filter_id: str,
+                 filter_type: FilterTypeEnumeration,
+                 inst_filter_type: FilterTypeEnumeration,
+                 pos: tuple[int] | None = None
+                 ) -> None:
         super().__init__(scene, filter_id, filter_type=int(filter_type), pos=pos)
         self.in_preview_mode = False
         self.associated_editor_widget: PreviewEditWidget | None = None
@@ -38,7 +44,7 @@ class PreviewFilter(VirtualFilter):
                 if channel.fader is None:
                     if channel.enabled:
                         logger.error(
-                            "The preview is enabled but no fader was assigned for channel '{}'.",
+                            "The preview is enabled but no fader was assigned for channel '%s'.",
                             channel.name
                         )
                     fader_filter = Filter(self.scene, fader_filter_id,
@@ -96,6 +102,6 @@ class CueFilter(PreviewFilter):
     elaboration.
     """
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_CUES,
                          FilterTypeEnumeration.FILTER_TYPE_CUES, pos=pos)

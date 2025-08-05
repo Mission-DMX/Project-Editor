@@ -1,6 +1,6 @@
 from logging import getLogger
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 def _rf(s: str) -> str:
@@ -10,6 +10,6 @@ def _rf(s: str) -> str:
     :returns: The processed name.
     """
     if ":" in s or ";" in s:
-        logger.warning("Replacing forbidden chars in sequencer key frame {}.", s)
+        logger.warning("Replacing forbidden chars in sequencer key frame %s.", s)
         return s.replace(":", "_").replace(";", "_")
     return s

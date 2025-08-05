@@ -86,16 +86,14 @@ class TimelineChannelLabel(QWidget):
                     painter.fillRect(6, 51 + i * CHANNEL_DISPLAY_HEIGHT, 13, 13, indicator_active_color)
         painter.end()
 
-    def mousePressEvent(self, ev: "QMouseEvent") -> None:
+    def mousePressEvent(self, ev: "QMouseEvent") -> None:  # NOQA: N802 This overrides a Qt6 native method
         super().mousePressEvent(ev)
         if not self._display_active_channel_indicator:
             return
         if 5 <= ev.x() <= 20:
-            i = 0
             y = ev.y()
-            for channel_name in self._names:
+            for i, channel_name in enumerate(self._names):
                 if 50 + i * CHANNEL_DISPLAY_HEIGHT <= y <= 65 + i * CHANNEL_DISPLAY_HEIGHT:
                     self.active_channels[channel_name] = not self.active_channels[channel_name]
                     break
-                i += 1
         self.update()

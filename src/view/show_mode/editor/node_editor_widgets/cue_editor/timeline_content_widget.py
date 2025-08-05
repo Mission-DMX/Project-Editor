@@ -228,10 +228,7 @@ class TimelineContentWidget(QWidget):
             self.cursor_position = clicked_timeslot
             self._update_7seg_text()
         else:
-            if 20 <= ((y - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40:
-                state_width = 10
-            else:
-                state_width = 1
+            state_width = 10 if 20 <= ((y - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40 else 1
             clicked_timeslot_lower = (x - state_width) * self._time_zoom
             clicked_timeslot_upper = (x + state_width) * self._time_zoom
             for kf in self.frames:

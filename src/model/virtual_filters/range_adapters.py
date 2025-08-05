@@ -108,7 +108,10 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
         raise ValueError("Unknown output port")
 
     def _instantiate_black_constant(self, filter_list: list[Filter]) -> None:
-        logger.warning("Instantiating black constant for brightness mixing %s due to missing color input", self.filter_id)
+        logger.warning(
+            "Instantiating black constant for brightness mixing %s due to missing color input",
+            self.filter_id
+        )
         c = Filter(
             filter_id=f"{self.filter_id}_color_recomposition",
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR,

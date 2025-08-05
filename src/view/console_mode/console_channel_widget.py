@@ -129,6 +129,6 @@ class ChannelWidget(QtWidgets.QWidget):
             self._channel.value = value
             self._bank_selector.fader_value_changed.emit(value)
 
-    def notify_automap(self, bank_index: int):
+    def notify_automap(self, bank_index: int) -> None:
         self._bank_selector.insert_fader_column(force_bank_index=bank_index)
         self._bank_selector.setEnabled(False)
