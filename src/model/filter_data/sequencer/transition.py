@@ -21,7 +21,7 @@ class SequenceKeyFrame:
 
     def format_for_filter(self) -> str:
         value_str: str = self.target_value.format_for_filter() if isinstance(self.target_value, ColorHSI) else str(self.target_value)
-        return f"{_rf(self.channel.name)}:{value_str}:{self.tf.value}:{self.duration}"
+        return f"{_rf(self.channel.name)}:{value_str}:{self.tf.value}:{self.duration * 1000.0}"
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "SequenceKeyFrame":
@@ -50,7 +50,7 @@ class SequenceKeyFrame:
                 skf.target_value = ColorHSI.from_filter_str(args[1])
             case _:
                 logger.error("Execpected data type: {}", found_channel.data_type)
-        skf.duration = float(args[3])
+        skf.duration = float(args[3]) / 1000.0
         skf.tf = TransferFunction(args[2])
         return skf
 
