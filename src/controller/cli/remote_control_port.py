@@ -199,7 +199,8 @@ class RemoteCLIServer:
                 except TimeoutError:
                     pass
                 except OSError as e:
-                    logger.exception("CLI socket error: %s", e)
+                    if not self._stopped:
+                        logger.exception("CLI socket error: %s", e)
             s.close()
         logger.info("Exiting CLI server thread")
 
