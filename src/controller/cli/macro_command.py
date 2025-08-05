@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from controller.cli.command import Command
@@ -9,14 +11,13 @@ if TYPE_CHECKING:
 
 
 class MacroCommand(Command):
+    """The Purpose of this command is management and execution of other macros."""
 
-    """Purpose of this command is management and execution of other macros."""
-
-    def __init__(self, context: "CLIContext") -> None:
+    def __init__(self, context: CLIContext) -> None:
         """:see Command.__init__:"""
         super().__init__(context, "macro")
 
-    def configure_parser(self, parser: "ArgumentParser") -> None:
+    def configure_parser(self, parser: ArgumentParser) -> None:
         """:see Command.configure_parser:"""
         subparsers = parser.add_subparsers(help="macro commands", dest="macroaction")
         exec_parser: ArgumentParser = subparsers.add_parser("exec", help="Execute a macro", exit_on_error=False)
@@ -27,7 +28,7 @@ class MacroCommand(Command):
         # TODO implement rename sub command
         # TODO implement append sub command
 
-    def execute(self, args: "Namespace") -> bool:
+    def execute(self, args: Namespace) -> bool:
         """:see Command.execute:"""
         match args.macroaction:
             case "exec":
