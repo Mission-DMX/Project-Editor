@@ -15,7 +15,10 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class EventSelectionDialog(QDialog):
+    """This dialog prompts the user to select an event to link."""
+
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Initializes the event selection dialog."""
         super().__init__(parent)
         self.setModal(True)
         self.setWindowTitle("Select Event")
@@ -45,14 +48,17 @@ class EventSelectionDialog(QDialog):
         self.setLayout(layout)
 
     def accept(self) -> None:
+        """Callback of the dialog accept signal. Automatically closes the dialog."""
         super().accept()
         self.close()
 
     def reject(self) -> None:
+        """Callback of the dialog reject signal. Automatically closes the dialog."""
         super().reject()
         self.close()
 
     def _fill_event_tree(self) -> None:
+        """Load the event tree with events found in the show file."""
         for event_sender in events.get_all_senders():
             sender_item = QTreeWidgetItem(self._event_tree)
             sender_item.setFlags(sender_item.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEditable)
@@ -67,6 +73,7 @@ class EventSelectionDialog(QDialog):
             self._event_tree.addTopLevelItem(sender_item)
 
     def _event_selected_from_tree(self) -> None:
+        """Callback to handle a user selection of a specific event."""
         if len(self._event_tree.selectedItems()) < 1:
             return
         selected_item = self._event_tree.selectedItems()[0]
@@ -80,10 +87,13 @@ class EventSelectionDialog(QDialog):
         self._argument_tb.setText(event[2])
 
     def _sender_value_changed(self) -> None:
+        """Callback to update the selected event if the user manually updated the event sender."""
         self.selected_event = (self._sender_tb.value(), self.selected_event[1], self.selected_event[2])
 
     def _function_value_changed(self) -> None:
+        """Callback to update the selected event if the user manually updated the event function."""
         self.selected_event = (self.selected_event[0], self._function_tb.value(), self.selected_event[2])
 
     def _arguments_changed(self) -> None:
+        """Callback to update the selected event if the user manually updated the event arguments."""
         self.selected_event = (self.selected_event[0], self.selected_event[1], self._argument_tb.text())

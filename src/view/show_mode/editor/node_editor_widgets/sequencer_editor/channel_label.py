@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 class ChannelLabel(QWidget):
+    """Label to represent a sequencer channel in a QListWidget."""
+
     _CHANNEL_STYLE_8BIT = """
     background-color: #202020;
     color: #DDDDDD;
@@ -39,6 +41,7 @@ class ChannelLabel(QWidget):
     """
 
     def __init__(self, channel: "SequencerChannel", parent: QWidget | None = None) -> None:
+        """Initialize the channel label using the given channel."""
         QWidget.__init__(self, parent)
         layout = QHBoxLayout(self)
         dtype_label = QLabel(self)

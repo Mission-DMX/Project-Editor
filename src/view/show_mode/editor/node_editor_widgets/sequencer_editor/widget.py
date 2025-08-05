@@ -30,8 +30,16 @@ logger = getLogger(__name__)
 
 
 class SequencerEditor(PreviewEditWidget):
+    """
+    This widget provides an editor for the sequencer filter.
+    """
 
     def __init__(self, parent: QWidget = None, f: Filter | None = None) -> None:
+        """
+        Instantiate a sequencer editor.
+        :param parent: The parent widget.
+        :param f: The filter to edit the settings for.
+        """
         super().__init__(f)
         self._timeline_container.generate_individual_frames = True
         self._parent_widget = QSplitter(parent=parent)
@@ -109,27 +117,36 @@ class SequencerEditor(PreviewEditWidget):
         self._selected_transition: Transition | None = None
 
     def _get_configuration(self) -> dict[str, str]:
+        """Get the configuration of the sequencer filter."""
         if self._selected_transition is not None:
             self._selected_transition.update_frames_from_cue(self._timeline_container.cue, self._model.channels)
         return self._model.get_configuration()
 
     def _load_configuration(self, conf: dict[str, str]) -> None:
+        """Load the current configuration of the sequencer filter."""
         self._model.load_configuration(conf)
         self._populate_data()
 
     def get_widget(self) -> QWidget:
+        """Returns the widget to be placed in the editor dialog."""
         return self._parent_widget
 
     def _load_parameters(self, parameters: dict[str, str]) -> None:
+        """As the sequencer filter does not use parameters, this method does nothing."""
         pass  # Nothing to do here
 
     def _get_parameters(self) -> dict[str, str]:
+        """As the sequencer filter does not use parameters, this method return an empty dictionary."""
         return {}
 
     def _get_model_channels(self) -> list[tuple[str, "DataType"]]:
+        """Use this method to retrieve all available channels, presented as a list of tuples."""
         return [(c.name, c.data_type) for c in self._model.channels]
 
     def get_channel_list(self) -> list[ExternalChannelDefinition]:
+        """
+        Use this method to retrieve all available channels, presented as a list of ExternalChannelDefinition objects.
+        """
         cdef_list: list[ExternalChannelDefinition] = []
         for c in self._model.channels:
             ec = ExternalChannelDefinition(c.data_type, c.name, self.bs_to_channel_mapping.get(c.name), self._bankset)
@@ -137,6 +154,7 @@ class SequencerEditor(PreviewEditWidget):
         return cdef_list
 
     def _transition_selected(self, new_transition: Transition | int | None) -> None:
+        """This callback handles the case that the user selected a transition."""
         if isinstance(new_transition, int):
             logger.info("Looking up transition %i.", new_transition)
             item = self._transition_list_widget.item(new_transition)
@@ -159,6 +177,7 @@ class SequencerEditor(PreviewEditWidget):
         self._recolor_bankset()
 
     def _deselect_transition(self) -> None:
+        """This method deselects any previous transition."""
         if self._selected_transition is None:
             return
         self._selected_transition.update_frames_from_cue(self._timeline_container.cue, self._model.channels)
@@ -170,6 +189,11 @@ class SequencerEditor(PreviewEditWidget):
         self._link_event_action.setEnabled(False)
 
     def _add_transition(self, t: Transition, is_new_transition: bool = True) -> None:
+        """
+        Add a transition to the sequence editor.
+        :param t: Transition to add.
+        :param is_new_transition: Whether the new transition is actually new or was already present in the model.
+        """
         if is_new_transition:
             self._model.transitions.append(t)
         li = AnnotatedListWidgetItem(self._transition_list_widget)
@@ -182,7 +206,12 @@ class SequencerEditor(PreviewEditWidget):
         if is_new_transition or self._selected_transition is None:
             self._transition_selected(t)
 
-    def _add_channel(self, c: SequencerChannel, is_new_transition: bool = True) -> None:
+    def _add_channel(self, c: SequencerChannel, is_new_channel: bool = True) -> None:
+        """
+        Add a channel to the sequence editor.
+        :param c: Channel to add.
+        :param is_new_channel: Whether the channel is actually new or was already present in the model.
+        """
         if self._model.get_channel_by_name(c.name) is not None:
             logger.warning("Skipping adding of channel as name '%s' is not unique.", c.name)
             self._input_dialog = QMessageBox(QMessageBox.Icon.Warning, "Channel name not unique",
@@ -190,21 +219,27 @@ class SequencerEditor(PreviewEditWidget):
             self._input_dialog.setModal(True)
             self._input_dialog.show()
             return
-        if is_new_transition:
+        if is_new_channel:
             self._model.append_channel(c)
-        self._add_existing_channel_to_list(c, is_new_transition)
+        self._add_existing_channel_to_list(c, is_new_channel)
 
-    def _add_existing_channel_to_list(self, c: SequencerChannel, is_new_transition: bool) -> None:
+    def _add_existing_channel_to_list(self, c: SequencerChannel, is_new_channel: bool) -> None:
+        """
+        For a given channel, add it to the channel selection list.
+        :param c: Channel to add.
+        :param is_new_channel: Whether the channel is actually new or was already present in the model.
+        """
         li = AnnotatedListWidgetItem(self._channel_list_widget)
         li.annotated_data = c
         item_widget = ChannelLabel(c, self._channel_list_widget)
         li.setSizeHint(item_widget.sizeHint())
         if self._filter_instance is not None and self._filter_instance.in_preview_mode:
-            self.link_column_to_channel(c.name, c.data_type, not is_new_transition)
+            self.link_column_to_channel(c.name, c.data_type, not is_new_channel)
         self._channel_list_widget.addItem(li)
         self._channel_list_widget.setItemWidget(li, item_widget)
 
     def _add_channel_pressed(self) -> None:
+        """Callback if the user activated the add_channel action."""
         self._input_dialog = ChannelInputDialog(
             self._parent_widget,
             lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
@@ -212,12 +247,14 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.show()
 
     def _remove_channel_pressed(self) -> None:
+        """Callback if the user activated the remove_channel action."""
         self._input_dialog = SelectionDialog("Remove Channels", "Please select Channels to remove.",
                                              [c.name for c in self._model.channels], self._parent_widget)
         self._input_dialog.accepted.connect(self._remove_channels_button_pressed_final)
         self._input_dialog.show()
 
     def _remove_channels_button_pressed_final(self) -> None:
+        """Callback after the user confirmed that it wants to delete the selected channels."""
         if not isinstance(self._input_dialog, SelectionDialog):
             return
         orig_t = self._selected_transition
@@ -237,6 +274,7 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.deleteLater()
 
     def _add_transition_pressed(self) -> None:
+        """Callback after the user activated the add_transition action."""
         self._input_dialog = SelectionDialog("Select Channels",
                                              "Please select Channels to add in the new transition.",
                                              [c.name for c in self._model.channels], self._parent_widget)
@@ -244,6 +282,7 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.show()
 
     def _add_transition_pressed_final(self) -> None:
+        """Callback once the user selected all channels that should be added to the new transition."""
         t = Transition()
         if not isinstance(self._input_dialog, SelectionDialog):
             logger.error("Expected SelectionDialog.")
@@ -257,6 +296,7 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.deleteLater()
 
     def _add_channel_to_transition_pressed(self) -> None:
+        """Callback allowing the user to add channels to an existing transition."""
         channels_avail = []
         existing_channel_names = self._selected_transition.preselected_channels.keys()
         for c in self._model.channels:
@@ -271,6 +311,7 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.show()
 
     def _add_channel_to_transition_pressed_final(self) -> None:
+        """Callback after the user selected which channels to add to an existing transition."""
         if self._selected_transition is None:
             logger.error("No transition selected while adding channels to it.")
             return
@@ -284,6 +325,7 @@ class SequencerEditor(PreviewEditWidget):
         self._transition_selected(self._selected_transition)
 
     def _remove_transition_clicked(self) -> None:
+        """Callback if the user wishes to delete a transition."""
         self._input_dialog = QMessageBox(self._parent_widget)
         self._input_dialog.setModal(True)
         self._input_dialog.setWindowTitle("Delete Transition")
@@ -294,6 +336,7 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.show()
 
     def _remove_transition_final(self, button: "QAbstractButton") -> None:
+        """Callback after the user confirmed to delete a transition."""
         if not isinstance(self._input_dialog, QMessageBox):
             logger.error("Expected message box as delete dialog.")
             return
@@ -313,11 +356,13 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.deleteLater()
 
     def _link_event_action_clicked(self) -> None:
+        """Callback when the user clicks the link action button."""
         self._input_dialog = EventSelectionDialog(self._parent_widget)
         self._input_dialog.accepted.connect(self._link_event_action_clicked_final)
         self._input_dialog.show()
 
     def _link_event_action_clicked_final(self) -> None:
+        """Callback once the user specified which actions to link."""
         if not isinstance(self._input_dialog, EventSelectionDialog):
             logger.error("Expected event selection dialog.")
             return
@@ -328,6 +373,10 @@ class SequencerEditor(PreviewEditWidget):
         self._transition_widget_map[self._selected_transition].update_labels(self._selected_transition)
 
     def _recolor_bankset(self) -> None:
+        """
+        This method takes care of setting the LCD background color of associated bank set columns in accordance to
+        the channel being present in the current transition present in the timeline editor.
+        """
         if self._bankset is None:
             return
         active_channels: set[str] = set()
@@ -344,19 +393,22 @@ class SequencerEditor(PreviewEditWidget):
             channel.fader.update()
 
     def _populate_data(self) -> None:
+        """This method loads all channel and transition data from the model."""
         for c in self._model.channels:
-            self._add_existing_channel_to_list(c, is_new_transition=False)
+            self._add_existing_channel_to_list(c, is_new_channel=False)
         if len(self._model.transitions) > 0:
             for t in self._model.transitions:
                 self._add_transition(t, is_new_transition=False)
             self._transition_selected(self._model.transitions[-1])
 
     def _rec_pressed(self) -> None:
+        """Callback on the record action."""
         super()._rec_pressed()
         if self._selected_transition is not None:
             self._transition_widget_map[self._selected_transition].update_labels(self._selected_transition)
 
     def parent_opened(self) -> None:
+        """Prompts the user to go into live preview or not upon opening of the sequence editor."""
         self._input_dialog = YesNoDialog(
             self.get_widget(),
             "Live Preview",
