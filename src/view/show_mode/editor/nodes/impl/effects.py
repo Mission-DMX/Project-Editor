@@ -193,6 +193,7 @@ class SequencerNode(FilterNode):
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
         self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
+        self.filter.default_values["time_scale"] = "1.0"
 
         try:
             for c_str in self.filter.filter_configurations["channels"].split(";"):
