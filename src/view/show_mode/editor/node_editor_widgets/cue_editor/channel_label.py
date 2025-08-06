@@ -28,6 +28,7 @@ class TimelineChannelLabel(QWidget):
         self.setMinimumHeight(20)
         self.sb_offset = 0
         self._update()
+        # TODO register with the bank set fader touch buttons to highlight a touched channel.
 
     def add_label(self, name: str, channel_type: str) -> None:
         """

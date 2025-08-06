@@ -34,8 +34,13 @@ class ExternalChannelDefinition:
 
 
 class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
+    """Shared ABc for widgets providing live WYSIWYG editing."""
 
     def __init__(self, f: Filter | None = None) -> None:
+        """
+        Initialize the preview edit widget. The filter needs to be virtual and support live previews.
+        see also model.virtual_filters.cue_vfilter.PreviewFilter
+        """
         super().__init__()
         self._broadcaster: Broadcaster = Broadcaster()
         self._broadcaster_signals_connected = False
@@ -86,9 +91,12 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
 
     @property
     def channels(self) -> list[ExternalChannelDefinition]:
+        """Get a list of channels associated with the filter."""
         return self.get_channel_list().copy()
 
     def connect_to_broadcaster(self) -> None:
+        """Register callbacks for the media section of the x-touch."""
+        # TODO use FF and FB buttons to jump between key frames, accepting their value as the current preset.
         self._broadcaster.desk_media_rec_pressed.connect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.connect(self.jg_right)
         self._broadcaster.jogwheel_rotated_left.connect(self.jg_left)
@@ -97,6 +105,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._broadcaster_signals_connected = True
 
     def _link_bankset(self) -> None:
+        """Assemble and activate the bank set used for live preview."""
         if not self._broadcaster_signals_connected:
             self.connect_to_broadcaster()
         if self._bankset is not None:
@@ -119,6 +128,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
             # TODO switch to scene of filter if different scene
 
     def disconnect_from_broadcaster(self) -> None:
+        """Remove the x-touch media callbacks."""
         self._broadcaster.desk_media_rec_pressed.disconnect(self._rec_pressed)
         self._broadcaster.jogwheel_rotated_right.disconnect(self.jg_right)
         self._broadcaster.jogwheel_rotated_left.disconnect(self.jg_left)
@@ -127,12 +137,15 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._broadcaster_signals_connected = False
 
     def _rec_pressed(self) -> None:
+        """Record a keyframe."""
         self._timeline_container.record_pressed()
 
     def _get_model_channels(self) -> list[tuple[str, DataType]]:
+        """Provide the channels from the timeline widget model."""
         return self._timeline_container.cue.channels
 
     def jg_right(self) -> None:
+        """Callback to move cursor right or increase zoom."""
         if self._jw_zoom_mode:
             self._timeline_container.increase_zoom(1.25)
             self._set_zoom_label_text()
@@ -140,6 +153,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
             self._timeline_container.move_cursor_right()
 
     def jg_left(self) -> None:
+        """Callback to move cursor left or decrease zoom."""
         if self._jw_zoom_mode:
             self._timeline_container.decrease_zoom(1.25)
             self._set_zoom_label_text()
@@ -147,30 +161,44 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
             self._timeline_container.move_cursor_left()
 
     def scrub_pressed(self) -> None:
+        """Activate alternative use of the jog wheel. (Switches between cursor moving and zoom manipulation.)"""
         self._jw_zoom_mode = True
 
     def scrub_released(self) -> None:
+        """Deactivate alternative jog wheel mode."""
         self._jw_zoom_mode = False
 
     def _set_zoom_label_text(self) -> None:
+        """Update the zoom label text."""
         self._zoom_label.setText(self._timeline_container.format_zoom())
 
     def increase_zoom(self) -> None:
+        """Increase the zoom level."""
         self._timeline_container.increase_zoom()
         self._set_zoom_label_text()
 
     def decrease_zoom(self) -> None:
+        """Decrease the zoom level."""
         self._timeline_container.decrease_zoom()
         self._set_zoom_label_text()
 
     def _transition_type_changed(self, text: str) -> None:
+        """Callback if the user selected a different transition type."""
         self._timeline_container.transition_type = text
 
     def set_editing_enabled(self, new_state: bool) -> None:
+        """Set or reset editing capability."""
         self._timeline_container.setEnabled(new_state)
         self._gui_rec_action.setEnabled(new_state)
 
     def link_column_to_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool) -> None:
+        """
+        Link a bank set column to a channel in the model.
+        :param channel_name: The name of the channel to link.
+        :param channel_type: The type of the channel to link.
+        :param is_part_of_mass_update: If true, no immediate update of the bank set will be triggered and the user is
+        responsible for triggering himself afterward. This is a performance optimization.
+        """
         if not self._bankset:
             return
         c = ColorDeskColumn() if channel_type == DataType.DT_COLOR else RawDeskColumn()
@@ -181,6 +209,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
             self._bankset.update()
 
     def _update_terminals(self, filter_node: "FilterNode") -> None:
+        """Update filter terminals based on current channels."""
         if self._filter_instance is None:
             return
         required_channels: set[tuple[str, DataType]] = set()
@@ -197,6 +226,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
             self._filter_instance.out_data_types[name] = dtype
 
     def parent_closed(self, filter_node: "FilterNode") -> None:
+        """Update the filter after the parent was closed."""
         self._timeline_container.clear_display()
         self._update_terminals(filter_node)
         if self._bankset:

@@ -13,6 +13,11 @@ logger = getLogger(__name__)
 
 
 def _get_column_from_name(channel_name: str) -> DeskColumn | None:
+    """
+    Get an associated bank set column from a channel name, if any.
+    :param channel_name: The name of the channel to use for lookup.
+    :return: The bank set column or None if no bank set column is found.
+    """
     for c in BankSet.active_bank_set().get_all_columns():
         if c.display_name == channel_name:
             return c
@@ -20,7 +25,12 @@ def _get_column_from_name(channel_name: str) -> DeskColumn | None:
 
 
 class TimelineContainer(QWidget):
+    """
+    This widget provides a timeline editor with a scroll area containing the timeline next to the channel labels.
+    """
+
     def __init__(self, parent: QWidget = None) -> None:
+        """Initialize the container."""
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self._channel_label = TimelineChannelLabel(parent)
@@ -43,6 +53,7 @@ class TimelineContainer(QWidget):
 
     @property
     def generate_individual_frames(self) -> bool:
+        """Should a record action produce individual keyframes ore a single combined one?"""
         return self._generate_individual_frames
 
     @generate_individual_frames.setter
@@ -52,6 +63,7 @@ class TimelineContainer(QWidget):
 
     @property
     def transition_type(self) -> str:
+        """Get or set the current transition type that would be used upon record action."""
         return self._current_transition_type
 
     @transition_type.setter
@@ -60,6 +72,7 @@ class TimelineContainer(QWidget):
 
     @property
     def bankset(self) -> BankSet:
+        """The bank set to use if the timeline editor is used in live preview"""
         return self._keyframes_panel.used_bankset
 
     @bankset.setter
@@ -67,10 +80,19 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.used_bankset = bs
 
     def add_channel(self, channel_type: DataType, name: str) -> None:
+        """
+        Add a channel to the editor.
+        :param channel_type: The data type of channel to add.
+        :param name: The name of the channel to add.
+        """
         self._channel_label.add_label(name, channel_type.format_for_filters())
         self._keyframes_panel.add_channels([(channel_type, name)])
 
     def remove_channel(self, c_name: str) -> None:
+        """
+        Remove a channel from the editor.
+        :param c_name: The name of the channel to remove.
+        """
         i = self._channel_label.remove_label(c_name)
         if i != -1:
             self._keyframes_panel.remove_channel(i)
@@ -103,18 +125,29 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.repaint()
 
     def increase_zoom(self, factor: float = 2.0) -> None:
+        """
+        Increase the zoom factor inside the editor.
+        :param factor: The zoom factor to increase. Defaults to doubling.
+        """
         self._keyframes_panel.zoom_in(factor)
 
     def decrease_zoom(self, factor: float = 2.0) -> None:
+        """
+        Decrease the zoom factor inside the editor.
+        :param factor: The zoom factor to decrease. Defaults to halving.
+        """
         self._keyframes_panel.zoom_out(factor)
 
     def move_cursor_left(self) -> None:
+        """Move the cursor left."""
         self._keyframes_panel.move_cursor_left()
 
     def move_cursor_right(self) -> None:
+        """Move the cursor right."""
         self._keyframes_panel.move_cursor_right()
 
     def record_pressed(self) -> None:
+        """Issue the recording of key frames."""
         if self._cue is None:
             logger.error("Cue is None. Disable rec buttons in this case.")
             return
@@ -138,6 +171,7 @@ class TimelineContainer(QWidget):
             self._keyframes_panel.insert_frame(f)
 
     def _generate_combined_frame(self, time_point: float) -> None:
+        """Generate a single keyframe at the given cursor position containing data for all enabled channels."""
         f = KeyFrame(self._cue)
         f.timestamp = time_point
         for i, channel in enumerate(self._cue.channels):
@@ -146,6 +180,7 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.insert_frame(f)
 
     def _generate_state_from_channel(self, channel: tuple[str, DataType], channel_index: int) -> State:
+        """Internal method to format a state from the given channel."""
         if self.bankset:
             if isinstance(channel_index, int):
                 column = self.bankset.get_column_by_number(channel_index)
@@ -177,13 +212,16 @@ class TimelineContainer(QWidget):
         return s
 
     def format_zoom(self) -> str:
+        """Get the current zoom factor in a human-readable format."""
         return f"{int(self._keyframes_panel._time_zoom * 10000) / 10000:0>3} Sec/Pixel"
 
     @staticmethod
     def clear_display() -> None:
+        """Clear the xtouch display. (It displays the current cursor position otherwise.)"""
         set_seven_seg_display_content(" " * 12, True)
 
     def _keyframe_panel_size_changed(self, new_size: QPoint) -> None:
+        """Internal method handling the resizing of the container."""
         if new_size.y() != self._channel_label.height():
             self._channel_label.setMinimumHeight(max(new_size.y(), self._channel_label.height()))
             self._channel_label.update()
