@@ -133,7 +133,7 @@ class SequencerEditor(PreviewEditWidget):
 
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         """As the sequencer filter does not use parameters, this method does nothing."""
-        pass  # Nothing to do here
+        return  # Nothing to do here
 
     def _get_parameters(self) -> dict[str, str]:
         """As the sequencer filter does not use parameters, this method return an empty dictionary."""
