@@ -6,7 +6,13 @@ from model import DataType
 
 
 class ChannelInputDialog(QDialog):
+    """Dialog to add a new channel to a preview edit widgets model."""
+
     def __init__(self, parent: QWidget, ok_function: Callable[[str, DataType], None]) -> None:
+        """Initialize the channel input dialog.
+        :param parent: parent QWidget
+        :param ok_function: function that will be called when the user presses the OK button. The name of the new
+        channel and the selected data type are provided."""
         super().__init__(parent)
         self._ok_function = ok_function
         self._layout = QFormLayout()

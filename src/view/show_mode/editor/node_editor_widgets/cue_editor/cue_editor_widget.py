@@ -47,6 +47,7 @@ logger = getLogger(__name__)
 
 
 class CueEditor(PreviewEditWidget):
+    """Node editor widget for the cue (v) filter."""
 
     def _get_parameters(self) -> dict[str, str]:
         return {}
