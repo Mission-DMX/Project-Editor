@@ -13,6 +13,11 @@ class UniverseTreeBrowserWidget(QTreeWidget):
     """Displays a browser for the fixtures within the universes."""
 
     def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False) -> None:
+        """Create a new universe browser instance.
+        :param show: The current active show file.
+        :param show_selection_checkboxes: If true, checkboxes to select individual items are provided.
+        Disabled by default.
+        """
         super().__init__()
         self._broadcaster = Broadcaster()
         self._show_selection_checkboxes = show_selection_checkboxes
@@ -28,11 +33,13 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             self._broadcaster.end_show_file_parsing.connect(lambda: self._change_show_file_state(False))
 
     def _change_show_file_state(self, new_state: bool) -> None:
+        """Callback to automatically refresh the view on show file changes."""
         self._currently_show_file_loading = new_state
         if not new_state:
             self.refresh()
 
     def refresh(self) -> None:
+        """Reload the browser. Warning: this operation is expensive."""
         if self._currently_show_file_loading:
             return
 
@@ -84,6 +91,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                 i += 1
 
     def get_selected_fixtures(self) -> list[UsedFixture]:
+        """Get a list of all fixture instances the user has selected."""
         a = []
         if not self._show_selection_checkboxes:
             return a

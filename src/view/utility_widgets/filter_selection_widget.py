@@ -8,10 +8,17 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class FilterSelectionWidget(QTreeWidget):
+    """A QTreeWidget implementation to select filters from a given scene."""
+
     selected_filter_changed: Signal = Signal(str)
 
     def __init__(self, parent: QWidget | None, scene: Scene | None,
                  allowed_filter_types: list[FilterTypeEnumeration] | None) -> None:
+        """Initialize the selection widget.
+        :param parent: The parent Qt widget.
+        :param scene: The scene to select the filter from.
+        :param allowed_filter_types: The filter types that are suitable for user selection.
+        """
         super().__init__(parent)
         self._scene = scene
         self._target_filter_id: str | None = None
@@ -116,6 +123,7 @@ class FilterSelectionWidget(QTreeWidget):
         self.selected_filter_changed.emit(self._target_filter_id)
 
     def set_scene(self, scene: Scene | None) -> None:
+        """Set the scene to select the filter from."""
         self._scene = scene
         if self._scene is not None:
             self.populate_widget()

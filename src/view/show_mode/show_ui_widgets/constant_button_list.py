@@ -21,8 +21,11 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder im
 
 
 class ConstantNumberButtonList(UIWidget):
+    """This show UI widget provides the user with configurable buttons that alter the content of a constant filter."""
+
     @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
+        """Provide a configuration widget for button control."""
         # TODO add option to configure images instead of text (to be used as GOBO select or color wheel choice etc.)
         widget = QWidget(parent)
         layout = QVBoxLayout()
