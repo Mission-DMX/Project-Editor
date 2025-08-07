@@ -7,11 +7,11 @@ from model.filter_data.sequencer._utils import _rf
 from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 from model.filter_data.transfer_function import TransferFunction
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class SequenceKeyFrame:
-    def __init__(self, target_channel: SequencerChannel):
+    def __init__(self, target_channel: SequencerChannel) -> None:
         if target_channel is None:
             logger.error("target_channel is None")
         self.channel: SequencerChannel = target_channel
@@ -20,8 +20,9 @@ class SequenceKeyFrame:
         self.tf: TransferFunction = TransferFunction.LINEAR
 
     def format_for_filter(self) -> str:
-        value_str: str = self.target_value.format_for_filter() if isinstance(self.target_value, ColorHSI) else str(self.target_value)
-        return f"{_rf(self.channel.name)}:{value_str}:{self.tf.value}:{self.duration}"
+        value_str: str = self.target_value.format_for_filter() if isinstance(self.target_value, ColorHSI) \
+            else str(self.target_value)
+        return f"{_rf(self.channel.name)}:{value_str}:{self.tf.value}:{self.duration * 1000.0}"
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "SequenceKeyFrame":
@@ -49,8 +50,8 @@ class SequenceKeyFrame:
             case DataType.DT_COLOR:
                 skf.target_value = ColorHSI.from_filter_str(args[1])
             case _:
-                logger.error("Execpected data type: {}", found_channel.data_type)
-        skf.duration = float(args[3])
+                logger.error("Expected data type: %s", found_channel.data_type)
+        skf.duration = float(args[3]) / 1000.0
         skf.tf = TransferFunction(args[2])
         return skf
 
@@ -92,14 +93,17 @@ def _force_channel_dict(cd: list[SequencerChannel] | dict[str, SequencerChannel]
 
 
 class Transition:
-    def __init__(self):
+    """This class represents a transition to be applied to channels within a sequencer filter."""
+
+    def __init__(self) -> None:
         self._trigger_event: tuple[int, int, str] = (0, 0, "")
         self.frames: list[SequenceKeyFrame] = []
         self.name: str = ""
         self.preselected_channels: dict[str, DataType] = {}
 
     def format_for_filter(self) -> str:
-        return f"{self._trigger_event[0]}:{self._trigger_event[1]}#{self.name}#{"#".join([c.format_for_filter() for c in self.frames])}"
+        formatted_frame_list = [c.format_for_filter() for c in self.frames]
+        return f"{self._trigger_event[0]}:{self._trigger_event[1]}#{self.name}#{"#".join(formatted_frame_list)}"
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "Transition":
@@ -132,9 +136,7 @@ class Transition:
 
     def to_cue(self) -> Cue:
         c = Cue()
-        channels: dict[str, DataType] = {}
-        for c_name, dtype in self.preselected_channels.items():
-            channels[c_name] = dtype
+        channels: dict[str, DataType] = self.preselected_channels.copy()
         for f in self.frames:
             channels[f.channel.name] = f.channel.data_type
         for k, v in channels.items():
@@ -150,7 +152,8 @@ class Transition:
             c.insert_frame(ckf)
         return c
 
-    def update_frames_from_cue(self, c: Cue, channel_dict: list[SequencerChannel] | dict[str, SequencerChannel]):
+    def update_frames_from_cue(self, c: Cue,
+                               channel_dict: list[SequencerChannel] | dict[str, SequencerChannel]) -> None:
         channel_dict = _force_channel_dict(channel_dict)
         self.frames.clear()
         c._frames.sort(key=lambda x: x.timestamp)

@@ -183,9 +183,9 @@ class EffectsStackNode(FilterNode):
 
 
 class SequencerNode(FilterNode):
-    nodeName = "Sequencer"
+    nodeName = "Sequencer"  # noqa: N815
 
-    def __init__(self, model, name) -> None:
+    def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER, name=name, terminals={
             "time": {"io": "in"},
             "time_scale": {"io": "in"}
@@ -193,6 +193,7 @@ class SequencerNode(FilterNode):
 
         self.filter.in_data_types["time"] = DataType.DT_DOUBLE
         self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
+        self.filter.default_values["time_scale"] = "1.0"
 
         try:
             for c_str in self.filter.filter_configurations["channels"].split(";"):

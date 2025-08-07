@@ -15,9 +15,11 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import C
 
 
 class TimelineContentWidget(QWidget):
+    """Internal widget rendering a timeline."""
     size_changed = Signal(QPoint)
 
     def __init__(self, parent: QWidget = None) -> None:
+        """Initialize the widget."""
         super().__init__(parent=parent)
         self._last_keyframe_end_point = 0  # Defines the length of the Cue in seconds
         self._time_zoom = 0.01  # Defines how many seconds are a pixel, defaults to 1 pixel = 10ms
@@ -32,6 +34,7 @@ class TimelineContentWidget(QWidget):
 
     @property
     def cue_index(self) -> int:
+        """Get or set the current cue index. This will also be displayed on the x-touch 7seg display."""
         return self._cue_index
 
     @cue_index.setter
@@ -42,6 +45,7 @@ class TimelineContentWidget(QWidget):
 
     @override
     def paintEvent(self, ev: QPaintEvent) -> None:
+        """Repaint the widget."""
         # TODO we should implement to only redraw required areas based on the hints provided within ev
         w = self.width()
         h = self.height()
@@ -134,16 +138,19 @@ class TimelineContentWidget(QWidget):
 
     @override
     def mousePressEvent(self, ev: QMouseEvent) -> None:
+        """Handle user mouse input."""
         super().mousePressEvent(ev)
         self._drag_begin = (ev.x(), ev.y())
         self.update()
 
     @override
     def resizeEvent(self, event: QResizeEvent) -> None:
+        """Trigger the handling resizing of the container."""
         super().resizeEvent(event)
         self.size_changed.emit(QPoint(self.width(), self.height()))
 
     def compute_resize(self) -> None:
+        """Actual handling of the recomputation of layout after resizing occurred."""
         p = self.parent()
         if p:
             parent_height = p.height()
@@ -162,20 +169,24 @@ class TimelineContentWidget(QWidget):
         self.repaint()
 
     def add_channels(self, channels: list[tuple[DataType, str]]) -> None:
+        """Add a channel to the internal model."""
         for c in channels:
             self._channels.append(c)
         self.compute_resize()
 
     def remove_channel(self, i: int) -> None:
+        """Remove a channel from the internal model."""
         self._channels.pop(i)
         self.compute_resize()
 
     def insert_frame(self, f: KeyFrame) -> None:
+        """Insert a frame from the internal model."""
         self.frames.append(f)
         self._last_clicked_kf_state = None
         self.repaint()
 
     def zoom_out(self, factor: float = 2.0) -> None:
+        """Decrease the zoom factor by the given amount."""
         if not self.isEnabled():
             return
         self._last_clicked_kf_state = None
@@ -183,6 +194,7 @@ class TimelineContentWidget(QWidget):
         self.compute_resize()
 
     def zoom_in(self, factor: float = 2.0) -> None:
+        """Increase the zoom factor by the given amount."""
         if not self.isEnabled():
             return
         self._last_clicked_kf_state = None
@@ -190,6 +202,8 @@ class TimelineContentWidget(QWidget):
         self.compute_resize()
 
     def move_cursor_right(self) -> None:
+        """Move the cursor to the right."""
+        # TODO notify parent scrolling if it is moving out of site.
         if not self.isEnabled():
             return
         self.cursor_position += self._time_zoom * 10
@@ -198,6 +212,8 @@ class TimelineContentWidget(QWidget):
         self.compute_resize()
 
     def move_cursor_left(self) -> None:
+        """Move the cursor to the left."""
+        # TODO notify parent scrolling if it is moving out of site
         if not self.isEnabled():
             return
         self.cursor_position -= self._time_zoom * 10
@@ -208,6 +224,7 @@ class TimelineContentWidget(QWidget):
         self.compute_resize()
 
     def _update_7seg_text(self) -> None:
+        """Generate 7seg display text based on current cursor position and cue index."""
         txt = format_seconds(self.cursor_position).replace(":", "").replace(".", "")
         while len(txt) < 10:
             txt = "0" + txt
@@ -218,6 +235,7 @@ class TimelineContentWidget(QWidget):
 
     @override
     def mouseReleaseEvent(self, ev: PySide6.QtGui.QMouseEvent) -> None:
+        """Handle user mouse input."""
         super().mouseReleaseEvent(ev)
         if not self.isEnabled():
             return
@@ -228,10 +246,7 @@ class TimelineContentWidget(QWidget):
             self.cursor_position = clicked_timeslot
             self._update_7seg_text()
         else:
-            if 20 <= ((y - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40:
-                state_width = 10
-            else:
-                state_width = 1
+            state_width = 10 if 20 <= ((y - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40 else 1
             clicked_timeslot_lower = (x - state_width) * self._time_zoom
             clicked_timeslot_upper = (x + state_width) * self._time_zoom
             for kf in self.frames:
@@ -246,6 +261,7 @@ class TimelineContentWidget(QWidget):
         self.repaint()
 
     def _clicked_on_keyframe(self, kf: KeyFrame, y: int) -> None:
+        """Handle the user double-clicking on a keyframe."""
         state_index = int((y - 20) / CHANNEL_DISPLAY_HEIGHT)
         states = kf._states
         double_click_issued = False
@@ -282,6 +298,7 @@ class TimelineContentWidget(QWidget):
             self._dialog.open()
 
     def clear_cue(self) -> None:
+        """Clear the timeline renderer model."""
         self._channels.clear()
         self.cursor_position = 0.0
         self.frames = []
@@ -290,6 +307,7 @@ class TimelineContentWidget(QWidget):
         self.compute_resize()
 
     def _get_channel_index(self, only_on_channel: str | None) -> int:
+        """Get the index of the current channel."""
         if only_on_channel is None:
             return 0
         i = 0

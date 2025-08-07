@@ -4,7 +4,7 @@ from logging import getLogger
 from model import ColorHSI, DataType
 from model.filter_data.sequencer._utils import _rf
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class InterleaveMethod(Enum):
@@ -14,7 +14,7 @@ class InterleaveMethod(Enum):
 
 
 class SequencerChannel:
-    def __init__(self, name: str = "", dtype: DataType = DataType.DT_8_BIT):
+    def __init__(self, name: str = "", dtype: DataType = DataType.DT_8_BIT) -> None:
         self.name: str = name
         self.data_type = dtype
         self.default_value: int | float | ColorHSI = 0
@@ -23,7 +23,8 @@ class SequencerChannel:
         self.interleave_method = InterleaveMethod.MAX
 
     def format_for_filter(self) -> str:
-        default_value_str = self.default_value.format_for_filter() if isinstance(self.default_value, ColorHSI) else str(self.default_value)
+        default_value_str = self.default_value.format_for_filter() if isinstance(self.default_value, ColorHSI) \
+            else str(self.default_value)
 
         return (f"{_rf(self.name)}:{self.data_type.format_for_filters()}:{default_value_str}:"
                 f"{str(self.apply_default_on_empty).lower()}:{str(self.apply_default_on_scene_switch).lower()}:"
@@ -52,7 +53,7 @@ class SequencerChannel:
             case DataType.DT_COLOR:
                 sc.default_value = ColorHSI.from_filter_str(args[2])
             case _:
-                logger.error("Execpected data type: {}", sc.data_type)
+                logger.error("Expected data type: %s", sc.data_type)
         sc.apply_default_on_empty = args[3].lower() == "true"
         sc.apply_default_on_scene_switch = args[4].lower() == "true"
         sc.interleave_method = InterleaveMethod(args[5])

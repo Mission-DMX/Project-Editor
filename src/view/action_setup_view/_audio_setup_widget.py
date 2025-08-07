@@ -3,14 +3,15 @@ from logging import getLogger
 
 from PySide6.QtWidgets import QComboBox, QDoubleSpinBox, QFormLayout, QLabel, QSpinBox, QWidget
 
-from model import device
 from model.events import AudioExtractEventSender, EventSender
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class AudioSetupWidget(QWidget):
-    def __init__(self, parent: QWidget | None = None):
+    """This QWidget allows the user to dial-in audio settings."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._sender: AudioExtractEventSender | None = None
         audio_layout = QFormLayout()
@@ -51,7 +52,7 @@ class AudioSetupWidget(QWidget):
         # TODO add sound level preview progress bar
         self.setLayout(audio_layout)
 
-    def update_from_sender(self, new_sender: EventSender | None):
+    def update_from_sender(self, new_sender: EventSender | None) -> None:
         self._sender = new_sender
         if not isinstance(new_sender, AudioExtractEventSender):
             return
@@ -60,38 +61,41 @@ class AudioSetupWidget(QWidget):
         self._audio_low_cut_tb.setValue(new_sender.low_cut)
         self._audio_magnitude_tb.setValue(new_sender.magnitude)
 
-    def _audio_dev_text_changed(self, new_text: str):
+    def _audio_dev_text_changed(self, new_text: str) -> None:
         if isinstance(self._sender, AudioExtractEventSender):
             self._sender.audio_device = new_text
 
-    def _audio_high_cut_changed(self, new_value: int):
+    def _audio_high_cut_changed(self, new_value: int) -> None:
         if isinstance(self._sender, AudioExtractEventSender):
             self._sender.high_cut = new_value
 
-    def _audio_low_cut_changed(self, new_value: int):
+    def _audio_low_cut_changed(self, new_value: int) -> None:
         if isinstance(self._sender, AudioExtractEventSender):
             self._sender.low_cut = new_value
 
-    def _audio_magnitude_changed(self, new_value: int):
+    def _audio_magnitude_changed(self, new_value: int) -> None:
         if isinstance(self._sender, AudioExtractEventSender):
             self._sender.magnitude = new_value
 
-    def _get_input_devices(self):
+    def _get_input_devices(self) -> None:
         self._device_list.clear()
         try:
-            results = subprocess.run(["pactl", "list", "sources"], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            results = subprocess.run(["pactl", "list", "sources"], check=False, capture_output=True)  # NOQA: S607
+            #  We rely on location lookup of pactl. While an attacker might override the location of pactl, an attacker
+            #  must already be root in order to alter the PATH on our installation.
         except FileNotFoundError:
             logger.error("Reading sources failed: Command 'pactl' not found. Is it in path?")
             return
         if results.returncode != 0:
-            logger.error("Reading available PA sources failed. Is pactl available and in path? Returned error: %s", results.stderr.decode())
+            logger.error("Reading available PA sources failed. Is pactl available and in path? Returned error: %s",
+                         results.stderr.decode())
             return
         name = "default"
         description = "default"
         channels = 1
         samplerate = 44100
         found_source = False
-        def add_source():
+        def add_source() -> None:
             nonlocal found_source
             nonlocal name
             nonlocal description
@@ -122,7 +126,7 @@ class AudioSetupWidget(QWidget):
             add_source()
         return
 
-    def _update_device_labels(self):
+    def _update_device_labels(self) -> None:
         index = self._audio_dev_tb.currentIndex()
         device_description = self._device_list[index]
         self._audio_dev_tb.setCurrentText(device_description[0])

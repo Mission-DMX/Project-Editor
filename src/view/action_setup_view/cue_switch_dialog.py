@@ -26,7 +26,8 @@ class _InsertCueSwitchDialog(_CommandInsertionDialog):
 
     def get_command(self) -> str:
         return (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} run_cue "
-                f"{self._cue_selection_cb.currentIndex()}  # switch to cue '{esc(self._cue_selection_cb.currentText())}' ")
+                f"{self._cue_selection_cb.currentIndex()}  # switch to "
+                f"cue '{esc(self._cue_selection_cb.currentText())}' ")
 
     def on_filter_selected(self) -> None:
         self._cue_selection_cb.setEnabled(True)

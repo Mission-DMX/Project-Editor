@@ -300,19 +300,19 @@ class MacroSetupWidget(QSplitter):
             )
             self._dialog.show()
 
-    def _insert_sequence_trigger_clicked(self):
+    def _insert_sequence_trigger_clicked(self) -> None:
         if self._selected_macro is not None:
             self._dialog = SequenceTriggerInsertionDialog(self, self._selected_macro, self._show,
                                                           self._macro_content_changed)
             self._dialog.show()
 
-    def _insert_scene_switch_trigger_clicked(self):
+    def _insert_scene_switch_trigger_clicked(self) -> None:
         if self._selected_macro is not None:
             self._dialog = SceneSwitchInsertionDialog(self, self._selected_macro, self._show,
                                                       self._macro_content_changed)
             self._dialog.show()
 
-    def _rename_macro_triggered(self):
+    def _rename_macro_triggered(self) -> None:
         if self._selected_macro is None:
             return
         self._dialog = QInputDialog(self)
@@ -323,7 +323,7 @@ class MacroSetupWidget(QSplitter):
         self._dialog.accepted.connect(self._rename_macro_final)
         self._dialog.show()
 
-    def _rename_macro_final(self):
+    def _rename_macro_final(self) -> None:
         if self._selected_macro is None or not isinstance(self._dialog, QInputDialog):
             logger.error("Aborting Rename. Please investigate bug.")
             return

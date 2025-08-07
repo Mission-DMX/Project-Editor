@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 class _AddMacroActionDialog(QDialog):
-    def __init__(self, ui_widget: "MacroButtonUIWidget", button_list: QListWidget, update_button: QPushButton):
+    def __init__(self, ui_widget: "MacroButtonUIWidget", button_list: QListWidget, update_button: QPushButton) -> None:
         super().__init__(parent=button_list)
         self._ui_widget = ui_widget
         self._update_button = update_button
@@ -58,17 +58,17 @@ class _AddMacroActionDialog(QDialog):
         self.setMinimumWidth(400)
         self.show()
 
-    def _reload_macro_cb(self):
+    def _reload_macro_cb(self) -> None:
         self._macro_combo_box.clear()
         for m in self._ui_widget.parent.scene.board_configuration.macros:
             self._macro_combo_box.addItem(m.name, m)
         self._populate_command_from_macro()
 
-    def _populate_command_from_macro(self):
+    def _populate_command_from_macro(self) -> None:
         if data := self._macro_combo_box.currentData():
             self._command_tb.setText(f"macro exec {escape_argument(data.name)}")
 
-    def _ok_button_pressed(self):
+    def _ok_button_pressed(self) -> None:
         model = json.loads(self._ui_widget.configuration.get("items") or "[]")
         model.append({
             "text": self._text_tb.text(),
@@ -78,7 +78,7 @@ class _AddMacroActionDialog(QDialog):
         self._ui_widget.refresh_config_macro_list(self._button_list, update_button=self._update_button)
         self.close()
 
-    def _cancel_button_pressed(self):
+    def _cancel_button_pressed(self) -> None:
         self.close()
 
 
@@ -86,7 +86,7 @@ class _MacroListWidget(QWidget):
 
     _NO_ICON = QIcon(resource_path(os.path.join("resources", "icons", "missing-image.svg")))
 
-    def __init__(self, parent: QListWidget, item_def: dict[str, str], index: int, update_button: QPushButton):
+    def __init__(self, parent: QListWidget, item_def: dict[str, str], index: int, update_button: QPushButton) -> None:
         super().__init__(parent)
         self._item_def = item_def
         self._update_button : QPushButton = update_button
@@ -108,11 +108,11 @@ class _MacroListWidget(QWidget):
         self.setLayout(layout)
         # TODO implement icon display and changing functionality
 
-    def _text_changed(self, text: str):
+    def _text_changed(self, text: str) -> None:
         self._item_def["text"] = text
         self._update_button.setEnabled(True)
 
-    def _command_changed(self, text: str):
+    def _command_changed(self, text: str) -> None:
         self._item_def["command"] = text
         self._update_button.setEnabled(True)
 
@@ -122,7 +122,7 @@ class _MacroListWidget(QWidget):
 
 
 class MacroButtonUIWidget(UIWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._latest_config_widget: QWidget | None = None
         self._latest_player_widget: QWidget | None = None
@@ -149,7 +149,7 @@ class MacroButtonUIWidget(UIWidget):
         self._populate_button_items(w)
         return w
 
-    def _populate_button_items(self, w: BoxGridRenderer):
+    def _populate_button_items(self, w: BoxGridRenderer) -> None:
         w.clear()
         for item_def in json.loads(self.configuration.get("items") or "[]"):
             item = BoxGridItem(w)
@@ -158,7 +158,7 @@ class MacroButtonUIWidget(UIWidget):
             item.clicked.connect(self._exec_command)
             w.add_item(item)
 
-    def _exec_command(self, command: str):
+    def _exec_command(self, command: str) -> None:
         if not command:
             return
         if not self._context.exec_command(command):
@@ -182,18 +182,16 @@ class MacroButtonUIWidget(UIWidget):
         self.copy_base(w)
         return w
 
-    def refresh_config_macro_list(self, config_list: QListWidget, update_button: QPushButton):
+    def refresh_config_macro_list(self, config_list: QListWidget, update_button: QPushButton) -> None:
         config_list.clear()
         model = json.loads(self.configuration["items"])
-        i = 0
-        for item_def in model:
+        for i, item_def in enumerate(model):
             item = AnnotatedListWidgetItem(config_list)
             item.annotated_data = item_def
             item_widget = _MacroListWidget(config_list, item_def, i, update_button)
             item.setSizeHint(item_widget.sizeHint())
             config_list.addItem(item)
             config_list.setItemWidget(item, item_widget)
-            i += 1
         if self._latest_config_widget is not None:
             self._populate_button_items(self._latest_config_widget)
 
@@ -201,38 +199,36 @@ class MacroButtonUIWidget(UIWidget):
         w = QWidget()
         w.setMinimumWidth(600)
         w.setMinimumHeight(800)
-        l = QFormLayout()
+        form_layout = QFormLayout()
         width_box = QSpinBox()
         width_box.setMinimum(64)
         width_box.setMaximum(16384)
         width_box.setValue(int(self.configuration.get("width") or "64"))
         width_box.valueChanged.connect(self._config_width_value_changed)
-        l.addRow("Width", width_box)
+        form_layout.addRow("Width", width_box)
         height_box = QSpinBox()
         height_box.setMinimum(64)
         height_box.setMaximum(16384)
         height_box.setValue(int(self.configuration.get("height") or "64"))
         height_box.valueChanged.connect(self._config_height_value_changed)
-        l.addRow("Height", height_box)
+        form_layout.addRow("Height", height_box)
         add_macro_button = QPushButton("Add macro")
-        l.addWidget(add_macro_button)
+        form_layout.addWidget(add_macro_button)
         button_list = QListWidget()
-        l.addWidget(button_list)
+        form_layout.addWidget(button_list)
         update_button = QPushButton("Update Buttons")
         update_button.setEnabled(False)
         update_button.clicked.connect(lambda: self._update_properties(button_list, update_button))
-        l.addWidget(update_button)
+        form_layout.addWidget(update_button)
         self.refresh_config_macro_list(button_list, update_button)
         add_macro_button.clicked.connect(lambda: _AddMacroActionDialog(self, button_list, update_button))
-        w.setLayout(l)
+        w.setLayout(form_layout)
         return w
 
-    def _update_properties(self, button_list: QListWidget, update_button: QPushButton):
+    def _update_properties(self, button_list: QListWidget, update_button: QPushButton) -> None:
         model = json.loads(self.configuration["items"])
-        i = 0
-        for item_def in model:
+        for i, item_def in enumerate(model):
             item_def.update(button_list.itemWidget(button_list.item(i)).item_def)
-            i += 1
         self.configuration["items"] = json.dumps(model)
         if self._latest_config_widget is not None:
             self._populate_button_items(self._latest_config_widget)
@@ -240,7 +236,7 @@ class MacroButtonUIWidget(UIWidget):
             self._populate_button_items(self._latest_player_widget)
         update_button.setEnabled(False)
 
-    def _config_width_value_changed(self, new_value: int):
+    def _config_width_value_changed(self, new_value: int) -> None:
         for widget in [self._latest_player_widget, self._latest_config_widget]:
             if widget is not None:
                 widget.setFixedWidth(new_value)
@@ -249,7 +245,7 @@ class MacroButtonUIWidget(UIWidget):
                     wh.update_size()
         self.configuration["width"] = str(new_value)
 
-    def _config_height_value_changed(self, new_value: int):
+    def _config_height_value_changed(self, new_value: int) -> None:
         for widget in [self._latest_player_widget, self._latest_config_widget]:
             if widget is not None:
                 widget.setFixedHeight(new_value)

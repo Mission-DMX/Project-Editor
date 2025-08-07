@@ -1,6 +1,5 @@
 """select Universe"""
 
-from av.audio import layout
 from PySide6 import QtWidgets
 from PySide6.QtGui import QAction, Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget
@@ -74,6 +73,6 @@ class UniverseSelector(QtWidgets.QTabWidget):
         for universe_widget in self._universe_widgets:
             universe_widget.notify_activate()
 
-    def _automap(self):
+    def _automap(self) -> None:
         for uw in self._universe_widgets:
             uw.automap()

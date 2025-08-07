@@ -7,7 +7,7 @@ from view.action_setup_view._command_insertion_dialog import escape_argument as 
 
 
 class SceneSwitchInsertionDialog(_CommandInsertionDialog):
-    def __init__(self, parent: QWidget, macro: Macro, _show: BoardConfiguration, update_callable: callable):
+    def __init__(self, parent: QWidget, macro: Macro, _show: BoardConfiguration, update_callable: callable) -> None:
         super().__init__(parent, macro, [], _show, update_callable)
         self._scene_selection_cb.setEnabled(False)
         self._scene_selection_cb.setVisible(False)

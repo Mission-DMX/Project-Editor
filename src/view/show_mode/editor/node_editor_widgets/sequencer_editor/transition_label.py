@@ -10,7 +10,18 @@ if TYPE_CHECKING:
 
 
 class TransitionLabel(QWidget):
-    def __init__(self, transition: "Transition", position: int, parent=None):
+    """The purpose of this class is to present the user with adequate information regarding a transition in the list."""
+
+    def __init__(self, transition: "Transition", position: int, parent: QWidget | None = None) -> None:
+        """
+        Get a new transition label.
+        :param transition: The transition to represent.
+        :type transition: Transition
+        :param position: The id of the transition in the model.
+        :type position: int
+        :param parent: The parent widget of this label.
+        :type parent: QWidget or None
+        """
         super().__init__(parent)
         layout = QHBoxLayout()
         self._transition_id_label = QLabel(self)
@@ -29,7 +40,8 @@ class TransitionLabel(QWidget):
         layout.addWidget(self._duration_label)
         self.update_labels(transition)
 
-    def update_labels(self, transition: "Transition"):
+    def update_labels(self, transition: "Transition") -> None:
+        """Updates the label according to the provided transition."""
         self._transition_name_label.setText(transition.name)
         self._event_label.setText(str(transition._trigger_event))
         self._duration_label.setText(format_seconds(transition.duration))

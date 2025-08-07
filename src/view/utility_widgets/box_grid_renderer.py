@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, QResizeEvent, Qt
@@ -16,14 +16,14 @@ class BoxGridItem(QObject):
     This class represents a box button. It features a text and an optional icon.
     On click, a signal 'clicked' will be emitted, which provides the data of the item.
     """
-    clicked: Signal = Signal(Any)
+    clicked: Signal = Signal(object)
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
         self._text: str = ""
         self._icon: QPixmap | None = None
         self._additional_render_method: Callable | None = None
-        self._data: Any | None = None
+        self._data: object | None = None
 
     def set_icon(self, icon: QPixmap | QIcon | None) -> None:
         """
@@ -66,12 +66,12 @@ class BoxGridItem(QObject):
         self._additional_render_method = method
 
     @property
-    def data(self) -> Any:
+    def data(self) -> object:
         """Store arbitrary data associated with this item."""
         return self._data
 
     @data.setter
-    def data(self, data: Any) -> None:
+    def data(self, data: object) -> None:
         self._data = data
 
 

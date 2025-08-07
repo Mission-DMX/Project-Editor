@@ -85,7 +85,10 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         self.custom_layout.addWidget(self._color_panel)
 
     def get_command(self) -> str:
-        if self._filter.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT]:
+        if self._filter.filter_type in [
+            FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
+            FilterTypeEnumeration.FILTER_CONSTANT_16_BIT
+        ]:
             return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {self._int_tb.value()}"
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
             return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {self._float_tb.value()}"
@@ -98,7 +101,8 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
             )
         qtc = self._color.to_qt_color()
         hexcode = f"rgb: {int(qtc.redF() * 255):02X}{int(qtc.greenF() * 255):02X}{int(qtc.blueF() * 255):02X}"
-        return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {esc(self._color.format_for_filter())} # {hexcode}"
+        return (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value "
+                f"{esc(self._color.format_for_filter())} # {hexcode}")
 
     def on_filter_selected(self) -> None:
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT:

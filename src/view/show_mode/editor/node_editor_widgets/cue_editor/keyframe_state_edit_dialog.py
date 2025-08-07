@@ -17,7 +17,15 @@ from model.filter_data.cues.cue import KeyFrame, State, StateColor, StateDouble,
 
 
 class KeyFrameStateEditDialog(QDialog):
+    """Dialog to update an existing keyframe."""
+
     def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function: Callable) -> None:
+        """Initialize the dialog.
+        :param parent: The parent widget. Contrary to other Qt widgets, this must not be None.
+        :param kf: The keyframe to edit.
+        :param s: The current state of the keyframe.
+        :param repaint_function: The function to call to repaint the keyframe after editing finished.
+        """
         super().__init__(parent=parent)
         self._layout = QFormLayout()
 
@@ -67,8 +75,10 @@ class KeyFrameStateEditDialog(QDialog):
         self._keyframe = kf
         self._state = s
         self._repaint_function = repaint_function
+        self.setModal(True)
 
     def _ok_pressed(self) -> None:
+        """Callback closing the dialog, saving changes and repainting the keyframe"""
         if isinstance(self._input, (QSpinBox, QDoubleSpinBox)):
             self._state._value = self._input.value()
         else:
@@ -82,9 +92,11 @@ class KeyFrameStateEditDialog(QDialog):
         self.close()
 
     def _delete_pressed(self) -> None:
+        """Action to delete the keyframe."""
         self._keyframe.delete_from_parent_cue()
         self.close()
         self._repaint_function()
 
     def choose_color_clicked(self) -> None:
+        """Close without saving changes."""
         self._input.open()

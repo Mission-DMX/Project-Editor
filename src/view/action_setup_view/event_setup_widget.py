@@ -204,7 +204,7 @@ class _SenderConfigurationWidget(QScrollArea):
         else:
             self._own_rename_issued = False
 
-    def _update_configuration(self):
+    def _update_configuration(self) -> None:
         if self._sender is not None:
             self._sender.send_update(auto_commit=True, push_direct=True)
 
@@ -388,7 +388,7 @@ class EventSetupWidget(QSplitter):
 
     """Widget containing the entire event sender configuration UI."""
 
-    def __init__(self, parent: QWidget | None, b: Broadcaster):
+    def __init__(self, parent: QWidget | None, b: Broadcaster) -> None:
         super().__init__(parent=parent)
         self._selection_panel = QWidget(self)
         layout = QVBoxLayout()

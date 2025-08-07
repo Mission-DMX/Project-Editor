@@ -36,7 +36,7 @@ class DelayCommand(Command):
 class PrintCommand(Command):
     """The Purpose of this command is printing stuff."""
 
-    def __init__(self, context) -> None:
+    def __init__(self, context: CLIContext) -> None:
         """:see Command.__init__:"""
         super().__init__(context, "print")
 
@@ -58,7 +58,7 @@ class SetCommand(Command):
         """:see Command.__init__:"""
         super().__init__(context, "set")
 
-    def configure_parser(self, parser: ArgumentParser):
+    def configure_parser(self, parser: ArgumentParser)->None:
         """:see Command.configure_parser:"""
         parser.add_argument("key", type=str, help="The variable to set")
         parser.add_argument("value", type=str, help="The value to set it to")
@@ -92,9 +92,8 @@ class IfCommand(Command):
 
     def execute(self, args: Namespace) -> bool:
         """:see Command.execute:"""
-
-        def bool_eval(arg: str):
-            return len(arg) > 0 and not arg == "0"
+        def bool_eval(arg: str) -> bool:
+            return len(arg) > 0 and arg != "0"
 
         in_command = False
         found_split = False

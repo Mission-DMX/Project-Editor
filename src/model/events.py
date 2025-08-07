@@ -148,7 +148,7 @@ class XtouchGPIOEventSender(EventSender):
 
 
 class AudioExtractEventSender(EventSender):
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
 
     @property
@@ -157,7 +157,7 @@ class AudioExtractEventSender(EventSender):
         return self.configuration.get("dev") or "default"
 
     @audio_device.setter
-    def audio_device(self, new_value: str):
+    def audio_device(self, new_value: str) -> None:
         self.configuration["dev"] = new_value
 
     @property
@@ -166,7 +166,7 @@ class AudioExtractEventSender(EventSender):
         return int(self.configuration.get("high_cut") or "100")
 
     @high_cut.setter
-    def high_cut(self, new_value: int):
+    def high_cut(self, new_value: int) -> None:
         self.configuration["high_cut"] = str(new_value)
 
     @property
@@ -175,7 +175,7 @@ class AudioExtractEventSender(EventSender):
         return int(self.configuration.get("low_cut") or "10")
 
     @low_cut.setter
-    def low_cut(self, new_value: int):
+    def low_cut(self, new_value: int) -> None:
         self.configuration["low_cut"] = str(new_value)
 
     @property
@@ -184,11 +184,16 @@ class AudioExtractEventSender(EventSender):
         return float(self.configuration.get("magnitude") or "10")
 
     @magnitude.setter
-    def magnitude(self, new_value: float):
+    def magnitude(self, new_value: float) -> None:
         self.configuration["magnitude"] = str(new_value)
 
 
-def insert_event(sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] | None = None) -> None:
+def insert_event(
+        sender_id: int,
+        sender_function: int = 0,
+        event_type: str = "single",
+        arguments: list[int] | None = None
+) -> None:
     """Insert an event in fish.
 
     :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will

@@ -11,7 +11,14 @@ if TYPE_CHECKING:
 
 
 class TimelineChannelLabel(QWidget):
+    """
+    This widget provides a label for channels within a timeline.
+
+    Use add_label in order to add a new channel label.
+    """
+
     def __init__(self, parent: QWidget = None) -> None:
+        """Initialize the channel label."""
         super().__init__(parent=parent)
         self.active_channels: dict[str, bool] = {}
         self._display_active_channel_indicator = False
@@ -21,14 +28,25 @@ class TimelineChannelLabel(QWidget):
         self.setMinimumHeight(20)
         self.sb_offset = 0
         self._update()
+        # TODO register with the bank set fader touch buttons to highlight a touched channel.
 
     def add_label(self, name: str, channel_type: str) -> None:
+        """
+        Add a new label.
+        :param name: The name of the channel.
+        :param channel_type: The type of the channel. Usually 8bit, 16bit, float or color.
+        """
         self._names.append(name)
         self._types.append(channel_type)
         self.active_channels[name] = True
         self._update()
 
     def remove_label(self, c_name: str) -> int:
+        """
+        Remove the label with the associated channel name.
+        :param c_name: The name of the channel to remove.
+        :return: The previous index of the removed channel.
+        """
         found_i = -1
         for i in range(len(self._names)):
             if self._names[i] == c_name:
@@ -41,18 +59,21 @@ class TimelineChannelLabel(QWidget):
         return found_i
 
     def clear_labels(self) -> None:
+        """Remove all labels."""
         self._names.clear()
         self._types.clear()
         self.active_channels.clear()
         self._update()
 
     def _update(self) -> None:
+        """Update the label properties."""
         required_height = 2 * 20 + CHANNEL_DISPLAY_HEIGHT * len(self._names) + self.sb_offset
         self.setMinimumHeight(required_height)
         self.update()
 
     @property
     def display_active_channel_indicator(self) -> bool:
+        """Should the channels provide checkboxes indicating if they're active or not?"""
         return self._display_active_channel_indicator
 
     @display_active_channel_indicator.setter
@@ -62,6 +83,7 @@ class TimelineChannelLabel(QWidget):
 
     @override
     def paintEvent(self, ev: QPaintEvent) -> None:
+        """Repaint the widget."""
         w = self.width()
         h = self.height()
         if w == 0 or h == 0:
@@ -82,20 +104,19 @@ class TimelineChannelLabel(QWidget):
                 painter.drawText(25, 60 + i * CHANNEL_DISPLAY_HEIGHT, self._types[i])
             if self._display_active_channel_indicator:
                 painter.fillRect(5, 50 + i * CHANNEL_DISPLAY_HEIGHT, 15, 15, indicator_background_color)
-                if self.active_channels.get(channel_name):
+                if channel_name in self.active_channels:
                     painter.fillRect(6, 51 + i * CHANNEL_DISPLAY_HEIGHT, 13, 13, indicator_active_color)
         painter.end()
 
-    def mousePressEvent(self, ev: "QMouseEvent") -> None:
+    def mousePressEvent(self, ev: "QMouseEvent") -> None:  # NOQA: N802 This overrides a Qt6 native method
+        """Handle user mouse input."""
         super().mousePressEvent(ev)
         if not self._display_active_channel_indicator:
             return
         if 5 <= ev.x() <= 20:
-            i = 0
             y = ev.y()
-            for channel_name in self._names:
+            for i, channel_name in enumerate(self._names):
                 if 50 + i * CHANNEL_DISPLAY_HEIGHT <= y <= 65 + i * CHANNEL_DISPLAY_HEIGHT:
                     self.active_channels[channel_name] = not self.active_channels[channel_name]
                     break
-                i += 1
         self.update()
