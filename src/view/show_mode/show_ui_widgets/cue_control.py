@@ -43,18 +43,16 @@ class _CueLabel(QWidget):
 
     @property
     def playing(self) -> bool:
-        """Get the state of the playing icon of the cue label"""
+        """State of the playing icon of the cue label."""
         return self._play_label.isVisible()
 
     @playing.setter
     def playing(self, new_value: bool) -> None:
-        """Set the state of the playing icon of the cue label"""
         self._play_label.setVisible(new_value)
 
 
 class CueControlUIWidget(UIWidget):
-    """
-    This widget allows the user to control cue filters.
+    """Widget to  allow user to control cue filters.
 
     This widget supports the 'widget_height' parameter indicating its height in pixels.
     It will automatically migrate older configurations which still had the 'cue_names' parameter.
@@ -90,7 +88,9 @@ class CueControlUIWidget(UIWidget):
             self._filter.linked_ui_widgets.remove(self)
         if self._filter is not None:
             f.scene.board_configuration.remove_filter_update_callback(
-                self._filter.scene.scene_id, self._filter.filter_id, self._cue_state.update,
+                self._filter.scene.scene_id,
+                self._filter.filter_id,
+                self._cue_state.update,
             )
         super().set_filter(f, i)
         self.associated_filters["cue_filter"] = f.filter_id
@@ -98,7 +98,8 @@ class CueControlUIWidget(UIWidget):
         if isinstance(self._filter, CueFilter):
             self._filter.linked_ui_widgets.append(self)
         f.scene.board_configuration.register_filter_update_callback(
-            f.scene.scene_id, f.filter_id, self._cue_state.update)
+            f.scene.scene_id, f.filter_id, self._cue_state.update
+        )
         self.update_model(clear_model=False)
         self._migrate_name_list()
         self._model = None
@@ -121,9 +122,11 @@ class CueControlUIWidget(UIWidget):
                 self.update_model()
 
     def update_model(self, clear_model: bool = True) -> None:
-        """
-        reload the cue model after the configuration has changed in the filter.
-        :param clear_model: Should the loaded model be unloaded afterward?
+        """Reload the cue model after the configuration has changed in the filter.
+
+        Args:
+            clear_model: Should the loaded model be unloaded afterward?
+
         """
         self._cues.clear()
         if self._filter:
@@ -138,7 +141,7 @@ class CueControlUIWidget(UIWidget):
             self._model = None
 
     def _repopulate_lists(self) -> None:
-        """Load / update the content of the cue lists"""
+        """Load / update the content of the cue lists."""
         for cue_list in [self._player_cue_list_widget, self._config_cue_list_widget]:
             if cue_list is None:
                 continue
@@ -153,7 +156,6 @@ class CueControlUIWidget(UIWidget):
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
-        """Implementation of abstract method 'generate_update_content'."""
         return self._command_chain
 
     @override
@@ -264,8 +266,10 @@ class CueControlUIWidget(UIWidget):
                 cue_count = self._player_cue_list_widget.count()
                 if self._last_active_cue != -1 and self._last_active_cue < cue_count:
                     self._player_cue_list_widget.itemWidget(
-                        self._player_cue_list_widget.item(self._last_active_cue)).playing = False
+                        self._player_cue_list_widget.item(self._last_active_cue)
+                    ).playing = False
                 if active_cue != -1 and active_cue < cue_count:
                     self._player_cue_list_widget.itemWidget(
-                        self._player_cue_list_widget.item(active_cue)).playing = True
+                        self._player_cue_list_widget.item(active_cue)
+                    ).playing = True
             self._last_active_cue = active_cue

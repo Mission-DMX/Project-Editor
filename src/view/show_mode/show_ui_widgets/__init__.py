@@ -22,23 +22,48 @@ out of the human readable name, the type required to instantiate a requested wid
 should be selected for construction) and a number indicating how many filters should be selected.
 """
 WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]]]] = {
-    "autotracker": ("Auto Tracker", AutoTrackerUIWidget,
-                    [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]]),
-    "buttonarray": ("Button Array", ButtonsWithValueSubmit, [
-        [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
-         FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
-    "buttonarray_submit": ("Button Array w/ Submit", ConstantNumberButtonList, [
-        [FilterTypeEnumeration.FILTER_CONSTANT_8BIT, FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
-         FilterTypeEnumeration.FILTER_CONSTANT_FLOAT]]),
+    "autotracker": (
+        "Auto Tracker",
+        AutoTrackerUIWidget,
+        [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]],
+    ),
+    "buttonarray": (
+        "Button Array",
+        ButtonsWithValueSubmit,
+        [
+            [
+                FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+                FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+            ]
+        ],
+    ),
+    "buttonarray_submit": (
+        "Button Array w/ Submit",
+        ConstantNumberButtonList,
+        [
+            [
+                FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+                FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+            ]
+        ],
+    ),
     "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
     "cuecontrol": (
-    "Cue Control", CueControlUIWidget, [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]]),
+        "Cue Control",
+        CueControlUIWidget,
+        [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]],
+    ),
     "pantiltconstant": (
-    "Pan/Tilt Control", PanTiltConstantControlUIWidget, [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]]),
+        "Pan/Tilt Control",
+        PanTiltConstantControlUIWidget,
+        [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]],
+    ),
     "sequencercontrol": (
         "Sequence Listing",
         SequencerControlUIWidget,
-        [[FilterTypeEnumeration.VFILTER_SEQUENCER, FilterTypeEnumeration.FILTER_SEQUENCER]]
+        [[FilterTypeEnumeration.VFILTER_SEQUENCER, FilterTypeEnumeration.FILTER_SEQUENCER]],
     ),
     "label": ("Text Label", ShowLabelUIWidget, []),
     "clock": ("BF Clock", ClockUIWidget, []),
@@ -46,17 +71,29 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
     # TODO add direct inputs
     # TODO add fader update widgets
     "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]]),
-    "debug_number": ("Number Output", NumberDebugVizWidget, [
-        [FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT, FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT,
-         FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT]]),
+    "debug_number": (
+        "Number Output",
+        NumberDebugVizWidget,
+        [
+            [
+                FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT,
+                FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT,
+                FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT,
+            ]
+        ],
+    ),
 }
 
 
 def get_widget_key(w: UIWidget) -> str | None:
-    """
-    This method searches the WIDGET_LIBRARY for the key of the provided widget.
-    :param w: The widgets whose key to look up.
-    :returns: The found key or None.
+    """Search the widget library for the key of the provided widget.
+
+    Args:
+        w: The widget whose key to look up.
+
+    Returns:
+        The found key, or None if not found.
+
     """
     for k, v in WIDGET_LIBRARY.items():
         if isinstance(w, v[1]):
@@ -65,8 +102,9 @@ def get_widget_key(w: UIWidget) -> str | None:
 
 
 @deprecated
-def filter_to_ui_widget(filter_: Filter, parent_page: "UIPage",
-                        configuration: dict[str, str] | None = None) -> UIWidget:
+def filter_to_ui_widget(
+    filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None
+) -> UIWidget:
     """Deprecated? We used to construct widgets this way but the WIDGET_LIBRARY method should be used instead now."""
     selected_configuration = configuration if configuration else {}
     match filter_.filter_type:

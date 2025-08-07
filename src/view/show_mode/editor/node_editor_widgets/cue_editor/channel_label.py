@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui
@@ -31,10 +33,12 @@ class TimelineChannelLabel(QWidget):
         # TODO register with the bank set fader touch buttons to highlight a touched channel.
 
     def add_label(self, name: str, channel_type: str) -> None:
-        """
-        Add a new label.
-        :param name: The name of the channel.
-        :param channel_type: The type of the channel. Usually 8bit, 16bit, float or color.
+        """Add a new label.
+
+        Args:
+            name: The name of the channel.
+            channel_type: The type of the channel. Usually 8bit, 16bit, float, or color.
+
         """
         self._names.append(name)
         self._types.append(channel_type)
@@ -42,10 +46,14 @@ class TimelineChannelLabel(QWidget):
         self._update()
 
     def remove_label(self, c_name: str) -> int:
-        """
-        Remove the label with the associated channel name.
-        :param c_name: The name of the channel to remove.
-        :return: The previous index of the removed channel.
+        """Remove the label with the associated channel name.
+
+        Args:
+            c_name: The name of the channel to remove.
+
+        Returns:
+            The previous index of the removed channel.
+
         """
         found_i = -1
         for i in range(len(self._names)):
@@ -97,8 +105,9 @@ class TimelineChannelLabel(QWidget):
         indicator_active_color = QColor.fromRgb(0xFF, 0x4A, 0x4A)
         for i, channel_name in enumerate(self._names):
             if (i % 2) == 0:
-                painter.fillRect(0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT,
-                                 channel_background_color)
+                painter.fillRect(
+                    0, 20 + i * CHANNEL_DISPLAY_HEIGHT, w, CHANNEL_DISPLAY_HEIGHT, channel_background_color
+                )
             painter.drawText(17, 45 + i * CHANNEL_DISPLAY_HEIGHT, channel_name)
             if len(self._types) > i:
                 painter.drawText(25, 60 + i * CHANNEL_DISPLAY_HEIGHT, self._types[i])
@@ -108,7 +117,7 @@ class TimelineChannelLabel(QWidget):
                     painter.fillRect(6, 51 + i * CHANNEL_DISPLAY_HEIGHT, 13, 13, indicator_active_color)
         painter.end()
 
-    def mousePressEvent(self, ev: "QMouseEvent") -> None:  # NOQA: N802 This overrides a Qt6 native method
+    def mousePressEvent(self, ev: QMouseEvent) -> None:  # NOQA: N802 This overrides a Qt6 native method
         """Handle user mouse input."""
         super().mousePressEvent(ev)
         if not self._display_active_channel_indicator:

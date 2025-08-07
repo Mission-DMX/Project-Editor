@@ -14,12 +14,13 @@ class TransitionLabel(QWidget):
     """The purpose of this class is to present the user with adequate information regarding a transition in the list."""
 
     def __init__(self, transition: Transition, position: int, parent: QWidget | None = None) -> None:
-        """
-        New transition label.
+        """Transition label.
+
         Args:
             transition: The transition to represent.
             position: The id of the transition in the model.
             parent: The parent widget of this label.
+
         """
         super().__init__(parent)
         layout = QHBoxLayout()
@@ -40,7 +41,7 @@ class TransitionLabel(QWidget):
         self.update_labels(transition)
 
     def update_labels(self, transition: Transition) -> None:
-        """Updates the label according to the provided transition."""
+        """Update the label according to the provided transition."""
         self._transition_name_label.setText(transition.name)
         self._event_label.setText(str(transition._trigger_event))
         self._duration_label.setText(format_seconds(transition.duration))

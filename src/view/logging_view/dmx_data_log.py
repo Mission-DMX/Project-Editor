@@ -1,5 +1,6 @@
 """Widget for displaying DMX current data"""
 
+# ruff: noqa
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QTimer
 

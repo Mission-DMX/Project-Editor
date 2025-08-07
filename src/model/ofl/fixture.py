@@ -55,7 +55,7 @@ class ColorSupport(IntFlag):
 
 
 def load_fixture(file: str) -> OflFixture | None:
-    """load fixture from OFL JSON"""
+    """Load fixture from OFL JSON."""
     if not os.path.isfile(file):
         logger.error("Fixture definition %s not found.", file)
         return None
@@ -105,14 +105,12 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def uuid(self) -> UUID:
-        """uuid of the fixture"""
+        """UUID of the fixture."""
         return self._uuid
 
     @property
     def power(self) -> float:
-        """
-        Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W.
-        """
+        """Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W."""
         return self._fixture.physical.power
 
     @property

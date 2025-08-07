@@ -1,4 +1,5 @@
-"""Scene widget for scene player"""
+"""Scene widget for scene player."""
+
 from PySide6.QtWidgets import QPushButton, QWidget
 
 from model import Broadcaster, Scene
@@ -6,8 +7,10 @@ from model import Broadcaster, Scene
 
 class SceneSwitchButton(QPushButton):
     """Widget to be displayed for a scene in the show player.
+
     Clicking the button will transmit the board config to fish and change the active scene.
     """
+
     width = 100
     height = 75
 
@@ -29,7 +32,7 @@ class SceneSwitchButton(QPushButton):
         b.active_scene_switched.connect(self._active_scene_switched)
 
     def _clicked(self) -> None:
-        """Handles behaviour when scene button was clicked"""
+        """Handle behavior when the scene button is clicked."""
         # transmit_to_fish(self._scene.board_configuration)
         self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene)
         # FIXME: Incorrect switching between scenes?
@@ -44,5 +47,5 @@ class SceneSwitchButton(QPushButton):
 
     @property
     def scene(self) -> Scene:
-        """The scene this widget represents"""
+        """The scene this widget represents."""
         return self._scene

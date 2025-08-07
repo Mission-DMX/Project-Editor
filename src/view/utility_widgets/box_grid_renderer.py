@@ -6,30 +6,34 @@ from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPalette, QPixmap, QR
 from PySide6.QtWidgets import QApplication, QWidget
 
 if TYPE_CHECKING:
-
-
     from PySide6.QtGui import QMouseEvent, QPaintEvent
 
 
 class BoxGridItem(QObject):
-    """
-    This class represents a box button. It features a text and an optional icon.
+    """A box button.
+
+     It features a text and an optional icon.
     On click, a signal 'clicked' will be emitted, which provides the data of the item.
     """
+
     clicked: Signal = Signal(object)
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
         self._text: str = ""
         self._icon: QPixmap | None = None
-        self._additional_render_method: Callable | None = None
+        self._additional_render_method: Callable[[QPainter, int, int], None] | None = None
         self._data: object | None = None
 
     def set_icon(self, icon: QPixmap | QIcon | None) -> None:
-        """
-        Sets the icon of this item. If a QIcon is passed, it will be automatically converted to the correct size.
+        """Set the icon of this item.
+
+        If a QIcon is passed, it will be automatically converted to the correct size.
         If a pixmap is passed, it needs to have the correct size from the beginning on.
-        :param icon: QPixmap or QIcon or None, the icon to set
+
+        Args:
+            icon: Icon to set.
+
         """
         if icon is None:
             self._icon = None
@@ -56,13 +60,12 @@ class BoxGridItem(QObject):
         self._text = str(text)
 
     @property
-    def additional_render_method(self) -> Callable | None:
-        """Get or set a callable to use for additional rendering. This callable must accept parameters of the type
-        QPainter, int, int. The painter is used for painting whereas the integers mark the x and y coordinates."""
+    def additional_render_method(self) -> Callable[[QPainter, int, int], None] | None:
+        """Additional render method."""
         return self._additional_render_method
 
     @additional_render_method.setter
-    def additional_render_method(self, method: Callable) -> None:
+    def additional_render_method(self, method: Callable[[QPainter, int, int], None]) -> None:
         self._additional_render_method = method
 
     @property
@@ -76,20 +79,24 @@ class BoxGridItem(QObject):
 
 
 class BoxGridRenderer(QWidget):
-    """
-    This class represents a widget providing a collection of floating box buttons.
-    Each box can contain text as well as icons. For special applications, custom rendering
-    methods might be provided as callables.
+    """Represents a widget providing a collection of floating box buttons.
 
-    Ussage:
-    ```
-    widget = BoxGridRenderer()
-    for i in range(15):
-        widget.add_label(f"Label {i}")
-    ```
+    Each box can contain text as well as icons. For special applications, custom
+    rendering methods can be provided as callables.
 
-    Each item (Box) can be accessed by its index using the `item_at` method.
-    :see BoxGridItem: for a detailed explanation on individual items.
+    Example:
+        ```python
+        widget = BoxGridRenderer()
+        for i in range(15):
+            widget.add_label(f"Label {i}")
+        ```
+
+    Methods:
+        item_at(index): Returns the item (Box) at the given index.
+
+    See Also:
+        BoxGridItem: For a detailed explanation of individual items.
+
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -104,7 +111,7 @@ class BoxGridRenderer(QWidget):
         self.setMinimumHeight(self._box_height)
         self.setMaximumHeight(65565)
         self.setMaximumWidth(65565)
-        self._fg_brush = QBrush(QColor(0xdc, 0x66, 0x01))
+        self._fg_brush = QBrush(QColor(0xDC, 0x66, 0x01))
 
     @property
     def box_width(self) -> int:
@@ -133,19 +140,24 @@ class BoxGridRenderer(QWidget):
         self.repaint()
 
     def add_label(self, text: str, icon: QIcon | None = None) -> None:
+        """Add a new item based on the provided text.
+
+        Args:
+            text: The text of the new item.
+            icon: An optional icon of the new item to add.
+
         """
-        Add a new item based on the provided text.
-        :param text: The text of the new item
-        :param icon: (optional) an icon of the new item to add."""
         b = BoxGridItem(self)
         b.text = text
         b.set_icon(icon)
         self.add_item(b)
 
     def add_item(self, b: BoxGridItem) -> None:
-        """
-        Add an item object.
-        :param b: The BoxGridItem to add.
+        """Add an item object.
+
+        Args:
+            b : The item to add.
+
         """
         self._boxes.append(b)
         b.setParent(self)
@@ -169,10 +181,14 @@ class BoxGridRenderer(QWidget):
         self.repaint()
 
     def item_at(self, i: int) -> BoxGridItem | None:
-        """
-        Access the desired item using the given location.
-        :param i: The index of the item to get.
-        :returns: The item or None if it does not exist.
+        """Access the desired item using the given index.
+
+        Args:
+            i (int): The index of the item to retrieve.
+
+        Returns:
+            The item at the given index, or None if it does not exist.
+
         """
         if not (0 <= i < len(self._boxes)):
             return None

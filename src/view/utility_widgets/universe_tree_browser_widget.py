@@ -1,5 +1,5 @@
+"""Provides the universe browser widget."""
 
-"""This file provides the universe browser widget."""
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTreeWidget
 
@@ -10,7 +10,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class UniverseTreeBrowserWidget(QTreeWidget):
-    """This widget displays a browser for the fixtures within the universes."""
+    """Displays a browser for the fixtures within the universes."""
 
     def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False) -> None:
         super().__init__()
@@ -37,9 +37,8 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             return
 
         def location_to_string(
-                location: int |
-                          proto.UniverseControl_pb2.Universe.ArtNet |
-                          proto.UniverseControl_pb2.Universe.USBConfig) -> str:
+            location: int | proto.UniverseControl_pb2.Universe.ArtNet | proto.UniverseControl_pb2.Universe.USBConfig,
+        ) -> str:
             if isinstance(location, proto.UniverseControl_pb2.Universe.ArtNet):
                 return f"{location.ip_address}:{location.port}/{location.universe_on_device}"
             if isinstance(location, proto.UniverseControl_pb2.Universe.USBConfig):
@@ -67,8 +66,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
                     last_fixture_object: AnnotatedTreeWidgetItem = AnnotatedTreeWidgetItem(item)
                     if self._show_selection_checkboxes:
                         last_fixture_object.setCheckState(0, Qt.CheckState.Unchecked)
-                    last_fixture_object.setText(0 + column_offset,
-                                                f"{universe.id}/{fixture.start_index + 1}")
+                    last_fixture_object.setText(0 + column_offset, f"{universe.id}/{fixture.start_index + 1}")
                     last_fixture_object.setText(1 + column_offset, fixture.name)
                     last_fixture_object.setText(2 + column_offset, str(fixture.mode))
                     last_fixture_object.setText(3 + column_offset, fixture.comment)
@@ -77,8 +75,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
 
                     for channel in fixture.fixture_channels:
                         channel_item = AnnotatedTreeWidgetItem(last_fixture_object)
-                        channel_item.setText(0 + column_offset,
-                                             f"{universe.id}/{fixture.start_index + 1}")
+                        channel_item.setText(0 + column_offset, f"{universe.id}/{fixture.start_index + 1}")
                         channel_item.setText(1 + column_offset, str(channel.name))
                         channel_item.setText(2 + column_offset, str(fixture.mode))
                         channel_item.setText(3 + column_offset, fixture.name)
