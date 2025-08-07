@@ -1,4 +1,4 @@
-"""connector for Signals"""
+"""Connector for Signals."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ P = ParamSpec("P")
 
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
-    """metaclass for a QObject Singleton"""
+    """Metaclass for a QObject Singleton."""
 
     instance: Any
 
@@ -31,7 +31,7 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
 
 
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
-    """connector for Signals"""
+    """Connector for Signals."""
 
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(proto.RealTimeControl_pb2.RunMode.ValueType)  # TODO Remove
