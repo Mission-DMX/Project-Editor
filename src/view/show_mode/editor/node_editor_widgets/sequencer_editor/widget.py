@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, Qt
 from PySide6.QtWidgets import QDialog, QListWidget, QMessageBox, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget
 
-from model import Filter
 from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 from model.filter_data.sequencer.sequencer_filter_model import SequencerFilterModel
 from model.filter_data.sequencer.transition import Transition
@@ -24,6 +25,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QAbstractButton
 
+    from model import Filter
     from model.filter import DataType
 
 logger = getLogger(__name__)
@@ -139,7 +141,7 @@ class SequencerEditor(PreviewEditWidget):
         """As the sequencer filter does not use parameters, this method return an empty dictionary."""
         return {}
 
-    def _get_model_channels(self) -> list[tuple[str, "DataType"]]:
+    def _get_model_channels(self) -> list[tuple[str, DataType]]:
         """Use this method to retrieve all available channels, presented as a list of tuples."""
         return [(c.name, c.data_type) for c in self._model.channels]
 
@@ -214,8 +216,11 @@ class SequencerEditor(PreviewEditWidget):
         """
         if self._model.get_channel_by_name(c.name) is not None:
             logger.warning("Skipping adding of channel as name '%s' is not unique.", c.name)
-            self._input_dialog = QMessageBox(QMessageBox.Icon.Warning, "Channel name not unique",
-                                             "The channel was not added due to its name being not unique.")
+            self._input_dialog = QMessageBox(
+                QMessageBox.Icon.Warning,
+                "Channel name not unique",
+                "The channel was not added due to its name being not unique.",
+            )
             self._input_dialog.setModal(True)
             self._input_dialog.show()
             return
@@ -241,15 +246,18 @@ class SequencerEditor(PreviewEditWidget):
     def _add_channel_pressed(self) -> None:
         """Callback if the user activated the add_channel action."""
         self._input_dialog = ChannelInputDialog(
-            self._parent_widget,
-            lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
+            self._parent_widget, lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
         )
         self._input_dialog.show()
 
     def _remove_channel_pressed(self) -> None:
         """Callback if the user activated the remove_channel action."""
-        self._input_dialog = SelectionDialog("Remove Channels", "Please select Channels to remove.",
-                                             [c.name for c in self._model.channels], self._parent_widget)
+        self._input_dialog = SelectionDialog(
+            "Remove Channels",
+            "Please select Channels to remove.",
+            [c.name for c in self._model.channels],
+            self._parent_widget,
+        )
         self._input_dialog.accepted.connect(self._remove_channels_button_pressed_final)
         self._input_dialog.show()
 
@@ -275,9 +283,12 @@ class SequencerEditor(PreviewEditWidget):
 
     def _add_transition_pressed(self) -> None:
         """Callback after the user activated the add_transition action."""
-        self._input_dialog = SelectionDialog("Select Channels",
-                                             "Please select Channels to add in the new transition.",
-                                             [c.name for c in self._model.channels], self._parent_widget)
+        self._input_dialog = SelectionDialog(
+            "Select Channels",
+            "Please select Channels to add in the new transition.",
+            [c.name for c in self._model.channels],
+            self._parent_widget,
+        )
         self._input_dialog.accepted.connect(self._add_transition_pressed_final)
         self._input_dialog.show()
 
@@ -304,9 +315,12 @@ class SequencerEditor(PreviewEditWidget):
             if channel_name in existing_channel_names:
                 continue
             channels_avail.append(channel_name)
-        self._input_dialog = SelectionDialog("Select Channels",
-                                             "Please select Channels to add in the existing transition.",
-                                             channels_avail, self._parent_widget)
+        self._input_dialog = SelectionDialog(
+            "Select Channels",
+            "Please select Channels to add in the existing transition.",
+            channels_avail,
+            self._parent_widget,
+        )
         self._input_dialog.accepted.connect(self._add_channel_to_transition_pressed_final)
         self._input_dialog.show()
 
@@ -335,13 +349,15 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog.buttonClicked.connect(self._remove_transition_final)
         self._input_dialog.show()
 
-    def _remove_transition_final(self, button: "QAbstractButton") -> None:
+    def _remove_transition_final(self, button: QAbstractButton) -> None:
         """Callback after the user confirmed to delete a transition."""
         if not isinstance(self._input_dialog, QMessageBox):
             logger.error("Expected message box as delete dialog.")
             return
-        if self._input_dialog.buttonRole(button) == QMessageBox.ButtonRole.YesRole and \
-                self._selected_transition is not None:
+        if (
+            self._input_dialog.buttonRole(button) == QMessageBox.ButtonRole.YesRole
+            and self._selected_transition is not None
+        ):
             self._model.transitions.remove(self._selected_transition)
             items_to_remove = []
             for item_index in range(self._transition_list_widget.count()):
@@ -410,8 +426,5 @@ class SequencerEditor(PreviewEditWidget):
     def parent_opened(self) -> None:
         """Prompts the user to go into live preview or not upon opening of the sequence editor."""
         self._input_dialog = YesNoDialog(
-            self.get_widget(),
-            "Live Preview",
-            "Would you like to switch to live preview now?",
-            self._link_bankset
+            self.get_widget(), "Live Preview", "Would you like to switch to live preview now?", self._link_bankset
         )

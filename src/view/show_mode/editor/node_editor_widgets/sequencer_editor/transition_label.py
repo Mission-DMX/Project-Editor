@@ -1,4 +1,5 @@
-from collections import Counter
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
@@ -12,15 +13,13 @@ if TYPE_CHECKING:
 class TransitionLabel(QWidget):
     """The purpose of this class is to present the user with adequate information regarding a transition in the list."""
 
-    def __init__(self, transition: "Transition", position: int, parent: QWidget | None = None) -> None:
+    def __init__(self, transition: Transition, position: int, parent: QWidget | None = None) -> None:
         """
-        Get a new transition label.
-        :param transition: The transition to represent.
-        :type transition: Transition
-        :param position: The id of the transition in the model.
-        :type position: int
-        :param parent: The parent widget of this label.
-        :type parent: QWidget or None
+        New transition label.
+        Args:
+            transition: The transition to represent.
+            position: The id of the transition in the model.
+            parent: The parent widget of this label.
         """
         super().__init__(parent)
         layout = QHBoxLayout()
@@ -40,7 +39,7 @@ class TransitionLabel(QWidget):
         layout.addWidget(self._duration_label)
         self.update_labels(transition)
 
-    def update_labels(self, transition: "Transition") -> None:
+    def update_labels(self, transition: Transition) -> None:
         """Updates the label according to the provided transition."""
         self._transition_name_label.setText(transition.name)
         self._event_label.setText(str(transition._trigger_event))
