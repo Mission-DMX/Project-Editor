@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
@@ -40,7 +42,7 @@ class ChannelLabel(QWidget):
     padding: 3px;
     """
 
-    def __init__(self, channel: "SequencerChannel", parent: QWidget | None = None) -> None:
+    def __init__(self, channel: SequencerChannel, parent: QWidget | None = None) -> None:
         """Initialize the channel label using the given channel."""
         QWidget.__init__(self, parent)
         layout = QHBoxLayout(self)
@@ -64,9 +66,11 @@ class ChannelLabel(QWidget):
         name_label = QLabel(channel.name)
         layout.addWidget(name_label)
         self.setLayout(layout)
-        self.setToolTip(f"Channel {channel.name}\n"
-                        f"Data Type: {channel.data_type.name}\n"
-                        f"Default Value: {channel.default_value}\n"
-                        f"Apply Default On Empty: {channel.apply_default_on_empty}\n"
-                        f"Apply Default on Scene Switch: {channel.apply_default_on_scene_switch}\n"
-                        f"Interleave Method: {channel.interleave_method.name}")
+        self.setToolTip(
+            f"Channel {channel.name}\n"
+            f"Data Type: {channel.data_type.name}\n"
+            f"Default Value: {channel.default_value}\n"
+            f"Apply Default On Empty: {channel.apply_default_on_empty}\n"
+            f"Apply Default on Scene Switch: {channel.apply_default_on_scene_switch}\n"
+            f"Interleave Method: {channel.interleave_method.name}"
+        )
