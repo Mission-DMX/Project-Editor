@@ -636,7 +636,6 @@ def _parse_patching(board_configuration: BoardConfiguration, location_element: E
         The loaded fixtures.
 
     """
-
     fixtures_path = "/var/cache/missionDMX/fixtures"  # TODO config file
 
     for child in location_element:
@@ -659,7 +658,6 @@ def _parse_ui_hint(ui_hint_element: ET.Element, board_configuration: BoardConfig
         board_configuration: The show file to apply the settings on.
 
     """
-
     ui_hint_key = ""
     ui_hint_value = ""
     for key, value in ui_hint_element.attrib.items():
