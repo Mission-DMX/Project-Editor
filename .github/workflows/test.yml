@@ -20,5 +20,18 @@ jobs:
         uses: astral-sh/ruff-action@v3
 #        with:
 #          args: 'check --extend-select ERA'
+      - name: Get changed Python files
+        id: changes
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          echo "files=$(git diff --name-only origin/${{ github.base_ref }} -- '*.py' | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Run Ruff on changed files (only D rules)
+        run: |
+          if [ -n "${{ steps.changes.outputs.files }}" ]; then
+            ruff check --select D ${{ steps.changes.outputs.files }}
+          else
+            echo "No Python files changed."
+          fi
 
 
