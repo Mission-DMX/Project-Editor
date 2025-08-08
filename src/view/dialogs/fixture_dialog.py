@@ -26,6 +26,7 @@ class FixtureDialog(QDialog):
     """Dialog for editing Fixtures."""
 
     def __init__(self, fixture: UsedFixture, parent: QWidget = None) -> None:
+        """Dialog for editing Fixtures."""
         super().__init__(parent)
         self._fixture: UsedFixture = fixture
 
