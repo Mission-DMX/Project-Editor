@@ -1,4 +1,4 @@
-"""serialization of universes"""
+"""Serialization of universes."""
 
 import xml.etree.ElementTree as ET
 
@@ -8,11 +8,13 @@ from model.ofl.fixture import UsedFixture
 
 
 def _create_universe_element(universe: Universe, parent: ET.Element) -> ET.Element:
-    """Creates an XML element of type physical_location.
+    """Create an XML element of type `physical_location`.
 
-    <universe name="name" description="description" id="0">
-        ...
-    </universe>
+    Example:
+        <universe name="name" description="description" id="0">
+            ...
+        </universe>
+
     """
     return ET.SubElement(
         parent,
@@ -26,9 +28,11 @@ def _create_universe_element(universe: Universe, parent: ET.Element) -> ET.Eleme
 
 
 def _create_physical_location_element(physical: int, parent: ET.Element) -> ET.Element:
-    """Creates an XML element of type physical_location.
+    """Create an XML element of type `physical_location`.
 
-    <physical_location>0</physical_location>
+    Example:
+        <physical_location>0</physical_location>
+
     """
     physical_location = ET.SubElement(parent, "physical_location")
     physical_location.text = str(physical)
@@ -38,9 +42,11 @@ def _create_physical_location_element(physical: int, parent: ET.Element) -> ET.E
 def _create_artnet_location_element(
     artnet_location: proto.UniverseControl_pb2.Universe.ArtNet, parent: ET.Element
 ) -> ET.Element:
-    """Creates an xml element of type artnet_location.
+    """Create an XML element of type `artnet_location`.
 
-    <artnet_location ip_address="127.0.0.1" udp_port="666" device_universe_id="0" />
+    Example:
+        <artnet_location ip_address="127.0.0.1" udp_port="666" device_universe_id="0" />
+
     """
     return ET.SubElement(
         parent,
@@ -56,9 +62,11 @@ def _create_artnet_location_element(
 def _create_ftdi_location_element(
     ftdi_location: proto.UniverseControl_pb2.Universe.USBConfig, parent: ET.Element
 ) -> ET.Element:
-    """Creates a xml element of type ftdi_location.
+    """Create an XML element of type `ftdi_location`.
 
-    <ftdi_location vendor_id="0" product_id="0" device_name="name"/>
+    Example:
+        <ftdi_location vendor_id="0" product_id="0" device_name="name"/>
+
     """
     # vendor_id=0x0403, product_id=0x6001
     return ET.SubElement(
@@ -74,11 +82,13 @@ def _create_ftdi_location_element(
 
 
 def _create_fixture_element(fixture: UsedFixture, patching_element: ET.Element, assemble_for_fish: bool) -> None:
-    """
-    add patching information of a fixture to the show file XML structure.
-    :param fixture: The Fixture to add
-    :param parent: The parent element to add to
-    :param assemble_for_fish: Should this information be omitted?
+    """Add patching information of a fixture to the show file XML structure.
+
+    Args:
+        fixture: The fixture to add.
+        patching_element: The parent element to add to.
+        assemble_for_fish: Whether this information should be omitted.
+
     """
     if assemble_for_fish:
         return
