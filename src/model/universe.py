@@ -1,4 +1,4 @@
-"""DMX Universe"""
+"""DMX Universe."""
 
 from typing import Final
 
@@ -10,9 +10,10 @@ NUMBER_OF_CHANNELS: int = 512
 
 
 class Universe:
-    """DMX universe with 512 channels"""
+    """DMX universe with 512 channels."""
 
     def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe) -> None:
+        """DMX universe with 512 channels."""
         self._broadcaster = Broadcaster()
         self._universe_proto: proto.UniverseControl_pb2.Universe = universe_proto
         self._channels: Final[list[Channel]] = [
@@ -25,7 +26,7 @@ class Universe:
 
     @property
     def universe_proto(self) -> proto.UniverseControl_pb2.Universe:
-        """the UniverseProto of the Universe"""
+        """UniverseProto of the Universe."""
         return self._universe_proto
 
     @universe_proto.setter
@@ -34,12 +35,12 @@ class Universe:
 
     @property
     def channels(self) -> list[Channel]:
-        """List of all 512 dmx channels belonging to the Universe"""
+        """List of all 512 dmx channels belonging to the Universe."""
         return self._channels
 
     @property
     def id(self) -> int:
-        """id of the universe"""
+        """ID of the universe."""
         return self._universe_proto.id
 
     @property
@@ -64,7 +65,7 @@ class Universe:
     def location(
         self,
     ) -> int | proto.UniverseControl_pb2.Universe.ArtNet | proto.UniverseControl_pb2.Universe.USBConfig:
-        """network location"""
+        """Network location."""
         if self._universe_proto.remote_location.ip_address != "":
             return self._universe_proto.remote_location
         if self._universe_proto.ftdi_dongle.vendor_id != "":
