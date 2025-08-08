@@ -38,6 +38,7 @@ class ColorSupport(IntFlag):
     HAS_UV_SEGMENT = 16
 
     def __str__(self) -> str:
+        """Return the string representation of ColorSupport."""
         if self == ColorSupport.NO_COLOR_SUPPORT:
             return "No Color Support"
         s = []
@@ -55,7 +56,7 @@ class ColorSupport(IntFlag):
 
 
 def load_fixture(file: str) -> OflFixture:
-    """load fixture from OFL JSON"""
+    """Load fixture from OFL JSON."""
     with open(file, "r", encoding="UTF-8") as f:
         ob: dict = json.load(f)
     ob.update({"fileName": file.split("/fixtures/")[1]})
@@ -77,7 +78,7 @@ class UsedFixture(QtCore.QObject):
         uuid: UUID | None = None,
         color_on_stage: str | None = None,
     ) -> None:
-        """Fixture in use with a specific mode"""
+        """Fixture in use with a specific mode."""
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[OflFixture] = fixture
@@ -103,14 +104,12 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def uuid(self) -> UUID:
-        """uuid of the fixture"""
+        """UUID of the fixture."""
         return self._uuid
 
     @property
     def power(self) -> float:
-        """
-        Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W.
-        """
+        """Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W."""
         return self._fixture.physical.power
 
     @property
