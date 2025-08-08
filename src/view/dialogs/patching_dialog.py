@@ -108,7 +108,7 @@ class PatchingDialog(QtWidgets.QDialog):
                 self._board_configuration,
                 self._patching_information.fixture,
                 self._select_mode.currentIndex(),
-                self.patching_information.universe,
+                self._board_configuration.universe(self.patching_information.universe),
                 start_index,
             )
 

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from model import BoardConfiguration
+    from model import BoardConfiguration, Universe
 
 logger = getLogger(__name__)
 
@@ -73,7 +73,7 @@ class UsedFixture(QtCore.QObject):
         board_configuration: BoardConfiguration,
         fixture: OflFixture,
         mode_index: int,
-        parent_universe: int,
+        parent_universe: Universe,
         start_index: int,
         uuid: UUID | None = None,
         color_on_stage: str | None = None,
@@ -86,7 +86,7 @@ class UsedFixture(QtCore.QObject):
 
         self._start_index: int = start_index
         self._mode_index: int = mode_index
-        self._universe_id: int = parent_universe
+        self._universe: Universe = parent_universe
 
         channels, segment_map, color_support = self._generate_fixture_channels()
 
@@ -155,12 +155,17 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def universe_id(self) -> int:
-        """Id of the universe for the fixture."""
-        return self._universe_id
+        """Universe for the fixture."""
+        return self._universe.id
 
-    @universe_id.setter
-    def universe_id(self, universe_id: int) -> None:
-        self._universe_id = universe_id
+    @property
+    def universe(self) -> Universe:
+        """Universe of the fixture."""
+        return self._universe
+
+    @universe.setter
+    def universe(self, universe: Universe) -> None:
+        self._universe = universe
 
     @property
     def channel_length(self) -> int:
@@ -249,10 +254,10 @@ def make_used_fixture(
     board_configuration: BoardConfiguration,
     fixture: OflFixture,
     mode_index: int,
-    universe_id: int,
+    universe: Universe,
     start_index: int,
     uuid: UUID | None = None,
     color: str | None = None,
 ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
-    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index, uuid, color)
+    return UsedFixture(board_configuration, fixture, mode_index, universe, start_index, uuid, color)

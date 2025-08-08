@@ -639,7 +639,7 @@ def _parse_patching(board_configuration: BoardConfiguration, location_element: E
             board_configuration,
             load_fixture(os.path.join(fixtures_path, child.attrib["fixture_file"])),
             int(child.attrib["mode"]),
-            universe_id,
+            board_configuration.universe(universe_id),
             int(child.attrib["start"]),
             UUID(child.attrib.get("id")) if child.attrib.get("id") else None,
             child.attrib.get("color"),
