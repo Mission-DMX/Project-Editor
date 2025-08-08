@@ -1,22 +1,29 @@
-""" item of the Patching """
+"""Channel items of the Patching."""
+
 from PySide6.QtGui import QColor, QColorConstants, QFont, QPainter, QPixmap
 
 _WIDTH: int = 100
 _HEIGHT: int = 100
+_SPACING: int = 1
 
 
-def item_width() -> int:
-    """width of the item"""
+def channel_item_width() -> int:
+    """Width of one Channel item."""
     return _WIDTH
 
 
-def item_height() -> int:
-    """height of the item"""
+def channel_item_height() -> int:
+    """Height of one Channel item."""
     return _HEIGHT
 
 
-def create_item(number: int, color: QColor = QColorConstants.White) -> QPixmap:
-    """creates a pixmap of the item"""
+def channel_item_spacing() -> int:
+    """Spacing between two Channel items."""
+    return _SPACING
+
+
+def create_item(number: int, color: QColor) -> QPixmap:
+    """Creates a pixmap of a Channel item."""
     pixmap = QPixmap(_WIDTH, _HEIGHT)
     pixmap.fill(color)
 

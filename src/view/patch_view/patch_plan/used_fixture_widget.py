@@ -1,39 +1,73 @@
-"""A Used Fixture in the patching view"""
+"""A Used Fixture in the patching view."""
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColorConstants, QFont, QMouseEvent, QPainter, QPixmap
-from PySide6.QtWidgets import QWidget
+from __future__ import annotations
 
-from model.ofl.fixture import UsedFixture
-from view.patch_view.patch_plan.channel_item_generator import create_item
+import math
+from typing import TYPE_CHECKING, override
+
+from PySide6 import QtWidgets
+from PySide6.QtGui import QAction, QColorConstants, QContextMenuEvent, QFont, QPainter, QPainterPath, QPixmap
+from PySide6.QtWidgets import QGraphicsItem, QStyleOptionGraphicsItem, QWidget
+
+from view.dialogs.fixture_dialog import FixtureDialog
+from view.patch_view.patch_plan.channel_item_generator import (
+    channel_item_height,
+    channel_item_spacing,
+    channel_item_width,
+    create_item,
+)
+from view.patch_view.patch_plan.patch_plan_widget import PatchBaseItem
+
+if TYPE_CHECKING:
+    from model import BoardConfiguration
+    from model.ofl.fixture import UsedFixture
 
 
-class UsedFixtureWidget(QWidget):
-    """
-    UI Widget of a Used Fixture
-    """
+class UsedFixtureWidget(PatchBaseItem):
+    """UI Widget of a Used Fixture."""
 
-    def __init__(self, fixture: UsedFixture) -> None:
+    def __init__(self, fixture: UsedFixture, board_configuration: BoardConfiguration) -> None:
+        """UI Widget of a Used Fixture."""
         super().__init__()
-        self._fixture = fixture
+        self._fixture: UsedFixture = fixture
+        self._board_configuration: BoardConfiguration = board_configuration
+        self._shape_path = QPainterPath()
         self._channels_static: list[QPixmap] = []
-        fixture.static_data_changed.connect(self._build_static_pixmap)
-        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+        fixture.static_data_changed.connect(self._rebild)
+        self._rebild()
+        self.setFlags(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
 
-        for chanel_index in range(fixture.channel_length):
-            self._channels_static.append(self._build_static_pixmap(chanel_index))
+    @override
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, /, widget: QWidget | None = ...) -> None:
+        x = (self._fixture.start_index % self._cols) * (channel_item_width() + channel_item_spacing())
+        y = math.floor(self._fixture.start_index / self._cols) * (channel_item_height() + channel_item_spacing())
+        self._shape_path = QPainterPath()
+        for channel_item in self._channels_static:
+            if x + channel_item_width() > self._view_width:
+                x = 0
+                y += channel_item_height() + channel_item_spacing()
+            painter.drawPixmap(x, y, channel_item)
+            self._shape_path.addRect(x, y, channel_item_width(), channel_item_height())
+            x += channel_item_width() + channel_item_spacing()
 
-    @property
-    def pixmap(self) -> list[QPixmap]:
-        """pixmap of the widget"""
-        return self._channels_static
+    @override
+    def shape(self) -> QPainterPath:
+        return self._shape_path
 
-    @property
-    def start_index(self) -> int:
-        """start index of the fixture"""
-        return self._fixture.start_index
+    @override
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        """Context Menu."""
+        menu = QtWidgets.QMenu()
+        action_modify = QAction("Bearbeiten", menu)
+
+        action_modify.triggered.connect(self._modify_fixture)
+
+        menu.addAction(action_modify)
+
+        menu.exec(event.screenPos())
 
     def _build_static_pixmap(self, channel_id: int) -> QPixmap:
+        """Build Static Pixmap for one Cannel."""
         pixmap = create_item(self._fixture.start_index + channel_id + 1, self._fixture.color_on_stage)
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -47,3 +81,15 @@ class UsedFixtureWidget(QWidget):
         painter.end()
 
         return pixmap
+
+    def _rebild(self) -> None:
+        """Rebuild all Channel Pixmap's."""
+        self._channels_static: list[QPixmap] = []
+        for chanel_index in range(self._fixture.channel_length):
+            self._channels_static.append(self._build_static_pixmap(chanel_index))
+        self.update()
+
+    def _modify_fixture(self) -> None:
+        """Modify clicked Fixture."""
+        self._dialog = FixtureDialog(self._fixture, self._board_configuration)
+        self._dialog.show()

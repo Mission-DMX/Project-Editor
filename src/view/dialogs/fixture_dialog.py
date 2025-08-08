@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
 from PySide6.QtWidgets import (
     QColorDialog,
     QDialog,
@@ -12,23 +13,28 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
 )
+
+from model.universe import NUMBER_OF_CHANNELS
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QColor
     from PySide6.QtWidgets import QWidget
 
+    from model import BoardConfiguration
     from model.ofl.fixture import UsedFixture
 
 
 class FixtureDialog(QDialog):
     """Dialog for editing Fixtures."""
 
-    def __init__(self, fixture: UsedFixture, parent: QWidget = None) -> None:
+    def __init__(self, fixture: UsedFixture, board_configuration: BoardConfiguration, parent: QWidget = None) -> None:
         """Dialog for editing Fixtures."""
         super().__init__(parent)
         self._fixture: UsedFixture = fixture
+        self._board_configuration: BoardConfiguration = board_configuration
 
         layout = QVBoxLayout()
 
@@ -41,7 +47,11 @@ class FixtureDialog(QDialog):
         layout_fixture.addWidget(self._name_on_stage, 1, 1)
 
         layout_fixture.addWidget(QLabel("Start Index"), 2, 0)
-        self._start_index = QLineEdit(str(self._fixture.start_index + 1))
+        self._start_index = QSpinBox()
+        self._start_index.setMinimum(0)
+        self._start_index.setMaximum(NUMBER_OF_CHANNELS)
+        self._start_index.setValue(self._fixture.start_index + 1)
+        self._start_index.textChanged.connect(self._validate_input)
         layout_fixture.addWidget(self._start_index, 2, 1)
 
         self._color_label = QLabel("Anzeigefarbe")
@@ -52,17 +62,22 @@ class FixtureDialog(QDialog):
         color_button.clicked.connect(self._open_color_picker)
         layout_fixture.addWidget(color_button, 3, 1)
 
+        layout_error = QHBoxLayout()
+        self._error_label = QLabel("No Error Found!")
+        layout_error.addWidget(self._error_label)
+
         layout_exit = QHBoxLayout()
-        _ok_button = QPushButton()
-        _ok_button.setText("Okay")
-        _ok_button.clicked.connect(self._ok)
+        self._ok_button = QPushButton()
+        self._ok_button.setText("Okay")
+        self._ok_button.clicked.connect(self._ok)
         _cancel_button = QPushButton()
         _cancel_button.setText("cancel")
         _cancel_button.clicked.connect(self._cancel)
         layout_exit.addWidget(_cancel_button)
-        layout_exit.addWidget(_ok_button)
+        layout_exit.addWidget(self._ok_button)
 
         layout.addLayout(layout_fixture)
+        layout.addLayout(layout_error)
         layout.addLayout(layout_exit)
         self.setLayout(layout)
 
@@ -89,3 +104,16 @@ class FixtureDialog(QDialog):
         """Handle color chosen."""
         self._selected_color = color
         self._color_label.setStyleSheet(f"background-color: {color.name()};")
+
+    def _validate_input(self) -> None:
+        """Validate input."""
+        self._ok_button.setEnabled(False)
+        occupied = np.arange(
+            int(self._start_index.value() - 1), int(self._start_index.value() - 1) + self._fixture.channel_length
+        )
+
+        if np.isin(occupied, self._board_configuration.get_occupied_channels(self._fixture.universe_id)).any():
+            self._error_label.setText("Channels already occupied!")
+            return
+        self._error_label = QLabel("No Error Found!")
+        self._ok_button.setEnabled(True)
