@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 
+import style
 from model import BoardConfiguration
 from model.ofl.fixture import make_used_fixture
 from model.ofl.ofl_fixture import OflFixture
@@ -63,7 +64,8 @@ class PatchingDialog(QtWidgets.QDialog):
         patching_layout.addWidget(self._patching)
 
         error_layout = QtWidgets.QHBoxLayout()
-        self._error_label = QtWidgets.QLabel("no Error Found")
+        self._error_label = QtWidgets.QLabel("No Error Found!")
+        self._error_label.setStyleSheet(style.LABEL_OKAY)
         error_layout.addWidget(self._error_label)
 
         layout_exit = QtWidgets.QHBoxLayout()
@@ -147,10 +149,12 @@ class PatchingDialog(QtWidgets.QDialog):
 
         self._ok.setEnabled(False)
         if not self._board_configuration.universe(self._patching_information.universe):
-            self._error_label.setText("no matching Universes")
+            self._error_label.setText("No matching Universe!")
+            self._error_label.setStyleSheet(style.LABEL_ERROR)
             return
         if 0 < self._patching_information.offset < channel_count:
-            self._error_label.setText("offset to low")
+            self._error_label.setText("Offset to low!")
+            self._error_label.setStyleSheet(style.LABEL_ERROR)
             return
 
         start_index = self.patching_information.channel
@@ -161,14 +165,17 @@ class PatchingDialog(QtWidgets.QDialog):
         occupied = (block_starts[:, np.newaxis] + channel_offsets).ravel()
 
         if occupied[-1] > 511:
-            self._error_label.setText("not enough channels")
+            self._error_label.setText("Not enough channels!")
+            self._error_label.setStyleSheet(style.LABEL_ERROR)
             return
 
         if np.isin(
             occupied, self._board_configuration.get_occupied_channels(self._patching_information.universe)
         ).any():
-            self._error_label.setText("channels already occupied")
+            self._error_label.setText("Channels already occupied!")
+            self._error_label.setStyleSheet(style.LABEL_ERROR)
             return
 
-        self._error_label.setText("No Error Found")
+        self._error_label.setText("No Error Found!")
+        self._error_label.setStyleSheet(style.LABEL_OKAY)
         self._ok.setEnabled(True)

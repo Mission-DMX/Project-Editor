@@ -75,7 +75,7 @@ class UsedFixtureWidget(PatchBaseItem):
         painter.setPen(QColorConstants.Black)
         font = QFont("Arial", 10)
         painter.setFont(font)
-        painter.drawText(5, 35, str(self._fixture.short_name) if self._fixture.short_name else str(self._fixture.name))
+        painter.drawText(5, 35, self._fixture.short_name if self._fixture.short_name else self._fixture.name)
         painter.drawText(5, 50, str(self._fixture.get_fixture_channel(channel_id).name))
         painter.drawText(5, 65, str(self._fixture.name_on_stage))
         painter.end()
