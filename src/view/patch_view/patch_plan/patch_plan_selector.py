@@ -1,4 +1,4 @@
-"""selector for Patching witch holds all Patching Universes"""
+"""Selector for Patching witch holds all Patching Universes."""
 
 from __future__ import annotations
 
@@ -23,9 +23,10 @@ logger = getLogger(__name__)
 
 
 class PatchPlanSelector(QtWidgets.QTabWidget):
-    """selector for Patching witch holds all Patching Universes"""
+    """Selector for Patching witch holds all Patching Universes."""
 
     def __init__(self, board_configuration: BoardConfiguration, parent: PatchMode) -> None:
+        """Selector for Patching witch holds all Patching Universes."""
         super().__init__(parent=parent)
         self._board_configuration = board_configuration
         self._broadcaster = Broadcaster()
@@ -45,15 +46,14 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self._patch_planes[fixture.universe_id].scene().addItem(UsedFixtureWidget(fixture, self._board_configuration))
 
     def _generate_universe(self) -> None:
-        """add a new Universe to universe Selector"""
-
+        """Add a new Universe to universe Selector."""
         dialog = UniverseDialog(self._board_configuration.next_universe_id())
         if dialog.exec():
             Universe(dialog.output)
 
     @override
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        """context menu"""
+        """Context menu."""
         for index in range(self.tabBar().count() - 1):
             if self.tabBar().tabRect(index).contains(event.pos()):
                 menu = QtWidgets.QMenu(self)

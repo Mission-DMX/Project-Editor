@@ -1,4 +1,4 @@
-"""patch Plan Widget for one Universe"""
+"""Patch Plan Widget for one Universe."""
 
 from typing import Final, override
 
@@ -37,6 +37,7 @@ class PatchPlanWidget(PatchBaseItem):
     ]
 
     def __init__(self) -> None:
+        """Patch Plan Widget for one Universe."""
         super().__init__()
         self.setZValue(-10)
 

@@ -1,4 +1,4 @@
-"""dialog for editing patching universe"""
+"""Dialog for editing patching universe."""
 
 from typing import Any
 
@@ -9,11 +9,12 @@ import proto.UniverseControl_pb2
 
 
 class UniverseDialog(QtWidgets.QDialog):
-    """dialog for editing patching universe"""
+    """Dialog for editing patching universe."""
 
     def __init__(
         self, patching_universe_or_id: proto.UniverseControl_pb2.Universe | int, parent: QWidget = None
     ) -> None:
+        """Dialog for editing patching universe."""
         super().__init__(parent)
         if isinstance(patching_universe_or_id, int):
             patching_proto: proto.UniverseControl_pb2.Universe = proto.UniverseControl_pb2.Universe(
@@ -85,7 +86,7 @@ class UniverseDialog(QtWidgets.QDialog):
             self._widgets.setCurrentIndex(0)
 
     def ok(self) -> None:
-        """accept the universe"""
+        """Handle Ok button."""
         if self._widgets.currentIndex() == 0:
             # art net
             self.output = proto.UniverseControl_pb2.Universe(
@@ -110,11 +111,12 @@ class UniverseDialog(QtWidgets.QDialog):
         self.accept()
 
     def cancel(self) -> None:
-        """cancel universe"""
+        """Handle cancel button."""
         self.reject()
 
 
 def _generate_widget(items: list[tuple[str, Any]], name: str) -> tuple[QtWidgets.QWidget, list[QtWidgets.QLineEdit]]:
+    """Generate a widget for a patching universe."""
     output = QtWidgets.QWidget()
     layout = QtWidgets.QGridLayout()
     widgets = []

@@ -23,7 +23,7 @@ def channel_item_spacing() -> int:
 
 
 def create_item(number: int, color: QColor) -> QPixmap:
-    """Creates a pixmap of a Channel item."""
+    """Create a pixmap of a Channel item."""
     pixmap = QPixmap(_WIDTH, _HEIGHT)
     pixmap.fill(color)
 
