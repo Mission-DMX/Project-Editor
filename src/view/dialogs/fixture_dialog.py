@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+import style
 from model.universe import NUMBER_OF_CHANNELS
 
 if TYPE_CHECKING:
@@ -40,7 +41,9 @@ class FixtureDialog(QDialog):
 
         layout_fixture = QGridLayout()
         layout_fixture.addWidget(QLabel("Fixture name:"), 0, 0)
-        layout_fixture.addWidget(QLabel(self._fixture.short_name), 0, 1)
+        layout_fixture.addWidget(
+            QLabel(self._fixture.short_name if self._fixture.short_name else self._fixture.name), 0, 1
+        )
 
         layout_fixture.addWidget(QLabel("Anzeigename"), 1, 0)
         self._name_on_stage = QLineEdit(self._fixture.name_on_stage)
@@ -64,6 +67,8 @@ class FixtureDialog(QDialog):
 
         layout_error = QHBoxLayout()
         self._error_label = QLabel("No Error Found!")
+        self._error_label.setFixedHeight(20)
+        self._error_label.setStyleSheet(style.LABEL_OKAY)
         layout_error.addWidget(self._error_label)
 
         layout_exit = QHBoxLayout()
@@ -114,6 +119,9 @@ class FixtureDialog(QDialog):
 
         if np.isin(occupied, self._board_configuration.get_occupied_channels(self._fixture.universe_id)).any():
             self._error_label.setText("Channels already occupied!")
+            self._error_label.setStyleSheet(style.LABEL_ERROR)
             return
-        self._error_label = QLabel("No Error Found!")
+
+        self._error_label.setText("No Error Found!")
+        self._error_label.setStyleSheet(style.LABEL_OKAY)
         self._ok_button.setEnabled(True)
