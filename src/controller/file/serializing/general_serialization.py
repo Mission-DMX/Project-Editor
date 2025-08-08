@@ -1,4 +1,4 @@
-"""serialization functions"""
+"""Serialization functions."""
 
 import xml.etree.ElementTree as ET
 
@@ -20,16 +20,18 @@ from model.events import get_all_senders
 def create_xml(
     board_configuration: BoardConfiguration, pn: ProcessNotifier, assemble_for_fish_loading: bool = False
 ) -> ET.Element:
-    """Creates an XML element from the given board configuration.
+    """Create an XML element from the given board configuration.
 
     Args:
-        board_configuration: The board configuration to be converted.
-        assemble_for_fish_loading: Pass True if the XML is build for fish.
-                                    This will skip the UI and resolve virtual filters
+        board_configuration: The board configuration to convert.
+        pn: The Process notifier to use.
+        assemble_for_fish_loading: Pass True if the XML is built for fish.
+            This will skip the UI and resolve virtual filters.
 
     Returns:
         The XML element containing the board configuration.
         See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information
+
     """
     pn.current_step_description = "Creating document root."
     pn.total_step_count += 1 + len(board_configuration.scenes) + 3
@@ -81,13 +83,15 @@ def create_xml(
 
 
 def _create_board_configuration_element(board_configuration: BoardConfiguration) -> ET.Element:
-    """Creates an XML element of a type scene.
+    """Create an XML element of type `BoardConfiguration`.
 
-    <board_configuration xmlns:p1="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile"
-     default_active_scene="0" notes="notes" show_name="Show Name"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ShowFile.xsd">
-       ...
-    </board_configuration>
+    Example:
+        <board_configuration xmlns:p1="http://www.asta.uni-luebeck.de/MissionDMX/ShowFile"
+         default_active_scene="0" notes="notes" show_name="Show Name"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ShowFile.xsd">
+           ...
+        </board_configuration>
+
     """
     # TODO we're not filling in the version attribute
     return ET.Element(
@@ -104,7 +108,9 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
 
 
 def _create_device_element(device: Device, parent: ET.Element) -> ET.Element:
-    """TODO implement patching of devices
+    """TODO: Implement patching of devices.
 
-    <device channel="0" name="name" type="type" universe_id="0">
+    Example:
+        <device channel="0" name="name" type="type" universe_id="0">
+
     """
