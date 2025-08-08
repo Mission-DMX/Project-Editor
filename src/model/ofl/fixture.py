@@ -138,6 +138,12 @@ class UsedFixture(QtCore.QObject):
         """Start index of theFixture in the Universe indexed by 0."""
         return self._start_index
 
+    @start_index.setter
+    def start_index(self, start_index: int) -> None:
+        if start_index != self._start_index:
+            self._start_index = start_index
+            self.static_data_changed.emit()
+
     @property
     def fixture_file(self) -> str:
         """File of the fixture."""
@@ -178,9 +184,10 @@ class UsedFixture(QtCore.QObject):
         return self._color_on_stage
 
     @color_on_stage.setter
-    def color_on_stage(self, color: str) -> None:
-        self._color_on_stage = QColor(color)
-        self.static_data_changed.emit()
+    def color_on_stage(self, color: QColor) -> None:
+        if color != self._color_on_stage:
+            self._color_on_stage = color
+            self.static_data_changed.emit()
 
     @property
     def name_on_stage(self) -> str:
@@ -189,8 +196,9 @@ class UsedFixture(QtCore.QObject):
 
     @name_on_stage.setter
     def name_on_stage(self, name: str) -> None:
-        self._name_on_stage = name
-        self.static_data_changed.emit()
+        if name != self._name_on_stage:
+            self._name_on_stage = name
+            self.static_data_changed.emit()
 
     @property
     def color_support(self) -> ColorSupport:
