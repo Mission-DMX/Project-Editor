@@ -1,4 +1,5 @@
 """DMX Universe"""
+
 from typing import Final
 
 import proto.UniverseControl_pb2
@@ -13,9 +14,10 @@ class Universe:
 
     def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe) -> None:
         self._broadcaster = Broadcaster()
-        self._universe_proto: proto.UniverseControl_pb2 = universe_proto
-        self._channels: Final[list[Channel]] = [Channel(channel_address) for channel_address in
-                                                range(NUMBER_OF_CHANNELS)]
+        self._universe_proto: proto.UniverseControl_pb2.Universe = universe_proto
+        self._channels: Final[list[Channel]] = [
+            Channel(channel_address) for channel_address in range(NUMBER_OF_CHANNELS)
+        ]
 
         self._name = f"Universe {self.universe_proto.id + 1}"
         self._description = self.name
@@ -60,7 +62,8 @@ class Universe:
 
     @property
     def location(
-            self) -> int | proto.UniverseControl_pb2.Universe.ArtNet | proto.UniverseControl_pb2.Universe.USBConfig:
+        self,
+    ) -> int | proto.UniverseControl_pb2.Universe.ArtNet | proto.UniverseControl_pb2.Universe.USBConfig:
         """network location"""
         if self._universe_proto.remote_location.ip_address != "":
             return self._universe_proto.remote_location
