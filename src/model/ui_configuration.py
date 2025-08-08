@@ -20,6 +20,7 @@ class UIWidget(ABC):
 
         Arguments:
             fid -- The id of the corresponding filter.
+
         """
         self._position: tuple[int, int] = (0, 0)
         self._size: tuple[int, int] = (0, 0)
@@ -37,6 +38,7 @@ class UIWidget(ABC):
 
         Returns:
             A list of key-value-tuples where each tuple defines a parameter of the filter to be updated.
+
         """
         raise NotImplementedError
 
@@ -46,6 +48,7 @@ class UIWidget(ABC):
 
         Returns:
             A fully set up QWidget instance
+
         """
         raise NotImplementedError
 
@@ -56,6 +59,7 @@ class UIWidget(ABC):
 
         Returns:
             A fully set up QWidget instance
+
         """
         raise NotImplementedError
 
@@ -92,7 +96,8 @@ class UIWidget(ABC):
 
     def notify_id_rename(self, old_id: str, new_id: str) -> None:
         """This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
-        in order to implement special behaviour"""
+        in order to implement special behaviour
+        """
         for slot in self._associated_filters:
             if self._associated_filters[slot] == old_id:
                 self._associated_filters[slot] = new_id
@@ -148,7 +153,8 @@ class UIWidget(ABC):
 
     def get_variante(self) -> str:
         """This method needs to be overridden if there are multiple fitting widgets for a filter
-        type in order for the show file saving (and loading) to choose the correct one."""
+        type in order for the show file saving (and loading) to choose the correct one.
+        """
         return ""
 
     def push_update(self) -> None:
@@ -177,6 +183,7 @@ class UIPage:
 
         Arguments:
             sid -- The id of the scene where the corresponding filter is located.
+
         """
         self._widgets: list[UIWidget] = []
         self._parent_scene: Scene = parent
@@ -278,6 +285,7 @@ class ShowUI:
 
         Returns:
             The complete list of pages.
+
         """
         return [p for _, pl in self._page_storage for p in pl]
 

@@ -71,6 +71,7 @@ class UIWidgetHolder(QWidget):
 
         Args:
             event: The closing event.
+
         """
         self.closing.emit()
         self._model.close()
@@ -86,6 +87,7 @@ class UIWidgetHolder(QWidget):
 
         Args:
             event: The mouse event.
+
         """
         if event.button() is Qt.MouseButton.LeftButton and self._instance_for_editor:
             self._old_pos = event.globalPos()
@@ -96,6 +98,7 @@ class UIWidgetHolder(QWidget):
 
         Args:
             event: The mouse event.
+
         """
         super().mouseMoveEvent(event)
         if not self._instance_for_editor:

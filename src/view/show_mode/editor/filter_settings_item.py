@@ -45,7 +45,9 @@ class FilterSettingsItem(QGraphicsSvgItem):
 
     Attributes:
         filter_node: The filter this item belongs to
+
     """
+
     _open_dialogs: ClassVar[list[QDialog]] = []
 
     def __init__(self, filter_node: FilterNode, parent: QGraphicsItem, filter_: Filter) -> None:
@@ -140,6 +142,7 @@ class FilterSettingsDialog(QDialog):
 
     Attributes:
         filter: The filter whose settings this dialog displays
+
     """
 
     def __init__(self, filter_node: FilterNode) -> None:

@@ -385,7 +385,6 @@ class _SenderAddDialog(QDialog):
 
 
 class EventSetupWidget(QSplitter):
-
     """Widget containing the entire event sender configuration UI."""
 
     def __init__(self, parent: QWidget | None, b: Broadcaster) -> None:

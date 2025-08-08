@@ -93,6 +93,10 @@ class ConstantNumberButtonList(UIWidget):
         self._value = 0
 
     def set_filter(self, f: Filter, i: int) -> None:
+        """Set the filter associated with this UI widget for a specific button.
+        :param f: The new filter to set
+        :param i: The index of the button to update.
+        """
         if f is None:
             return
         super().set_filter(f, i)

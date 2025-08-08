@@ -17,7 +17,6 @@ class ChannelInputDialog(QDialog):
                 the name of the new channel and the selected data type.
 
         """
-
         super().__init__(parent)
         self._ok_function = ok_function
         self._layout = QFormLayout()

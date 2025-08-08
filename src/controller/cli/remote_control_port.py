@@ -25,6 +25,7 @@ class SocketStreamReader:
 
         Arguments:
         sock -- the socket to listen on
+
         """
         self._sock = sock
         self._recv_buffer = bytearray()
@@ -50,6 +51,7 @@ class SocketStreamReader:
 
         Returns:
         bytearray with line.
+
         """
         return self.read_until(b"\n")
 
@@ -61,6 +63,7 @@ class SocketStreamReader:
 
         Returns:
         bytearray with the found content.
+
         """
         if len(separator) != 1:
             raise ValueError("Only separators of length 1 are supported.")
@@ -113,6 +116,7 @@ class Connection:
         client -- the connection socket fd.
         address -- the remote address of the connected client.
         connection_map -- the map handling all active connections.
+
         """
         self.context = CLIContext(show, networkmgr, exit_available=True)
         self._client = client
@@ -170,6 +174,7 @@ class RemoteCLIServer:
         Arguments:
         interface -- The interface to bind to. Defaults to all IPv6 interfaces.
         port -- The port to listen on. Defaults to TCP/2929
+
         """
         self._server_thread = Thread(target=self.run)
         self._bind_interface = interface

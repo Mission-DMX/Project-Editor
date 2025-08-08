@@ -39,7 +39,7 @@ class DeskColumn(ABC):
         self.data_changed_callback = None
 
     def set_pushed_to_device(self) -> None:
-        """set Column pushed to a device"""
+        """Set Column pushed to a device"""
         self._pushed_to_device = True
 
     def copy_base(self, dc: DeskColumn) -> None:
@@ -67,6 +67,7 @@ class DeskColumn(ABC):
 
         Returns:
         The corresponding protobuf message
+
         """
 
     @abstractmethod
@@ -178,6 +179,7 @@ class RawDeskColumn(DeskColumn):
 
         Returns:
             The text as a string
+
         """
         return self._secondary_text_line
 
@@ -199,6 +201,7 @@ class RawDeskColumn(DeskColumn):
 
         Returns:
         fader position as 16 bit unsigned int (between 0 and 65535)
+
         """
         return self._fader_position
 
@@ -217,7 +220,7 @@ class RawDeskColumn(DeskColumn):
 
     @property
     def encoder_position(self) -> int:
-        """position of the rotary encoder"""
+        """Position of the rotary encoder"""
         return self._encoder_position
 
     @encoder_position.setter
@@ -255,7 +258,7 @@ class ColorDeskColumn(DeskColumn):
 
     @property
     def color(self) -> ColorHSI:
-        """color of the colum"""
+        """Color of the colum"""
         return self._color
 
     @color.setter
@@ -277,16 +280,16 @@ class FaderBank:
         self.columns: list[DeskColumn] = []
 
     def set_pushed_to_device(self) -> None:
-        """set pushed for all columns"""
+        """Set pushed for all columns"""
         for column in self.columns:
             column.set_pushed_to_device()
 
     def add_column(self, col: DeskColumn) -> None:
-        """add a new colum"""
+        """Add a new colum"""
         self.columns.append(col)
 
     def remove_column(self, col: DeskColumn) -> None:
-        """removes the specified column from the bank set"""
+        """Removes the specified column from the bank set"""
         self.columns.remove(col)
 
     def generate_bank_message(self) -> proto.Console_pb2.add_fader_bank_set.fader_bank:
@@ -294,6 +297,7 @@ class FaderBank:
 
         Returns:
             proto buf representation
+
         """
         msg = proto.Console_pb2.add_fader_bank_set.fader_bank()
         for col in self.columns:
@@ -344,7 +348,7 @@ class BankSet:
 
     @classmethod
     def active_bank_set(cls) -> BankSet:
-        """current bank set"""
+        """Current bank set"""
         return cls._active_bank_set
 
     @staticmethod
@@ -367,6 +371,7 @@ class BankSet:
         description -- Optional. A human-readable description used in the fader bank editor to identify the set to edit
         gui_controlled -- Indicates that the set is managed by the gui thread.
         id -- If a specific ID should be used for initialization
+
         """
         # TODO why is id as string
         if id_:
@@ -400,10 +405,11 @@ class BankSet:
             pass
 
     def update(self) -> bool:
-        """push the bank set to fish or update it if required
+        """Push the bank set to fish or update it if required
 
         Returns:
             True if the bank set was successfully dispatched. Otherwise false
+
         """
         if not BankSet._fish_connector.is_running:
             return False
@@ -505,6 +511,7 @@ class BankSet:
 
         Returns:
         True if the operation was successful, Otherwise False.
+
         """
         if i < 0 or i >= len(self.banks):
             return False
@@ -517,7 +524,8 @@ class BankSet:
     def link(self) -> bool:
         """Load the bank set to fish.
 
-        If there was no bank set linked before this bank set might become the active one immediately."""
+        If there was no bank set linked before this bank set might become the active one immediately.
+        """
         return self.update()
 
     def unlink(self) -> bool:

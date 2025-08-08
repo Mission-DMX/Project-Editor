@@ -18,7 +18,8 @@ _persistence_notes: dict[str, dict[tuple[int, int, str], str]] = {}
 
 def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
     """Update the sender model based on the provided message from fish.
-    :param msg: The message to use"""
+    :param msg: The message to use
+    """
     ev = _senders.get(msg.name)
     if ev is None:
         match msg.type:
@@ -62,7 +63,8 @@ class EventSender:
 
     def __init__(self, name: str) -> None:
         """Create a new event sender.
-        :param name: The name to give it. This cannot be changed later on."""
+        :param name: The name to give it. This cannot be changed later on.
+        """
         self._name: str = name
         self.index_on_fish: int = -1
         self.type: str = ""

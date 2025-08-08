@@ -15,6 +15,7 @@ def _select_file(parent: QWidget, func: Callable[[str, BoardConfiguration], None
 
     Args:
         func: Function to be called after file was selected and confirmed. Function gets the file name as a string.
+
     """
     file_dialog = QFileDialog(parent, "Save Show File" if show_save_dialog else "Load Show File")
     file_dialog.setNameFilter("Mission DMX Show Files (*.show)")
@@ -31,6 +32,7 @@ def _load_show_file(file_name: str, show_data: BoardConfiguration) -> None:
 
     Args:
         file_name: Path to the file to be loaded
+
     """
     return read_document(file_name, show_data)
 
@@ -40,6 +42,7 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
 
     Args:
         file_name: File in which the config is saved.
+
     """
     if write_document(file_name, show_data) and show_data.file_path != file_name:
         show_data.file_path = file_name

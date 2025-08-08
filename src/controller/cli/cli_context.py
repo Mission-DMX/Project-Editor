@@ -136,6 +136,7 @@ class CLIContext:
 
         Returns:
         true if the evaluation succeeded, false otherwise
+
         """
         try:
             args = _split_args(line)
@@ -164,6 +165,7 @@ class CLIContext:
 
         Arguments:
         text -- The line to be printed
+
         """
         self.return_text += text + "\n"
 
@@ -172,6 +174,7 @@ class CLIContext:
 
         Returns:
         The stored text that was accumulated by print.
+
         """
         tmp_text = self.return_text
         self.return_text = ""

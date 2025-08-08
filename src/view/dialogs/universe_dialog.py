@@ -75,7 +75,7 @@ class UniverseDialog(QtWidgets.QDialog):
             self._widgets.setCurrentIndex(0)
 
     def ok(self) -> None:
-        """accept the universe"""
+        """Accept the universe"""
         if self._widgets.currentIndex() == 0:
             # art net
             self.output = proto.UniverseControl_pb2.Universe(
@@ -100,7 +100,7 @@ class UniverseDialog(QtWidgets.QDialog):
         self.accept()
 
     def cancel(self) -> None:
-        """cancel universe"""
+        """Cancel universe"""
         self.reject()
 
 

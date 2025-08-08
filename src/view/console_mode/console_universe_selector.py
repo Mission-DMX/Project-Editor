@@ -34,7 +34,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
 
     def add_universe(self, universe: Universe) -> None:
         """
-        add a new Universe to universe Selector
+        Add a new Universe to universe Selector
         Args:
             universe: the new universe to add
         """
@@ -64,7 +64,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self.addTab(widget, str(universe.universe_proto.id))
 
     def send_all_universe(self) -> None:
-        """send all universes to fish"""
+        """Send all universes to fish"""
         for universe in self._board_configuration.universes:
             self._board_configuration.broadcaster.send_universe_value.emit(universe)
 

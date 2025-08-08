@@ -16,6 +16,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.view_settings import C
 
 class TimelineContentWidget(QWidget):
     """Internal widget rendering a timeline."""
+
     size_changed = Signal(QPoint)
 
     def __init__(self, parent: QWidget = None) -> None:

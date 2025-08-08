@@ -73,6 +73,7 @@ class BoardConfiguration:
 
         Args:
             scene: The scene to be added.
+
         """
         self._scenes.append(scene)
         self._scenes_index[scene.scene_id] = len(self._scenes) - 1
@@ -82,14 +83,17 @@ class BoardConfiguration:
 
         Args:
             scene: The scene to be removed.
+
         """
         self._scenes.remove(scene)
         self._scenes_index.pop(scene.scene_id)
 
     def _add_universe(self, universe: Universe) -> None:
         """Creates and adds a universe from passed patching universe.
+
         Args:
             universe: The universe to add.
+
         """
         self._universes.update({universe.id: universe})
 
@@ -101,6 +105,7 @@ class BoardConfiguration:
 
         Args:
             universe: The universe to be removed.
+
         """
         try:
             del self._universes[universe.id]
@@ -112,6 +117,7 @@ class BoardConfiguration:
 
         Args:
             device: The device to be added.
+
         """
         self._devices.append(device)
 
@@ -120,6 +126,7 @@ class BoardConfiguration:
 
         Args:
             device: The device to be removed.
+
         """
 
     def universe(self, universe_id: int) -> Universe | None:
@@ -130,6 +137,7 @@ class BoardConfiguration:
 
         Returns:
             The universe if found, else None.
+
         """
         return self._universes.get(universe_id, None)
 
@@ -195,13 +203,14 @@ class BoardConfiguration:
 
     @property
     def file_path(self) -> str:
-        """ path to the showfile"""
+        """Path to the showfile"""
         return self._show_file_path
 
     @file_path.setter
     def file_path(self, new_path: str) -> None:
         """Update the show file path.
-        :param new_path: The location to save the show file to"""
+        :param new_path: The location to save the show file to
+        """
         self._show_file_path = new_path
         self._broadcaster.show_file_path_changed.emit(new_path)
 
@@ -266,7 +275,8 @@ class BoardConfiguration:
 
     def get_macro(self, macro_id: int | str) -> Macro | None:
         """Get the macro specified by its index.
-        :returns: The macro or None if none was found."""
+        :returns: The macro or None if none was found.
+        """
         if isinstance(macro_id, int):
             if macro_id >= len(self._macros):
                 return None
@@ -283,7 +293,7 @@ class BoardConfiguration:
         return self._macros.copy()
 
     def next_universe_id(self) -> int:
-        """next empty universe id"""
+        """Next empty universe id"""
         nex_id = len(self._universes)
         while self._universes.get(nex_id):
             nex_id += 1

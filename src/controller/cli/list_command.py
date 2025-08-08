@@ -70,7 +70,7 @@ class ListCommand(Command):
                 return False
 
     def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str) -> None:
-        """print the entry of a bank set"""
+        """Print the entry of a bank set"""
         # TODO id not string
         preamble = "*" if bs.id == selected_bank_set_id else " "
         if bs.is_linked:

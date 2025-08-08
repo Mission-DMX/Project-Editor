@@ -23,6 +23,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         Args:
             universe: the Universe to edit
             parent: Qt parent of the widget.
+
         """
         super().__init__(parent=parent)
         self._universe = universe

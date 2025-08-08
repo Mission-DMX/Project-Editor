@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class DataType(IntFlag):
     """Data types used by filter channels"""
+
     DT_8_BIT = auto()
     DT_16_BIT = auto()
     DT_DOUBLE = auto()
@@ -195,7 +196,8 @@ class Filter:
     @property
     def filter_type(self) -> int:
         """The type of the filter. This might be a positive number for a filter that fish understands or a negative
-        one in case of a virtual filter that the GUI needs to resolve first."""
+        one in case of a virtual filter that the GUI needs to resolve first.
+        """
         return self._filter_type
 
     @filter_type.setter
@@ -314,10 +316,12 @@ class VirtualFilter(Filter, abc.ABC):
 
     def deserialize(self) -> None:
         """This method should be called after the filter configuration has been loaded.
-        It might be used to implement the loading of the filter model."""
+        It might be used to implement the loading of the filter model.
+        """
 
     def serialize(self) -> None:
         """Virtual filter might need to prepare themselves prior to being saved to a show file.
         For example, they might need to compile some information. This method will be called just prior to generating
         the filter element within the show file. Afterward the current state of the v-filter needs to be accessible
-        purely by querying the configuration and parameters variables."""
+        purely by querying the configuration and parameters variables.
+        """

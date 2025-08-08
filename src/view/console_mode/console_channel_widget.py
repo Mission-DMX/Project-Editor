@@ -29,6 +29,7 @@ class ChannelWidget(QtWidgets.QWidget):
         Args:
             channel: The channel this widget represents.
             parent: Qt parent of the widget
+
         """
         super().__init__(parent=parent)
         if bank_set_control_list is None:
@@ -121,7 +122,7 @@ class ChannelWidget(QtWidgets.QWidget):
             self._max_button.setStyleSheet(style.BUTTON)
 
     def update_value(self, value: int | str) -> None:
-        """update of a value in """
+        """Update of a value in"""
         value = int(value)
         self._bank_selector._latest_ui_position_update = value
         if self._channel.value != value:
