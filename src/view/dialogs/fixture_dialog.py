@@ -51,7 +51,7 @@ class FixtureDialog(QDialog):
 
         layout_fixture.addWidget(QLabel("Start Index"), 2, 0)
         self._start_index = QSpinBox()
-        self._start_index.setMinimum(0)
+        self._start_index.setMinimum(1)
         self._start_index.setMaximum(NUMBER_OF_CHANNELS)
         self._start_index.setValue(self._fixture.start_index + 1)
         self._start_index.textChanged.connect(self._validate_input)
