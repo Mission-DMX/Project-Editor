@@ -9,7 +9,13 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_edi
 
 
 class UIPlayerWidget(QWidget):
+    """Container for Show UI widgets to be used in UI page player."""
+
     def __init__(self, parent: QWidget) -> None:
+        """Initialize the container.
+
+        :param parent: The parent Qt widget.
+        """
         super().__init__(parent)
         self._scene: Scene | None = None
         self.setLayout(QGridLayout(self))
@@ -32,6 +38,7 @@ class UIPlayerWidget(QWidget):
 
     @property
     def scene(self) -> Scene | None:
+        """Get or set the associated scene."""
         return self._scene
 
     @scene.setter
@@ -65,6 +72,7 @@ class UIPlayerWidget(QWidget):
             self._ui_page_window_index = max(len(scene.ui_pages) - 1, 0)
 
     def check_page_update(self) -> None:
+        """Perform a check if anything (including dimensions) need to be changed."""
         if self._scene is None:
             return
         index = self._ui_page_window_index
