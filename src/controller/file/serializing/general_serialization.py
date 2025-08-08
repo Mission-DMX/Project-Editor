@@ -1,4 +1,5 @@
 """serialization functions"""
+
 import xml.etree.ElementTree as ET
 
 from controller.file.serializing.events_and_macros import _write_event_sender, _write_macro
@@ -16,8 +17,9 @@ from model import BoardConfiguration, Device
 from model.events import get_all_senders
 
 
-def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
-               assemble_for_fish_loading: bool = False) -> ET.Element:
+def create_xml(
+    board_configuration: BoardConfiguration, pn: ProcessNotifier, assemble_for_fish_loading: bool = False
+) -> ET.Element:
     """Creates an XML element from the given board configuration.
 
     Args:
@@ -55,7 +57,8 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
         if fixtures := board_configuration.fixtures:
             patching_element = ET.SubElement(universe_element, "patching")
             for fixture in fixtures:
-                _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
+                if fixture.universe == universe:
+                    _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
 
     pn.total_step_count += 1
     pn.current_step_description = "Storing device list."
@@ -87,14 +90,17 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
     </board_configuration>
     """
     # TODO we're not filling in the version attribute
-    return ET.Element("bord_configuration", attrib={
-        "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
-        "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
-        "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        "show_name": str(board_configuration.show_name),
-        "default_active_scene": str(board_configuration.default_active_scene),
-        "notes": str(board_configuration.notes),
-    })
+    return ET.Element(
+        "bord_configuration",
+        attrib={
+            "xmlns": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
+            "xsi:schemaLocation": "http://www.asta.uni-luebeck.de/MissionDMX/ShowFile",
+            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+            "show_name": str(board_configuration.show_name),
+            "default_active_scene": str(board_configuration.default_active_scene),
+            "notes": str(board_configuration.notes),
+        },
+    )
 
 
 def _create_device_element(device: Device, parent: ET.Element) -> ET.Element:
