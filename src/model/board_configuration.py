@@ -1,18 +1,25 @@
 """Provides data structures with accessors and modifiers for DMX"""
-from collections.abc import Callable, Sequence
+
+from __future__ import annotations
+
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 import numpy as np
 from PySide6 import QtCore, QtGui
 
-import proto.FilterMode_pb2
-
 from .broadcaster import Broadcaster
-from .device import Device
-from .macro import Macro
-from .ofl.fixture import UsedFixture
-from .scene import Scene
-from .universe import Universe
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    import proto.FilterMode_pb2
+
+    from .device import Device
+    from .macro import Macro
+    from .ofl.fixture import UsedFixture
+    from .scene import Scene
+    from .universe import Universe
 
 logger = getLogger(__name__)
 
@@ -195,7 +202,7 @@ class BoardConfiguration:
 
     @property
     def file_path(self) -> str:
-        """ path to the showfile"""
+        """Path to the showfile."""
         return self._show_file_path
 
     @file_path.setter
@@ -289,12 +296,12 @@ class BoardConfiguration:
             nex_id += 1
         return nex_id
 
-    def get_occupied_channels(self, universe_id: int) -> np.typing.NDArray[int]:
+    def get_occupied_channels(self, universe: Universe) -> np.typing.NDArray[int]:
         """Returns a list of all channels that are occupied by a scene."""
         ranges = [
             np.arange(fixture.start_index, fixture.start_index + fixture.channel_length)
             for fixture in self.fixtures
-            if fixture.universe_id == universe_id
+            if fixture.universe == universe
         ]
 
         return np.concatenate(ranges) if ranges else np.array([], dtype=int)

@@ -164,7 +164,10 @@ class PatchingDialog(QtWidgets.QDialog):
             return
 
         if np.isin(
-            occupied, self._board_configuration.get_occupied_channels(self._patching_information.universe)
+            occupied,
+            self._board_configuration.get_occupied_channels(
+                self._board_configuration.universe(self._patching_information.universe)
+            ),
         ).any():
             self._error_label.setText("Channels already occupied!")
             self._error_label.setStyleSheet(style.LABEL_ERROR)
