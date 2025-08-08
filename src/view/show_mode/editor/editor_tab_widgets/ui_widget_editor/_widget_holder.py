@@ -21,6 +21,7 @@ class UIWidgetHolder(QWidget):
         self._model: UIWidget = child
         if instance_for_editor:
             self._child = child.get_configuration_widget(self)
+            self._child.setEnabled(False)
         else:
             self._child = child.get_player_widget(self)
             self._child.setEnabled(True)
@@ -48,9 +49,15 @@ class UIWidgetHolder(QWidget):
     def update_size(self) -> None:
         self.setMinimumWidth(100)
         self.setMinimumHeight(30)
+        self.setMaximumHeight(65565)
+        self.setMaximumWidth(65565)
 
         child_layout = self._child.layout()
-        minimum_size = child_layout.minimumSize() if child_layout else QSize(250, 100)
+        if child_layout:
+            minimum_size = child_layout.totalMinimumSize()
+        else:
+            minimum_size = self._child.minimumSize()
+            minimum_size = QSize(max(250, minimum_size.width()), max(100, minimum_size.height()))
         w = max(minimum_size.width() + 50, self.minimumWidth())
         h = max(minimum_size.height() + 50, self.minimumHeight())
         self._label.resize(w, 20)
@@ -64,8 +71,10 @@ class UIWidgetHolder(QWidget):
 
         Args:
             event: The closing event.
+
         """
         self.closing.emit()
+        self._model.close()
         try:
             self._model.parent.widgets.remove(self._model)
         except ValueError:
@@ -78,6 +87,7 @@ class UIWidgetHolder(QWidget):
 
         Args:
             event: The mouse event.
+
         """
         if event.button() is Qt.MouseButton.LeftButton and self._instance_for_editor:
             self._old_pos = event.globalPos()
@@ -88,6 +98,7 @@ class UIWidgetHolder(QWidget):
 
         Args:
             event: The mouse event.
+
         """
         super().mouseMoveEvent(event)
         if not self._instance_for_editor:
@@ -112,7 +123,7 @@ class UIWidgetHolder(QWidget):
 
     def _show_edit_dialog(self) -> None:
         if not self._edit_dialog:
-            self._edit_dialog = QDialog(self)
+            self._edit_dialog = QDialog(self.parent())
             layout = QVBoxLayout()
             layout.addWidget(self._model.get_config_dialog_widget(self._edit_dialog))
             # TODO add cancel and close buttons

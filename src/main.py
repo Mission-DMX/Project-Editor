@@ -58,7 +58,7 @@ if __name__ == "__main__":
     logger = logging.getLogger("Project-Editor")
 
     def setup_logging() -> None:
-        """read logging from config file and set up the logger"""
+        """Read logging from config file and set up the logger"""
         config_file = resource_path(pathlib.Path(os.path.join("configs", "logging.json")))
         with open(config_file, "r", encoding="utf-8") as f_in:
             config = json.load(f_in)
@@ -79,8 +79,7 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
     def set_dark_theme(application: QApplication) -> None:
-        """set default dark theme"""
-
+        """Set default dark theme"""
         application.setStyle("Fusion")
         dark_palette = QPalette()
         dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
@@ -131,7 +130,6 @@ if __name__ == "__main__":
                 from controller.file.read import read_document
 
                 read_document(show_file_path, widget.show_configuration)
-                widget.show_configuration.broadcaster.show_file_loaded.emit()
                 application.processEvents(QEventLoop.ProcessEventsFlag.AllEvents)
             else:
                 logger.warning("Failed to open show file '%s' as it does not seam to be a file.", show_file_path)

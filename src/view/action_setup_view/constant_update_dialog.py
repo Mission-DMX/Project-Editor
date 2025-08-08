@@ -15,6 +15,7 @@ from model import BoardConfiguration, ColorHSI
 from model.filter import FilterTypeEnumeration
 from model.macro import Macro
 from view.action_setup_view._command_insertion_dialog import _CommandInsertionDialog
+from view.action_setup_view._command_insertion_dialog import escape_argument as esc
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_content_widget import (
     PanTiltConstantContentWidget,
 )
@@ -84,22 +85,24 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         self.custom_layout.addWidget(self._color_panel)
 
     def get_command(self) -> str:
-        if self._filter.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
-                                        FilterTypeEnumeration.FILTER_CONSTANT_16_BIT]:
-            return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._int_tb.value()}"
+        if self._filter.filter_type in [
+            FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
+            FilterTypeEnumeration.FILTER_CONSTANT_16_BIT
+        ]:
+            return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {self._int_tb.value()}"
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
-            return f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value {self._float_tb.value()}"
+            return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {self._float_tb.value()}"
         if self._filter.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
             return (
-                f"showctl filtermsg {self._scene.scene_id} {self.filter_id}_16bit_pan value "
-                f"{int(self._pan_tilt_widget.pan * 65535)}\n"
-                f"showctl filtermsg {self._scene.scene_id} {self.filter_id}_16bit_tilt value "
-                f"{int(self._pan_tilt_widget.tilt * 65535)}")
-
+                f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)}_16bit_pan "
+                f"value {int(self._pan_tilt_widget.pan * 65535)}\n"
+                f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)}_16bit_tilt "
+                f"value {int(self._pan_tilt_widget.tilt * 65535)}"
+            )
         qtc = self._color.to_qt_color()
         hexcode = f"rgb: {int(qtc.redF() * 255):02X}{int(qtc.greenF() * 255):02X}{int(qtc.blueF() * 255):02X}"
-        return (f"showctl filtermsg {self._scene.scene_id} {self.filter_id} value "
-                f"{self._color.format_for_filter()} # {hexcode}")
+        return (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value "
+                f"{esc(self._color.format_for_filter())} # {hexcode}")
 
     def on_filter_selected(self) -> None:
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT:

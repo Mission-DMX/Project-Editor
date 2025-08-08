@@ -36,12 +36,16 @@ class WidgetSetupDialog(QDialog):
         self._stack_layout = QStackedLayout()
         for filter_set in allowed_filters:
             widget = FilterSelectionWidget(self, page.scene, filter_set)
+            widget.selected_filter_changed.connect(
+                lambda new_filter_id: self._select_button.setEnabled(new_filter_id is not None)
+            )
             self._fsw.append(widget)
             self._stack_layout.addWidget(widget)
         horizontal_layout.addLayout(self._stack_layout)
         self._select_button = QPushButton(self)
         self._select_button.setText("Select Filter")
         self._select_button.pressed.connect(self._select_pressed)
+        self._select_button.setEnabled(False)
         self._bc = ButtonContainer(self)
         self._bc.add_button(self._select_button)
         horizontal_layout.addWidget(self._bc)
@@ -60,3 +64,4 @@ class WidgetSetupDialog(QDialog):
             self.close()
         else:
             self._stack_layout.setCurrentIndex(self._page_index)
+        self._select_button.setEnabled(True)

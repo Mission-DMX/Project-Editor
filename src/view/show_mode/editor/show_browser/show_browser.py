@@ -1,4 +1,4 @@
-"""This file provides the ShowBrowser widget."""
+"""ShowBrowser widget."""
 
 import os.path
 from functools import partial
@@ -33,7 +33,7 @@ from .fixture_to_filter import place_fixture_filters_in_scene
 
 
 class ShowBrowser:
-    """This class provides a navigation bar / browser for the complete show."""
+    """Provide a navigation bar and browser for the complete show."""
 
     _filter_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter.svg")))
     _scene_browser_tab_icon = QIcon(resource_path(os.path.join("resources", "icons", "showbrowser-show.svg")))
@@ -105,11 +105,6 @@ class ShowBrowser:
 
     @board_configuration.setter
     def board_configuration(self, b: BoardConfiguration | None) -> None:
-        if not self._show and b:
-            b.broadcaster.add_universe.connect(lambda: self._universe_browsing_tree.refresh())
-            b.broadcaster.delete_universe.connect(lambda: self._universe_browsing_tree.refresh())
-            # TODO listen to scene delete signal
-            b.broadcaster.add_fixture.connect(lambda: self._universe_browsing_tree.refresh())
         self._show = b
         self._universe_browsing_tree._show = b
         self._refresh_all()

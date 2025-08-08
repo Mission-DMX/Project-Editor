@@ -1,4 +1,4 @@
-"""simple non-blocking Yes No Dialog"""
+"""Simple non-blocking Yes No Dialog."""
 
 from collections.abc import Callable
 
@@ -13,7 +13,7 @@ _ICON_MAP: dict[QMessageBox.Icon, QStyle.StandardPixmap] = {
 
 
 class YesNoDialog(QDialog):
-    """simple non-blocking Yes No Dialog"""
+    """Simple non-blocking Yes No Dialog."""
 
     def __init__(
         self,
@@ -56,6 +56,8 @@ class YesNoDialog(QDialog):
     def _yes__button_pressed(self) -> None:
         self.close()
         self._success_action()
+        self.deleteLater()
 
     def _no_button_pressed(self) -> None:
         self.close()
+        self.deleteLater()

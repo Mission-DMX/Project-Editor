@@ -48,6 +48,14 @@ class ListCommand(Command):
                         self.context.print(
                             f"{"Color" if isinstance(c, ColorDeskColumn) else "Number"} - {c.display_name}")
                 return True
+            case "macros":
+                for m in self.context.show.macros:
+                    self.context.print(m.name)
+                return True
+            case "variables":
+                for k, v in self.context.variables.items():
+                    self.context.print(f"{k}={v}")
+                return True
             case "bank_sets":
                 self.context.print(" Bank Set ID                         | Description ")
                 self.context.print("===================================================")
@@ -62,7 +70,7 @@ class ListCommand(Command):
                 return False
 
     def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str) -> None:
-        """print the entry of a bank set"""
+        """Print the entry of a bank set"""
         # TODO id not string
         preamble = "*" if bs.id == selected_bank_set_id else " "
         if bs.is_linked:

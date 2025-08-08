@@ -1,5 +1,6 @@
 """Widget for displaying DMX current data"""
 
+# ruff: noqa
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QTimer
 
@@ -29,6 +30,7 @@ class DmxDataLogWidget(QtWidgets.QWidget):
 
         self._broadcaster.add_universe.connect(self.react_add_universe)
         self._broadcaster.dmx_from_fish.connect(self.react_dmx_data)
+        self.setMinimumWidth(350)
 
     def showEvent(self, event):
         """show logging Window start timer"""

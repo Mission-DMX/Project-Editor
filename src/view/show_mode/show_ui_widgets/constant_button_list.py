@@ -17,11 +17,15 @@ from PySide6.QtWidgets import (
 
 from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
+from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 
 
 class ConstantNumberButtonList(UIWidget):
+    """This show UI widget provides the user with configurable buttons that alter the content of a constant filter."""
+
     @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
+        """Provide a configuration widget for button control."""
         # TODO add option to configure images instead of text (to be used as GOBO select or color wheel choice etc.)
         widget = QWidget(parent)
         layout = QVBoxLayout()
@@ -76,6 +80,10 @@ class ConstantNumberButtonList(UIWidget):
         return widget
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the button list show UI widget.
+        :param parent: The parent widget page.
+        :param configuration: The configuration of this widget.
+        """
         super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
@@ -89,6 +97,10 @@ class ConstantNumberButtonList(UIWidget):
         self._value = 0
 
     def set_filter(self, f: Filter, i: int) -> None:
+        """Set the filter associated with this UI widget for a specific button.
+        :param f: The new filter to set
+        :param i: The index of the button to update.
+        """
         if f is None:
             return
         super().set_filter(f, i)
@@ -113,13 +125,13 @@ class ConstantNumberButtonList(UIWidget):
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget:
             self._player_widget.deleteLater()
-        self.construct_player_widget(parent)
+        self._construct_player_widget(parent)
         return self._player_widget
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if not self._configuration_widget:
-            self.construct_configuration_widget(parent)
+            self._construct_configuration_widget(parent)
         return self._configuration_widget
 
     @override
@@ -129,7 +141,8 @@ class ConstantNumberButtonList(UIWidget):
         super().copy_base(w)
         return w
 
-    def construct_player_widget(self, parent: QWidget | None) -> None:
+    def _construct_player_widget(self, parent: QWidget | None) -> None:
+        """Construct usable widget."""
         self._player_widget = QWidget(parent)
         self._player_widget.setMinimumWidth(50)
         self._player_widget.setMinimumHeight(30)
@@ -144,8 +157,11 @@ class ConstantNumberButtonList(UIWidget):
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
         self._player_widget.setLayout(layout)
+        if isinstance(parent, UIWidgetHolder):
+            parent.update_size()
 
-    def construct_configuration_widget(self, parent: QWidget | None) -> None:
+    def _construct_configuration_widget(self, parent: QWidget | None) -> None:
+        """Construct placeholder widget."""
         self._configuration_widget = QWidget(parent)
         self._configuration_widget.setMinimumWidth(50)
         self._configuration_widget.setMinimumHeight(30)
@@ -160,6 +176,9 @@ class ConstantNumberButtonList(UIWidget):
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
         self._configuration_widget.setLayout(layout)
+        if isinstance(parent, UIWidgetHolder):
+            parent.update_size()
 
     def __str__(self) -> str:
+        """Get the filter id string or an error message."""
         return str(self._model.filter_id if self._model else "Error: No Filter configured.")

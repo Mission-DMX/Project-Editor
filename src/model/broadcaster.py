@@ -1,4 +1,4 @@
-"""connector for Signals"""
+"""Connector for Signals."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ P = ParamSpec("P")
 
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
-    """metaclass for a QObject Singleton"""
+    """Metaclass for a QObject Singleton."""
 
     instance: Any
 
@@ -31,14 +31,16 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
 
 
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
-    """connector for Signals"""
+    """Connector for Signals."""
 
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(proto.RealTimeControl_pb2.RunMode.ValueType)  # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(object)
-    load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
+    transmitting_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
     show_file_loaded: QtCore.Signal = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
+    begin_show_file_parsing: QtCore.Signal = QtCore.Signal()
+    end_show_file_parsing: QtCore.Signal = QtCore.Signal()
     add_universe: QtCore.Signal = QtCore.Signal(object)
     add_fixture: QtCore.Signal = QtCore.Signal(object)
     send_universe: QtCore.Signal = QtCore.Signal(object)

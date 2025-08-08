@@ -23,11 +23,14 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         Args:
             universe: the Universe to edit
             parent: Qt parent of the widget.
+
         """
         super().__init__(parent=parent)
-        self._broadcaster = Broadcaster()
-        self._broadcaster.add_fixture.connect(self._add_fixture)
         self._universe = universe
+        self._broadcaster = Broadcaster()
+        # self._broadcaster.fixture_patched.connect(self._reload_patched_fixtures)
+        self._subwidgets: list[ChannelWidget | QtWidgets.QLabel] = []
+        self._broadcaster.add_fixture.connect(self._add_fixture)
 
         self.setFixedHeight(650)
 
@@ -54,7 +57,6 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._bank_set_control_elements: list[QWidget] = []
 
         self.setWidget(self._universe_widget)
-        self._universe_widget = self._universe_widget
         self._broadcaster.jogwheel_rotated_left.connect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.connect(self._increase_scroll)
         self._scroll_position: int = 0
@@ -89,6 +91,20 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             self._bank_set.activate()
             self._bank_set.update()  # FIXME activate should suffice
             self._bank_set.push_messages_now()
+
+    def automap(self) -> None:
+        index = 0
+        fixtures_per_bank = 0
+        for w in self._subwidgets:
+            if isinstance(w, ChannelWidget):
+                w.notify_automap(index)
+                fixtures_per_bank += 1
+                if fixtures_per_bank >= 8:
+                    index += 1
+                    fixtures_per_bank = 0
+            else:
+                index += 1
+                fixtures_per_bank = 0
 
     def _add_fixture(self, fixture: UsedFixture) -> None:
         layout = self._universe_widget.layout()

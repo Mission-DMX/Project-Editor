@@ -21,7 +21,7 @@ def _write_event_sender(root: "ET.Element", es: "EventSender") -> None:
         re = ET.SubElement(element, "eventRename", attrib={
             "eventType": str(k[0]),
             "senderFunction": str(k[1]),
-            "arguments": str(k[2]),
+            "arguments": str(k[2]).replace("\0", "0"),
         })
         re.text = v
 
