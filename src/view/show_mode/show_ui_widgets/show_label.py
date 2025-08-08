@@ -13,6 +13,11 @@ if TYPE_CHECKING:
 
 class ShowLabelUIWidget(UIWidget):
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the label widget.
+
+        :param parent: The parent widget page.
+        :param configuration: The initial configuration of the sequencer.
+        """
         super().__init__(parent, configuration)
         self._player_widget: QLabel | None = None
         self._conf_widget: QLabel | None = None

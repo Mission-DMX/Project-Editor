@@ -19,6 +19,10 @@ class BoxGridItem(QObject):
     clicked: Signal = Signal(object)
 
     def __init__(self, parent: QWidget | None) -> None:
+        """Initialize the widget.
+
+        :param parent: The parent Qt widget.
+        """
         super().__init__(parent=parent)
         self._text: str = ""
         self._icon: QPixmap | None = None
@@ -100,6 +104,10 @@ class BoxGridRenderer(QWidget):
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Initialize the widget.
+
+        :param parent: The parent Qt widget.
+        """
         super().__init__(parent)
         self._boxes: list[BoxGridItem] = []
         self._box_width = 100

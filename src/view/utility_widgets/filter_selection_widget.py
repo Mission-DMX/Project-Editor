@@ -15,6 +15,7 @@ class FilterSelectionWidget(QTreeWidget):
     def __init__(self, parent: QWidget | None, scene: Scene | None,
                  allowed_filter_types: list[FilterTypeEnumeration] | None) -> None:
         """Initialize the selection widget.
+
         :param parent: The parent Qt widget.
         :param scene: The scene to select the filter from.
         :param allowed_filter_types: The filter types that are suitable for user selection.
@@ -34,6 +35,7 @@ class FilterSelectionWidget(QTreeWidget):
 
     @property
     def selected_filter(self) -> Filter | None:
+        """Get or set the current selected filter."""
         return self._filter
 
     @selected_filter.setter
@@ -52,6 +54,10 @@ class FilterSelectionWidget(QTreeWidget):
         self.selected_filter_changed.emit(self._target_filter_id)
 
     def populate_widget(self) -> bool:
+        """Refresh the widget model.
+
+        :return: True if a filter is selected afterward.
+        """
         selected_filter_found = False
         already_added_filters = set()
         fp_index = 0
