@@ -1,4 +1,4 @@
-"""Provides data structures with accessors and modifiers for DMX"""
+"""Provides data structures with accessors and modifiers for DMX."""
 
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ class BoardConfiguration:
     """Board configuration of a show file."""
 
     def __init__(self, show_name: str = "", default_active_scene: int = 0, notes: str = "") -> None:
+        """Board configuration of a show file."""
         self._show_name: str = show_name
         self._default_active_scene: int = default_active_scene
         self._notes: str = notes
@@ -55,7 +56,7 @@ class BoardConfiguration:
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
     def _clear(self) -> None:
-        """This method resets the show data prior to loading a new one."""
+        """Reset the show data prior to loading new one."""
         for scene in self._scenes:
             self._broadcaster.delete_scene.emit(scene)
         for universe in self._universes:
@@ -76,38 +77,44 @@ class BoardConfiguration:
         self._macros.clear()
 
     def _add_scene(self, scene: Scene) -> None:
-        """Adds a scene to the list of scenes.
+        """Add a scene to the list of scenes.
 
         Args:
-            scene: The scene to be added.
+            scene: The scene to add.
+
         """
         self._scenes.append(scene)
         self._scenes_index[scene.scene_id] = len(self._scenes) - 1
 
     def _delete_scene(self, scene: Scene) -> None:
-        """Removes the passed scene from the list of scenes.
+        """Remove the given scene from the list of scenes.
 
         Args:
-            scene: The scene to be removed.
+            scene: The scene to remove.
+
         """
         self._scenes.remove(scene)
         self._scenes_index.pop(scene.scene_id)
 
     def _add_universe(self, universe: Universe) -> None:
-        """Creates and adds a universe from passed patching universe.
+        """Create and add a universe from the given patching universe.
+
         Args:
             universe: The universe to add.
+
         """
         self._universes.update({universe.id: universe})
 
     def _add_fixture(self, used_fixture: UsedFixture) -> None:
+        """Handle add Fixture signal."""
         self._fixtures.append(used_fixture)
 
     def _delete_universe(self, universe: Universe) -> None:
-        """Removes the passed universe from the list of universes.
+        """Remove the given universe from the list of universes.
 
         Args:
-            universe: The universe to be removed.
+            universe: The universe to remove.
+
         """
         try:
             del self._universes[universe.id]
@@ -115,89 +122,89 @@ class BoardConfiguration:
             logger.exception("Unable to remove universe %s", universe.name)
 
     def _add_device(self, device: Device) -> None:
-        """Adds the device to the board configuration.
+        """Add the given device to the board configuration.
 
         Args:
-            device: The device to be added.
+            device: The device to add.
+
         """
         self._devices.append(device)
 
     def _delete_device(self, device: Device) -> None:
-        """Removes the passed device from the list of devices.
+        """Remove the given device from the list.
 
         Args:
-            device: The device to be removed.
+            device: The device to remove.
+
         """
 
     def universe(self, universe_id: int) -> Universe | None:
-        """Tries to find a universe by id.
+        """Find a universe by its ID.
 
-        Arg:
-            universe_id: The id of the universe requested.
+        Args:
+            universe_id: The ID of the requested universe.
 
         Returns:
             The universe if found, else None.
+
         """
         return self._universes.get(universe_id, None)
 
     @property
     def fixtures(self) -> Sequence[UsedFixture]:
-        """Fixtures associated with this Show"""
+        """Fixtures associated with this Show."""
         return self._fixtures
 
     @property
     def show_name(self) -> str:
-        """The name of the show"""
+        """Name of the show."""
         return self._show_name
 
     @show_name.setter
     def show_name(self, show_name: str) -> None:
-        """Sets the show name"""
         self._show_name = show_name
 
     @property
     def default_active_scene(self) -> int:
-        """Scene to be activated by fish on loadup"""
+        """Scene to be activated by fish on loadup."""
         return self._default_active_scene
 
     @default_active_scene.setter
     def default_active_scene(self, default_active_scene: int) -> None:
-        """Setss the scene to be activated by fish on loadup"""
         self._default_active_scene = default_active_scene
 
     @property
     def notes(self) -> str:
-        """Notes for the show"""
+        """Notes for the show."""
         return self._notes
 
     @notes.setter
     def notes(self, notes: str) -> None:
-        """Sets the notes for the show"""
         self._notes = notes
 
     @property
     def scenes(self) -> list[Scene]:
-        """The scenes of the show"""
+        """Scenes of the show."""
         return self._scenes
 
     @property
     def devices(self) -> list[Device]:
-        """The devices of the show"""
+        """Devices of the show."""
         return self._devices
 
     @property
     def universes(self) -> list[Universe]:
-        """The universes of the show"""
+        """Universes of the show."""
         return list(self._universes.values())
 
     @property
     def ui_hints(self) -> dict[str, str]:
-        """UI hints for the show"""
+        """UI hints for the show."""
         return self._ui_hints
 
     @property
     def broadcaster(self) -> Broadcaster:
-        """The broadcaster the board configuration uses"""
+        """The broadcaster the board configuration use."""
         return self._broadcaster
 
     @property
@@ -207,13 +214,11 @@ class BoardConfiguration:
 
     @file_path.setter
     def file_path(self, new_path: str) -> None:
-        """Update the show file path.
-        :param new_path: The location to save the show file to"""
         self._show_file_path = new_path
         self._broadcaster.show_file_path_changed.emit(new_path)
 
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
-        """Returns the scene by her id"""
+        """Return the scene by id."""
         looked_up_position = self._scenes_index.get(scene_id)
         if looked_up_position is not None and looked_up_position < len(self._scenes):
             return self._scenes[looked_up_position]
@@ -223,21 +228,23 @@ class BoardConfiguration:
         return None
 
     def _distribute_filter_update_message(self, param: proto.FilterMode_pb2.update_parameter) -> None:
-        """Find listeners to incoming filter update message and distribute it to them."""
+        """Find listeners for an incoming filter update message and distribute it."""
         candidate_list = self._filter_update_msg_register.get((param.scene_id, param.filter_id))
         if candidate_list is not None:
             for c in candidate_list:
                 c(param)
 
     def register_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
-        """
-        Register a new callback for filter update messages.
+        """Register a new callback for filter update messages.
 
-        If filter update messages are received, they need to be routed to their intended destination. This is done using
-        this registration method. Suitable callables receive the update message as a parameter.
-        :param target_scene: The scene the callback belongs to.
-        :param target_filter_id: The filter id to listen on.
-        :param c: The callable to register.
+        If filter update messages are received, they are routed to their intended
+        destination. Suitable callables receive the update message as a parameter.
+
+        Args:
+            target_scene: The scene the callback belongs to.
+            target_filter_id: The filter ID to listen on.
+            c: The callable to register.
+
         """
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
@@ -247,11 +254,13 @@ class BoardConfiguration:
             callable_list.append(c)
 
     def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
-        """
-        Remove a previously registered callback.
-        :param target_scene: The scene the callback belongs to.
-        :param target_filter_id: The filter id which it is listening on.
-        :param c: The callable to be removed.
+        """Remove a previously registered callback.
+
+        Args:
+            target_scene: The scene the callback belongs to.
+            target_filter_id: The filter ID it is listening on.
+            c: The callable to remove.
+
         """
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
@@ -260,12 +269,13 @@ class BoardConfiguration:
             callable_list.remove(c)
 
     def add_macro(self, m: Macro) -> None:
-        """
-        Add a new macro to the show file.
+        """Add a new macro to the show file.
 
         This method must be called from a QObject as it triggers an event.
 
-        :param m: The macro to add.
+        Args:
+            m: The macro to add.
+
         """
         new_index = len(self._macros)
         self._macros.append(m)
@@ -273,7 +283,11 @@ class BoardConfiguration:
 
     def get_macro(self, macro_id: int | str) -> Macro | None:
         """Get the macro specified by its index.
-        :returns: The macro or None if none was found."""
+
+        Returns:
+            The macro, or None if none was found.
+
+        """
         if isinstance(macro_id, int):
             if macro_id >= len(self._macros):
                 return None
@@ -286,18 +300,18 @@ class BoardConfiguration:
 
     @property
     def macros(self) -> list[Macro]:
-        """Get a list of registered macros."""
+        """List of registered macros."""
         return self._macros.copy()
 
     def next_universe_id(self) -> int:
-        """next empty universe id"""
+        """Next empty universe id."""
         nex_id = len(self._universes)
         while self._universes.get(nex_id):
             nex_id += 1
         return nex_id
 
     def get_occupied_channels(self, universe: Universe) -> np.typing.NDArray[int]:
-        """Returns a list of all channels that are occupied by a scene."""
+        """Return a list of all channels that are occupied by Fixtures in a Universe."""
         ranges = [
             np.arange(fixture.start_index, fixture.start_index + fixture.channel_length)
             for fixture in self.fixtures
