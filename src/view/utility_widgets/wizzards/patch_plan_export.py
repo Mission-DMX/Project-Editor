@@ -149,7 +149,7 @@ class PatchPlanExportWizard(QWizard):
         self, fixtures: list[UsedFixture], phase_association: dict[UsedFixture, int], phases: Counter[int]
     ) -> None:
         """Given a fixture list with its phase schedule, this method writes the CSV file."""
-        fixtures.sort(key=lambda f: f.universe_id * 512 + f.start_index)
+        fixtures.sort(key=lambda f: f.universe.id * 512 + f.start_index)
         with open(self._export_location_tb.text(), "w", newline="") as csv_file:
             logger.info("Exporting Fixtures as CSV to %s.", csv_file.name)
             writer = csv.writer(csv_file, delimiter=";")
@@ -170,7 +170,7 @@ class PatchPlanExportWizard(QWizard):
                     [
                         fixture.name_on_stage or fixture.name,
                         fixture.fixture_file,
-                        str(fixture.universe_id),
+                        str(fixture.universe.id),
                         str(fixture.start_index),
                         f"L{fixture_phase + 1}",
                         str(fixture.power),
