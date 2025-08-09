@@ -6,14 +6,13 @@ import math
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtGui import QAction, QColorConstants, QFont, QPainter, QPainterPath, QPixmap
+from PySide6.QtGui import QAction, QColorConstants, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsSceneContextMenuEvent, QStyleOptionGraphicsItem, QWidget
 
+import style
 from patch.patch_plan.channel_item_generator import (
-    channel_item_height,
-    channel_item_spacing,
-    channel_item_width,
     create_item,
+    paint_text,
 )
 from patch.patch_plan.patch_base_item import PatchBaseItem
 
@@ -40,16 +39,16 @@ class UsedFixtureView(PatchBaseItem):
     @override
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, /, widget: QWidget | None = ...) -> None:
         """Paint the Used Fixture."""
-        x = (self._fixture.start_index % self._cols) * (channel_item_width() + channel_item_spacing())
-        y = math.floor(self._fixture.start_index / self._cols) * (channel_item_height() + channel_item_spacing())
+        x = (self._fixture.start_index % self._cols) * (style.PATCH_ITEM.width + style.PATCH_ITEM.margin)
+        y = math.floor(self._fixture.start_index / self._cols) * (style.PATCH_ITEM.height + style.PATCH_ITEM.margin)
         self._shape_path = QPainterPath()
         for channel_item in self._channels_static:
-            if x + channel_item_width() > self._view_width:
+            if x + style.PATCH_ITEM.width > self._view_width:
                 x = 0
-                y += channel_item_height() + channel_item_spacing()
+                y += style.PATCH_ITEM.height + style.PATCH_ITEM.margin
             painter.drawPixmap(x, y, channel_item)
-            self._shape_path.addRect(x, y, channel_item_width(), channel_item_height())
-            x += channel_item_width() + channel_item_spacing()
+            self._shape_path.addRect(x, y, style.PATCH_ITEM.width, style.PATCH_ITEM.height)
+            x += style.PATCH_ITEM.width + style.PATCH_ITEM.margin
 
     @override
     def shape(self) -> QPainterPath:
@@ -75,11 +74,27 @@ class UsedFixtureView(PatchBaseItem):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         painter.setPen(QColorConstants.Black)
-        font = QFont("Arial", 10)
-        painter.setFont(font)
-        painter.drawText(5, 35, self._fixture.short_name if self._fixture.short_name else self._fixture.name)
-        painter.drawText(5, 50, str(self._fixture.get_fixture_channel(channel_id).name))
-        painter.drawText(5, 65, str(self._fixture.name_on_stage))
+        paint_text(
+            painter,
+            style.PATCH_ITEM.text.fixture_name,
+            style.PATCH_ITEM.padding,
+            self._fixture.short_name if self._fixture.short_name else self._fixture.name,
+        )
+
+        paint_text(
+            painter,
+            style.PATCH_ITEM.text.fixture_channel_name,
+            style.PATCH_ITEM.padding,
+            self._fixture.get_fixture_channel(channel_id).name,
+        )
+
+        paint_text(
+            painter,
+            style.PATCH_ITEM.text.fixture_name_on_stage,
+            style.PATCH_ITEM.padding,
+            self._fixture.name_on_stage,
+        )
+
         painter.end()
 
         return pixmap

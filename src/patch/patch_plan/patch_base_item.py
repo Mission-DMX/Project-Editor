@@ -6,12 +6,8 @@ from typing import override
 from PySide6.QtCore import QObject, QRectF
 from PySide6.QtWidgets import QGraphicsItem
 
+import style
 from model.universe import NUMBER_OF_CHANNELS
-from patch.patch_plan.channel_item_generator import (
-    channel_item_height,
-    channel_item_spacing,
-    channel_item_width,
-)
 
 
 class PatchBaseItem(QObject, QGraphicsItem):
@@ -30,7 +26,7 @@ class PatchBaseItem(QObject, QGraphicsItem):
     def resize(cls, view_width: int) -> None:
         """Handle resize the view."""
         cls._view_width = view_width
-        new_cols = max(1, cls._view_width // (channel_item_width() + channel_item_spacing()))
+        new_cols = max(1, cls._view_width // (style.PATCH_ITEM.width + style.PATCH_ITEM.margin))
         if new_cols != cls._cols:
             cls._cols = new_cols
             cls._rows = math.ceil(NUMBER_OF_CHANNELS / new_cols)
@@ -38,4 +34,4 @@ class PatchBaseItem(QObject, QGraphicsItem):
     @override
     def boundingRect(self) -> QRectF:
         """Bounding rectangle of this item."""
-        return QRectF(0, 0, self._view_width, self._rows * (channel_item_height() + channel_item_spacing()))
+        return QRectF(0, 0, self._view_width, self._rows * (style.PATCH_ITEM.height + style.PATCH_ITEM.margin))

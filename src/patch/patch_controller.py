@@ -6,7 +6,7 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 from PySide6 import QtCore
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, QTimer
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QGraphicsScene, QStackedWidget
 
@@ -14,6 +14,7 @@ from model import Universe
 from patch.patch_plan.auto_resize_view import AutoResizeView
 from patch.patch_plan.dialogs.universe_dialog import UniverseDialog
 from patch.patch_plan.patch_item.background_view import BackgroundView
+from patch.patch_plan.patch_item.log_dmx_view import LogDMXView
 from patch.patch_plan.patch_item.used_fixture_view import UsedFixtureView
 from patch.patch_plan.patch_plan_selector_view import PatchPlanSelectorView
 from view.dialogs.fixture_dialog import FixtureDialog
@@ -57,6 +58,10 @@ class PatchController(QObject):
         self._board_configuration.broadcaster.view_patching.connect(lambda: self.view.setCurrentIndex(1))
         self._board_configuration.broadcaster.view_leave_patching.connect(lambda: self.view.setCurrentIndex(0))
 
+        self._timer = QTimer()
+        self._timer.setInterval(1000)
+        self._timer.timeout.connect(self._request_dmx_data)
+
     @property
     def view(self) -> QStackedWidget:
         """Patch View."""
@@ -69,7 +74,7 @@ class PatchController(QObject):
             Universe(self._dialog.output)
 
     def _add_universe(self, universe: Universe) -> None:
-        """Handle add a new universe."""
+        """Handle, add a new universe."""
         index = self._patch_plan_selector_view.tabBar().count() - 1
         scene = QGraphicsScene(self)
         view = AutoResizeView(scene)
@@ -79,6 +84,8 @@ class PatchController(QObject):
 
         background = BackgroundView()
         scene.addItem(background)
+        dmx_data_log = LogDMXView()
+        scene.addItem(dmx_data_log)
         self._patch_planes.update({universe.id: view})
         self._patch_plan_selector_view.insertTab(index, view, str(universe.name))
 
@@ -115,3 +122,8 @@ class PatchController(QObject):
         """Modify clicked Fixture."""
         self._dialog = FixtureDialog(fixture, self._board_configuration)
         self._dialog.show()
+
+    def _request_dmx_data(self) -> None:
+        """Send Signal to request dmx data from fish for each universe."""
+        for universe in self._board_configuration.universes:
+            self._broadcaster.send_request_dmx_data.emit(universe)

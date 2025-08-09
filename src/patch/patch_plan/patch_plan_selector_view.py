@@ -26,7 +26,7 @@ class PatchPlanSelectorView(QtWidgets.QTabWidget):
         """Selector for Patching witch holds all Patching Universes."""
         super().__init__(parent=parent)
 
-        self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
+        self.setTabPosition(QtWidgets.QTabWidget.TabPosition.North)
         self.addTab(QtWidgets.QWidget(), "+")
         self.tabBarClicked.connect(self._tab_clicked)
         self.tabBar().setCurrentIndex(0)

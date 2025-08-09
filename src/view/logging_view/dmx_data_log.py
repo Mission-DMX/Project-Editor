@@ -14,11 +14,6 @@ class DmxDataLogWidget(QtWidgets.QWidget):
 
     def __init__(self, broadcaster: Broadcaster):
         super().__init__()
-        self.setGeometry(self.geometry().x(), self.geometry().y(), 150, FinalGlobals.get_screen_height())
-        self._broadcaster = broadcaster
-        self._timer = QTimer()
-        self._timer.setInterval(1000)
-        self._timer.timeout.connect(self._request_dmx_data)
 
         self._widgets = QtWidgets.QTabWidget(self)
         self._universes: list[tuple[Universe, list[DmxLogItem]]] = []
@@ -39,11 +34,6 @@ class DmxDataLogWidget(QtWidgets.QWidget):
     def closeEvent(self, event):
         """close logging Window stp timer"""
         self._timer.stop()
-
-    def _request_dmx_data(self) -> None:
-        """send signal to request dmx data from fish for each universe"""
-        for universe in self._universes:
-            self._broadcaster.send_request_dmx_data.emit(universe[0])
 
     def react_add_universe(self, universe: Universe):
         """react on add universe Signal"""
