@@ -15,7 +15,7 @@ from patch.patch_plan.channel_item_generator import (
 from patch.patch_plan.patch_base_item import PatchBaseItem
 
 
-class PatchPlanWidget(PatchBaseItem):
+class BackgroundView(PatchBaseItem):
     """Patch Plan Widget for one Universe."""
 
     _background_tiles: Final[list[QPixmap]] = [

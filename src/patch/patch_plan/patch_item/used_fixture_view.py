@@ -15,7 +15,7 @@ from patch.patch_plan.channel_item_generator import (
     channel_item_width,
     create_item,
 )
-from patch.patch_plan.patch_plan_widget import PatchBaseItem
+from patch.patch_plan.patch_base_item import PatchBaseItem
 
 if TYPE_CHECKING:
     from model.ofl.fixture import UsedFixture
@@ -29,6 +29,7 @@ class UsedFixtureView(PatchBaseItem):
     def __init__(self, fixture: UsedFixture) -> None:
         """UI Widget of a Used Fixture."""
         super().__init__()
+        self.setZValue(0)
         self._fixture: UsedFixture = fixture
         self._shape_path = QPainterPath()
         self._channels_static: list[QPixmap] = []
