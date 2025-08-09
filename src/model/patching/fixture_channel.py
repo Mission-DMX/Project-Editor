@@ -1,4 +1,5 @@
 """Channels of a Fixture"""
+
 from enum import IntFlag
 from typing import Final
 
@@ -7,6 +8,7 @@ from PySide6 import QtCore
 
 class FixtureChannelType(IntFlag):
     """Types of channels of a fixture"""
+
     UNDEFINED = 0
     RED = 1
     GREEN = 2
@@ -25,7 +27,8 @@ class FixtureChannelType(IntFlag):
 
 class FixtureChannel:
     """A channel of a fixture"""
-    updated: QtCore.Signal(int) = QtCore.Signal(int)
+
+    updated: QtCore.Signal = QtCore.Signal(int)
 
     def __init__(self, name: str) -> None:
         self._name: Final[str] = name
