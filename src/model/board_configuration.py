@@ -57,8 +57,7 @@ class BoardConfiguration:
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
     def _clear(self) -> None:
-        """Reset the show data prior to loading new one."""
-
+        """Reset the show data before loading a new one."""
         for scene in self._scenes:
             self._broadcaster.delete_scene.emit(scene)
         for universe in self._universes.copy().values():
@@ -322,7 +321,7 @@ class BoardConfiguration:
         return np.concatenate(ranges) if ranges else np.array([], dtype=int)
 
     def _connection_changed(self, connected: bool) -> None:
-        """Connection to fish is changed."""
+        """Handle connection to fish is changed."""
         if connected:
             for universe in self.universes:
                 self.broadcaster.send_universe.emit(universe)

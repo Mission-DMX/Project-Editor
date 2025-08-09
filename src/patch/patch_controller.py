@@ -26,9 +26,10 @@ if TYPE_CHECKING:
 
 
 class PatchController(QObject):
-    """Controller for Patching screen"""
+    """Controller for Patch mode."""
 
     def __init__(self, board_configuration: BoardConfiguration, parent_view: MainWindow) -> None:
+        """Patch Mode Controller."""
         super().__init__()
         self._board_configuration = board_configuration
         self._broadcaster = self._board_configuration.broadcaster
@@ -62,7 +63,7 @@ class PatchController(QObject):
         return self._patch_view
 
     def _generate_universe(self) -> None:
-        """add a new Universe to universe Selector"""
+        """Generate a new Universe by Dialog."""
         self._dialog = UniverseDialog(self._board_configuration.next_universe_id())
         if self._dialog.exec():
             Universe(self._dialog.output)

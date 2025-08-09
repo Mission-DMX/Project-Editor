@@ -1,9 +1,10 @@
-"""main Window for the Editor"""
+"""Main Window for the Editor."""
 
 from __future__ import annotations
 
 import os.path
 import platform
+from collections.abc import Callable
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui, QtWidgets
@@ -36,16 +37,21 @@ if TYPE_CHECKING:
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """Main window of the app. All widget are children of its central widget."""
+    """Main window of the app.
+
+    All widgets are children of its central widget.
+
+    """
 
     STATUS_ICON_DIRECT_MODE = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
     STATUS_ICON_FILTER_MODE = QIcon(resource_path(os.path.join("resources", "icons", "play.svg")))
 
     def __init__(self, parent: QWidget = None) -> None:
-        """Inits the MainWindow.
+        """Init the MainWindow.
 
         Args:
             parent: Qt parent of the widget.
+
         """
         super().__init__(parent)
         # first logging to don't miss logs
@@ -137,7 +143,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @property
     def fish_connector(self) -> NetworkManager:
-        """NetworkManager"""
+        """Network manager."""
         return self._fish_connector
 
     def _to_widget(self, index: int) -> None:
@@ -159,9 +165,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self._widgets.setCurrentIndex(index)
 
     def _setup_menubar(self) -> None:
-        """Adds a menubar with submenus."""
+        """Add a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[tuple[str, None | callable, str | None]]] = {
+        menus: dict[str, list[tuple[str, None | Callable, str | None]]] = {
             "Fish": [
                 ("&Connect", self._start_connection, None),
                 ("&Disconnect", self._fish_connector.disconnect, None),
@@ -219,8 +225,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_connection(self) -> None:  # TODO rework to signals
         self._fish_connector.start(True)
 
-    def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
-        """add entries to a menu"""
+    def _add_entries_to_menu(
+        self, menu: QtWidgets.QMenu, entries: list[tuple[str, None | Callable, str | None]]
+    ) -> None:
+        """Add entries to a menu."""
         for entry in entries:
             if entry[0] == "---":
                 menu.addSeparator()
@@ -235,13 +243,13 @@ class MainWindow(QtWidgets.QMainWindow):
             menu.addAction(menu_entry)
 
     def _change_server_name(self) -> None:
-        """change fish socket name"""
+        """Change fish socket name."""
         text, run = QtWidgets.QInputDialog.getText(self, "Server Name", "Enter Server Name:")
         if run:
             self._fish_connector.change_server_name(text)
 
     def _setup_status_bar(self) -> None:
-        """build status bor"""
+        """Build status bar."""
         status_bar = QtWidgets.QStatusBar()
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
@@ -309,7 +317,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._last_cycle_time_widget.setVisible(False)
 
     def _update_last_cycle_time(self, new_value: int) -> None:
-        """update plot of fish last cycle Time"""
+        """Update plot of fish last cycle Time."""
         self._last_cycle_time = self._last_cycle_time[1:]  # Remove the first y element.
         self._last_cycle_time.append(new_value)  # Add a new value
 
@@ -324,7 +332,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._last_cycle_time_widget.setStyleSheet(style.LABEL_ERROR)
 
     def _show_column_dialog(self, index: str) -> None:
-        """Dialog modify tho selected Column"""
+        """Dialog to modify tho selected Column."""
         active_bank_set = BankSet.active_bank_set()
         column = active_bank_set.get_column(index)
         if active_bank_set.active_column != column:
@@ -361,9 +369,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @property
     def show_configuration(self) -> BoardConfiguration:
+        """Configuration of the show."""
         return self._board_configuration
 
     def open_show_settings(self) -> None:
+        """Open the settings dialog."""
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
 
