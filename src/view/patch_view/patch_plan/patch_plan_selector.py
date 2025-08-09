@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QGraphicsScene
 
 from model import BoardConfiguration, Universe
 from model.broadcaster import Broadcaster
-from view.dialogs.universe_dialog import UniverseDialog
+from patch.patch_plan.dialogs.universe_dialog import UniverseDialog
 from view.patch_view.patch_plan.patch_plan_widget import AutoResizeView, PatchPlanWidget
 from view.patch_view.patch_plan.used_fixture_widget import UsedFixtureWidget
 
