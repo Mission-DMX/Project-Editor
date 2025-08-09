@@ -3,18 +3,18 @@
 import math
 from typing import override
 
-from PySide6.QtCore import QRectF
+from PySide6.QtCore import QObject, QRectF
 from PySide6.QtWidgets import QGraphicsItem
 
 from model.universe import NUMBER_OF_CHANNELS
-from view.patch_view.patch_plan.channel_item_generator import (
+from patch.patch_plan.channel_item_generator import (
     channel_item_height,
     channel_item_spacing,
     channel_item_width,
 )
 
 
-class PatchBaseItem(QGraphicsItem):
+class PatchBaseItem(QObject, QGraphicsItem):
     """QGraphicsItem for patching items."""
 
     _cols = 1
@@ -23,7 +23,8 @@ class PatchBaseItem(QGraphicsItem):
 
     def __init__(self) -> None:
         """Initialize."""
-        super().__init__()
+        QObject.__init__(self)
+        QGraphicsItem.__init__(self)
 
     @classmethod
     def resize(cls, view_width: int) -> None:

@@ -51,21 +51,22 @@ class BoardConfiguration:
         self._broadcaster.delete_universe.connect(self._delete_universe)
         self._broadcaster.device_created.connect(self._add_device)
         self._broadcaster.delete_device.connect(self._delete_device)
+        self._broadcaster.connection_state_updated.connect(self._connection_changed)
 
         self._filter_update_msg_register: dict[tuple[int, str], list[Callable]] = {}
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
     def _clear(self) -> None:
         """Reset the show data prior to loading new one."""
+
         for scene in self._scenes:
             self._broadcaster.delete_scene.emit(scene)
-        for universe in self._universes:
+        for universe in self._universes.copy().values():
             self._broadcaster.delete_universe.emit(universe)
         for device in self._devices:
             self._broadcaster.delete_device.emit(device)
         QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
         self.scenes.clear()
-        self._universes.clear()
         self._devices.clear()
         self._show_name = ""
         self._default_active_scene = 0
@@ -319,3 +320,9 @@ class BoardConfiguration:
         ]
 
         return np.concatenate(ranges) if ranges else np.array([], dtype=int)
+
+    def _connection_changed(self, connected: bool) -> None:
+        """Connection to fish is changed."""
+        if connected:
+            for universe in self.universes:
+                self.broadcaster.send_universe.emit(universe)

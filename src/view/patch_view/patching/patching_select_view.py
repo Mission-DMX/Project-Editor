@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-class PatchingSelect(QtWidgets.QScrollArea):
+class PatchingSelectView(QtWidgets.QScrollArea):
     """select Manufacturer"""
 
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:

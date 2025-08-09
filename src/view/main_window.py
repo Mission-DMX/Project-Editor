@@ -18,6 +18,7 @@ from controller.utils.process_notifications import get_global_process_state, get
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
 from model.control_desk import BankSet, ColorDeskColumn
+from patch.patch_controller import PatchController
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_universe_selector import UniverseSelector
@@ -25,7 +26,6 @@ from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.settings.settings_dialog import SettingsDialog
-from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
@@ -57,6 +57,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
 
+        self._patch_controller = PatchController(self._board_configuration, self)  # TODO in controller
+
         # views
         views: list[tuple[str, QtWidgets.QWidget, callable]] = [
             (
@@ -76,7 +78,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             (
                 "Patch",
-                MainWidget(PatchMode(self._board_configuration, self), self),
+                self._patch_controller.view,
                 self._broadcaster.view_to_patch_menu.emit,
             ),
             ("Debug", debug_console, lambda: self._to_widget(4)),

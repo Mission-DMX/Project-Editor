@@ -2,31 +2,17 @@
 
 from typing import Final, override
 
-from PySide6.QtGui import QColorConstants, QPainter, QPixmap, QResizeEvent
-from PySide6.QtWidgets import QGraphicsView, QStyleOptionGraphicsItem, QWidget
+from PySide6.QtGui import QColorConstants, QPainter, QPixmap
+from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
 from model.universe import NUMBER_OF_CHANNELS
-from view.patch_view.patch_plan.channel_item_generator import (
+from patch.patch_plan.channel_item_generator import (
     channel_item_height,
     channel_item_spacing,
     channel_item_width,
     create_item,
 )
-from view.patch_view.patch_plan.patch_base_item import PatchBaseItem
-
-
-class AutoResizeView(QGraphicsView):
-    """View, automatically resizes scene."""
-
-    _base_item = PatchBaseItem()
-
-    @override
-    def resizeEvent(self, event: QResizeEvent, /) -> None:
-        """Resize the View."""
-        super().resizeEvent(event)
-        new_width = self.viewport().width()
-        self._base_item.resize(new_width)
-        self.setSceneRect(0, 0, new_width, self._base_item.boundingRect().height())
+from patch.patch_plan.patch_base_item import PatchBaseItem
 
 
 class PatchPlanWidget(PatchBaseItem):
