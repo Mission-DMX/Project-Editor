@@ -13,9 +13,9 @@ from PySide6.QtWidgets import QGraphicsScene, QStackedWidget
 from model import Universe
 from patch.patch_plan.auto_resize_view import AutoResizeView
 from patch.patch_plan.dialogs.universe_dialog import UniverseDialog
-from patch.patch_plan.patch_plan_selector_view import PatchPlanSelectorView
+from patch.patch_plan.patch_item.patch_plan_selector_view import PatchPlanSelectorView
+from patch.patch_plan.patch_item.used_fixture_view import UsedFixtureView
 from patch.patch_plan.patch_plan_widget import PatchPlanWidget
-from patch.patch_plan.used_fixture_view import UsedFixtureView
 from view.dialogs.fixture_dialog import FixtureDialog
 from view.patch_view.patching.patching_select_view import PatchingSelectView
 
