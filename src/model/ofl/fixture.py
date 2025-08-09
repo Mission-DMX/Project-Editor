@@ -67,6 +67,7 @@ class UsedFixture(QtCore.QObject):
     """Fixture in use with a specific mode."""
 
     static_data_changed: QtCore.Signal = QtCore.Signal()
+    universe_changed: QtCore.Signal = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -99,7 +100,7 @@ class UsedFixture(QtCore.QObject):
         )
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
-        self.parent_universe: int = parent_universe
+        self.parent_universe: int = parent_universe.id  # TODO remove
         self._board_configuration.broadcaster.add_fixture.emit(self)
 
     @property
@@ -156,6 +157,7 @@ class UsedFixture(QtCore.QObject):
     @property
     def universe_id(self) -> int:
         """Universe for the fixture."""
+        # TODO remove
         return self._universe.id
 
     @property
@@ -165,7 +167,10 @@ class UsedFixture(QtCore.QObject):
 
     @universe.setter
     def universe(self, universe: Universe) -> None:
-        self._universe = universe
+        if universe != self._universe:
+            old_id = self._universe
+            self._universe = universe
+            self.universe_changed.emit(old_id)
 
     @property
     def channel_length(self) -> int:

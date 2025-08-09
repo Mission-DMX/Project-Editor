@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
@@ -35,6 +36,7 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self._broadcaster.add_fixture.connect(self._add_fixture)
 
         self._patch_planes: dict[int, AutoResizeView] = {}
+        self._fixture_items: dict[UsedFixture, UsedFixtureWidget] = {}
 
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self.addTab(QtWidgets.QWidget(), "+")
@@ -43,7 +45,15 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self.tabBar().setCurrentIndex(0)
 
     def _add_fixture(self, fixture: UsedFixture) -> None:
-        self._patch_planes[fixture.universe_id].scene().addItem(UsedFixtureWidget(fixture, self._board_configuration))
+        new_widget = UsedFixtureWidget(fixture, self._board_configuration)
+        fixture.universe_changed.connect(partial(self._switch_universe, fixture))
+        self._fixture_items[fixture] = new_widget
+        self._patch_planes[fixture.universe.id].scene().addItem(new_widget)
+
+    def _switch_universe(self, fixture: UsedFixture, old_universe_id: int) -> None:
+        widget = self._fixture_items[fixture]
+        self._patch_planes[old_universe_id].scene().removeItem(widget)
+        self._patch_planes[fixture.universe.id].scene().addItem(widget)
 
     def _generate_universe(self) -> None:
         """Add a new Universe to universe Selector."""
