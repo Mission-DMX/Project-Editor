@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 
 import numpy as np
 from PySide6 import QtCore
+from PySide6.QtGui import QColor
 
 from model.ofl.ofl_fixture import FixtureMode, OflFixture
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from model import BoardConfiguration
+    from model import BoardConfiguration, Universe
 
 logger = getLogger(__name__)
 
@@ -37,6 +38,7 @@ class ColorSupport(IntFlag):
     HAS_UV_SEGMENT = 16
 
     def __str__(self) -> str:
+        """Return the string representation of ColorSupport."""
         if self == ColorSupport.NO_COLOR_SUPPORT:
             return "No Color Support"
         s = []
@@ -54,7 +56,7 @@ class ColorSupport(IntFlag):
 
 
 def load_fixture(file: str) -> OflFixture:
-    """load fixture from OFL JSON"""
+    """Load fixture from OFL JSON."""
     with open(file, "r", encoding="UTF-8") as f:
         ob: dict = json.load(f)
     ob.update({"fileName": file.split("/fixtures/")[1]})
@@ -65,17 +67,19 @@ class UsedFixture(QtCore.QObject):
     """Fixture in use with a specific mode."""
 
     static_data_changed: QtCore.Signal = QtCore.Signal()
+    universe_changed: QtCore.Signal = QtCore.Signal(int)
 
     def __init__(
         self,
         board_configuration: BoardConfiguration,
         fixture: OflFixture,
         mode_index: int,
-        parent_universe: int,
+        parent_universe: Universe,
         start_index: int,
         uuid: UUID | None = None,
-        color: str | None = None,
+        color_on_stage: str | None = None,
     ) -> None:
+        """Fixture in use with a specific mode."""
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[OflFixture] = fixture
@@ -83,7 +87,7 @@ class UsedFixture(QtCore.QObject):
 
         self._start_index: int = start_index
         self._mode_index: int = mode_index
-        self._universe_id: int = parent_universe
+        self._universe: Universe = parent_universe
 
         channels, segment_map, color_support = self._generate_fixture_channels()
 
@@ -91,24 +95,22 @@ class UsedFixture(QtCore.QObject):
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
-        self._color_on_stage: str = (
-            color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+        self._color_on_stage: QColor = QColor(
+            color_on_stage if color_on_stage else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
         )
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
-        self.parent_universe: int = parent_universe
+        self.parent_universe: int = parent_universe.id  # TODO remove
         self._board_configuration.broadcaster.add_fixture.emit(self)
 
     @property
     def uuid(self) -> UUID:
-        """uuid of the fixture"""
+        """UUID of the fixture."""
         return self._uuid
 
     @property
     def power(self) -> float:
-        """
-        Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W.
-        """
+        """Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W."""
         return self._fixture.physical.power
 
     @property
@@ -136,6 +138,12 @@ class UsedFixture(QtCore.QObject):
         """Start index of theFixture in the Universe indexed by 0."""
         return self._start_index
 
+    @start_index.setter
+    def start_index(self, start_index: int) -> None:
+        if start_index != self._start_index:
+            self._start_index = start_index
+            self.static_data_changed.emit()
+
     @property
     def fixture_file(self) -> str:
         """File of the fixture."""
@@ -148,12 +156,21 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def universe_id(self) -> int:
-        """Id of the universe for the fixture."""
-        return self._universe_id
+        """Universe for the fixture."""
+        # TODO remove
+        return self._universe.id
 
-    @universe_id.setter
-    def universe_id(self, universe_id: int) -> None:
-        self._universe_id = universe_id
+    @property
+    def universe(self) -> Universe:
+        """Universe of the fixture."""
+        return self._universe
+
+    @universe.setter
+    def universe(self, universe: Universe) -> None:
+        if universe != self._universe:
+            old_id = self._universe
+            self._universe = universe
+            self.universe_changed.emit(old_id)
 
     @property
     def channel_length(self) -> int:
@@ -171,14 +188,15 @@ class UsedFixture(QtCore.QObject):
         return tuple(self._fixture_channels)
 
     @property
-    def color_on_stage(self) -> str:
+    def color_on_stage(self) -> QColor:
         """Color of the fixture on stage."""
         return self._color_on_stage
 
     @color_on_stage.setter
-    def color_on_stage(self, color: str) -> None:
-        self._color_on_stage = color
-        self.static_data_changed.emit()
+    def color_on_stage(self, color: QColor) -> None:
+        if color != self._color_on_stage:
+            self._color_on_stage = color
+            self.static_data_changed.emit()
 
     @property
     def name_on_stage(self) -> str:
@@ -187,8 +205,9 @@ class UsedFixture(QtCore.QObject):
 
     @name_on_stage.setter
     def name_on_stage(self, name: str) -> None:
-        self._name_on_stage = name
-        self.static_data_changed.emit()
+        if name != self._name_on_stage:
+            self._name_on_stage = name
+            self.static_data_changed.emit()
 
     @property
     def color_support(self) -> ColorSupport:
@@ -237,7 +256,13 @@ class UsedFixture(QtCore.QObject):
 
 
 def make_used_fixture(
-    board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
+    board_configuration: BoardConfiguration,
+    fixture: OflFixture,
+    mode_index: int,
+    universe: Universe,
+    start_index: int,
+    uuid: UUID | None = None,
+    color: str | None = None,
 ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
-    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    return UsedFixture(board_configuration, fixture, mode_index, universe, start_index, uuid, color)

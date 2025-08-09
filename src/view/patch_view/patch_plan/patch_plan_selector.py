@@ -1,27 +1,33 @@
-"""selector for Patching witch holds all Patching Universes"""
+"""Selector for Patching witch holds all Patching Universes."""
+
+from __future__ import annotations
+
+from functools import partial
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtGui import QContextMenuEvent
-from PySide6.QtWidgets import QScrollArea
+from PySide6.QtWidgets import QGraphicsScene
 
 from model import BoardConfiguration, Universe
 from model.broadcaster import Broadcaster
-from model.ofl.fixture import UsedFixture
 from view.dialogs.universe_dialog import UniverseDialog
-from view.patch_view.patch_plan.patch_plan_widget import PatchPlanWidget
+from view.patch_view.patch_plan.patch_plan_widget import AutoResizeView, PatchPlanWidget
+from view.patch_view.patch_plan.used_fixture_widget import UsedFixtureWidget
 
 if TYPE_CHECKING:
-    from view.patch_view.patch_mode import PatchMode
+    from PySide6.QtGui import QContextMenuEvent
 
+    from model.ofl.fixture import UsedFixture
+    from view.patch_view.patch_mode import PatchMode
 logger = getLogger(__name__)
 
 
 class PatchPlanSelector(QtWidgets.QTabWidget):
-    """selector for Patching witch holds all Patching Universes"""
+    """Selector for Patching witch holds all Patching Universes."""
 
-    def __init__(self, board_configuration: BoardConfiguration, parent: "PatchMode") -> None:
+    def __init__(self, board_configuration: BoardConfiguration, parent: PatchMode) -> None:
+        """Selector for Patching witch holds all Patching Universes."""
         super().__init__(parent=parent)
         self._board_configuration = board_configuration
         self._broadcaster = Broadcaster()
@@ -29,7 +35,8 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self._broadcaster.delete_universe.connect(self._remove_universe)
         self._broadcaster.add_fixture.connect(self._add_fixture)
 
-        self._patch_planes: dict[int, PatchPlanWidget] = {}
+        self._patch_planes: dict[int, AutoResizeView] = {}
+        self._fixture_items: dict[UsedFixture, UsedFixtureWidget] = {}
 
         self.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
         self.addTab(QtWidgets.QWidget(), "+")
@@ -38,19 +45,25 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
         self.tabBar().setCurrentIndex(0)
 
     def _add_fixture(self, fixture: UsedFixture) -> None:
-        widget: PatchPlanWidget = self._patch_planes[fixture.parent_universe]
-        widget.add_fixture(fixture)
+        new_widget = UsedFixtureWidget(fixture, self._board_configuration)
+        fixture.universe_changed.connect(partial(self._switch_universe, fixture))
+        self._fixture_items[fixture] = new_widget
+        self._patch_planes[fixture.universe.id].scene().addItem(new_widget)
+
+    def _switch_universe(self, fixture: UsedFixture, old_universe_id: int) -> None:
+        widget = self._fixture_items[fixture]
+        self._patch_planes[old_universe_id].scene().removeItem(widget)
+        self._patch_planes[fixture.universe.id].scene().addItem(widget)
 
     def _generate_universe(self) -> None:
-        """add a new Universe to universe Selector"""
-
+        """Add a new Universe to universe Selector."""
         dialog = UniverseDialog(self._board_configuration.next_universe_id())
         if dialog.exec():
             Universe(dialog.output)
 
     @override
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        """context menu"""
+        """Context menu."""
         for index in range(self.tabBar().count() - 1):
             if self.tabBar().tabRect(index).contains(event.pos()):
                 menu = QtWidgets.QMenu(self)
@@ -73,14 +86,16 @@ class PatchPlanSelector(QtWidgets.QTabWidget):
 
     def _add_universe(self, universe: Universe) -> None:
         index = self.tabBar().count() - 1
-        patch_plan = QScrollArea()
-        patch_plan.setWidgetResizable(True)
-        patch_plan.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        patch_plan.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        widget = PatchPlanWidget()
-        patch_plan.setWidget(widget)
-        self._patch_planes.update({universe.id: widget})
-        self.insertTab(index, patch_plan, str(universe.name))
+        scene = QGraphicsScene(self)
+        view = AutoResizeView(scene)
+        view.setRenderHints(view.renderHints() | QtGui.QPainter.RenderHint.Antialiasing)
+        view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        background = PatchPlanWidget()
+        scene.addItem(background)
+        self._patch_planes.update({universe.id: view})
+        self.insertTab(index, view, str(universe.name))
 
     def _remove_universe(self, universe: Universe) -> None:
         del self._patch_planes[universe.id]

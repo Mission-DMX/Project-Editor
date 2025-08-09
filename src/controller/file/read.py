@@ -1,8 +1,9 @@
-"""Handles reading a xml document"""
+"""Handle reading a xml document."""
 
 import os
 import xml.etree.ElementTree as ET
 from logging import getLogger
+from uuid import UUID
 
 import xmlschema
 from defusedxml.ElementTree import parse
@@ -28,10 +29,12 @@ logger = getLogger(__name__)
 
 
 def _parse_and_add_bankset(child: ET.Element, loaded_banksets: dict[str, BankSet]) -> None:
-    """
-    Parse and add a bank set to the show file.
-    :param child: The XML element to examine
-    :param loaded_banksets: The list to add the bankset to.
+    """Parse and add a bank set to the show file.
+
+    Args:
+        child: The XML element to examine.
+        loaded_banksets: The list to add the bank set to.
+
     """
     _id = child.attrib.get("id")
     bs: BankSet = BankSet(gui_controlled=True, id_=_id)
@@ -68,15 +71,16 @@ def _parse_and_add_bankset(child: ET.Element, loaded_banksets: dict[str, BankSet
 
 
 def read_document(file_name: str, board_configuration: BoardConfiguration) -> bool:
-    """Parses the specified file to a board configuration data model.
+    """Parse the specified file to a board configuration data model.
 
     Args:
-        file_name: The path to the file to be parsed.
+        file_name: The path to the file to parse.
+        board_configuration: The current BoardConfiguration.
 
     Returns:
         A BoardConfiguration instance parsed from the provided file.
-    """
 
+    """
     pn = get_process_notifier("Load Showfile", 5)
 
     try:
@@ -159,10 +163,14 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
 
 def lcd_color_from_string(display_color: str) -> proto.Console_pb2.lcd_color:
-    """
-    Convert the string representation of the LCD backlight color to the enum.
-    :param display_color: The string representation
-    :returns: The enum representation
+    """Convert the string representation of the LCD backlight color to the enum.
+
+    Args:
+        display_color: The string representation.
+
+    Returns:
+        The enum representation.
+
     """
     match display_color:
         case "white":
@@ -186,18 +194,20 @@ def lcd_color_from_string(display_color: str) -> proto.Console_pb2.lcd_color:
 
 
 def _clean_tags(element: ET.Element, prefix: str) -> None:
-    """This method recursively cleans up immediate XML tag prefixes."""
+    """Recursively clean up immediate XML tag prefixes."""
     for child in element:
         child.tag = child.tag.replace(prefix, "")
         _clean_tags(child, prefix)
 
 
 def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pages: list[FilterPage]) -> bool:
-    """
-    Load a filter page from the XML representation.
-    :param element: The XML element to load the data from
-    :param parent_scene: The scene to add the page to
-    :param instantiated_pages: The list of all loaded filter pages, where this element is appended to
+    """Load a filter page from the XML representation.
+
+    Args:
+        element: The XML element to load the data from.
+        parent_scene: The scene to add the page to.
+        instantiated_pages: The list of all loaded filter pages, to which this element is appended.
+
     """
     f = FilterPage(parent_scene)
     for key, value in element.attrib.items():
@@ -241,11 +251,13 @@ def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pa
 def _parse_scene(
     scene_element: ET.Element, board_configuration: BoardConfiguration, loaded_banksets: dict[str, BankSet]
 ) -> None:
-    """
-    Load a scene from the show file data structure.
-    :param scene_element: The XML element to use
-    :param board_configuration: The show configuration object to insert the scene into.
-    :param loaded_banksets: A list of bank sets that are associated with the scene.
+    """Load a scene from the show file data structure.
+
+    Args:
+        scene_element: The XML element to use.
+        board_configuration: The show configuration object to insert the scene into.
+        loaded_banksets: A list of bank sets associated with the scene.
+
     """
     human_readable_name = ""
     scene_id = 0
@@ -297,10 +309,12 @@ def _parse_scene(
 
 
 def _append_ui_page(page_def: ET.Element, scene: Scene) -> None:
-    """
-    Load a UI page (the ones that contain the widgets) from the XML data.
-    :param page_def: The XML data structure
-    :param scene: The scene to add it to.
+    """Load a UI page (containing widgets) from XML data.
+
+    Args:
+        page_def: The XML data structure.
+        scene: The scene to add it to.
+
     """
     page = UIPage(scene)
     for k, v in page_def.attrib.items():
@@ -364,10 +378,12 @@ def _append_ui_page(page_def: ET.Element, scene: Scene) -> None:
 
 
 def _parse_filter(filter_element: ET.Element, scene: Scene) -> None:
-    """
-    Load a filter from the XML definition.
-    :param filter_element: THe XML data to load the filter from
-    :param scene: The scene to append the filter to
+    """Load a filter from the XML definition.
+
+    Args:
+        filter_element: The XML data to load the filter from.
+        scene: The scene to append the filter to.
+
     """
     filter_id = ""
     filter_type = 0
@@ -408,10 +424,12 @@ def _parse_filter(filter_element: ET.Element, scene: Scene) -> None:
 
 
 def _parse_channel_link(initial_parameters_element: ET.Element, filter_: Filter) -> None:
-    """
-    Load a connection between two filters.
-    :param initial_parameters_element: The XML element describing the connection.
-    :param filter_: The parent filter (whose input this is) to attach the connection to.
+    """Load a connection between two filters.
+
+    Args:
+        initial_parameters_element: The XML element describing the connection.
+        filter_: The parent filter (whose input this is) to attach the connection to.
+
     """
     cl_key = ""
     cl_value = ""
@@ -428,10 +446,12 @@ def _parse_channel_link(initial_parameters_element: ET.Element, filter_: Filter)
 
 
 def _parse_initial_parameters(initial_parameters_element: ET.Element, filter_: Filter) -> None:
-    """
-    Load the parameters of a filter.
-    :param initial_parameters_element: The XML definition to load the parameters from
-    :param filter_: The filter whose parameters these are.
+    """Load the parameters of a filter.
+
+    Args:
+        initial_parameters_element: The XML definition to load the parameters from.
+        filter_: The filter whose parameters these are.
+
     """
     ip_key = ""
     ip_value = ""
@@ -450,11 +470,13 @@ def _parse_initial_parameters(initial_parameters_element: ET.Element, filter_: F
 
 
 def _parse_filter_configuration(filter_configuration_element: ET.Element, filter_: Filter, fc: dict[str, str]) -> None:
-    """
-    Load the configuration of a filter.
-    :param filter_configuration_element: The XML data to load the configuration from
-    :param filter_: The filter which the configuration belongs to
-    :param fc: The existing configuration to append to
+    """Load the configuration of a filter.
+
+    Args:
+        filter_configuration_element: The XML data to load the configuration from.
+        filter_: The filter to which the configuration belongs.
+        fc: The existing configuration to append to.
+
     """
     fc_key = ""
     fc_value = ""
@@ -476,10 +498,12 @@ def _parse_filter_configuration(filter_configuration_element: ET.Element, filter
 
 
 def _parse_universe(universe_element: ET.Element, board_configuration: BoardConfiguration) -> None:
-    """
-    Load a universe description from XML data.
-    :param universe_element: The XML data to use.
-    :param board_configuration: The show to register the universe with.
+    """Load a universe description from XML data.
+
+    Args:
+        universe_element: The XML data to use.
+        board_configuration: The show to register the universe with.
+
     """
     universe_id = None
     name = ""
@@ -523,19 +547,27 @@ def _parse_universe(universe_element: ET.Element, board_configuration: BoardConf
 
 
 def _parse_physical_location(location_element: ET.Element) -> int:
-    """
-    Parse a universe definition for one attached directly to the IO mainboard.
-    :param location_element: The XML data to load from
-    :returns: The location
+    """Parse a universe definition for one attached directly to the IO mainboard.
+
+    Args:
+        location_element: The XML data to load from.
+
+    Returns:
+        The location.
+
     """
     return int(location_element.text)
 
 
 def _parse_artnet_location(location_element: ET.Element) -> proto.UniverseControl_pb2.Universe.ArtNet:
-    """
-    Parse a universe definition of an ArtNet stage box.
-    :param location_element: The XML data to load from
-    :returns: An ArtNet universe location
+    """Parse a universe definition of an ArtNet stage box.
+
+    Args:
+        location_element: The XML data to load from.
+
+    Returns:
+        An ArtNet universe location.
+
     """
     device_universe_id = 0
     ip_address = ""
@@ -557,10 +589,14 @@ def _parse_artnet_location(location_element: ET.Element) -> proto.UniverseContro
 
 
 def _parse_ftdi_location(location_element: ET.Element) -> proto.UniverseControl_pb2.Universe.USBConfig:
-    """
-    Load a universe location definition of an USB DMX adapter.
-    :param location_element: The XML data to load from
-    :returns: THe loaded connection details
+    """Load a universe location definition of a USB DMX adapter.
+
+    Args:
+        location_element: The XML data to load from.
+
+    Returns:
+        The loaded connection details.
+
     """
     product_id = 0
     vendor_id = 0
@@ -585,11 +621,16 @@ def _parse_ftdi_location(location_element: ET.Element) -> proto.UniverseControl_
 
 
 def _parse_patching(board_configuration: BoardConfiguration, location_element: ET.Element, universe_id: int) -> None:
-    """
-    Load patching information from XML data.
-    :param location_element: The XML data to load from
-    :param universe_id: The id of the universe which this fixture belongs to.
-    :returns: The loaded fixtures
+    """Load patching information from XML data.
+
+    Args:
+        board_configuration: The current BoardConfiguration.
+        location_element: The XML data to load from.
+        universe_id: The ID of the universe this fixture belongs to.
+
+    Returns:
+        The loaded fixtures.
+
     """
     fixtures_path = "/var/cache/missionDMX/fixtures"  # TODO config file
 
@@ -598,18 +639,22 @@ def _parse_patching(board_configuration: BoardConfiguration, location_element: E
             board_configuration,
             load_fixture(os.path.join(fixtures_path, child.attrib["fixture_file"])),
             int(child.attrib["mode"]),
-            universe_id,
+            board_configuration.universe(universe_id),
             int(child.attrib["start"]),
+            UUID(child.attrib.get("id")) if child.attrib.get("id") else None,
+            child.attrib.get("color"),
         )
 
     # TODO load fixture name from file
 
 
 def _parse_ui_hint(ui_hint_element: ET.Element, board_configuration: BoardConfiguration) -> None:
-    """
-    Load general configuration data.
-    :param ui_hint_element: The XML representation to load from
-    :param board_configuration: THe show file to apply the settings on.
+    """Load general configuration data.
+
+    Args:
+        ui_hint_element: The XML representation to load from.
+        board_configuration: The show file to apply the settings on.
+
     """
     ui_hint_key = ""
     ui_hint_value = ""
