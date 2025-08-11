@@ -14,13 +14,15 @@ from model import Universe
 from patch.patch_plan.auto_resize_view import AutoResizeView
 from patch.patch_plan.dialogs.universe_dialog import UniverseDialog
 from patch.patch_plan.patch_item.background_view import BackgroundView
-from patch.patch_plan.patch_item.log_dmx_view import LogDMXView
+from patch.patch_plan.patch_item.log_dmx.log_dmx_model import LogDmxModel
+from patch.patch_plan.patch_item.log_dmx.log_dmx_view import LogDMXView
 from patch.patch_plan.patch_item.used_fixture_view import UsedFixtureView
 from patch.patch_plan.patch_plan_selector_view import PatchPlanSelectorView
 from view.dialogs.fixture_dialog import FixtureDialog
 from view.patch_view.patching.patching_select_view import PatchingSelectView
 
 if TYPE_CHECKING:
+    import proto.DirectMode_pb2
     from model import BoardConfiguration
     from model.ofl.fixture import UsedFixture
     from view.main_window import MainWindow
@@ -35,8 +37,9 @@ class PatchController(QObject):
         self._board_configuration = board_configuration
         self._broadcaster = self._board_configuration.broadcaster
         self._dialog = None
+        self._log_interval: int = 1
 
-        self._patch_planes: dict[int, AutoResizeView] = {}
+        self._patch_planes: dict[int, tuple[AutoResizeView, LogDmxModel]] = {}
         self._fixture_items: dict[UsedFixture, UsedFixtureView] = {}
 
         self._patch_view: QStackedWidget = QStackedWidget(parent_view)
@@ -49,14 +52,17 @@ class PatchController(QObject):
         self._patch_plan_selector_view.generate_universe.connect(self._generate_universe)
         self._patch_plan_selector_view.rename_universe.connect(self._rename_universe)
         self._patch_plan_selector_view.delete_universe_index.connect(self._delete_universe_index)
+        self._patch_plan_selector_view.dmx_log.connect(self._dmx_log)
+        self._patch_plan_selector_view.dmx_log_interval.connect(lambda x: self._timer.setInterval(x * 1000))
 
         self._broadcaster.add_universe.connect(self._add_universe)
         self._broadcaster.delete_universe.connect(self._delete_universe)
         self._broadcaster.add_fixture.connect(self._add_fixture)
 
-        self._board_configuration.broadcaster.view_to_patch_menu.connect(lambda: self.view.setCurrentIndex(0))
-        self._board_configuration.broadcaster.view_patching.connect(lambda: self.view.setCurrentIndex(1))
-        self._board_configuration.broadcaster.view_leave_patching.connect(lambda: self.view.setCurrentIndex(0))
+        self._broadcaster.view_to_patch_menu.connect(lambda: self.view.setCurrentIndex(0))
+        self._broadcaster.view_patching.connect(lambda: self.view.setCurrentIndex(1))
+        self._broadcaster.view_leave_patching.connect(lambda: self.view.setCurrentIndex(0))
+        self._broadcaster.dmx_from_fish.connect(self._dmx_from_fish)
 
         self._timer = QTimer()
         self._timer.setInterval(1000)
@@ -84,9 +90,10 @@ class PatchController(QObject):
 
         background = BackgroundView()
         scene.addItem(background)
-        dmx_data_log = LogDMXView()
+        log_dmx_model = LogDmxModel()
+        dmx_data_log = LogDMXView(log_dmx_model)
         scene.addItem(dmx_data_log)
-        self._patch_planes.update({universe.id: view})
+        self._patch_planes.update({universe.id: (view, log_dmx_model)})
         self._patch_plan_selector_view.insertTab(index, view, str(universe.name))
 
     def _delete_universe_index(self, index: int) -> None:
@@ -95,7 +102,7 @@ class PatchController(QObject):
 
     def _delete_universe(self, universe: Universe) -> None:
         """Handle remove a universe."""
-        widget = self._patch_planes[universe.id]
+        widget = self._patch_planes[universe.id][0]
         self._patch_plan_selector_view.removeTab(self._patch_plan_selector_view.indexOf(widget))
         del self._patch_planes[universe.id]
 
@@ -111,12 +118,12 @@ class PatchController(QObject):
         new_widget.modify_fixture.connect(self._modify_fixture)
         fixture.universe_changed.connect(partial(self._switch_universe, fixture))
         self._fixture_items[fixture] = new_widget
-        self._patch_planes[fixture.universe.id].scene().addItem(new_widget)
+        self._patch_planes[fixture.universe.id][0].scene().addItem(new_widget)
 
     def _switch_universe(self, fixture: UsedFixture, old_universe_id: int) -> None:
         widget = self._fixture_items[fixture]
-        self._patch_planes[old_universe_id].scene().removeItem(widget)
-        self._patch_planes[fixture.universe.id].scene().addItem(widget)
+        self._patch_planes[old_universe_id][0].scene().removeItem(widget)
+        self._patch_planes[fixture.universe.id][0].scene().addItem(widget)
 
     def _modify_fixture(self, fixture: UsedFixture) -> None:
         """Modify clicked Fixture."""
@@ -127,3 +134,13 @@ class PatchController(QObject):
         """Send Signal to request dmx data from fish for each universe."""
         for universe in self._board_configuration.universes:
             self._broadcaster.send_request_dmx_data.emit(universe)
+
+    def _dmx_log(self, run: bool) -> None:
+        if run:
+            self._timer.start()
+        else:
+            self._timer.stop()
+
+    def _dmx_from_fish(self, dmx: proto.DirectMode_pb2.dmx_output) -> None:
+        """Handle dmx data signal from fish."""
+        self._patch_planes[dmx.universe_id][1].current_values = list(dmx.channel_data)
