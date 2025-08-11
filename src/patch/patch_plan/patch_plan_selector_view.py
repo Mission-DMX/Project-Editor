@@ -7,6 +7,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import Qt
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QContextMenuEvent
@@ -19,6 +20,8 @@ class PatchPlanSelectorView(QtWidgets.QTabWidget):
     """Selector for Patching witch holds all Patching Universes."""
 
     generate_universe = QtCore.Signal()
+    dmx_log = QtCore.Signal(bool)
+    dmx_log_interval = QtCore.Signal(int)
     rename_universe = QtCore.Signal(int)
     delete_universe_index = QtCore.Signal(int)
 
@@ -30,6 +33,28 @@ class PatchPlanSelectorView(QtWidgets.QTabWidget):
         self.addTab(QtWidgets.QWidget(), "+")
         self.tabBarClicked.connect(self._tab_clicked)
         self.tabBar().setCurrentIndex(0)
+
+        dmx_log = QtWidgets.QWidget()
+        dmx_log.setFixedHeight(40)
+        dmx_log_layout = QtWidgets.QHBoxLayout(dmx_log)
+
+        dmx_log_value = QtWidgets.QSpinBox()
+        dmx_log_value.setMinimum(1)
+        dmx_log_value.setMaximum(25)
+        dmx_log_value.setValue(1)
+        dmx_log_value.valueChanged.connect(self.dmx_log_interval.emit)
+
+        dmx_log_checkbox = QtWidgets.QCheckBox("Log DMX data.")
+        dmx_log_checkbox.checkStateChanged.connect(
+            lambda check_state: self.dmx_log.emit(check_state == Qt.CheckState.Checked)
+        )
+
+        dmx_log_layout.addWidget(QtWidgets.QLabel("Interval (s):"))
+        dmx_log_layout.addWidget(dmx_log_value)
+        dmx_log_layout.addWidget(dmx_log_checkbox)
+        dmx_log.setLayout(dmx_log_layout)
+        self.setCornerWidget(dmx_log)
+        self.cornerWidget()
 
     @override
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
