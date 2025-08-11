@@ -16,7 +16,7 @@ def create_item(number: int, color: QColor) -> QPixmap:
     painter.setPen(QColorConstants.Black)
     painter.drawRect(0, 0, style.PATCH_ITEM.width - 1, style.PATCH_ITEM.height - 1)
 
-    paint_text(painter, style.PATCH_ITEM.text.channel_id, style.PATCH_ITEM.padding, str(number))
+    paint_text(painter, style.PATCH_ITEM.parts.channel_id, style.PATCH_ITEM.padding, str(number))
     painter.end()
 
     return pixmap

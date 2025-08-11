@@ -12,13 +12,21 @@ class _TextItem(BaseModel):
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
 
-class _Text(BaseModel):
+class _ICON(BaseModel):
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+class _Parts(BaseModel):
     channel_id: _TextItem
     fixture_name: _TextItem
     fixture_channel_name: _TextItem
     fixture_name_on_stage: _TextItem
     dmx_value: _TextItem
-
+    dmx_trend: _TextItem
+    dmx_trend_icon: _ICON
     model_config = ConfigDict(frozen=True)
 
 
@@ -27,7 +35,7 @@ class _PatchItem(BaseModel):
     height: int
     margin: int
     padding: int
-    text: _Text
+    parts: _Parts
 
     model_config = ConfigDict(frozen=True)
 
@@ -73,11 +81,13 @@ PATCH_ITEM = _PatchItem(
     height=100,
     margin=1,
     padding=5,
-    text=_Text(
+    parts=_Parts(
         channel_id=_TextItem(x=0, y=15, font=QFont("Arial", 13)),
         fixture_name=_TextItem(x=0, y=30, font=QFont("Arial", 10)),
         fixture_channel_name=_TextItem(x=0, y=45, font=QFont("Arial", 10)),
         fixture_name_on_stage=_TextItem(x=0, y=60, font=QFont("Arial", 10)),
         dmx_value=_TextItem(x=0, y=75, font=QFont("Arial", 13)),
+        dmx_trend=_TextItem(x=20, y=90, font=QFont("Arial", 10)),
+        dmx_trend_icon=_ICON(x=0, y=80, width=10, height=10),
     ),
 )

@@ -76,21 +76,21 @@ class UsedFixtureView(PatchBaseItem):
         painter.setPen(QColorConstants.Black)
         paint_text(
             painter,
-            style.PATCH_ITEM.text.fixture_name,
+            style.PATCH_ITEM.parts.fixture_name,
             style.PATCH_ITEM.padding,
             self._fixture.short_name if self._fixture.short_name else self._fixture.name,
         )
 
         paint_text(
             painter,
-            style.PATCH_ITEM.text.fixture_channel_name,
+            style.PATCH_ITEM.parts.fixture_channel_name,
             style.PATCH_ITEM.padding,
             self._fixture.get_fixture_channel(channel_id).name,
         )
 
         paint_text(
             painter,
-            style.PATCH_ITEM.text.fixture_name_on_stage,
+            style.PATCH_ITEM.parts.fixture_name_on_stage,
             style.PATCH_ITEM.padding,
             self._fixture.name_on_stage,
         )
