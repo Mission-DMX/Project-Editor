@@ -22,11 +22,13 @@ def create_item(number: int, color: QColor) -> QPixmap:
     return pixmap
 
 
-def paint_text(painter: QPainter, text_style: style._TextItem, padding: int, text: str) -> None:
+def paint_text(painter: QPainter, text_style: style._TextItem, offset: int | tuple[int, int], text: str) -> None:
     """Paint text."""
+    if type(offset) is int:
+        offset = [offset, offset]
     painter.setFont(text_style.font)
     painter.drawText(
-        padding + text_style.x,
-        padding + text_style.y,
+        offset[0] + text_style.x,
+        offset[1] + text_style.y,
         text,
     )
