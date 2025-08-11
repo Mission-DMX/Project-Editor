@@ -1,4 +1,4 @@
-"""Styles for UI"""
+"""Styles for the UI."""
 
 from pydantic import BaseModel, ConfigDict
 from PySide6.QtGui import QFont

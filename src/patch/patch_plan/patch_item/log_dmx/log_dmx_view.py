@@ -1,3 +1,5 @@
+"""View for Logging DMX values for one Universe."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -53,7 +55,10 @@ TREND_STAY = _make_triangle_pixmap(
 
 
 class LogDMXView(PatchBaseItem):
+    """View for Logging DMX values for one Universe."""
+
     def __init__(self, model: LogDmxModel) -> None:
+        """View for Logging DMX values for one Universe."""
         super().__init__()
         self.setZValue(10)
         self._model = model
