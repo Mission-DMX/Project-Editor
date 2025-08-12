@@ -1,7 +1,9 @@
+"""Filter config widget (editor) for cue filter."""
+
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import override, TYPE_CHECKING
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QIcon
@@ -55,6 +57,7 @@ class CueEditor(PreviewEditWidget):
     def _load_parameters(self, conf: dict[str, str]) -> None:
         pass
 
+    @override
     def get_widget(self) -> QWidget:
         return self._parent_widget
 
@@ -82,6 +85,7 @@ class CueEditor(PreviewEditWidget):
         return self._model.get_as_configuration()
 
     def __init__(self, parent: QWidget = None, f: Filter | None = None) -> None:
+        """Initialize the editor widget."""
         super().__init__(f)
         self._parent_widget = QWidget(parent=parent)
         top_layout = QVBoxLayout()
@@ -252,6 +256,11 @@ class CueEditor(PreviewEditWidget):
         self._ui_widget_update_required = True
 
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
+        """Add a cue to the model.
+
+        :param cue: The cue to add.
+        :param name: The name of the cue.
+        """
         target_row = self._cue_list_widget.rowCount()
         self._cue_list_widget.setRowCount(target_row + 1)
         num_item = QTableWidgetItem(1)
@@ -281,6 +290,11 @@ class CueEditor(PreviewEditWidget):
         return target_row
 
     def select_cue(self, cue_index: int, from_manual_input: bool = False) -> None:
+        """Select a cue.
+
+        :param cue_index: The index of the cue to select.
+        :param from_manual_input: Did the user do the selection?
+        """
         if cue_index < 0 or cue_index >= len(self._model.cues):
             return
         if 0 <= self._last_selected_cue < len(self._model.cues):
@@ -309,7 +323,7 @@ class CueEditor(PreviewEditWidget):
         self.select_cue(new_index)
 
     def _add_channel_button_pressed(self) -> None:
-        """This button queries the user for a channel type and adds it to the filter and all cues.
+        """Query the user for a channel type and adds it to the filter and all cues.
 
         The default for all cues is a 0 keyframe at the start.
         """
@@ -344,9 +358,7 @@ class CueEditor(PreviewEditWidget):
         self._toolbar_remove_channel_action.setEnabled(True)
 
     def _remove_channel_button_pressed(self) -> None:
-        """This button queries the user for a channel to be removed and removes it from the filter output as well as
-        all cues.
-        """
+        """Query the user for a channel to be removed and removes it from the filter output as well as all cues."""
         self._input_dialog = SelectionDialog(
             "Remove Channels",
             "Please select Channels to remove.",
@@ -386,11 +398,13 @@ class CueEditor(PreviewEditWidget):
         self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
             .setText(self._timeline_container.cue.duration_formatted)
 
+    @override
     def parent_closed(self, filter_node: FilterNode) -> None:
         if self._ui_widget_update_required:
             self._update_ui_widget()
         super().parent_closed(filter_node)
 
+    @override
     def parent_opened(self) -> None:
         self._input_dialog = YesNoDialog(
             self.get_widget(), "Preview", "Would you like to switch to live preview?", self._link_bankset
@@ -398,6 +412,7 @@ class CueEditor(PreviewEditWidget):
 
         self._ui_widget_update_required = False
 
+    @override
     def get_channel_list(self) -> list[ExternalChannelDefinition]:
         channel_list = []
         # it should be sufficient to only check the fist cue as all cues should have the same channels

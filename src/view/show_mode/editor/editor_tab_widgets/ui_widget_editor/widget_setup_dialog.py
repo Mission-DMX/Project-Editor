@@ -1,3 +1,5 @@
+"""Contains dialog to add a new show UI widget."""
+
 from collections.abc import Callable
 
 from PySide6.QtCore import QPoint
@@ -10,11 +12,13 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 
 class WidgetSetupDialog(QDialog):
+    """Dialog to add a new show UI widget."""
+
     def __init__(self, parent: QWidget, allowed_filters: list[list[FilterTypeEnumeration]], callback: Callable,
                  pos: QPoint, page: UIPage, swidget: UIWidget) -> None:
-        """
-        Initialize a new widget setup dialog. The purpose of this dialog is to query all required filters for setup and
-        registering them with the new widget.
+        """Initialize a new widget setup dialog.
+
+        The purpose of this dialog is to query all required filters for setup and registering them with the new widget.
 
         :param parent: The parent widget of this dialog
         :param allowed_filters: The list of allowed filter types. For every entry in the list, a filter conforming to
@@ -55,7 +59,7 @@ class WidgetSetupDialog(QDialog):
         self.show()
 
     def _select_pressed(self) -> None:
-        """This method handles the filter selection and finishing of the dialog."""
+        """Method handles the filter selection and finishing of the dialog."""
         self._page_index += 1
         if self._page_index == len(self._fsw):
             for i in range(len(self._fsw)):

@@ -1,3 +1,4 @@
+"""Dialog to query data on channel add."""
 from collections.abc import Callable
 
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLineEdit, QPushButton, QWidget

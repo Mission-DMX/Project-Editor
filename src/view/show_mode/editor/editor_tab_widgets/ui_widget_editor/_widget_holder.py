@@ -1,3 +1,5 @@
+"""Contains the Show UI widget holder."""
+
 from logging import getLogger
 from typing import override
 
@@ -12,11 +14,17 @@ logger = getLogger(__name__)
 
 
 class UIWidgetHolder(QWidget):
-    """Widget to hold node editor widgets and move them around"""
+    """Widget to hold node editor widgets and move them around."""
 
     closing = Signal()
 
     def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True) -> None:
+        """Initialize the widget holder.
+
+        :param child: UIWidget to hold.
+        :param parent: Parent Qt widget. Likely a ShowUIPlayer instance.
+        :param instance_for_editor: Is this container used in an editor?
+        """
         super().__init__(parent)
         self._model: UIWidget = child
         if instance_for_editor:
@@ -47,6 +55,7 @@ class UIWidgetHolder(QWidget):
         self._edit_dialog = None
 
     def update_size(self) -> None:
+        """Update dimensions of show UI widget."""
         self.setMinimumWidth(100)
         self.setMinimumHeight(30)
         self.setMaximumHeight(65565)
@@ -110,13 +119,14 @@ class UIWidgetHolder(QWidget):
 
     @property
     def holding(self) -> NodeEditorFilterConfigWidget:
-        """The widget the holder is holding"""
+        """The widget the holder is holding."""
         return self._child
 
     @property
     def widget(self) -> UIWidget:
         return self._model
 
+    @override
     def move(self, new_pos: QPoint) -> None:
         super().move(new_pos)
         self._model.position = (new_pos.x(), new_pos.y())

@@ -1,14 +1,15 @@
-"""dialog for editing patching universe"""
+"""dialog for editing patching universe."""
 from PySide6 import QtWidgets
 
 import proto.UniverseControl_pb2
 
 
 class UniverseDialog(QtWidgets.QDialog):
-    """dialog for editing patching universe"""
+    """dialog for editing patching universe."""
 
     def __init__(self, patching_universe_or_id: proto.UniverseControl_pb2.Universe | int,
                  parent: object = None) -> None:
+        """Initialize universe dialog."""
         super().__init__(parent)
         if isinstance(patching_universe_or_id, int):
             patching_proto: proto.UniverseControl_pb2.Universe = proto.UniverseControl_pb2.Universe(
@@ -75,7 +76,7 @@ class UniverseDialog(QtWidgets.QDialog):
             self._widgets.setCurrentIndex(0)
 
     def ok(self) -> None:
-        """Accept the universe"""
+        """Accept the universe."""
         if self._widgets.currentIndex() == 0:
             # art net
             self.output = proto.UniverseControl_pb2.Universe(
@@ -100,7 +101,7 @@ class UniverseDialog(QtWidgets.QDialog):
         self.accept()
 
     def cancel(self) -> None:
-        """Cancel universe"""
+        """Cancel universe."""
         self.reject()
 
 

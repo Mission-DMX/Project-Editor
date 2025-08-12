@@ -1,3 +1,4 @@
+"""Internal widget to provide labels for channels in timeline."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -13,8 +14,7 @@ if TYPE_CHECKING:
 
 
 class TimelineChannelLabel(QWidget):
-    """
-    This widget provides a label for channels within a timeline.
+    """Widget providing a label for channels within a timeline.
 
     Use add_label in order to add a new channel label.
     """
@@ -81,7 +81,10 @@ class TimelineChannelLabel(QWidget):
 
     @property
     def display_active_channel_indicator(self) -> bool:
-        """Should the channels provide checkboxes indicating if they're active or not?"""
+        """Enable or disable the active channel indicator.
+
+        Should the channels provide checkboxes indicating if they're active or not?
+        """
         return self._display_active_channel_indicator
 
     @display_active_channel_indicator.setter

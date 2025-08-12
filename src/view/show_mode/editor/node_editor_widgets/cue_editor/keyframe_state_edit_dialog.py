@@ -1,3 +1,5 @@
+"""Contains KeyFrameStateEditDialog, a dialog to edit the state of a keyframe."""
+
 from collections.abc import Callable
 
 from PySide6.QtGui import QColor, QIcon
@@ -21,6 +23,7 @@ class KeyFrameStateEditDialog(QDialog):
 
     def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function: Callable) -> None:
         """Initialize the dialog.
+
         :param parent: The parent widget. Contrary to other Qt widgets, this must not be None.
         :param kf: The keyframe to edit.
         :param s: The current state of the keyframe.
@@ -78,7 +81,7 @@ class KeyFrameStateEditDialog(QDialog):
         self.setModal(True)
 
     def _ok_pressed(self) -> None:
-        """Callback closing the dialog, saving changes and repainting the keyframe"""
+        """Callback closing the dialog, saving changes and repainting the keyframe."""
         if isinstance(self._input, (QSpinBox, QDoubleSpinBox)):
             self._state._value = self._input.value()
         else:
