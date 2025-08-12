@@ -1,3 +1,5 @@
+"""Qt widget to display show UI widgets."""
+
 from typing import override
 
 from PySide6.QtCore import QPoint

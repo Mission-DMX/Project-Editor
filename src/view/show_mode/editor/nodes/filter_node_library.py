@@ -98,10 +98,12 @@ class FilterNodeLibrary(NodeLibrary):
     """Custom Node Library."""
 
     def __init__(self) -> None:
+        """Initialize the filter node library."""
         super().__init__()
-        self.reload()
+        self._reload()
 
-    def reload(self) -> None:
+    def _reload(self) -> None:
+        """Add filter node entries."""
         self._register_constants_nodes()
         self._register_debug_nodes()
         self._register_adapters_nodes()

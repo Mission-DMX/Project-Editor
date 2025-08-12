@@ -1,3 +1,5 @@
+"""Show UI Widget containing arbitrary text."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -12,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class ShowLabelUIWidget(UIWidget):
+    """Widget to display user defined rich text (markdown)."""
+
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         """Initialize the label widget.
 

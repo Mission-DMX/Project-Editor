@@ -1,4 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+"""Debug output show UI widgets.
+
+ColorLabel -- Regular Qt Widget to display set color.
+ColorDebugVizWidget -- Show UI widget to display debug output containing colors.
+NumberDebugVizWidget -- Show UI widget to display debug output containing numbers.
+"""
 from __future__ import annotations
 
 from abc import ABC
@@ -156,6 +162,10 @@ class ColorLabel(QWidget):
         self._last_color_processed: QColor = QColor()
 
     def set_color(self, c: ColorHSI) -> None:
+        """Set the color to display.
+
+        :param c: The color to set. (ColorHSI)
+        """
         self.set_hsi(c.hue, c.saturation, c.intensity)
 
     def set_hsi(self, h: float, s: float, i: float) -> None:
@@ -185,7 +195,10 @@ class ColorLabel(QWidget):
 
 
 class ColorDebugVizWidget(_DebugVizWidget):
+    """Show UI widget to display debug output colors."""
+
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize show UI widget using parent UI page and configuration."""
         super().__init__(parent, configuration)
         self.configured_dimensions_changed_callback = self._dimensions_changed
         self._show_widget: ColorLabel | None = None
@@ -217,6 +230,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
             self._show_widget = None
 
     def __del__(self) -> None:
+        """Delete callbacks on object deletion."""
         self._delete_callback()
         super().__del__()
 
@@ -294,7 +308,10 @@ class _NumberLabel(QWidget):
 
 
 class NumberDebugVizWidget(_DebugVizWidget):
+    """UI widget to display debug output numbers."""
+
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize widget using parent UI page and initial configuration data."""
         super().__init__(parent, configuration, ["Plain", "Illumination"])
         self._show_widget: _NumberLabel | None = None
         self.configured_dimensions_changed_callback = self._dimensions_changed
@@ -311,6 +328,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
             self._callback_registered = True
         return self._show_widget
 
+    @override
     def copy(self, new_parent: UIPage) -> UIWidget:
         c = NumberDebugVizWidget(new_parent, self.configuration.copy())
         super().copy_base(c)
@@ -339,6 +357,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
             )
 
     def __del__(self) -> None:
+        """Cleanup registered callbacks on object delete."""
         self._delete_callback()
         super().__del__()
 

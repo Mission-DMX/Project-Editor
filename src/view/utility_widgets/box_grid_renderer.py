@@ -1,3 +1,9 @@
+"""System for dynamic floating boxes.
+
+BoxGridItem - An item inside a box grid renderer
+BoxGridRenderer - A widget displaying floating boxes with configurable content and optional custom rendering
+"""
+
 from collections.abc import Callable
 from typing import TYPE_CHECKING, override
 

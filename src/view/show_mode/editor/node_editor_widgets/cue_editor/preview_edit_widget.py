@@ -1,3 +1,9 @@
+"""ABC widget for filters supporting live preview.
+
+ExternalChannelDefinition -- POD describing a preview channel.
+PreviewEditWidget -- The editor base class.
+"""
+
 from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import TYPE_CHECKING
@@ -26,6 +32,13 @@ class ExternalChannelDefinition:
     """
 
     def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet) -> None:
+        """Initialize the pod.
+
+        :param data_type: The data type of the channel.
+        :param name: The name of the channel.
+        :param associated_fader: The fader source of the channel.
+        :param bank_set: The bank set of the channel.
+        """
         self.data_type = data_type
         self.name = name
         self.fader = associated_fader
@@ -34,11 +47,12 @@ class ExternalChannelDefinition:
 
 
 class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
-    """Shared ABc for widgets providing live WYSIWYG editing."""
+    """Shared ABC for widgets providing live WYSIWYG editing."""
 
     def __init__(self, f: Filter | None = None) -> None:
-        """
-        Initialize the preview edit widget. The filter needs to be virtual and support live previews.
+        """Initialize the preview edit widget.
+
+        The filter needs to be virtual and support live previews.
         see also model.virtual_filters.cue_vfilter.PreviewFilter
         """
         super().__init__()
@@ -81,9 +95,10 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
 
     @abstractmethod
     def get_channel_list(self) -> list[ExternalChannelDefinition]:
-        """
-        This method needs to return the list of exposed channels. It may return a mutable list as it will be
-        copied anyway
+        """Return the list of exposed channels.
+
+        Implementation Required.
+        It may return a mutable list as it will be copied anyway.
 
         :returns: A list of ExternalChannelDefinition objects
         """
@@ -161,7 +176,10 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
             self._timeline_container.move_cursor_left()
 
     def scrub_pressed(self) -> None:
-        """Activate alternative use of the jog wheel. (Switches between cursor moving and zoom manipulation.)"""
+        """Activate alternative use of the jog wheel.
+
+        (Switches between cursor moving and zoom manipulation.)
+        """
         self._jw_zoom_mode = True
 
     def scrub_released(self) -> None:
@@ -192,8 +210,8 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._gui_rec_action.setEnabled(new_state)
 
     def link_column_to_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool) -> None:
-        """
-        Link a bank set column to a channel in the model.
+        """Link a bank set column to a channel in the model.
+
         :param channel_name: The name of the channel to link.
         :param channel_type: The type of the channel to link.
         :param is_part_of_mass_update: If true, no immediate update of the bank set will be triggered and the user is

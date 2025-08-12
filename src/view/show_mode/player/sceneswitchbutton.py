@@ -21,6 +21,7 @@ class SceneSwitchButton(QPushButton):
     _STYLE_NOT_ACTIVE = None
 
     def __init__(self, scene: Scene, parent: QWidget = None) -> None:
+        """Initialize button using scene to switch to as well as parent Qt widget."""
         super().__init__(parent)
         if SceneSwitchButton._STYLE_NOT_ACTIVE is None:
             SceneSwitchButton._STYLE_NOT_ACTIVE = self.styleSheet()

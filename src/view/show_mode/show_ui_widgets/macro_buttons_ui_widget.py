@@ -1,7 +1,9 @@
+"""Provides UI widget to allow quick execution of macros by user."""
+
 import json
 import os
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -75,7 +77,7 @@ class _AddMacroActionDialog(QDialog):
             "command": self._command_tb.text()
         })
         self._ui_widget.configuration["items"] = json.dumps(model)
-        self._ui_widget.refresh_config_macro_list(self._button_list, update_button=self._update_button)
+        self._ui_widget._refresh_config_macro_list(self._button_list, update_button=self._update_button)
         self.close()
 
     def _cancel_button_pressed(self) -> None:
@@ -122,7 +124,10 @@ class _MacroListWidget(QWidget):
 
 
 class MacroButtonUIWidget(UIWidget):
+    """Widget displaying button selection for execution of macros."""
+
     def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
+        """Initialize widget using configuration and parent ui page."""
         super().__init__(parent, configuration)
         self._latest_config_widget: QWidget | None = None
         self._latest_player_widget: QWidget | None = None
@@ -139,6 +144,7 @@ class MacroButtonUIWidget(UIWidget):
         self._context = CLIContext(parent.scene.board_configuration, NetworkManager(), False)
         self._logger = getLogger(f"{parent.title} macro_button_returns")
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         return []
 
@@ -169,20 +175,23 @@ class MacroButtonUIWidget(UIWidget):
         self._logger.info(self._context.return_text)
         self._context.return_text = ""
 
+    @override
     def get_player_widget(self, parent: "QWidget") -> "QWidget":
         self._latest_player_widget = self._construct_widget()
         return self._latest_player_widget
 
+    @override
     def get_configuration_widget(self, parent: "QWidget") -> "QWidget":
         self._latest_config_widget = self._construct_widget()
         return self._latest_config_widget
 
+    @override
     def copy(self, new_parent: "UIPage") -> "UIWidget":
         w = MacroButtonUIWidget(new_parent, self.configuration.copy())
         self.copy_base(w)
         return w
 
-    def refresh_config_macro_list(self, config_list: QListWidget, update_button: QPushButton) -> None:
+    def _refresh_config_macro_list(self, config_list: QListWidget, update_button: QPushButton) -> None:
         config_list.clear()
         model = json.loads(self.configuration["items"])
         for i, item_def in enumerate(model):
@@ -195,6 +204,7 @@ class MacroButtonUIWidget(UIWidget):
         if self._latest_config_widget is not None:
             self._populate_button_items(self._latest_config_widget)
 
+    @override
     def get_config_dialog_widget(self, parent: "QWidget") -> "QWidget":
         w = QWidget()
         w.setMinimumWidth(600)
@@ -220,7 +230,7 @@ class MacroButtonUIWidget(UIWidget):
         update_button.setEnabled(False)
         update_button.clicked.connect(lambda: self._update_properties(button_list, update_button))
         form_layout.addWidget(update_button)
-        self.refresh_config_macro_list(button_list, update_button)
+        self._refresh_config_macro_list(button_list, update_button)
         add_macro_button.clicked.connect(lambda: _AddMacroActionDialog(self, button_list, update_button))
         w.setLayout(form_layout)
         return w

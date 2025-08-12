@@ -1,3 +1,4 @@
+"""File contains internal timeline content widget."""
 from typing import override
 
 import PySide6

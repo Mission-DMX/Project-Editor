@@ -43,6 +43,12 @@ class ShowBrowser:
     _uipage_icon = QIcon(resource_path(os.path.join("resources", "icons", "uipage.svg")))
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget) -> None:
+        """Initialize a ShowBrowser.
+
+        :param parent: The parent Qt widget.
+        :param show: The show model.
+        :param editor_tab_browser: The editor to use for opening actions.
+        """
         self._recently_created_scene = None
         self._widget = QWidget(parent)
         self._widget.setMaximumWidth(450)
@@ -97,10 +103,12 @@ class ShowBrowser:
 
     @property
     def widget(self) -> QWidget:
+        """Get the constructed widget."""
         return self._widget
 
     @property
     def board_configuration(self) -> BoardConfiguration | None:
+        """Get the show configuration."""
         return self._show
 
     @board_configuration.setter
@@ -112,6 +120,7 @@ class ShowBrowser:
 
     @property
     def selected_scene(self) -> Scene | None:
+        """Get the current selected scene."""
         return self._selected_scene
 
     @selected_scene.setter

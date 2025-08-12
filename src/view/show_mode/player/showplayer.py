@@ -21,6 +21,10 @@ class ShowPlayerWidget(QWidget):
     """Widget to remote control fish show mode."""
 
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget = None) -> None:
+        """Instantiate player requires complete show configuration as well as parent Qt widget.
+
+        The parent should not be None.
+        """
         super().__init__(parent)
         self._board_configuration = board_configuration
 

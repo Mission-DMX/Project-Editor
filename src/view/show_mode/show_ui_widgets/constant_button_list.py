@@ -1,3 +1,4 @@
+"""Show UI widgets to update constant filter values."""
 from __future__ import annotations
 
 import sys
@@ -21,7 +22,7 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder im
 
 
 class ConstantNumberButtonList(UIWidget):
-    """This show UI widget provides the user with configurable buttons that alter the content of a constant filter."""
+    """Show UI widget to provide the user with configurable buttons that alter the content of a constant filter."""
 
     @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
@@ -81,6 +82,7 @@ class ConstantNumberButtonList(UIWidget):
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         """Initialize the button list show UI widget.
+
         :param parent: The parent widget page.
         :param configuration: The configuration of this widget.
         """
@@ -98,6 +100,7 @@ class ConstantNumberButtonList(UIWidget):
 
     def set_filter(self, f: Filter, i: int) -> None:
         """Set the filter associated with this UI widget for a specific button.
+
         :param f: The new filter to set
         :param i: The index of the button to update.
         """

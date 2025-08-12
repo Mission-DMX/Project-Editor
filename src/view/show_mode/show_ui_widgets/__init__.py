@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""This module contains the implementations of show UI widgets.
+"""Implementations of show UI widgets.
+
 How to add one: Create a new class inheriting from UIWidget. Implement the abstract methods. Register it in the library
 below.
 """

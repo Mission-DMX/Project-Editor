@@ -1,3 +1,5 @@
+"""File contains TimelineContainer Qt Widget."""
+
 from logging import getLogger
 
 from PySide6.QtCore import QPoint, Qt
@@ -13,8 +15,8 @@ logger = getLogger(__name__)
 
 
 def _get_column_from_name(channel_name: str) -> DeskColumn | None:
-    """
-    Get an associated bank set column from a channel name, if any.
+    """Get an associated bank set column from a channel name, if any.
+
     :param channel_name: The name of the channel to use for lookup.
     :return: The bank set column or None if no bank set column is found.
     """
@@ -25,9 +27,7 @@ def _get_column_from_name(channel_name: str) -> DeskColumn | None:
 
 
 class TimelineContainer(QWidget):
-    """
-    This widget provides a timeline editor with a scroll area containing the timeline next to the channel labels.
-    """
+    """Widget providing a timeline editor with a scroll area containing the timeline next to the channel labels."""
 
     def __init__(self, parent: QWidget = None) -> None:
         """Initialize the container."""
@@ -53,7 +53,10 @@ class TimelineContainer(QWidget):
 
     @property
     def generate_individual_frames(self) -> bool:
-        """Should a record action produce individual keyframes ore a single combined one?"""
+        """Get the individual frame flag.
+
+        Should a record action produce individual keyframes ore a single combined one?
+        """
         return self._generate_individual_frames
 
     @generate_individual_frames.setter
@@ -72,7 +75,7 @@ class TimelineContainer(QWidget):
 
     @property
     def bankset(self) -> BankSet:
-        """The bank set to use if the timeline editor is used in live preview"""
+        """The bank set to use if the timeline editor is used in live preview."""
         return self._keyframes_panel.used_bankset
 
     @bankset.setter
@@ -80,8 +83,8 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.used_bankset = bs
 
     def add_channel(self, channel_type: DataType, name: str) -> None:
-        """
-        Add a channel to the editor.
+        """Add a channel to the editor.
+
         :param channel_type: The data type of channel to add.
         :param name: The name of the channel to add.
         """
@@ -89,8 +92,8 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.add_channels([(channel_type, name)])
 
     def remove_channel(self, c_name: str) -> None:
-        """
-        Remove a channel from the editor.
+        """Remove a channel from the editor.
+
         :param c_name: The name of the channel to remove.
         """
         i = self._channel_label.remove_label(c_name)
@@ -98,7 +101,7 @@ class TimelineContainer(QWidget):
             self._keyframes_panel.remove_channel(i)
 
     def clear_channels(self) -> None:
-        """Removes all channels from the widget"""
+        """Removes all channels from the widget."""
         # TODO clear all labels from self._channel_labels_panel_layout
         # TODO reset self._keyframes_panel
 
@@ -125,15 +128,15 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.repaint()
 
     def increase_zoom(self, factor: float = 2.0) -> None:
-        """
-        Increase the zoom factor inside the editor.
+        """Increase the zoom factor inside the editor.
+
         :param factor: The zoom factor to increase. Defaults to doubling.
         """
         self._keyframes_panel.zoom_in(factor)
 
     def decrease_zoom(self, factor: float = 2.0) -> None:
-        """
-        Decrease the zoom factor inside the editor.
+        """Decrease the zoom factor inside the editor.
+
         :param factor: The zoom factor to decrease. Defaults to halving.
         """
         self._keyframes_panel.zoom_out(factor)
@@ -217,7 +220,10 @@ class TimelineContainer(QWidget):
 
     @staticmethod
     def clear_display() -> None:
-        """Clear the xtouch display. (It displays the current cursor position otherwise.)"""
+        """Clear the xtouch display.
+
+        (It displays the current cursor position otherwise.)
+        """
         set_seven_seg_display_content(" " * 12, True)
 
     def _keyframe_panel_size_changed(self, new_size: QPoint) -> None:
