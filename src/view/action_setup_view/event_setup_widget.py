@@ -1,3 +1,4 @@
+"""Contains EventSetupWidget and required internal helper classes."""
 import os
 from logging import getLogger
 from typing import TYPE_CHECKING
@@ -210,7 +211,7 @@ class _SenderConfigurationWidget(QScrollArea):
 
 
 class _SourceListWidget(QWidget):
-    """Content widget for ListWidgetItems of event senders"""
+    """Content widget for ListWidgetItems of event senders."""
 
     def __init__(self, parent: QWidget, sender: events.EventSender) -> None:
         super().__init__(parent=parent)
@@ -238,7 +239,7 @@ class _SourceListWidget(QWidget):
 
 
 class _EventLogListWidget(QWidget):
-    """Content widget for ListWidgetItems of logged events"""
+    """Content widget for ListWidgetItems of logged events."""
 
     _STYLE_ID_TAG = """
     background-color: #B0B0B0;
@@ -388,6 +389,7 @@ class EventSetupWidget(QSplitter):
     """Widget containing the entire event sender configuration UI."""
 
     def __init__(self, parent: QWidget | None, b: Broadcaster) -> None:
+        """Initialize the event setup widget."""
         super().__init__(parent=parent)
         self._selection_panel = QWidget(self)
         layout = QVBoxLayout()

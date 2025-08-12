@@ -1,7 +1,12 @@
+"""Contains range adapter filters.
+
+EightBitToFloatRange -- ranged 8bit to float.
+ColorGlobalBrightnessMixinVFilter -- Global Brightness output.
+"""
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 
@@ -12,16 +17,20 @@ logger = getLogger(__name__)
 
 
 class SixteenBitToFloatRange(VirtualFilter):
+    """Converts 16 bit ranges to float."""
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+        """Instantiate the filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE, pos=pos)
 
+    @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
             case "value":
                 return f"{self.filter_id}_float_range:value"
         return None
 
+    @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         filter_: Filter = Filter(
             filter_id=f"{self.filter_id}_16bit_to_float",
@@ -55,16 +64,20 @@ class SixteenBitToFloatRange(VirtualFilter):
 
 
 class EightBitToFloatRange(VirtualFilter):
+    """V-Filter to convert 8bit ranges into float ranges."""
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+        """Instantiates the v-filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, pos=pos)
 
+    @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
             case "value":
                 return f"{self.filter_id}_float_range:value"
         return None
 
+    @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         filter_: Filter = Filter(
             filter_id=f"{self.filter_id}_8bit_to_float",
@@ -98,10 +111,13 @@ class EightBitToFloatRange(VirtualFilter):
 
 
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
+    """V-Filter that provides the global brightness property."""
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+        """Instantiate a color global brightness filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, pos=pos)
 
+    @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if virtual_port_id == "out":
             return f"{self.filter_id}_color_recomposition:value"
@@ -120,6 +136,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
         c.initial_parameters["value"] = "0,0,0"
         filter_list.append(c)
 
+    @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         if self.channel_links.get("color_in") is None:
             self._instantiate_black_constant(filter_list)

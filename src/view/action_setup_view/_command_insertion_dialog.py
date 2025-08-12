@@ -1,3 +1,5 @@
+"""Contains a helper method to escape arguments and the _CommandInsertionDialog case class."""
+
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QStackedLayout, QVBoxLayout, QWidget
 
 from model import BoardConfiguration, Scene
@@ -7,6 +9,11 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 
 def escape_argument(argument: str) -> str:
+    """Escape an argument for usage in a command.
+
+    :param argument: The argument to escape.
+    :return: The escaped argument.
+    """
     s = argument if isinstance(argument, str) else str(argument)
     s = s.replace("\\", "\\\\")
     s = s.replace("\n", "\\n")
@@ -17,10 +24,11 @@ def escape_argument(argument: str) -> str:
 
 
 class _CommandInsertionDialog(QDialog):
-    """This class provides a foundation for command insertion dialogs."""
+    """Provides a foundation for command insertion dialogs."""
 
     def __init__(self, parent: QWidget, macro: Macro, supported_filter_list: list[FilterTypeEnumeration],
                  show: BoardConfiguration, update_callable: callable) -> None:
+        """Initialize the dialog."""
         super().__init__(parent)
 
         self._macro = macro
@@ -81,14 +89,16 @@ class _CommandInsertionDialog(QDialog):
         self.close()
 
     def get_command(self) -> str:
-        """
+        """Get the finished command.
+
         This method needs to be implemented in order to get the command that should be inserted.
         :returns: a string without leading new line.
         """
         raise NotImplementedError
 
     def on_filter_selected(self) -> None:
-        """
+        """Perform updates on filter selection.
+
         This method gets called once the user selected the desired filter.
         Use this method to implement custom behavior. self.filter and self.filter_id
         are now guaranteed to be not None. This method may be called multiple times

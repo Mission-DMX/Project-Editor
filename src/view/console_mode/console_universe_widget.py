@@ -1,4 +1,4 @@
-"""directly edit channels of a universe"""
+"""directly edit channels of a universe."""
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QWidget
 
@@ -62,6 +62,7 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._scroll_position: int = 0
 
     def __del__(self) -> None:
+        """Remove callbacks and delete bank set."""
         self._bank_set.unlink()
         self._broadcaster.jogwheel_rotated_left.disconnect(self._decrease_scroll)
         self._broadcaster.jogwheel_rotated_right.disconnect(self._increase_scroll)
@@ -87,12 +88,14 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self.horizontalScrollBar().setValue(self._translate_scroll_position(self._scroll_position))
 
     def notify_activate(self) -> None:
+        """Activate this universe in the console."""
         if self._bank_set:
             self._bank_set.activate()
             self._bank_set.update()  # FIXME activate should suffice
             self._bank_set.push_messages_now()
 
     def automap(self) -> None:
+        """Automatically map channels to x-touch."""
         index = 0
         fixtures_per_bank = 0
         for w in self._subwidgets:

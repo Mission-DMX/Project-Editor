@@ -1,3 +1,6 @@
+"""Contains SceneSwitchInsertionDialog."""
+from typing import override
+
 from PySide6.QtWidgets import QComboBox, QDialogButtonBox, QWidget
 
 from model import BoardConfiguration
@@ -7,7 +10,16 @@ from view.action_setup_view._command_insertion_dialog import escape_argument as 
 
 
 class SceneSwitchInsertionDialog(_CommandInsertionDialog):
+    """Dialog to insert scene switches into macro."""
+
     def __init__(self, parent: QWidget, macro: Macro, _show: BoardConfiguration, update_callable: callable) -> None:
+        """Initialize the dialog.
+
+        :param parent: The parent widget.
+        :param macro: The macro model.
+        :param show: The show model.
+        :param update_callable: Method to be called after user confirmation.
+        """
         super().__init__(parent, macro, [], _show, update_callable)
         self._scene_selection_cb.setEnabled(False)
         self._scene_selection_cb.setVisible(False)
@@ -21,6 +33,7 @@ class SceneSwitchInsertionDialog(_CommandInsertionDialog):
         self.custom_layout.addWidget(self._scene_cb)
         self.custom_layout.setCurrentIndex(0)
 
+    @override
     def get_command(self) -> str:
         data = self._scene_cb.currentData()
         if data is None:

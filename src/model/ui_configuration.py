@@ -1,3 +1,10 @@
+"""Contains the show UI model.
+
+UIWidget -- An ABC for a show UI widget.
+UIPage -- A page containing widgets.
+ShowUI -- Container class for all pages in the scene.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -13,13 +20,17 @@ if TYPE_CHECKING:
 
 
 class UIWidget(ABC):
-    """This class represents a link between an interactable widget on a page and the corresponding filter."""
+    """Show UI widget.
+
+    This class represents a link between an interactable widget on a page and the corresponding filter.
+    """
 
     def __init__(self, parent_page: UIPage, configuration: dict[str, str] | None = None) -> None:
         """Set up the basic components of a widget.
 
         Arguments:
-            fid -- The id of the corresponding filter.
+            parent_page (UIPage): The parent page of the widget.
+            configuration (dict[str, str] | None): The configuration of the widget.
 
         """
         self._position: tuple[int, int] = (0, 0)
@@ -34,7 +45,9 @@ class UIWidget(ABC):
 
     @abstractmethod
     def generate_update_content(self) -> list[tuple[str, str]]:
-        """This method needs to be implemented in order to compute the update content.
+        """Get the updates to be sent to fish.
+
+        This method needs to be implemented in order to compute the update content.
 
         Returns:
             A list of key-value-tuples where each tuple defines a parameter of the filter to be updated.
@@ -44,7 +57,9 @@ class UIWidget(ABC):
 
     @abstractmethod
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        """This method needs to yield a QWidget that can be placed on the player page.
+        """Get the show UI widget.
+
+        This method needs to yield a QWidget that can be placed on the player page.
 
         Returns:
             A fully set up QWidget instance
@@ -54,7 +69,9 @@ class UIWidget(ABC):
 
     @abstractmethod
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        """This method needs to return a QWidget that can be used to configure the UI widget within
+        """Get the configuration widget.
+
+        This method needs to return a QWidget that can be used to configure the UI widget within
         the UI editor.
 
         Returns:
@@ -64,13 +81,18 @@ class UIWidget(ABC):
         raise NotImplementedError
 
     def set_filter(self, f: Filter, i: int) -> None:
+        """Set an associated filter.
+
+        :param i: The filter index to update.
+        :param f: The new filter to use.
+        """
         if not f:
             return
         self.associated_filters[str(i)] = f.filter_id
 
     @property
     def filter_ids(self) -> list[str]:
-        """Get the id of the linked filter"""
+        """Get the id of the linked filter."""
         linked_filters: list[str | None] = [None] * len(self._associated_filters)
 
         for i, (k, v) in enumerate(self._associated_filters.items()):
@@ -92,10 +114,13 @@ class UIWidget(ABC):
 
     @property
     def associated_filters(self) -> dict[str, str]:
+        """Get the filters associated with this show UI widget."""
         return self._associated_filters
 
     def notify_id_rename(self, old_id: str, new_id: str) -> None:
-        """This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
+        """Notify widget of renamed filter ids.
+
+        This method will be called by the parent scene in the event of the renaming of a filter. It may be overridden
         in order to implement special behaviour
         """
         for slot in self._associated_filters:
@@ -104,36 +129,38 @@ class UIWidget(ABC):
 
     @property
     def parent(self) -> UIPage:
-        """Get the parent page of this widget"""
+        """Get the parent page of this widget."""
         return self._parent
 
     @property
     def position(self) -> tuple[int, int]:
-        """Get the position of the widget on the UI page"""
+        """Get the position of the widget on the UI page."""
         return self._position
 
     @position.setter
     def position(self, new_position: tuple[int, int]) -> None:
-        """Update the position of the widget on the UI page"""
+        """Update the position of the widget on the UI page."""
         self._position = new_position
         self.parent.display_update_required = True
 
     @property
     def size(self) -> tuple[int, int]:
-        """Get the size of the widget in the UI page"""
+        """Get the size of the widget in the UI page."""
         return self._size
 
     @size.setter
     def size(self, new_size: tuple[int, int]) -> None:
-        """Update the size of the widget"""
+        """Update the size of the widget."""
         self._size = new_size
         self.parent.display_update_required = True
 
     @property
     def configuration(self) -> dict[str, str]:
+        """Get the configuration of the widget."""
         return self._configuration
 
     def copy_base(self, w: UIWidget) -> UIWidget:
+        """Copy private properties of base class."""
         w._position = self._position
         w._size = self._size
         w._filter_id = self._filter_id
@@ -142,23 +169,33 @@ class UIWidget(ABC):
 
     @abstractmethod
     def copy(self, new_parent: UIPage) -> UIWidget:
-        """This method needs to perform a deep copy of the object, excluding generatable state, such as the widgets"""
+        """Copy the object.
+
+        This method needs to perform a deep copy of the object, excluding generatable state, such as the widgets.
+
+        :param new_parent: The parent of the copy.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
-        """This method shall return a widget that will be placed within the configuration dialog"""
+        """Get the configuration widget.
+
+        This method shall return a widget that will be placed within the configuration dialog.
+        """
         # TODO warum nutzt nur eine der implementierenden klassen überhaupt das parent objekt?
         raise NotImplementedError
 
     def get_variante(self) -> str:
-        """This method needs to be overridden if there are multiple fitting widgets for a filter
+        """Get the filter variant.
+
+        This method needs to be overridden if there are multiple fitting widgets for a filter
         type in order for the show file saving (and loading) to choose the correct one.
         """
         return ""
 
     def push_update(self) -> None:
-        """Use this method to trigger a filter update process"""
+        """Use this method to trigger a filter update process."""
         for entry in self.generate_update_content():
             k = entry[0]
             v = entry[1]
@@ -176,13 +213,16 @@ class UIWidget(ABC):
 
 
 class UIPage:
-    """This class represents a page containing widgets that can be used to control the show."""
+    """Show UI Page.
+
+    This class represents a page containing widgets that can be used to control the show.
+    """
 
     def __init__(self, parent: Scene) -> None:
-        """Construct a UI Page
+        """Construct a UI Page.
 
         Arguments:
-            sid -- The id of the scene where the corresponding filter is located.
+            parent (Scene): The parent Scene.
 
         """
         self._widgets: list[UIWidget] = []
@@ -193,26 +233,27 @@ class UIPage:
 
     @property
     def scene(self) -> Scene:
-        """Get the scene this page is bound to"""
+        """Get the scene this page is bound to."""
         return self._parent_scene
 
     @property
     def page_active_on_player(self) -> bool:
-        """Returns true if this page is currently displayed on any player"""
+        """Returns true if this page is currently displayed on any player."""
         return self._player is not None
 
     def activate_on_player(self, player: str) -> None:
-        """Set the player this page is displayed on"""
+        """Set the player this page is displayed on."""
         self._player = player
         # TODO push page to player
 
     @property
     def widgets(self) -> list[UIWidget]:
-        """Returns a copy of the internal widget list"""
+        """Returns a copy of the internal widget list."""
         return list(self._widgets)
 
     @property
     def title(self) -> str:
+        """Get or set page title."""
         return self._title
 
     @title.setter
@@ -220,6 +261,7 @@ class UIPage:
         self._title = new_title
 
     def copy(self, new_parent: Scene) -> UIPage:
+        """Copy the page."""
         new_page = UIPage(new_parent)
         new_page._player = self._player
         new_page._title = self._title
@@ -228,17 +270,19 @@ class UIPage:
         return new_page
 
     def append_widget(self, widget: UIWidget) -> None:
+        """Add a widget to the page."""
         self._widgets.append(widget)
 
     def push_update(self) -> None:
-        """This method indicates that updates to the running filters should be sent."""
+        """Indicate that updates to the running filters should be sent."""
 
     def remove_widget(self, widget: UIWidget) -> None:
+        """Remove a widget from the page."""
         self._widgets.remove(widget)
 
 
 class ShowUI:
-    """This class contains all pages of the show
+    """Container class containing all pages of the show.
 
     The _page_storage variable contains the pages per scene.
     """
@@ -246,7 +290,7 @@ class ShowUI:
     _fish_connector: NetworkManager = None
 
     def __init__(self) -> None:
-        """This constructor initializes the show UI.
+        """Initialize the show UI.
 
         At any given time there may only be one instance of this class running in the player but one might construct
         arbitrary amounts for editing purposes.
@@ -257,7 +301,7 @@ class ShowUI:
 
     @property
     def active_scene(self) -> int:
-        """Get the index of the current active scene"""
+        """Get the index of the current active scene."""
         return self._active_scene
 
     @active_scene.setter
@@ -274,6 +318,7 @@ class ShowUI:
 
     @property
     def scenes(self) -> list[str]:
+        """Get all scene names."""
         scene_name_list = []
         for scene_name, _ in self._page_storage:
             scene_name_list.append(scene_name)
@@ -281,7 +326,7 @@ class ShowUI:
 
     @property
     def pages(self) -> list[UIPage]:
-        """This method enumerates all pages.
+        """Enumerate all UI pages.
 
         Returns:
             The complete list of pages.

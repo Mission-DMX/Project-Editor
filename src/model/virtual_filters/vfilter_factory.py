@@ -1,5 +1,6 @@
 
-"""
+"""V-Filter factory.
+
 This file provides a factory for v-filter instances. The primary use case is for restoring efforts after loading a
 show file.
 """
@@ -28,7 +29,8 @@ if TYPE_CHECKING:
 
 def construct_virtual_filter_instance(scene: Scene, filter_type: int, filter_id: str,
                                       pos: tuple[int, int] | tuple[float, float] | None = None) -> VirtualFilter | None:
-    """
+    """Construct virtual filters.
+
     This method constructs instances of v-filter based on the provided model for the restoring of show files.
 
     :param scene: The parent scene of the filter to be constructed.

@@ -1,4 +1,7 @@
+"""Contains ConstantUpdateInsertionDialog."""
+
 from logging import getLogger
+from typing import override
 
 from PySide6.QtWidgets import (
     QColorDialog,
@@ -25,7 +28,16 @@ logger = getLogger(__name__)
 
 
 class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
+    """Dialog to insert constant filter updates."""
+
     def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: callable) -> None:
+        """Initialize the dialog.
+
+        :param parent: The parent widget.
+        :param macro: The macro model.
+        :param show: The show model.
+        :param update_callable: Method to be called after user confirmation.
+        """
         super().__init__(
             parent, macro,
             [
@@ -84,6 +96,7 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         self._color_panel.setEnabled(False)
         self.custom_layout.addWidget(self._color_panel)
 
+    @override
     def get_command(self) -> str:
         if self._filter.filter_type in [
             FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
@@ -104,6 +117,7 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         return (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value "
                 f"{esc(self._color.format_for_filter())} # {hexcode}")
 
+    @override
     def on_filter_selected(self) -> None:
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT:
             self._int_tb.setMaximum(255)

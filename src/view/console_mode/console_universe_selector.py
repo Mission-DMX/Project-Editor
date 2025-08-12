@@ -1,4 +1,4 @@
-"""select Universe"""
+"""Contains select Universe widget."""
 
 from PySide6 import QtWidgets
 from PySide6.QtGui import QAction, Qt
@@ -11,9 +11,10 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 
 
 class UniverseSelector(QtWidgets.QTabWidget):
-    """select Universe from Tab Widget"""
+    """select Universe from Tab Widget."""
 
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
+        """Initialize the widget."""
         super().__init__(parent=parent)
         self._board_configuration = board_configuration
         board_configuration.broadcaster.add_universe.connect(self.add_universe)
@@ -33,10 +34,11 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self._initial_tab_present: bool = True
 
     def add_universe(self, universe: Universe) -> None:
-        """
-        Add a new Universe to universe Selector
+        """Add a new Universe to universe Selector.
+
         Args:
-            universe: the new universe to add
+            universe: the new universe to add.
+
         """
         if self._initial_tab_present:
             self._initial_tab_present = False
@@ -64,11 +66,12 @@ class UniverseSelector(QtWidgets.QTabWidget):
         self.addTab(widget, str(universe.universe_proto.id))
 
     def send_all_universe(self) -> None:
-        """Send all universes to fish"""
+        """Send all universes to fish."""
         for universe in self._board_configuration.universes:
             self._board_configuration.broadcaster.send_universe_value.emit(universe)
 
     def notify_activate(self) -> None:
+        """Handle activation of the universe in console."""
         # TODO this obviously breaks given multiple universes but it'll work for now
         for universe_widget in self._universe_widgets:
             universe_widget.notify_activate()

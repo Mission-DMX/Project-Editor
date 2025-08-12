@@ -9,7 +9,7 @@ logger = getLogger(__name__)
 
 
 class AudioSetupWidget(QWidget):
-    """This QWidget allows the user to dial-in audio settings."""
+    """A QWidget that allows the user to dial-in audio settings."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)

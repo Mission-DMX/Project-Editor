@@ -1,3 +1,5 @@
+"""Contains a syntax highlighter for our CLI language."""
+
 import re
 from typing import override
 
@@ -6,11 +8,10 @@ from PySide6.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFo
 
 
 class CLISyntaxHighlighter(QSyntaxHighlighter):
-    """
-    This class provides syntax highlighting for input CLI commands.
-    """
+    """Provides syntax highlighting for input CLI commands."""
 
     def __init__(self, document: QTextDocument | None = None) -> None:
+        """Initialize the syntax highlighter."""
         super().__init__(document)
         self._mappings = {}
         self._space_format = QTextCharFormat()
@@ -45,7 +46,12 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
 
     @override
     def highlightBlock(self, text: str, /) -> None:
-        """This method gets called for every text block. It sets the formats on it"""
+        """Highlight text blocks.
+
+        This method gets called for every text block. It sets the formats on it.
+
+        :param text: The text to inspect.
+        """
         for pattern, fmt in self._mappings.items():
             iterator = pattern.globalMatch(text)
             while iterator.hasNext():

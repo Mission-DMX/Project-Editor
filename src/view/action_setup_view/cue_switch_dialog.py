@@ -1,3 +1,4 @@
+"""Contains _InsertCueSwitchDialog."""
 from collections.abc import Callable
 
 from PySide6.QtWidgets import QComboBox, QWidget

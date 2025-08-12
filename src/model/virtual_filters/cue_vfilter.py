@@ -1,6 +1,9 @@
-"""This file contains the switching vFilter implementation for the cue filter."""
+"""Cue v-Filter and base class.
+
+This file contains the switching vFilter implementation for the cue filter.
+"""
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from model import Filter, Scene
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
@@ -13,6 +16,8 @@ logger = getLogger(__name__)
 
 
 class PreviewFilter(VirtualFilter):
+    """A v-filter providing preview channels if in preview mode. The actual filter otherwise."""
+
     def __init__(self,
                  scene: Scene,
                  filter_id: str,
@@ -20,6 +25,14 @@ class PreviewFilter(VirtualFilter):
                  inst_filter_type: FilterTypeEnumeration,
                  pos: tuple[int] | None = None
                  ) -> None:
+        """Instantiate the filter.
+
+        :param scene: The scene to use.
+        :param filter_id: The id of the filter.
+        :param filter_type: The filter type.
+        :param inst_filter_type: The filter type in case of actual instantiation.
+        :param pos: The position of the filter.
+        """
         super().__init__(scene, filter_id, filter_type=int(filter_type), pos=pos)
         self.in_preview_mode = False
         self.associated_editor_widget: PreviewEditWidget | None = None
@@ -27,6 +40,7 @@ class PreviewFilter(VirtualFilter):
         self._inst_filter_type: FilterTypeEnumeration = inst_filter_type
         self.linked_ui_widgets: list[CueControlUIWidget] = []
 
+    @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         if self.in_preview_mode:
             # query the corresponding output channels from the fader filters
@@ -35,6 +49,7 @@ class PreviewFilter(VirtualFilter):
         # just return the output ports as-is
         return f"{self.filter_id}:{virtual_port_id}"
 
+    @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         if self.in_preview_mode:
             if self.associated_editor_widget is None:
@@ -96,12 +111,14 @@ class PreviewFilter(VirtualFilter):
 
 
 class CueFilter(PreviewFilter):
-    """
+    """Cue v-Filter.
+
     This class implements a switch for the cue filter. In case of enabled live preview it links the faders of the
     temporary bank set to the outputs of the filter. Otherwise, it will simply instantiate a plain cue filter on
     elaboration.
     """
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+        """Instantiate the cue v-filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_CUES,
                          FilterTypeEnumeration.FILTER_TYPE_CUES, pos=pos)

@@ -1,3 +1,5 @@
+"""Contains MacroSetupWidget."""
+
 from __future__ import annotations
 
 import os
@@ -67,6 +69,7 @@ class MacroSetupWidget(QSplitter):
     """Widget to configure a selected macro."""
 
     def __init__(self, parent: QWidget | None, show_config: BoardConfiguration) -> None:
+        """Initialize the macr setup widget."""
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
         self._show: BoardConfiguration = show_config
@@ -182,6 +185,7 @@ class MacroSetupWidget(QSplitter):
             self._editor_area.document().clear()
 
     def clear(self) -> None:
+        """Clear the widget data."""
         self._macro_list.clear()
         self._trigger_list.clear()
         self._editor_area.clear()
