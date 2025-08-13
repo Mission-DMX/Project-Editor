@@ -1,4 +1,4 @@
-"""write Events and Macros"""
+"""write Events and Macros."""
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 

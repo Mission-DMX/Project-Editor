@@ -1,4 +1,4 @@
-"""Dialogs for Show File"""
+"""Dialogs for Show File."""
 import os
 from collections.abc import Callable
 
@@ -14,7 +14,10 @@ def _select_file(parent: QWidget, func: Callable[[str, BoardConfiguration], None
     """Opens QFileDialog to select a file.
 
     Args:
+        parent (QWidget): The parent widget of the resulting dialog..
         func: Function to be called after file was selected and confirmed. Function gets the file name as a string.
+        show_save_dialog (bool): Whether the save dialog should be shown.
+        show_data (BoardConfiguration): The model object whose file path should be changed.
 
     """
     file_dialog = QFileDialog(parent, "Save Show File" if show_save_dialog else "Load Show File")
@@ -32,6 +35,7 @@ def _load_show_file(file_name: str, show_data: BoardConfiguration) -> None:
 
     Args:
         file_name: Path to the file to be loaded
+        show_data: Show data to be loaded into
 
     """
     return read_document(file_name, show_data)
@@ -42,6 +46,7 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
 
     Args:
         file_name: File in which the config is saved.
+        show_data: Board configuration to be saved.
 
     """
     if write_document(file_name, show_data) and show_data.file_path != file_name:
@@ -49,8 +54,8 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
 
 
 def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:
-    """
-    Open the save file dialog if required and save the file.
+    """Open the save file dialog if required and save the file.
+
     :param parent: The parent of the show file
     :param show_data: The show content to be saved
     """
@@ -58,8 +63,8 @@ def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) ->
 
 
 def show_load_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:
-    """
-    Display the open file dialog to open a show file and load it if one was successfully selected.
+    """Display the open file dialog to open a show file and load it if one was successfully selected.
+
     :param parent: The parent widget of the dialog
     :param show_data: The show file configuration to load the data into.
     """

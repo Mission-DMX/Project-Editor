@@ -42,6 +42,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
     def __new__(cls) -> Self:
+        """Override __new__ for singleton behavior."""
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance

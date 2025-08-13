@@ -1,8 +1,10 @@
+"""Various utility commands."""
+
 from __future__ import annotations
 
 from enum import Enum
 from time import sleep
-from typing import TYPE_CHECKING
+from typing import override, TYPE_CHECKING
 
 from controller.cli.command import Command
 
@@ -16,15 +18,18 @@ class DelayCommand(Command):
     """The Purpose of this command is delayed execution."""
 
     def __init__(self, context: CLIContext) -> None:
-        """:see Command.__init__:"""
+        """Initialize command.
+
+        :see: Command.__init__
+        """
         super().__init__(context, "delay")
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
-        """:see Command.configure_parser:"""
         parser.add_argument("delay", type=int, help="Delay in milliseconds")
 
+    @override
     def execute(self, args: Namespace) -> bool:
-        """:see Command.execute:"""
         try:
             sleep(args.delay / 1000)
             return True
@@ -37,15 +42,18 @@ class PrintCommand(Command):
     """The Purpose of this command is printing stuff."""
 
     def __init__(self, context: CLIContext) -> None:
-        """:see Command.__init__:"""
+        """Initialize command.
+
+        :see: Command.__init__
+        """
         super().__init__(context, "print")
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
-        """:see Command.configure_parser:"""
         parser.add_argument("text", type=str, help="Stuff to print", nargs="*")
 
+    @override
     def execute(self, args: Namespace) -> bool:
-        """:see Command.execute:"""
         text = " ".join(args.text)
         self.context.print(text)
         return True
@@ -55,16 +63,19 @@ class SetCommand(Command):
     """The Purpose of this command is the setting of variables."""
 
     def __init__(self, context: CLIContext) -> None:
-        """:see Command.__init__:"""
+        """Initialize command.
+
+        :see: Command.__init__
+        """
         super().__init__(context, "set")
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
-        """:see Command.configure_parser:"""
         parser.add_argument("key", type=str, help="The variable to set")
         parser.add_argument("value", type=str, help="The value to set it to")
 
+    @override
     def execute(self, args: Namespace) -> bool:
-        """:see Command.execute:"""
         self.context.variables[args.key] = args.value
         # TODO implement support for arithmetic in case of numbers
         return True
@@ -83,15 +94,18 @@ class IfCommand(Command):
     """The Purpose of this command is conditional execution of the appended command."""
 
     def __init__(self, context: CLIContext) -> None:
-        """:see Command.__init__:"""
+        """Initialize command.
+
+        :see: Command.__init__
+        """
         super().__init__(context, "if")
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
-        """:see Command.configure_parser:"""
         parser.add_argument("expression", type=str, help="The expression to evaluate", nargs="*")
 
+    @override
     def execute(self, args: Namespace) -> bool:
-        """:see Command.execute:"""
 
         def bool_eval(arg: str) -> bool:
             return len(arg) > 0 and arg != "0"

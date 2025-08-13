@@ -14,8 +14,8 @@ from model.scene import FilterPage
 
 def _add_filter_page_to_element(scene_element: ET.Element, page: FilterPage,
                                 parent_page: FilterPage | None) -> None:
-    """
-    This function writes the filter pages of a scene or parent page.
+    """Writes the filter pages of a scene or parent page.
+
     :param scene_element: The XML element to write to
     :param page: The filter page to serialize
     :param parent_page: This needs to be the parent page of the one to serialize (if any, otherwise pass None)
@@ -32,8 +32,8 @@ def _add_filter_page_to_element(scene_element: ET.Element, page: FilterPage,
 
 
 def _add_ui_page_to_element(scene_element: ET.Element, ui_page: UIPage) -> None:
-    """
-    Add a UI page (the widgets one) to an existing scene element.
+    """Add a UI page (the widgets one) to an existing scene element.
+
     :param scene_element: The parent scene XML element
     :param ui_page: The UI page to add
     """
@@ -59,8 +59,7 @@ def _add_ui_page_to_element(scene_element: ET.Element, ui_page: UIPage) -> None:
 
 def generate_scene_xml_description(assemble_for_fish_loading: bool, root: ET.Element, scene: Scene,
                                    pn: ProcessNotifier) -> None:
-    """
-    This method generates the DOM tree for a given scene.
+    """Generates the DOM tree for a given scene.
 
     :param assemble_for_fish_loading: Boolean that should be true if and only if the data is being transferred to fish
     :param root: The DOM root
