@@ -58,7 +58,7 @@ if __name__ == "__main__":
     logger = logging.getLogger("Project-Editor")
 
     def setup_logging() -> None:
-        """Read logging from config file and set up the logger"""
+        """Read logging from config file and set up the logger."""
         config_file = resource_path(pathlib.Path(os.path.join("configs", "logging.json")))
         with open(config_file, "r", encoding="utf-8") as f_in:
             config = json.load(f_in)
@@ -70,6 +70,10 @@ if __name__ == "__main__":
             atexit.register(queue_handler.listener.stop)
 
     def setup_asyncio() -> None:
+        """Enable Qt event loop async support.
+
+        This is required for gamepad/controller I/O.
+        """
         # Warning: while this change is important, the feature is yet a technical preview in pyside6.6 and the
         #  API may change. The functionality however will stay in place.
         import asyncio
@@ -79,7 +83,7 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(QAsyncioEventLoopPolicy())
 
     def set_dark_theme(application: QApplication) -> None:
-        """Set default dark theme"""
+        """Set default dark theme."""
         application.setStyle("Fusion")
         dark_palette = QPalette()
         dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
@@ -103,7 +107,7 @@ if __name__ == "__main__":
         application.setPalette(dark_palette)
 
     def main(application: QApplication) -> None:
-        """Startup"""
+        """Startup entry."""
         setup_logging()
         logging.basicConfig(level="INFO")
         opengl_context_init()
