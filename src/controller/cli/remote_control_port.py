@@ -1,4 +1,4 @@
-"""Classes for remote connection"""
+"""Classes for remote connection."""
 
 from __future__ import annotations
 
@@ -18,13 +18,12 @@ logger = getLogger(__name__)
 
 
 class SocketStreamReader:
-    """This class is used to split the input TCP stream into separate lines."""
+    """Class is used to split the input TCP stream into separate lines."""
 
     def __init__(self, sock: socket) -> None:
-        """Initialize the stream reader
+        """Initialize the stream reader.
 
-        Arguments:
-        sock -- the socket to listen on
+        :param sock: the socket to listen on
 
         """
         self._sock = sock
@@ -32,7 +31,7 @@ class SocketStreamReader:
         self.echo = True
 
     def read(self, num_bytes: int = -1) -> bytes:
-        """This method is here to comply with the stream interface but never, hence not implemented"""
+        """Method is here to comply with the stream interface but never, hence not implemented."""
         raise NotImplementedError
 
     def read_exactly(self, num_bytes: int) -> bytes:
@@ -56,13 +55,11 @@ class SocketStreamReader:
         return self.read_until(b"\n")
 
     def read_until(self, separator: bytes = b"\n") -> bytes:
-        """Read from the socket until the escape sequence was found
+        """Read from the socket until the escape sequence was found.
 
-        Arguments:
-        separator -- the delimiter to look out for
+        :param separator: the delimiter to look out for
 
-        Returns:
-        bytearray with the found content.
+        :returns: bytearray with the found content.
 
         """
         if len(separator) != 1:
@@ -91,7 +88,7 @@ class SocketStreamReader:
         return result
 
     def _recv_into(self, view: memoryview) -> int:
-        """This method performs a zero copy read request."""
+        """Method performs a zero copy read request."""
         bytes_read = min(len(view), len(self._recv_buffer))
         view[:bytes_read] = self._recv_buffer[:bytes_read]
         self._recv_buffer = self._recv_buffer[bytes_read:]
@@ -105,17 +102,18 @@ class SocketStreamReader:
 
 
 class Connection:
-    """This class handles a remote CLI connection."""
+    """Class handles a remote CLI connection."""
 
     def __init__(
         self, client: socket, address: str, connection_map: dict, show: BoardConfiguration, networkmgr: NetworkManager
     ) -> None:
-        """This constructor takes over the connection.
+        """Constructor takes over the connection.
 
-        Arguments:
-        client -- the connection socket fd.
-        address -- the remote address of the connected client.
-        connection_map -- the map handling all active connections.
+        :param client: the connection socket fd.
+        :param address: the remote address of the connected client.
+        :param connection_map: the map handling all active connections.
+        :param show: Show model.
+        :param networkmgr: NetworkManager instance.
 
         """
         self.context = CLIContext(show, networkmgr, exit_available=True)
@@ -126,7 +124,7 @@ class Connection:
         self._client_thread.start()
 
     def run(self) -> None:
-        """This method will be called by the client thread in order to handle the client."""
+        """Method will be called by the client thread in order to handle the client."""
         try:
             logger.info("Got incoming remote CLI connection from %s.", self._remote_address)
             reader = SocketStreamReader(self._client)
@@ -159,21 +157,25 @@ class Connection:
 
     @property
     def remote_address(self) -> str:
-        """Property for remote address"""
+        """Property for remote address."""
         return self._remote_address
 
 
 class RemoteCLIServer:
-    """This class handles the control port. Only IPv6 connections are supported."""
+    """Class handles the control port.
+
+    Only IPv6 connections are supported.
+    """
 
     def __init__(
         self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::", port: int = 2929
     ) -> None:
         """Construct the handler and opens a port.
 
-        Arguments:
-        interface -- The interface to bind to. Defaults to all IPv6 interfaces.
-        port -- The port to listen on. Defaults to TCP/2929
+        :param show: Show model.
+        .param netmgr: the network manager object.
+        :param interface: The interface to bind to. Defaults to all IPv6 interfaces.
+        :param port: The port to listen on. Defaults to TCP/2929
 
         """
         self._server_thread = Thread(target=self.run)
@@ -188,7 +190,7 @@ class RemoteCLIServer:
         logger.warning("Opened up CLI interface on [%s]:%s", interface, port)
 
     def run(self) -> None:
-        """This method will be run by the server thread in order to process incoming clients."""
+        """Method will be run by the server thread in order to process incoming clients."""
         with socket(AF_INET6, SOCK_STREAM) as s:
             self._server_socket = s
             s.bind((self._bind_interface, self._bind_port))
@@ -210,7 +212,7 @@ class RemoteCLIServer:
         logger.info("Exiting CLI server thread")
 
     def stop(self) -> None:
-        """This method stops the server and disconnects all clients.
+        """Stops the server and disconnects all clients.
 
         It may block until the operating system released all resources.
         """
