@@ -143,4 +143,4 @@ class PatchController(QObject):
 
     def _dmx_from_fish(self, dmx: proto.DirectMode_pb2.dmx_output) -> None:
         """Handle dmx data signal from fish."""
-        self._patch_planes[dmx.universe_id][1].current_values = list(dmx.channel_data)
+        self._patch_planes[dmx.universe_id][1].current_values = list(dmx.channel_data[1:])  # TODO fish of by one
