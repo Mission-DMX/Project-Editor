@@ -1,3 +1,4 @@
+"""Event model classes."""
 from __future__ import annotations
 
 from logging import getLogger
@@ -18,6 +19,7 @@ _persistence_notes: dict[str, dict[tuple[int, int, str], str]] = {}
 
 def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
     """Update the sender model based on the provided message from fish.
+
     :param msg: The message to use
     """
     ev = _senders.get(msg.name)
@@ -59,10 +61,14 @@ _broadcaster_instance.event_sender_update.connect(handle_incoming_sender_update)
 
 
 class EventSender:
-    """Base class for fish event sender representations. Also used for fish.builtin.plain"""
+    """Base class for fish event sender representations.
+
+    Also used for fish.builtin.plain.
+    """
 
     def __init__(self, name: str) -> None:
         """Create a new event sender.
+
         :param name: The name to give it. This cannot be changed later on.
         """
         self._name: str = name
@@ -76,14 +82,15 @@ class EventSender:
 
     @property
     def name(self) -> str:
-        """
-        The human-readable name of the event sender.
+        """The human-readable name of the event sender.
+
         This should be unique as it is possible to search for senders by name.
         """
         return self._name
 
     @property
     def debug_enabled(self) -> bool:
+        """Enable or disable debug logging of events."""
         return self._debug_enabled
 
     @debug_enabled.setter
@@ -95,8 +102,8 @@ class EventSender:
     # TODO implement event function and argument renaming model
 
     def send_update(self, auto_commit: bool = True, push_direct: bool = False) -> proto.Events_pb2.event_sender:
-        """
-        Assemble an event_sender message and publish it if auto_commit is enabled.
+        """Assemble an event_sender message and publish it if auto_commit is enabled.
+
         While it is possible to override this method, it is advisable to implementing classes
         to only update the configuration parameter.
         :param auto_commit: Should the message be sent directly?
@@ -115,8 +122,8 @@ class EventSender:
 
 
 def get_sender(name: str) -> EventSender | None:
-    """
-    Look up a specific sender by its name.
+    """Look up a specific sender by its name.
+
     :param name: The unique name of the sender
     :returns: the object if the lookup was successful
     """
@@ -129,19 +136,23 @@ def get_sender_by_id(sender_id: int) -> EventSender | None:
 
 
 def get_all_senders() -> list[EventSender]:
-    """
-    Get a list of all sender currently running on fish.
+    """Get a list of all sender currently running on fish.
+
     :returns: A mutable list (copied)
     """
     return list(_senders.values())
 
 
 class XtouchGPIOEventSender(EventSender):
+    """Event sender reacting on the pedal GPIO input of a connected X-Touch."""
+
     def __init__(self, name: str) -> None:
+        """Initialize a new Xtouch GPIO event sender."""
         super().__init__(name)
 
     @property
     def pedal_threshold(self) -> int:
+        """Trigger threshold of the pedal."""
         return int(self.configuration.get("expression_pedal_threshold") or "0")
 
     @pedal_threshold.setter
@@ -150,12 +161,15 @@ class XtouchGPIOEventSender(EventSender):
 
 
 class AudioExtractEventSender(EventSender):
+    """Event sender using audio beat analysis to trigger events."""
+
     def __init__(self, name: str) -> None:
+        """Initialize the event sender."""
         super().__init__(name)
 
     @property
     def audio_device(self) -> str:
-        """The alsa device node or pulse device name"""
+        """The alsa device node or pulse device name."""
         return self.configuration.get("dev") or "default"
 
     @audio_device.setter
@@ -227,6 +241,12 @@ def insert_event(
 
 
 def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] | None = None) -> None:
+    """Mark an event sender as persistent.
+
+    If the event sender is not yet known, it will be marked once it is announced to the editor.
+    :param name: The unique name of the sender.
+    :param renaming: The renaming data indicator of the sender. It will be noted as well.
+    """
     if renaming is None:
         renaming = {}
     sender = get_sender(name)
