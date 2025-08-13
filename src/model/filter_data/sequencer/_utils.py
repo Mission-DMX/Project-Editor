@@ -1,11 +1,12 @@
+"""Utility methods for filter channel name checking."""
 from logging import getLogger
 
 logger = getLogger(__name__)
 
 
 def _rf(s: str) -> str:
-    """
-    This method replaces for bidden characters in sequence and channel names.
+    """Replaces for bidden characters in sequence and channel names.
+
     :param s: the name to process.
     :returns: The processed name.
     """

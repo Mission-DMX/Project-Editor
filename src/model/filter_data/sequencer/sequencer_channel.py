@@ -1,3 +1,5 @@
+"""Sequencer channel model and interleave method enum."""
+
 from enum import Enum
 from logging import getLogger
 
@@ -8,13 +10,25 @@ logger = getLogger(__name__)
 
 
 class InterleaveMethod(Enum):
+    """Interleave Method.
+
+    This defines the combination of values if multiple transitions are affecting the same channel at the same time.
+    """
+
     AVERAGE = "average"
     MIN = "min"
     MAX = "max"
 
 
 class SequencerChannel:
+    """Model of a sequencer filter channel."""
+
     def __init__(self, name: str = "", dtype: DataType = DataType.DT_8_BIT) -> None:
+        """Initialize the sequencer channel model.
+
+        :param name: name of the channel.
+        :param dtype: data type of the channel.
+        """
         self.name: str = name
         self.data_type = dtype
         self.default_value: int | float | ColorHSI = 0
@@ -23,6 +37,7 @@ class SequencerChannel:
         self.interleave_method = InterleaveMethod.MAX
 
     def format_for_filter(self) -> str:
+        """Serialize model into filter format."""
         default_value_str = self.default_value.format_for_filter() if isinstance(self.default_value, ColorHSI) \
             else str(self.default_value)
 
@@ -32,9 +47,7 @@ class SequencerChannel:
 
     @staticmethod
     def from_filter_str(s: str) -> "SequencerChannel":
-        """
-        Parse the provided serialized string and return a new instance.
-        """
+        """Parse the provided serialized string and return a new instance."""
         sc = SequencerChannel()
         if len(s or "") == 0:
             return sc
@@ -60,6 +73,7 @@ class SequencerChannel:
         return sc
 
     def copy(self) -> "SequencerChannel":
+        """Copy the current instance."""
         sc = SequencerChannel()
         sc.name = self.name
         sc.data_type = self.data_type
