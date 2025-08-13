@@ -1,3 +1,9 @@
+"""Transition model.
+
+SequenceKeyFrame -- A sequence key frame.
+Transition -- A set of key frames, executed in order.
+"""
+
 from collections import Counter
 from logging import getLogger
 
@@ -11,7 +17,13 @@ logger = getLogger(__name__)
 
 
 class SequenceKeyFrame:
+    """A sequence key frame."""
+
     def __init__(self, target_channel: SequencerChannel) -> None:
+        """Initialize a sequence key frame.
+
+        :param target_channel: Target channel.
+        """
         if target_channel is None:
             logger.error("target_channel is None")
         self.channel: SequencerChannel = target_channel
@@ -20,12 +32,20 @@ class SequenceKeyFrame:
         self.tf: TransferFunction = TransferFunction.LINEAR
 
     def format_for_filter(self) -> str:
+        """Serialize for filter definition."""
         value_str: str = self.target_value.format_for_filter() if isinstance(self.target_value, ColorHSI) \
             else str(self.target_value)
         return f"{_rf(self.channel.name)}:{value_str}:{self.tf.value}:{self.duration * 1000.0}"
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "SequenceKeyFrame":
+        """Deserialize from filter definition.
+
+        :param s: Filter definition.
+        :type s: str
+        :param channels: Channels to map to.
+        :type channels: list[SequencerChannel]
+        """
         args = s.split(":")
         channel_name = args[0]
         found_channel: SequencerChannel | None = None
@@ -56,6 +76,10 @@ class SequenceKeyFrame:
         return skf
 
     def copy(self, new_target: SequencerChannel) -> "SequenceKeyFrame":
+        """Get a copy of this sequence key frame.
+
+        :param new_target: The parent channel of the new key frame object.
+        """
         if self.channel.name != new_target.name or self.channel == new_target:
             logger.warning("Expected copy of own channel for generation.")
         sc = SequenceKeyFrame(new_target)
@@ -68,6 +92,7 @@ class SequenceKeyFrame:
         return sc
 
     def target_value_as_cue_state(self) -> State:
+        """Return the target value as a cue state."""
         match self.channel.data_type:
             case DataType.DT_8_BIT:
                 s = StateEightBit(self.tf.value)
@@ -96,17 +121,24 @@ class Transition:
     """This class represents a transition to be applied to channels within a sequencer filter."""
 
     def __init__(self) -> None:
+        """Instantiate a transition object."""
         self._trigger_event: tuple[int, int, str] = (0, 0, "")
         self.frames: list[SequenceKeyFrame] = []
         self.name: str = ""
         self.preselected_channels: dict[str, DataType] = {}
 
     def format_for_filter(self) -> str:
+        """Serialize this transition for filter format."""
         formatted_frame_list = [c.format_for_filter() for c in self.frames]
         return f"{self._trigger_event[0]}:{self._trigger_event[1]}#{self.name}#{"#".join(formatted_frame_list)}"
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "Transition":
+        """Deserialize this transition from filter format.
+
+        :param s: The serialized description.
+        :param channels: The channel definition that this transition should be mapped to.
+        """
         if isinstance(channels, list):
             new_dict = {}
             for c in channels:
@@ -127,6 +159,7 @@ class Transition:
         return t
 
     def copy(self, new_channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "Transition":
+        """Get a copy of this transition."""
         new_channels = _force_channel_dict(new_channels)
         t = Transition()
         t._trigger_event = self._trigger_event
@@ -135,6 +168,7 @@ class Transition:
         return t
 
     def to_cue(self) -> Cue:
+        """Convert the transition to a cue object."""
         c = Cue()
         channels: dict[str, DataType] = self.preselected_channels.copy()
         for f in self.frames:
@@ -154,6 +188,11 @@ class Transition:
 
     def update_frames_from_cue(self, c: Cue,
                                channel_dict: list[SequencerChannel] | dict[str, SequencerChannel]) -> None:
+        """Update the content of this transition using a Cue object.
+
+        :param c: Cue to use as a reference
+        :param channel_dict: Either a list of SequencerChannels or a dict of channel names and their SequencerChannels.
+        """
         channel_dict = _force_channel_dict(channel_dict)
         self.frames.clear()
         c._frames.sort(key=lambda x: x.timestamp)
@@ -168,6 +207,7 @@ class Transition:
 
     @property
     def duration(self) -> float:
+        """Get the duration of the transition in seconds."""
         if len(self.frames) == 0:
             return 0.0
         durations = Counter()

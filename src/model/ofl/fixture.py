@@ -38,6 +38,7 @@ class ColorSupport(IntFlag):
     HAS_UV_SEGMENT = 16
 
     def __str__(self) -> str:
+        """Generate human-readable channel color support representation."""
         if self == ColorSupport.NO_COLOR_SUPPORT:
             return "No Color Support"
         s = []
@@ -80,6 +81,16 @@ class UsedFixture(QtCore.QObject):
         uuid: UUID | None = None,
         color: str | None = None,
     ) -> None:
+        """Instantiate a UsedFixture object.
+
+        :param board_configuration: The show model
+        :param fixture: The base fixture definition
+        :param mode_index: The fixture mode to use
+        :param parent_universe: The parent universe
+        :param start_index: The first channels address
+        :param uuid: The UUID of the fixture instance
+        :param color: The color of the fixture in the patching view
+        """
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[OflFixture] = fixture
