@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
 from logging import getLogger
-from typing import override, TYPE_CHECKING, Never, Union
+from typing import TYPE_CHECKING, Never, Union, override
 
 from model import ColorHSI, DataType
 from model.filter_data.transfer_function import TransferFunction

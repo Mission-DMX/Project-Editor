@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 from time import sleep
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from controller.cli.command import Command
 

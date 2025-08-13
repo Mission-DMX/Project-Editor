@@ -60,7 +60,6 @@ class DeskColumn(ABC):
     @abstractmethod
     def copy(self) -> DeskColumn:
         """Copy the object."""
-        pass
 
     def update(self) -> bool:
         """Update the state of this column with fish."""
@@ -82,7 +81,6 @@ class DeskColumn(ABC):
     @abstractmethod
     def update_from_message(self, message: proto.Console_pb2.fader_column) -> None:
         """Callback for incoming messages to update the model."""
-        pass
 
     def _generate_base_column_message(self) -> proto.Console_pb2.fader_column:
         """Fill in generic data for protobuf message."""
@@ -400,7 +398,8 @@ class BankSet:
         After construction link() needs to be called in order to link the set with the control desk.
 
         :param banks: The initial list of fader banks
-        :param description: Optional. A human-readable description used in the fader bank editor to identify the set to edit
+        :param description: Optional. A human-readable description used in the fader bank editor.
+            Its used to identify the set to edit
         :param gui_controlled: Indicates that the set is managed by the gui thread.
         :param id_: If a specific ID should be used for initialization
 

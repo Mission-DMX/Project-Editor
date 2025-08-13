@@ -1,7 +1,7 @@
 """Client Commands."""
 from __future__ import annotations
 
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from controller.cli.command import Command
 from model.control_desk import BankSet, ColorDeskColumn
