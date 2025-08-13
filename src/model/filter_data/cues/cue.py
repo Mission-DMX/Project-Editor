@@ -97,22 +97,22 @@ class State(ABC):
 
     @abstractmethod
     def encode(self) -> str:
-        """This method returns the state encodes in the filter format"""
+        """Get the state encodes in the filter format."""
         raise NotImplementedError
 
     @abstractmethod
     def decode(self, content: str) -> Never:
-        """This method decodes the state configuration from a filter config string."""
+        """Get the state configuration from a filter config string."""
         raise NotImplementedError
 
     @abstractmethod
     def get_data_type(self) -> DataType:
-        """This method needs to return the filter data type."""
+        """Get the filter data type."""
         raise NotImplementedError
 
     @abstractmethod
     def copy(self) -> State:
-        """This method needs to return a copy of the state"""
+        """Get a copy of the state."""
         raise NotImplementedError
 
 
@@ -250,6 +250,7 @@ class StateColor(State):
 
     @property
     def color(self) -> ColorHSI:
+        """Get or set color of this state."""
         return self._value
 
     @color.setter
@@ -318,7 +319,7 @@ class KeyFrame:
             self._states.append(s)
 
     def delete_from_parent_cue(self) -> None:
-        """This method deletes the frame from the parent."""
+        """Delete the frame from the parent."""
         self._parent._frames.remove(self)
 
     def copy(self, new_parent: Cue) -> KeyFrame:
@@ -346,7 +347,7 @@ class Cue:
 
     @property
     def duration(self) -> float:
-        """Computes the length of the cue"""
+        """Computes the length of the cue."""
         latest_timestamp = 0.0
         for f in self._frames:
             latest_timestamp = max(latest_timestamp, f.timestamp)
@@ -359,7 +360,7 @@ class Cue:
 
     @property
     def channel_types(self) -> list[DataType]:
-        """Returns the keyframe data types"""
+        """Returns the keyframe data types."""
         if len(self._frames) == 0:
             return []
 
@@ -367,11 +368,11 @@ class Cue:
 
     @property
     def channels(self) -> list[tuple[str, DataType]]:
-        """Returns the nominal channel definitions"""
+        """Returns the nominal channel definitions."""
         return list(self._channel_definitions)
 
     def format_cue(self) -> str:
-        """This method returns the cue formatted in the filter config format."""
+        """Returns the cue formatted in the filter config format."""
         end_handling_str = self.end_action.get_filter_format_str()
         restart_beh_str = "restart" if self.restart_on_another_play_press else "do_nothing"
         frames_str_list = [f.format_filter_str() for f in self._frames]
@@ -399,7 +400,7 @@ class Cue:
             self.name = primary_tokens[3]
 
     def add_channel(self, name: str, t: str | DataType) -> None:
-        """Add a channel name to list of names"""
+        """Add a channel name to list of names."""
         dt = DataType.from_filter_str(t) if isinstance(t, str) else t
 
         for cd in self._channel_definitions:
@@ -424,7 +425,7 @@ class Cue:
             kf._states.append(kf_s)
 
     def insert_frame(self, f: KeyFrame) -> None:
-        """Add a frame to the cue"""
+        """Add a frame to the cue."""
         self._frames.append(f)
 
     def remove_channel(self, c: Union[ExternalChannelDefinition, tuple[str, DataType]]) -> None:
