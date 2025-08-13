@@ -118,7 +118,7 @@ def _force_channel_dict(cd: list[SequencerChannel] | dict[str, SequencerChannel]
 
 
 class Transition:
-    """This class represents a transition to be applied to channels within a sequencer filter."""
+    """Represents a transition to be applied to channels within a sequencer filter."""
 
     def __init__(self) -> None:
         """Instantiate a transition object."""
