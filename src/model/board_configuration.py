@@ -1,4 +1,4 @@
-"""Provides data structures with accessors and modifiers for DMX"""
+"""Provides data structures with accessors and modifiers for DMX."""
 from collections.abc import Callable, Sequence
 from logging import getLogger
 
@@ -21,6 +21,7 @@ class BoardConfiguration:
     """Board configuration of a show file."""
 
     def __init__(self, show_name: str = "", default_active_scene: int = 0, notes: str = "") -> None:
+        """Initialize broadcaster singleton."""
         self._show_name: str = show_name
         self._default_active_scene: int = default_active_scene
         self._notes: str = notes
@@ -48,7 +49,7 @@ class BoardConfiguration:
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
     def _clear(self) -> None:
-        """This method resets the show data prior to loading a new one."""
+        """Resets the show data prior to loading a new one."""
         for scene in self._scenes:
             self._broadcaster.delete_scene.emit(scene)
         for universe in self._universes:
@@ -143,79 +144,80 @@ class BoardConfiguration:
 
     @property
     def fixtures(self) -> Sequence[UsedFixture]:
-        """Fixtures associated with this Show"""
+        """Fixtures associated with this Show."""
         return self._fixtures
 
     @property
     def show_name(self) -> str:
-        """The name of the show"""
+        """The name of the show."""
         return self._show_name
 
     @show_name.setter
     def show_name(self, show_name: str) -> None:
-        """Sets the show name"""
+        """Sets the show name."""
         self._show_name = show_name
 
     @property
     def default_active_scene(self) -> int:
-        """Scene to be activated by fish on loadup"""
+        """Scene to be activated by fish on loadup."""
         return self._default_active_scene
 
     @default_active_scene.setter
     def default_active_scene(self, default_active_scene: int) -> None:
-        """Setss the scene to be activated by fish on loadup"""
+        """Sets the scene to be activated by fish on loadup."""
         self._default_active_scene = default_active_scene
 
     @property
     def notes(self) -> str:
-        """Notes for the show"""
+        """Notes for the show."""
         return self._notes
 
     @notes.setter
     def notes(self, notes: str) -> None:
-        """Sets the notes for the show"""
+        """Sets the notes for the show."""
         self._notes = notes
 
     @property
     def scenes(self) -> list[Scene]:
-        """The scenes of the show"""
+        """The scenes of the show."""
         return self._scenes
 
     @property
     def devices(self) -> list[Device]:
-        """The devices of the show"""
+        """The devices of the show."""
         return self._devices
 
     @property
     def universes(self) -> list[Universe]:
-        """The universes of the show"""
+        """The universes of the show."""
         return list(self._universes.values())
 
     @property
     def ui_hints(self) -> dict[str, str]:
-        """UI hints for the show"""
+        """UI hints for the show."""
         return self._ui_hints
 
     @property
     def broadcaster(self) -> Broadcaster:
-        """The broadcaster the board configuration uses"""
+        """The broadcaster the board configuration uses."""
         return self._broadcaster
 
     @property
     def file_path(self) -> str:
-        """Path to the showfile"""
+        """Path to the showfile."""
         return self._show_file_path
 
     @file_path.setter
     def file_path(self, new_path: str) -> None:
         """Update the show file path.
+
         :param new_path: The location to save the show file to
         """
         self._show_file_path = new_path
         self._broadcaster.show_file_path_changed.emit(new_path)
 
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
-        """Returns the scene by her id"""
+        """Returns the scene by her id."""
         looked_up_position = self._scenes_index.get(scene_id)
         if looked_up_position is not None and looked_up_position < len(self._scenes):
             return self._scenes[looked_up_position]
@@ -232,8 +234,7 @@ class BoardConfiguration:
                 c(param)
 
     def register_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
-        """
-        Register a new callback for filter update messages.
+        """Register a new callback for filter update messages.
 
         If filter update messages are received, they need to be routed to their intended destination. This is done using
         this registration method. Suitable callables receive the update message as a parameter.
@@ -249,8 +250,8 @@ class BoardConfiguration:
             callable_list.add(c)
 
     def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
-        """
-        Remove a previously registered callback.
+        """Remove a previously registered callback.
+
         :param target_scene: The scene the callback belongs to.
         :param target_filter_id: The filter id which it is listening on.
         :param c: The callable to be removed.
@@ -262,8 +263,7 @@ class BoardConfiguration:
             callable_list.remove(c)
 
     def add_macro(self, m: Macro) -> None:
-        """
-        Add a new macro to the show file.
+        """Add a new macro to the show file.
 
         This method must be called from a QObject as it triggers an event.
 
@@ -275,6 +275,7 @@ class BoardConfiguration:
 
     def get_macro(self, macro_id: int | str) -> Macro | None:
         """Get the macro specified by its index.
+
         :returns: The macro or None if none was found.
         """
         if isinstance(macro_id, int):
@@ -293,7 +294,7 @@ class BoardConfiguration:
         return self._macros.copy()
 
     def next_universe_id(self) -> int:
-        """Next empty universe id"""
+        """Next empty universe id."""
         nex_id = len(self._universes)
         while self._universes.get(nex_id):
             nex_id += 1

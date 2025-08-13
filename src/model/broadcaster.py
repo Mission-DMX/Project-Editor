@@ -21,10 +21,12 @@ class QObjectSingletonMeta(type(QtCore.QObject)):
     instance: Any
 
     def __init__(cls: type[QObjectSingletonMeta], name: str, bases: tuple[type, ...], _dict: dict[str, Any]) -> None:
+        """Initialize singleton instance."""
         super().__init__(name, bases, _dict)
         cls.instance = None
 
     def __call__(cls: type[QObjectSingletonMeta], *args: P.args, **kw: P.kwargs) -> QObjectSingletonMeta:
+        """Override __call__ for singleton behavior."""
         if cls.instance is None:
             cls.instance = super().__call__(*args, **kw)
         return cls.instance
@@ -116,6 +118,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     event_sender_update: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event_sender)
 
     def __new__(cls) -> Self:
+        """Override __new__ to implement singleton behavior."""
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance
