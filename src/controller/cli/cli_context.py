@@ -1,4 +1,4 @@
-"""Context of the Client"""
+"""Context of the Client."""
 from __future__ import annotations
 
 import argparse
@@ -73,11 +73,11 @@ def _split_args(line: str) -> list[str]:
 
 
 class CLIContext:
-    """Context of the Client"""
+    """Context of the Client."""
 
     def __init__(self, show: BoardConfiguration, networkmgr: NetworkManager, exit_available: bool = False) -> None:
-        """
-        Initialize a new CLI context.
+        """Initialize a new CLI context.
+
         :param show: The current active show configuration
         :param networkmgr: The active network manager, user for communication with fish
         :param exit_available: Should the exit command (close the connection) be available or not?
@@ -114,8 +114,8 @@ class CLIContext:
         self._exit_available = exit_available
 
     def _replace_variables(self, args: list[str]) -> list[str]:
-        """
-        This method replaces variables in the provided list of arguments with their respective current values.
+        """Replaces variables in the provided list of arguments with their respective current values.
+
         :param args: The list of arguments
         :return: The list of arguments with resolved variables
         """
@@ -130,12 +130,11 @@ class CLIContext:
         return new_arg_list
 
     def exec_command(self, line: str) -> bool:
-        """Execute a command within the given context
-        Arguments:
-        line -- the command to be parsed and executed
+        """Execute a command within the given context.
 
-        Returns:
-        true if the evaluation succeeded, false otherwise
+        :param line: the command to be parsed and executed
+
+        :returns: true if the evaluation succeeded, false otherwise
 
         """
         try:
@@ -161,16 +160,15 @@ class CLIContext:
         return False
 
     def print(self, text: str) -> None:
-        """This method can be used by commands to print text to which ever output medium there is.
+        """Method can be used by commands to print text to which ever output medium there is.
 
-        Arguments:
-        text -- The line to be printed
+        :param text: The line to be printed
 
         """
         self.return_text += text + "\n"
 
     def fetch_print_buffer(self) -> str:
-        """This method returns the stored output buffer and clears it.
+        """Returns the stored output buffer and clears it.
 
         Returns:
         The stored text that was accumulated by print.

@@ -1,7 +1,7 @@
-"""Commands for Help"""
+"""Commands for Help."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import override, TYPE_CHECKING
 
 from controller.cli.command import Command
 
@@ -12,15 +12,18 @@ if TYPE_CHECKING:
 
 
 class HelpCommand(Command):
-    """Commands for Help"""
+    """Commands for Help."""
 
     def __init__(self, context: CLIContext) -> None:
+        """Initialize the command."""
         super().__init__(context, "help")
         self.help_text = "This command displays the help about a certain command."
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("topic", help="Specify the topic you like to hear about", default="", nargs="?")
 
+    @override
     def execute(self, args: Namespace) -> bool:
         match args.topic:
             case "select":

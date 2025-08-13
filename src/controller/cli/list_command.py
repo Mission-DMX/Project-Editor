@@ -1,7 +1,7 @@
-"""Client Commands"""
+"""Client Commands."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import override, TYPE_CHECKING
 
 from controller.cli.command import Command
 from model.control_desk import BankSet, ColorDeskColumn
@@ -13,15 +13,18 @@ if TYPE_CHECKING:
 
 
 class ListCommand(Command):
-    """Commands to list show and client state"""
+    """Commands to list show and client state."""
 
     def __init__(self, context: CLIContext) -> None:
+        """Initialize ListCommand."""
         super().__init__(context, "list")
         self.help_text = "This command displays the content of system collections."
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("section", help="The section of which content should be listed")
 
+    @override
     def execute(self, args: Namespace) -> bool:
         match args.section:
             case "scenes":
@@ -70,7 +73,7 @@ class ListCommand(Command):
                 return False
 
     def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str) -> None:
-        """Print the entry of a bank set"""
+        """Print the entry of a bank set."""
         # TODO id not string
         preamble = "*" if bs.id == selected_bank_set_id else " "
         if bs.is_linked:
