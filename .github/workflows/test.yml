@@ -29,6 +29,7 @@ jobs:
       - name: Run Ruff on changed files (only D rules)
         run: |
           if [ -n "${{ steps.changes.outputs.files }}" ]; then
+            ruff --version
             ruff check --select D ${{ steps.changes.outputs.files }} --ignore D203 --ignore D213 --ignore D401 --ignore D415
           else
             echo "No Python files changed."
