@@ -111,7 +111,12 @@ def get_widget_key(w: UIWidget) -> str | None:
 def filter_to_ui_widget(
     filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None
 ) -> UIWidget:
-    """Deprecated? We used to construct widgets this way but the WIDGET_LIBRARY method should be used instead now."""
+    """Do not use.
+
+    Deprecated.
+
+    We used to construct widgets this way, but the WIDGET_LIBRARY method should be used instead.
+    """
     selected_configuration = configuration if configuration else {}
     match filter_.filter_type:
         case 0 | 1 | 2:

@@ -81,7 +81,10 @@ class KeyFrameStateEditDialog(QDialog):
         self.setModal(True)
 
     def _ok_pressed(self) -> None:
-        """Callback closing the dialog, saving changes and repainting the keyframe."""
+        """Handle ok pressed.
+
+        Save changes and repaint the keyframe.
+        """
         if isinstance(self._input, (QSpinBox, QDoubleSpinBox)):
             self._state._value = self._input.value()
         else:
@@ -95,7 +98,7 @@ class KeyFrameStateEditDialog(QDialog):
         self.close()
 
     def _delete_pressed(self) -> None:
-        """Action to delete the keyframe."""
+        """Handle delete keyframe button."""
         self._keyframe.delete_from_parent_cue()
         self.close()
         self._repaint_function()
