@@ -1,4 +1,5 @@
 """Context of the Client."""
+
 from __future__ import annotations
 
 import argparse
@@ -41,7 +42,7 @@ def _split_args(line: str) -> list[str]:
                     case "t":
                         current_arg += "\t"
                         in_string = False
-                    case  "n":
+                    case "n":
                         current_arg += "\n"
                         in_escape = False
                     case "r":
@@ -104,7 +105,8 @@ class CLIContext:
         self.network_manager: NetworkManager = networkmgr
         self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers: argparse._SubParsersAction = self.parser.add_subparsers(
-            help="subcommands help", dest="subparser_name")
+            help="subcommands help", dest="subparser_name"
+        )
         for c in self._commands:
             c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
         if exit_available:
@@ -114,10 +116,14 @@ class CLIContext:
         self._exit_available = exit_available
 
     def _replace_variables(self, args: list[str]) -> list[str]:
-        """Replaces variables in the provided list of arguments with their respective current values.
+        """Replace variables in the provided list of arguments with their current values.
 
-        :param args: The list of arguments
-        :return: The list of arguments with resolved variables
+        Args:
+            args: The list of arguments.
+
+        Returns:
+            The list of arguments with resolved variables.
+
         """
         new_arg_list = []
         for arg in args:
@@ -132,9 +138,9 @@ class CLIContext:
     def exec_command(self, line: str) -> bool:
         """Execute a command within the given context.
 
-        :param line: the command to be parsed and executed
+        :param line: The command to be parsed and executed.
 
-        :returns: true if the evaluation succeeded, false otherwise
+        :returns: True if the evaluation succeeded, False otherwise.
 
         """
         try:
@@ -160,18 +166,19 @@ class CLIContext:
         return False
 
     def print(self, text: str) -> None:
-        """Method can be used by commands to print text to which ever output medium there is.
+        """Print text to the available output medium.
 
-        :param text: The line to be printed
+        Args:
+            text: The line to be printed.
 
         """
         self.return_text += text + "\n"
 
     def fetch_print_buffer(self) -> str:
-        """Returns the stored output buffer and clears it.
+        """Get the output buffer and clear it.
 
         Returns:
-        The stored text that was accumulated by print.
+            The stored text that print accumulated.
 
         """
         tmp_text = self.return_text
