@@ -1,4 +1,5 @@
-"""directly edit channels of a universe."""
+"""Directly edit channels of on univers."""
+
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QWidget
 
@@ -18,11 +19,11 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
     """
 
     def __init__(self, universe: Universe, parent: QWidget = None) -> None:
-        """Inits a ManualUniverseEditorWidget.
+        """Initialize a ManualUniverseEditorWidget.
 
         Args:
-            universe: the Universe to edit
-            parent: Qt parent of the widget.
+            universe: The universe to edit.
+            parent: The Qt parent of the widget.
 
         """
         super().__init__(parent=parent)
@@ -48,11 +49,13 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         self._universe_widget.setFixedHeight(650)
         self._universe_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
 
-        self._universe_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Maximum,
-                                            QtWidgets.QSizePolicy.Policy.Expanding)
+        self._universe_widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Maximum, QtWidgets.QSizePolicy.Policy.Expanding
+        )
 
-        self._bank_set = BankSet(gui_controlled=True,
-                                 description=f"Console mode Bankset for universe {universe.description}.")
+        self._bank_set = BankSet(
+            gui_controlled=True, description=f"Console mode Bankset for universe {universe.description}."
+        )
         self._bank_set.activate()
         self._bank_set_control_elements: list[QWidget] = []
 
@@ -112,11 +115,15 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
     def _add_fixture(self, fixture: UsedFixture) -> None:
         layout = self._universe_widget.layout()
         for channel_index in range(fixture.channel_length):
-            channel_widget = ChannelWidget(fixture.get_fixture_channel(channel_index),
-                                           self._universe.channels[fixture.start_index + channel_index],
-                                           self._bank_set,
-                                           self._bank_set_control_elements, self)
+            channel_widget = ChannelWidget(
+                fixture.get_fixture_channel(channel_index),
+                self._universe.channels[fixture.start_index + channel_index],
+                self._bank_set,
+                self._bank_set_control_elements,
+                self,
+            )
             layout.addWidget(channel_widget)
             self._universe.channels[fixture.start_index + channel_index].updated.connect(
-                lambda _, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe))
+                lambda _, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe)
+            )
         layout.addWidget(QtWidgets.QLabel(fixture.name))

@@ -21,9 +21,11 @@ class UIWidgetHolder(QWidget):
     def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True) -> None:
         """Initialize the widget holder.
 
-        :param child: UIWidget to hold.
-        :param parent: Parent Qt widget. Likely a ShowUIPlayer instance.
-        :param instance_for_editor: Is this container used in an editor?
+        Args:
+            child: The UI widget to hold.
+            parent: The parent Qt widget, likely a ShowUIPlayer instance.
+            instance_for_editor: True if this container is used in an editor.
+
         """
         super().__init__(parent)
         self._model: UIWidget = child
@@ -75,8 +77,8 @@ class UIWidgetHolder(QWidget):
         self.repaint()
 
     @override
-    def closeEvent(self, event:QCloseEvent) -> None:
-        """Emits closing signal.
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Emit closing signal.
 
         Args:
             event: The closing event.
@@ -92,7 +94,7 @@ class UIWidgetHolder(QWidget):
 
     @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        """Saves the current position on left click.
+        """Save the current position of a left click.
 
         Args:
             event: The mouse event.
@@ -103,7 +105,7 @@ class UIWidgetHolder(QWidget):
 
     @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        """Moves the widget on mouse drag.
+        """Move the widget on mouse drag.
 
         Args:
             event: The mouse event.

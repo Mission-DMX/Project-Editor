@@ -3,6 +3,7 @@
 EightBitToFloatRange -- ranged 8bit to float.
 ColorGlobalBrightnessMixinVFilter -- Global Brightness output.
 """
+
 from __future__ import annotations
 
 from logging import getLogger
@@ -54,20 +55,22 @@ class SixteenBitToFloatRange(VirtualFilter):
         filter_._filter_configurations = {}
         filter_._in_data_types = {"value_in": DataType.DT_DOUBLE}
         filter_._out_data_types = {"value": DataType.DT_DOUBLE}
-        filter_._gui_update_keys = {"lower_bound_in": DataType.DT_16_BIT,
-                                    "upper_bound_in": DataType.DT_16_BIT,
-                                    "lower_bound_out": DataType.DT_DOUBLE,
-                                    "upper_bound_out": DataType.DT_DOUBLE}
+        filter_._gui_update_keys = {
+            "lower_bound_in": DataType.DT_16_BIT,
+            "upper_bound_in": DataType.DT_16_BIT,
+            "lower_bound_out": DataType.DT_DOUBLE,
+            "upper_bound_out": DataType.DT_DOUBLE,
+        }
         filter_._in_data_types = {}
         filter_._channel_links = {"value_in": f"{self.filter_id}_16bit_to_float:value"}
         filter_list.append(filter_)
 
 
 class EightBitToFloatRange(VirtualFilter):
-    """V-Filter to convert 8bit ranges into float ranges."""
+    """Convert 8-bit ranges into float ranges using a V-Filter."""
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
-        """Instantiates the v-filter."""
+        """Convert 8-bit ranges into float ranges using a V-Filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, pos=pos)
 
     @override
@@ -101,10 +104,12 @@ class EightBitToFloatRange(VirtualFilter):
         filter_._filter_configurations = {}
         filter_._in_data_types = {"value_in": DataType.DT_DOUBLE}
         filter_._out_data_types = {"value": DataType.DT_DOUBLE}
-        filter_._gui_update_keys = {"lower_bound_in": DataType.DT_8_BIT,
-                                    "upper_bound_in": DataType.DT_8_BIT,
-                                    "lower_bound_out": DataType.DT_DOUBLE,
-                                    "upper_bound_out": DataType.DT_DOUBLE}
+        filter_._gui_update_keys = {
+            "lower_bound_in": DataType.DT_8_BIT,
+            "upper_bound_in": DataType.DT_8_BIT,
+            "lower_bound_out": DataType.DT_DOUBLE,
+            "upper_bound_out": DataType.DT_DOUBLE,
+        }
         filter_._in_data_types = {}
         filter_._channel_links = {"value_in": f"{self.filter_id}_8bit_to_float:value"}
         filter_list.append(filter_)
@@ -125,13 +130,12 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
 
     def _instantiate_black_constant(self, filter_list: list[Filter]) -> None:
         logger.warning(
-            "Instantiating black constant for brightness mixing %s due to missing color input",
-            self.filter_id
+            "Instantiating black constant for brightness mixing %s due to missing color input", self.filter_id
         )
         c = Filter(
             filter_id=f"{self.filter_id}_color_recomposition",
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
-            scene=self.scene
+            scene=self.scene,
         )
         c.initial_parameters["value"] = "0,0,0"
         filter_list.append(c)
@@ -155,11 +159,14 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             logger.debug("Created global master as input was left empty")
             normalize_from_16bit = True
         conv_filter_id = f"{self.filter_id}__input_converter"
-        conv_filter = Filter(filter_id=conv_filter_id,
-                             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT \
-                                 if normalize_from_16bit else FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
-                             pos=self.pos,
-                             scene=self.scene)
+        conv_filter = Filter(
+            filter_id=conv_filter_id,
+            filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT
+            if normalize_from_16bit
+            else FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
+            pos=self.pos,
+            scene=self.scene,
+        )
         conv_filter.channel_links["value_in"] = brightness_input
         filter_list.append(conv_filter)
         brightness_input = conv_filter_id + ":value"
@@ -180,7 +187,7 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
             scene=self.scene,
         )
-        filter_const_norm.initial_parameters["value"] = str(1 / 2 ** 16) if normalize_from_16bit else str(1 / 255)
+        filter_const_norm.initial_parameters["value"] = str(1 / 2**16) if normalize_from_16bit else str(1 / 255)
         filter_list.append(filter_const_norm)
         filter_const_norm_id += ":value"
         brightness_normalization_filter_id = f"{self.filter_id}_brightness_normalization"

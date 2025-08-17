@@ -1,14 +1,19 @@
 """Utility methods for filter channel name checking."""
+
 from logging import getLogger
 
 logger = getLogger(__name__)
 
 
 def _rf(s: str) -> str:
-    """Replaces for bidden characters in sequence and channel names.
+    """Replace forbidden characters in sequence and channel names.
 
-    :param s: the name to process.
-    :returns: The processed name.
+    Args:
+        s: The name to process.
+
+    Returns:
+        The processed name.
+
     """
     if ":" in s or ";" in s:
         logger.warning("Replacing forbidden chars in sequencer key frame %s.", s)
