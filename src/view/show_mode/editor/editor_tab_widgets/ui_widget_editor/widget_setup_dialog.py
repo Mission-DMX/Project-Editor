@@ -1,4 +1,4 @@
-"""Contains dialog to add a new show UI widget."""
+"""Dialog to add a new show UI widget."""
 
 from collections.abc import Callable
 
@@ -14,20 +14,28 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 class WidgetSetupDialog(QDialog):
     """Dialog to add a new show UI widget."""
 
-    def __init__(self, parent: QWidget, allowed_filters: list[list[FilterTypeEnumeration]], callback: Callable,
-                 pos: QPoint, page: UIPage, swidget: UIWidget) -> None:
+    def __init__(
+        self,
+        parent: QWidget,
+        allowed_filters: list[list[FilterTypeEnumeration]],
+        callback: Callable,
+        pos: QPoint,
+        page: UIPage,
+        swidget: UIWidget,
+    ) -> None:
         """Initialize a new widget setup dialog.
 
-        The purpose of this dialog is to query all required filters for setup and registering them with the new widget.
+        This dialog queries all required filters for setup and registers them with the new widget.
 
-        :param parent: The parent widget of this dialog
-        :param allowed_filters: The list of allowed filter types. For every entry in the list, a filter conforming to
-        the stated filter types in the entry is queried.
-        :param callback: A callback receiving the widget and position as arguments which will be called once the dialog
-        finished.
-        :param pos: The position where the widget should be placed.
-        :param page: The UI page to place the widget into.
-        :param swidget: The widget template to instantiate.
+        Args:
+            parent: The parent widget of this dialog.
+            allowed_filters: The list of allowed filter types. For each entry, a filter conforming
+                to the stated type is queried.
+            callback: A callable receiving the widget and position, called once the dialog finishes.
+            pos: The position where the widget should be placed.
+            page: The UI page to place the widget into.
+            swidget: The widget template to instantiate.
+
         """
         super().__init__(parent=parent, modal=True)
         self._instantiation_function = callback
@@ -59,7 +67,7 @@ class WidgetSetupDialog(QDialog):
         self.show()
 
     def _select_pressed(self) -> None:
-        """Method handles the filter selection and finishing of the dialog."""
+        """Handle the filter selection and finishing of the dialog."""
         self._page_index += 1
         if self._page_index == len(self._fsw):
             for i in range(len(self._fsw)):
