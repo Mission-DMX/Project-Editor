@@ -127,8 +127,9 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
             self._bankset.unlink()
             BankSet.push_messages_now()
         self._bankset = BankSet(gui_controlled=True)
-        self._bankset.description = (f"Live Editor BS for "
-                                     f"{self._filter_instance.filter_id if self._filter_instance is not None else ""}")
+        self._bankset.description = (
+            f"Live Editor BS for {self._filter_instance.filter_id if self._filter_instance is not None else ''}"
+        )
         self._bankset.link()
         self._bankset.activate()
 
@@ -160,7 +161,10 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         return self._timeline_container.cue.channels
 
     def jg_right(self) -> None:
-        """Callback to move cursor right or increase zoom."""
+        """Handle jog wheel right event.
+
+        Move the cursor right or increase the zoom.
+        """
         if self._jw_zoom_mode:
             self._timeline_container.increase_zoom(1.25)
             self._set_zoom_label_text()
@@ -168,7 +172,10 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
             self._timeline_container.move_cursor_right()
 
     def jg_left(self) -> None:
-        """Callback to move cursor left or decrease zoom."""
+        """Handle jog wheel left event.
+
+        Move the cursor left or decrease the zoom.
+        """
         if self._jw_zoom_mode:
             self._timeline_container.decrease_zoom(1.25)
             self._set_zoom_label_text()
@@ -201,7 +208,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._set_zoom_label_text()
 
     def _transition_type_changed(self, text: str) -> None:
-        """Callback if the user selected a different transition type."""
+        """Handle user selecting a different transition type."""
         self._timeline_container.transition_type = text
 
     def set_editing_enabled(self, new_state: bool) -> None:
@@ -212,10 +219,12 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
     def link_column_to_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool) -> None:
         """Link a bank set column to a channel in the model.
 
-        :param channel_name: The name of the channel to link.
-        :param channel_type: The type of the channel to link.
-        :param is_part_of_mass_update: If true, no immediate update of the bank set will be triggered and the user is
-        responsible for triggering himself afterward. This is a performance optimization.
+        Args:
+            channel_name: The name of the channel to link.
+            channel_type: The type of the channel to link.
+            is_part_of_mass_update: If True, no immediate update of the bank set is triggered.
+                The user is responsible for triggering it afterward. This improves performance.
+
         """
         if not self._bankset:
             return

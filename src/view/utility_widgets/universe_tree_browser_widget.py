@@ -34,7 +34,7 @@ class UniverseTreeBrowserWidget(QTreeWidget):
             self._broadcaster.end_show_file_parsing.connect(lambda: self._change_show_file_state(False))
 
     def _change_show_file_state(self, new_state: bool) -> None:
-        """Callback to automatically refresh the view on show file changes."""
+        """Handle show file changes."""
         self._currently_show_file_loading = new_state
         if not new_state:
             self.refresh()

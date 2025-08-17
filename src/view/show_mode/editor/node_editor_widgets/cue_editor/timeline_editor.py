@@ -101,7 +101,7 @@ class TimelineContainer(QWidget):
             self._keyframes_panel.remove_channel(i)
 
     def clear_channels(self) -> None:
-        """Removes all channels from the widget."""
+        """Remove all channels from the widget."""
         # TODO clear all labels from self._channel_labels_panel_layout
         # TODO reset self._keyframes_panel
 
@@ -183,7 +183,7 @@ class TimelineContainer(QWidget):
         self._keyframes_panel.insert_frame(f)
 
     def _generate_state_from_channel(self, channel: tuple[str, DataType], channel_index: int) -> State:
-        """Internal method to format a state from the given channel."""
+        """Format state from the given channel."""
         if self.bankset:
             if isinstance(channel_index, int):
                 column = self.bankset.get_column_by_number(channel_index)
@@ -227,9 +227,10 @@ class TimelineContainer(QWidget):
         set_seven_seg_display_content(" " * 12, True)
 
     def _keyframe_panel_size_changed(self, new_size: QPoint) -> None:
-        """Internal method handling the resizing of the container."""
+        """Handle the resizing of the container."""
         if new_size.y() != self._channel_label.height():
             self._channel_label.setMinimumHeight(max(new_size.y(), self._channel_label.height()))
             self._channel_label.update()
-        self.setMinimumHeight(max(self.height(), self.minimumHeight(),
-                                  self._channel_label.height(), self._channel_label.minimumHeight()))
+        self.setMinimumHeight(
+            max(self.height(), self.minimumHeight(), self._channel_label.height(), self._channel_label.minimumHeight())
+        )
