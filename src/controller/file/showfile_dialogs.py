@@ -1,4 +1,5 @@
 """Dialogs for Show File."""
+
 import os
 from collections.abc import Callable
 
@@ -9,15 +10,19 @@ from controller.file.write import write_document
 from model import BoardConfiguration
 
 
-def _select_file(parent: QWidget, func: Callable[[str, BoardConfiguration], None], show_save_dialog: bool,
-                 show_data: BoardConfiguration) -> None:
-    """Opens QFileDialog to select a file.
+def _select_file(
+    parent: QWidget,
+    func: Callable[[str, BoardConfiguration], None],
+    show_save_dialog: bool,
+    show_data: BoardConfiguration,
+) -> None:
+    """Open a QFileDialog to select a file.
 
     Args:
-        parent (QWidget): The parent widget of the resulting dialog..
-        func: Function to be called after file was selected and confirmed. Function gets the file name as a string.
-        show_save_dialog (bool): Whether the save dialog should be shown.
-        show_data (BoardConfiguration): The model object whose file path should be changed.
+        parent: The parent widget of the resulting dialog.
+        func: Function to call after a file is selected and confirmed. Receives the file name as a string.
+        show_save_dialog: Whether the save dialog should be shown.
+        show_data: The model object whose file path should be changed.
 
     """
     file_dialog = QFileDialog(parent, "Save Show File" if show_save_dialog else "Load Show File")
@@ -30,8 +35,8 @@ def _select_file(parent: QWidget, func: Callable[[str, BoardConfiguration], None
     file_dialog.show()
 
 
-def _load_show_file(file_name: str, show_data: BoardConfiguration) -> None:
-    """Loads a show file.
+def _load_show_file(file_name: str, show_data: BoardConfiguration) -> bool:
+    """Load a show file.
 
     Args:
         file_name: Path to the file to be loaded
@@ -42,7 +47,7 @@ def _load_show_file(file_name: str, show_data: BoardConfiguration) -> None:
 
 
 def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
-    """Saves the board configuration to a specified file.
+    """Save the board configuration to a specified file.
 
     Args:
         file_name: File in which the config is saved.
@@ -56,16 +61,20 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
 def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:
     """Open the save file dialog if required and save the file.
 
-    :param parent: The parent of the show file
-    :param show_data: The show content to be saved
+    Args:
+        parent: The parent of the show file.
+        show_data: The show content to be saved.
+
     """
     _select_file(parent, _save_show_file, True, show_data)
 
 
 def show_load_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:
-    """Display the open file dialog to open a show file and load it if one was successfully selected.
+    """Display the open file dialog and load a show file if one is selected.
 
-    :param parent: The parent widget of the dialog
-    :param show_data: The show file configuration to load the data into.
+    Args:
+        parent: The parent widget of the dialog.
+        show_data: The show file configuration to load the data into.
+
     """
     _select_file(parent, _load_show_file, False, show_data)

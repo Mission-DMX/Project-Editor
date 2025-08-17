@@ -1,4 +1,5 @@
 """Provides data structures with accessors and modifiers for DMX."""
+
 from collections.abc import Callable, Sequence
 from logging import getLogger
 
@@ -49,7 +50,7 @@ class BoardConfiguration:
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
     def _clear(self) -> None:
-        """Resets the show data prior to loading a new one."""
+        """Reset the show data before loading a new one."""
         for scene in self._scenes:
             self._broadcaster.delete_scene.emit(scene)
         for universe in self._universes:
@@ -70,7 +71,7 @@ class BoardConfiguration:
         self._macros.clear()
 
     def _add_scene(self, scene: Scene) -> None:
-        """Adds a scene to the list of scenes.
+        """Add a scene to the list of scenes.
 
         Args:
             scene: The scene to be added.
@@ -80,7 +81,7 @@ class BoardConfiguration:
         self._scenes_index[scene.scene_id] = len(self._scenes) - 1
 
     def _delete_scene(self, scene: Scene) -> None:
-        """Removes the passed scene from the list of scenes.
+        """Remove the passed scene from the list of scenes.
 
         Args:
             scene: The scene to be removed.
@@ -90,7 +91,7 @@ class BoardConfiguration:
         self._scenes_index.pop(scene.scene_id)
 
     def _add_universe(self, universe: Universe) -> None:
-        """Creates and adds a universe from passed patching universe.
+        """Create and add a universe.
 
         Args:
             universe: The universe to add.
@@ -102,7 +103,7 @@ class BoardConfiguration:
         self._fixtures.append(used_fixture)
 
     def _delete_universe(self, universe: Universe) -> None:
-        """Removes the passed universe from the list of universes.
+        """Remove the passed universe from the list of universes.
 
         Args:
             universe: The universe to be removed.
@@ -114,7 +115,7 @@ class BoardConfiguration:
             logger.exception("Unable to remove universe %s", universe.name)
 
     def _add_device(self, device: Device) -> None:
-        """Adds the device to the board configuration.
+        """Add a device to the board configuration.
 
         Args:
             device: The device to be added.
@@ -123,7 +124,7 @@ class BoardConfiguration:
         self._devices.append(device)
 
     def _delete_device(self, device: Device) -> None:
-        """Removes the passed device from the list of devices.
+        """Remove the passed device from the list of devices.
 
         Args:
             device: The device to be removed.
@@ -131,9 +132,9 @@ class BoardConfiguration:
         """
 
     def universe(self, universe_id: int) -> Universe | None:
-        """Tries to find a universe by id.
+        """Try to find a universe by id.
 
-        Arg:
+        Args:
             universe_id: The id of the universe requested.
 
         Returns:
@@ -154,7 +155,6 @@ class BoardConfiguration:
 
     @show_name.setter
     def show_name(self, show_name: str) -> None:
-        """Sets the show name."""
         self._show_name = show_name
 
     @property
@@ -164,7 +164,6 @@ class BoardConfiguration:
 
     @default_active_scene.setter
     def default_active_scene(self, default_active_scene: int) -> None:
-        """Sets the scene to be activated by fish on loadup."""
         self._default_active_scene = default_active_scene
 
     @property
@@ -174,7 +173,6 @@ class BoardConfiguration:
 
     @notes.setter
     def notes(self, notes: str) -> None:
-        """Sets the notes for the show."""
         self._notes = notes
 
     @property
@@ -209,15 +207,11 @@ class BoardConfiguration:
 
     @file_path.setter
     def file_path(self, new_path: str) -> None:
-        """Update the show file path.
-
-        :param new_path: The location to save the show file to
-        """
         self._show_file_path = new_path
         self._broadcaster.show_file_path_changed.emit(new_path)
 
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
-        """Returns the scene by her id."""
+        """Get a scene by her id."""
         looked_up_position = self._scenes_index.get(scene_id)
         if looked_up_position is not None and looked_up_position < len(self._scenes):
             return self._scenes[looked_up_position]
@@ -274,9 +268,11 @@ class BoardConfiguration:
         self._broadcaster.macro_added_to_show_file.emit(new_index)
 
     def get_macro(self, macro_id: int | str) -> Macro | None:
-        """Get the macro specified by its index.
+        """Macro specified by its index.
 
-        :returns: The macro or None if none was found.
+        Returns:
+            The macro or None if no macro was found.
+
         """
         if isinstance(macro_id, int):
             if macro_id >= len(self._macros):
@@ -301,7 +297,7 @@ class BoardConfiguration:
         return nex_id
 
     def get_occupied_channels(self, universe_id: int) -> np.typing.NDArray[int]:
-        """Returns a list of all channels that are occupied by a scene."""
+        """List of all channels that are occupied by a scene."""
         ranges = [
             np.arange(fixture.start_index, fixture.start_index + fixture.channel_length)
             for fixture in self.fixtures
