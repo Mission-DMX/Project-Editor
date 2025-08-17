@@ -30,7 +30,9 @@ class DeskColumn(ABC):
     def __init__(self, uid: str | None = None) -> None:
         """Initialize a new column object.
 
-        :param uid: Unique identifier for the column.
+        Args:
+        uid: Unique identifier for the column.
+
         """
         self.id = uid if uid else _generate_unique_id()
         self.bank_set: BankSet | None = None
@@ -46,10 +48,10 @@ class DeskColumn(ABC):
         """Set Column pushed to a device."""
         self._pushed_to_device = True
 
-    def copy_base(self, dc: DeskColumn) -> None:
-        """Internal base method for the copy action.
+    def _copy_base(self, dc: DeskColumn) -> None:
+        """Perform the base copy action.
 
-        Call copy() instead of this method.
+        Call `copy()` instead of this method.
         """
         dc._bottom_display_line_inverted = self._bottom_display_line_inverted
         dc._top_display_line_inverted = self._top_display_line_inverted
@@ -80,7 +82,7 @@ class DeskColumn(ABC):
 
     @abstractmethod
     def update_from_message(self, message: proto.Console_pb2.fader_column) -> None:
-        """Callback for incoming messages to update the model."""
+        """Handle incoming messages to update the model."""
 
     def _generate_base_column_message(self) -> proto.Console_pb2.fader_column:
         """Fill in generic data for protobuf message."""
@@ -129,7 +131,7 @@ class RawDeskColumn(DeskColumn):
     @override
     def copy(self) -> DeskColumn:
         base_dc = RawDeskColumn(self.id)
-        self.copy_base(base_dc)
+        self._copy_base(base_dc)
         base_dc._fader_position = self._fader_position
         base_dc._encoder_position = self._encoder_position
         base_dc._select_button_led_active = self._select_button_led_active
@@ -200,9 +202,11 @@ class RawDeskColumn(DeskColumn):
 
     @secondary_text_line.setter
     def secondary_text_line(self, new_value: str | None) -> None:
-        """Sets the secondary text line.
+        """Set the secondary text line.
 
-        new_value -- The text to set
+        Args:
+            new_value: The text to set.
+
         """
         if new_value:
             self._secondary_text_line = str(new_value)
@@ -215,16 +219,18 @@ class RawDeskColumn(DeskColumn):
         """Get or set the fader position.
 
         Returns:
-        fader position as 16 bit unsigned int (between 0 and 65535).
+        fader position as 16-bit unsigned int (between 0 and 65.535).
 
         """
         return self._fader_position
 
     @fader_position.setter
     def fader_position(self, position: int) -> None:
-        """Set the fader position. Please keep in mind that the fader positions range from 0 to 65535.
+        """Set the fader position (0-65.535).
 
-        :param position: The new position to set
+        Args:
+            position: The new position to set.
+
         """
         if self._fader_position == position:
             return
@@ -252,12 +258,12 @@ class ColorDeskColumn(DeskColumn):
     @override
     def copy(self) -> DeskColumn:
         base_dc = ColorDeskColumn(self.id)
-        self.copy_base(base_dc)
+        self._copy_base(base_dc)
         base_dc._color = self._color.copy()
         return base_dc
 
     def __init__(self, _id: str | None = None) -> None:
-        """Initialize color desk column."""
+        """Color desk column."""
         super().__init__(_id)
         self._color: ColorHSI = ColorHSI(0.0, 0.0, 0.0)
 
@@ -311,11 +317,11 @@ class FaderBank:
         self.columns.append(col)
 
     def remove_column(self, col: DeskColumn) -> None:
-        """Removes the specified column from the bank set."""
+        """Remove the specified column from the bank set."""
         self.columns.remove(col)
 
     def generate_bank_message(self) -> proto.Console_pb2.add_fader_bank_set.fader_bank:
-        """Computes a proto buf representation of the bank.
+        """Compute a proto buf representation of the bank.
 
         Returns:
             proto buf representation
@@ -337,13 +343,13 @@ class FaderBank:
 class BanksetIDUpdateListener(ABC):
     """Listener for changes to bank set ids.
 
-    Implement this listener and register it with the bank set in order to be notified about changes to the ID of the
+    Implement this listener and register it with the bank set to be notified about changes to the ID of the
     bank set.
     """
 
     @abstractmethod
     def notify_on_new_id(self, new_id: str) -> Never:
-        """Must be implemented in order to be notified about changes to the bank set id."""
+        """Must be implemented to be notified about changes to the bank set id."""
         raise NotImplementedError
 
 
@@ -351,8 +357,8 @@ class BankSet:
     """Represents a bank set.
 
     A bank set is a set of banks, the user can switch between at a given time.
-    Multiple bank sets can be linked to fish at the same time but only one may be active at the same time.
-    Only the GUI may specify which bank set is active any given time,
+    Multiple bank sets can be linked to fish at the same time, but only one may be active at the same time.
+    Only the GUI may specify which bank set is active at any given time,
      except for the event that the active bank set will be unlinked.
     In this case fish will enable the bank set with the next lower index.
     """
@@ -370,20 +376,20 @@ class BankSet:
 
     @classmethod
     def linked_bank_sets(cls) -> list[BankSet]:
-        """Yields the mutable list of bank sets that are currently loaded in fish.
+        """Mutable list of bank sets currently loaded in Fish.
 
-        This method should only be used by friend classes.
+        Use this method only in friend classes.
         """
         return cls._linked_bank_sets
 
     @classmethod
     def active_bank_set(cls) -> BankSet:
-        """Current bank set."""
+        """Active bank set."""
         return cls._active_bank_set
 
     @staticmethod
     def get_linked_bank_sets() -> list[BankSet]:
-        """Returns a copy of the linked bank sets, save to be used by non friend classes."""
+        """Copy of the linked bank sets, save to be used by non-friend classes."""
         return list(BankSet._linked_bank_sets)
 
     def __init__(
@@ -393,15 +399,16 @@ class BankSet:
         gui_controlled: bool = False,
         id_: str | None = None,
     ) -> None:
-        """Construct a bank set object.
+        """Bank set.
 
-        After construction link() needs to be called in order to link the set with the control desk.
+        After construction, call `link()` to link the set with the control desk.
 
-        :param banks: The initial list of fader banks
-        :param description: Optional. A human-readable description used in the fader bank editor.
-            Its used to identify the set to edit
-        :param gui_controlled: Indicates that the set is managed by the gui thread.
-        :param id_: If a specific ID should be used for initialization
+        Args:
+            banks: The initial list of fader banks.
+            description: Optional human-readable description used in the fader bank editor.
+                It is used to identify the set to edit.
+            gui_controlled: Indicates that the set is managed by the GUI thread.
+            id_: The ID to use for initialization, if specific.
 
         """
         # TODO why is id as string
@@ -484,7 +491,7 @@ class BankSet:
         return self._id
 
     def activate(self, out_of_thread: bool = False) -> None:
-        """Calling this method makes this bank set the active one."""
+        """Set this bank set as the active one."""
         # if BankSet._active_bank_set_id == self.id:
         #    return
         self._gui_controlled = not out_of_thread
@@ -522,7 +529,7 @@ class BankSet:
         """Update the fader bank on the control desk.
 
         Warning: This operation is expensive and might interrupt the interactions of the user. Add all columns to the
-        bank at first. If all you'd like to do is updating a column: call the update function on that column.
+        bank at first. If all you'd like to do is update a column: call the update function on that column.
         """
         self.banks.append(bank)  # TODO ein BankSet has no columns attribute
         for col in bank.columns:
@@ -530,7 +537,7 @@ class BankSet:
         self.update()
 
     def add_column_to_next_bank(self, f: DeskColumn) -> None:
-        """Adds the provided column f to the last not full bank set."""
+        """Add the provided column f to the last not full bank set."""
         if len(self.banks) == 0:
             self.add_bank(FaderBank())
         if len(self.banks[-1].columns) >= 8:  # TODO query actual bank width
@@ -539,7 +546,7 @@ class BankSet:
         f.bank_set = self
 
     def set_active_bank(self, i: int) -> bool:
-        """Sets the active bank.
+        """Set the active bank.
 
         Returns:
         True if the operation was successful, Otherwise False.
@@ -556,12 +563,12 @@ class BankSet:
     def link(self) -> bool:
         """Load the bank set to fish.
 
-        If there was no bank set linked before this bank set might become the active one immediately.
+        If there was no bank set linked, before this bank set might become the active one immediately.
         """
         return self.update()
 
     def unlink(self) -> bool:
-        """Removes the bank set from the control desk.
+        """Remove the bank set from the control desk.
 
         Returns: True on success
         """
@@ -584,24 +591,37 @@ class BankSet:
 
     @property
     def is_linked(self) -> bool:
-        """Returns True if the bank set is loaded to fish."""
+        """Is bank set loaded with fish.
+
+        True if the bank set is loaded with fish.
+        """
         return self.pushed_to_fish
 
     @property
     def is_empty(self) -> bool:
-        """Returns true if the bank set is empty."""
+        """Is bank set empty.
+
+        Returns true if the bank set is empty.
+        """
         return len(self.banks) == 0
 
     @staticmethod
     def push_messages_now() -> None:
-        """Pushes outstanding updates to fish. It should only be called within the Qt event loop."""
+        """Push outstanding updates to fish.
+
+        It should only be called within the Qt event loop.
+        """
         BankSet._fish_connector.push_messages()
 
     def get_column(self, column_id: str) -> DeskColumn | None:
-        """Returns the column requested by the provided id or None if it could not be found.
+        """Column matching the provided ID, or None if not found.
 
-        :param column_id: The id of the column to search for
-        :returns: The column or None.
+        Args:
+            column_id: The ID of the column to search for.
+
+        Returns:
+            The column or None.
+
         """
         for b in self.banks:
             for c in b.columns:
@@ -614,7 +634,7 @@ class BankSet:
         self.active_column = column
 
     def get_column_by_number(self, index: int) -> DeskColumn | None:
-        """Iterates through the banks and returns column i."""
+        """Column i by iterating through the banks."""
         i = 0
         # Unfortunately we cannot return the index directly, as the number of columns in a bank is not constant.
         for b in self.banks:
@@ -626,9 +646,11 @@ class BankSet:
         return None
 
     def get_all_columns(self) -> list[DeskColumn]:
-        """Use this method to get all columns in the set.
+        """Get all columns in the set.
 
-        :returns: A list of all columns.
+        Returns:
+            A list of all columns.
+
         """
         column_list: list[DeskColumn] = []
         for b in self.banks:
@@ -637,7 +659,7 @@ class BankSet:
 
     @staticmethod
     def handle_column_update_message(message: proto.Console_pb2.fader_column) -> None:
-        """Callback for processing of updates sent from fish."""
+        """Handle updates sent from fish."""
         col = BankSet._active_bank_set.get_column(message.column_id)
         if col:
             col.update_from_message(message)
@@ -686,9 +708,9 @@ def send_independent_update_msg(update_from_gui: bool) -> None:
 
 
 def commit_all_bank_sets() -> None:
-    """Method calls update on all linked columns.
+    """Update all linked columns.
 
-    This is useful in the event of a reconnect to fish as the state of fish is unknown at this point in time.
+    This is useful when reconnecting to Fish, as its state is unknown at this point.
     """
     bank_set_for_activation = None
     for bs in BankSet.linked_bank_sets():
