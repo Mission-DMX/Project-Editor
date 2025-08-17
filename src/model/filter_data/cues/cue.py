@@ -274,7 +274,7 @@ class KeyFrame:
 
     def format_filter_str(self) -> str:
         """Serialize for filter."""
-        return f"{self.timestamp}:{"&".join([s.encode() for s in self._states])}"
+        return f"{self.timestamp}:{'&'.join([s.encode() for s in self._states])}"
 
     @staticmethod
     def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: Cue) -> KeyFrame:
@@ -347,7 +347,7 @@ class Cue:
 
     @property
     def duration(self) -> float:
-        """Computes the length of the cue."""
+        """Length of the cue."""
         latest_timestamp = 0.0
         for f in self._frames:
             latest_timestamp = max(latest_timestamp, f.timestamp)
@@ -355,12 +355,12 @@ class Cue:
 
     @property
     def duration_formatted(self) -> str:
-        """Returns the duration of the cue as a formatted string."""
+        """Duration of the cue as a formatted string."""
         return format_seconds(self.duration)
 
     @property
     def channel_types(self) -> list[DataType]:
-        """Returns the keyframe data types."""
+        """Keyframe data types."""
         if len(self._frames) == 0:
             return []
 
@@ -368,18 +368,17 @@ class Cue:
 
     @property
     def channels(self) -> list[tuple[str, DataType]]:
-        """Returns the nominal channel definitions."""
+        """Nominal channel definitions."""
         return list(self._channel_definitions)
 
     def format_cue(self) -> str:
-        """Returns the cue formatted in the filter config format."""
+        """Format the cue in the filter config format."""
         end_handling_str = self.end_action.get_filter_format_str()
         restart_beh_str = "restart" if self.restart_on_another_play_press else "do_nothing"
         frames_str_list = [f.format_filter_str() for f in self._frames]
         if self.name is None or self.name == "":
             self.name = "No Name"
-        return (f"{"|".join(frames_str_list)}#{end_handling_str}#"
-                f"{restart_beh_str}#{self.name.replace('#', '')}")
+        return f"{'|'.join(frames_str_list)}#{end_handling_str}#{restart_beh_str}#{self.name.replace('#', '')}"
 
     def from_string_definition(self, definition: str) -> None:
         """Deserialize filter definition."""
@@ -400,7 +399,7 @@ class Cue:
             self.name = primary_tokens[3]
 
     def add_channel(self, name: str, t: str | DataType) -> None:
-        """Add a channel name to list of names."""
+        """Add a channel name to a list of names."""
         dt = DataType.from_filter_str(t) if isinstance(t, str) else t
 
         for cd in self._channel_definitions:
