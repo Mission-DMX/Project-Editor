@@ -1,4 +1,5 @@
 """Color in HSI Form."""
+
 from __future__ import annotations
 
 import colorsys
@@ -13,13 +14,15 @@ if TYPE_CHECKING:
 class ColorHSI:
     """Color Definition."""
 
-    def __init__(self, hue: confloat(ge=0, le=360), saturation: confloat(ge=0, le=1),
-                 intensity: confloat(ge=0, le=1)) -> None:
-        """HSI Color.
+    def __init__(
+        self, hue: confloat(ge=0, le=360), saturation: confloat(ge=0, le=1), intensity: confloat(ge=0, le=1)
+    ) -> None:
+        """HSI color.
 
-        :param hue: color itself in the form of an angle between [0,360] degrees
-        :param saturation:  in range of [0,1]
-        :param intensity: in range of [0,1] where 0 is black and 1 is white
+        Args:
+            hue: Color itself in the form of an angle between [0, 360] degrees.
+            saturation: Value in the range [0, 1].
+            intensity: Value in the range [0, 1], where 0 is black and 1 is white.
 
         """
         self._hue: confloat(ge=0, le=360) = hue
@@ -28,11 +31,10 @@ class ColorHSI:
 
     @classmethod
     def from_filter_str(cls, filter_format: str) -> ColorHSI:
-        """HSI Color.
+        """Initialize an HSI color from the given filter configuration string.
 
-        This constructor parses the supplied color string and constructs the color object from it.
-
-        :param filter_format: The color provided as a filter configuration string
+        Args:
+        filter_format: The color provided as a filter configuration string.
 
         """
         if not filter_format or filter_format.count(",") < 2:
@@ -70,16 +72,16 @@ class ColorHSI:
     def intensity(self) -> confloat(ge=0, le=1):
         """Perceived illuminance.
 
-        float [0, 1] where 0 is black and 1 is white.
+        float [0, 1] where 0 is black, and 1 is white.
         """
         return self._intensity
 
     def format_for_filter(self) -> str:
-        """Formats the color to be parsable by fish filters."""
+        """Format the color so it can be parsed by fish filters."""
         return f"{float(self._hue)},{float(self._saturation)},{float(self._intensity)}"
 
     def to_rgb(self) -> tuple[int, int, int]:
-        """Returns the RGB representations as int between 0 and 255."""
+        """RGB representations as int between 0 and 255."""
         rr, rg, rb = colorsys.hls_to_rgb((self._hue % 360) / 360.0, self._intensity, self._saturation)
         return int(rr * 255), int(rg * 255), int(rb * 255)
 
