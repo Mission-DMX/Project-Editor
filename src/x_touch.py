@@ -1,4 +1,4 @@
-"""All messages send to the x-touch"""
+"""All messages send to the x-touch."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ import proto.MessageTypes_pb2
 from model.control_desk import set_seven_seg_display_content
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from model.broadcaster import Broadcaster
 
 VIEW_PATCH_MENU_MSG: proto.Console_pb2.button_state_change = proto.Console_pb2.button_state_change(
@@ -78,9 +80,10 @@ SAVE_BUTTON_DEACTIVATE_MSG: proto.Console_pb2.button_state_change = proto.Consol
 
 
 class XTouchMessages:
-    """messages to the XTouch"""
+    """Messages to the XTouch."""
 
-    def __init__(self, broadcaster: Broadcaster, send: callable) -> None:
+    def __init__(self, broadcaster: Broadcaster, send: Callable[[proto.Console_pb2.button_state_change], None]) -> None:
+        """Messages to the XTouch."""
         self._broadcaster = broadcaster
 
         # listen on updates
@@ -106,7 +109,7 @@ class XTouchMessages:
         self._broadcaster.view_leave_temperature.connect(lambda: send(VIEW_NOT_TEMPERATURE_MSG))
         self._broadcaster.show_file_path_changed.connect(self._update_save_button)
         self._broadcaster.application_closing.connect(self._cleanup_xtouch)
-        self._send: callable = send
+        self._send: Callable = send
 
     def _update_save_button(self, file_path: str) -> None:
         if file_path:
