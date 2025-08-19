@@ -1,6 +1,5 @@
 """Contains a syntax highlighter for our CLI language."""
 
-import re
 from typing import override
 
 from PySide6.QtCore import QRegularExpression
@@ -50,7 +49,9 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
 
         This method gets called for every text block. It sets the formats on it.
 
-        :param text: The text to inspect.
+        Args:
+            text: The text to inspect.
+
         """
         for pattern, fmt in self._mappings.items():
             iterator = pattern.globalMatch(text)
