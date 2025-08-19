@@ -72,7 +72,9 @@ class EventSender:
     def __init__(self, name: str) -> None:
         """Create a new event sender.
 
-        :param name: The name to give it. This cannot be changed later on.
+        Args:
+            name: The name to give it. This cannot be changed later on.
+
         """
         self._name: str = name
         self.index_on_fish: int = -1
