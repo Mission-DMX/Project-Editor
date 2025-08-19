@@ -11,8 +11,11 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 def escape_argument(argument: str) -> str:
     """Escape an argument for usage in a command.
 
-    :param argument: The argument to escape.
-    :return: The escaped argument.
+    Args:
+        argument: The argument to escape.
+
+    Returns: The escaped argument.
+
     """
     s = argument if isinstance(argument, str) else str(argument)
     s = s.replace("\\", "\\\\")
@@ -26,8 +29,14 @@ def escape_argument(argument: str) -> str:
 class _CommandInsertionDialog(QDialog):
     """Provides a foundation for command insertion dialogs."""
 
-    def __init__(self, parent: QWidget, macro: Macro, supported_filter_list: list[FilterTypeEnumeration],
-                 show: BoardConfiguration, update_callable: callable) -> None:
+    def __init__(
+        self,
+        parent: QWidget,
+        macro: Macro,
+        supported_filter_list: list[FilterTypeEnumeration],
+        show: BoardConfiguration,
+        update_callable: callable,
+    ) -> None:
         """Initialize the dialog."""
         super().__init__(parent)
 
@@ -92,7 +101,8 @@ class _CommandInsertionDialog(QDialog):
         """Get the finished command.
 
         This method needs to be implemented in order to get the command that should be inserted.
-        :returns: a string without leading new line.
+
+        Returns: a string without leading new line.
         """
         raise NotImplementedError
 
