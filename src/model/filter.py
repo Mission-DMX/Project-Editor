@@ -289,8 +289,10 @@ class Filter:
     def copy(self, new_scene: Scene = None, new_id: str | None = None) -> Filter:
         """Copy the filter.
 
-        :param new_scene: Parent scene of the new filter object.
-        :param new_id: New id of the new filter object.
+        Args:
+            new_scene: Parent scene of the new filter object.
+            new_id: New id of the new filter object.
+
         """
         from .virtual_filters.vfilter_factory import construct_virtual_filter_instance
 
