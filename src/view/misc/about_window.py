@@ -30,8 +30,8 @@ def read_entire_file_as_str(file_path: str) -> str:
     """
     # TODO in toml
     try:
-        with open(file_path, "r", encoding="UTF-8") as f:
-            text = f.read()
+        with open(file_path, "r", encoding="UTF-8") as file:
+            text = file.read()
     except OSError as e:
         text = "Unknown Debug"
         logger.exception("Unable to load file string from %s. %s", file_path, e)
@@ -59,4 +59,4 @@ class AboutWindow(QMessageBox):
         self.setDetailedText(CONTRIBUTORS_STR)
         self.setMinimumWidth(800)
         self.setMinimumHeight(600)
-        self.setTextFormat(Qt.RichText)
+        self.setTextFormat(Qt.TextFormat.RichText)
