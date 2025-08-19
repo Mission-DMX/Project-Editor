@@ -17,8 +17,12 @@ logger = getLogger(__name__)
 def _get_column_from_name(channel_name: str) -> DeskColumn | None:
     """Get an associated bank set column from a channel name, if any.
 
-    :param channel_name: The name of the channel to use for lookup.
-    :return: The bank set column or None if no bank set column is found.
+    Args:
+        channel_name: The name of the channel to use for lookup.
+
+    Returns:
+        The bank set column or None if no bank set column is found.
+
     """
     for c in BankSet.active_bank_set().get_all_columns():
         if c.display_name == channel_name:
@@ -85,8 +89,10 @@ class TimelineContainer(QWidget):
     def add_channel(self, channel_type: DataType, name: str) -> None:
         """Add a channel to the editor.
 
-        :param channel_type: The data type of channel to add.
-        :param name: The name of the channel to add.
+        Args:
+            channel_type: The data type of the channel to add.
+            name: The name of the channel to add.
+
         """
         self._channel_label.add_label(name, channel_type.format_for_filters())
         self._keyframes_panel.add_channels([(channel_type, name)])
@@ -94,7 +100,9 @@ class TimelineContainer(QWidget):
     def remove_channel(self, c_name: str) -> None:
         """Remove a channel from the editor.
 
-        :param c_name: The name of the channel to remove.
+        Args:
+        c_name: The name of the channel to remove.
+
         """
         i = self._channel_label.remove_label(c_name)
         if i != -1:
@@ -130,14 +138,18 @@ class TimelineContainer(QWidget):
     def increase_zoom(self, factor: float = 2.0) -> None:
         """Increase the zoom factor inside the editor.
 
-        :param factor: The zoom factor to increase. Defaults to doubling.
+        Args:
+            factor: The zoom factor to increase. Defaults to doubling.
+
         """
         self._keyframes_panel.zoom_in(factor)
 
     def decrease_zoom(self, factor: float = 2.0) -> None:
         """Decrease the zoom factor inside the editor.
 
-        :param factor: The zoom factor to decrease. Defaults to halving.
+        Args:
+            factor: The zoom factor to decrease. Defaults to halving.
+
         """
         self._keyframes_panel.zoom_out(factor)
 
