@@ -15,9 +15,11 @@ class UniverseTreeBrowserWidget(QTreeWidget):
     def __init__(self, show: BoardConfiguration | None = None, show_selection_checkboxes: bool = False) -> None:
         """Create a new universe browser instance.
 
-        :param show: The current active show file.
-        :param show_selection_checkboxes: If true, checkboxes to select individual items are provided.
-        Disabled by default.
+        Args:
+            show: The current active show file.
+            show_selection_checkboxes: If true, checkboxes to select individual items are provided.
+                Disabled by default.
+
         """
         super().__init__()
         self._broadcaster = Broadcaster()
