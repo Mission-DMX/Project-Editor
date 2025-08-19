@@ -27,7 +27,9 @@ class BoxGridItem(QObject):
     def __init__(self, parent: QWidget | None) -> None:
         """Initialize the widget.
 
-        :param parent: The parent Qt widget.
+        Args:
+            parent: The parent Qt widget.
+
         """
         super().__init__(parent=parent)
         self._text: str = ""
@@ -112,7 +114,9 @@ class BoxGridRenderer(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         """Initialize the widget.
 
-        :param parent: The parent Qt widget.
+        Args:
+            parent: The parent Qt widget.
+
         """
         super().__init__(parent)
         self._boxes: list[BoxGridItem] = []
