@@ -1,4 +1,4 @@
-"""Show UI Widget containing arbitrary text."""
+"""Show a UI Widget containing arbitrary text."""
 
 from __future__ import annotations
 
@@ -14,13 +14,15 @@ if TYPE_CHECKING:
 
 
 class ShowLabelUIWidget(UIWidget):
-    """Widget to display user defined rich text (markdown)."""
+    """Widget to display user-defined rich text (markdown)."""
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         """Initialize the label widget.
 
-        :param parent: The parent widget page.
-        :param configuration: The initial configuration of the sequencer.
+        Args:
+            parent: The parent widget page.
+            configuration: The initial configuration of the sequencer.
+
         """
         super().__init__(parent, configuration)
         self._player_widget: QLabel | None = None
@@ -77,9 +79,11 @@ class ShowLabelUIWidget(UIWidget):
         text_as_html = markdown(new_text)
         if self._conf_widget is not None:
             self._conf_widget.setText(text_as_html)
-            self._conf_widget.setMinimumWidth(max(self._conf_widget.fontMetrics().horizontalAdvance(new_text),
-                                                  self._conf_widget.minimumWidth()))
+            self._conf_widget.setMinimumWidth(
+                max(self._conf_widget.fontMetrics().horizontalAdvance(new_text), self._conf_widget.minimumWidth())
+            )
         if self._player_widget is not None:
             self._player_widget.setText(text_as_html)
-            self._player_widget.setMinimumWidth(max(self._player_widget.fontMetrics().horizontalAdvance(new_text),
-                                                    self._player_widget.minimumWidth()))
+            self._player_widget.setMinimumWidth(
+                max(self._player_widget.fontMetrics().horizontalAdvance(new_text), self._player_widget.minimumWidth())
+            )
