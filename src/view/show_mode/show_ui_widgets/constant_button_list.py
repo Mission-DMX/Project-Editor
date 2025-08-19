@@ -1,4 +1,5 @@
 """Show UI widgets to update constant filter values."""
+
 from __future__ import annotations
 
 import sys
@@ -61,10 +62,11 @@ class ConstantNumberButtonList(UIWidget):
         def add_action() -> None:
             if not self.configuration.get("buttons"):
                 self.configuration["buttons"] = ""
-            self.configuration["buttons"] += \
-                (f"{';' if len(self.configuration["buttons"]) else ''}"
-                 f"{name_edit.text().replace(';', '').replace(':', '')}:"
-                 f"{int(value_edit.value()) if self._maximum != -1 else value_edit.value()}")
+            self.configuration["buttons"] += (
+                f"{';' if len(self.configuration['buttons']) else ''}"
+                f"{name_edit.text().replace(';', '').replace(':', '')}:"
+                f"{int(value_edit.value()) if self._maximum != -1 else value_edit.value()}"
+            )
 
             list_widget.addItem(f"{name_edit.text()} -> {value_edit.value()}")
             if self._configuration_widget:
@@ -81,10 +83,12 @@ class ConstantNumberButtonList(UIWidget):
         return widget
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
-        """Initialize the button list show UI widget.
+        """Button list UI widget.
 
-        :param parent: The parent widget page.
-        :param configuration: The configuration of this widget.
+        Args:
+            parent: The parent widget page.
+            configuration: The configuration of this widget.
+
         """
         super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
@@ -101,8 +105,10 @@ class ConstantNumberButtonList(UIWidget):
     def set_filter(self, f: Filter, i: int) -> None:
         """Set the filter associated with this UI widget for a specific button.
 
-        :param f: The new filter to set
-        :param i: The index of the button to update.
+        Args:
+            f: The new filter to set
+            i: The index of the button to update.
+
         """
         if f is None:
             return
@@ -110,11 +116,18 @@ class ConstantNumberButtonList(UIWidget):
         self._model = f
         self.associated_filters["constant"] = f.filter_id
         self._filter_type = f.filter_type
-        self._value = float(
-            f.initial_parameters["value"]) if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else \
-            int(f.initial_parameters["value"])
-        self._maximum = 255 if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT \
-            else -1 if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else (2 ** 16) - 1
+        self._value = (
+            float(f.initial_parameters["value"])
+            if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT
+            else int(f.initial_parameters["value"])
+        )
+        self._maximum = (
+            255
+            if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT
+            else -1
+            if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT
+            else (2**16) - 1
+        )
 
     def _set_value(self, new_value: float) -> None:
         self._value = new_value
@@ -145,7 +158,7 @@ class ConstantNumberButtonList(UIWidget):
         return w
 
     def _construct_player_widget(self, parent: QWidget | None) -> None:
-        """Construct usable widget."""
+        """Construct a usable widget."""
         self._player_widget = QWidget(parent)
         self._player_widget.setMinimumWidth(50)
         self._player_widget.setMinimumHeight(30)
