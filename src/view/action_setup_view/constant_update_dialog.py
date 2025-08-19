@@ -31,15 +31,18 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
     """Dialog to insert constant filter updates."""
 
     def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: callable) -> None:
-        """Initialize the dialog.
+        """Dialog to insert constant filter updates.
 
-        :param parent: The parent widget.
-        :param macro: The macro model.
-        :param show: The show model.
-        :param update_callable: Method to be called after user confirmation.
+        Args:
+            parent: The parent widget.
+            macro: The macro model.
+            show: The show model.
+            update_callable: Method to be called after user confirmation.
+
         """
         super().__init__(
-            parent, macro,
+            parent,
+            macro,
             [
                 FilterTypeEnumeration.VFILTER_POSITION_CONSTANT,
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
@@ -47,7 +50,8 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
                 FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
             ],
-            show, update_callable,
+            show,
+            update_callable,
         )
         self._int_tb = QSpinBox()
         self._int_tb.setMinimum(0)
@@ -100,7 +104,7 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
     def get_command(self) -> str:
         if self._filter.filter_type in [
             FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
-            FilterTypeEnumeration.FILTER_CONSTANT_16_BIT
+            FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
         ]:
             return f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value {self._int_tb.value()}"
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
@@ -114,8 +118,10 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
             )
         qtc = self._color.to_qt_color()
         hexcode = f"rgb: {int(qtc.redF() * 255):02X}{int(qtc.greenF() * 255):02X}{int(qtc.blueF() * 255):02X}"
-        return (f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value "
-                f"{esc(self._color.format_for_filter())} # {hexcode}")
+        return (
+            f"showctl filtermsg {self._scene.scene_id} {esc(self.filter_id)} value "
+            f"{esc(self._color.format_for_filter())} # {hexcode}"
+        )
 
     @override
     def on_filter_selected(self) -> None:
