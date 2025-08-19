@@ -1,4 +1,5 @@
 """Contains a selection dialog."""
+
 from typing import override
 
 from PySide6.QtGui import QStandardItem, QStandardItemModel, Qt
@@ -11,10 +12,12 @@ class SelectionDialog(QDialog):
     def __init__(self, title: str, message: str, items: list[str], parent: QWidget | None = None) -> None:
         """Initialize the dialog.
 
-        :param title: The window title of the dialog.
-        :param message: The displayed message or help text of the dialog.
-        :param items: The list of items to present in the dialog.
-        :param parent: The parent Qt widget of the dialog.
+        Args:
+            title: The window title of the dialog.
+            message: The displayed message or help text of the dialog.
+            items: The list of items to present in the dialog.
+            parent: The parent Qt widget of the dialog.
+
         """
         super().__init__(parent)
         form = QFormLayout(self)
@@ -28,8 +31,9 @@ class SelectionDialog(QDialog):
             item.setCheckable(True)
             model.appendRow(item)
         self.list_view.setModel(model)
-        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-                                      Qt.Orientation.Horizontal, self)
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, Qt.Orientation.Horizontal, self
+        )
         form.addRow(button_box)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
