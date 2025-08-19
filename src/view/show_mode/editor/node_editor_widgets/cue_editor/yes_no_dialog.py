@@ -26,13 +26,15 @@ class YesNoDialog(QDialog):
     ) -> None:
         """Initialize the query dialog.
 
-        :param parent: The parent QWidget.
-        :param title: The window title of the dialog.
-        :param question: The question text of the dialog.
-        :param success_action: The function that will be called when the dialog was confirmed.
-        :param icon: The question icon. Defaults to QMessageBox.Icon.Question.
-        :param default_accept: Should the accept option be selected by default? (Causes Enter to confirm.)
-        Defaults to True.
+        Args:
+            parent: The parent QWidget.
+            title: The window title of the dialog.
+            question: The question text of the dialog.
+            success_action: The function that will be called when the dialog is confirmed.
+            icon: The question icon. Defaults to QMessageBox.Icon.Question.
+            default_accept: Whether the accept option should be selected by default
+                (causing Enter to confirm). Defaults to True.
+
         """
         super().__init__(parent)
         self._layout = QFormLayout()
