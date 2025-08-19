@@ -76,12 +76,14 @@ def _split_args(line: str) -> list[str]:
 class CLIContext:
     """Context of the Client."""
 
-    def __init__(self, show: BoardConfiguration, networkmgr: NetworkManager, exit_available: bool = False) -> None:
+    def __init__(self, show: BoardConfiguration, network_manager: NetworkManager, exit_available: bool = False) -> None:
         """Initialize a new CLI context.
 
-        :param show: The current active show configuration
-        :param networkmgr: The active network manager, user for communication with fish
-        :param exit_available: Should the exit command (close the connection) be available or not?
+        Args:
+            show: The current active show configuration
+            network_manager: The active network manager, user for communication with fish
+            exit_available: Should the exit command (close the connection) be available or not?
+
         """
         self._commands = [
             ListCommand(self),
@@ -102,7 +104,7 @@ class CLIContext:
         self.stack = set()
         self.variables: dict[str, str] = {}
         self.show = show
-        self.network_manager: NetworkManager = networkmgr
+        self.network_manager: NetworkManager = network_manager
         self.parser = argparse.ArgumentParser(exit_on_error=False)
         subparsers: argparse._SubParsersAction = self.parser.add_subparsers(
             help="subcommands help", dest="subparser_name"
