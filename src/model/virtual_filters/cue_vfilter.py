@@ -2,6 +2,7 @@
 
 This file contains the switching vFilter implementation for the cue filter.
 """
+
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
@@ -18,20 +19,23 @@ logger = getLogger(__name__)
 class PreviewFilter(VirtualFilter):
     """A v-filter providing preview channels if in preview mode. The actual filter otherwise."""
 
-    def __init__(self,
-                 scene: Scene,
-                 filter_id: str,
-                 filter_type: FilterTypeEnumeration,
-                 inst_filter_type: FilterTypeEnumeration,
-                 pos: tuple[int] | None = None
-                 ) -> None:
-        """Instantiate the filter.
+    def __init__(
+        self,
+        scene: Scene,
+        filter_id: str,
+        filter_type: FilterTypeEnumeration,
+        inst_filter_type: FilterTypeEnumeration,
+        pos: tuple[int] | None = None,
+    ) -> None:
+        """V-filter.
 
-        :param scene: The scene to use.
-        :param filter_id: The id of the filter.
-        :param filter_type: The filter type.
-        :param inst_filter_type: The filter type in case of actual instantiation.
-        :param pos: The position of the filter.
+        Args:
+            scene: The scene to use.
+            filter_id: The id of the filter.
+            filter_type: The filter type.
+            inst_filter_type: The filter type in case of actual instantiation.
+            pos: The position of the filter.
+
         """
         super().__init__(scene, filter_id, filter_type=int(filter_type), pos=pos)
         self.in_preview_mode = False
@@ -58,21 +62,25 @@ class PreviewFilter(VirtualFilter):
                 fader_filter_id = f"{self.filter_id}__{channel.name}"
                 if channel.fader is None:
                     if channel.enabled:
-                        logger.error(
-                            "The preview is enabled but no fader was assigned for channel '%s'.",
-                            channel.name
-                        )
-                    fader_filter = Filter(self.scene, fader_filter_id,
-                                          filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR
-                                          if channel.data_type == DataType.DT_COLOR
-                                          else FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, pos=self.pos)
+                        logger.error("The preview is enabled but no fader was assigned for channel '%s'.", channel.name)
+                    fader_filter = Filter(
+                        self.scene,
+                        fader_filter_id,
+                        filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR
+                        if channel.data_type == DataType.DT_COLOR
+                        else FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+                        pos=self.pos,
+                    )
                     fader_filter_id += ":value"
                 else:
-                    fader_filter = Filter(self.scene, fader_filter_id,
-                                          filter_type=FilterTypeEnumeration.FILTER_FADER_HSI if
-                                          channel.data_type == DataType.DT_COLOR else
-                                          FilterTypeEnumeration.FILTER_FADER_RAW,
-                                          pos=self.pos)
+                    fader_filter = Filter(
+                        self.scene,
+                        fader_filter_id,
+                        filter_type=FilterTypeEnumeration.FILTER_FADER_HSI
+                        if channel.data_type == DataType.DT_COLOR
+                        else FilterTypeEnumeration.FILTER_FADER_RAW,
+                        pos=self.pos,
+                    )
                     fader_filter_id += ":color" if channel.data_type == DataType.DT_COLOR else ":primary"
 
                 fader_filter.filter_configurations["column_id"] = channel.fader.id
@@ -81,19 +89,25 @@ class PreviewFilter(VirtualFilter):
 
                 if channel.data_type == DataType.DT_8_BIT:
                     adapter_filter_name = f"{self.filter_id}__ADAPTER__{channel.name}"
-                    adapter_filter = Filter(self.scene, adapter_filter_name,
-                                            filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
-                                            pos=self.pos)
+                    adapter_filter = Filter(
+                        self.scene,
+                        adapter_filter_name,
+                        filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
+                        pos=self.pos,
+                    )
                     adapter_filter.channel_links["value"] = fader_filter_id
                     fader_filter_id = adapter_filter_name + ":value_upper"
                     filter_list.append(adapter_filter)
                 elif channel.data_type in [DataType.DT_BOOL, DataType.DT_DOUBLE]:
                     adapter_filter_name = f"{self.filter_id}__ADAPTER__{channel.name}"
-                    adapter_filter = Filter(self.scene, adapter_filter_name,
-                                            filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL
-                                            if channel.data_type == DataType.DT_BOOL else
-                                            FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT,
-                                            pos=self.pos)
+                    adapter_filter = Filter(
+                        self.scene,
+                        adapter_filter_name,
+                        filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL
+                        if channel.data_type == DataType.DT_BOOL
+                        else FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT,
+                        pos=self.pos,
+                    )
                     adapter_filter.channel_links["value_in"] = fader_filter_id
                     fader_filter_id = adapter_filter_name + ":value"
                     filter_list.append(adapter_filter)
@@ -120,5 +134,6 @@ class CueFilter(PreviewFilter):
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         """Instantiate the cue v-filter."""
-        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_CUES,
-                         FilterTypeEnumeration.FILTER_TYPE_CUES, pos=pos)
+        super().__init__(
+            scene, filter_id, FilterTypeEnumeration.VFILTER_CUES, FilterTypeEnumeration.FILTER_TYPE_CUES, pos=pos
+        )
