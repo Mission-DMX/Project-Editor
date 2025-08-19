@@ -1,4 +1,5 @@
-"""This file provides a widget to browse bank set columns."""
+"""A widget to browse bank set columns."""
+
 from logging import getLogger
 
 from PySide6.QtCore import Signal
@@ -11,22 +12,29 @@ logger = getLogger(__name__)
 
 
 class FaderColumnSelectorWidget(QWidget):
-    """This widget enables the user to select a fader column."""
+    """Enables the user to select a fader column."""
 
     selection_changed = Signal(DeskColumn)
 
-    def __init__(self, parent: QWidget | None = None, column_filter: type[DeskColumn] | None = None,
-                 base_set: BankSet | None = None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        column_filter: type[DeskColumn] | None = None,
+        base_set: BankSet | None = None,
+    ) -> None:
         """Construct a new browser widget.
 
-        :param parent: The parent widget of this one
-        :param column_filter: an optional column type to filter for
-        :param base_set: Display this set even if it is not linked to fish.
+        Args:
+            parent: The parent widget of this one.
+            column_filter: An optional column type to filter for.
+            base_set: Display this set even if it is not linked to fish.
+
         """
         super().__init__()
         self._filter = column_filter
-        self._base_sets: list[BankSet] = base_set if isinstance(base_set, list) \
-            else [base_set] if isinstance(base_set, BankSet) else []
+        self._base_sets: list[BankSet] = (
+            base_set if isinstance(base_set, list) else [base_set] if isinstance(base_set, BankSet) else []
+        )
         self._item_index: dict[str, dict[str, AnnotatedTreeWidgetItem]] = {}
 
         layout = QVBoxLayout()
@@ -53,7 +61,7 @@ class FaderColumnSelectorWidget(QWidget):
 
     @property
     def ignore_main_brightness(self) -> bool:
-        """:returns: True if the user selected to ignore the main brightness fader."""
+        """Ignore the main brightness."""
         return self._ignore_main_brightness_checkbox.isChecked()
 
     @ignore_main_brightness.setter
@@ -62,7 +70,7 @@ class FaderColumnSelectorWidget(QWidget):
 
     @property
     def main_brightness_cb_enabled(self) -> bool:
-        """Is the checkbox to ignore the main brightness fader enabled itself?"""
+        """Main brightness checkbox enabled."""
         return self._ignore_main_brightness_checkbox.isEnabled()
 
     @main_brightness_cb_enabled.setter
@@ -70,13 +78,15 @@ class FaderColumnSelectorWidget(QWidget):
         self._ignore_main_brightness_checkbox.setEnabled(new_value)
 
     def set_selected_item(self, set_id: str, column_id: str) -> None:
-        """Use this method to select a specified column.
+        """Select a specified column.
 
-        If there is no matching column, it will simply do nothing.
-        If there is a matching one, it will also expand the tree up to the selected one.
+        If there is no matching column, nothing happens.
+        If there is a matching one, the tree is expanded up to the selected column.
 
-        :param set_id: The id of the bank set that contains the column
-        :param column_id: The id of the column to select.
+        Args:
+            set_id: The ID of the bank set that contains the column.
+            column_id: The ID of the column to select.
+
         """
         bank_set = self._item_index.get(set_id)
         if bank_set is None:
@@ -131,14 +141,15 @@ class FaderColumnSelectorWidget(QWidget):
                 i += 1
             self._tree.insertTopLevelItem(0, set_item)
 
-    def add_base_bank_set(self, bs: BankSet) -> None:
-        """
-        Use this method to add a bank set to the list of force-active sets after construction finished.
+    def add_base_bank_set(self, bank_set: BankSet) -> None:
+        """Add a bank set to the list of force-active sets after construction finished.
 
-        :param bs: The bank set to add.
+        Args:
+            bank_set: The bank set to add.
+
         """
-        if bs is None:
+        if bank_set is None:
             logger.warning("Tried to add None type base bank set.")
             return
-        if bs not in self._base_sets:
-            self._base_sets.append(bs)
+        if bank_set not in self._base_sets:
+            self._base_sets.append(bank_set)
