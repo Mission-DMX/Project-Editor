@@ -1,4 +1,5 @@
 """Module for filter settings editor."""
+
 from __future__ import annotations
 
 import os.path
@@ -53,9 +54,11 @@ class FilterSettingsItem(QGraphicsSvgItem):
     def __init__(self, filter_node: FilterNode, parent: QGraphicsItem, filter_: Filter) -> None:
         """Initialize a filter settings item.
 
-        :param filter_node: The filter node this item belongs to.
-        :param parent: The parent QGraphicsItem.
-        :param filter_: The filter that should be configured.
+        Args:
+            filter_node: The filter node this item belongs to.
+            parent: The parent QGraphicsItem.
+            filter_: The filter that should be configured.
+
         """
         super().__init__(resource_path(os.path.join("resources", "icons", "settings.svg")), parent)
         self.dialog = None
@@ -68,20 +71,12 @@ class FilterSettingsItem(QGraphicsSvgItem):
 
     @override
     def focusOutEvent(self, ev: QFocusEvent) -> None:
-        """Override to handle buggy behaviour.
-
-        :param ev: event
-        """
         super().focusOutEvent(ev)
         if self.on_update is not None:
             self.on_update()
 
     @override
     def keyPressEvent(self, ev: QKeyEvent) -> None:
-        """Override to handle buggy behaviour.
-
-        :param ev: event
-        """
         if ev.key() == Qt.Key.Key_Enter or (ev.key() == Qt.Key.Key_Return and self.on_update is not None):
             self.on_update()
             return
@@ -115,11 +110,15 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
     """Check for special configuration widgets.
 
     This method checks if there is a special configuration widget implemented for the given filter.
-    In case there is, it will instantiate and return it. Otherwise, it will return None and leave the
+    If there is, it will instantiate and return it. Otherwise, it returns None and leaves the
     task of generating a generic one to the dialog.
 
-    :param filter_: The filter to check for.
-    :returns: The instantiates settings widget or None.
+    Args:
+        filter_: The filter to check for.
+
+    Returns:
+        The instantiated settings widget or None.
+
     """
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
@@ -144,12 +143,7 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
 
 
 class FilterSettingsDialog(QDialog):
-    """A dialog to configure a filter.
-
-    Attributes:
-        filter: The filter whose settings this dialog displays
-
-    """
+    """A dialog to configure a filter."""
 
     def __init__(self, filter_node: FilterNode) -> None:
         """Initialize the dialog."""
@@ -217,8 +211,9 @@ class FilterSettingsDialog(QDialog):
         # Fetch patching short name
         key = "Empty"
         for fixture in self.filter.scene.board_configuration.fixtures:
-            if fixture.universe_id == universe_id and value in range(fixture.start_index,
-                                                                     fixture.start_index + fixture.channel_length + 1):
+            if fixture.universe_id == universe_id and value in range(
+                fixture.start_index, fixture.start_index + fixture.channel_length + 1
+            ):
                 key = f"{key} : {fixture.short_name}"
                 break
 
