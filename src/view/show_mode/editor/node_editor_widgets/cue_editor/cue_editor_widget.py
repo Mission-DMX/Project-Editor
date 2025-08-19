@@ -15,10 +15,8 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QInputDialog,
-    QLabel,
     QMenu,
     QMessageBox,
-    QPushButton,
     QScrollArea,
     QTableWidget,
     QTableWidgetItem,
@@ -27,12 +25,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from controller.file.transmitting_to_fish import transmit_to_fish
 from model.control_desk import BankSet
 from model.filter_data.cues.cue import Cue, EndAction
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.virtual_filters.cue_vfilter import CueFilter
-from src.view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
@@ -258,8 +254,10 @@ class CueEditor(PreviewEditWidget):
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
         """Add a cue to the model.
 
-        :param cue: The cue to add.
-        :param name: The name of the cue.
+        Args:
+            cue: The cue to add.
+            name: The name of the cue.
+
         """
         target_row = self._cue_list_widget.rowCount()
         self._cue_list_widget.setRowCount(target_row + 1)
@@ -292,8 +290,10 @@ class CueEditor(PreviewEditWidget):
     def select_cue(self, cue_index: int, from_manual_input: bool = False) -> None:
         """Select a cue.
 
-        :param cue_index: The index of the cue to select.
-        :param from_manual_input: Did the user do the selection?
+        Args:
+            cue_index: The index of the cue to select.
+            from_manual_input: Did the user do the selection?
+
         """
         if cue_index < 0 or cue_index >= len(self._model.cues):
             return
@@ -395,8 +395,9 @@ class CueEditor(PreviewEditWidget):
 
     def _rec_pressed(self) -> None:
         super()._rec_pressed()
-        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1) \
-            .setText(self._timeline_container.cue.duration_formatted)
+        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1).setText(
+            self._timeline_container.cue.duration_formatted
+        )
 
     @override
     def parent_closed(self, filter_node: FilterNode) -> None:
@@ -419,8 +420,9 @@ class CueEditor(PreviewEditWidget):
         if len(self._model.cues) == 0:
             return channel_list
         for name, c_type in self._model.cues[0].channels:
-            channel_list.append(ExternalChannelDefinition(c_type, name,
-                                                          self.bs_to_channel_mapping.get(name), self._bankset))
+            channel_list.append(
+                ExternalChannelDefinition(c_type, name, self.bs_to_channel_mapping.get(name), self._bankset)
+            )
         return channel_list
 
     def _update_ui_widget(self) -> None:
