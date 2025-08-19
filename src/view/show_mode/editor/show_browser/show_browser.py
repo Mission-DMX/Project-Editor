@@ -45,9 +45,11 @@ class ShowBrowser:
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget) -> None:
         """Initialize a ShowBrowser.
 
-        :param parent: The parent Qt widget.
-        :param show: The show model.
-        :param editor_tab_browser: The editor to use for opening actions.
+        Args:
+            parent: The parent Qt widget.
+            show: The show model.
+            editor_tab_browser: The editor to use for opening actions.
+
         """
         self._recently_created_scene = None
         self._widget = QWidget(parent)
