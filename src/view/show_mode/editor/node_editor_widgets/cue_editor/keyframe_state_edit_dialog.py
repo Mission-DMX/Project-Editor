@@ -22,12 +22,14 @@ class KeyFrameStateEditDialog(QDialog):
     """Dialog to update an existing keyframe."""
 
     def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function: Callable) -> None:
-        """Initialize the dialog.
+        """Dialog to update an existing keyframe.
 
-        :param parent: The parent widget. Contrary to other Qt widgets, this must not be None.
-        :param kf: The keyframe to edit.
-        :param s: The current state of the keyframe.
-        :param repaint_function: The function to call to repaint the keyframe after editing finished.
+        Args:
+            parent: The parent widget. Contrary to other Qt widgets, this must not be None.
+            kf: The keyframe to edit.
+            s: The current state of the keyframe.
+            repaint_function: The function to call to repaint the keyframe after editing is finished.
+
         """
         super().__init__(parent=parent)
         self._layout = QFormLayout()
