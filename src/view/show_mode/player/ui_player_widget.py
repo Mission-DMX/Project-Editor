@@ -11,12 +11,14 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_edi
 
 
 class UIPlayerWidget(QWidget):
-    """Container for Show UI widgets to be used in UI page player."""
+    """Container for Show UI widgets to be used in the UI page player."""
 
     def __init__(self, parent: QWidget) -> None:
-        """Initialize the container.
+        """UI container widget.
 
-        :param parent: The parent Qt widget.
+        Args:
+            parent: The parent Qt widget.
+
         """
         super().__init__(parent)
         self._scene: Scene | None = None
