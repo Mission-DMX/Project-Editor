@@ -83,13 +83,15 @@ class UsedFixture(QtCore.QObject):
     ) -> None:
         """Instantiate a UsedFixture object.
 
-        :param board_configuration: The show model
-        :param fixture: The base fixture definition
-        :param mode_index: The fixture mode to use
-        :param parent_universe: The parent universe
-        :param start_index: The first channels address
-        :param uuid: The UUID of the fixture instance
-        :param color: The color of the fixture in the patching view
+        Args:
+            board_configuration: The show model
+            fixture: The base fixture definition
+            mode_index: The fixture mode to use
+            parent_universe: The parent universe
+            start_index: The first channels address
+            uuid: The UUID of the fixture instance
+            color: The color of the fixture in the patching view
+
         """
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
