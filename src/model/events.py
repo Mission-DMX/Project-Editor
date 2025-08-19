@@ -1,4 +1,5 @@
 """Event model classes."""
+
 from __future__ import annotations
 
 from logging import getLogger
@@ -18,9 +19,11 @@ _persistence_notes: dict[str, dict[tuple[int, int, str], str]] = {}
 
 
 def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
-    """Update the sender model based on the provided message from fish.
+    """Update the sender model based on a message from fish.
 
-    :param msg: The message to use
+    Args:
+        msg: The message to use.
+
     """
     ev = _senders.get(msg.name)
     if ev is None:
@@ -104,10 +107,16 @@ class EventSender:
     def send_update(self, auto_commit: bool = True, push_direct: bool = False) -> proto.Events_pb2.event_sender:
         """Assemble an event_sender message and publish it if auto_commit is enabled.
 
-        While it is possible to override this method, it is advisable to implementing classes
-        to only update the configuration parameter.
-        :param auto_commit: Should the message be sent directly?
-        :returns: The assembled (and perhaps sent) message
+        While it is possible to override this method, implementing classes should
+        prefer only updating the configuration parameter.
+
+        Args:
+            auto_commit: Whether the message should be sent directly.
+            push_direct: Whether the message should be sent directly to fish.
+
+        Returns:
+            The assembled (and possibly sent) message.
+
         """
         msg = proto.Events_pb2.event_sender()
         msg.name = self.name
@@ -124,8 +133,12 @@ class EventSender:
 def get_sender(name: str) -> EventSender | None:
     """Look up a specific sender by its name.
 
-    :param name: The unique name of the sender
-    :returns: the object if the lookup was successful
+    Args:
+        name: The unique name of the sender.
+
+    Returns:
+        The sender object if the lookup was successful.
+
     """
     return _senders.get(name)
 
@@ -135,10 +148,12 @@ def get_sender_by_id(sender_id: int) -> EventSender | None:
     return _senders_by_id.get(sender_id)
 
 
-def get_all_senders() -> list[EventSender]:
-    """Get a list of all sender currently running on fish.
+def get_all_senders() -> list[proto.Events_pb2.event_sender]:
+    """Get a list of all senders currently running on fish.
 
-    :returns: A mutable list (copied)
+    Returns:
+        list: A mutable list (copied).
+
     """
     return list(_senders.values())
 
@@ -205,19 +220,17 @@ class AudioExtractEventSender(EventSender):
 
 
 def insert_event(
-        sender_id: int,
-        sender_function: int = 0,
-        event_type: str = "single",
-        arguments: list[int] | None = None
+    sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] | None = None
 ) -> None:
     """Insert an event in fish.
 
-    :param sender_id: The id of the sender the event is supposed to be originating from. Supplying a negative value will
-    abort the action.
+    Args:
+        sender_id: The id of the sender the event is supposed to be originating from.
+            Supplying a negative value will abort the action.
+        sender_function: The event sender function to use.
+        event_type: The event type to use. Must be one of "single", "release" or "start".
+        arguments: The event arguments to use.
 
-    :param sender_function: The event sender function to use
-    :param event_type: The event type to use. Must be one of single, release or start
-    :param arguments: The event arguments to use
     """
     if sender_id < 0:
         return
@@ -244,8 +257,11 @@ def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] 
     """Mark an event sender as persistent.
 
     If the event sender is not yet known, it will be marked once it is announced to the editor.
-    :param name: The unique name of the sender.
-    :param renaming: The renaming data indicator of the sender. It will be noted as well.
+
+    Args:
+    name: The unique name of the sender.
+    renaming: The renaming data indicator of the sender. It will be noted as well.
+
     """
     if renaming is None:
         renaming = {}
