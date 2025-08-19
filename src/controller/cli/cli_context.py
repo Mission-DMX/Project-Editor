@@ -140,9 +140,10 @@ class CLIContext:
     def exec_command(self, line: str) -> bool:
         """Execute a command within the given context.
 
-        :param line: The command to be parsed and executed.
+        Args:
+            line: The command to be parsed and executed.
 
-        :returns: True if the evaluation succeeded, False otherwise.
+        Returns: True if the evaluation succeeded, False otherwise.
 
         """
         try:
