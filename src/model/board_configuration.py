@@ -232,9 +232,12 @@ class BoardConfiguration:
 
         If filter update messages are received, they need to be routed to their intended destination. This is done using
         this registration method. Suitable callables receive the update message as a parameter.
-        :param target_scene: The scene the callback belongs to.
-        :param target_filter_id: The filter id to listen on.
-        :param c: The callable to register.
+
+        Args:
+            target_scene: The scene the callback belongs to.
+            target_filter_id: The filter id to listen on.
+            c: The callable to register.
+
         """
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
@@ -246,9 +249,11 @@ class BoardConfiguration:
     def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
         """Remove a previously registered callback.
 
-        :param target_scene: The scene the callback belongs to.
-        :param target_filter_id: The filter id which it is listening on.
-        :param c: The callable to be removed.
+        Args:
+            target_scene: The scene the callback belongs to.
+            target_filter_id: The filter id which it is listening on.
+            c: The callable to be removed.
+
         """
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
@@ -256,15 +261,17 @@ class BoardConfiguration:
         if c in callable_list:
             callable_list.remove(c)
 
-    def add_macro(self, m: Macro) -> None:
+    def add_macro(self, macro: Macro) -> None:
         """Add a new macro to the show file.
 
         This method must be called from a QObject as it triggers an event.
 
-        :param m: The macro to add.
+        Args:
+            macro: The macro to add.
+
         """
         new_index = len(self._macros)
-        self._macros.append(m)
+        self._macros.append(macro)
         self._broadcaster.macro_added_to_show_file.emit(new_index)
 
     def get_macro(self, macro_id: int | str) -> Macro | None:
