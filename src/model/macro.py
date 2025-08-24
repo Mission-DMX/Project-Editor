@@ -1,4 +1,5 @@
-"""Macros with their Triggers"""
+"""Macros with their Triggers."""
+
 from __future__ import annotations
 
 from logging import getLogger
@@ -16,6 +17,7 @@ logger = getLogger(__name__)
 
 
 def trigger_factory(trigger_type: str) -> Trigger:
+    """Trigger Factory."""
     match trigger_type:
         case "startup":
             return _StartupTrigger()
@@ -26,11 +28,14 @@ def trigger_factory(trigger_type: str) -> Trigger:
 
 
 class Trigger(QObject):
+    """Macro Trigger."""
+
     SUPPORTED_TYPES: Final[list[str]] = ["startup", "f_keys"]
 
     enabled_changed: Signal = Signal(bool)
 
     def __init__(self, tr_t: str) -> None:
+        """Macro Trigger."""
         super().__init__()
         self._macro: Macro | None = None
         self._type: str = tr_t
@@ -38,6 +43,7 @@ class Trigger(QObject):
         self._configuration: dict[str, str] = {}
 
     def copy(self) -> Trigger:
+        """Copy a trigger."""
         t = trigger_factory(self._type)
         t.name = self.name
         for k, v in self._configuration.items():
@@ -46,33 +52,34 @@ class Trigger(QObject):
 
     @property
     def enabled(self) -> bool:
+        """Is macro trigger enabled."""
         if self._macro is not None:
             return self._macro._triggers[self]
         return False
 
     @enabled.setter
     def enabled(self, new_state: bool) -> None:
-        """Enable or disable the trigger on its macro (which must be set)"""
+        """Enable or disable the trigger on its macro (which must be set)."""
         if self._macro is not None:
             self._macro._triggers[self] = new_state
             self.enabled_changed.emit(new_state)
 
     def set_param(self, key: str, value: str) -> None:
-        """set Params of a Trigger"""
+        """Set Params of a Trigger."""
         self._configuration[key] = value
 
     @property
     def configuration(self) -> dict[str, str]:
-        """configuration Copy of a Trigger"""
+        """Configuration Copy of a Trigger."""
         return self._configuration.copy()
 
     @property
     def type(self) -> str:
-        """type of the Trigger"""
+        """Type of the Trigger."""
         return self._type
 
     def exec(self) -> None:
-        """Execute a Trigger"""
+        """Execute a Trigger."""
         if self._macro is not None:
             pn = get_process_notifier(f"Macro: {self._macro.name}, triggered by {self.name}", 1)
             pn.current_step_description = "Inferencing macro"
@@ -82,22 +89,24 @@ class Trigger(QObject):
 
 
 class _StartupTrigger(Trigger):
-    """Trigger on Startup"""
+    """Trigger on Startup."""
 
     def __init__(self) -> None:
         super().__init__("startup")
         from model import Broadcaster
+
         Broadcaster().board_configuration_loaded.connect(self.exec)
 
 
 class _FKeysTrigger(Trigger):
-    """Triggers for F-Keys"""
+    """Triggers for F-Keys."""
 
     def __init__(self) -> None:
         super().__init__("f_keys")
         self._key: int = 0
         self.set_param("button", "0")
         from model import Broadcaster
+
         Broadcaster().desk_f_key_pressed.connect(self._key_pressed)
 
     def _key_pressed(self, key: int) -> None:
@@ -105,7 +114,7 @@ class _FKeysTrigger(Trigger):
             self.exec()
 
     def set_param(self, key: str, value: str) -> None:
-        """set Params of a Trigger"""
+        """Set Params of a Trigger."""
         super().set_param(key, value)
         if key == "button":
             new_value = int(value)
@@ -113,6 +122,7 @@ class _FKeysTrigger(Trigger):
                 raise ValueError("F Buttons range from 0 to 7")
             self._key = new_value
             from controller.network import NetworkManager
+
             msg = button_state_change(
                 button=ButtonCode.Value(f"BTN_F{new_value + 1}_F{new_value + 1}"),
                 new_state=ButtonState.BS_ACTIVE,
@@ -121,20 +131,22 @@ class _FKeysTrigger(Trigger):
 
 
 class Macro:
+    """Macro."""
+
     def __init__(self, parent: BoardConfiguration) -> None:
-        """Initialize a new empty macro"""
+        """Empty macro."""
         self.content: str = ""
         self.name: str = ""
         self._show: BoardConfiguration = parent
         self._triggers: dict[Trigger, bool] = {}
         from controller.cli.cli_context import CLIContext
         from controller.network import NetworkManager
+
         self.c = CLIContext(self._show, NetworkManager(), exit_available=False)
 
     @property
     def trigger_conditions(self) -> list[Trigger]:
-        """Get a list of all active triggers.
-        :returns: A copy of the active trigger list"""
+        """Copy list of all active triggers."""
         trigger_conditions = []
         for k, v in self._triggers:
             if v:
@@ -143,22 +155,23 @@ class Macro:
 
     @property
     def all_triggers(self) -> list[Trigger]:
-        """all Triggers of a Macro"""
+        """All Triggers of a Macro."""
         return list(self._triggers.keys())
 
     def add_trigger(self, t: Trigger, active: bool = True) -> None:
-        """
-        Register a new trigger.
+        """Register a new trigger.
 
-        :param t: The trigger to add
-        :param active: Should the new trigger be active by default?
+        Args:
+            t: The trigger to add
+            active: Should the new trigger be active by default?
+
         """
         t = t.copy()
         self._triggers[t] = active
         t._macro = self
 
     def copy(self) -> Macro:
-        """Obtain a deep copy of this macro"""
+        """Deep copy of this macro."""
         m = Macro(self._show)
         m.name = str(self.name)
         m.content = str(self.content)
@@ -167,7 +180,7 @@ class Macro:
         return m
 
     def exec(self) -> bool:
-        """execute a Macro"""
+        """Execute a Macro."""
         success = True
         for command in self.content.split("\n"):
             if not self.c.exec_command(command):
