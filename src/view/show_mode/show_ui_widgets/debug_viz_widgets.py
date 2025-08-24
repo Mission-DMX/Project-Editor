@@ -5,6 +5,7 @@ ColorLabel -- Regular Qt Widget to display set color.
 ColorDebugVizWidget -- Show UI widget to display debug output containing colors.
 NumberDebugVizWidget -- Show UI widget to display debug output containing numbers.
 """
+
 from __future__ import annotations
 
 from abc import ABC
@@ -164,7 +165,9 @@ class ColorLabel(QWidget):
     def set_color(self, c: ColorHSI) -> None:
         """Set the color to display.
 
-        :param c: The color to set. (ColorHSI)
+        Args:
+            c: The color to set. (ColorHSI)
+
         """
         self.set_hsi(c.hue, c.saturation, c.intensity)
 
