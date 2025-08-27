@@ -1,3 +1,5 @@
+"""Curves described using the mathematical primitives provided by fish."""
+
 from __future__ import annotations
 
 from enum import IntFlag
