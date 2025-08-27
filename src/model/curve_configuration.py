@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 from enum import IntFlag
 
 
 class BaseCurve(IntFlag):
-    """This enum defines which parts should be present in the wave. If multiple apply, they'll be added or multiplied,
-    depending on the accumulation selection."""
+    """Which parts should be present in the wave.
+
+    If multiple parts apply, they are either added or multiplied,
+    depending on the accumulation selection.
+    """
+
     NONE = 0
     SIN = 1
     COS = 2
@@ -17,17 +23,18 @@ class BaseCurve(IntFlag):
 
 
 class CurveConfiguration:
-    """
-    This class defines curves described using the mathematical primitives provided by fish.
-    It cannot be transferred to fish directly (yet) but is used across different components of
-    the gui that interact with fish. Most notably, it is used by the effects stack to define curves for effects.
+    """Curves described using the mathematical primitives provided by fish.
+
+    This class cannot yet be transferred directly to fish but is used across various GUI components
+    that interact with fish. Most notably, it is used by the effects stack to define curves for effects.
     """
 
     def __init__(self) -> None:
+        """Curves described using the mathematical primitives provided by fish."""
         self.frequencies: dict[BaseCurve, float] = {}
         self.amplitudes: dict[BaseCurve, float] = {}
         self.offsets: dict[BaseCurve, float] = {}
-        for curve in [BaseCurve(2 ** c) for c in range(9)]:
+        for curve in [BaseCurve(2**c) for c in range(9)]:
             self.frequencies[curve] = 1.0
             self.amplitudes[curve] = 1.0
             self.offsets[curve] = 0.0
@@ -37,30 +44,35 @@ class CurveConfiguration:
         self.base_amplitude: float = 1.0
 
     def serialize(self) -> str:
-        """
-        This method serializes the configuration into a format for being saved inside strings in the showfile.
+        """Srialize the configuration into a format for being saved inside strings in the showfile.
+
         It does not necessarily represent a format that components of fish can understand.
 
-        :returns: A string representing the configuration
+        Returns: A string representing the configuration
+
         """
-        return ";".join([
-            "1",  # Opset
-            str(self.selected_features),
-            str(self.base_phase),
-            str(self.base_amplitude),
-            "true" if self.append_features_using_addition else "false",
-            ",".join([str(k) + ":" + str(v) for k, v in self.frequencies.items()]),
-            ",".join([str(k) + ":" + str(v) for k, v in self.amplitudes.items()]),
-            ",".join([str(k) + ":" + str(v) for k, v in self.offsets.items()]),
-        ])
+        return ";".join(
+            [
+                "1",  # Opset
+                str(self.selected_features),
+                str(self.base_phase),
+                str(self.base_amplitude),
+                "true" if self.append_features_using_addition else "false",
+                ",".join([str(k) + ":" + str(v) for k, v in self.frequencies.items()]),
+                ",".join([str(k) + ":" + str(v) for k, v in self.amplitudes.items()]),
+                ",".join([str(k) + ":" + str(v) for k, v in self.offsets.items()]),
+            ]
+        )
 
     @classmethod
-    def from_str(cls, config: str) -> "CurveConfiguration":
-        """
-        This method deserializes this class using the format provided by the serialize function.
+    def from_str(cls, config: str) -> CurveConfiguration:
+        """Deserialize this class using the format provided by the serialize function.
 
-        :param config: The representation of the object as a serialized string.
-        :returns: a new CurveConfiguration object
+        Args:
+            config: The representation of the object as a serialized string.
+
+        Returns: a new CurveConfiguration object
+
         """
         cc = CurveConfiguration()
         if config is None or len(config) == 0:
@@ -78,6 +90,7 @@ class CurveConfiguration:
                 k = BaseCurve(int(k))
                 v = float(v)
                 target[k] = v
+
         decode_common_props(cc.frequencies, config[5])
         decode_common_props(cc.amplitudes, config[6])
 
