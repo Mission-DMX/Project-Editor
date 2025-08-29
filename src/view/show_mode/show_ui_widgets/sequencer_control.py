@@ -20,10 +20,12 @@ class SequencerControlUIWidget(UIWidget):
     """
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
-        """Initialize the sequence control widget.
+        """Sequence control widget.
 
-        :param parent: The parent widget page.
-        :param configuration: The initial configuration of the sequencer.
+        Args:
+            parent: The parent widget page.
+            configuration: The initial configuration of the sequencer.
+
         """
         super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
