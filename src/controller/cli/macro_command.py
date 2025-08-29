@@ -1,4 +1,5 @@
 """Execute macro command."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -17,7 +18,7 @@ class MacroCommand(Command):
     def __init__(self, context: CLIContext) -> None:
         """Initialize the command.
 
-        :see Command.__init__:
+        See `Command.__init__`.
         """
         super().__init__(context, "macro")
 
