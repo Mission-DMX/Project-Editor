@@ -356,9 +356,12 @@ class VirtualFilter(Filter, abc.ABC):
         actually instantiated corresponding filter. It should return None if and only if the provided input
         virtual_port_id does not exist with this filter type.
 
-        :param virtual_port_id: The name of the port of this virtual filter that should be translated to the channel id
-        of an instantiated filter.
-        :returns: The resolved real filter and output port combination or None if the input was invalid.
+        Args:
+            virtual_port_id: The name of the port of this virtual filter that should be translated to the channel id
+                                of an instantiated filter.
+
+        Returns: The resolved real filter and output port combination or None if the input was invalid.
+
         """
         raise NotImplementedError
 
@@ -368,11 +371,14 @@ class VirtualFilter(Filter, abc.ABC):
 
         It places the real filters inside the provided filter_list argument.
 
-        :param filter_list: The list to resolve the real filters into
+        Notes:
+            Implementing classes do not need to resolve real port addresses from other filters themselves as this
+            method will be called prior to resolving filter addresses. Instead, instantiated filters need to contain the
+            configured channel mappings.
 
-        :note: Implementing classes do not need to resolve real port addresses from other filters themselves as this
-        method will be called prior to resolving filter addresses. Instead, instantiated filters need to contain the
-        configured channel mappings.
+        Args:
+            filter_list: The list to resolve the real filters into
+
         """
         raise NotImplementedError
 
