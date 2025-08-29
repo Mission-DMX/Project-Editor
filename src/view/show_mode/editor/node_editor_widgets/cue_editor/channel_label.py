@@ -1,6 +1,8 @@
 """Internal widget to provide labels for channels in timeline."""
+
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui
@@ -22,15 +24,29 @@ class TimelineChannelLabel(QWidget):
     def __init__(self, parent: QWidget = None) -> None:
         """Initialize the channel label."""
         super().__init__(parent=parent)
-        self.active_channels: dict[str, bool] = {}
+        self._active_channels: dict[str, bool] = {}
         self._display_active_channel_indicator = False
         self._names: list[str] = []
         self._types: list[str] = []
         self.setMinimumWidth(2 * CHANNEL_DISPLAY_HEIGHT)
         self.setMinimumHeight(20)
-        self.sb_offset = 0
+        self._sb_offset = 0
         self._update()
         # TODO register with the bank set fader touch buttons to highlight a touched channel.
+
+    @property
+    def active_channels(self) -> MappingProxyType[str, bool]:
+        """Active channels."""
+        return MappingProxyType(self.active_channels)
+
+    @property
+    def sb_offset(self) -> int:
+        """Offset of the scrollbar."""
+        return self._sb_offset
+
+    @sb_offset.setter
+    def sb_offset(self, value: int) -> None:
+        self._sb_offset = value
 
     def add_label(self, name: str, channel_type: str) -> None:
         """Add a new label.
@@ -42,7 +58,7 @@ class TimelineChannelLabel(QWidget):
         """
         self._names.append(name)
         self._types.append(channel_type)
-        self.active_channels[name] = True
+        self._active_channels[name] = True
         self._update()
 
     def remove_label(self, c_name: str) -> int:
@@ -62,7 +78,7 @@ class TimelineChannelLabel(QWidget):
                 self._types.pop(i)
                 found_i = i
                 break
-        self.active_channels.pop(c_name)
+        self._active_channels.pop(c_name)
         self._update()
         return found_i
 
@@ -70,12 +86,12 @@ class TimelineChannelLabel(QWidget):
         """Remove all labels."""
         self._names.clear()
         self._types.clear()
-        self.active_channels.clear()
+        self._active_channels.clear()
         self._update()
 
     def _update(self) -> None:
         """Update the label properties."""
-        required_height = 2 * 20 + CHANNEL_DISPLAY_HEIGHT * len(self._names) + self.sb_offset
+        required_height = 2 * 20 + CHANNEL_DISPLAY_HEIGHT * len(self._names) + self._sb_offset
         self.setMinimumHeight(required_height)
         self.update()
 
@@ -116,7 +132,7 @@ class TimelineChannelLabel(QWidget):
                 painter.drawText(25, 60 + i * CHANNEL_DISPLAY_HEIGHT, self._types[i])
             if self._display_active_channel_indicator:
                 painter.fillRect(5, 50 + i * CHANNEL_DISPLAY_HEIGHT, 15, 15, indicator_background_color)
-                if channel_name in self.active_channels:
+                if channel_name in self._active_channels:
                     painter.fillRect(6, 51 + i * CHANNEL_DISPLAY_HEIGHT, 13, 13, indicator_active_color)
         painter.end()
 
@@ -129,6 +145,6 @@ class TimelineChannelLabel(QWidget):
             y = ev.y()
             for i, channel_name in enumerate(self._names):
                 if 50 + i * CHANNEL_DISPLAY_HEIGHT <= y <= 65 + i * CHANNEL_DISPLAY_HEIGHT:
-                    self.active_channels[channel_name] = not self.active_channels[channel_name]
+                    self._active_channels[channel_name] = not self._active_channels[channel_name]
                     break
         self.update()
