@@ -4,14 +4,20 @@ SequenceKeyFrame -- A sequence key frame.
 Transition -- A set of key frames, executed in order.
 """
 
+from __future__ import annotations
+
 from collections import Counter
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from model import ColorHSI, DataType
 from model.filter_data.cues.cue import Cue, KeyFrame, State, StateColor, StateDouble, StateEightBit, StateSixteenBit
 from model.filter_data.sequencer._utils import _rf
-from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 from model.filter_data.transfer_function import TransferFunction
+
+if TYPE_CHECKING:
+    from model.filter_data.sequencer.sequencer_channel import SequencerChannel
+
 
 logger = getLogger(__name__)
 
@@ -22,7 +28,9 @@ class SequenceKeyFrame:
     def __init__(self, target_channel: SequencerChannel) -> None:
         """Initialize a sequence key frame.
 
-        :param target_channel: Target channel.
+        Args:
+            target_channel: Target channel.
+
         """
         if target_channel is None:
             logger.error("target_channel is None")
@@ -33,18 +41,19 @@ class SequenceKeyFrame:
 
     def format_for_filter(self) -> str:
         """Serialize for filter definition."""
-        value_str: str = self.target_value.format_for_filter() if isinstance(self.target_value, ColorHSI) \
-            else str(self.target_value)
+        value_str: str = (
+            self.target_value.format_for_filter() if isinstance(self.target_value, ColorHSI) else str(self.target_value)
+        )
         return f"{_rf(self.channel.name)}:{value_str}:{self.tf.value}:{self.duration * 1000.0}"
 
     @staticmethod
-    def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "SequenceKeyFrame":
+    def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> SequenceKeyFrame:
         """Deserialize from filter definition.
 
-        :param s: Filter definition.
-        :type s: str
-        :param channels: Channels to map to.
-        :type channels: list[SequencerChannel]
+        Args:
+            s: Filter definition.
+            channels: Channels to map to.
+
         """
         args = s.split(":")
         channel_name = args[0]
@@ -75,7 +84,7 @@ class SequenceKeyFrame:
         skf.tf = TransferFunction(args[2])
         return skf
 
-    def copy(self, new_target: SequencerChannel) -> "SequenceKeyFrame":
+    def copy(self, new_target: SequencerChannel) -> SequenceKeyFrame:
         """Get a copy of this sequence key frame.
 
         :param new_target: The parent channel of the new key frame object.
@@ -130,14 +139,16 @@ class Transition:
     def format_for_filter(self) -> str:
         """Serialize this transition for filter format."""
         formatted_frame_list = [c.format_for_filter() for c in self.frames]
-        return f"{self._trigger_event[0]}:{self._trigger_event[1]}#{self.name}#{"#".join(formatted_frame_list)}"
+        return f"{self._trigger_event[0]}:{self._trigger_event[1]}#{self.name}#{'#'.join(formatted_frame_list)}"
 
     @staticmethod
-    def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "Transition":
+    def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> Transition:
         """Deserialize this transition from filter format.
 
-        :param s: The serialized description.
-        :param channels: The channel definition that this transition should be mapped to.
+        Args:
+            s: The serialized description.
+            channels: The channel definition that this transition should be mapped to.
+
         """
         if isinstance(channels, list):
             new_dict = {}
@@ -148,17 +159,17 @@ class Transition:
         first_delim = s.find("#")
         event_def = s[:first_delim].split(":")
         t._trigger_event = (int(event_def[0]), int(event_def[1]), "")
-        s = s[first_delim+1:]
+        s = s[first_delim + 1 :]
         first_delim = s.find("#")
         t.name = s[:first_delim]
-        s = s[first_delim + 1:]
+        s = s[first_delim + 1 :]
         for arg in s.split("#"):
             if len(arg) == 0:
                 continue
             t.frames.append(SequenceKeyFrame.from_filter_str(arg, channels))
         return t
 
-    def copy(self, new_channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> "Transition":
+    def copy(self, new_channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> Transition:
         """Get a copy of this transition."""
         new_channels = _force_channel_dict(new_channels)
         t = Transition()
@@ -186,12 +197,15 @@ class Transition:
             c.insert_frame(ckf)
         return c
 
-    def update_frames_from_cue(self, c: Cue,
-                               channel_dict: list[SequencerChannel] | dict[str, SequencerChannel]) -> None:
+    def update_frames_from_cue(
+        self, c: Cue, channel_dict: list[SequencerChannel] | dict[str, SequencerChannel]
+    ) -> None:
         """Update the content of this transition using a Cue object.
 
-        :param c: Cue to use as a reference
-        :param channel_dict: Either a list of SequencerChannels or a dict of channel names and their SequencerChannels.
+        Args:
+            c: Cue to use as a reference
+            channel_dict: Either a list of SequencerChannels or a dict of channel names and their SequencerChannels.
+
         """
         channel_dict = _force_channel_dict(channel_dict)
         self.frames.clear()
