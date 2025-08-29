@@ -1,4 +1,4 @@
-"""Styles for UI"""
+"""Style for UI."""
 
 APP = ""
 
