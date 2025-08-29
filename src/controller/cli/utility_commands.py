@@ -20,7 +20,7 @@ class DelayCommand(Command):
     def __init__(self, context: CLIContext) -> None:
         """Initialize command.
 
-        :see: Command.__init__
+        See `Command.__init__`.
         """
         super().__init__(context, "delay")
 
@@ -65,7 +65,7 @@ class SetCommand(Command):
     def __init__(self, context: CLIContext) -> None:
         """Initialize command.
 
-        :see: Command.__init__
+        See `Command.__init__`.
         """
         super().__init__(context, "set")
 
@@ -96,7 +96,7 @@ class IfCommand(Command):
     def __init__(self, context: CLIContext) -> None:
         """Initialize command.
 
-        :see: Command.__init__
+        See `Command.__init__`.
         """
         super().__init__(context, "if")
 
@@ -106,7 +106,6 @@ class IfCommand(Command):
 
     @override
     def execute(self, args: Namespace) -> bool:
-
         def bool_eval(arg: str) -> bool:
             return len(arg) > 0 and arg != "0"
 
