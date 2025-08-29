@@ -87,7 +87,9 @@ class SequenceKeyFrame:
     def copy(self, new_target: SequencerChannel) -> SequenceKeyFrame:
         """Get a copy of this sequence key frame.
 
-        :param new_target: The parent channel of the new key frame object.
+        Args:
+            new_target: The parent channel of the new key frame object.
+
         """
         if self.channel.name != new_target.name or self.channel == new_target:
             logger.warning("Expected copy of own channel for generation.")
