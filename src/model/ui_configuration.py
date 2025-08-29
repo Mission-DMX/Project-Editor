@@ -1,8 +1,9 @@
 """Contains the show UI model.
 
-UIWidget -- An ABC for a show UI widget.
-UIPage -- A page containing widgets.
-ShowUI -- Container class for all pages in the scene.
+Classes:
+    UIWidget -- An ABC for a show UI widget.
+    UIPage -- A page containing widgets.
+    ShowUI -- Container class for all pages in the scene.
 """
 
 from __future__ import annotations
@@ -29,8 +30,8 @@ class UIWidget(ABC):
         """Set up the basic components of a widget.
 
         Arguments:
-            parent_page (UIPage): The parent page of the widget.
-            configuration (dict[str, str] | None): The configuration of the widget.
+            parent_page: The parent page of the widget.
+            configuration: The configuration of the widget.
 
         """
         self._position: tuple[int, int] = (0, 0)
@@ -83,8 +84,10 @@ class UIWidget(ABC):
     def set_filter(self, f: Filter, i: int) -> None:
         """Set an associated filter.
 
-        :param i: The filter index to update.
-        :param f: The new filter to use.
+        Args:
+            i: The filter index to update.
+            f: The new filter to use.
+
         """
         if not f:
             return
@@ -173,7 +176,9 @@ class UIWidget(ABC):
 
         This method needs to perform a deep copy of the object, excluding generatable state, such as the widgets.
 
-        :param new_parent: The parent of the copy.
+        Args:
+            new_parent: The parent of the copy.
+
         """
         raise NotImplementedError
 
@@ -222,7 +227,7 @@ class UIPage:
         """Construct a UI Page.
 
         Arguments:
-            parent (Scene): The parent Scene.
+            parent: The parent Scene.
 
         """
         self._widgets: list[UIWidget] = []
