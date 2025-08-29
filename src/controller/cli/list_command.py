@@ -1,4 +1,5 @@
 """Client Commands."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -49,7 +50,8 @@ class ListCommand(Command):
                     self.context.print("==================================")
                     for c in bank.columns:
                         self.context.print(
-                            f"{"Color" if isinstance(c, ColorDeskColumn) else "Number"} - {c.display_name}")
+                            f"{'Color' if isinstance(c, ColorDeskColumn) else 'Number'} - {c.display_name}"
+                        )
                 return True
             case "macros":
                 for m in self.context.show.macros:

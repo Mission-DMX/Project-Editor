@@ -1,4 +1,5 @@
 """commands for selection"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -32,7 +33,6 @@ def find_bank_set(identifier: str) -> BankSet | None:
 
 
 class SelectCommand(Command):
-
     def __init__(self, context: CLIContext) -> None:
         super().__init__(context, "select")
         self.help_text = "This command displays the help about a certain command."
@@ -68,6 +68,7 @@ class SelectCommand(Command):
                 self.context.print(f"ERROR: the requested bank set '{args.item}' was not found")
             case _:
                 self.context.print(
-                    f"ERROR: The resource '{args.what}' cannot be selected. Type 'help select' to obtain a list.")
+                    f"ERROR: The resource '{args.what}' cannot be selected. Type 'help select' to obtain a list."
+                )
                 return False
         return True
