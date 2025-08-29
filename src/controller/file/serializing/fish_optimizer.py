@@ -35,7 +35,7 @@ class SceneOptimizerModule:
     def _substitute_universe_filter(self, f: Filter) -> None:
         """Register a universe filter for later aggregation.
 
-        Updates the internal dictionary of universe filters with the given filter’s configuration.
+        Updates the internal dictionary of universe filters with the given filters configuration.
         Each entry is a tuple of ``(input_channel_name, universe_channel, foreign_output_channel)``.
 
         Args:

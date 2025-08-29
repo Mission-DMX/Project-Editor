@@ -140,7 +140,7 @@ class Effect(ABC):
 
         This method must handle cases where an input slot is not occupied and insert reasonable defaults.
         Implementers are responsible for calling `emplace_filter` on subsequently placed filters.
-        The method returns a dictionary describing the output ports of the emplaced filters relevant for using the output.
+        Returns a dictionary describing the output ports of the emplaced filters relevant for using the output.
         The layout of this dictionary is: {"output-name": "filter_id:channel"}.
 
         Based on the effect output types, the following outputs need to be provided:
@@ -175,7 +175,8 @@ class Effect(ABC):
     def get_serializable_effect_name(self) -> str:
         """Return a unique identifier for the effect.
 
-        This method must be implemented to provide an effect name that can be used to store and recover the effect's state.
+        This method must be implemented to provide an effect name that can be used to store and recover the effect's
+        state.
 
         Returns:
             A unique identifier for the effect.
