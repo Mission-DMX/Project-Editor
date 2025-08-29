@@ -280,9 +280,11 @@ class KeyFrame:
     def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: Cue) -> KeyFrame:
         """Deserialize from filter representation.
 
-        :param f_str: Filter representation string.
-        :param channel_data_types: Associated channels.
-        :param parent_cue: Parent cue.
+        Args:
+            f_str: Filter representation string.
+            channel_data_types: Associated channels.
+            parent_cue: Parent cue.
+
         """
         parts = f_str.split(":")
         if len(parts) != 2:
