@@ -37,8 +37,8 @@ class AutoTrackerSettings:
         self._map: MappingCalibration | None = None
         if self.settings.get("mapping_calibration"):
             self._map = MappingCalibration(self.settings["mapping_calibration"])
-        if self.settings.get('crop'):
-            self._load_crop(self.settings['crop'])
+        if self.settings.get("crop"):
+            self._load_crop(self.settings["crop"])
         self._next_frame = None
 
     @property
@@ -97,7 +97,8 @@ class AutoTrackerSettings:
         """
         This method parses the provided definition and stores them inside the cropping definition.
 
-        :param cs: The string representation of the cropping information to parse.
+        Args:
+            cs: The string representation of the cropping information to parse.
         """
-        cx_args = cs.replace('(', '').replace(')', '').split(', ')
+        cx_args = cs.replace("(", "").replace(")", "").split(", ")
         self.crop = (int(cx_args[0]), int(cx_args[1]), int(cx_args[2]), int(cx_args[3]))
