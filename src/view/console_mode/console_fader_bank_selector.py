@@ -1,4 +1,5 @@
 """Contains ConsoleFaderBankSelectorWidget."""
+
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QWidget
 
@@ -10,8 +11,13 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
 
     fader_value_changed = Signal(int)
 
-    def __init__(self, bank_set: BankSet, display_text: str, parent: QWidget = None,
-                 bank_set_control_list: list[QWidget] | None = None) -> None:
+    def __init__(
+        self,
+        bank_set: BankSet,
+        display_text: str,
+        parent: QWidget = None,
+        bank_set_control_list: list[QWidget] | None = None,
+    ) -> None:
         """Initialize the widget."""
         super().__init__(parent)
         if bank_set_control_list is None:
@@ -36,7 +42,9 @@ class ConsoleFaderBankSelectorWidget(QComboBox):
     def insert_fader_column(self, force_bank_index: int | None = None) -> None:
         """Add a new fader column.
 
-        :param force_bank_index: Index of fader column to insert. If None: go to the end of the bank.
+        Args:
+            force_bank_index: Index of fader column to insert. If None: go to the end of the bank.
+
         """
         self._skip_next_update = True
         if self._fader:
