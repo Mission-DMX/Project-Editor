@@ -119,7 +119,7 @@ class CLIContext:
 
     @property
     def exit_called(self) -> bool:
-        """Has the exit command been called?"""
+        """Return whether the exit command has been called."""
         return self._exit_called
 
     @exit_called.setter
