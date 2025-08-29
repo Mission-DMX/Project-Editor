@@ -1,5 +1,7 @@
 """Application settings."""
 
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -25,7 +27,7 @@ class AutoTrackerSettings:
 
     """
 
-    def __init__(self, f: "AutoTrackerFilter"):
+    def __init__(self, f: AutoTrackerFilter):
         """Initialize the `Settings` class with default values."""
         self._crop: tuple[int, int, int, int] = (0, 0, 0, 0)
         self._lights: LightController = f.light_controller
