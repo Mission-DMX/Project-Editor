@@ -42,12 +42,7 @@ logger = getLogger(__name__)
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
-    """GraphicsItem to handle opening filter settings dialog.
-
-    Attributes:
-        filter_node: The filter this item belongs to
-
-    """
+    """GraphicsItem to handle opening filter settings dialog."""
 
     _open_dialogs: ClassVar[list[QDialog]] = []
 
@@ -61,9 +56,9 @@ class FilterSettingsItem(QGraphicsSvgItem):
 
         """
         super().__init__(resource_path(os.path.join("resources", "icons", "settings.svg")), parent)
-        self.dialog = None
-        self.filter_node = filter_node
-        self.on_update = lambda: None
+        self._dialog = None
+        self._filter_node = filter_node
+        self._on_update = lambda: None
         self.setScale(0.2)
         self.moveBy(parent.boundingRect().width() / 2 - 6, parent.boundingRect().height() - 20)
         self._filter = filter_
@@ -72,13 +67,13 @@ class FilterSettingsItem(QGraphicsSvgItem):
     @override
     def focusOutEvent(self, ev: QFocusEvent) -> None:
         super().focusOutEvent(ev)
-        if self.on_update is not None:
-            self.on_update()
+        if self._on_update is not None:
+            self._on_update()
 
     @override
     def keyPressEvent(self, ev: QKeyEvent) -> None:
-        if ev.key() == Qt.Key.Key_Enter or (ev.key() == Qt.Key.Key_Return and self.on_update is not None):
-            self.on_update()
+        if ev.key() == Qt.Key.Key_Enter or (ev.key() == Qt.Key.Key_Return and self._on_update is not None):
+            self._on_update()
             return
         super().keyPressEvent(ev)
 
@@ -90,10 +85,10 @@ class FilterSettingsItem(QGraphicsSvgItem):
         if ev.button() == Qt.MouseButton.LeftButton:
             # TODO make sure that we're opening it in the same dialog, fixed to a screen unless settings request
             #  otherwise
-            if self.dialog is not None:
-                self.dialog.deleteLater()
-            self.dialog = FilterSettingsDialog(self.filter_node)
-            self.dialog.show()
+            if self._dialog is not None:
+                self._dialog.deleteLater()
+            self._dialog = FilterSettingsDialog(self._filter_node)
+            self._dialog.show()
 
     @override
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget | None = ...) -> None:
