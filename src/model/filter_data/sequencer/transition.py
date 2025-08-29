@@ -43,6 +43,11 @@ class SequenceKeyFrame:
         self._tf: TransferFunction = TransferFunction.LINEAR
 
     @property
+    def duration(self) -> float:
+        """Duration of this key frame."""
+        return self._duration
+
+    @property
     def channel(self) -> SequencerChannel:
         """Target channel."""
         return self._channel
@@ -227,7 +232,7 @@ class Transition:
         t = Transition()
         t._trigger_event = self._trigger_event
         for skf in self._frames:
-            t._frames.append(skf.copy(new_channels[skf._channel.name]))
+            t._frames.append(skf.copy(new_channels[skf.channel.name]))
         return t
 
     def to_cue(self) -> Cue:
@@ -235,16 +240,16 @@ class Transition:
         c = Cue()
         channels: dict[str, DataType] = dict(self.preselected_channels)
         for f in self._frames:
-            channels[f._channel.name] = f._channel.data_type
+            channels[f.channel.name] = f.channel.data_type
         for k, v in channels.items():
             c.add_channel(k, v)
         channel_ages = Counter()
         for f in self._frames:
             ckf = KeyFrame(c)
-            channel_name = f._channel.name
+            channel_name = f.channel.name
             ckf.only_on_channel = channel_name
             ckf.append_state(f.target_value_as_cue_state())
-            channel_ages[channel_name] += f._duration
+            channel_ages[channel_name] += f.duration
             ckf.timestamp = channel_ages[channel_name]
             c.insert_frame(ckf)
         return c
