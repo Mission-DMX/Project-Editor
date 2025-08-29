@@ -72,10 +72,7 @@ class _AddMacroActionDialog(QDialog):
 
     def _ok_button_pressed(self) -> None:
         model = json.loads(self._ui_widget.configuration.get("items") or "[]")
-        model.append({
-            "text": self._text_tb.text(),
-            "command": self._command_tb.text()
-        })
+        model.append({"text": self._text_tb.text(), "command": self._command_tb.text()})
         self._ui_widget.configuration["items"] = json.dumps(model)
         self._ui_widget._refresh_config_macro_list(self._button_list, update_button=self._update_button)
         self.close()
@@ -85,13 +82,12 @@ class _AddMacroActionDialog(QDialog):
 
 
 class _MacroListWidget(QWidget):
-
     _NO_ICON = QIcon(resource_path(os.path.join("resources", "icons", "missing-image.svg")))
 
     def __init__(self, parent: QListWidget, item_def: dict[str, str], index: int, update_button: QPushButton) -> None:
         super().__init__(parent)
         self._item_def = item_def
-        self._update_button : QPushButton = update_button
+        self._update_button: QPushButton = update_button
         layout = QHBoxLayout()
         layout.addWidget(QLabel(str(index)))
         self._icon_bt = QPushButton(self)
@@ -141,6 +137,7 @@ class MacroButtonUIWidget(UIWidget):
         self._latest_config_widget: BoxGridRenderer | None = None
         from controller.cli.cli_context import CLIContext
         from controller.network import NetworkManager
+
         self._context = CLIContext(parent.scene.board_configuration, NetworkManager(), False)
         self._logger = getLogger(f"{parent.title} macro_button_returns")
 
