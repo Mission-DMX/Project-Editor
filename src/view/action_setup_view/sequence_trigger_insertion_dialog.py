@@ -1,4 +1,6 @@
 """Contains SequenceTriggerInsertionDialog."""
+
+from collections.abc import Callable
 from typing import override
 
 from PySide6.QtWidgets import QComboBox, QWidget
@@ -14,18 +16,17 @@ from view.action_setup_view._command_insertion_dialog import escape_argument as 
 class SequenceTriggerInsertionDialog(_CommandInsertionDialog):
     """Dialog to insert triggers for sequences."""
 
-    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: callable) -> None:
+    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: Callable) -> None:
         """Initialize the dialog.
 
-        :param parent: The parent widget.
-        :param macro: The macro model.
-        :param show: The show model.
-        :param update_callable: Method to be called after user confirmation.
+        Args:
+            parent: The parent widget.
+            macro: The macro model.
+            show: The show model.
+            update_callable: Method to be called after user confirmation.
+
         """
-        super().__init__(
-            parent, macro,[FilterTypeEnumeration.VFILTER_SEQUENCER],
-            show, update_callable
-        )
+        super().__init__(parent, macro, [FilterTypeEnumeration.VFILTER_SEQUENCER], show, update_callable)
         self._sequence_selection_cb = QComboBox(self)
         self._sequence_selection_cb.setEnabled(False)
         self._sequence_selection_cb.setEditable(False)
@@ -44,5 +45,7 @@ class SequenceTriggerInsertionDialog(_CommandInsertionDialog):
     @override
     def get_command(self) -> str:
         data = self._sequence_selection_cb.currentData()
-        return (f"event send -i {esc(data[0])} --function {esc(data[1])} --args {esc(data[2])}  # trigger "
-                f"transition {self._sequence_selection_cb.currentText()}")
+        return (
+            f"event send -i {esc(data[0])} --function {esc(data[1])} --args {esc(data[2])}  # trigger "
+            f"transition {self._sequence_selection_cb.currentText()}"
+        )
