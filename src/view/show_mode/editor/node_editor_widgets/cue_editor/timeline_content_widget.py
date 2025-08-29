@@ -1,4 +1,6 @@
 """File contains internal timeline content widget."""
+
+from collections.abc import Sequence
 from typing import override
 
 import PySide6
@@ -26,17 +28,45 @@ class TimelineContentWidget(QWidget):
         self._last_keyframe_end_point = 0  # Defines the length of the Cue in seconds
         self._time_zoom = 0.01  # Defines how many seconds are a pixel, defaults to 1 pixel = 10ms
         self._channels: list[tuple[DataType, str]] = []
-        self.frames: list[KeyFrame] = []
-        self.cursor_position = 3.0
+        self._frames: list[KeyFrame] = []
+        self._cursor_position = 3.0
         self._drag_begin: tuple[int, int] = None
-        self.compute_resize()
+        self._compute_resize()
         self._cue_index: int = 0
-        self.used_bankset: BankSet = None
+        self._used_bankset: BankSet = None
         self._last_clicked_kf_state: State = None
 
     @property
+    def used_bankset(self) -> BankSet:
+        """Bankset used by the timeline."""
+        return self._used_bankset
+
+    @used_bankset.setter
+    def used_bankset(self, bs: BankSet) -> None:
+        self._used_bankset = bs
+
+    @property
+    def frames(self) -> Sequence[KeyFrame]:
+        """List of keyframes."""
+        return tuple(self._frames)
+
+    @frames.setter
+    def frames(self, value: list[KeyFrame]) -> None:
+        self._frames = value
+
+    @property
+    def cursor_position(self) -> float:
+        """Current cursor position."""
+        return self._cursor_position
+
+    @property
     def cue_index(self) -> int:
-        """Get or set the current cue index. This will also be displayed on the x-touch 7seg display."""
+        """Current cue index.
+
+        Notes:
+            This will also be displayed on the x-touch 7seg display.
+
+        """
         return self._cue_index
 
     @cue_index.setter
@@ -73,7 +103,7 @@ class TimelineContentWidget(QWidget):
         light_gray_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         kf_line_brush = QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC))
         kf_line_brush.setStyle(Qt.HorPattern)
-        for kf in self.frames:
+        for kf in self._frames:
             if kf:
                 i = 0
                 x = int(kf.timestamp / self._time_zoom)
@@ -125,7 +155,7 @@ class TimelineContentWidget(QWidget):
                 time_str = format_seconds(x * self._time_zoom)
                 painter.drawText(x, y - 2, time_str)
                 x += 10 * len(time_str)
-        abs_cursor_pos = int(self.cursor_position / self._time_zoom)
+        abs_cursor_pos = int(self._cursor_position / self._time_zoom)
         cursor_path = QPainterPath(QPoint(abs_cursor_pos, 0))
         cursor_path.moveTo(-16 + abs_cursor_pos, 0)
         cursor_path.lineTo(16 + abs_cursor_pos, 0)
@@ -151,7 +181,7 @@ class TimelineContentWidget(QWidget):
         super().resizeEvent(event)
         self.size_changed.emit(QPoint(self.width(), self.height()))
 
-    def compute_resize(self) -> None:
+    def _compute_resize(self) -> None:
         """Actual handling of the recomputation of layout after resizing occurred."""
         p = self.parent()
         if p:
@@ -164,7 +194,7 @@ class TimelineContentWidget(QWidget):
             max(
                 parent_width,
                 int(self._last_keyframe_end_point / self._time_zoom),
-                int(self.cursor_position / self._time_zoom),
+                int(self._cursor_position / self._time_zoom),
             )
         )
         self.setMinimumHeight(max(parent_height, int(len(self._channels) * CHANNEL_DISPLAY_HEIGHT) + 2 * 20))
@@ -174,16 +204,16 @@ class TimelineContentWidget(QWidget):
         """Add a channel to the internal model."""
         for c in channels:
             self._channels.append(c)
-        self.compute_resize()
+        self._compute_resize()
 
     def remove_channel(self, i: int) -> None:
         """Remove a channel from the internal model."""
         self._channels.pop(i)
-        self.compute_resize()
+        self._compute_resize()
 
     def insert_frame(self, f: KeyFrame) -> None:
         """Insert a frame from the internal model."""
-        self.frames.append(f)
+        self._frames.append(f)
         self._last_clicked_kf_state = None
         self.repaint()
 
@@ -193,7 +223,7 @@ class TimelineContentWidget(QWidget):
             return
         self._last_clicked_kf_state = None
         self._time_zoom *= factor
-        self.compute_resize()
+        self._compute_resize()
 
     def zoom_in(self, factor: float = 2.0) -> None:
         """Increase the zoom factor by the given amount."""
@@ -201,33 +231,33 @@ class TimelineContentWidget(QWidget):
             return
         self._last_clicked_kf_state = None
         self._time_zoom /= factor
-        self.compute_resize()
+        self._compute_resize()
 
     def move_cursor_right(self) -> None:
         """Move the cursor to the right."""
         # TODO notify parent scrolling if it is moving out of site.
         if not self.isEnabled():
             return
-        self.cursor_position += self._time_zoom * 10
+        self._cursor_position += self._time_zoom * 10
         self._last_clicked_kf_state = None
         self._update_7seg_text()
-        self.compute_resize()
+        self._compute_resize()
 
     def move_cursor_left(self) -> None:
         """Move the cursor to the left."""
         # TODO notify parent scrolling if it is moving out of site
         if not self.isEnabled():
             return
-        self.cursor_position -= self._time_zoom * 10
-        if self.cursor_position < 0:
-            self.cursor_position = 0.0
+        self._cursor_position -= self._time_zoom * 10
+        if self._cursor_position < 0:
+            self._cursor_position = 0.0
         self._last_clicked_kf_state = None
         self._update_7seg_text()
-        self.compute_resize()
+        self._compute_resize()
 
     def _update_7seg_text(self) -> None:
         """Generate 7seg display text based on current cursor position and cue index."""
-        txt = format_seconds(self.cursor_position).replace(":", "").replace(".", "")
+        txt = format_seconds(self._cursor_position).replace(":", "").replace(".", "")
         while len(txt) < 10:
             txt = "0" + txt
         txt = str(self._cue_index % 100) + txt
@@ -245,13 +275,13 @@ class TimelineContentWidget(QWidget):
         x = ev.x()
         if y <= 20:
             clicked_timeslot = x * self._time_zoom
-            self.cursor_position = clicked_timeslot
+            self._cursor_position = clicked_timeslot
             self._update_7seg_text()
         else:
             state_width = 10 if 20 <= ((y - 20) % CHANNEL_DISPLAY_HEIGHT) <= 40 else 1
             clicked_timeslot_lower = (x - state_width) * self._time_zoom
             clicked_timeslot_upper = (x + state_width) * self._time_zoom
-            for kf in self.frames:
+            for kf in self._frames:
                 if clicked_timeslot_lower <= kf.timestamp <= clicked_timeslot_upper:
                     if kf.only_on_channel is None:
                         self._clicked_on_keyframe(kf, y)
@@ -275,10 +305,10 @@ class TimelineContentWidget(QWidget):
         else:
             self._last_clicked_kf_state = None
             new_state = None
-        if self.used_bankset:
+        if self._used_bankset:
             kf_states = states
             i = 0
-            for b in self.used_bankset.banks:
+            for b in self._used_bankset.banks:
                 for c in b.columns:
                     if i < len(kf_states):
                         s = kf_states[i]
@@ -294,19 +324,19 @@ class TimelineContentWidget(QWidget):
                         i += 1
                     else:
                         break
-            self.used_bankset.push_messages_now()
+            self._used_bankset.push_messages_now()
         if double_click_issued:
-            self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state, self.compute_resize)
+            self._dialog = KeyFrameStateEditDialog(self.parent(), kf, new_state, self._compute_resize)
             self._dialog.open()
 
     def clear_cue(self) -> None:
         """Clear the timeline renderer model."""
         self._channels.clear()
-        self.cursor_position = 0.0
-        self.frames = []
+        self._cursor_position = 0.0
+        self._frames = []
         self._last_keyframe_end_point = 0
         self._update_7seg_text()
-        self.compute_resize()
+        self._compute_resize()
 
     def _get_channel_index(self, only_on_channel: str | None) -> int:
         """Get the index of the current channel."""
