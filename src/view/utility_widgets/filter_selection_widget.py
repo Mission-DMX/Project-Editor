@@ -14,13 +14,16 @@ class FilterSelectionWidget(QTreeWidget):
 
     selected_filter_changed: Signal = Signal(str)
 
-    def __init__(self, parent: QWidget | None, scene: Scene | None,
-                 allowed_filter_types: list[FilterTypeEnumeration] | None) -> None:
-        """Initialize the selection widget.
+    def __init__(
+        self, parent: QWidget | None, scene: Scene | None, allowed_filter_types: list[FilterTypeEnumeration] | None
+    ) -> None:
+        """Filter Select widget.
 
-        :param parent: The parent Qt widget.
-        :param scene: The scene to select the filter from.
-        :param allowed_filter_types: The filter types that are suitable for user selection.
+        Args:
+            parent: The parent Qt widget.
+            scene: The scene to select the filter from.
+            allowed_filter_types: The filter types that are suitable for user selection.
+
         """
         super().__init__(parent)
         self._scene = scene
@@ -58,7 +61,8 @@ class FilterSelectionWidget(QTreeWidget):
     def populate_widget(self) -> bool:
         """Refresh the widget model.
 
-        :return: True if a filter is selected afterward.
+        Returns: True if a filter is selected afterward.
+
         """
         selected_filter_found = False
         already_added_filters = set()
@@ -69,8 +73,9 @@ class FilterSelectionWidget(QTreeWidget):
         self._last_selected_item = None
 
         def is_filter_addable(filter_to_add: Filter) -> bool:
-            return not ((len(self._allowed_filter_types) > 0) and
-                        (filter_to_add.filter_type not in self._allowed_filter_types))
+            return not (
+                (len(self._allowed_filter_types) > 0) and (filter_to_add.filter_type not in self._allowed_filter_types)
+            )
 
         def add_filter_item(filter_to_add: Filter, page_item: AnnotatedTreeWidgetItem) -> AnnotatedTreeWidgetItem:
             nonlocal already_added_filters
