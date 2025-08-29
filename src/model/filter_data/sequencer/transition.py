@@ -36,17 +36,24 @@ class SequenceKeyFrame:
         """
         if target_channel is None:
             logger.error("target_channel is None")
-        self.channel: SequencerChannel = target_channel
-        self.target_value: int | float | ColorHSI = 0
-        self.duration: float = 0.0
-        self.tf: TransferFunction = TransferFunction.LINEAR
+        self._channel: SequencerChannel = target_channel
+        self._target_value: int | float | ColorHSI = 0
+        self._duration: float = 0.0
+        self._tf: TransferFunction = TransferFunction.LINEAR
+
+    @property
+    def channel(self) -> SequencerChannel:
+        """Target channel."""
+        return self._channel
 
     def format_for_filter(self) -> str:
         """Serialize for filter definition."""
         value_str: str = (
-            self.target_value.format_for_filter() if isinstance(self.target_value, ColorHSI) else str(self.target_value)
+            self._target_value.format_for_filter()
+            if isinstance(self._target_value, ColorHSI)
+            else str(self._target_value)
         )
-        return f"{_rf(self.channel.name)}:{value_str}:{self.tf.value}:{self.duration * 1000.0}"
+        return f"{_rf(self._channel.name)}:{value_str}:{self._tf.value}:{self._duration * 1000.0}"
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> SequenceKeyFrame:
@@ -71,19 +78,19 @@ class SequenceKeyFrame:
         skf = SequenceKeyFrame(found_channel)
         match found_channel.data_type:
             case DataType.DT_8_BIT:
-                skf.target_value = max(0, min(255, int(args[1])))
+                skf._target_value = max(0, min(255, int(args[1])))
             case DataType.DT_16_BIT:
-                skf.target_value = max(0, min(65535, int(args[1])))
+                skf._target_value = max(0, min(65535, int(args[1])))
             case DataType.DT_DOUBLE:
-                skf.target_value = float(args[1])
+                skf._target_value = float(args[1])
             case DataType.DT_BOOL:
-                skf.target_value = max(0, min(1, int(args[1])))
+                skf._target_value = max(0, min(1, int(args[1])))
             case DataType.DT_COLOR:
-                skf.target_value = ColorHSI.from_filter_str(args[1])
+                skf._target_value = ColorHSI.from_filter_str(args[1])
             case _:
                 logger.error("Expected data type: %s", found_channel.data_type)
-        skf.duration = float(args[3]) / 1000.0
-        skf.tf = TransferFunction(args[2])
+        skf._duration = float(args[3]) / 1000.0
+        skf._tf = TransferFunction(args[2])
         return skf
 
     def copy(self, new_target: SequencerChannel) -> SequenceKeyFrame:
@@ -93,31 +100,31 @@ class SequenceKeyFrame:
             new_target: The parent channel of the new key frame object.
 
         """
-        if self.channel.name != new_target.name or self.channel == new_target:
+        if self._channel.name != new_target.name or self._channel == new_target:
             logger.warning("Expected copy of own channel for generation.")
         sc = SequenceKeyFrame(new_target)
-        if self.channel.data_type == DataType.DT_COLOR:
-            sc.target_value = self.target_value.copy()
+        if self._channel.data_type == DataType.DT_COLOR:
+            sc._target_value = self._target_value.copy()
         else:
-            sc.target_value = self.target_value
-        sc.duration = self.duration
-        sc.tf = self.tf
+            sc._target_value = self._target_value
+        sc._duration = self._duration
+        sc._tf = self._tf
         return sc
 
     def target_value_as_cue_state(self) -> State:
         """Return the target value as a cue state."""
-        match self.channel.data_type:
+        match self._channel.data_type:
             case DataType.DT_8_BIT:
-                s = StateEightBit(self.tf.value)
+                s = StateEightBit(self._tf.value)
             case DataType.DT_16_BIT:
-                s = StateSixteenBit(self.tf.value)
+                s = StateSixteenBit(self._tf.value)
             case DataType.DT_DOUBLE:
-                s = StateDouble(self.tf.value)
+                s = StateDouble(self._tf.value)
             case DataType.DT_COLOR:
-                s = StateColor(self.tf.value)
+                s = StateColor(self._tf.value)
             case DataType.DT_BOOL:
-                s = StateEightBit(self.tf.value)
-        s._value = self.target_value
+                s = StateEightBit(self._tf.value)
+        s._value = self._target_value
         return s
 
 
@@ -179,7 +186,7 @@ class Transition:
         t = Transition()
         t._trigger_event = self._trigger_event
         for skf in self.frames:
-            t.frames.append(skf.copy(new_channels[skf.channel.name]))
+            t.frames.append(skf.copy(new_channels[skf._channel.name]))
         return t
 
     def to_cue(self) -> Cue:
@@ -187,16 +194,16 @@ class Transition:
         c = Cue()
         channels: dict[str, DataType] = self.preselected_channels.copy()
         for f in self.frames:
-            channels[f.channel.name] = f.channel.data_type
+            channels[f._channel.name] = f._channel.data_type
         for k, v in channels.items():
             c.add_channel(k, v)
         channel_ages = Counter()
         for f in self.frames:
             ckf = KeyFrame(c)
-            channel_name = f.channel.name
+            channel_name = f._channel.name
             ckf.only_on_channel = channel_name
             ckf.append_state(f.target_value_as_cue_state())
-            channel_ages[channel_name] += f.duration
+            channel_ages[channel_name] += f._duration
             ckf.timestamp = channel_ages[channel_name]
             c.insert_frame(ckf)
         return c
@@ -217,10 +224,10 @@ class Transition:
         channel_ages = Counter()
         for cf in c._frames:
             skf = SequenceKeyFrame(channel_dict.get(cf.only_on_channel))
-            skf.target_value = cf._states[0]._value
-            skf.tf = TransferFunction(cf._states[0].transition)
-            skf.duration = cf.timestamp - channel_ages[cf.only_on_channel]
-            channel_ages[cf.only_on_channel] += skf.duration
+            skf._target_value = cf._states[0]._value
+            skf._tf = TransferFunction(cf._states[0].transition)
+            skf._duration = cf.timestamp - channel_ages[cf.only_on_channel]
+            channel_ages[cf.only_on_channel] += skf._duration
             self.frames.append(skf)
 
     @property
@@ -230,5 +237,5 @@ class Transition:
             return 0.0
         durations = Counter()
         for f in self.frames:
-            durations[f.channel] += f.duration
+            durations[f._channel] += f._duration
         return max(durations.values())
