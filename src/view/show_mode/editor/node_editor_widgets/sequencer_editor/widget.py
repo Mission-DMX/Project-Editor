@@ -341,7 +341,7 @@ class SequencerEditor(PreviewEditWidget):
         channel_dict: dict[str, DataType] = {}
         for c_name in self._input_dialog.selected_items:
             channel_dict[c_name] = self._model.get_channel_by_name(c_name).data_type
-        self._selected_transition.preselected_channels.update(channel_dict)
+        self._selected_transition.update_preselected_channels(channel_dict)
         self._transition_selected(self._selected_transition)
 
     def _remove_transition_clicked(self) -> None:
@@ -391,7 +391,7 @@ class SequencerEditor(PreviewEditWidget):
         if self._selected_transition is None:
             logger.error("Expected selected transition to exist")
             return
-        self._selected_transition._trigger_event = self._input_dialog.selected_event
+        self._selected_transition.trigger_event = self._input_dialog.selected_event
         self._transition_widget_map[self._selected_transition].update_labels(self._selected_transition)
 
     def _recolor_bankset(self) -> None:

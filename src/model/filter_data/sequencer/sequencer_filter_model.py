@@ -71,7 +71,7 @@ class SequencerFilterModel:
                     if skf.channel.name == c_name:
                         to_remove.append(skf)
                 for rc in to_remove:
-                    t.frames.remove(rc)
+                    t.remove_frame(rc)
 
     def get_channel_by_name(self, c_name: str) -> SequencerChannel | None:
         """Lookup a channel by its name.

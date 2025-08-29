@@ -1,4 +1,5 @@
 """Label for transitions."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -44,5 +45,5 @@ class TransitionLabel(QWidget):
     def update_labels(self, transition: Transition) -> None:
         """Update the label according to the provided transition."""
         self._transition_name_label.setText(transition.name)
-        self._event_label.setText(str(transition._trigger_event))
+        self._event_label.setText(str(transition.trigger_event))
         self._duration_label.setText(format_seconds(transition.duration))

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections import Counter
 from logging import getLogger
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from model import ColorHSI, DataType
@@ -143,14 +144,54 @@ class Transition:
     def __init__(self) -> None:
         """Instantiate a transition object."""
         self._trigger_event: tuple[int, int, str] = (0, 0, "")
-        self.frames: list[SequenceKeyFrame] = []
-        self.name: str = ""
-        self.preselected_channels: dict[str, DataType] = {}
+        self._frames: list[SequenceKeyFrame] = []
+        self._name: str = ""
+        self._preselected_channels: dict[str, DataType] = {}
+
+    @property
+    def preselected_channels(self) -> MappingProxyType[str, DataType]:
+        """Preselected channels."""
+        return MappingProxyType(self._preselected_channels)
+
+    @preselected_channels.setter
+    def preselected_channels(self, new_preselected_channels: dict[str, DataType]) -> None:
+        self._preselected_channels = new_preselected_channels
+
+    def update_preselected_channels(self, new_preselected_channels: dict[str, DataType]) -> None:
+        """Update the preselected channels."""
+        self._preselected_channels.update(new_preselected_channels)
+
+    @property
+    def trigger_event(self) -> tuple[int, int, str]:
+        """Trigger event of this transition."""
+        return self._trigger_event
+
+    @trigger_event.setter
+    def trigger_event(self, new_trigger_event: tuple[int, int, str]) -> None:
+        self._trigger_event = new_trigger_event
+
+    @property
+    def name(self) -> str:
+        """Name of this transition."""
+        return self._name
+
+    @name.setter
+    def name(self, new_name: str) -> None:
+        self._name = new_name
+
+    @property
+    def frames(self) -> Sequence[SequenceKeyFrame]:
+        """Get the frames of this transition."""
+        return tuple(self._frames)
+
+    def remove_frame(self, frame: SequenceKeyFrame) -> None:
+        """Remove a frame from this transition."""
+        self._frames.remove(frame)
 
     def format_for_filter(self) -> str:
         """Serialize this transition for filter format."""
-        formatted_frame_list = [c.format_for_filter() for c in self.frames]
-        return f"{self._trigger_event[0]}:{self._trigger_event[1]}#{self.name}#{'#'.join(formatted_frame_list)}"
+        formatted_frame_list = [c.format_for_filter() for c in self._frames]
+        return f"{self._trigger_event[0]}:{self._trigger_event[1]}#{self._name}#{'#'.join(formatted_frame_list)}"
 
     @staticmethod
     def from_filter_str(s: str, channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> Transition:
@@ -172,12 +213,12 @@ class Transition:
         t._trigger_event = (int(event_def[0]), int(event_def[1]), "")
         s = s[first_delim + 1 :]
         first_delim = s.find("#")
-        t.name = s[:first_delim]
+        t._name = s[:first_delim]
         s = s[first_delim + 1 :]
         for arg in s.split("#"):
             if len(arg) == 0:
                 continue
-            t.frames.append(SequenceKeyFrame.from_filter_str(arg, channels))
+            t._frames.append(SequenceKeyFrame.from_filter_str(arg, channels))
         return t
 
     def copy(self, new_channels: list[SequencerChannel] | dict[str, SequencerChannel]) -> Transition:
@@ -185,20 +226,20 @@ class Transition:
         new_channels = _force_channel_dict(new_channels)
         t = Transition()
         t._trigger_event = self._trigger_event
-        for skf in self.frames:
-            t.frames.append(skf.copy(new_channels[skf._channel.name]))
+        for skf in self._frames:
+            t._frames.append(skf.copy(new_channels[skf._channel.name]))
         return t
 
     def to_cue(self) -> Cue:
         """Convert the transition to a cue object."""
         c = Cue()
-        channels: dict[str, DataType] = self.preselected_channels.copy()
-        for f in self.frames:
+        channels: dict[str, DataType] = dict(self.preselected_channels)
+        for f in self._frames:
             channels[f._channel.name] = f._channel.data_type
         for k, v in channels.items():
             c.add_channel(k, v)
         channel_ages = Counter()
-        for f in self.frames:
+        for f in self._frames:
             ckf = KeyFrame(c)
             channel_name = f._channel.name
             ckf.only_on_channel = channel_name
@@ -219,7 +260,7 @@ class Transition:
 
         """
         channel_dict = _force_channel_dict(channel_dict)
-        self.frames.clear()
+        self._frames.clear()
         c._frames.sort(key=lambda x: x.timestamp)
         channel_ages = Counter()
         for cf in c._frames:
@@ -228,14 +269,14 @@ class Transition:
             skf._tf = TransferFunction(cf._states[0].transition)
             skf._duration = cf.timestamp - channel_ages[cf.only_on_channel]
             channel_ages[cf.only_on_channel] += skf._duration
-            self.frames.append(skf)
+            self._frames.append(skf)
 
     @property
     def duration(self) -> float:
         """Get the duration of the transition in seconds."""
-        if len(self.frames) == 0:
+        if len(self._frames) == 0:
             return 0.0
         durations = Counter()
-        for f in self.frames:
+        for f in self._frames:
             durations[f._channel] += f._duration
         return max(durations.values())

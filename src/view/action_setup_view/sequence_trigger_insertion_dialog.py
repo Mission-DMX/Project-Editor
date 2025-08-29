@@ -40,7 +40,7 @@ class SequenceTriggerInsertionDialog(_CommandInsertionDialog):
         filter_model = SequencerFilterModel()
         filter_model.load_configuration(self._filter_selection.selected_filter.filter_configurations)
         for i, t in enumerate(filter_model.transitions):
-            self._sequence_selection_cb.addItem(t.name or str(i), t._trigger_event)
+            self._sequence_selection_cb.addItem(t.name or str(i), t.trigger_event)
 
     @override
     def get_command(self) -> str:
