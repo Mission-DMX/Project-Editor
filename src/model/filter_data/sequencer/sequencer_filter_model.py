@@ -31,7 +31,7 @@ class SequencerFilterModel:
         """Get the configuration of this filter."""
         return {
             "channels": ";".join([c.format_for_filter() for c in self.channels]),
-            "transitions": ";".join([t.format_for_filter() for t in self.transitions])
+            "transitions": ";".join([t.format_for_filter() for t in self.transitions]),
         }
 
     def remove_channels(self, selected_items: list[str] | list[SequencerChannel]) -> None:
@@ -59,8 +59,11 @@ class SequencerFilterModel:
         Note: At the moment, this operation is slow as there is no index. However, as n is usually small, fixing this
         isn't a high priority.
 
-        :param c_name: Name of the channel to look up.
-        :return: The channel corresponding to the given name or None if not found.
+        Args:
+            c_name: Name of the channel to look up.
+
+        Returns: The channel corresponding to the given name or None if not found.
+
         """
         for c in self.channels:
             if c.name == c_name:
