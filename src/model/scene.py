@@ -1,4 +1,5 @@
 """Scene module"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -21,7 +22,7 @@ class FilterPage:
 
     @property
     def name(self) -> str:
-        """name"""
+        """Name"""
         return self._name
 
     @name.setter
@@ -30,21 +31,21 @@ class FilterPage:
 
     @property
     def filters(self) -> list[Filter]:
-        """list of filters"""
+        """List of filters"""
         return self._filters
 
     @property
     def child_pages(self) -> list[FilterPage]:
-        """list of child pages"""
+        """List of child pages"""
         return self._child_pages
 
     @property
     def parent_scene(self) -> Scene:
-        """parent scene"""
+        """Parent scene"""
         return self._parent_scene
 
     def copy(self, new_scene: Scene = None) -> Scene:
-        """copy of a filter page"""
+        """Copy of a filter page"""
         if not new_scene:
             new_fp = FilterPage(self._parent_scene)
             # Internal copying should not copy filters as they are unique within Scene
@@ -63,9 +64,7 @@ class FilterPage:
 class Scene:
     """Scene for a show file."""
 
-    def __init__(self, scene_id: int,
-                 human_readable_name: str,
-                 board_configuration: BoardConfiguration) -> None:
+    def __init__(self, scene_id: int, human_readable_name: str, board_configuration: BoardConfiguration) -> None:
         self._scene_id: int = scene_id
         self._human_readable_name: str = human_readable_name
         self._board_configuration: BoardConfiguration = board_configuration
@@ -112,9 +111,7 @@ class Scene:
         return self._filter_pages
 
     def insert_filterpage(self, fp: FilterPage) -> None:
-        """
-        add a filterpage to the scene
-        """
+        """Add a filterpage to the scene"""
         self._filter_pages.append(fp)
 
     @property
@@ -130,7 +127,7 @@ class Scene:
 
     @property
     def ui_pages(self) -> list[UIPage]:
-        """list of UIPages"""
+        """List of UIPages"""
         return self._ui_pages
 
     def __str__(self) -> str:
@@ -142,14 +139,15 @@ class Scene:
         """This method makes sure that the bank set associated with this scene gets applied to fish."""
         if self._associated_bankset is None:
             from .control_desk import BankSet
-            self._associated_bankset = BankSet(description=f"Bankset associated with scene {self._scene_id}.",
-                                               gui_controlled=True)
+
+            self._associated_bankset = BankSet(
+                description=f"Bankset associated with scene {self._scene_id}.", gui_controlled=True
+            )
             return False
         return True
 
     def copy(self, existing_scenes: list[Scene]) -> Scene:
-        """
-        This method returns a copy of the scene, jet containing a new unique ID.
+        """This method returns a copy of the scene, jet containing a new unique ID.
 
         existing_scenes: A list of scenes to check the new id against.
         """
@@ -161,9 +159,11 @@ class Scene:
                     chosen_id *= 2
                     break
             id_check_passed = True
-        scene = Scene(scene_id=chosen_id,
-                      human_readable_name=str(self.human_readable_name),
-                      board_configuration=self.board_configuration)
+        scene = Scene(
+            scene_id=chosen_id,
+            human_readable_name=str(self.human_readable_name),
+            board_configuration=self.board_configuration,
+        )
         for f in self._filters:
             new_filter = f.copy(new_scene=scene)
             scene.append_filter(new_filter)
@@ -175,7 +175,7 @@ class Scene:
         return scene
 
     def get_filter_by_id(self, fid: str) -> Filter | None:
-        """get filter by filter ID"""
+        """Get filter by filter ID"""
         f = self._filter_index.get(fid)
         if f:
             return f
@@ -201,8 +201,7 @@ class Scene:
         return name_to_try
 
     def append_filter(self, f: Filter, filter_page_index: int = -1) -> None:
-        """
-        Insert a filter in the scene.
+        """Insert a filter in the scene.
         :param f: The filter to add
         :param filter_page_index: The index of the filter page to add it to.
                                   -1 indicates that this step should be skipped.
@@ -235,8 +234,7 @@ class Scene:
             remove_filter_from_page(p)
 
     def notify_about_filter_rename_action(self, sender: Filter, old_id: str) -> None:
-        """
-        This method checks connections of a filter which should be renamed and updates them accordingly.
+        """This method checks connections of a filter which should be renamed and updates them accordingly.
         :param sender: The filter that was renamed
         :param old_id: The id which this filter was known as before.
         """
