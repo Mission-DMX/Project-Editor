@@ -1,5 +1,5 @@
 # coding=utf-8
-"""perform camera calibration"""
+"""Perform camera calibration."""
 
 import cv2
 
@@ -7,10 +7,7 @@ from controller.autotrack.Calibration.Calibration import Calibration
 
 
 class DistortionCalibration(Calibration):
-    """
-    DistortionCalibration is a class for performing camera calibration
-    using a chessboard pattern and correcting image distortion.
-
+    """Camera calibration using a chessboard pattern and correcting image distortion.
 
     Args:
         images (list): List of input images for calibration.
@@ -19,9 +16,11 @@ class DistortionCalibration(Calibration):
     Attributes:
         camera_matrix (numpy.ndarray): The camera matrix after calibration.
         distortion_coeffs (numpy.ndarray): The distortion coefficients after calibration.
+
     """
 
     def __init__(self, images=None, file=None):
+        """Camera calibration."""
         super().__init__()
         self.images = images
         if file is None and images is not None:
@@ -30,8 +29,7 @@ class DistortionCalibration(Calibration):
             self.camera_matrix, self.distortion_coeffs = self.load(file)
 
     def chessboard_calibration(self):
-        """
-        Perform camera calibration using a chessboard pattern.
+        """Perform camera calibration using a chessboard pattern.
 
         Returns: Tuple containing camera matrix and distortion coefficients.
         """
