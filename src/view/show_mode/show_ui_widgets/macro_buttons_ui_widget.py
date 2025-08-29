@@ -1,5 +1,7 @@
 """Provides UI widget to allow quick execution of macros by user."""
 
+from __future__ import annotations
+
 import json
 import os
 from logging import getLogger
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class _AddMacroActionDialog(QDialog):
-    def __init__(self, ui_widget: "MacroButtonUIWidget", button_list: QListWidget, update_button: QPushButton) -> None:
+    def __init__(self, ui_widget: MacroButtonUIWidget, button_list: QListWidget, update_button: QPushButton) -> None:
         super().__init__(parent=button_list)
         self._ui_widget = ui_widget
         self._update_button = update_button
@@ -122,7 +124,7 @@ class _MacroListWidget(QWidget):
 class MacroButtonUIWidget(UIWidget):
     """Widget displaying button selection for execution of macros."""
 
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]) -> None:
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         """Initialize widget using configuration and parent ui page."""
         super().__init__(parent, configuration)
         self._latest_config_widget: QWidget | None = None
@@ -145,7 +147,7 @@ class MacroButtonUIWidget(UIWidget):
     def generate_update_content(self) -> list[tuple[str, str]]:
         return []
 
-    def _construct_widget(self) -> "QWidget":
+    def _construct_widget(self) -> QWidget:
         w = BoxGridRenderer()
         w.setFixedWidth(max(int(self.configuration.get("width") or "64"), w.minimumWidth()))
         w.setFixedHeight(max(int(self.configuration.get("height") or "64"), w.minimumHeight()))
@@ -173,17 +175,17 @@ class MacroButtonUIWidget(UIWidget):
         self._context.return_text = ""
 
     @override
-    def get_player_widget(self, parent: "QWidget") -> "QWidget":
+    def get_player_widget(self, parent: QWidget) -> QWidget:
         self._latest_player_widget = self._construct_widget()
         return self._latest_player_widget
 
     @override
-    def get_configuration_widget(self, parent: "QWidget") -> "QWidget":
+    def get_configuration_widget(self, parent: QWidget) -> QWidget:
         self._latest_config_widget = self._construct_widget()
         return self._latest_config_widget
 
     @override
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = MacroButtonUIWidget(new_parent, self.configuration.copy())
         self.copy_base(w)
         return w
@@ -202,7 +204,7 @@ class MacroButtonUIWidget(UIWidget):
             self._populate_button_items(self._latest_config_widget)
 
     @override
-    def get_config_dialog_widget(self, parent: "QWidget") -> "QWidget":
+    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
         w = QWidget()
         w.setMinimumWidth(600)
         w.setMinimumHeight(800)
