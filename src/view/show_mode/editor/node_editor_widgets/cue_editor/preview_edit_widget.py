@@ -34,10 +34,12 @@ class ExternalChannelDefinition:
     def __init__(self, data_type: DataType, name: str, associated_fader: DeskColumn, bank_set: BankSet) -> None:
         """Initialize the pod.
 
-        :param data_type: The data type of the channel.
-        :param name: The name of the channel.
-        :param associated_fader: The fader source of the channel.
-        :param bank_set: The bank set of the channel.
+        Args:
+            data_type: The data type of the channel.
+            name: The name of the channel.
+            associated_fader: The fader source of the channel.
+            bank_set: The bank set of the channel.
+
         """
         self.data_type = data_type
         self.name = name
@@ -100,7 +102,8 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         Implementation Required.
         It may return a mutable list as it will be copied anyway.
 
-        :returns: A list of ExternalChannelDefinition objects
+        Returns: A list of ExternalChannelDefinition objects
+
         """
         raise NotImplementedError
 
