@@ -26,8 +26,10 @@ class SequencerChannel:
     def __init__(self, name: str = "", dtype: DataType = DataType.DT_8_BIT) -> None:
         """Initialize the sequencer channel model.
 
-        :param name: name of the channel.
-        :param dtype: data type of the channel.
+        Args:
+            name: name of the channel.
+            dtype: data type of the channel.
+
         """
         self.name: str = name
         self.data_type = dtype
@@ -38,12 +40,17 @@ class SequencerChannel:
 
     def format_for_filter(self) -> str:
         """Serialize model into filter format."""
-        default_value_str = self.default_value.format_for_filter() if isinstance(self.default_value, ColorHSI) \
+        default_value_str = (
+            self.default_value.format_for_filter()
+            if isinstance(self.default_value, ColorHSI)
             else str(self.default_value)
+        )
 
-        return (f"{_rf(self.name)}:{self.data_type.format_for_filters()}:{default_value_str}:"
-                f"{str(self.apply_default_on_empty).lower()}:{str(self.apply_default_on_scene_switch).lower()}:"
-                f"{self.interleave_method.value}")
+        return (
+            f"{_rf(self.name)}:{self.data_type.format_for_filters()}:{default_value_str}:"
+            f"{str(self.apply_default_on_empty).lower()}:{str(self.apply_default_on_scene_switch).lower()}:"
+            f"{self.interleave_method.value}"
+        )
 
     @staticmethod
     def from_filter_str(s: str) -> "SequencerChannel":
