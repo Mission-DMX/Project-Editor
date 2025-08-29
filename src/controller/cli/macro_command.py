@@ -44,12 +44,12 @@ class MacroCommand(Command):
                     return False
                 for m in self.context.show.macros:
                     if m.name == args.macro:
-                        self.context.stack.add(m.name)
+                        self.context.add_to_stack(m.name)
                         m.c.return_text = ""
                         res = m.exec()
                         if len(m.c.return_text) > 0:
                             self.context.print(m.c.return_text)
-                        self.context.stack.discard(m.name)
+                        self.context.discard_from_stack(m.name)
                         return res
                 self.context.print(f"ERROR: Macro '{args.macro}' not found.")
                 return False

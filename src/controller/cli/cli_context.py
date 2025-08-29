@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import traceback
 from argparse import Namespace
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from controller.cli.bankset_command import BankSetCommand
@@ -19,7 +20,7 @@ from controller.cli.utility_commands import DelayCommand, IfCommand, PrintComman
 if TYPE_CHECKING:
     from controller.network import NetworkManager
     from model import BoardConfiguration, Scene
-    from model.control_desk import BankSet, DeskColumn
+    from model.control_desk import BankSet
 
 
 def _split_args(line: str) -> list[str]:
@@ -98,24 +99,91 @@ class CLIContext:
             IfCommand(self),
             HelpCommand(self),
         ]
-        self.selected_bank: BankSet | None = None
-        self.selected_column: DeskColumn | None = None
-        self.selected_scene: Scene | None = None
-        self.stack = set()
-        self.variables: dict[str, str] = {}
-        self.show = show
-        self.network_manager: NetworkManager = network_manager
-        self.parser = argparse.ArgumentParser(exit_on_error=False)
-        subparsers: argparse._SubParsersAction = self.parser.add_subparsers(
+        self._selected_bank: BankSet | None = None
+        self._selected_scene: Scene | None = None
+        self._stack = set()
+        self._variables: dict[str, str] = {}
+        self._show = show
+        self._network_manager: NetworkManager = network_manager
+        self._parser = argparse.ArgumentParser(exit_on_error=False)
+        subparsers: argparse._SubParsersAction = self._parser.add_subparsers(
             help="subcommands help", dest="subparser_name"
         )
         for c in self._commands:
             c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
         if exit_available:
             subparsers.add_parser("exit", exit_on_error=False, help="Close this remote connection")
-        self.return_text = ""
-        self.exit_called = False
+        self._return_text = ""
+        self._exit_called = False
         self._exit_available = exit_available
+
+    @property
+    def exit_called(self) -> bool:
+        """Has the exit command been called?"""
+        return self._exit_called
+
+    @exit_called.setter
+    def exit_called(self, new_exit_called: bool) -> None:
+        self._exit_called = new_exit_called
+
+    @property
+    def return_text(self) -> str:
+        """Return text."""
+        return self._return_text
+
+    @return_text.setter
+    def return_text(self, new_return_text: str) -> None:
+        self._return_text = new_return_text
+
+    @property
+    def network_manager(self) -> NetworkManager:
+        """Network manager."""
+        return self._network_manager
+
+    @property
+    def show(self) -> BoardConfiguration:
+        """Current show configuration."""
+        return self._show
+
+    @property
+    def variables(self) -> MappingProxyType[str, str]:
+        """Variables."""
+        return MappingProxyType(self._variables)
+
+    def update_variables(self, new_variables: dict[str, str]) -> None:
+        """Update the variables."""
+        self._variables.update(new_variables)
+
+    @property
+    def stack(self) -> frozenset[str]:
+        """Stack of commands."""
+        return frozenset(self._stack)
+
+    def add_to_stack(self, command: str) -> None:
+        """Add a command to the stack."""
+        self._stack.add(command)
+
+    def discard_from_stack(self, command: str) -> None:
+        """Remove a command from the stack."""
+        self._stack.discard(command)
+
+    @property
+    def selected_scene(self) -> Scene | None:
+        """Currently selected scene."""
+        return self._selected_scene
+
+    @selected_scene.setter
+    def selected_scene(self, new_selected_scene: Scene) -> None:
+        self._selected_scene = new_selected_scene
+
+    @property
+    def selected_bank(self) -> BankSet | None:
+        """Currently selected bank."""
+        return self._selected_bank
+
+    @selected_bank.setter
+    def selected_bank(self, new_selected_bank: BankSet) -> None:
+        self._selected_bank = new_selected_bank
 
     def _replace_variables(self, args: list[str]) -> list[str]:
         """Replace variables in the provided list of arguments with their current values.
@@ -132,7 +200,7 @@ class CLIContext:
             if arg.startswith("\\$"):
                 new_arg_list.append(arg[1:])
             elif arg.startswith("$"):
-                new_arg_list.append(str(self.variables.get(arg[1:])))
+                new_arg_list.append(str(self._variables.get(arg[1:])))
             else:
                 new_arg_list.append(arg)
         return new_arg_list
@@ -151,18 +219,18 @@ class CLIContext:
             args = self._replace_variables(args)
             if len(args) == 0:
                 return True
-            global_args: Namespace = self.parser.parse_args(args=args)
+            global_args: Namespace = self._parser.parse_args(args=args)
             if self._exit_available and global_args.subparser_name == "exit":
-                self.exit_called = True
+                self._exit_called = True
             elif global_args.subparser_name == "?":
-                self.print(self.parser.format_help())
+                self.print(self._parser.format_help())
             else:
                 for c in self._commands:
                     if c.name == global_args.subparser_name:
                         return c.execute(global_args)
         except argparse.ArgumentError as e:
             self.print("Failed to parse command: " + str(e))
-            self.print(self.parser.format_usage())
+            self.print(self._parser.format_usage())
         except Exception as e:
             self.print(traceback.format_exc())
             self.print("Execution of command failed: " + str(e))
@@ -175,7 +243,7 @@ class CLIContext:
             text: The line to be printed.
 
         """
-        self.return_text += text + "\n"
+        self._return_text += text + "\n"
 
     def fetch_print_buffer(self) -> str:
         """Get the output buffer and clear it.
@@ -184,6 +252,6 @@ class CLIContext:
             The stored text that print accumulated.
 
         """
-        tmp_text = self.return_text
-        self.return_text = ""
+        tmp_text = self._return_text
+        self._return_text = ""
         return tmp_text

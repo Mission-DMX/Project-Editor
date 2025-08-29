@@ -76,7 +76,7 @@ class SetCommand(Command):
 
     @override
     def execute(self, args: Namespace) -> bool:
-        self.context.variables[args.key] = args.value
+        self.context.update_variables({args.key: args.value})
         # TODO implement support for arithmetic in case of numbers
         return True
 
