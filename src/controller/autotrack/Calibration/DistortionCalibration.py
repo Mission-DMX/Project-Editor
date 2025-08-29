@@ -1,5 +1,6 @@
 # coding=utf-8
-""" perform camera calibration"""
+"""perform camera calibration"""
+
 import cv2
 
 from controller.autotrack.Calibration.Calibration import Calibration
@@ -32,7 +33,7 @@ class DistortionCalibration(Calibration):
         """
         Perform camera calibration using a chessboard pattern.
 
-        :return: Tuple containing camera matrix and distortion coefficients.
+        Returns: Tuple containing camera matrix and distortion coefficients.
         """
         obj_points = []
         img_points = []
@@ -49,9 +50,7 @@ class DistortionCalibration(Calibration):
                     distortion_coeffs,
                     rvecs,
                     tvecs,
-                ) = cv2.calibrateCamera(
-                    obj_points, img_points, gray.shape[::-1], None, None
-                )
+                ) = cv2.calibrateCamera(obj_points, img_points, gray.shape[::-1], None, None)
                 return camera_matrix, distortion_coeffs
             else:
                 return None, None
