@@ -199,7 +199,7 @@ class SequencerEditor(PreviewEditWidget):
 
         """
         if is_new_transition:
-            self._model.transitions.append(t)
+            self._model.append_transition(t)
         li = AnnotatedListWidgetItem(self._transition_list_widget)
         li.annotated_data = t
         item_widget = TransitionLabel(t, self._transition_list_widget.count(), self._transition_list_widget)
@@ -364,7 +364,7 @@ class SequencerEditor(PreviewEditWidget):
             self._input_dialog.buttonRole(button) == QMessageBox.ButtonRole.YesRole
             and self._selected_transition is not None
         ):
-            self._model.transitions.remove(self._selected_transition)
+            self._model.remove_transition(self._selected_transition)
             items_to_remove = []
             for item_index in range(self._transition_list_widget.count()):
                 item = self._transition_list_widget.item(item_index)

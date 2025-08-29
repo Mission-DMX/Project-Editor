@@ -16,6 +16,8 @@ from model.filter_data.sequencer._utils import _rf
 from model.filter_data.transfer_function import TransferFunction
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 
 
@@ -200,7 +202,7 @@ class Transition:
         return c
 
     def update_frames_from_cue(
-        self, c: Cue, channel_dict: list[SequencerChannel] | dict[str, SequencerChannel]
+        self, c: Cue, channel_dict: Sequence[SequencerChannel] | dict[str, SequencerChannel]
     ) -> None:
         """Update the content of this transition using a Cue object.
 
