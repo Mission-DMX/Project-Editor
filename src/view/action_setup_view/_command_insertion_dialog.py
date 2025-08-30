@@ -68,8 +68,8 @@ class _CommandInsertionDialog(QDialog):
         layout.addWidget(self._scene_selection_cb)
         layout.addWidget(self._filter_selection)
 
-        self.custom_layout: QStackedLayout = QStackedLayout()
-        layout.addLayout(self.custom_layout)
+        self._custom_layout: QStackedLayout = QStackedLayout()
+        layout.addLayout(self._custom_layout)
 
         layout.addWidget(self._button_box)
 

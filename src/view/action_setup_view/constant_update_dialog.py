@@ -1,5 +1,6 @@
 """Contains ConstantUpdateInsertionDialog."""
 
+from collections.abc import Callable
 from logging import getLogger
 from typing import override
 
@@ -30,7 +31,7 @@ logger = getLogger(__name__)
 class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
     """Dialog to insert constant filter updates."""
 
-    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: callable) -> None:
+    def __init__(self, parent: QWidget, macro: Macro, show: BoardConfiguration, update_callable: Callable) -> None:
         """Dialog to insert constant filter updates.
 
         Args:
@@ -62,7 +63,7 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         int_tb_layout.addStretch()
         int_panel = QWidget()
         int_panel.setLayout(int_tb_layout)
-        self.custom_layout.addWidget(int_panel)
+        self._custom_layout.addWidget(int_panel)
 
         self._float_tb = QDoubleSpinBox()
         self._float_tb.setEnabled(False)
@@ -72,11 +73,11 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         float_tb_layout.addStretch()
         float_panel = QWidget()
         float_panel.setLayout(float_tb_layout)
-        self.custom_layout.addWidget(float_panel)
+        self._custom_layout.addWidget(float_panel)
 
         self._pan_tilt_widget = PanTiltConstantContentWidget(None, enable_joystick=False)
         self._pan_tilt_widget.setEnabled(False)
-        self.custom_layout.addWidget(self._pan_tilt_widget)
+        self._custom_layout.addWidget(self._pan_tilt_widget)
 
         self._color_panel = QWidget()
         self._color = ColorHSI(0, 0, 0)
@@ -98,7 +99,7 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         color_layout.addStretch()
         self._color_panel.setLayout(color_layout)
         self._color_panel.setEnabled(False)
-        self.custom_layout.addWidget(self._color_panel)
+        self._custom_layout.addWidget(self._color_panel)
 
     @override
     def get_command(self) -> str:
@@ -128,20 +129,20 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         if self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT:
             self._int_tb.setMaximum(255)
             self._int_tb.setEnabled(True)
-            self.custom_layout.setCurrentIndex(0)
+            self._custom_layout.setCurrentIndex(0)
         elif self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_16_BIT:
             self._int_tb.setMaximum(65565)
             self._int_tb.setEnabled(True)
-            self.custom_layout.setCurrentIndex(0)
+            self._custom_layout.setCurrentIndex(0)
         elif self._filter.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
             self._float_tb.setEnabled(True)
-            self.custom_layout.setCurrentIndex(1)
+            self._custom_layout.setCurrentIndex(1)
         elif self._filter.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
             self._pan_tilt_widget.setEnabled(True)
-            self.custom_layout.setCurrentIndex(2)
+            self._custom_layout.setCurrentIndex(2)
         else:
             self._color_panel.setEnabled(True)
-            self.custom_layout.setCurrentIndex(3)
+            self._custom_layout.setCurrentIndex(3)
 
     def _select_color(self) -> None:
         self._color = ColorHSI.from_qt_color(self._color_picker.selectedColor())

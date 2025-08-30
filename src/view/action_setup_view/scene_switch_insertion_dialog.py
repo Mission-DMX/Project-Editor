@@ -34,8 +34,8 @@ class SceneSwitchInsertionDialog(_CommandInsertionDialog):
         self._scene_cb = QComboBox(self)
         for s in self._show.scenes:
             self._scene_cb.addItem(str(s.human_readable_name or s.scene_id), s.scene_id)
-        self.custom_layout.addWidget(self._scene_cb)
-        self.custom_layout.setCurrentIndex(0)
+        self._custom_layout.addWidget(self._scene_cb)
+        self._custom_layout.setCurrentIndex(0)
 
     @override
     def get_command(self) -> str:

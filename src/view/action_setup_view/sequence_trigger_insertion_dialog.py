@@ -30,8 +30,8 @@ class SequenceTriggerInsertionDialog(_CommandInsertionDialog):
         self._sequence_selection_cb = QComboBox(self)
         self._sequence_selection_cb.setEnabled(False)
         self._sequence_selection_cb.setEditable(False)
-        self.custom_layout.addWidget(self._sequence_selection_cb)
-        self.custom_layout.setCurrentIndex(0)
+        self._custom_layout.addWidget(self._sequence_selection_cb)
+        self._custom_layout.setCurrentIndex(0)
 
     @override
     def on_filter_selected(self) -> None:
