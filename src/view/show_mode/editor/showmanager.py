@@ -4,12 +4,13 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
 """
+
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QInputDialog, QSplitter, QTabBar, QTabWidget, QWidget
 
 from controller.file.transmitting_to_fish import transmit_to_fish
-from model.board_configuration import BoardConfiguration, Broadcaster, Scene
-from model.scene import FilterPage
+from model.board_configuration import BoardConfiguration, Broadcaster
+from model.scene import FilterPage, Scene
 from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import (
     SceneUIPageEditorWidget,
@@ -36,7 +37,8 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget.setTabsClosable(True)
         self._open_page_tab_widget.addTab(QWidget(), "+")
         plus_button = self._open_page_tab_widget.tabBar().tabButton(
-            self._open_page_tab_widget.count() - 1, QTabBar.ButtonPosition.RightSide,
+            self._open_page_tab_widget.count() - 1,
+            QTabBar.ButtonPosition.RightSide,
         )
         if plus_button:
             plus_button.resize(0, 0)
@@ -110,11 +112,16 @@ class ShowEditorWidget(QSplitter):
         self._opened_pages.add(page)
         scene_tab = SceneTabWidget(page)
         # Move +/- buttons one to the right and insert new tab for the scene
-        self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab,
-                                             page.parent_scene.human_readable_name + "/" + page.name)
+        self._open_page_tab_widget.insertTab(
+            self._open_page_tab_widget.tabBar().count() - 1,
+            scene_tab,
+            page.parent_scene.human_readable_name + "/" + page.name,
+        )
         # When loading scene from a file, set displayed tab to first loaded scene
-        if (self._open_page_tab_widget.count() == 2 or
-                self._board_configuration.default_active_scene == page.parent_scene.scene_id):
+        if (
+            self._open_page_tab_widget.count() == 2
+            or self._board_configuration.default_active_scene == page.parent_scene.scene_id
+        ):
             self._open_page_tab_widget.setCurrentWidget(scene_tab)
         return scene_tab
 
