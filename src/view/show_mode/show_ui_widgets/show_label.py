@@ -1,3 +1,5 @@
+"""Show a UI Widget containing arbitrary text."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -12,7 +14,16 @@ if TYPE_CHECKING:
 
 
 class ShowLabelUIWidget(UIWidget):
+    """Widget to display user-defined rich text (markdown)."""
+
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the label widget.
+
+        Args:
+            parent: The parent widget page.
+            configuration: The initial configuration of the sequencer.
+
+        """
         super().__init__(parent, configuration)
         self._player_widget: QLabel | None = None
         self._conf_widget: QLabel | None = None
@@ -25,8 +36,6 @@ class ShowLabelUIWidget(UIWidget):
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._player_widget is not None:
-            self._player_widget.deleteLater()
         self._player_widget = self._construct_widget(parent)
         return self._player_widget
 
@@ -70,9 +79,11 @@ class ShowLabelUIWidget(UIWidget):
         text_as_html = markdown(new_text)
         if self._conf_widget is not None:
             self._conf_widget.setText(text_as_html)
-            self._conf_widget.setMinimumWidth(max(self._conf_widget.fontMetrics().horizontalAdvance(new_text),
-                                                  self._conf_widget.minimumWidth()))
+            self._conf_widget.setMinimumWidth(
+                max(self._conf_widget.fontMetrics().horizontalAdvance(new_text), self._conf_widget.minimumWidth())
+            )
         if self._player_widget is not None:
             self._player_widget.setText(text_as_html)
-            self._player_widget.setMinimumWidth(max(self._player_widget.fontMetrics().horizontalAdvance(new_text),
-                                                    self._player_widget.minimumWidth()))
+            self._player_widget.setMinimumWidth(
+                max(self._player_widget.fontMetrics().horizontalAdvance(new_text), self._player_widget.minimumWidth())
+            )

@@ -1,4 +1,4 @@
-"""simple non-blocking Yes No Dialog"""
+"""Simple non-blocking Yes No Dialog."""
 
 from collections.abc import Callable
 
@@ -13,7 +13,7 @@ _ICON_MAP: dict[QMessageBox.Icon, QStyle.StandardPixmap] = {
 
 
 class YesNoDialog(QDialog):
-    """simple non-blocking Yes No Dialog"""
+    """Simple non-blocking Yes No Dialog."""
 
     def __init__(
         self,
@@ -24,6 +24,18 @@ class YesNoDialog(QDialog):
         icon: QMessageBox.Icon = QMessageBox.Icon.Question,
         default_accept: bool = True,
     ) -> None:
+        """Initialize the query dialog.
+
+        Args:
+            parent: The parent QWidget.
+            title: The window title of the dialog.
+            question: The question text of the dialog.
+            success_action: The function that will be called when the dialog is confirmed.
+            icon: The question icon. Defaults to QMessageBox.Icon.Question.
+            default_accept: Whether the accept option should be selected by default
+                (causing Enter to confirm). Defaults to True.
+
+        """
         super().__init__(parent)
         self._layout = QFormLayout()
         self.setWindowTitle(title)
@@ -56,6 +68,8 @@ class YesNoDialog(QDialog):
     def _yes__button_pressed(self) -> None:
         self.close()
         self._success_action()
+        self.deleteLater()
 
     def _no_button_pressed(self) -> None:
         self.close()
+        self.deleteLater()

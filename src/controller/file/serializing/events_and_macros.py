@@ -1,4 +1,4 @@
-"""write Events and Macros"""
+"""write Events and Macros."""
 import xml.etree.ElementTree as ET
 from typing import TYPE_CHECKING
 
@@ -21,7 +21,7 @@ def _write_event_sender(root: "ET.Element", es: "EventSender") -> None:
         re = ET.SubElement(element, "eventRename", attrib={
             "eventType": str(k[0]),
             "senderFunction": str(k[1]),
-            "arguments": str(k[2]),
+            "arguments": str(k[2]).replace("\0", "0"),
         })
         re.text = v
 

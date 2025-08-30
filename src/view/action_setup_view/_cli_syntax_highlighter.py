@@ -1,3 +1,5 @@
+"""Contains a syntax highlighter for our CLI language."""
+
 from typing import override
 
 from PySide6.QtCore import QRegularExpression
@@ -5,11 +7,10 @@ from PySide6.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFo
 
 
 class CLISyntaxHighlighter(QSyntaxHighlighter):
-    """
-    This class provides syntax highlighting for input CLI commands.
-    """
+    """Provides syntax highlighting for input CLI commands."""
 
     def __init__(self, document: QTextDocument | None = None) -> None:
+        """Initialize the syntax highlighter."""
         super().__init__(document)
         self._mappings = {}
         self._space_format = QTextCharFormat()
@@ -27,14 +28,31 @@ class CLISyntaxHighlighter(QSyntaxHighlighter):
         self._string_expression = QRegularExpression('\\".+\\"')
         self._mappings[self._string_expression] = self._string_format
 
+        self._escape_format = QTextCharFormat()
+        self._escape_format.setForeground(QBrush(QColor.fromRgb(0xFF, 0xA5, 0)))
+        self._escape_expression = QRegularExpression('\\\\[tnr$"]')
+        self._mappings[self._escape_expression] = self._escape_format
+
         self._comment_format = QTextCharFormat()
         self._comment_format.setForeground(QBrush(QColor.fromRgb(0, 125, 0)))
         self._comment_expression = QRegularExpression("(#.+)|#")
         self._mappings[self._comment_expression] = self._comment_format
 
+        self._variable_format = QTextCharFormat()
+        self._variable_format.setForeground(QBrush(QColor.fromRgb(0, 80, 80)))
+        self._variable_expression = QRegularExpression("(?<=[^\\\\])(\\$\\w+)")
+        self._mappings[self._variable_expression] = self._variable_format
+
     @override
     def highlightBlock(self, text: str, /) -> None:
-        """This method gets called for every text block. It sets the formats on it"""
+        """Highlight text blocks.
+
+        This method gets called for every text block. It sets the formats on it.
+
+        Args:
+            text: The text to inspect.
+
+        """
         for pattern, fmt in self._mappings.items():
             iterator = pattern.globalMatch(text)
             while iterator.hasNext():

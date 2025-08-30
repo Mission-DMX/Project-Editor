@@ -1,3 +1,5 @@
+"""Show UI widget to control cue filters."""
+
 import os
 from logging import getLogger
 from typing import override
@@ -19,9 +21,9 @@ from PySide6.QtWidgets import (
 
 from model import Filter, UIPage, UIWidget
 from model.file_support.cue_state import CueState
+from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.virtual_filters.cue_vfilter import CueFilter
 from utility import resource_path
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 logger = getLogger(__name__)
@@ -43,24 +45,23 @@ class _CueLabel(QWidget):
 
     @property
     def playing(self) -> bool:
-        """Get the state of the playing icon of the cue label"""
+        """State of the playing icon of the cue label."""
         return self._play_label.isVisible()
 
     @playing.setter
     def playing(self, new_value: bool) -> None:
-        """Set the state of the playing icon of the cue label"""
         self._play_label.setVisible(new_value)
 
 
 class CueControlUIWidget(UIWidget):
-    """
-    This widget allows the user to control cue filters.
+    """Widget to  allow user to control cue filters.
 
     This widget supports the 'widget_height' parameter indicating its height in pixels.
     It will automatically migrate older configurations which still had the 'cue_names' parameter.
     """
 
     def __init__(self, parent: UIPage, configuration: dict[str, str] | None = None) -> None:
+        """Initialize cue control show UI widget using parent UI page and configuration."""
         super().__init__(parent, configuration)
         self._statuslabel = QLabel()
         self._cues: list[tuple[str, int]] = []
@@ -71,7 +72,7 @@ class CueControlUIWidget(UIWidget):
 
         self._timer = QTimer()
         self._timer.setInterval(50)
-        self._timer.timeout.connect(self.update_time_passed)
+        self._timer.timeout.connect(self._update_time_passed)
         self._timer.start()
 
         self._player_cue_list_widget: QListWidget | None = None
@@ -83,6 +84,7 @@ class CueControlUIWidget(UIWidget):
         self._model: CueFilterModel | None = None
         self._last_active_cue: int = -1
 
+    @override
     def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
@@ -90,7 +92,9 @@ class CueControlUIWidget(UIWidget):
             self._filter.linked_ui_widgets.remove(self)
         if self._filter is not None:
             f.scene.board_configuration.remove_filter_update_callback(
-                self._filter.scene.scene_id, self._filter.filter_id, self._cue_state.update,
+                self._filter.scene.scene_id,
+                self._filter.filter_id,
+                self._cue_state.update,
             )
         super().set_filter(f, i)
         self.associated_filters["cue_filter"] = f.filter_id
@@ -98,7 +102,8 @@ class CueControlUIWidget(UIWidget):
         if isinstance(self._filter, CueFilter):
             self._filter.linked_ui_widgets.append(self)
         f.scene.board_configuration.register_filter_update_callback(
-            f.scene.scene_id, f.filter_id, self._cue_state.update)
+            f.scene.scene_id, f.filter_id, self._cue_state.update
+        )
         self.update_model(clear_model=False)
         self._migrate_name_list()
         self._model = None
@@ -121,9 +126,11 @@ class CueControlUIWidget(UIWidget):
                 self.update_model()
 
     def update_model(self, clear_model: bool = True) -> None:
-        """
-        reload the cue model after the configuration has changed in the filter.
-        :param clear_model: Should the loaded model be unloaded afterward?
+        """Reload the cue model after the configuration has changed in the filter.
+
+        Args:
+            clear_model: Should the loaded model be unloaded afterward?
+
         """
         self._cues.clear()
         if self._filter:
@@ -138,7 +145,7 @@ class CueControlUIWidget(UIWidget):
             self._model = None
 
     def _repopulate_lists(self) -> None:
-        """Load / update the content of the cue lists"""
+        """Load / update the content of the cue lists."""
         for cue_list in [self._player_cue_list_widget, self._config_cue_list_widget]:
             if cue_list is None:
                 continue
@@ -153,28 +160,27 @@ class CueControlUIWidget(UIWidget):
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
-        """Implementation of abstract method 'generate_update_content'."""
         return self._command_chain
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget:
             self._player_widget.deleteLater()
-        self._player_widget = self.construct_widget(parent, True)
+        self._player_widget = self._construct_widget(parent, True)
         return self._player_widget
 
-    def construct_widget(self, parent: QWidget | None, enabled: bool) -> QWidget:
+    def _construct_widget(self, parent: QWidget | None, enabled: bool) -> QWidget:
         w = QWidget(parent)
         layout = QVBoxLayout()
         toolbar = QToolBar(w)
         # TODO add Icons from theme
-        toolbar.addAction("Play", lambda: self.insert_action("run_mode", "play"))
-        toolbar.addAction("Pause", lambda: self.insert_action("run_mode", "pause"))
-        toolbar.addAction("Play Cue", lambda: self.insert_action("run_mode", "to_next_cue"))
-        toolbar.addAction("stop", lambda: self.insert_action("run_mode", "stop"))
+        toolbar.addAction("Play", lambda: self._insert_action("run_mode", "play"))
+        toolbar.addAction("Pause", lambda: self._insert_action("run_mode", "pause"))
+        toolbar.addAction("Play Cue", lambda: self._insert_action("run_mode", "to_next_cue"))
+        toolbar.addAction("stop", lambda: self._insert_action("run_mode", "stop"))
         toolbar.addSeparator()
-        toolbar.addAction("Run Cue", lambda: self.insert_action("run_cue", self.get_selected_cue_id()))
-        toolbar.addAction("Load Cue", lambda: self.insert_action("next_cue", self.get_selected_cue_id()))
+        toolbar.addAction("Run Cue", lambda: self._insert_action("run_cue", self._get_selected_cue_id()))
+        toolbar.addAction("Load Cue", lambda: self._insert_action("next_cue", self._get_selected_cue_id()))
         toolbar.setEnabled(enabled)
         toolbar.setMinimumWidth(330)
         toolbar.setMinimumHeight(30)
@@ -196,13 +202,13 @@ class CueControlUIWidget(UIWidget):
             self._config_cue_list_widget = cue_list
             layout.addWidget(QLabel("Cue State Label"))
         layout.addWidget(cue_list)
-        self.update_time_passed()
+        self._update_time_passed()
 
         w.setLayout(layout)
         w.setFixedHeight(int(self.configuration.get("widget_height") or "350"))
         return w
 
-    def insert_action(self, action: str | None, state: str | None) -> None:
+    def _insert_action(self, action: str | None, state: str | None) -> None:
         if not action or not state:
             return
         command = (action, state)
@@ -213,7 +219,7 @@ class CueControlUIWidget(UIWidget):
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if not self._config_widget:
-            self._config_widget = self.construct_widget(parent, False)
+            self._config_widget = self._construct_widget(parent, False)
         return self._config_widget
 
     @override
@@ -248,14 +254,14 @@ class CueControlUIWidget(UIWidget):
             self._player_widget.setFixedHeight(new_height)
         self.configuration["widget_height"] = str(new_height)
 
-    def get_selected_cue_id(self) -> str | None:
+    def _get_selected_cue_id(self) -> str | None:
         if self._player_cue_list_widget:
             for selected_cue_item in self._player_cue_list_widget.selectedItems():
                 if isinstance(selected_cue_item, AnnotatedListWidgetItem):
                     return str(selected_cue_item.annotated_data[1])
         return None
 
-    def update_time_passed(self) -> None:
+    def _update_time_passed(self) -> None:
         if self._statuslabel is not None:
             self._statuslabel.setText(str(self._cue_state))
         active_cue = self._cue_state.playing_cue
@@ -264,8 +270,10 @@ class CueControlUIWidget(UIWidget):
                 cue_count = self._player_cue_list_widget.count()
                 if self._last_active_cue != -1 and self._last_active_cue < cue_count:
                     self._player_cue_list_widget.itemWidget(
-                        self._player_cue_list_widget.item(self._last_active_cue)).playing = False
+                        self._player_cue_list_widget.item(self._last_active_cue)
+                    ).playing = False
                 if active_cue != -1 and active_cue < cue_count:
                     self._player_cue_list_widget.itemWidget(
-                        self._player_cue_list_widget.item(active_cue)).playing = True
+                        self._player_cue_list_widget.item(active_cue)
+                    ).playing = True
             self._last_active_cue = active_cue

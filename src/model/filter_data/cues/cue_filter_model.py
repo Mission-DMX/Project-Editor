@@ -1,9 +1,14 @@
+"""Cue filter model."""
+
 from model import DataType
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
+from model.filter_data.cues.cue import Cue
 
 
 class CueFilterModel:
+    """Model of a cue filter configuration."""
+
     def __init__(self, parameters: dict[str, str] | None = None) -> None:
+        """Initialize empty model."""
         super().__init__()
         self.cues: list[Cue] = []
         self.channels: list[tuple[str, DataType]] = []  # name, data type
@@ -14,6 +19,7 @@ class CueFilterModel:
             self.load_from_configuration(parameters)
 
     def get_as_configuration(self) -> dict[str, str]:
+        """Serialize filter configuration."""
         if len(self.cues) > 0:
             mapping_str = ";".join([f"{t[0]}:{t[1].format_for_filters()}" for t in self.cues[0].channels])
         else:
@@ -22,12 +28,14 @@ class CueFilterModel:
                 "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": self.default_cue}
 
     def append_cue(self, c: Cue) -> None:
+        """Add a cue to the model."""
         if c not in self.cues:
             self.cues.append(c)
         for channel in self.channels:
             c.add_channel(channel[0], channel[1])
 
     def add_channel(self, name: str, dt: DataType) -> None:
+        """Add a channel to the model."""
         for cd in self.channels:
             if name == cd[0]:
                 if dt == cd[1]:
@@ -38,11 +46,13 @@ class CueFilterModel:
             c.add_channel(name, dt)
 
     def remove_channel(self, c: tuple[str, DataType]) -> None:
+        """Remove a channel from the model."""
         for cue in self.cues:
             cue.remove_channel(c)
         self.channels.remove(c)
 
     def load_from_configuration(self, parameters: dict[str, str]) -> None:
+        """Deserialize configuration from filter configuration."""
         self.global_restart_on_end = parameters.get("end_handling") == "start_again"
 
         mapping_str = parameters.get("mapping")

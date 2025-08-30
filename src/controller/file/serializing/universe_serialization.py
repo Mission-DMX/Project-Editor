@@ -8,9 +8,9 @@ from model.ofl.fixture import UsedFixture
 
 
 def _create_universe_element(universe: Universe, parent: ET.Element) -> ET.Element:
-    """Create an XML element of type `physical_location`.
+    """Create an XML Universe element.
 
-    Example:
+    Examples:
         <universe name="name" description="description" id="0">
             ...
         </universe>
@@ -30,7 +30,7 @@ def _create_universe_element(universe: Universe, parent: ET.Element) -> ET.Eleme
 def _create_physical_location_element(physical: int, parent: ET.Element) -> ET.Element:
     """Create an XML element of type `physical_location`.
 
-    Example:
+    Examples:
         <physical_location>0</physical_location>
 
     """
@@ -44,7 +44,7 @@ def _create_artnet_location_element(
 ) -> ET.Element:
     """Create an XML element of type `artnet_location`.
 
-    Example:
+    Examples:
         <artnet_location ip_address="127.0.0.1" udp_port="666" device_universe_id="0" />
 
     """
@@ -64,7 +64,7 @@ def _create_ftdi_location_element(
 ) -> ET.Element:
     """Create an XML element of type `ftdi_location`.
 
-    Example:
+    Examples:
         <ftdi_location vendor_id="0" product_id="0" device_name="name"/>
 
     """

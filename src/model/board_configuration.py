@@ -53,7 +53,7 @@ class BoardConfiguration:
         self._broadcaster.delete_device.connect(self._delete_device)
         self._broadcaster.connection_state_updated.connect(self._connection_changed)
 
-        self._filter_update_msg_register: dict[tuple[int, str], list[Callable]] = {}
+        self._filter_update_msg_register: dict[tuple[int, str], set[Callable]] = {}
         self._broadcaster.update_filter_parameter.connect(self._distribute_filter_update_message)
 
     def _clear(self) -> None:
@@ -97,7 +97,7 @@ class BoardConfiguration:
         self._scenes_index.pop(scene.scene_id)
 
     def _add_universe(self, universe: Universe) -> None:
-        """Create and add a universe from the given patching universe.
+        """Create and add a universe.
 
         Args:
             universe: The universe to add.
@@ -204,7 +204,7 @@ class BoardConfiguration:
 
     @property
     def broadcaster(self) -> Broadcaster:
-        """The broadcaster the board configuration use."""
+        """The broadcaster the board configuration uses."""
         return self._broadcaster
 
     @property
@@ -218,7 +218,7 @@ class BoardConfiguration:
         self._broadcaster.show_file_path_changed.emit(new_path)
 
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
-        """Return the scene by id."""
+        """Return the scene by ID."""
         looked_up_position = self._scenes_index.get(scene_id)
         if looked_up_position is not None and looked_up_position < len(self._scenes):
             return self._scenes[looked_up_position]
@@ -248,10 +248,10 @@ class BoardConfiguration:
         """
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
-            callable_list = []
+            callable_list = set()
             self._filter_update_msg_register[(target_scene, target_filter_id)] = callable_list
         if c not in callable_list:
-            callable_list.append(c)
+            callable_list.add(c)
 
     def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
         """Remove a previously registered callback.
@@ -268,17 +268,17 @@ class BoardConfiguration:
         if c in callable_list:
             callable_list.remove(c)
 
-    def add_macro(self, m: Macro) -> None:
+    def add_macro(self, macro: Macro) -> None:
         """Add a new macro to the show file.
 
         This method must be called from a QObject as it triggers an event.
 
         Args:
-            m: The macro to add.
+            macro: The macro to add.
 
         """
         new_index = len(self._macros)
-        self._macros.append(m)
+        self._macros.append(macro)
         self._broadcaster.macro_added_to_show_file.emit(new_index)
 
     def get_macro(self, macro_id: int | str) -> Macro | None:

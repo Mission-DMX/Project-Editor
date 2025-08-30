@@ -1,3 +1,4 @@
+"""Dialog to query data on channel add."""
 from collections.abc import Callable
 
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLineEdit, QPushButton, QWidget
@@ -6,7 +7,17 @@ from model import DataType
 
 
 class ChannelInputDialog(QDialog):
+    """Dialog to add a new channel to a preview edit widgets model."""
+
     def __init__(self, parent: QWidget, ok_function: Callable[[str, DataType], None]) -> None:
+        """Channel input dialog.
+
+        Args:
+            parent: Parent QWidget.
+            ok_function: Function called when the user presses the OK button. It receives
+                the name of the new channel and the selected data type.
+
+        """
         super().__init__(parent)
         self._ok_function = ok_function
         self._layout = QFormLayout()

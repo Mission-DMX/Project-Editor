@@ -1,3 +1,5 @@
+"""Contains the Show UI widget holder."""
+
 from logging import getLogger
 from typing import override
 
@@ -12,15 +14,24 @@ logger = getLogger(__name__)
 
 
 class UIWidgetHolder(QWidget):
-    """Widget to hold node editor widgets and move them around"""
+    """Widget to hold node editor widgets and move them around."""
 
     closing = Signal()
 
     def __init__(self, child: UIWidget, parent: QWidget, instance_for_editor: bool = True) -> None:
+        """Initialize the widget holder.
+
+        Args:
+            child: The UI widget to hold.
+            parent: The parent Qt widget, likely a ShowUIPlayer instance.
+            instance_for_editor: True if this container is used in an editor.
+
+        """
         super().__init__(parent)
         self._model: UIWidget = child
         if instance_for_editor:
             self._child = child.get_configuration_widget(self)
+            self._child.setEnabled(False)
         else:
             self._child = child.get_player_widget(self)
             self._child.setEnabled(True)
@@ -46,11 +57,18 @@ class UIWidgetHolder(QWidget):
         self._edit_dialog = None
 
     def update_size(self) -> None:
+        """Update dimensions of show UI widget."""
         self.setMinimumWidth(100)
         self.setMinimumHeight(30)
+        self.setMaximumHeight(65565)
+        self.setMaximumWidth(65565)
 
         child_layout = self._child.layout()
-        minimum_size = child_layout.minimumSize() if child_layout else QSize(250, 100)
+        if child_layout:
+            minimum_size = child_layout.totalMinimumSize()
+        else:
+            minimum_size = self._child.minimumSize()
+            minimum_size = QSize(max(250, minimum_size.width()), max(100, minimum_size.height()))
         w = max(minimum_size.width() + 50, self.minimumWidth())
         h = max(minimum_size.height() + 50, self.minimumHeight())
         self._label.resize(w, 20)
@@ -59,13 +77,15 @@ class UIWidgetHolder(QWidget):
         self.repaint()
 
     @override
-    def closeEvent(self, event:QCloseEvent) -> None:
-        """Emits closing signal.
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Emit closing signal.
 
         Args:
             event: The closing event.
+
         """
         self.closing.emit()
+        self._model.close()
         try:
             self._model.parent.widgets.remove(self._model)
         except ValueError:
@@ -74,20 +94,22 @@ class UIWidgetHolder(QWidget):
 
     @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        """Saves the current position on left click.
+        """Save the current position of a left click.
 
         Args:
             event: The mouse event.
+
         """
         if event.button() is Qt.MouseButton.LeftButton and self._instance_for_editor:
             self._old_pos = event.globalPos()
 
     @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        """Moves the widget on mouse drag.
+        """Move the widget on mouse drag.
 
         Args:
             event: The mouse event.
+
         """
         super().mouseMoveEvent(event)
         if not self._instance_for_editor:
@@ -99,20 +121,21 @@ class UIWidgetHolder(QWidget):
 
     @property
     def holding(self) -> NodeEditorFilterConfigWidget:
-        """The widget the holder is holding"""
+        """The widget the holder is holding."""
         return self._child
 
     @property
     def widget(self) -> UIWidget:
         return self._model
 
+    @override
     def move(self, new_pos: QPoint) -> None:
         super().move(new_pos)
         self._model.position = (new_pos.x(), new_pos.y())
 
     def _show_edit_dialog(self) -> None:
         if not self._edit_dialog:
-            self._edit_dialog = QDialog(self)
+            self._edit_dialog = QDialog(self.parent())
             layout = QVBoxLayout()
             layout.addWidget(self._model.get_config_dialog_widget(self._edit_dialog))
             # TODO add cancel and close buttons

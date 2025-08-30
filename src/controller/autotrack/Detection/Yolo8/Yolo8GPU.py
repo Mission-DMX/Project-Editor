@@ -1,4 +1,5 @@
-# coding=utf-8
+"""YOLOv8 models for object detection."""
+
 import os
 import time
 from logging import getLogger
@@ -14,33 +15,31 @@ logger = getLogger(__name__)
 
 
 class Yolo8GPU(Detector):
-    """
-    The `Yolo8` class is a detector that uses the YOLOv8 model for object detection.
+    """Use YOLOv8 models for object detection.
 
     Attributes:
-        model (cv2.dnn.Net): The YOLOv8 model.
+        model: The YOLOv8 model.
 
     Methods:
-        - `__init__()`: Initialize the Yolo8 object.
-        - `detect(frame)`: Detect objects in a given frame.
-        - `loadModel()`: Load the YOLOv8 model from the ONNX file.
+        __init__: Initialize the Yolo8 object.
+        detect: Detect objects in a given frame.
+        load_model: Load the YOLOv8 model from the ONNX file.
+
     """
 
     def __init__(self):
-        """
-        Initialize the Yolo8 object.
-        """
+        """Initialize the Yolo8 object."""
         self.model = None
 
     def detect(self, frame):
-        """
-        Detect objects in a given frame.
+        """Detect objects in a given frame.
 
         Args:
-            frame (numpy.ndarray): Input image frame.
+            frame: Input image frame.
 
         Returns:
-            numpy.ndarray: Detected objects in the frame.
+            Detected objects in the frame.
+
         """
         if self.model is None:
             self.loadModel()
@@ -60,9 +59,7 @@ class Yolo8GPU(Detector):
         return output0[0]
 
     def loadModel(self):
-        """
-        Load the Yolo8 model from the ONNX file.
-        """
+        """Load the Yolo8 models from the ONNX file."""
         # self.model = cv2.dnn.readNetFromONNX("./Detection/Yolo8/models/yolov8n.onnx")
         self.model = rt.InferenceSession(
             resource_path(os.path.join("resources", "autotrack_models", "yolov8n.onnx")),

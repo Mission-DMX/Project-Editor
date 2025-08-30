@@ -1,7 +1,8 @@
-"""commands for selection"""
+"""Commands for selection."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from controller.cli.command import Command
 from model.control_desk import BankSet
@@ -13,13 +14,14 @@ if TYPE_CHECKING:
 
 
 def find_bank_set(identifier: str) -> BankSet | None:
-    """
-    find a bank set
+    """Find a bank set by its identifier.
+
     Args:
         identifier: the identifier of the bank set
 
     Returns:
         bank set or none if the identifier not exists
+
     """
     linked_sets = BankSet.get_linked_bank_sets()
     try:
@@ -32,15 +34,19 @@ def find_bank_set(identifier: str) -> BankSet | None:
 
 
 class SelectCommand(Command):
+    """Selected Command."""
 
     def __init__(self, context: CLIContext) -> None:
+        """Select Command."""
         super().__init__(context, "select")
         self.help_text = "This command displays the help about a certain command."
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("what", help="Specify what you would like to select")
         parser.add_argument("item", help="Specify the item you would like to select")
 
+    @override
     def execute(self, args: Namespace) -> bool:
         match args.what:
             case "scene":
@@ -68,6 +74,7 @@ class SelectCommand(Command):
                 self.context.print(f"ERROR: the requested bank set '{args.item}' was not found")
             case _:
                 self.context.print(
-                    f"ERROR: The resource '{args.what}' cannot be selected. Type 'help select' to obtain a list.")
+                    f"ERROR: The resource '{args.what}' cannot be selected. Type 'help select' to obtain a list."
+                )
                 return False
         return True
