@@ -1,3 +1,4 @@
+"""Contains EventSetupWidget and required internal helper classes."""
 import os
 from logging import getLogger
 from typing import TYPE_CHECKING
@@ -16,7 +17,9 @@ from PySide6.QtWidgets import (
     QListWidget,
     QPushButton,
     QScrollArea,
+    QSpinBox,
     QSplitter,
+    QStackedLayout,
     QTableWidget,
     QTableWidgetItem,
     QToolBar,
@@ -29,6 +32,7 @@ from model import Broadcaster, events
 from model.events import EventSender, get_sender_by_id, mark_sender_persistent
 from proto.Events_pb2 import event
 from utility import resource_path
+from view.action_setup_view._audio_setup_widget import AudioSetupWidget
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem, AnnotatedTableWidgetItem
 
 if TYPE_CHECKING:
@@ -41,6 +45,7 @@ _keypad_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsour
 _midi_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midi.svg")))
 _midirtp_icon = QIcon(resource_path(os.path.join("resources", "icons", "eventsource-midirtp.svg")))
 _rename_icon = QIcon(resource_path(os.path.join("resources", "icons", "rename.svg")))
+_audio_icon = QIcon(resource_path(os.path.join("resources", "icons", "audio.svg")))
 
 _event_type_string: dict[proto.Events_pb2.event_type, str] = {
     proto.Events_pb2.ONGOING_EVENT: "Ongoing",
@@ -78,11 +83,23 @@ class _SenderConfigurationWidget(QScrollArea):
         self._debug_include_ongoing_checkbox.setText("Include Ongoing Events")
         self._debug_include_ongoing_checkbox.checkStateChanged.connect(self._debug_include_ongoing_changed)
         layout.addWidget(self._debug_include_ongoing_checkbox)
+        self._custom_conf_layout = QStackedLayout()
+        custom_conf_widget = QWidget(self)
+        self._no_custom_config_label = QLabel(custom_conf_widget)
+        self._custom_conf_layout.addWidget(self._no_custom_config_label)
+        self._audio_config_widget = AudioSetupWidget(custom_conf_widget)
+        self._custom_conf_layout.addWidget(self._audio_config_widget)
+        # TODO implement individual configuration widgets for remaining sender types
+        custom_conf_widget.setLayout(self._custom_conf_layout)
+        layout.addWidget(custom_conf_widget)
+        self._apply_config_button = QPushButton(self)
+        self._apply_config_button.setText("Update configuration now.")
+        self._apply_config_button.clicked.connect(self._update_configuration)
+        layout.addWidget(self._apply_config_button)
         self._rename_table = QTableWidget(self, rowCount=0, columnCount=4)
         self._rename_table.cellChanged.connect(self._rename_table_cell_changed)
         layout.addWidget(self._rename_table)
         # TODO add manual rename button
-        # TODO implement individual configuration widgets for event sender types
         self.setLayout(layout)
         self._own_rename_issued = False
         self._broadcaster = b
@@ -114,6 +131,13 @@ class _SenderConfigurationWidget(QScrollArea):
             self._debug_include_ongoing_checkbox.setEnabled(new_sender.debug_enabled)
             self._rename_table.setEnabled(True)
             self._update_table()
+            if isinstance(new_sender, events.AudioExtractEventSender):
+                self._custom_conf_layout.setCurrentWidget(self._audio_config_widget)
+                self._audio_config_widget.update_from_sender(new_sender)
+                self._apply_config_button.setEnabled(True)
+            else:
+                self._custom_conf_layout.setCurrentWidget(self._no_custom_config_label)
+                self._apply_config_button.setEnabled(False)
         else:
             self._name_label.setText("")
             self._index_label.setText("")
@@ -127,6 +151,8 @@ class _SenderConfigurationWidget(QScrollArea):
             self._rename_table.clear()
             self._rename_table.setRowCount(0)
             self._rename_table.setEnabled(False)
+            self._apply_config_button.setEnabled(False)
+            self._custom_conf_layout.setCurrentWidget(self._no_custom_config_label)
 
     def _update_table(self) -> None:
         self._rename_table.clear()
@@ -179,9 +205,13 @@ class _SenderConfigurationWidget(QScrollArea):
         else:
             self._own_rename_issued = False
 
+    def _update_configuration(self) -> None:
+        if self._sender is not None:
+            self._sender.send_update(auto_commit=True, push_direct=True)
+
 
 class _SourceListWidget(QWidget):
-    """Content widget for ListWidgetItems of event senders"""
+    """Content widget for ListWidgetItems of event senders."""
 
     def __init__(self, parent: QWidget, sender: events.EventSender) -> None:
         super().__init__(parent=parent)
@@ -192,6 +222,8 @@ class _SourceListWidget(QWidget):
         self._icon_label.setMinimumWidth(64)
         if isinstance(sender, events.XtouchGPIOEventSender):
             self._icon_label.setPixmap(_xtouch_gpio_icon.pixmap(64, 64))
+        if isinstance(sender, events.AudioExtractEventSender):
+            self._icon_label.setPixmap(_audio_icon.pixmap(64, 64))
         else:
             self._icon_label.setPixmap(_plain_icon.pixmap(64, 64))
         layout.addWidget(self._icon_label)
@@ -207,7 +239,7 @@ class _SourceListWidget(QWidget):
 
 
 class _EventLogListWidget(QWidget):
-    """Content widget for ListWidgetItems of logged events"""
+    """Content widget for ListWidgetItems of logged events."""
 
     _STYLE_ID_TAG = """
     background-color: #B0B0B0;
@@ -337,6 +369,7 @@ class _SenderAddDialog(QDialog):
                 "fish.builtin.midirtp",
                 "fish.builtin.xtouchgpio",
                 "fish.builtin.gpio",
+                "fish.builtin.audioextract",
                 "fish.builtin.macrokeypad",
             ]
         )
@@ -356,6 +389,7 @@ class EventSetupWidget(QSplitter):
     """Widget containing the entire event sender configuration UI."""
 
     def __init__(self, parent: QWidget | None, b: Broadcaster) -> None:
+        """Initialize the event setup widget."""
         super().__init__(parent=parent)
         self._selection_panel = QWidget(self)
         layout = QVBoxLayout()

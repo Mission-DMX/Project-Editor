@@ -1,6 +1,4 @@
-"""
-This file provides a wizard to automatically export the configured patch plan as a spreadsheet.
-"""
+"""Provide a wizard to automatically export the configured patch plan as a spreadsheet."""
 
 import csv
 import os.path
@@ -31,13 +29,13 @@ logger = getLogger(__name__)
 
 
 class PatchPlanExportWizard(QWizard):
-    """
-    This wizard guides the user to export the patching configuration as a CSV file, providing a power distribution
-    guide in the process.
+    """Wizard guides the user to export the patching configuration as a CSV file.
+
+    Provide a power distribution guide in the process.
     """
 
     def __init__(self, parent: QWidget, show_data: BoardConfiguration) -> None:
-        """Instantiate a new wizard object"""
+        """Wizard object."""
         super().__init__(parent)
         self.setModal(True)
         self.setMinimumSize(600, 300)
@@ -92,18 +90,21 @@ class PatchPlanExportWizard(QWizard):
         self._show = show_data
 
     def _select_export_location(self) -> None:
-        """This button callback prompts the user to select an CSV file export destination."""
+        """Handle export button click.
+
+        Prompts the user to select an CSV file export destination.
+        """
         self._file_selection_dialog.show()
 
     def _export_location_selected(self, file_name: str) -> None:
-        """This callback applies the path of the user-selected location into the text box."""
+        """Apply the path of the user-selected location into the text box."""
         self._export_location_tb.setText(file_name)
         self._first_page.completeChanged.emit()
 
     def _load_fixture_list(self, _: ComposableWizardPage) -> None:
-        """
-        This method loads all available fixtures into the list widget,
-        prompting the user to select the one desired for export.
+        """Load all available fixtures into the list widget.
+
+        Prompting the user to select the one desired for export.
         """
         for fixture in self._show.fixtures:
             item = AnnotatedListWidgetItem(self._fixture_list)
@@ -181,12 +182,13 @@ class PatchPlanExportWizard(QWizard):
     def _schedule_phases(
         self, fixtures: list[UsedFixture], phase_association: dict[UsedFixture, int], phases: Counter[int]
     ) -> None:
-        """
-        This method distributes the fixtures on the available power phases.
+        """Distribute the fixtures on the available power phases.
 
-        :param fixtures: The fixture list to use
-        :param phase_association: The mapping of fixtures to their phases. This dictionary will be filled in.
-        :param phases: The load on each power phase in Watt.
+        Args:
+            fixtures: The fixture list to use.
+            phase_association: The mapping of fixtures to their phases. This dictionary will be filled in.
+            phases: The load on each power phase in Watt.
+
         """
         number_of_phases = self._number_phases_sb.value()
         fixtures.sort(key=lambda f: f.physical.power, reverse=True)

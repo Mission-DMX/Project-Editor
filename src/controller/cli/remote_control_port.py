@@ -1,4 +1,4 @@
-"""Classes for remote connection"""
+"""Classes for remote connection."""
 
 from __future__ import annotations
 
@@ -18,20 +18,24 @@ logger = getLogger(__name__)
 
 
 class SocketStreamReader:
-    """This class is used to split the input TCP stream into separate lines."""
+    """Class is used to split the input TCP stream into separate lines."""
 
     def __init__(self, sock: socket) -> None:
-        """Initialize the stream reader
+        """Stream reader.
 
-        Arguments:
-        sock -- the socket to listen on
+        Args:
+            sock: The socket to listen on.
+
         """
         self._sock = sock
         self._recv_buffer = bytearray()
         self.echo = True
 
     def read(self, num_bytes: int = -1) -> bytes:
-        """This method is here to comply with the stream interface but never, hence not implemented"""
+        """Comply with the stream interface (method not implemented).
+
+        This method exists to satisfy the interface but is intentionally left unimplemented.
+        """
         raise NotImplementedError
 
     def read_exactly(self, num_bytes: int) -> bytes:
@@ -50,17 +54,19 @@ class SocketStreamReader:
 
         Returns:
         bytearray with line.
+
         """
         return self.read_until(b"\n")
 
     def read_until(self, separator: bytes = b"\n") -> bytes:
-        """Read from the socket until the escape sequence was found
+        """Read from the socket until the escape sequence is found.
 
-        Arguments:
-        separator -- the delimiter to look out for
+        Args:
+            separator: The delimiter to look for.
 
         Returns:
-        bytearray with the found content.
+            The bytearray containing the found content.
+
         """
         if len(separator) != 1:
             raise ValueError("Only separators of length 1 are supported.")
@@ -88,7 +94,7 @@ class SocketStreamReader:
         return result
 
     def _recv_into(self, view: memoryview) -> int:
-        """This method performs a zero copy read request."""
+        """Zero copy read request."""
         bytes_read = min(len(view), len(self._recv_buffer))
         view[:bytes_read] = self._recv_buffer[:bytes_read]
         self._recv_buffer = self._recv_buffer[bytes_read:]
@@ -102,17 +108,20 @@ class SocketStreamReader:
 
 
 class Connection:
-    """This class handles a remote CLI connection."""
+    """Class handles a remote CLI connection."""
 
     def __init__(
         self, client: socket, address: str, connection_map: dict, show: BoardConfiguration, networkmgr: NetworkManager
     ) -> None:
-        """This constructor takes over the connection.
+        """CLI connection.
 
-        Arguments:
-        client -- the connection socket fd.
-        address -- the remote address of the connected client.
-        connection_map -- the map handling all active connections.
+        Args:
+            client: The connection socket fd.
+            address: The remote address of the connected client.
+            connection_map: The map handling all active connections.
+            show: The show model.
+            networkmgr: The NetworkManager instance.
+
         """
         self.context = CLIContext(show, networkmgr, exit_available=True)
         self._client = client
@@ -122,7 +131,7 @@ class Connection:
         self._client_thread.start()
 
     def run(self) -> None:
-        """This method will be called by the client thread in order to handle the client."""
+        """Handle the client."""
         try:
             logger.info("Got incoming remote CLI connection from %s.", self._remote_address)
             reader = SocketStreamReader(self._client)
@@ -145,9 +154,9 @@ class Connection:
         self._connection_map.pop(self._remote_address)
 
     def stop(self) -> None:
-        """Forcefully disconnect and stop the client.
+        """Disconnect and stop the client forcefully.
 
-        This operation may block until the operating system released the socket.
+        This operation may block until the operating system releases the socket.
         """
         self.context.exit_called = True
         self._client.close()
@@ -155,21 +164,27 @@ class Connection:
 
     @property
     def remote_address(self) -> str:
-        """Property for remote address"""
+        """Remote address."""
         return self._remote_address
 
 
 class RemoteCLIServer:
-    """This class handles the control port. Only IPv6 connections are supported."""
+    """Class handles the control port.
+
+    Only IPv6 connections are supported.
+    """
 
     def __init__(
         self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::", port: int = 2929
     ) -> None:
-        """Construct the handler and opens a port.
+        """Construct the handler and open a port.
 
-        Arguments:
-        interface -- The interface to bind to. Defaults to all IPv6 interfaces.
-        port -- The port to listen on. Defaults to TCP/2929
+        Args:
+            show: The show model.
+            netmgr: The network manager object.
+            interface: The interface to bind to. Defaults to all IPv6 interfaces.
+            port: The port to listen on. Defaults to TCP/2929.
+
         """
         self._server_thread = Thread(target=self.run)
         self._bind_interface = interface
@@ -183,7 +198,7 @@ class RemoteCLIServer:
         logger.warning("Opened up CLI interface on [%s]:%s", interface, port)
 
     def run(self) -> None:
-        """This method will be run by the server thread in order to process incoming clients."""
+        """Process incoming clients."""
         with socket(AF_INET6, SOCK_STREAM) as s:
             self._server_socket = s
             s.bind((self._bind_interface, self._bind_port))
@@ -199,14 +214,15 @@ class RemoteCLIServer:
                 except TimeoutError:
                     pass
                 except OSError as e:
-                    logger.exception("CLI socket error: %s", e)
+                    if not self._stopped:
+                        logger.exception("CLI socket error: %s", e)
             s.close()
         logger.info("Exiting CLI server thread")
 
     def stop(self) -> None:
-        """This method stops the server and disconnects all clients.
+        """Stop the server and disconnects all clients.
 
-        It may block until the operating system released all resources.
+        It may block until the operating system releases all resources.
         """
         logger.info("Stopping CLI server")
         self._stopped = True

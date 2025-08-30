@@ -1,4 +1,4 @@
-"""This file provides the ShowBrowser widget."""
+"""ShowBrowser widget."""
 
 import os.path
 from functools import partial
@@ -33,7 +33,7 @@ from .fixture_to_filter import place_fixture_filters_in_scene
 
 
 class ShowBrowser:
-    """This class provides a navigation bar / browser for the complete show."""
+    """Provide a navigation bar and browser for the complete show."""
 
     _filter_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter.svg")))
     _scene_browser_tab_icon = QIcon(resource_path(os.path.join("resources", "icons", "showbrowser-show.svg")))
@@ -43,6 +43,14 @@ class ShowBrowser:
     _uipage_icon = QIcon(resource_path(os.path.join("resources", "icons", "uipage.svg")))
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget) -> None:
+        """Initialize a ShowBrowser.
+
+        Args:
+            parent: The parent Qt widget.
+            show: The show model.
+            editor_tab_browser: The editor to use for opening actions.
+
+        """
         self._recently_created_scene = None
         self._widget = QWidget(parent)
         self._widget.setMaximumWidth(450)
@@ -97,19 +105,16 @@ class ShowBrowser:
 
     @property
     def widget(self) -> QWidget:
+        """Get the constructed widget."""
         return self._widget
 
     @property
     def board_configuration(self) -> BoardConfiguration | None:
+        """Get the show configuration."""
         return self._show
 
     @board_configuration.setter
     def board_configuration(self, b: BoardConfiguration | None) -> None:
-        if not self._show and b:
-            b.broadcaster.add_universe.connect(lambda: self._universe_browsing_tree.refresh())
-            b.broadcaster.delete_universe.connect(lambda: self._universe_browsing_tree.refresh())
-            # TODO listen to scene delete signal
-            b.broadcaster.add_fixture.connect(lambda: self._universe_browsing_tree.refresh())
         self._show = b
         self._universe_browsing_tree._show = b
         self._refresh_all()
@@ -117,6 +122,7 @@ class ShowBrowser:
 
     @property
     def selected_scene(self) -> Scene | None:
+        """Get the current selected scene."""
         return self._selected_scene
 
     @selected_scene.setter

@@ -1,4 +1,5 @@
-"""Show player to remote control fish show mode"""
+"""Show player to remote control fish show mode."""
+
 from PySide6.QtWidgets import QWidget
 
 from controller.network import NetworkManager
@@ -9,7 +10,7 @@ from .ui_player_widget import UIPlayerWidget
 
 
 class _PlaceholderWidget(QWidget):
-    """Placeholder for grid"""
+    """Placeholder for grid."""
 
     def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
@@ -17,9 +18,13 @@ class _PlaceholderWidget(QWidget):
 
 
 class ShowPlayerWidget(QWidget):
-    """Widget to remote control fish show mode"""
+    """Widget to remote control fish show mode."""
 
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget = None) -> None:
+        """Instantiate player requires complete show configuration as well as parent Qt widget.
+
+        The parent should not be None.
+        """
         super().__init__(parent)
         self._board_configuration = board_configuration
 
@@ -39,23 +44,25 @@ class ShowPlayerWidget(QWidget):
             self._switch_scene(current_scene_id)
 
     def _index_to_position(self, index: int) -> tuple[int, int]:
-        """Calculates the grid position from index.
+        """Calculate the grid position from index.
 
         Args:
             index: The index
 
         Returns:
             A tuple of x-y coordinates (column, row)
+
         """
         column = int(index / self._max_rows)
         row = index - column * self._max_rows
         return column, row
 
     def _add_scene(self, scene: Scene) -> None:
-        """Adds a scene to the player.
+        """Add a scene to the player.
 
         Args:
             scene: Scene to be added.
+
         """
         scene_widget = SceneSwitchButton(scene, self)
         self._grid.append(scene_widget)
@@ -66,10 +73,11 @@ class ShowPlayerWidget(QWidget):
             self._reload()
 
     def _remove_scene(self, scene: Scene) -> None:
-        """Removes a scene from the player.
+        """Remove a scene from the player.
 
         Args:
             scene: Scene to be removed.
+
         """
         for scene_widget in self._grid:
             if scene_widget.scene.scene_id is scene.scene_id:
@@ -79,7 +87,7 @@ class ShowPlayerWidget(QWidget):
                 break
 
     def _reload(self) -> None:
-        """Reloads all scene widgets by filling up emtpty spaces"""
+        """Reload all scene widgets by filling up empty spaces."""
         max_height = 0
         last_height = 0
         last_width = 0
@@ -97,10 +105,12 @@ class ShowPlayerWidget(QWidget):
         uipage_container_width = self.width() - 10 - last_width
         uipage_container_height = self.height() - 10 - max_height
         self._ui_container.resize(uipage_container_width, uipage_container_height)
+        self._ui_container.check_page_update()
 
     def _switch_scene(self, scene: Scene | int) -> None:
         scene_index = scene.scene_id if isinstance(scene, Scene) else scene
         if scene_index == self._scene_index:
+            self._ui_container.check_page_update()
             return
 
         if not (scene_index < len(self._board_configuration.scenes)):

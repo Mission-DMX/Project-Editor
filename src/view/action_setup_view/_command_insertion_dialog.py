@@ -1,3 +1,5 @@
+"""Contains a helper method to escape arguments and the _CommandInsertionDialog case class."""
+
 from PySide6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QStackedLayout, QVBoxLayout, QWidget
 
 from model import BoardConfiguration, Scene
@@ -6,11 +8,36 @@ from model.macro import Macro
 from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 
-class _CommandInsertionDialog(QDialog):
-    """This class provides a foundation for command insertion dialogs."""
+def escape_argument(argument: str) -> str:
+    """Escape an argument for usage in a command.
 
-    def __init__(self, parent: QWidget, macro: Macro, supported_filter_list: list[FilterTypeEnumeration],
-                 show: BoardConfiguration, update_callable: callable) -> None:
+    Args:
+        argument: The argument to escape.
+
+    Returns: The escaped argument.
+
+    """
+    s = argument if isinstance(argument, str) else str(argument)
+    s = s.replace("\\", "\\\\")
+    s = s.replace("\n", "\\n")
+    s = s.replace("\t", "\\t")
+    if " " in s:
+        return '"' + s + '"'
+    return s
+
+
+class _CommandInsertionDialog(QDialog):
+    """Provides a foundation for command insertion dialogs."""
+
+    def __init__(
+        self,
+        parent: QWidget,
+        macro: Macro,
+        supported_filter_list: list[FilterTypeEnumeration],
+        show: BoardConfiguration,
+        update_callable: callable,
+    ) -> None:
+        """Initialize the dialog."""
         super().__init__(parent)
 
         self._macro = macro
@@ -41,8 +68,8 @@ class _CommandInsertionDialog(QDialog):
         layout.addWidget(self._scene_selection_cb)
         layout.addWidget(self._filter_selection)
 
-        self.custom_layout: QStackedLayout = QStackedLayout()
-        layout.addLayout(self.custom_layout)
+        self._custom_layout: QStackedLayout = QStackedLayout()
+        layout.addLayout(self._custom_layout)
 
         layout.addWidget(self._button_box)
 
@@ -71,14 +98,17 @@ class _CommandInsertionDialog(QDialog):
         self.close()
 
     def get_command(self) -> str:
-        """
+        """Get the finished command.
+
         This method needs to be implemented in order to get the command that should be inserted.
-        :returns: a string without leading new line.
+
+        Returns: a string without leading new line.
         """
         raise NotImplementedError
 
     def on_filter_selected(self) -> None:
-        """
+        """Perform updates on filter selection.
+
         This method gets called once the user selected the desired filter.
         Use this method to implement custom behavior. self.filter and self.filter_id
         are now guaranteed to be not None. This method may be called multiple times

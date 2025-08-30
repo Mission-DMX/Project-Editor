@@ -1,4 +1,5 @@
-"""Color in HSI Form"""
+"""Color in HSI Form."""
+
 from __future__ import annotations
 
 import colorsys
@@ -11,15 +12,17 @@ if TYPE_CHECKING:
 
 
 class ColorHSI:
-    """Color Definition"""
+    """Color Definition."""
 
-    def __init__(self, hue: confloat(ge=0, le=360), saturation: confloat(ge=0, le=1),
-                 intensity: confloat(ge=0, le=1)) -> None:
-        """ HSI Color
+    def __init__(
+        self, hue: confloat(ge=0, le=360), saturation: confloat(ge=0, le=1), intensity: confloat(ge=0, le=1)
+    ) -> None:
+        """HSI color.
+
         Args:
-            hue: color itself in the form of an angle between [0,360] degrees
-            saturation:  in range of [0,1]
-            intensity: in range of [0,1] where 0 is black and 1 is white
+            hue: Color itself in the form of an angle between [0, 360] degrees.
+            saturation: Value in the range [0, 1].
+            intensity: Value in the range [0, 1], where 0 is black and 1 is white.
 
         """
         self._hue: confloat(ge=0, le=360) = hue
@@ -28,12 +31,11 @@ class ColorHSI:
 
     @classmethod
     def from_filter_str(cls, filter_format: str) -> ColorHSI:
-        """ HSI Color
+        """Initialize an HSI color from the given filter configuration string.
 
-        This constructor parses the supplied color string and constructs the color object from it.
+        Args:
+        filter_format: The color provided as a filter configuration string.
 
-        Arguments:
-            filter_format -- The color provided as a filter configuration string
         """
         if not filter_format or filter_format.count(",") < 2:
             return ColorHSI(128.0, 0.5, 1.0)
@@ -55,42 +57,48 @@ class ColorHSI:
 
     @property
     def hue(self) -> confloat(ge=0, le=360):
-        """color itself in the form of an angle between [0,360] degrees"""
+        """Color itself in the form of an angle between [0,360] degrees."""
         return self._hue
 
     @property
     def saturation(self) -> confloat(ge=0, le=1):
         """Saturation of the color.
 
-        Float between (including) zero (100% white, 0% color) and 1 (0% white, 100% color)
+        Float between (including) zero (100% white, 0% color) and 1 (0% white, 100% color).
         """
         return self._saturation
 
     @property
     def intensity(self) -> confloat(ge=0, le=1):
-        """Perceived illuminance, float [0, 1]
-        where 0 is black and 1 is white
+        """Perceived illuminance.
+
+        float [0, 1] where 0 is black, and 1 is white.
         """
         return self._intensity
 
     def format_for_filter(self) -> str:
-        """This method formats the color to be parsable by fish filters."""
+        """Format the color so it can be parsed by fish filters."""
         return f"{float(self._hue)},{float(self._saturation)},{float(self._intensity)}"
 
     def to_rgb(self) -> tuple[int, int, int]:
-        """This method returns the RGB representations as int between 0 and 255"""
+        """RGB representations as int between 0 and 255."""
         rr, rg, rb = colorsys.hls_to_rgb((self._hue % 360) / 360.0, self._intensity, self._saturation)
         return int(rr * 255), int(rg * 255), int(rb * 255)
 
     def to_qt_color(self) -> QColor:
-        """return color in qt color format"""
+        """Return color in qt color format."""
         return QColor.fromHslF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)
 
     def copy(self) -> ColorHSI:
-        """return a copy of The color object"""
+        """Return a copy of The color object."""
         return ColorHSI(self._hue, self._saturation, self._intensity)
 
     @classmethod
     def from_qt_color(cls, c: QColor) -> ColorHSI:
-        """ generate a HSI color from qt color format"""
+        """Generate a HSI color from qt color format."""
         return ColorHSI(c.hslHueF() * 360.0, c.hslSaturationF(), c.lightnessF())
+
+    def __str__(self) -> str:
+        """Format color as HTML color code."""
+        r, g, b = self.to_rgb()
+        return f"#{r:02x}{g:02x}{b:02x}".upper()

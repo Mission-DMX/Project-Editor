@@ -1,4 +1,4 @@
-"""Styles for UI"""
+"""Style for UI."""
 
 APP = ""
 
@@ -35,3 +35,31 @@ LABEL_WARN = "background-color: rgba(255, 127, 0, 1);"
 LABEL_ERROR = "background-color: rgba(255, 0, 0, 1);"
 
 PATCH = "margin: 0px; padding: 1px; color: black;"
+
+CHANNEL_STYLE_8BIT = """
+   background-color: #202020;
+   color: #DDDDDD;
+   border-radius: 5px;
+   padding: 3px;
+   """
+
+CHANNEL_STYLE_16BIT = """
+   background-color: #202020;
+   color: #EEEEEE;
+   border-radius: 5px;
+   padding: 3px;
+   """
+
+CHANNEL_STYLE_FLOAT = """
+   background-color: #202020;
+   color: #FFFFFF;
+   border-radius: 5px;
+   padding: 3px;
+   """
+
+CHANNEL_STYLE_COLOR = """
+   background-color: #202020;
+   color: #10AA10;
+   border-radius: 5px;
+   padding: 3px;
+   """

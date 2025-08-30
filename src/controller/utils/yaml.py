@@ -1,4 +1,4 @@
-"""YAML handler"""
+"""YAML handler."""
 
 from logging import getLogger
 
@@ -9,11 +9,13 @@ logger = getLogger(__name__)
 
 
 def yaml_load(file_path: str) -> dict:
-    """
-    This method returns the content of the specified YAML file as a dictionary.
+    """Content of the specified YAML file as a dictionary.
 
-    :param file_path: The path to the YAML file to load
-    :returns: The dictionary defined in the file or an empty one in case of any issue.
+    Args:
+        file_path: The path to the YAML file to load
+
+    Returns: The dictionary defined in the file or an empty one in case of any issue.
+
     """
     d = {}
     with open(file_path, "r", encoding="UTF-8") as f:

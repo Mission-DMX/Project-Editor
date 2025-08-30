@@ -1,3 +1,5 @@
+"""Contains MacroSetupWidget."""
+
 from __future__ import annotations
 
 import os
@@ -10,6 +12,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QListWidget,
     QMessageBox,
@@ -26,6 +29,8 @@ from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
 from view.action_setup_view.constant_update_dialog import ConstantUpdateInsertionDialog
 from view.action_setup_view.cue_switch_dialog import _InsertCueSwitchDialog
 from view.action_setup_view.new_trigger_dialog import _NewTriggerDialog
+from view.action_setup_view.scene_switch_insertion_dialog import SceneSwitchInsertionDialog
+from view.action_setup_view.sequence_trigger_insertion_dialog import SequenceTriggerInsertionDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
@@ -64,6 +69,7 @@ class MacroSetupWidget(QSplitter):
     """Widget to configure a selected macro."""
 
     def __init__(self, parent: QWidget | None, show_config: BoardConfiguration) -> None:
+        """Initialize the macr setup widget."""
         super().__init__(parent=parent)
         self._broadcaster = Broadcaster()
         self._show: BoardConfiguration = show_config
@@ -78,16 +84,21 @@ class MacroSetupWidget(QSplitter):
         self._import_macro_action.setText("Import")
         self._import_macro_action.triggered.connect(self._import_macro_clicked)
         self._macro_actions.addAction(self._import_macro_action)
-        self.add_macro_action = QAction()
-        self.add_macro_action.setText("New Macro")
-        self.add_macro_action.triggered.connect(self._add_macro_pressed)
-        self._macro_actions.addAction(self.add_macro_action)
+        self._add_macro_action = QAction()
+        self._add_macro_action.setText("New Macro")
+        self._add_macro_action.triggered.connect(self._add_macro_pressed)
+        self._macro_actions.addAction(self._add_macro_action)
+        self._rename_macro_action = QAction()
+        self._rename_macro_action.setText("Rename Macro")
+        self._rename_macro_action.setEnabled(False)
+        self._rename_macro_action.triggered.connect(self._rename_macro_triggered)
+        self._macro_actions.addAction(self._rename_macro_action)
         self._macro_panel.setLayout(layout)
         layout.addWidget(self._macro_actions)
         self._macro_list = QListWidget(self._macro_panel)
         self._macro_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         self._macro_list.itemSelectionChanged.connect(self._selected_macro_changed)
-        # TODO add action to rename macro on double click
+        self._macro_list.itemDoubleClicked.connect(self._rename_macro_triggered)
         layout.addWidget(self._macro_list)
         self.addWidget(self._macro_panel)
         self._trigger_panel = QWidget(self)
@@ -122,10 +133,13 @@ class MacroSetupWidget(QSplitter):
         self._insert_cue_switch_action.setText("Insert Cue Switch")
         self._insert_cue_switch_action.triggered.connect(self._insert_cue_switch_clicked)
         self._content_panel_actions.addAction(self._insert_cue_switch_action)
+        self._insert_switch_scene_command_action = QAction()
+        self._insert_switch_scene_command_action.setText("Insert Scene Switch")
+        self._insert_switch_scene_command_action.triggered.connect(self._insert_scene_switch_trigger_clicked)
+        self._content_panel_actions.addAction(self._insert_switch_scene_command_action)
         self._insert_sequence_trigger_action = QAction()
         self._insert_sequence_trigger_action.setText("Insert Sequence Trigger")
-        # TODO connect action
-        self._insert_sequence_trigger_action.setEnabled(False)
+        self._insert_sequence_trigger_action.triggered.connect(self._insert_sequence_trigger_clicked)
         self._content_panel_actions.addAction(self._insert_sequence_trigger_action)
         self._insert_constant_update_action = QAction()
         self._insert_constant_update_action.setText("Insert Constant Update")
@@ -156,6 +170,7 @@ class MacroSetupWidget(QSplitter):
                 )
             self._selected_macro = selected_items[0].annotated_data
         self._trigger_list.clear()
+        self._rename_macro_action.setEnabled(True)
         if self._selected_macro is not None:
             self._trigger_actions.setEnabled(True)
             self._editor_area.setEnabled(True)
@@ -170,6 +185,7 @@ class MacroSetupWidget(QSplitter):
             self._editor_area.document().clear()
 
     def clear(self) -> None:
+        """Clear the widget data."""
         self._macro_list.clear()
         self._trigger_list.clear()
         self._editor_area.clear()
@@ -287,3 +303,42 @@ class MacroSetupWidget(QSplitter):
                 self, self._selected_macro, self._show, self._macro_content_changed
             )
             self._dialog.show()
+
+    def _insert_sequence_trigger_clicked(self) -> None:
+        if self._selected_macro is not None:
+            self._dialog = SequenceTriggerInsertionDialog(
+                self, self._selected_macro, self._show, self._macro_content_changed
+            )
+            self._dialog.show()
+
+    def _insert_scene_switch_trigger_clicked(self) -> None:
+        if self._selected_macro is not None:
+            self._dialog = SceneSwitchInsertionDialog(
+                self, self._selected_macro, self._show, self._macro_content_changed
+            )
+            self._dialog.show()
+
+    def _rename_macro_triggered(self) -> None:
+        if self._selected_macro is None:
+            return
+        self._dialog = QInputDialog(self)
+        self._dialog.setModal(True)
+        self._dialog.setWindowTitle("Rename Macro")
+        self._dialog.setTextValue(self._selected_macro.name)
+        self._dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        self._dialog.accepted.connect(self._rename_macro_final)
+        self._dialog.show()
+
+    def _rename_macro_final(self) -> None:
+        if self._selected_macro is None or not isinstance(self._dialog, QInputDialog):
+            logger.error("Aborting Rename. Please investigate bug.")
+            return
+        new_name = self._dialog.textValue()
+        if len(new_name) == 0:
+            logger.warning("Aborted Rename due to empty name.")
+            return
+        self._selected_macro.name = new_name
+        items = self._macro_list.selectedItems()
+        if len(items) == 0:
+            return
+        items[0].setText(new_name)

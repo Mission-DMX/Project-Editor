@@ -1,4 +1,5 @@
-"""Custom Node Library"""
+"""Custom Node Library."""
+
 from pyqtgraph.flowchart.NodeLibrary import NodeLibrary
 
 from view.show_mode.editor.nodes.impl.adapters import (
@@ -55,6 +56,7 @@ from view.show_mode.editor.nodes.impl.effects import (
     AutoTrackerNode,
     CueListNode,
     EffectsStackNode,
+    SequencerNode,
     Shift8BitNode,
     Shift16BitNode,
     ShiftColorNode,
@@ -70,6 +72,7 @@ from view.show_mode.editor.nodes.impl.faders import (
 )
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
+    EventCounterFilterNode,
     TimeNode,
     TimeSwitchOffDelay8BitNode,
     TimeSwitchOffDelay16BitNode,
@@ -92,13 +95,15 @@ from view.show_mode.editor.nodes.import_node import ImportNode
 
 
 class FilterNodeLibrary(NodeLibrary):
-    """Custom Node Library"""
+    """Custom Node Library."""
 
     def __init__(self) -> None:
+        """Initialize the filter node library."""
         super().__init__()
-        self.reload()
+        self._reload()
 
-    def reload(self) -> None:
+    def _reload(self) -> None:
+        """Add filter node entries."""
         self._register_constants_nodes()
         self._register_debug_nodes()
         self._register_adapters_nodes()
@@ -113,7 +118,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ImportNode, [("")])
 
     def _register_constants_nodes(self) -> None:
-        """Registers all the constants nodes."""
+        """Register all the constants nodes."""
         # Add Node -> Constants sub menu
         self.addNodeType(Constants8BitNode, [("Constants",)])
         self.addNodeType(Constants16BitNode, [("Constants",)])
@@ -122,7 +127,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(PanTiltConstant, [("Constants",)])
 
     def _register_debug_nodes(self) -> None:
-        """Registers all the debugs nodes."""
+        """Register all the debugs nodes."""
         # Add Node -> Debug sub menu
         self.addNodeType(Debug8BitNode, [("Debug", "Fish-Log")])
         self.addNodeType(Debug16BitNode, [("Debug", "Fish-Log")])
@@ -134,7 +139,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(DebugRemoteColorNode, [("Debug",)])
 
     def _register_adapters_nodes(self) -> None:
-        """Registers all the constants nodes."""
+        """Register all the constants nodes."""
         # Add Node -> Adapters sub menu
         self.addNodeType(Adapter16BitTo8BitNode, [("Adapters",)])
         self.addNodeType(Adapter16BitToBoolNode, [("Adapters",)])
@@ -156,7 +161,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ColorBrightnessMixinNode, [("Adapters",)])
 
     def _register_arithmetic_nodes(self) -> None:
-        """Registers all the arithmetics nodes."""
+        """Register all the arithmetics nodes."""
         # Add Node -> Arithmetic sub menu
         self.addNodeType(ArithmeticMACNode, [("Arithmetics",)])
         self.addNodeType(ArithmeticFloatTo8BitNode, [("Arithmetics",)])
@@ -179,15 +184,16 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(TrigonometricArcTanNode, [("Trigonometrics",)])
 
     def _register_wave_nodes(self) -> None:
-        """Registers all the wave nodes."""
+        """Register all the wave nodes."""
         self.addNodeType(SquareWaveNode, [("Waves",)])
         self.addNodeType(TriangleWaveNode, [("Waves",)])
         self.addNodeType(SawtoothWaveNode, [("Waves",)])
 
     def _register_time_nodes(self) -> None:
-        """Registers all the time nodes."""
+        """Register all the time nodes."""
         # Add Node -> Time sub menu
         self.addNodeType(TimeNode, [("Time",)])
+        self.addNodeType(EventCounterFilterNode, [("Time",)])
         self.addNodeType(TimeSwitchOnDelay8BitNode, [("Time",)])
         self.addNodeType(TimeSwitchOnDelay16BitNode, [("Time",)])
         self.addNodeType(TimeSwitchOnDelayFloatNode, [("Time",)])
@@ -196,7 +202,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(TimeSwitchOffDelayFloatNode, [("Time",)])
 
     def _register_fader_nodes(self) -> None:
-        """Registers all the fader nodes."""
+        """Register all the fader nodes."""
         # Add Node -> Filter Fader sub menu
         self.addNodeType(FaderMainBrightness, [("Filter Fader",)])
         self.addNodeType(FaderRawNode, [("Filter Fader",)])
@@ -213,6 +219,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ShiftFloatNode, [("Effects",)])
         self.addNodeType(ShiftColorNode, [("Effects",)])
         self.addNodeType(EffectsStackNode, [("Effects",)])
+        self.addNodeType(SequencerNode, [("Effects",)])
 
     def _register_scripting_nodes(self) -> None:
         self.addNodeType(LuaFilterNode, [("Script",)])

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 from collections import defaultdict
 from enum import IntFlag
@@ -37,6 +38,7 @@ class ColorSupport(IntFlag):
     HAS_UV_SEGMENT = 16
 
     def __str__(self) -> str:
+        """Generate human-readable channel color support representation."""
         if self == ColorSupport.NO_COLOR_SUPPORT:
             return "No Color Support"
         s = []
@@ -53,8 +55,11 @@ class ColorSupport(IntFlag):
         return "+".join(s)
 
 
-def load_fixture(file: str) -> OflFixture:
-    """load fixture from OFL JSON"""
+def load_fixture(file: str) -> OflFixture | None:
+    """Load fixture from OFL JSON."""
+    if not os.path.isfile(file):
+        logger.error("Fixture definition %s not found.", file)
+        return None
     with open(file, "r", encoding="UTF-8") as f:
         ob: dict = json.load(f)
     ob.update({"fileName": file.split("/fixtures/")[1]})
@@ -76,6 +81,18 @@ class UsedFixture(QtCore.QObject):
         uuid: UUID | None = None,
         color: str | None = None,
     ) -> None:
+        """Instantiate a UsedFixture object.
+
+        Args:
+            board_configuration: The show model
+            fixture: The base fixture definition
+            mode_index: The fixture mode to use
+            parent_universe: The parent universe
+            start_index: The first channels address
+            uuid: The UUID of the fixture instance
+            color: The color of the fixture in the patching view
+
+        """
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[OflFixture] = fixture
@@ -101,14 +118,12 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def uuid(self) -> UUID:
-        """uuid of the fixture"""
+        """UUID of the fixture."""
         return self._uuid
 
     @property
     def power(self) -> float:
-        """
-        Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W.
-        """
+        """Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W."""
         return self._fixture.physical.power
 
     @property

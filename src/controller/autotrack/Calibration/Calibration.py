@@ -1,32 +1,27 @@
 # coding=utf-8
-"""methods for camera calibration and image distortion"""
+"""Methods for camera calibration and image distortion."""
+
 import cv2
 import numpy as np
 
 
 class Calibration:
-    """
-    The `Calibration` class provides methods for camera calibration and image distortion correction. It serves as the parent class for specific calibration.
+    """The `Calibration` class provides methods for camera calibration and image distortion correction.
 
-    Attributes:
-        camera_matrix (numpy.ndarray): The camera matrix after calibration.
-        distortion_coeffs (numpy.ndarray): The distortion coefficients after calibration.
-
-    Methods:
-        - `save(filename)`: Save the camera matrix and distortion coefficients to a file.
-        - `load(file)`: Load the camera matrix and distortion coefficients from a file.
-        - `undistort(image)`: Undistort an image using the camera matrix and distortion coefficients, if available.
+    It serves as the parent class for specific calibration.
     """
 
     def __init__(self):
+        """Camera Calibration."""
         self.camera_matrix = None
         self.distortion_coeffs = None
 
     def save(self, filename):
-        """
-        Save the camera matrix and distortion coefficients to a file.
+        """Save the camera matrix and distortion coefficients to a file.
 
-        :param filename: The filename without file extension.
+        Args:
+            filename: The filename without file extension.
+
         """
         np.savez(
             f"{filename}.npz",
@@ -35,21 +30,25 @@ class Calibration:
         )
 
     def load(self, file):
-        """
-        Load the camera matrix and distortion coefficients from a file.
+        """Load the camera matrix and distortion coefficients from a file.
 
-        :param file: The filename with file extension.
-        :return: Tuple (camera_matrix, distortion_coeffs)
+        Args:
+            file: The filename with file extension.
+
+        Returns: Tuple (camera_matrix, distortion_coeffs)
+
         """
         npzfile = np.load(file)
         return npzfile["camera_matrix"], npzfile["distortion_coeffs"]
 
     def undistort(self, image):
-        """
-        Undistort an image using the camera matrix and distortion coefficients, if available.
+        """Undistort an image using the camera matrix and distortion coefficients, if available.
 
-        :param image: The image to undistort (distorted).
-        :return: The undistorted image.
+        Args:
+            image: The image to undistort (distorted).
+
+        Returns: The undistorted image.
+
         """
         if self.camera_matrix is not None and self.distortion_coeffs is not None:
             return cv2.undistort(

@@ -1,3 +1,5 @@
+"""Widget to select filters from a scene."""
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QTreeWidget, QWidget
 
@@ -8,10 +10,21 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class FilterSelectionWidget(QTreeWidget):
+    """A QTreeWidget implementation to select filters from a given scene."""
+
     selected_filter_changed: Signal = Signal(str)
 
-    def __init__(self, parent: QWidget | None, scene: Scene | None,
-                 allowed_filter_types: list[FilterTypeEnumeration] | None) -> None:
+    def __init__(
+        self, parent: QWidget | None, scene: Scene | None, allowed_filter_types: list[FilterTypeEnumeration] | None
+    ) -> None:
+        """Filter Select widget.
+
+        Args:
+            parent: The parent Qt widget.
+            scene: The scene to select the filter from.
+            allowed_filter_types: The filter types that are suitable for user selection.
+
+        """
         super().__init__(parent)
         self._scene = scene
         self._target_filter_id: str | None = None
@@ -27,6 +40,7 @@ class FilterSelectionWidget(QTreeWidget):
 
     @property
     def selected_filter(self) -> Filter | None:
+        """Get or set the current selected filter."""
         return self._filter
 
     @selected_filter.setter
@@ -45,6 +59,11 @@ class FilterSelectionWidget(QTreeWidget):
         self.selected_filter_changed.emit(self._target_filter_id)
 
     def populate_widget(self) -> bool:
+        """Refresh the widget model.
+
+        Returns: True if a filter is selected afterward.
+
+        """
         selected_filter_found = False
         already_added_filters = set()
         fp_index = 0
@@ -54,8 +73,9 @@ class FilterSelectionWidget(QTreeWidget):
         self._last_selected_item = None
 
         def is_filter_addable(filter_to_add: Filter) -> bool:
-            return not len(
-                self._allowed_filter_types) > 0 and filter_to_add.filter_type not in self._allowed_filter_types
+            return not (
+                (len(self._allowed_filter_types) > 0) and (filter_to_add.filter_type not in self._allowed_filter_types)
+            )
 
         def add_filter_item(filter_to_add: Filter, page_item: AnnotatedTreeWidgetItem) -> AnnotatedTreeWidgetItem:
             nonlocal already_added_filters
@@ -116,6 +136,7 @@ class FilterSelectionWidget(QTreeWidget):
         self.selected_filter_changed.emit(self._target_filter_id)
 
     def set_scene(self, scene: Scene | None) -> None:
+        """Set the scene to select the filter from."""
         self._scene = scene
         if self._scene is not None:
             self.populate_widget()

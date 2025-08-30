@@ -1,6 +1,6 @@
 [project]
 name = "Project-Editor"
-version = "1.1.1"
+version = "1.1.2"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
     { name = "CorsCodini", email = "cors.codini@web.de" },
@@ -87,7 +87,12 @@ ignore = [
     "ERA001", #commented-out code is okay at the moment
     "PTH", #pathlib maybe slower
     "COM812", #for ruff format
-    "UP015", ] #disable for adding "r" to open
+    "UP015", #disable for adding "r" to open
+    "D104", #ignore public packages
+    "D203", #Use D211 instead
+    "D213", #Use D213 instead
+    "D415", #USe D400 instead
+]
 
 
 [tool.ruff.format]

@@ -1,4 +1,5 @@
-"""Module for filter settings editor"""
+"""Module for filter settings editor."""
+
 from __future__ import annotations
 
 import os.path
@@ -30,6 +31,7 @@ from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidge
 from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+from .node_editor_widgets.sequencer_editor.widget import SequencerEditor
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QCloseEvent, QFocusEvent, QKeyEvent, QMouseEvent, QPainter
@@ -40,18 +42,23 @@ logger = getLogger(__name__)
 
 
 class FilterSettingsItem(QGraphicsSvgItem):
-    """GraphicsItem to handle opening filter settings dialog.
+    """GraphicsItem to handle opening filter settings dialog."""
 
-    Attributes:
-        filter_node: The filter this item belongs to
-    """
     _open_dialogs: ClassVar[list[QDialog]] = []
 
     def __init__(self, filter_node: FilterNode, parent: QGraphicsItem, filter_: Filter) -> None:
+        """Initialize a filter settings item.
+
+        Args:
+            filter_node: The filter node this item belongs to.
+            parent: The parent QGraphicsItem.
+            filter_: The filter that should be configured.
+
+        """
         super().__init__(resource_path(os.path.join("resources", "icons", "settings.svg")), parent)
-        self.dialog = None
-        self.filter_node = filter_node
-        self.on_update = lambda: None
+        self._dialog = None
+        self._filter_node = filter_node
+        self._on_update = lambda: None
         self.setScale(0.2)
         self.moveBy(parent.boundingRect().width() / 2 - 6, parent.boundingRect().height() - 20)
         self._filter = filter_
@@ -59,40 +66,31 @@ class FilterSettingsItem(QGraphicsSvgItem):
 
     @override
     def focusOutEvent(self, ev: QFocusEvent) -> None:
-        """
-        Override to handle buggy behaviour
-        Args:
-            ev: event
-        """
         super().focusOutEvent(ev)
-        if self.on_update is not None:
-            self.on_update()
+        if self._on_update is not None:
+            self._on_update()
 
     @override
     def keyPressEvent(self, ev: QKeyEvent) -> None:
-        """
-        Override to handle buggy behaviour
-        Args:
-            ev: event
-        """
-        if ev.key() == Qt.Key.Key_Enter or (ev.key() == Qt.Key.Key_Return and self.on_update is not None):
-            self.on_update()
+        if ev.key() == Qt.Key.Key_Enter or (ev.key() == Qt.Key.Key_Return and self._on_update is not None):
+            self._on_update()
             return
         super().keyPressEvent(ev)
 
     @override
     def mousePressEvent(self, ev: QMouseEvent) -> None:
-        """Handle left mouse button click by opening filter settings dialog"""
+        """Handle left mouse button click by opening filter settings dialog."""
         if not self._filter.configuration_supported:
             return
         if ev.button() == Qt.MouseButton.LeftButton:
             # TODO make sure that we're opening it in the same dialog, fixed to a screen unless settings request
             #  otherwise
-            if self.dialog is not None:
-                self.dialog.deleteLater()
-            self.dialog = FilterSettingsDialog(self.filter_node)
-            self.dialog.show()
+            if self._dialog is not None:
+                self._dialog.deleteLater()
+            self._dialog = FilterSettingsDialog(self._filter_node)
+            self._dialog.show()
 
+    @override
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget | None = ...) -> None:
         if not self._filter.configuration_supported:
             if not self._mb_updated:
@@ -104,13 +102,18 @@ class FilterSettingsItem(QGraphicsSvgItem):
 
 
 def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfigWidget | None:
-    """
+    """Check for special configuration widgets.
+
     This method checks if there is a special configuration widget implemented for the given filter.
-    In case there is, it will instantiate and return it. Otherwise, it will return None and leave the
+    If there is, it will instantiate and return it. Otherwise, it returns None and leaves the
     task of generating a generic one to the dialog.
 
-    :param filter_: The filter to check for.
-    :returns: The instantiates settings widget or None.
+    Args:
+        filter_: The filter to check for.
+
+    Returns:
+        The instantiated settings widget or None.
+
     """
     if 39 <= filter_.filter_type <= 43:
         return ColumnSelect(filter_)
@@ -128,18 +131,17 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return ImportVFilterSettingsWidget(filter_)
     if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
         return ColorMixingSetupWidget()
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_SEQUENCER:
+        return SequencerEditor(f=filter_)
 
     return None
 
 
 class FilterSettingsDialog(QDialog):
-    """
-
-    Attributes:
-        filter: The filter whose settings this dialog displays
-    """
+    """A dialog to configure a filter."""
 
     def __init__(self, filter_node: FilterNode) -> None:
+        """Initialize the dialog."""
         super().__init__()
         self._filter_node = filter_node
         self.filter = filter_node.filter
@@ -181,7 +183,7 @@ class FilterSettingsDialog(QDialog):
                     line_edit.textChanged.connect(lambda new_value, _key=key: self._fc_value_changed(_key, new_value))
                     layout.addRow(display_key, line_edit)
         self._ok_button = QPushButton("Ok")
-        self._ok_button.pressed.connect(self.ok_button_pressed)
+        self._ok_button.pressed.connect(self._ok_button_pressed)
 
         if isinstance(layout, QFormLayout):
             layout.addRow("", self._ok_button)
@@ -204,8 +206,9 @@ class FilterSettingsDialog(QDialog):
         # Fetch patching short name
         key = "Empty"
         for fixture in self.filter.scene.board_configuration.fixtures:
-            if fixture.universe_id == universe_id and value in range(fixture.start_index,
-                                                                     fixture.start_index + fixture.channel_length + 1):
+            if fixture.universe_id == universe_id and value in range(
+                fixture.start_index, fixture.start_index + fixture.channel_length + 1
+            ):
                 key = f"{key} : {fixture.short_name}"
                 break
 
@@ -219,7 +222,7 @@ class FilterSettingsDialog(QDialog):
         # Todo rework to direct dict action
         self.filter.filter_configurations[key] = value
 
-    def ok_button_pressed(self) -> None:
+    def _ok_button_pressed(self) -> None:
         if self._special_widget:
             self.filter.filter_configurations.update(self._special_widget.configuration)
             self.filter.initial_parameters.update(self._special_widget.parameters)
@@ -233,6 +236,7 @@ class FilterSettingsDialog(QDialog):
             self._filter_node.update_node_after_settings_changed()
         super().closeEvent(arg__1)
 
+    @override
     def show(self) -> None:
         super().show()
         if self._special_widget:

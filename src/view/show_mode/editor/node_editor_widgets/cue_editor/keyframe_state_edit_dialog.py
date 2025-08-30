@@ -1,3 +1,5 @@
+"""Contains KeyFrameStateEditDialog, a dialog to edit the state of a keyframe."""
+
 from collections.abc import Callable
 
 from PySide6.QtGui import QColor, QIcon
@@ -13,18 +15,22 @@ from PySide6.QtWidgets import (
 )
 
 from model import ColorHSI
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import (
-    KeyFrame,
-    State,
-    StateColor,
-    StateDouble,
-    StateEightBit,
-    StateSixteenBit,
-)
+from model.filter_data.cues.cue import KeyFrame, State, StateColor, StateDouble, StateEightBit, StateSixteenBit
 
 
 class KeyFrameStateEditDialog(QDialog):
+    """Dialog to update an existing keyframe."""
+
     def __init__(self, parent: QWidget, kf: KeyFrame, s: State, repaint_function: Callable) -> None:
+        """Dialog to update an existing keyframe.
+
+        Args:
+            parent: The parent widget. Contrary to other Qt widgets, this must not be None.
+            kf: The keyframe to edit.
+            s: The current state of the keyframe.
+            repaint_function: The function to call to repaint the keyframe after editing is finished.
+
+        """
         super().__init__(parent=parent)
         self._layout = QFormLayout()
 
@@ -74,8 +80,13 @@ class KeyFrameStateEditDialog(QDialog):
         self._keyframe = kf
         self._state = s
         self._repaint_function = repaint_function
+        self.setModal(True)
 
     def _ok_pressed(self) -> None:
+        """Handle ok pressed.
+
+        Save changes and repaint the keyframe.
+        """
         if isinstance(self._input, (QSpinBox, QDoubleSpinBox)):
             self._state._value = self._input.value()
         else:
@@ -89,9 +100,11 @@ class KeyFrameStateEditDialog(QDialog):
         self.close()
 
     def _delete_pressed(self) -> None:
+        """Handle delete keyframe button."""
         self._keyframe.delete_from_parent_cue()
         self.close()
         self._repaint_function()
 
     def choose_color_clicked(self) -> None:
+        """Close without saving changes."""
         self._input.open()

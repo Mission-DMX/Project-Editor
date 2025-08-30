@@ -1,7 +1,7 @@
-"""Commands for Help"""
+"""Commands for Help."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from controller.cli.command import Command
 
@@ -12,15 +12,18 @@ if TYPE_CHECKING:
 
 
 class HelpCommand(Command):
-    """Commands for Help"""
+    """Commands for Help."""
 
     def __init__(self, context: CLIContext) -> None:
+        """Initialize the command."""
         super().__init__(context, "help")
         self.help_text = "This command displays the help about a certain command."
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("topic", help="Specify the topic you like to hear about", default="", nargs="?")
 
+    @override
     def execute(self, args: Namespace) -> bool:
         match args.topic:
             case "select":
@@ -36,6 +39,15 @@ class HelpCommand(Command):
                 self.context.print("\tfilters -- Display the filter ids in the current selected scene.")
                 self.context.print("\tcolumns -- Display the columns in the current selected bank set.")
                 self.context.print("\tbank_sets -- Display the available bank sets.")
+                self.context.print("\tmacros -- Display the available macros.")
+                self.context.print("\tvariables -- Display all current variables.")
+            case "print":
+                self.context.print("Print all appended arguments")
+            case "set":
+                self.context.print("Set the specified variable to the specified value")
+            case "if":
+                self.context.print("Usage: if <expression> <command>")
+                self.context.print("Executes the specified command if the expression evaluates to true.")
             case "patch":
                 self.context.print("Patch a fixture. Usage: patch <fixture name> [number of fixtures]@<universe>"
                                    "[@<start channel>[@<offset>]]")
@@ -53,9 +65,21 @@ class HelpCommand(Command):
                 self.context.print("\tsend -- Insert a new event into fish")
             case "showctl":
                 self.context.print("Manage the general show file and execution on fish")
+                self.context.print("\tload <show file> -- Load the provided show file and make it the current one")
+                self.context.print("\tfiltermsg <scene id> <filter id> <key> <value> -- Update the parameter <key> of "
+                                   "\n\t\tfilter <filter id> from scene <scene id> to value <value>.")
+                self.context.print("select-scene <scene id> -- switch to scene with ID <scene id>")
+                self.context.print("commit [--select-default-scene] -- apply the current loaded show file to fish")
+            case "delay":
+                self.context.print("delay the execution of the macro by the specified amount of milliseconds")
+            case "macro":
+                self.context.print("Control macros.")  # TODO
+                self.context.print("\texec <macro> -- Execute the macro")
+                # TODO
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
-                self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl")
+                self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
+                self.context.print("\tprint\tset\tif")
                 return False
         return True

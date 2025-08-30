@@ -1,3 +1,7 @@
+"""Application settings."""
+
+from __future__ import annotations
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -11,8 +15,7 @@ logger = getLogger(__file__)
 
 
 class AutoTrackerSettings:
-    """
-    The `Settings` class manages application settings.
+    """Manages application settings.
 
     Attributes:
         _crop (tuple): A tuple representing the crop settings (x1, x2, y1, y2).
@@ -21,12 +24,11 @@ class AutoTrackerSettings:
     Methods:
         - `__init__()`: Initialize the `Settings` class with default values.
         - `crop`: Get or set the crop settings as a tuple (x1, x2, y1, y2).
+
     """
 
-    def __init__(self, f: "AutoTrackerFilter"):
-        """
-        Initialize the `Settings` class with default values.
-        """
+    def __init__(self, f: AutoTrackerFilter):
+        """Initialize the `Settings` class with default values."""
         self._crop: tuple[int, int, int, int] = (0, 0, 0, 0)
         self._lights: LightController = f.light_controller
         self._filter: "AutoTrackerFilter" = f
@@ -37,37 +39,33 @@ class AutoTrackerSettings:
         self._map: MappingCalibration | None = None
         if self.settings.get("mapping_calibration"):
             self._map = MappingCalibration(self.settings["mapping_calibration"])
-        if self.settings.get('crop'):
-            self._load_crop(self.settings['crop'])
+        if self.settings.get("crop"):
+            self._load_crop(self.settings["crop"])
         self._next_frame = None
 
     @property
     def crop(self) -> tuple[int, int, int, int]:
-        """
-        Get or set the crop settings as a tuple (x1, x2, y1, y2).
+        """Crop settings.
 
         Returns:
             tuple: A tuple representing the crop settings (x1, x2, y1, y2).
+
         """
         return self._crop
 
     @property
     def lights(self) -> LightController:
+        """Light controller."""
         return self._lights
 
     @crop.setter
     def crop(self, value: tuple[int, int, int, int]):
-        """
-        Set the crop settings.
-
-        Args:
-            value (tuple): A tuple representing the crop settings (x1, x2, y1, y2).
-        """
         self._crop = value
         self._filter.filter_configurations.update(self.as_dict())
 
     @property
     def map(self) -> MappingCalibration | None:
+        """Mapping calibration."""
         return self._map
 
     @map.setter
@@ -77,6 +75,7 @@ class AutoTrackerSettings:
 
     @property
     def next_frame(self):
+        """Next frame."""
         return self._next_frame
 
     @next_frame.setter
@@ -86,6 +85,7 @@ class AutoTrackerSettings:
         # TODO perform a proper refactor to remove this from settings
 
     def as_dict(self):
+        """Convert settings to dict."""
         return {
             "confidence_threshold": "0.25",
             "Setting2": "",
@@ -94,10 +94,11 @@ class AutoTrackerSettings:
         }
 
     def _load_crop(self, cs: str):
-        """
-        This method parses the provided definition and stores them inside the cropping definition.
+        """Parse the provided definition and store it inside the cropping definition.
 
-        :param cs: The string representation of the cropping information to parse.
+        Args:
+            cs: The string representation of the cropping information to parse.
+
         """
-        cx_args = cs.replace('(', '').replace(')', '').split(', ')
+        cx_args = cs.replace("(", "").replace(")", "").split(", ")
         self.crop = (int(cx_args[0]), int(cx_args[1]), int(cx_args[2]), int(cx_args[3]))
