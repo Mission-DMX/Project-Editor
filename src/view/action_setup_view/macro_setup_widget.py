@@ -84,10 +84,10 @@ class MacroSetupWidget(QSplitter):
         self._import_macro_action.setText("Import")
         self._import_macro_action.triggered.connect(self._import_macro_clicked)
         self._macro_actions.addAction(self._import_macro_action)
-        self.add_macro_action = QAction()
-        self.add_macro_action.setText("New Macro")
-        self.add_macro_action.triggered.connect(self._add_macro_pressed)
-        self._macro_actions.addAction(self.add_macro_action)
+        self._add_macro_action = QAction()
+        self._add_macro_action.setText("New Macro")
+        self._add_macro_action.triggered.connect(self._add_macro_pressed)
+        self._macro_actions.addAction(self._add_macro_action)
         self._rename_macro_action = QAction()
         self._rename_macro_action.setText("Rename Macro")
         self._rename_macro_action.setEnabled(False)
@@ -306,14 +306,16 @@ class MacroSetupWidget(QSplitter):
 
     def _insert_sequence_trigger_clicked(self) -> None:
         if self._selected_macro is not None:
-            self._dialog = SequenceTriggerInsertionDialog(self, self._selected_macro, self._show,
-                                                          self._macro_content_changed)
+            self._dialog = SequenceTriggerInsertionDialog(
+                self, self._selected_macro, self._show, self._macro_content_changed
+            )
             self._dialog.show()
 
     def _insert_scene_switch_trigger_clicked(self) -> None:
         if self._selected_macro is not None:
-            self._dialog = SceneSwitchInsertionDialog(self, self._selected_macro, self._show,
-                                                      self._macro_content_changed)
+            self._dialog = SceneSwitchInsertionDialog(
+                self, self._selected_macro, self._show, self._macro_content_changed
+            )
             self._dialog.show()
 
     def _rename_macro_triggered(self) -> None:
