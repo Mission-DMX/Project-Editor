@@ -1,9 +1,9 @@
 [project]
 name = "Project-Editor"
-version = "1.0.3"
+version = "1.1.2"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
-    { name = "MKay", email = "ma.kaussow@uni-luebeck.de" },
+    { name = "CorsCodini", email = "cors.codini@web.de" },
     { name = "Niklas Naumann", email = "niklas.naumann@student.uni-luebeck.de" },
     { name = "Doralitze", email = "doralitze@chaotikum.org" },
 ]
@@ -22,31 +22,89 @@ dependencies = [
     "html2text>=2024.2.26",
     "markdown>=3.7",
     "typing-extensions>=4.13.1",
+    "tomlkit>=0.13.2",
     # Dependencies for automatic tracking
     "opencv-python>=4.11.0.86",
     "qimage2ndarray>=1.10.0",
     "aiortc>=1.11.0",
     "qasync>=0.27.1",
-    "onnxruntime-gpu>=1.21.0",
     "pyjoystick>=1.2.4",
-    "pyopengl>=3.1.9"
-
+    "pyopengl>=3.1.9",
+    "onnxruntime-openvino>=1.21.0",
+    "pydantic>=2.11.7",
+    "defusedxml>=0.7.1",
+    "tzlocal>=5.3.1",
 ]
 
 [dependency-groups]
 dev = [
     "pylint>=3.3.6",
     "pylint-protobuf>=0.22.0",
-    "tomlkit>=0.13.2",
     "pyinstaller>=6.12.0",
+    "ruff>=0.12.0",
+    "mypy>=1.16.1",
+    "types-protobuf>=6.30.2.20250703",
+    "types-requests>=2.32.4.20250611",
+    "types-Markdown>=3.8.0.20250708",
 ]
+
+[tool.missionDMX]
+display-name = "Mission DMX"
+organization = { name = "missionDMX", domain = "technikradio.org" }
 
 [tool.pdm]
 distribution = false
 
+[tool.ruff]
+line-length = 120
+exclude = [
+    "update_version.py",
+    "src/proto",
+    "src/controller/autotrack",
+    "test/",
+    "src/view/utility_widgets/wizzards/theater_scene_wizard.py",
+    "src/view/logging_view/dmx_data_log.py"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "E722",
+    "F401",
+    "UP007", #Pycharm problem
+    "UP038", #Deprecated,
+    "SIM105", #Slower contextlib.suppress
+    "TRY", "PLC0415", "ARG002", #TODO ich weiß noch nicht
+    "TRY003", #TODO own error classes
+    "SLF", #TODO private acesses
+    "C901", "PLR", #TODO remve complexity
+    "PLR2004", #TODO magic numbers
+    "D", #TODO Dockstrings
+    "EM", #TODO discuss: code is less readable
+    "FBT", #TODO discuss: beter readable code
+    "BLE001", # bilnd exceptions are fine at the moment
+    "TD", #TODO TODO formating
+    "FIX", #TODOs are okay at the moment
+    "ERA001", #commented-out code is okay at the moment
+    "PTH", #pathlib maybe slower
+    "COM812", #for ruff format
+    "UP015", #disable for adding "r" to open
+    "D104", #ignore public packages
+    "D203", #Use D211 instead
+    "D213", #Use D213 instead
+    "D415", #USe D400 instead
+]
+
+
+[tool.ruff.format]
+docstring-code-format = true
+line-ending = "lf"
+
 [tool.isort]
-skip = ["src/proto/", ".venv"]
+profile = "black"
 line_length = 120
+skip = ["src/proto/", ".venv"]
+multi_line_output = 3
+
 
 [tool.pylint.MASTER]
 extension-pkg-whitelist = "PyQt6, PySide6, pydantic"
@@ -56,6 +114,10 @@ load-plugins = "pylint_protobuf"
 max-line-length = 120
 
 [tool.pylint]
-ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/']
+ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/', "src/view/utility_widgets/wizzards/theater_scene_wizard.py"]
 generated-members = ['proto/']
 source-roots = ["src"]
+
+[tool.mypy]
+mypy_path = ["src"]
+generated-members = ['proto/']

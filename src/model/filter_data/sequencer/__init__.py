@@ -1,0 +1,1 @@
+"""Sequencer channel model, serialization and deserialization."""

@@ -1,13 +1,13 @@
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout
-
-from model.control_desk import *
-from style import Style
 from view.show_mode.editor.node_editor_widgets import ColumnSelect
+
+import style
+from model.control_desk import *
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
-    app.setStyleSheet(Style.APP)
+    app.setStyleSheet(style.APP)
     app.setApplicationName("mission-dmx-editor")
     app.setApplicationDisplayName("Mission DMX")
     app.setOrganizationName("missionDMX")

@@ -1,36 +1,36 @@
-# coding=utf-8
 from model import Filter, Scene
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
-from view.show_mode.show_ui_widgets.autotracker.VFilterLightController import VFilterLightController
+from view.show_mode.show_ui_widgets.autotracker.v_filter_light_controller import VFilterLightController
 
 
 class _MHControlInstance:
-    def __init__(self, mh_id: int, channel_data_type: DataType.DT_16_BIT | DataType.DT_8_BIT = DataType.DT_16_BIT):
+    def __init__(self, mh_id: int,
+                 channel_data_type: DataType.DT_16_BIT | DataType.DT_8_BIT = DataType.DT_16_BIT) -> None:
         self.datatype: DataType.DT_16_BIT | DataType.DT_8_BIT = channel_data_type
         self.name_prefix: str = f"__MH_{mh_id}__"
 
 
 class AutoTrackerFilter(VirtualFilter):
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_AUTOTRACKER, pos=pos)
         self._control_filters: dict[int, _MHControlInstance] = {}
-        self._light_controller: VFilterLightController = VFilterLightController(self)
+        self._light_controller: VFilterLightController = VFilterLightController()
         self.out_data_types["minimum_brightness"] = DataType.DT_DOUBLE
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         # TODO upgrade to multi tracker support
         match virtual_port_id:
             case "minimum_brightness":
-                return self.get_min_brightness_filter_id(0)
+                return self.get_min_brightness_filter_id()
             case "pan":
                 return self.get_pan_filter_id(0)
             case "tilt":
                 return self.get_tilt_filter_id(0)
 
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
         # TODO implement multi tracker support
-        filter_list.append(Filter(self.scene, self.get_min_brightness_filter_id(0),
+        filter_list.append(Filter(self.scene, self.get_min_brightness_filter_id(),
                                   FilterTypeEnumeration.FILTER_CONSTANT_FLOAT))
         for tf in self._control_filters.values():
             filter_list.append(Filter(self.scene, self.get_pan_filter_id(tf),
@@ -58,7 +58,7 @@ class AutoTrackerFilter(VirtualFilter):
             mh_tracker = tracker_id
         return f"{self.filter_id}{mh_tracker.name_prefix}TILT_Constant"
 
-    def get_min_brightness_filter_id(self, tracker_id: int | _MHControlInstance):
+    def get_min_brightness_filter_id(self) -> str:
         # TODO upgrade to multi tracker support
         return f"{self.filter_id}__min_brightness"
 
@@ -78,7 +78,7 @@ class AutoTrackerFilter(VirtualFilter):
                     return tr
             except ValueError:
                 pass
-        self.filter_configurations['trackercount'] = '0'
+        self.filter_configurations["trackercount"] = "0"
         return 0
 
     @property

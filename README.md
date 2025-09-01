@@ -4,6 +4,10 @@ This software is responsible for creating and editing project files for the DMX 
 Binäre Abhängigkeiten:
 * libsdl2-dev
 
+The following tools need to be in PATH for the editor to work properly:
+ * `pactl` (Pulse Audio control)
+ * `swaymsg` (In order to let the editor direct its windows)
+
 ## Dev
 For dev use pdm as package manager:
 ```

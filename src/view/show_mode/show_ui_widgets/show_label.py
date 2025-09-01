@@ -1,8 +1,11 @@
-# coding=utf-8
-from typing import TYPE_CHECKING
+"""Show a UI Widget containing arbitrary text."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, override
 
 from markdown import markdown
-from PySide6.QtWidgets import QLabel, QTextEdit, QWidget
+from PySide6.QtWidgets import QDialog, QLabel, QTextEdit, QWidget
 
 from model import UIWidget
 
@@ -11,39 +14,54 @@ if TYPE_CHECKING:
 
 
 class ShowLabelUIWidget(UIWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
-        super().__init__(parent, configuration)
-        self._widget: QLabel | None = None
-        self._edit_widget : QTextEdit | None = None
+    """Widget to display user-defined rich text (markdown)."""
 
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the label widget.
+
+        Args:
+            parent: The parent widget page.
+            configuration: The initial configuration of the sequencer.
+
+        """
+        super().__init__(parent, configuration)
+        self._player_widget: QLabel | None = None
+        self._conf_widget: QLabel | None = None
+        self._edit_widget: QTextEdit | None = None
+
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         # This is merely a label. We do not need to update anything.
         return []
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._widget is None:
-            self._construct_widget()
-        return self._widget
+        self._player_widget = self._construct_widget(parent)
+        return self._player_widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        if self._widget is None:
-            self._construct_widget()
-        return self._widget
+        if self._conf_widget is not None:
+            self._conf_widget.deleteLater()
+        self._conf_widget = self._construct_widget(parent)
+        return self._conf_widget
 
-    def _construct_widget(self):
-        w = QLabel()
+    def _construct_widget(self, parent: QWidget) -> QWidget:
+        w = QLabel(parent)
         w.setWordWrap(True)
         w.setText(markdown(self.configuration.get("text") or ""))
         w.setMinimumWidth(100)
         w.setMinimumHeight(10)
-        self._widget = w
+        return w
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    @override
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = ShowLabelUIWidget(new_parent, self.configuration.copy())
         super().copy_base(w)
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    @override
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         if self._edit_widget is not None:
             return self._edit_widget
         w = QTextEdit(parent)
@@ -55,8 +73,17 @@ class ShowLabelUIWidget(UIWidget):
         w.textChanged.connect(self._editor_text_changed)
         return w
 
-    def _editor_text_changed(self):
+    def _editor_text_changed(self) -> None:
         new_text = self._edit_widget.toMarkdown()
         self.configuration["text"] = new_text
-        if self._widget is not None:
-            self._widget.setText(markdown(new_text))
+        text_as_html = markdown(new_text)
+        if self._conf_widget is not None:
+            self._conf_widget.setText(text_as_html)
+            self._conf_widget.setMinimumWidth(
+                max(self._conf_widget.fontMetrics().horizontalAdvance(new_text), self._conf_widget.minimumWidth())
+            )
+        if self._player_widget is not None:
+            self._player_widget.setText(text_as_html)
+            self._player_widget.setMinimumWidth(
+                max(self._player_widget.fontMetrics().horizontalAdvance(new_text), self._player_widget.minimumWidth())
+            )

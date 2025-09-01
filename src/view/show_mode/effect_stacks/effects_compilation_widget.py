@@ -1,8 +1,7 @@
-# coding=utf-8
-
-"""This file contains the widget to stack the effects."""
+"""Widget to stack effects."""
 
 from logging import getLogger
+from typing import override
 
 from PySide6 import QtCore, QtGui
 from PySide6.QtCore import QRect, Signal
@@ -10,16 +9,16 @@ from PySide6.QtGui import QBrush, QColor, QFontMetrics, QMouseEvent, QPainter, Q
 from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from model.ofl.fixture import UsedFixture
-from model.virtual_filters.effects_stacks.ChaningEffectDummy import ChainingEffectDummy
+from model.virtual_filters.effects_stacks.chaning_effect_dummy import ChainingEffectDummy
 from model.virtual_filters.effects_stacks.effect import Effect, EffectType
 from model.virtual_filters.effects_stacks.effect_socket import EffectsSocket
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class EffectCompilationWidget(QWidget):
-    """This widget renders the stacked effects editor."""
+    """Render the stacked effects' editor."""
 
     effect_added = Signal(Effect)
     active_config_widget_changed = Signal(QWidget)
@@ -37,13 +36,14 @@ class EffectCompilationWidget(QWidget):
     background-blend-mode: screen;
     """
 
-    def __init__(self, filter: EffectsStack, parent: QWidget):
+    def __init__(self, filter_: EffectsStack, parent: QWidget) -> None:
+        """Render the stacked effects' editor."""
         super().__init__(parent=parent)
-        self._filter = filter
+        self._filter = filter_
         self.setMinimumWidth(600)
         self.setSizePolicy(
             QSizePolicy.MinimumExpanding,
-            QSizePolicy.MinimumExpanding
+            QSizePolicy.MinimumExpanding,
         )
         self._pending_effect: Effect | None = None
         self._slot_counter: list[tuple[str, Effect]] = []
@@ -54,9 +54,15 @@ class EffectCompilationWidget(QWidget):
         self._active_config_widget: QWidget | None = None
         self.update()
 
-    def add_fixture_or_group(self, fg: UsedFixture):
-        """This method adds the provided fixture(-group) to the filter by creating and appending a corresponding socket.
-        :param fg: The fixture to add"""
+    def add_fixture_or_group(self, fg: UsedFixture) -> None:
+        """Add the provided fixture(-group) to the filter.
+
+        Creating and appending a corresponding socket.
+
+        Args:
+            fg: The fixture to add
+
+        """
         if fg in self._added_fixtures:
             return
         self._added_fixtures.add(fg)
@@ -64,11 +70,13 @@ class EffectCompilationWidget(QWidget):
         self._filter.sockets.append(es)
         self.update()
 
-    def update(self):
+    @override
+    def update(self) -> None:
         self.setMinimumHeight(max(len(self._filter.sockets) * 50, self.minimumHeight()))
         super().update()
 
-    def paintEvent(self, redraw_hint: QPaintEvent):
+    @override
+    def paintEvent(self, redraw_hint: QPaintEvent) -> None:
         if self._painting_active:
             return
         self._painting_active = True
@@ -109,8 +117,8 @@ class EffectCompilationWidget(QWidget):
         slot_type: EffectType = effect.get_output_slot_type()
         fm = self.fontMetrics()
         light_blue_brush = QBrush(QColor.fromRgb(0x03, 0x9B, 0xE5))
-        light_gray_color = QBrush(QColor.fromRgb(0xaa, 0xaa, 0xaa))
-        red_color = QBrush(QColor.fromRgb(0xff, 0, 0))
+        light_gray_color = QBrush(QColor.fromRgb(0xAA, 0xAA, 0xAA))
+        red_color = QBrush(QColor.fromRgb(0xFF, 0, 0))
         p.setBrush(light_gray_color)
         old_transform = p.transform()
         transform_90deg = QTransform()
@@ -152,8 +160,9 @@ class EffectCompilationWidget(QWidget):
         config_widget = effect.get_configuration_widget()
         if config_widget is not None:
             x += 25
-            p.setBrush(QBrush(QColor.fromRgb(0, 0xff, 0xff)) if config_widget == self._active_config_widget else
-                       gray_color)
+            p.setBrush(
+                QBrush(QColor.fromRgb(0, 0xFF, 0xFF)) if config_widget == self._active_config_widget else gray_color
+            )
             p.drawRoundedRect(x, y, 20, 20, 3.0, 3.0)
             p.setBrush(light_gray_color)
             p.drawLine(x + 5, y + 10, x + 15, y + 10)
@@ -198,26 +207,30 @@ class EffectCompilationWidget(QWidget):
                 p.setBrush(old_brush)
                 """
                 p.drawLine(old_x - 3, old_y - 3, old_x - 3, y)
-            else:
-                # render insertion hint for empty slots
-                if self._pending_effect:
-                    can_attach_effect = False
-                    supported_slot_types = effect.get_accepted_input_types()[slot_name]
-                    for supported_target in supported_slot_types:
-                        can_attach_effect |= Effect.can_convert_slot(self._pending_effect.get_output_slot_type(),
-                                                                     supported_target)
-                    if can_attach_effect:
-                        if slot_name not in rendered_slots:
-                            # render placement hint
-                            slot_counter_str = str(len(self._slot_counter))
-                            x -= 10
-                            slot_counter_str_width = fm.horizontalAdvance(slot_counter_str)
-                            p.fillRect(x - slot_counter_str_width - 6, int(y + socket_height / 2 - text_height / 2 - 3),
-                                       slot_counter_str_width + 6, text_height / 2 + 6, light_blue_brush)
-                            p.drawText(x - slot_counter_str_width - 3, y + socket_height / 2 + 3, slot_counter_str)
-                            rendered_slots.add(slot_name)
-                            dummy_effect = ChainingEffectDummy(effect, slot_name, supported_slot_types)
-                            self._slot_counter.append((slot_name, dummy_effect))
+            # render insertion hint for empty slots
+            elif self._pending_effect:
+                can_attach_effect = False
+                supported_slot_types = effect.get_accepted_input_types()[slot_name]
+                for supported_target in supported_slot_types:
+                    can_attach_effect |= Effect.can_convert_slot(
+                        self._pending_effect.get_output_slot_type(), supported_target
+                    )
+                if can_attach_effect and slot_name not in rendered_slots:
+                    # render placement hint
+                    slot_counter_str = str(len(self._slot_counter))
+                    x -= 10
+                    slot_counter_str_width = fm.horizontalAdvance(slot_counter_str)
+                    p.fillRect(
+                        x - slot_counter_str_width - 6,
+                        int(y + socket_height / 2 - text_height / 2 - 3),
+                        slot_counter_str_width + 6,
+                        text_height / 2 + 6,
+                        light_blue_brush,
+                    )
+                    p.drawText(x - slot_counter_str_width - 3, y + socket_height / 2 + 3, slot_counter_str)
+                    rendered_slots.add(slot_name)
+                    dummy_effect = ChainingEffectDummy(effect, slot_name, supported_slot_types)
+                    self._slot_counter.append((slot_name, dummy_effect))
 
         y += socket_height
         return x, y
@@ -245,10 +258,12 @@ class EffectCompilationWidget(QWidget):
         y += 5
         return y
 
-    def load_effect_to_add(self, e: Effect | None):
+    def load_effect_to_add(self, e: Effect | None) -> None:
         """Prior to adding an effect, it needs to be loaded first.
 
-        :param e: The effect to load.
+        Args:
+            e: The effect to load.
+
         """
         self._pending_effect = e
         # TODO change jogwheel input to select slot for add operation
@@ -256,8 +271,11 @@ class EffectCompilationWidget(QWidget):
         QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
 
     def add_effect_to_slot(self, i: int) -> bool:
-        """This method triggers the placement of the previously loaded effect.
-        :param i: The index of the slot to add the effect to.
+        """Trigger the placement of the previously loaded effect.
+
+        Args:
+            i: The index of the slot to add the effect to.
+
         """
         if self._pending_effect is None or i >= len(self._slot_counter):
             return False
@@ -271,38 +289,37 @@ class EffectCompilationWidget(QWidget):
         return True
 
     def get_maximum_slot_counter(self) -> int:
-        """
-        Use this method in order to retrieve the highest available slot index that the currently loaded effect can be
-        placed into.
+        """Retrieve the highest available slot index that the currently loaded effect can be placed into.
 
-        :returns: The index of the highest slot. Zero based. -1 indicates that there are no slots that can accept the
-        effect.
+        Returns:
+            The index of the highest slot. Zero-based. -1 indicates that there are no slots that can accept the effect.
+
         """
         return len(self._slot_counter) - 1
 
-    def mousePressEvent(self, event: QMouseEvent):
+    @override
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         for x, y, widget in self._config_button_positions:
-            if x < event.x() < x + 25:
-                if y < event.y() < y + 25:
-                    self._active_config_widget = widget
-                    self.active_config_widget_changed.emit(widget)
-                    self.update()
-                    return
+            if x < event.x() < x + 25 and y < event.y() < y + 25:
+                self._active_config_widget = widget
+                self.active_config_widget_changed.emit(widget)
+                self.update()
+                return
         for x, y, effect in self._delete_button_positions:
-            if x < event.x() < x + 25:
-                if y < event.y() < y + 25:
-                    if self._active_config_widget == effect.get_configuration_widget():
-                        self._active_config_widget = None
-                        self.active_config_widget_changed.emit(None)
-                        # FIXME this does not yet automatically disable the widget.
-                        # TODO test deleting after loading
-                        # TODO fix deleting of top level effects (effect.attach is not called if attached to socket)
-                    if effect.slot_parent is not None:
-                        parent_effect, slot_name = effect.slot_parent
-                        parent_effect.clear_slot(slot_name)
-                    else:
-                        logger.error("The effect '%s' should be deleted but the parent is None. FIXME!",
-                                     effect.get_human_filter_name()
-                                     )
-                        self.update()
-                    return
+            if x < event.x() < x + 25 and y < event.y() < y + 25:
+                if self._active_config_widget == effect.get_configuration_widget():
+                    self._active_config_widget = None
+                    self.active_config_widget_changed.emit(None)
+                    # FIXME this does not yet automatically disable the widget.
+                    # TODO test deleting after loading
+                    # TODO fix deleting of top level effects (effect.attach is not called if attached to socket)
+                if effect.slot_parent is not None:
+                    parent_effect, slot_name = effect.slot_parent
+                    parent_effect.clear_slot(slot_name)
+                else:
+                    logger.error(
+                        "The effect '%s' should be deleted but the parent is None. FIXME!",
+                        effect.get_human_filter_name(),
+                    )
+                    self.update()
+                return

@@ -1,4 +1,3 @@
-# coding=utf-8
 """search in logging Items"""
 import enum
 
@@ -13,7 +12,7 @@ class Operation(enum.Enum):
 class Search:
     """search in logging Items"""
 
-    def __init__(self, items: tuple[str, str], operation: Operation):
+    def __init__(self, items: tuple[str, str], operation: Operation) -> None:
         self._items: tuple[str, str] = items
         self._operation: Operation = operation
 

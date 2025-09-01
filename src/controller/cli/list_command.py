@@ -1,19 +1,32 @@
-# coding=utf-8
-"""Client Commands"""
+"""Client Commands."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, override
+
 from controller.cli.command import Command
 from model.control_desk import BankSet, ColorDeskColumn
 
+if TYPE_CHECKING:
+    from argparse import ArgumentParser, Namespace
+
+    from controller.cli.cli_context import CLIContext
+
 
 class ListCommand(Command):
+    """Commands to list show and client state."""
 
-    def __init__(self, context):
+    def __init__(self, context: CLIContext) -> None:
+        """Initialize ListCommand."""
         super().__init__(context, "list")
         self.help_text = "This command displays the content of system collections."
 
-    def configure_parser(self, parser):
+    @override
+    def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("section", help="The section of which content should be listed")
 
-    def execute(self, args) -> bool:
+    @override
+    def execute(self, args: Namespace) -> bool:
         match args.section:
             case "scenes":
                 self.context.print(" ID | Description")
@@ -37,7 +50,17 @@ class ListCommand(Command):
                     self.context.print("==================================")
                     for c in bank.columns:
                         self.context.print(
-                            f"{"Color" if isinstance(c, ColorDeskColumn) else "Number"} - {c.display_name}")
+                            f"{'Color' if isinstance(c, ColorDeskColumn) else 'Number'} - {c.display_name}"
+                        )
+                return True
+            case "macros":
+                for m in self.context.show.macros:
+                    self.context.print(m.name)
+                return True
+            case "variables":
+                for k, v in self.context.variables.items():
+                    self.context.print(f"{k}={v}")
+                return True
             case "bank_sets":
                 self.context.print(" Bank Set ID                         | Description ")
                 self.context.print("===================================================")
@@ -51,8 +74,9 @@ class ListCommand(Command):
                 self.context.print(f"ERROR: The requested container '{args.section}' was not found.")
                 return False
 
-    def print_bank_set_entry(self, bs, selected_bank_set_id):
-        """print the entry of a bank set"""
+    def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str) -> None:
+        """Print the entry of a bank set."""
+        # TODO id not string
         preamble = "*" if bs.id == selected_bank_set_id else " "
         if bs.is_linked:
             self.context.print(preamble + bs.id + " | " + bs.description)

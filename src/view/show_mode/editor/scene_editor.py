@@ -1,23 +1,22 @@
-# coding=utf-8
 """Widget containing a nodeeditor for one scene."""
 from PySide6.QtWidgets import QDialog, QGridLayout, QTabBar, QTabWidget, QWidget
 
 from model import Scene
 from model.scene import FilterPage
-from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import \
-    SceneUIPageEditorWidget
+from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import (
+    SceneUIPageEditorWidget,
+)
 
 
 class SceneUIManagerWidget(QTabWidget):
     """Widget containing the scene pages"""
 
-    def __init__(self, scene: Scene | FilterPage, parent: QWidget):
+    def __init__(self, scene: Scene | FilterPage, parent: QWidget) -> None:
         super().__init__(parent)
         self.ui_page = None
         self._scene = scene
         self.setTabsClosable(True)
 
-        self.addTab(QWidget(), "+")
         plus_button = self.tabBar().tabButton(self.count() - 1, QTabBar.ButtonPosition.RightSide)
         if plus_button:
             plus_button.hide()
@@ -27,16 +26,10 @@ class SceneUIManagerWidget(QTabWidget):
 
         self._add_page()
 
-        self.tabBarClicked.connect(self._tab_bar_clicked)
         self.tabCloseRequested.connect(self.removeTab)
         self.tabBarDoubleClicked.connect(self._pop_page)
 
-    def _tab_bar_clicked(self, index: int):
-        """Handles behaviour when +/- button was clicked"""
-        if index == self.count() - 1:
-            self._add_page()
-
-    def _add_page(self):
+    def _add_page(self) -> None:
         """Adds a page to the scene"""
         page_widget = SceneUIPageEditorWidget(self.scene.ui_pages[0], self)
         self.insertTab(self.count() - 1, page_widget, f"Page {self.count()}")
@@ -59,7 +52,7 @@ class SceneUIManagerWidget(QTabWidget):
         self._poped_pages.append(dialog)
         dialog.show()
 
-    def _unpop_page(self, page: QWidget, index: int):
+    def _unpop_page(self, page: QWidget, index: int) -> None:
         """Reinserts page.
 
         Args:
@@ -69,7 +62,7 @@ class SceneUIManagerWidget(QTabWidget):
         self.insertTab(index, page, f"Page {index + 1}")
 
     @property
-    def scene(self):
+    def scene(self) -> Scene:
         """The scene managed by the scene manager"""
         if isinstance(self._scene, Scene):
             return self._scene

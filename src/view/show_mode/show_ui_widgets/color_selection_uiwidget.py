@@ -1,16 +1,26 @@
-# coding=utf-8
+from typing import override
+
 from PySide6.QtGui import QAction, QColor
-from PySide6.QtWidgets import QColorDialog, QHBoxLayout, QListWidget, QPushButton, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QColorDialog,
+    QDialog,
+    QHBoxLayout,
+    QListWidget,
+    QPushButton,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import ColorHSI, Filter, UIPage, UIWidget
 
 
 class ColorSelectionUIWidget(UIWidget):
 
-    def __init__(self, parent: UIPage, configuration: dict[str, str]):
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
 
-        self._value = ColorHSI.from_filter_str("")
+        self._value: ColorHSI = ColorHSI.from_filter_str("")
         if not self.configuration.get("number_of_presets"):
             self.configuration["number_of_presets"] = "0"
         if not self.configuration.get("stored_presets"):
@@ -20,7 +30,7 @@ class ColorSelectionUIWidget(UIWidget):
         self._config_widget: QWidget | None = None
         self._filter = None
 
-    def set_filter(self, f: "Filter", i: int):
+    def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
         super().set_filter(f, i)
@@ -28,10 +38,11 @@ class ColorSelectionUIWidget(UIWidget):
         self.associated_filters["constant"] = f.filter_id
         self._value = ColorHSI.from_filter_str(f.initial_parameters.get("value"))
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", self._value.format_for_filter())]
 
-    def push_value(self, new_value: ColorHSI):
+    def push_value(self, new_value: ColorHSI) -> None:
         self._value = new_value
         self.push_update()
 
@@ -51,7 +62,7 @@ class ColorSelectionUIWidget(UIWidget):
             column_layout = QVBoxLayout()
             select_button = QPushButton("Sel", w)
             select_button.setEnabled(for_player)
-            select_button.clicked.connect(lambda _i=i: self._select_color(i))
+            select_button.clicked.connect(lambda _i=i: self._select_color(_i))
             column_layout.addWidget(select_button)
             color_label = QWidget(w)
             color_label.setMinimumWidth(16)
@@ -75,25 +86,29 @@ class ColorSelectionUIWidget(UIWidget):
         w.setLayout(layout)
         return w
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         if self._player_widget:
             self._player_widget.deleteLater()
         self._player_widget = self._build_base_widget(parent, True)
         return self._player_widget
 
+    @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         if not self._config_widget:
             self._config_widget = self._build_base_widget(parent, False)
         return self._config_widget
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    @override
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = ColorSelectionUIWidget(new_parent, self.configuration)
         self.copy_base(w)
         w.set_filter(self._filter, 0)
         w._value = self._value.copy()
         return w
 
-    def get_config_dialog_widget(self, parent: QWidget) -> QWidget:
+    @override
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         w = QWidget(parent)
         layout = QVBoxLayout()
         toolbar = QToolBar(w)
@@ -104,7 +119,7 @@ class ColorSelectionUIWidget(UIWidget):
         layout.addWidget(preset_list)
         w.setLayout(layout)
 
-        def _add_preset(c_template):
+        def _add_preset(c_template: QColor) -> None:
             c: ColorHSI = ColorHSI.from_qt_color(c_template)
             self._presets.append(c)
             self.configuration["number_of_presets"] = str(int(self.configuration["number_of_presets"]) + 1)
@@ -119,7 +134,7 @@ class ColorSelectionUIWidget(UIWidget):
                 config_parent = self._config_widget.parent()
                 self._config_widget = self._build_base_widget(config_parent, False)
 
-        def open_dialog():
+        def open_dialog() -> None:
             d = QColorDialog(w)
             d.colorSelected.connect(_add_preset)
             d.show()
@@ -127,12 +142,12 @@ class ColorSelectionUIWidget(UIWidget):
         add_action.triggered.connect(open_dialog)
         return w
 
-    def _select_color(self, i: int):
+    def _select_color(self, i: int) -> None:
         if not self._player_widget:
             return
         d = QColorDialog(self._player_widget)
         d.colorSelected.connect(lambda color: self._set_preset(i, color))
         d.show()
 
-    def _set_preset(self, i: int, color: QColor):
+    def _set_preset(self, i: int, color: QColor) -> None:
         self._presets[i] = ColorHSI.from_qt_color(color)

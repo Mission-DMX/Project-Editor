@@ -1,27 +1,27 @@
-# coding=utf-8
 import os.path
+from typing import override
 
 from PySide6.QtGui import QBrush, QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QSpinBox, QVBoxLayout, QWidget
 
 from controller.utils.yaml import yaml_load
-from model import Filter
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 
 
 class _ColorHelpWidget(QWidget):
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setMinimumWidth(30 * 4)
         self.setMinimumHeight(25 * 4)
         self._data: list[dict] = []
 
-    def set_help_content(self, d: list[dict]):
+    def set_help_content(self, d: list[dict]) -> None:
         self._data = d
         self.repaint()
 
-    def paintEvent(self, ev: QPaintEvent):
+    @override
+    def paintEvent(self, ev: QPaintEvent) -> None:
         w = self.width()
         h = self.height()
         if w == 0 or h == 0:
@@ -52,7 +52,7 @@ class _ColorHelpWidget(QWidget):
 class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
     _help_data = yaml_load(resource_path(os.path.join("resources", "data", "color_mixing.yml")))
 
-    def __init__(self, filter_: Filter, parent: QWidget = None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__()
         self._widget = QWidget(parent=parent)
         self._color_help_widget = _ColorHelpWidget(parent=self._widget)
@@ -76,10 +76,10 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
     def _get_configuration(self) -> dict[str, str]:
         return {
             "input_count": str(self._channel_count_spinbox.value()),
-            "method": str(self._method_selection_box.currentText())
+            "method": str(self._method_selection_box.currentText()),
         }
 
-    def _load_configuration(self, conf: dict[str, str]):
+    def _load_configuration(self, conf: dict[str, str]) -> None:
         try:
             self._channel_count_spinbox.setValue(int(conf.get("input_count")))
         except ValueError:
@@ -89,12 +89,12 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
         return self._widget
 
-    def _load_parameters(self, parameters: dict[str, str]):
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         # We're not using UI parameters
         pass
 
     def _get_parameters(self) -> dict[str, str]:
         return {}
 
-    def _selected_method_changed(self, new_method: str):
+    def _selected_method_changed(self, new_method: str) -> None:
         self._color_help_widget.set_help_content(ColorMixingSetupWidget._help_data.get(new_method))

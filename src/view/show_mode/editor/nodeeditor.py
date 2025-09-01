@@ -1,4 +1,3 @@
-# coding=utf-8
 """Module containing node editor"""
 from logging import getLogger
 
@@ -35,7 +34,7 @@ class NodeEditorWidget(QWidget):
 
         self._populate_flowchart()
 
-    def _populate_flowchart(self):
+    def _populate_flowchart(self) -> None:
         self._flowchart = FilterFlowchart(page=self._page, library=self._library)
         self._flowchart.removeNode(self._flowchart.outputNode)
         self._flowchart.removeNode(self._flowchart.inputNode)
@@ -47,7 +46,7 @@ class NodeEditorWidget(QWidget):
             for remote_filter_channel in filter_.channel_links.values():
                 if not remote_filter_channel:
                     continue
-                filter_name, _ = remote_filter_channel.split(':')
+                filter_name, _ = remote_filter_channel.split(":")
                 required_filters.add(filter_name)
         still_missing_filters = required_filters - loaded_in_filters
         for filter_candidate in self._page.parent_scene.filters:
@@ -59,7 +58,7 @@ class NodeEditorWidget(QWidget):
                             self._page.parent_scene)
                 self._flowchart.create_node_with_filter(
                     filter_=filter_candidate,
-                    node_type=type_to_node[filter_candidate.filter_type], is_from_different_page=True
+                    node_type=type_to_node[filter_candidate.filter_type], is_from_different_page=True,
                 )
         if len(still_missing_filters) > 0:
             raise Exception(f"Missing filters '{still_missing_filters}' in scene '{self._page.parent_scene}'.")
@@ -71,8 +70,8 @@ class NodeEditorWidget(QWidget):
             for input_channel, output_channel in node.filter.channel_links.items():
                 if not isinstance(output_channel, str) or len(output_channel) == 0:
                     continue
-                remote_name = output_channel.split(':')[0]
-                remote_term = output_channel.split(':')[1]
+                remote_name = output_channel.split(":")[0]
+                remote_term = output_channel.split(":")[1]
                 fc_nodes = self._flowchart.nodes()
                 remote_node = fc_nodes.get(remote_name)
                 if remote_node is None:
@@ -99,6 +98,6 @@ class NodeEditorWidget(QWidget):
         """The flowchart of the scene"""
         return self._flowchart
 
-    def refresh(self):
+    def refresh(self) -> None:
         self.layout().removeWidget(self._flowchart.widget().chartWidget.viewDock)
         self._populate_flowchart()

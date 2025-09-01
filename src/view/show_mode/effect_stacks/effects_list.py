@@ -1,19 +1,29 @@
-# coding=utf-8
-
 """This file implements the list widget for effects. Register your effect inside the EFFECT_LIST widget.
 Usage: The key indicates the category of the effect and the list all containing effects."""
 
+from typing import override
+
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPaintEvent
-from PySide6.QtWidgets import (QCompleter, QHBoxLayout, QLabel, QLineEdit, QPushButton, QScrollArea, QSizePolicy,
-                               QSpacerItem, QVBoxLayout, QWidget)
+from PySide6.QtGui import QBrush, QColor, QFont, QIcon, QPainter, QPaintEvent
+from PySide6.QtWidgets import (
+    QCompleter,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSpacerItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model.virtual_filters.effects_stacks.effect import Effect
 from model.virtual_filters.effects_stacks.effects.color_effects import ColorWheelEffect
 from model.virtual_filters.effects_stacks.effects.fader_input_effects import ColorInputEffect
 from model.virtual_filters.effects_stacks.effects.generic_effects import FunctionEffect
 
-EFFECT_LIST = {
+EFFECT_LIST: dict[str, list[type[Effect]]] = {
     "colors:": [ColorWheelEffect],
     "animations": [FunctionEffect],
     "fader-inputs": [ColorInputEffect],
@@ -32,34 +42,36 @@ PRESET_LIST: list[tuple[str, str]] = []
 class _EffectSeparator(QWidget):
     """This widget provides a separator between effect categories."""
 
-    def __init__(self, parent: QWidget, text: str):
+    def __init__(self, parent: QWidget, text: str) -> None:
         super().__init__(parent=parent)
         self._children: list[QWidget] = []
         self._text = text
         self.setFont(self.font())
 
-    def setFont(self, arg__1):
-        super().setFont(arg__1)
+    @override
+    def setFont(self, font: QFont) -> None:
+        super().setFont(font)
         fm = self.fontMetrics()
         self.setMinimumHeight(fm.height() + 2)
         self.setMinimumWidth(fm.horizontalAdvance(self._text) + 10)
 
-    def add_child(self, c: QWidget):
+    def add_child(self, c: QWidget) -> None:
         self._children.append(c)
         self.update_visibility()
 
-    def update_visibility(self):
+    def update_visibility(self) -> None:
         visible = False
         for c in self._children:
             visible |= not c.isHidden()
         self.setVisible(visible)
 
-    def paintEvent(self, event: QPaintEvent):
+    @override
+    def paintEvent(self, event: QPaintEvent) -> None:
         p = QPainter(self)
         if self.isVisible():
             fm = self.fontMetrics()
             text_height = fm.height()
-            text_space = fm.horizontalAdvance(' ')
+            text_space = fm.horizontalAdvance(" ")
             text_width = fm.horizontalAdvance(self._text)
             p.drawText(int(text_space / 2), text_height + 1, self._text)
             p.setBrush(QBrush(QColor.fromRgb(0xCC, 0xCC, 0xCC)))
@@ -73,7 +85,8 @@ class _EffectLabel(QWidget):
 
     button_icon = QIcon.fromTheme("window-new")
 
-    def __init__(self, effect_cls, parent: QWidget, separator: _EffectSeparator, list_widget: "EffectsListWidget"):
+    def __init__(self, effect_cls: type[Effect], parent: QWidget, separator: _EffectSeparator,
+                 list_widget: "EffectsListWidget") -> None:
         super().__init__(parent=parent)
         layout = QHBoxLayout()
         self.setLayout(layout)
@@ -98,17 +111,17 @@ class _EffectLabel(QWidget):
         separator.add_child(self)
         self._list_widget = list_widget
 
-    def show(self):
+    def show(self) -> None:
         for w in [self, self._label, self._button]:
             w.setVisible(True)
         self._separator.update_visibility()
 
-    def hide(self):
+    def hide(self) -> None:
         for w in [self, self._label, self._button]:
             w.setVisible(False)
         self._separator.update_visibility()
 
-    def add_effect(self):
+    def add_effect(self) -> None:
         self._list_widget.effect_selected.emit(self._template())
 
 
@@ -119,7 +132,7 @@ class EffectsListWidget(QWidget):
 
     effect_selected = Signal(Effect)
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent=parent)
         central_layout = QVBoxLayout()
         self.setLayout(central_layout)
@@ -157,7 +170,7 @@ class EffectsListWidget(QWidget):
         container_layout.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Minimum, QSizePolicy.Expanding))
         self.setMaximumWidth(400)
 
-    def _update_search(self, new_query_text: str):
+    def _update_search(self, new_query_text: str) -> None:
         new_query_text = new_query_text.lower()
         for w in self._effect_widgets:
             # TODO introduce category splitters

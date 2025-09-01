@@ -1,76 +1,35 @@
-# coding=utf-8
-"""Fixture Definitions from OFL """
-import json
-from enum import Enum, IntFlag
-from logging import getLogger
-from typing import TYPE_CHECKING, NotRequired, TypedDict
+"""Fixture Definitions from OFL."""
 
-logger = getLogger(__file__)
+from __future__ import annotations
+
+import json
+import os
+import random
+from collections import defaultdict
+from enum import IntFlag
+from logging import getLogger
+from typing import TYPE_CHECKING, Final
+from uuid import UUID, uuid4
+
+import numpy as np
+from PySide6 import QtCore
+
+from model.ofl.ofl_fixture import FixtureMode, OflFixture
+from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
-    from model.patching_channel import PatchingChannel
+    from collections.abc import Sequence
 
+    from numpy.typing import NDArray
 
-class Category(Enum):
-    """Category of Fixtures"""
-    "Barrel Scanner"
-    "Blinder"
-    "Color Changer"
-    "Dimmer"
-    "Effect"
-    "Fan"
-    "Flower"
-    "Hazer"
-    "Laser"
-    "Matrix"
-    "Moving Head"
-    "Pixel Bar"
-    "Scanner"
-    "Smoke"
-    "Stand"
-    "Strobe"
-    "Other"
+    from model import BoardConfiguration
 
-
-# class Capabilities:
-#    dmxRange: tuple[int, int]
-
-
-# class Channel(TypedDict):
-#    defaultValue: str
-#    highlightValue: str
-#    capabilities: list[Capabilities]
-
-
-class Mode(TypedDict):
-    """ possible Modes of a fixture"""
-    name: str
-    shortName: str
-    #    rdmPersonalityIndex: int
-    #    physical: Physical
-    channels: list[str]
-
-
-class Fixture(TypedDict):
-    """a Fixture from OFL"""
-    name: str
-    shortName: NotRequired[str]
-    categories: set[Category]
-    #    meta: MetaData
-    comment: NotRequired[str]
-    #    links: Links
-    #    helpWanted
-    #    rdm
-    #    physical
-    #    matrix: Matrix
-    #    wheels
-    #    availableChannels
-    #    templateChannels
-    modes: list[Mode]
-    fileName: str
+logger = getLogger(__name__)
 
 
 class ColorSupport(IntFlag):
+    """Color Support of fixture."""
+
     NO_COLOR_SUPPORT = 0
     COLD_AND_WARM_WHITE = 1
     HAS_RGB_SUPPORT = 2
@@ -78,7 +37,8 @@ class ColorSupport(IntFlag):
     HAS_AMBER_SEGMENT = 8
     HAS_UV_SEGMENT = 16
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Generate human-readable channel color support representation."""
         if self == ColorSupport.NO_COLOR_SUPPORT:
             return "No Color Support"
         s = []
@@ -95,164 +55,204 @@ class ColorSupport(IntFlag):
         return "+".join(s)
 
 
-def load_fixture(file) -> Fixture:
-    """load fixture from OFL json"""
-    with open(file, "r", encoding='UTF-8') as f:
-        ob: json = json.load(f)
-    return Fixture(name=ob["name"], comment=try_load(ob, "comment"), shortName=try_load(ob, "shortName"),
-                   categories=ob["categories"] if "categories" in ob else [],
-                   modes=ob["modes"] if "modes" in ob else [], fileName=file.split("/fixtures/")[1])
+def load_fixture(file: str) -> OflFixture | None:
+    """Load fixture from OFL JSON."""
+    if not os.path.isfile(file):
+        logger.error("Fixture definition %s not found.", file)
+        return None
+    with open(file, "r", encoding="UTF-8") as f:
+        ob: dict = json.load(f)
+    ob.update({"fileName": file.split("/fixtures/")[1]})
+    return OflFixture.model_validate(ob)
 
 
-def try_load(ob: json, name: object) -> str:
-    """ try to load not required json parts"""
-    try:
-        return ob[name]
-    except KeyError:
-        return ""
+class UsedFixture(QtCore.QObject):
+    """Fixture in use with a specific mode."""
 
+    static_data_changed: QtCore.Signal = QtCore.Signal()
 
-class UsedFixture:
-    """ Fixture in use with a specific mode"""
+    def __init__(
+        self,
+        board_configuration: BoardConfiguration,
+        fixture: OflFixture,
+        mode_index: int,
+        parent_universe: int,
+        start_index: int,
+        uuid: UUID | None = None,
+        color: str | None = None,
+    ) -> None:
+        """Instantiate a UsedFixture object.
 
-    def __init__(self, name: str, short_name: str, categories: set[Category], comment: str, mode: Mode,
-                 fixture_file: str, mode_index: int, parent_universe: int) -> None:
-        self.name: str = name
-        self.short_name: str = short_name
-        self.categories: set[Category] = categories
-        self.comment: str = comment
-        self.mode: Mode = mode
+        Args:
+            board_configuration: The show model
+            fixture: The base fixture definition
+            mode_index: The fixture mode to use
+            parent_universe: The parent universe
+            start_index: The first channels address
+            uuid: The UUID of the fixture instance
+            color: The color of the fixture in the patching view
+
+        """
+        super().__init__()
+        self._board_configuration: Final[BoardConfiguration] = board_configuration
+        self._fixture: Final[OflFixture] = fixture
+        self._uuid: Final[UUID] = uuid if uuid else uuid4()
+
+        self._start_index: int = start_index
+        self._mode_index: int = mode_index
+        self._universe_id: int = parent_universe
+
+        channels, segment_map, color_support = self._generate_fixture_channels()
+
+        self._fixture_channels: Final[list[FixtureChannel]] = channels
+        self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
+        self._color_support: Final[ColorSupport] = color_support
+
+        self._color_on_stage: str = (
+            color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+        )
+        self._name_on_stage: str = self.short_name if self.short_name else self.name
+
         self.parent_universe: int = parent_universe
-        self._channels: list["PatchingChannel"] = []
-        self.fixture_file: str = fixture_file
-        self.mode_index: int = mode_index
-
-        self.red_segments: list["PatchingChannel"] = []
-        self.blue_segments: list["PatchingChannel"] = []
-        self.green_segments: list["PatchingChannel"] = []
-        self.white_segments: list["PatchingChannel"] = []
-        self.amber_segments: list["PatchingChannel"] = []
-        self.uv_segments: list["PatchingChannel"] = []
-
-        self.position_channels: list["PatchingChannel"] = []
-        self.pan_channels: list["PatchingChannel"] = []
-        self.tilt_channels: list["PatchingChannel"] = []
-        self.animation_speed_channels: list["PatchingChannel"] = []
-
-    def update_segments(self):
-        self.red_segments.clear()
-        self.blue_segments.clear()
-        self.green_segments.clear()
-        self.white_segments.clear()
-        self.amber_segments.clear()
-        self.uv_segments.clear()
-
-        for f in self.channels:
-            # TODO looking at the fixture data this might work well for led based color changers.
-            #  Yet, we need to support color wheels as well. One option would be to check for the "capability": {
-            #         "type": "ColorIntensity",
-            #         "color": "Red"
-            #       }
-            #  Data of a fixture channel.
-            if not isinstance(f.fixture_channel, str):
-                continue
-            found_color_hints: int = 0
-            if "red" in f.fixture_channel.lower():
-                self.red_segments.append(f)
-                found_color_hints += 1
-            if "green" in f.fixture_channel.lower():
-                self.green_segments.append(f)
-                found_color_hints += 1
-            if "blue" in f.fixture_channel.lower():
-                self.blue_segments.append(f)
-                found_color_hints += 1
-            if "white" in f.fixture_channel.lower():
-                self.white_segments.append(f)
-                found_color_hints += 1
-                # TODO we also need to append this in case the fixture does not have rgb support but multiple white
-                #  segments (such as a LED blinder)
-            if "uv" in f.fixture_channel.lower():
-                self.uv_segments.append(f)
-                found_color_hints += 1
-            if "amber" in f.fixture_channel.lower():
-                self.amber_segments.append(f)
-                found_color_hints += 1
-            if found_color_hints > 1:
-                logger.warning("Associated %s/%s:%s in multiple color segments.",
-                               str(self.parent_universe), str(f.address), f.fixture_channel)
-        # TODO discussion: integration of fixture groups would be most straight forward if they would be represented as
-        #  an inheritance of UsedFixture, representing their individual lamps as segments of the group. This way we
-        #  would not need to implement special cases everywhere where this information is accessed.
-
-    def find_position_channels(self):
-        self.position_channels.clear()
-        self.pan_channels.clear()
-        self.tilt_channels.clear()
-        self.animation_speed_channels.clear()
-        for f in self.channels:
-            channel_name = f.fixture_channel.lower()
-            if "pan" in channel_name:
-                self.position_channels.append(f)
-                if "speed" in channel_name:
-                    self.animation_speed_channels.append(f)
-                    continue
-
-                self.pan_channels.append(f)
-            if "tilt" in channel_name:
-                self.position_channels.append(f)
-                if "speed" in channel_name:
-                    self.animation_speed_channels.append(f)
-                    continue
-
-                self.tilt_channels.append(f)
-            if "rotation" in channel_name:
-                # This will also catch lense and gobo rotations
-                self.position_channels.append(f)
-
-    def copy(self):
-        """
-        This method clones the used fixture entry, except for the occupied channels
-        """
-        return UsedFixture(self.name, self.short_name, self.categories,
-                           self.comment, self.mode, self.fixture_file, self.mode_index, self.parent_universe)
-        # we do not need to copy the segment data as it is deduced from the channels data
+        self._board_configuration.broadcaster.add_fixture.emit(self)
 
     @property
-    def channels(self) -> list["PatchingChannel"]:
-        self._channels.sort(key=lambda x: x.address)
-        return self._channels
+    def uuid(self) -> UUID:
+        """UUID of the fixture."""
+        return self._uuid
 
+    @property
+    def power(self) -> float:
+        """Fixture maximum continuous power draw (not accounting for capacitor charging as well as lamp warmup) in W."""
+        return self._fixture.physical.power
+
+    @property
+    def name(self) -> str:
+        """Name of theFixture."""
+        return self._fixture.name
+
+    @property
+    def short_name(self) -> str:
+        """Short name of theFixture."""
+        return self._fixture.shortName
+
+    @property
+    def comment(self) -> str:
+        """Comment of theFixture."""
+        return self._fixture.comment
+
+    @property
+    def mode(self) -> FixtureMode:
+        """Mode of theFixture."""
+        return self._fixture.modes[self._mode_index]
+
+    @property
+    def start_index(self) -> int:
+        """Start index of theFixture in the Universe indexed by 0."""
+        return self._start_index
+
+    @property
+    def fixture_file(self) -> str:
+        """File of the fixture."""
+        return self._fixture.fileName
+
+    @property
+    def mode_index(self) -> int:
+        """Index of the mode in the fixture."""
+        return self._mode_index
+
+    @property
+    def universe_id(self) -> int:
+        """Id of the universe for the fixture."""
+        return self._universe_id
+
+    @universe_id.setter
+    def universe_id(self, universe_id: int) -> None:
+        self._universe_id = universe_id
+
+    @property
+    def channel_length(self) -> int:
+        """Number of channels of the fixture."""
+        return len(self._fixture_channels)
+
+    @property
+    def channel_indexes(self) -> list[int]:
+        """Index of the channels in the fixture."""
+        return list(range(self._start_index, self._start_index + len(self._fixture_channels)))
+
+    @property
+    def fixture_channels(self) -> tuple[FixtureChannel, ...]:
+        """Fixture channels of the fixture."""
+        return tuple(self._fixture_channels)
+
+    @property
+    def color_on_stage(self) -> str:
+        """Color of the fixture on stage."""
+        return self._color_on_stage
+
+    @color_on_stage.setter
+    def color_on_stage(self, color: str) -> None:
+        self._color_on_stage = color
+        self.static_data_changed.emit()
+
+    @property
+    def name_on_stage(self) -> str:
+        """Name of the fixture on stage."""
+        return self._name_on_stage
+
+    @name_on_stage.setter
+    def name_on_stage(self, name: str) -> None:
+        self._name_on_stage = name
+        self.static_data_changed.emit()
+
+    @property
     def color_support(self) -> ColorSupport:
+        """Color support of the fixture."""
+        return self._color_support
+
+    def get_segment_in_universe_by_type(self, segment_type: FixtureChannelType) -> Sequence[int]:
+        """Get a segment by type."""
+        return tuple((self._segment_map[segment_type] + self.start_index).tolist())
+
+    def _generate_fixture_channels(
+        self,
+    ) -> tuple[list[FixtureChannel], dict[FixtureChannelType, NDArray[np.int_]], ColorSupport]:
+        segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
+        fixture_channels: list[FixtureChannel] = []
+
+        for index, channel_name in enumerate(self.mode.channels):
+            channel = FixtureChannel(channel_name)
+            fixture_channels.append(channel)
+            for channel_type in channel.type_as_list:
+                segment_map[channel_type].append(index)
+
         found_color = ColorSupport.NO_COLOR_SUPPORT
+        if all(segment_map[t] for t in (FixtureChannelType.RED, FixtureChannelType.GREEN, FixtureChannelType.BLUE)):
+            found_color |= ColorSupport.HAS_RGB_SUPPORT
+        if segment_map[FixtureChannelType.UV]:
+            found_color |= ColorSupport.HAS_UV_SEGMENT
+        if segment_map[FixtureChannelType.AMBER]:
+            found_color |= ColorSupport.HAS_AMBER_SEGMENT
+        if segment_map[FixtureChannelType.WHITE]:
+            found_color |= ColorSupport.HAS_WHITE_SEGMENT
 
-        has_red = len(self.red_segments) > 0
-        has_green = len(self.green_segments) > 0
-        has_blue = len(self.blue_segments) > 0
-        has_white = len(self.white_segments) > 0
-        has_amber = len(self.amber_segments) > 0
-        has_uv = len(self.uv_segments) > 0
+        return (
+            fixture_channels,
+            {key: np.array(segment_map[key], dtype=np.int_) for key in FixtureChannelType},
+            found_color,
+        )
 
-        if has_red and has_green and has_blue:
-            found_color += ColorSupport.HAS_RGB_SUPPORT
-        if has_uv:
-            found_color += ColorSupport.HAS_UV_SEGMENT
-        if has_amber:
-            found_color += ColorSupport.HAS_AMBER_SEGMENT
-        if has_white:
-            found_color += ColorSupport.HAS_WHITE_SEGMENT
-        return found_color
+    def get_fixture_channel(self, index: int) -> FixtureChannel:
+        """Get a fixture channel by index."""
+        return self._fixture_channels[index]
 
-    @property
-    def first_channel(self) -> int:
-        i = 513
-        for c in self.channels:
-            i = min(i, c.address)
-        if i == 513:
-            i = -1
-        return i
+    def __str__(self) -> str:
+        """Get a human-readable description of the fixture in the show file."""
+        return f"Fixture {self.name_on_stage or self.name} at {self.parent_universe}/{self.start_index}"
 
 
-def make_used_fixture(fixture: Fixture, mode_index: int, universe_id: int) -> UsedFixture:
-    """generate a new Used Fixture from a fixture"""
-    return UsedFixture(fixture['name'], fixture['shortName'], fixture['categories'], fixture['comment'],
-                       fixture['modes'][mode_index], fixture["fileName"], mode_index, universe_id)
+def make_used_fixture(
+    board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
+) -> UsedFixture:
+    """Generate a new Used Fixture from a oflFixture."""
+    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)

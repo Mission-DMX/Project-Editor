@@ -1,11 +1,12 @@
-# coding=utf-8
 """Widget to edit a channel."""
-from PySide6 import QtCore, QtWidgets
 
+from PySide6 import QtCore, QtWidgets
+from PySide6.QtWidgets import QWidget
+
+import style
 from model.channel import Channel
 from model.control_desk import BankSet
-from model.patching_channel import PatchingChannel
-from style import Style
+from model.patching.fixture_channel import FixtureChannel
 from view.console_mode.console_fader_bank_selector import ConsoleFaderBankSelectorWidget
 
 
@@ -22,19 +23,28 @@ class ChannelWidget(QtWidgets.QWidget):
     The min button is on the left side, the max button on the right side of the slider.
     """
 
-    def __init__(self, channel: Channel, patching_channel: PatchingChannel, parent=None, bank_set: BankSet = None,
-                 bank_set_control_list=None):
-        """Inits the ChannelWidget.
+    def __init__(
+        self,
+        fixture_channel: FixtureChannel,
+        channel: Channel,
+        bank_set: BankSet = None,
+        bank_set_control_list: list[QWidget] | None = None,
+        parent: QWidget = None,
+    ) -> None:
+        """Widget to edit a channel.
 
         Args:
             channel: The channel this widget represents.
-            parent: Qt parent of the widget
+            fixture_channel: The fixture channel that is controlled by this channel.
+            bank_set: A bank set associacted with this channel.
+            bank_set_control_list: List of bank sets that this channel might be added to.
+            parent: Qt parent of the widget.
+
         """
         super().__init__(parent=parent)
         if bank_set_control_list is None:
             bank_set_control_list = []
-        self._channel: Channel = channel
-        self._patching_channel = patching_channel
+        self._channel = channel
 
         # general width and height for all components
         element_size = 40
@@ -43,13 +53,13 @@ class ChannelWidget(QtWidgets.QWidget):
         slider_len = 256
 
         # Displays the address of the channel + 1 for human readability
-        address_label: QtWidgets.QLabel = QtWidgets.QLabel(str(channel.address + 1), self)
+        address_label: QtWidgets.QLabel = QtWidgets.QLabel(str(self._channel.address + 1), self)
         address_label.setFixedSize(element_size, element_size)
         address_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         # Displays the current channel value
         self._value_editor: QtWidgets.QSpinBox = QtWidgets.QSpinBox(self)
-        self._value_editor.setValue(channel.value)
+        self._value_editor.setValue(self._channel.value)
         self._value_editor.setMaximum(255)
         self._value_editor.setMinimum(0)
         self._value_editor.setButtonSymbols(QtWidgets.QAbstractSpinBox.ButtonSymbols.NoButtons)
@@ -57,23 +67,23 @@ class ChannelWidget(QtWidgets.QWidget):
         self._value_editor.textChanged.connect(self.update_value)
         self._value_editor.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
-        self._fixture = QtWidgets.QLabel(self._patching_channel.fixture_channel)
-        self._fixture.setWordWrap(True)
-        self._fixture.setFixedSize(element_size, element_size * 2)
-        self._fixture.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self._patching_channel.updated_fixture.connect(self._update_fixture)
-        if self._patching_channel.fixture_channel == "none":
-            self.setVisible(False)
+        self._fixture_channel = QtWidgets.QLabel(fixture_channel.name)
+        self._fixture_channel.setWordWrap(True)
+        self._fixture_channel.setFixedSize(element_size, element_size * 2)
+        self._fixture_channel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
-        self._bank_selector = ConsoleFaderBankSelectorWidget(bank_set, self._patching_channel.fixture_channel,
-                                                             bank_set_control_list=bank_set_control_list)
+        self._channel.updated.connect(self.update_value)
+
+        self._bank_selector = ConsoleFaderBankSelectorWidget(
+            bank_set, fixture_channel.name, bank_set_control_list=bank_set_control_list
+        )
         self._bank_selector.fader_value_changed.connect(self.update_value)
         self._bank_selector.setFixedWidth(element_size)
 
         # Button to set the channel to the max value 255
         self._max_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Max", self)
         self._max_button.setFixedSize(element_size, element_size)
-        self._max_button.setStyleSheet(Style.BUTTON)
+        self._max_button.setStyleSheet(style.BUTTON)
         self._max_button.clicked.connect(lambda: self.update_value(255))
 
         # Slider to change the value and display the current value graphically
@@ -84,13 +94,13 @@ class ChannelWidget(QtWidgets.QWidget):
         self._slider.setMinimum(0)
         self._slider.setMaximum(255)
         self._slider.setFixedSize(element_size, slider_len)
-        self._slider.setStyleSheet(Style.SLIDER)
+        self._slider.setStyleSheet(style.SLIDER)
         self._slider.valueChanged.connect(self.update_value)
 
         # Button to set the channel to the min value 0
         self._min_button: QtWidgets.QPushButton = QtWidgets.QPushButton("Min", self)
         self._min_button.setFixedSize(element_size, element_size)
-        self._min_button.setStyleSheet(Style.ACTIVE_BUTTON)
+        self._min_button.setStyleSheet(style.ACTIVE_BUTTON)
         self._min_button.clicked.connect(lambda: self.update_value(0))
 
         self._channel.updated.connect(self._update)
@@ -98,7 +108,7 @@ class ChannelWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         layout.addWidget(address_label)
-        layout.addWidget(self._fixture)
+        layout.addWidget(self._fixture_channel)
         layout.addWidget(self._bank_selector)
         layout.addWidget(self._value_editor)
         layout.addWidget(self._max_button)
@@ -109,27 +119,29 @@ class ChannelWidget(QtWidgets.QWidget):
         self.setContentsMargins(0, 0, 0, 0)
 
     def _update(self, value: int) -> None:
-        """Updates the slider and value label."""
+        """Update the slider and value label."""
         self._slider.setValue(value)
         self._value_editor.setValue(value)
         if value == 0:
-            self._min_button.setStyleSheet(Style.ACTIVE_BUTTON)
-            self._max_button.setStyleSheet(Style.BUTTON)
+            self._min_button.setStyleSheet(style.ACTIVE_BUTTON)
+            self._max_button.setStyleSheet(style.BUTTON)
         elif value == 255:
-            self._max_button.setStyleSheet(Style.ACTIVE_BUTTON)
-            self._min_button.setStyleSheet(Style.BUTTON)
+            self._max_button.setStyleSheet(style.ACTIVE_BUTTON)
+            self._min_button.setStyleSheet(style.BUTTON)
         else:
-            self._min_button.setStyleSheet(Style.BUTTON)
-            self._max_button.setStyleSheet(Style.BUTTON)
+            self._min_button.setStyleSheet(style.BUTTON)
+            self._max_button.setStyleSheet(style.BUTTON)
 
-    def _update_fixture(self):
-        self._fixture.setText(self._patching_channel.fixture_channel)
-
-    def update_value(self, value: int | str):
-        """update of a value in """
+    def update_value(self, value: int | str) -> None:
+        """Update of a value in."""
         value = int(value)
         self._bank_selector._latest_ui_position_update = value
         if self._channel.value != value:
             value = min(max(value, 0), 255)
             self._channel.value = value
             self._bank_selector.fader_value_changed.emit(value)
+
+    def notify_automap(self, bank_index: int) -> None:
+        """Perform required actions on universe activation in console."""
+        self._bank_selector.insert_fader_column(force_bank_index=bank_index)
+        self._bank_selector.setEnabled(False)

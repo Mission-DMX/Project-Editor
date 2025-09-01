@@ -1,25 +1,37 @@
-# coding=utf-8
 # SPDX-License-Identifier: GPL-3.0-or-later
+"""Debug output show UI widgets.
+
+ColorLabel -- Regular Qt Widget to display set color.
+ColorDebugVizWidget -- Show UI widget to display debug output containing colors.
+NumberDebugVizWidget -- Show UI widget to display debug output containing numbers.
+"""
+
+from __future__ import annotations
+
 from abc import ABC
 from logging import getLogger
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
-from PySide6.QtWidgets import QComboBox, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
+from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
 
-import proto.FilterMode_pb2
 from model import ColorHSI, UIWidget
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import proto.FilterMode_pb2
     from model import UIPage
 
-logger = getLogger(__file__)
+logger = getLogger(__name__)
 
 
 class _DebugVizWidget(UIWidget, ABC):
-    """This class is the foundation for widgets that display the state of remote debug nodes"""
+    """Provide the foundation for widgets that display the state of remote debug nodes."""
 
-    def __init__(self, parent: "UIPage", configuration: dict[str, str], presentation_mode: list[str] | None = None):
+    def __init__(
+        self, parent: UIPage, configuration: dict[str, str], presentation_mode: list[str] | None = None
+    ) -> None:
         super().__init__(parent, configuration)
         self._config_widget: QWidget | None = None
         self._placeholder_widget: QWidget | None = None
@@ -34,26 +46,32 @@ class _DebugVizWidget(UIWidget, ABC):
             configuration["width"] = "100"
         self.presentation_mode = presentation_mode
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self._config_widget is not None:
             self._config_widget.deleteLater()
         if self._placeholder_widget is not None:
             self._placeholder_widget.deleteLater()
 
+    @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         # As we only consume values, we do not need to generate updates
         return []
 
-    def get_config_dialog_widget(self, parent: QWidget | None) -> QWidget:
-        if self._config_widget is None:
-            self._construct_config_widget()
+    @override
+    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
+        if self._config_widget is not None:
+            self._config_widget.deleteLater()
+        self._construct_config_widget()
         return self._config_widget
 
-    def set_conf_width(self, new_width: int):
-        """
-        This method updates the configured width.
+    def set_conf_width(self, new_width: int) -> None:
+        """Update the configured width.
+
         Passing 0 or negative numbers will abort execution.
-        :param new_width: The width to set.
+
+        Args:
+            new_width:  The width to set.
+
         """
         if new_width < 1:
             return
@@ -64,11 +82,14 @@ class _DebugVizWidget(UIWidget, ABC):
         if self._placeholder_widget is not None:
             self._placeholder_widget.setFixedWidth(new_width)
 
-    def set_conf_height(self, new_height: int):
-        """
-        This method updates the configured height.
+    def set_conf_height(self, new_height: int) -> None:
+        """Update the configured height.
+
         Passing 0 or negative numbers will abort execution.
-        :param new_height: The height to set.
+
+        Args:
+            new_height:  The height to set.
+
         """
         if new_height < 1:
             return
@@ -79,8 +100,8 @@ class _DebugVizWidget(UIWidget, ABC):
         if self._placeholder_widget is not None:
             self._placeholder_widget.setFixedHeight(new_height)
 
-    def _construct_config_widget(self):
-        """This method constructs the widget for dimension and display mode setup."""
+    def _construct_config_widget(self) -> None:
+        """Construct the widget for dimension and display mode setup."""
         w = QWidget()
         w.setMinimumWidth(250)
         w.setMinimumHeight(125)
@@ -108,9 +129,10 @@ class _DebugVizWidget(UIWidget, ABC):
         w.setLayout(layout)
         self._config_widget = w
 
+    @override
     def get_configuration_widget(self, parent: QWidget) -> QWidget:
         if self._placeholder_widget is not None:
-            return self._placeholder_widget
+            self._placeholder_widget.deleteLater()
         w = QWidget(parent=parent)
         w.setFixedWidth(self.configured_width)
         w.setFixedHeight(self.configured_height)
@@ -121,28 +143,42 @@ class _DebugVizWidget(UIWidget, ABC):
         self._placeholder_widget = w
         return w
 
-    def _mode_conf_changed(self, new_mode_str: str):
+    def _mode_conf_changed(self, new_mode_str: str) -> None:
         """Change the configured mode and call dimensions changed callback if any."""
         self.configuration["mode"] = new_mode_str
         if self.configured_dimensions_changed_callback is not None:
             self.configured_dimensions_changed_callback()
 
 
-class _ColorLabel(QWidget):
-    """A label for displaying colors"""
+class ColorLabel(QWidget):
+    """Label for displaying colors."""
 
-    def __init__(self, *args, **kwargs):
-        """Default color is black"""
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent: QWidget) -> None:
+        """Label for displaying colors.
+
+        Default color is black.
+        """
+        super().__init__(parent)
         self._last_color: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self._last_color_processed: QColor = QColor()
 
-    def set_hsi(self, h: float, s: float, i: float):
+    def set_color(self, c: ColorHSI) -> None:
+        """Set the color to display.
+
+        Args:
+            c: The color to set. (ColorHSI)
+
         """
-        Set the color of the color label.
-        :param h: The hue value
-        :param s: The saturation value
-        :param i: The luminescence value
+        self.set_hsi(c.hue, c.saturation, c.intensity)
+
+    def set_hsi(self, h: float, s: float, i: float) -> None:
+        """Set the color of the color label.
+
+        Args:
+            h: The hue value.
+            s: The saturation value.
+            i: The luminescence value.
+
         """
         if self._last_color == (h, s, i):
             return
@@ -150,8 +186,9 @@ class _ColorLabel(QWidget):
         self._last_color_processed = ColorHSI(h, s, i).to_qt_color()
         self.update()
 
-    def paintEvent(self, event: QPaintEvent, /):
-        """Redraw the widget"""
+    @override
+    def paintEvent(self, event: QPaintEvent, /) -> None:
+        """Redraw the widget."""
         painter = QPainter(self)
         c = self._last_color_processed
         r = event.rect()
@@ -161,45 +198,59 @@ class _ColorLabel(QWidget):
 
 
 class ColorDebugVizWidget(_DebugVizWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    """Show UI widget to display debug output colors."""
+
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize show UI widget using parent UI page and configuration."""
         super().__init__(parent, configuration)
         self.configured_dimensions_changed_callback = self._dimensions_changed
-        self._show_widget: _ColorLabel | None = None
+        self._show_widget: ColorLabel | None = None
+        self._callback_registered = False
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._show_widget is None:
-            self._construct_player_widget(parent)
+        self._construct_player_widget(parent)
         return self._show_widget
 
-    def _construct_player_widget(self, parent: QWidget):
-        w = _ColorLabel(parent=parent)
+    def _construct_player_widget(self, parent: QWidget) -> None:
+        w = ColorLabel(parent=parent)
         w.setFixedWidth(self.configured_width)
         w.setFixedHeight(self.configured_height)
         self._show_widget = w
-        self.parent.scene.board_configuration.register_filter_update_callback(
-            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
-        self._show_widget.destroyed.connect(self._delete_callback)
-
-    def _delete_callback(self):
-        if self._show_widget is not None:
-            self.parent.scene.board_configuration.remove_filter_update_callback(
+        if not self._callback_registered:
+            self.parent.scene.board_configuration.register_filter_update_callback(
                 self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
             )
-            self._show_widget.deleteLater()
+            self._callback_registered = True
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def _delete_callback(self) -> None:
+        if self._show_widget is not None:
+            self.parent.scene.board_configuration.remove_filter_update_callback(
+                self.parent.scene.scene_id,
+                self.filter_ids[0],
+                self._recv_update,
+            )
+            self._show_widget = None
+
+    def __del__(self) -> None:
+        """Delete callbacks on object deletion."""
+        self._delete_callback()
+        super().__del__()
+
+    @override
+    def copy(self, new_parent: UIPage) -> UIWidget:
         c = ColorDebugVizWidget(new_parent, self.configuration.copy())
         super().copy_base(c)
         return c
 
-    def _dimensions_changed(self):
+    def _dimensions_changed(self) -> None:
         if self._show_widget is None:
             return
         self._show_widget.setFixedWidth(self.configured_width)
         self._show_widget.setFixedHeight(self.configured_height)
 
-    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter):
-        """Checks for correct filter and updates the displayed color"""
+    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        """Check for correct filter and updates the displayed color."""
         if self._show_widget is None:
             return
 
@@ -207,20 +258,24 @@ class ColorDebugVizWidget(_DebugVizWidget):
             hsi_value = param.parameter_value.split(",")
             self._show_widget.set_hsi(float(hsi_value[0]), float(hsi_value[1]), float(hsi_value[2]))
         except ValueError:
-            logger.error("Unable to parse color '%s' from filter '%s:%s'.", param.parameter_value,
-                         param.filter_id, param.parameter_key)
+            logger.exception(
+                "Unable to parse color '%s' from filter '%s:%s'.",
+                param.parameter_value,
+                param.filter_id,
+                param.parameter_key,
+            )
 
 
 class _NumberLabel(QWidget):
-    def __init__(self, *args, **kwargs):
-        """Default number is 0, default mode is without illumination display"""
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
         self.mode: str = ""
         self._number: float = 0.0
         self._text: str = "0"
 
-    def paintEvent(self, event: QPaintEvent, /):
-        """Redraw the widget"""
+    @override
+    def paintEvent(self, event: QPaintEvent, /) -> None:
+        """Redraw the widget."""
         painter = QPainter(self)
         painter.drawRect(0, 0, self.width(), self.height())
         if self.mode == "Illumination":
@@ -230,7 +285,9 @@ class _NumberLabel(QWidget):
         fm = painter.fontMetrics()
         painter.drawText(
             int(self.width() / 2 - fm.horizontalAdvance(self._text) / 2),
-            int(self.height() / 2 - fm.height() / 2), self._text)
+            int(self.height() / 2 - fm.height() / 2),
+            self._text,
+        )
         painter.end()
 
     @property
@@ -238,13 +295,13 @@ class _NumberLabel(QWidget):
         return self._number
 
     @number.setter
-    def number(self, new_number: int | float):
+    def number(self, new_number: float) -> None:
         if new_number == self._number:
             return
         text = f"{new_number:.5f}"
-        while text[-1] == '0' and '.' in text:
+        while text[-1] == "0" and "." in text:
             text = text[:-1]
-        if text[-1] == '.':
+        if text[-1] == ".":
             text = text[:-1]
         if text == self._text:
             return
@@ -254,45 +311,64 @@ class _NumberLabel(QWidget):
 
 
 class NumberDebugVizWidget(_DebugVizWidget):
-    def __init__(self, parent: "UIPage", configuration: dict[str, str]):
+    """UI widget to display debug output numbers."""
+
+    def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize widget using parent UI page and initial configuration data."""
         super().__init__(parent, configuration, ["Plain", "Illumination"])
         self._show_widget: _NumberLabel | None = None
         self.configured_dimensions_changed_callback = self._dimensions_changed
+        self._callback_registered = False
 
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._show_widget is None:
-            self._show_widget = _NumberLabel(parent)
-            self._dimensions_changed()
+        self._show_widget = _NumberLabel(parent)
+        self._dimensions_changed()
+        if not self._callback_registered:
             self.parent.scene.board_configuration.register_filter_update_callback(
-                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update)
-            self._show_widget.destroyed.connect(self._delete_callback)
+                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
+            )
+            self._callback_registered = True
         return self._show_widget
 
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    @override
+    def copy(self, new_parent: UIPage) -> UIWidget:
         c = NumberDebugVizWidget(new_parent, self.configuration.copy())
         super().copy_base(c)
         return c
 
-    def _dimensions_changed(self):
+    def _dimensions_changed(self) -> None:
         if self._show_widget is None:
             return
         self._show_widget.setFixedWidth(self.configured_width)
         self._show_widget.setFixedHeight(self.configured_height)
         self._show_widget.mode = self.configuration.get("mode") or "Plain"
 
-    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter):
-        """Checks for correct filter and updates the displayed number"""
+    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        """Check for correct filter and updates the displayed number."""
         if self._show_widget is None:
             return
 
         try:
             self._show_widget.number = float(param.parameter_value)
         except ValueError:
-            logger.error("Unexpected number received from filter '%s:%s': %s", param.filter_id,
-                         param.parameter_key, param.parameter_value)
+            logger.exception(
+                "Unexpected number received from filter '%s:%s': %s",
+                param.filter_id,
+                param.parameter_key,
+                param.parameter_value,
+            )
 
-    def _delete_callback(self):
+    def __del__(self) -> None:
+        """Cleanup registered callbacks on object delete."""
+        self._delete_callback()
+        super().__del__()
+
+    def _delete_callback(self) -> None:
+        self.parent.scene.board_configuration.remove_filter_update_callback(
+            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
+        )
         if self._show_widget is not None:
-            self.parent.scene.board_configuration.remove_filter_update_callback(self.parent.scene.scene_id,
-                                                                                self.filter_ids[0], self._recv_update)
             self._show_widget.deleteLater()
+            self._placeholder_widget.deleteLater()
+            self._show_widget = None

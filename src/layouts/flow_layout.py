@@ -1,10 +1,11 @@
-# coding=utf-8
 """
 implementation of flow Layout for Python 3.12
 from https://doc.qt.io/qtforpython-6/examples/example_widgets_layouts_flowlayout.html
 """
+from typing import override
+
 from PySide6.QtCore import QMargins, QPoint, QRect, QSize, Qt
-from PySide6.QtWidgets import QLayout, QSizePolicy
+from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
 
 class FlowLayout(QLayout):
@@ -12,55 +13,64 @@ class FlowLayout(QLayout):
     Layout for floating Widges to width
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
 
         if parent is not None:
             self.setContentsMargins(QMargins(0, 0, 0, 0))
 
-        self._item_list = []
+        self._item_list: list[QLayoutItem] = []
 
-    def __del__(self):
+    def __del__(self) -> None:
         item = self.takeAt(0)
         while item:
             item = self.takeAt(0)
 
-    def addItem(self, item):
+    @override
+    def addItem(self, item: QLayoutItem) -> None:
         self._item_list.append(item)
 
-    def count(self):
+    @override
+    def count(self) -> int:
         return len(self._item_list)
 
-    def itemAt(self, index):
+    @override
+    def itemAt(self, index: int) -> QLayoutItem | None:
         if 0 <= index < len(self._item_list):
             return self._item_list[index]
 
         return None
 
-    def takeAt(self, index):
+    @override
+    def takeAt(self, index: int) -> QLayoutItem | None:
         if 0 <= index < len(self._item_list):
             return self._item_list.pop(index)
 
         return None
 
-    def expandingDirections(self):
+    @override
+    def expandingDirections(self) -> Qt.Orientation:
         return Qt.Orientation(0)
 
-    def hasHeightForWidth(self):
+    @override
+    def hasHeightForWidth(self) -> bool:
         return True
 
-    def heightForWidth(self, width):
-        height = self._do_layout(QRect(0, 0, width, 0), True)
-        return height
+    @override
+    def heightForWidth(self, width: int) -> float:
+        return self._do_layout(QRect(0, 0, width, 0), True)
 
-    def setGeometry(self, rect):
-        super(FlowLayout, self).setGeometry(rect)
+    @override
+    def setGeometry(self, rect: QRect) -> None:
+        super().setGeometry(rect)
         self._do_layout(rect, False)
 
-    def sizeHint(self):
+    @override
+    def sizeHint(self) -> QSize:
         return self.minimumSize()
 
-    def minimumSize(self):
+    @override
+    def minimumSize(self) -> QSize:
         size = QSize()
 
         for item in self._item_list:
@@ -69,7 +79,7 @@ class FlowLayout(QLayout):
         size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
         return size
 
-    def _do_layout(self, rect, test_only):
+    def _do_layout(self, rect: QRect, test_only: bool) -> float:
         x = rect.x()
         y = rect.y()
         line_height = 0
@@ -78,10 +88,10 @@ class FlowLayout(QLayout):
         for item in self._item_list:
             style = item.widget().style()
             layout_spacing_x = style.layoutSpacing(
-                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Horizontal
+                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Horizontal,
             )
             layout_spacing_y = style.layoutSpacing(
-                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Vertical
+                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Vertical,
             )
             space_x = spacing + layout_spacing_x
             space_y = spacing + layout_spacing_y

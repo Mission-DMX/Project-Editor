@@ -1,24 +1,30 @@
-# coding=utf-8
 # pylint: disable=implicit-flag-alias
-"""Filter module"""
+"""Filter model.
+
+Contains: DataType, FilterTypeEnumeration, Filter and VirtualFilter
+"""
+
+from __future__ import annotations
+
 import abc
 from enum import IntFlag, auto
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from . import Scene
 
 
 class DataType(IntFlag):
-    """Data types used by filter channels"""
+    """Data types used by filter channels."""
+
     DT_8_BIT = auto()
     DT_16_BIT = auto()
     DT_DOUBLE = auto()
     DT_COLOR = auto()
     DT_BOOL = auto()
 
-    def format_for_filters(self):
-        """This method returns the data type representation commonly used by the fish filters for configuration."""
+    def format_for_filters(self) -> str:
+        """Datatype representation commonly used by the fish filters for configuration."""
         if self.value == DataType.DT_8_BIT.value:
             return "8bit"
 
@@ -35,11 +41,15 @@ class DataType(IntFlag):
 
     @staticmethod
     def names() -> list[str]:
-        return [f.format_for_filters() for f in [DataType.DT_8_BIT, DataType.DT_16_BIT, DataType.DT_DOUBLE,
-                                                 DataType.DT_COLOR]]
+        """List of all available data type names."""
+        return [
+            f.format_for_filters()
+            for f in [DataType.DT_8_BIT, DataType.DT_16_BIT, DataType.DT_DOUBLE, DataType.DT_COLOR]
+        ]
 
     @staticmethod
-    def from_filter_str(type_definition_string: str):
+    def from_filter_str(type_definition_string: str) -> DataType:
+        """Deserialize from filter string."""
         if isinstance(type_definition_string, DataType):
             return type_definition_string
         match type_definition_string:
@@ -55,12 +65,19 @@ class DataType(IntFlag):
                 return DataType.DT_8_BIT
 
     def __str__(self) -> str:
+        """Get a human-readable representation of the data type."""
         if self.value == DataType.DT_BOOL.value:
             return "bool (8bit)"
         return self.format_for_filters()
 
 
 class FilterTypeEnumeration(IntFlag):
+    """Filter type enumeration.
+
+    Negative values indicate virtual filters.
+    """
+
+    VFILTER_SEQUENCER = -12
     VFILTER_COLOR_MIXER = -11
     VFILTER_IMPORT = -10
     VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN = -9
@@ -141,37 +158,58 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_REMOTE_DEBUG_16BIT = 66
     FILTER_REMOTE_DEBUG_FLOAT = 67
     FILTER_REMOTE_DEBUG_PIXEL = 68
+    FILTER_SEQUENCER = 69
+    FILTER_EVENT_COUNTER = 70
 
 
 class Filter:
-    """Filter for show file"""
+    """Filter for a show file."""
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int,
-                 pos: tuple[int, int] | tuple[float, float] | None = None,
-                 filter_configurations: dict[str, str] | None = None,
-                 initial_parameters: dict[str, str] | None = None):
+    def __init__(
+        self,
+        scene: Scene,
+        filter_id: str,
+        filter_type: int,
+        pos: tuple[int, int] | tuple[float, float] | None = None,
+        filter_configurations: dict[str, str] | None = None,
+        initial_parameters: dict[str, str] | None = None,
+    ) -> None:
+        """Filter for a show file.
+
+        Args:
+        scene: The parent scene of the filter.
+        filter_id: The ID of the filter.
+        filter_type: The type of the filter.
+        pos: The position of the filter in the node editor.
+        filter_configurations: The configuration of the filter.
+        initial_parameters: The initial parameters of the filter.
+
+        """
+        # TODO id why as string
         if pos is None:
             pos = [0.0, 0.0]
-        self._scene: "Scene" = scene
+
+        self._scene: Scene = scene
         self._filter_id = filter_id
-        self._filter_type = int(filter_type)
+        self._filter_type: int = int(filter_type)
         self._pos: tuple[float, float] | None = pos
         self._channel_links: dict[str, str] = {}
         self._initial_parameters: dict[str, str] = initial_parameters or {}
         self._filter_configurations: dict[str, str] = filter_configurations or {}
-        self._gui_update_keys: dict[str, DataType | list[str]] = {}
+        self._gui_update_keys: dict[str, Union[DataType, list[str]]] = {}
         self._in_data_types: dict[str, DataType] = {}
         self._default_values: dict[str, str] = {}
         self._out_data_types: dict[str, DataType] = {}
         self._configuration_supported: bool = True
 
     @property
-    def scene(self) -> "Scene":
-        """The scene the filter belongs to"""
+    def scene(self) -> Scene:
+        """The scene the filter belongs to."""
         return self._scene
 
     @property
     def configuration_supported(self) -> bool:
+        """Returns true if the filter supports user configuration."""
         return self._configuration_supported
 
     @property
@@ -180,7 +218,7 @@ class Filter:
         return self._filter_id
 
     @filter_id.setter
-    def filter_id(self, id_):
+    def filter_id(self, id_: str) -> None:
         old_id: str = self._filter_id
         self._filter_id = id_
         if self.scene:
@@ -188,32 +226,39 @@ class Filter:
 
     @property
     def filter_type(self) -> int:
-        """The type of the filter. This might be a positive number for a filter that fish understands or a negative
-        one in case of a virtual filter that the GUI needs to resolve first."""
+        """The type of the filter.
+
+        This might be a positive number for a filter that fish understands or a negative
+        one in case of a virtual filter that the GUI needs to resolve first.
+        """
         return self._filter_type
 
+    @filter_type.setter
+    def filter_type(self, type_: int) -> None:
+        self._filter_type = type_
+
     @property
-    def pos(self) -> tuple[float] | None:
-        """The position of the filter node inside the ui"""
+    def pos(self) -> tuple[float, float] | None:
+        """The position of the filter node inside the ui."""
         return self._pos
 
     @pos.setter
-    def pos(self, pos: list[float, float]):
+    def pos(self, pos: tuple[float, float] | None) -> None:
         self._pos = pos
 
     @property
     def channel_links(self) -> dict[str, str]:
-        """Dict mapping the filters inputs to the connected outputs"""
+        """Dict mapping the filter inputs to the connected outputs."""
         return self._channel_links
 
     @property
-    def initial_parameters(self):
-        """The initial parameters"""
+    def initial_parameters(self) -> dict[str, str]:
+        """The initial parameters."""
         return self._initial_parameters
 
     @property
     def filter_configurations(self) -> dict[str, str]:
-        """The filter configurations"""
+        """The filter configurations."""
         return self._filter_configurations
 
     @property
@@ -228,27 +273,45 @@ class Filter:
 
     @property
     def out_data_types(self) -> dict[str, DataType]:
-        """Dict mapping output channel names to their data types"""
+        """Dict mapping output channel names to their data types."""
         return self._out_data_types
 
     @property
     def gui_update_keys(self) -> dict[str, DataType | str]:
+        """Get updates that should be transmitted to the filter currently running on fish."""
         return self._gui_update_keys
 
     @property
     def is_virtual_filter(self) -> bool:
+        """Returns true if the filter has an ID from the virtual range."""
         return self.filter_type < 0
 
-    def copy(self, new_scene: "Scene" = None, new_id: str = None) -> "Filter":
+    def copy(self, new_scene: Scene = None, new_id: str | None = None) -> Filter:
+        """Copy the filter.
+
+        Args:
+            new_scene: Parent scene of the new filter object.
+            new_id: New id of the new filter object.
+
+        """
         from .virtual_filters.vfilter_factory import construct_virtual_filter_instance
+
         if self.is_virtual_filter:
-            f = construct_virtual_filter_instance(new_scene if new_scene else self.scene,
-                                                  self._filter_type, new_id if new_id else self._filter_id,
-                                                  pos=self._pos)
+            f = construct_virtual_filter_instance(
+                new_scene if new_scene else self.scene,
+                self._filter_type,
+                new_id if new_id else self._filter_id,
+                pos=self._pos,
+            )
             f.filter_configurations.update(self.filter_configurations.copy())
         else:
-            f = Filter(new_scene if new_scene else self.scene, self._filter_id if not new_id else new_id,
-                       self._filter_type, self._pos, self.filter_configurations.copy())
+            f = Filter(
+                new_scene if new_scene else self.scene,
+                new_id if new_id else self._filter_id,
+                self._filter_type,
+                self._pos,
+                self.filter_configurations.copy(),
+            )
         f._channel_links = self.channel_links.copy()
         f._initial_parameters = self.initial_parameters.copy()
         f._in_data_types = self._in_data_types.copy()
@@ -259,57 +322,76 @@ class Filter:
             f.deserialize()
         return f
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Get a human-readable representation of this filter."""
         return f"Filter '{self._filter_id}' from scene '{self.scene}'"
 
 
 class VirtualFilter(Filter, abc.ABC):
-    """
-    This abstract class can be used in order to implement virtual filters. The configuration of these filters is still
-    stored within the filter configuration, however, these filters will not be sent to fish. Instead, their
-    instantiate_filters method will be called in order to provide a representation that fish can understand in the event
+    """Abstract class can be used to implement virtual filters.
+
+    The configuration of these filters is still
+    stored within the filter configuration; however, these filters will not be sent to fish. Instead, their
+    instantiate_filters method will be called to provide a representation that fish can understand in the event
     that the show will be serialized for fish.
     """
 
-    def __init__(self, scene: "Scene", filter_id: str, filter_type: int, pos: tuple[int] | None = None):
+    def __init__(self, scene: Scene, filter_id: str, filter_type: int, pos: tuple[int] | None = None) -> None:
+        """Initialize a virtual filter.
+
+        Args:
+            scene: The scene this filter belongs to.
+            filter_id: The unique ID of the filter.
+            filter_type: The type of the filter.
+            pos: The position of the filter node inside the UI.
+
+        """
         super().__init__(scene, filter_id, filter_type, pos)
 
     @abc.abstractmethod
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
-        """
-        This method shall be consulted by the show file generator if it serializes the show in order to send it to fish.
+        """Shall be consulted by the show file generator if it serializes the show to send it to fish.
+
         The purpose of this method is to translate the virtual filter output port to the filterid:portid string of the
-        actually instantiated corresponding filter. It should return None, if and only if the provided input
+        actually instantiated corresponding filter. It should return None if and only if the provided input
         virtual_port_id does not exist with this filter type.
 
-        :param virtual_port_id: The name of the port of this virtual filter that should be translated to the channel id
-        of an instantiated filter.
-        :returns: The resolved real filter and output port combination or None if the input was invalid.
+        Args:
+            virtual_port_id: The name of the port of this virtual filter that should be translated to the channel id
+                                of an instantiated filter.
+
+        Returns: The resolved real filter and output port combination or None if the input was invalid.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abc.abstractmethod
-    def instantiate_filters(self, filter_list: list[Filter]):
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
+        """Will be called by the show file serializer when it serializes the show for fish.
+
+        It places the real filters inside the provided filter_list argument.
+
+        Notes:
+            Implementing classes do not need to resolve real port addresses from other filters themselves as this
+            method will be called prior to resolving filter addresses. Instead, instantiated filters need to contain the
+            configured channel mappings.
+
+        Args:
+            filter_list: The list to resolve the real filters into
+
         """
-        This method will be called by the show file serializer when it serializes the show for fish. It places the real
-        filters inside the provided filter_list argument.
+        raise NotImplementedError
 
-        :param filter_list: The list to resolve the real filters into
+    def deserialize(self) -> None:
+        """Perform post-processing after the filter configuration has been loaded.
 
-        :note: Implementing classes do not need to resolve real port addresses from other filters themselves as this
-        method will be called prior to resolving filter addresses. Instead, instantiated filters need to contain the
-        configured channel mappings.
+        Use this method to implement the loading of the filter model.
         """
-        raise NotImplementedError()
 
-    def deserialize(self):
-        """This method should be called after the filter configuration has been loaded.
-        It might be used to implement the loading of the filter model."""
-        pass
-
-    def serialize(self):
+    def serialize(self) -> None:
         """Virtual filter might need to prepare themselves prior to being saved to a show file.
+
         For example, they might need to compile some information. This method will be called just prior to generating
         the filter element within the show file. Afterward the current state of the v-filter needs to be accessible
-        purely by querying the configuration and parameters variables."""
-        pass
+        purely by querying the configuration and parameters variables.
+        """

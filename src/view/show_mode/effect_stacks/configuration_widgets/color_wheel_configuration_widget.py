@@ -1,8 +1,7 @@
-# coding=utf-8
-
 """This file contains the configuration widget for the color wheel effect."""
+from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import QDoubleSpinBox, QFormLayout, QSpinBox, QWidget
 
@@ -13,9 +12,9 @@ if TYPE_CHECKING:
 class ColorWheelConfigurationWidget(QWidget):
     """This widget enables the user to set up the defaults of the color wheel effect settings."""
 
-    def __init__(self, f: "ColorWheelEffect"):
+    def __init__(self, f: ColorWheelEffect) -> None:
         super().__init__()
-        self._f: "ColorWheelEffect" = f
+        self._f: ColorWheelEffect = f
         layout = QFormLayout()
         self.setLayout(layout)
 
@@ -38,20 +37,21 @@ class ColorWheelConfigurationWidget(QWidget):
         # TODO disable settings if the corresponding input is occupied
         self.load_values_from_effect()
 
-    def _fragment_count_changed(self, e):
+    def _fragment_count_changed(self) -> None:
         self._f.fragment_number = self._fragment_number_widget.value()
 
-    def _min_hue_changed(self, e):
+    def _min_hue_changed(self) -> None:
         self._f.min_hue = self._minimum_hue.value()
 
-    def _max_hue_changed(self, e):
+    def _max_hue_changed(self) -> None:
         self._f.max_hue = self._maximum_hue.value()
 
-    def load_values_from_effect(self):
+    def load_values_from_effect(self) -> None:
         self._fragment_number_widget.setValue(self._f.fragment_number)
         self._minimum_hue.setValue(self._f.min_hue)
         self._maximum_hue.setValue(self._f.max_hue)
 
-    def setVisible(self, visible):
+    @override
+    def setVisible(self, visible: bool) -> None:
         self.load_values_from_effect()
         return super().setVisible(visible)

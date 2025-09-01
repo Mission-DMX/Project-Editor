@@ -1,25 +1,25 @@
-# coding=utf-8
 """widget for logging_view"""
 import json
-import logging
-from typing import List
+from logging import getLogger
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QCompleter
+from PySide6.QtWidgets import QCompleter, QWidget
 
 from model.broadcaster import Broadcaster
 
 from .logging_item_widget import LoggingItemWidget
 from .search import Operation, Search
 
+logger = getLogger(__name__)
+
 
 class LoggingWidget(QtWidgets.QTabWidget):
     """widget for logging_view"""
     _loging_level_changed: QtCore.Signal = QtCore.Signal(tuple)
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
 
         select_bar = QtWidgets.QMenuBar()
@@ -42,10 +42,10 @@ class LoggingWidget(QtWidgets.QTabWidget):
             "CRITICAL": QAction("Critical", level_menu, checkable=True, checked=True,
                                 changed=(
                                     lambda: self._loging_level_changed.emit(
-                                        ("CRITICAL", self._levels["CRITICAL"].isChecked()))))
+                                        ("CRITICAL", self._levels["CRITICAL"].isChecked())))),
         }
         level_menu.addAction(QAction("all", level_menu, triggered=(lambda: self.all_log_levels(True))))
-        for key, value in self._levels.items():
+        for value in self._levels.values():
             level_menu.addAction(value)
         level_menu.addAction(QAction("none", level_menu, triggered=(lambda: self.all_log_levels(False))))
         select_bar.addMenu(level_menu)
@@ -62,11 +62,11 @@ class LoggingWidget(QtWidgets.QTabWidget):
         self._tree.setColumnCount(2)
         self._tree.setHeaderLabels(["key", "value"])
         self._tree.setColumnWidth(0, 150)
-        self._tree.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self._tree.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._tree.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self._tree.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._tree.setLayout(QtWidgets.QVBoxLayout())
 
-        self._log_items: List[LoggingItemWidget] = []
+        self._log_items: list[LoggingItemWidget] = []
 
         container_layout = QtWidgets.QVBoxLayout()
         container_layout.addWidget(select_bar)
@@ -75,9 +75,9 @@ class LoggingWidget(QtWidgets.QTabWidget):
 
         self.setLayout(container_layout)
 
-        logging.info("start DMXGui")
+        logger.info("start DMXGui")
 
-    def all_log_levels(self, value: bool):
+    def all_log_levels(self, value: bool) -> None:
         """set all log levels"""
         for level in self._levels.values():
             level.setChecked(value)
@@ -94,7 +94,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
     def update_display(self, text: str) -> None:
         """update display for searching items"""
         search: list[Search] = []
-        ands: [str] = text.split("&")
+        ands: list[str] = text.split("&")
         for item in ands:
             part = item.split(":")
             if len(part) == 2:

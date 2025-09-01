@@ -1,34 +1,41 @@
-# coding=utf-8
-"""Classes for remote connection"""
+"""Classes for remote connection."""
+
+from __future__ import annotations
+
 from asyncio import IncompleteReadError
-from logging import Logger
-from socket import AF_INET6, SOCK_STREAM
-from socket import error as socket_error
-from socket import socket
+from logging import getLogger
+from socket import AF_INET6, SOCK_STREAM, socket
 from threading import Thread
+from typing import TYPE_CHECKING
 
 from controller.cli.cli_context import CLIContext
-from controller.network import NetworkManager
-from model import BoardConfiguration
 
-logger = Logger(__file__)
+if TYPE_CHECKING:
+    from controller.network import NetworkManager
+    from model import BoardConfiguration
+
+logger = getLogger(__name__)
 
 
 class SocketStreamReader:
-    """This class is used to split the input TCP stream into separate lines."""
+    """Class is used to split the input TCP stream into separate lines."""
 
-    def __init__(self, sock: socket):
-        """Initialize the stream reader
-        
-        Arguments:
-        sock -- the socket to listen on
+    def __init__(self, sock: socket) -> None:
+        """Stream reader.
+
+        Args:
+            sock: The socket to listen on.
+
         """
         self._sock = sock
         self._recv_buffer = bytearray()
         self.echo = True
 
     def read(self, num_bytes: int = -1) -> bytes:
-        """This method is here to comply with the stream interface but never, hence not implemented"""
+        """Comply with the stream interface (method not implemented).
+
+        This method exists to satisfy the interface but is intentionally left unimplemented.
+        """
         raise NotImplementedError
 
     def read_exactly(self, num_bytes: int) -> bytes:
@@ -44,20 +51,22 @@ class SocketStreamReader:
 
     def readline(self) -> bytes:
         """Read an entire line from the socket stream.
-        
+
         Returns:
         bytearray with line.
+
         """
         return self.read_until(b"\n")
 
     def read_until(self, separator: bytes = b"\n") -> bytes:
-        """Read from the socket until the escape sequence was found
-        
-        Arguments:
-        separator -- the delimiter to look out for
-        
+        """Read from the socket until the escape sequence is found.
+
+        Args:
+            separator: The delimiter to look for.
+
         Returns:
-        bytearray with the found content.
+            The bytearray containing the found content.
+
         """
         if len(separator) != 1:
             raise ValueError("Only separators of length 1 are supported.")
@@ -66,7 +75,8 @@ class SocketStreamReader:
         start = 0
         buf = bytearray(len(self._recv_buffer))
         bytes_read = self._recv_into(memoryview(buf))
-        assert bytes_read == len(buf)
+        if bytes_read != len(buf):
+            raise ValueError("Not enough bytes to read.")
 
         while True:
             idx = buf.find(separator, start)
@@ -79,12 +89,12 @@ class SocketStreamReader:
 
         result = bytes(buf[: idx + 1])
         self._recv_buffer = b"".join(
-            (memoryview(buf)[(idx + 1):], self._recv_buffer)
+            (memoryview(buf)[(idx + 1) :], self._recv_buffer),
         )
         return result
 
     def _recv_into(self, view: memoryview) -> int:
-        """This method performs a zero copy read request."""
+        """Zero copy read request."""
         bytes_read = min(len(view), len(self._recv_buffer))
         view[:bytes_read] = self._recv_buffer[:bytes_read]
         self._recv_buffer = self._recv_buffer[bytes_read:]
@@ -98,16 +108,20 @@ class SocketStreamReader:
 
 
 class Connection:
-    """This class handles a remote CLI connection."""
+    """Class handles a remote CLI connection."""
 
-    def __init__(self, client: socket, address: str, connection_map: dict, show: BoardConfiguration,
-                 networkmgr: "NetworkManager"):
-        """This constructor takes over the connection.
-        
-        Arguments:
-        client -- the connection socket fd.
-        address -- the remote address of the connected client.
-        connection_map -- the map handling all active connections.
+    def __init__(
+        self, client: socket, address: str, connection_map: dict, show: BoardConfiguration, networkmgr: NetworkManager
+    ) -> None:
+        """CLI connection.
+
+        Args:
+            client: The connection socket fd.
+            address: The remote address of the connected client.
+            connection_map: The map handling all active connections.
+            show: The show model.
+            networkmgr: The NetworkManager instance.
+
         """
         self.context = CLIContext(show, networkmgr, exit_available=True)
         self._client = client
@@ -116,47 +130,61 @@ class Connection:
         self._client_thread = Thread(target=self.run)
         self._client_thread.start()
 
-    def run(self):
-        """This method will be called by the client thread in order to handle the client."""
+    def run(self) -> None:
+        """Handle the client."""
         try:
+            logger.info("Got incoming remote CLI connection from %s.", self._remote_address)
             reader = SocketStreamReader(self._client)
             while not self.context.exit_called:
-                self._client.send("> ".encode("utf-8"))
+                self._client.send(b"> ")
                 line = reader.readline().decode("utf-8").replace("\r", "").replace("\n", "")
                 if line == "@echo off":
                     reader.echo = False
                 else:
                     self.context.exec_command(line)
-                self._client.send(self.context.fetch_print_buffer().encode("utf-8"))
-        except socket_error:
+                self._client.send(self.context.fetch_print_buffer().encode())
+        except OSError:
             pass
         except UnicodeDecodeError as e:
             self._client.send("Unable to decode command. Exiting.")
             self._client.close()
-            logger.error("Failed to decode CLI command.", e)
+            logger.exception("Failed to decode CLI command. %s", e)
         finally:
             self._client.close()
         self._connection_map.pop(self._remote_address)
 
-    def stop(self):
-        """Forcefully disconnect and stop the client.
-        
-        This operation may block until the operating system released the socket.
+    def stop(self) -> None:
+        """Disconnect and stop the client forcefully.
+
+        This operation may block until the operating system releases the socket.
         """
         self.context.exit_called = True
         self._client.close()
         self._client_thread.join()
 
+    @property
+    def remote_address(self) -> str:
+        """Remote address."""
+        return self._remote_address
+
 
 class RemoteCLIServer:
-    """This class handles the control port. Only IPv6 connections are supported."""
+    """Class handles the control port.
 
-    def __init__(self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::", port: int = 2929):
-        """Construct the handler and opens a port.
-        
-        Arguments:
-        interface -- The interface to bind to. Defaults to all IPv6 interfaces.
-        port -- The port to listen on. Defaults to TCP/2929
+    Only IPv6 connections are supported.
+    """
+
+    def __init__(
+        self, show: BoardConfiguration, netmgr: NetworkManager, interface: str = "::", port: int = 2929
+    ) -> None:
+        """Construct the handler and open a port.
+
+        Args:
+            show: The show model.
+            netmgr: The network manager object.
+            interface: The interface to bind to. Defaults to all IPv6 interfaces.
+            port: The port to listen on. Defaults to TCP/2929.
+
         """
         self._server_thread = Thread(target=self.run)
         self._bind_interface = interface
@@ -167,36 +195,42 @@ class RemoteCLIServer:
         self._show = show
         self._network_manager = netmgr
         self._server_thread.start()
+        logger.warning("Opened up CLI interface on [%s]:%s", interface, port)
 
-    def run(self):
-        """This method will be run by the server thread in order to process incoming clients."""
+    def run(self) -> None:
+        """Process incoming clients."""
         with socket(AF_INET6, SOCK_STREAM) as s:
             self._server_socket = s
             s.bind((self._bind_interface, self._bind_port))
+            s.settimeout(2)
             s.listen()
             while not self._stopped:
                 try:
                     client, remote_address = s.accept()
                     remote_address = str(remote_address)
-                    self._connected_clients[remote_address] = Connection(client, remote_address,
-                                                                         self._connected_clients,
-                                                                         self._show, self._network_manager)
-                except socket_error:
+                    self._connected_clients[remote_address] = Connection(
+                        client, remote_address, self._connected_clients, self._show, self._network_manager
+                    )
+                except TimeoutError:
                     pass
-            logger.info("Exiting CLI server thread")
+                except OSError as e:
+                    if not self._stopped:
+                        logger.exception("CLI socket error: %s", e)
+            s.close()
+        logger.info("Exiting CLI server thread")
 
-    def stop(self):
-        """This method stops the server and disconnects all clients.
-        
-        It may block until the operating system released all resources.
+    def stop(self) -> None:
+        """Stop the server and disconnects all clients.
+
+        It may block until the operating system releases all resources.
         """
+        logger.info("Stopping CLI server")
         self._stopped = True
         self._server_socket.close()
-        to_be_stopped = []
-        for k_addr in self._connected_clients.keys():
-            to_be_stopped.append(self._connected_clients[k_addr])
+        to_be_stopped: list[Connection] = [self._connected_clients[k_addr] for k_addr in self._connected_clients]
         for c in to_be_stopped:
             c.stop()
+            logger.info("CLI clients from %s disconnected.", c.remote_address)
         try:
             self._server_thread.join()
         except KeyboardInterrupt:

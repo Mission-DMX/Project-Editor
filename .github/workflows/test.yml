@@ -3,21 +3,34 @@ name: Testing
 on: [ pull_request ]
 
 jobs:
-  test:
+  test_on_pr:
+    if: github.base_ref != 'main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup PDM
-        uses: pdm-project/setup-pdm@v4
-        with:
-          cache: true
-          python-version-file: pyproject.toml
+      - name: Test with ruff
+        uses: astral-sh/ruff-action@v3
 
-      - name: Install dependencies
-        run: pdm install --dev
-
-      - name: Check Import Order with isort
-        uses: isort/isort-action@v1
-      - name: Analysing the code with pylint
+  test_on_main_pr:
+    if: github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test with ruff
+        uses: astral-sh/ruff-action@v3
+#        with:
+#          args: 'check --extend-select ERA'
+      - name: Get changed Python files
+        id: changes
         run: |
-          pdm run pylint --fail-under=8 $(git ls-files '*.py')
+          git fetch origin ${{ github.base_ref }}
+          echo "files=$(git diff --name-only origin/${{ github.base_ref }} -- '*.py' | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+
+      - name: Run Ruff on changed files (only D rules)
+        run: |
+          if [ -n "${{ steps.changes.outputs.files }}" ]; then
+            ruff --version
+            ruff check --select D ${{ steps.changes.outputs.files }} --ignore D203 --ignore D213 --ignore D401 --ignore D415
+          else
+            echo "No Python files changed."
+          fi

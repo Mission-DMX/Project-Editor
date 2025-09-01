@@ -4,6 +4,7 @@ added_files = [
          ( 'src/resources/' , 'resources'),
          ( 'src/resources/autotrack_models', 'resources/autotrack_models' ),
          ( 'src/resources/data', 'resources/data' ),
+         ( 'src/resources/fonts', 'resources/fonts' ),
          ( 'src/resources/icons', 'resources/icons' ),
          ( 'src/configs','configs')
          ]

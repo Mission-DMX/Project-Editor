@@ -1,22 +1,37 @@
-# coding=utf-8
-import logging
+# ruff: noqa
 import os.path
+from logging import getLogger
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QPushButton, QRadioButton, QScrollArea, QVBoxLayout, QWidget,
-                               QWizard)
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QCheckBox,
+    QComboBox,
+    QFormLayout,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+    QWizard,
+)
 
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Scene
+from model.channel import Channel
 from model.filter import DataType, Filter, FilterTypeEnumeration
+from model.filter_data.cues.cue import Cue
+from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.ofl.fixture import ColorSupport, UsedFixture
-from model.patching_channel import PatchingChannel
+from model.patching.fixture_channel import FixtureChannelType
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue import Cue
-from view.show_mode.editor.node_editor_widgets.cue_editor.model.cue_filter_model import CueFilterModel
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.show_mode.editor.show_browser.fixture_to_filter import place_fixture_filters_in_scene
 from view.utility_widgets.button_container import ButtonContainer
@@ -25,13 +40,14 @@ from view.utility_widgets.wizzards._composable_wizard_page import ComposableWiza
 
 _folder_empty_icon = QIcon(resource_path(os.path.join("resources", "icons", "folder.svg")))
 _folder_full_icon = QIcon(resource_path(os.path.join("resources", "icons", "folder-full.svg")))
-logger = logging.getLogger(__file__)
+logger = getLogger(__file__)
 
 
 def _d_assign(d, v, k):
     d[v] = k
 
 
+# TODO komplett überarbeiten
 class TheaterSceneWizard(QWizard):
     def __init__(self, parent: QWidget, show: BoardConfiguration):
         super().__init__(parent)
@@ -40,13 +56,15 @@ class TheaterSceneWizard(QWizard):
         self.setWindowTitle("Theatrical Scene Wizard")
         self._introduction_page = ComposableWizardPage()
         self._introduction_page.setTitle("Introduction")
-        self._introduction_label = QLabel("This wizard guides you through the automatic creation of a scene used for "
-                                          "theater productions. You can select a set of fixtures that should be used "
-                                          "and it will automatically add them as well as inter connect it with a Cue "
-                                          "filter. Last but not least, you may choose a set of properties that you "
-                                          "would like to control within that scene and this wizard will automatically "
-                                          "create the required channels and connections for you.<br />Click next to "
-                                          "continue.")
+        self._introduction_label = QLabel(
+            "This wizard guides you through the automatic creation of a scene used for "
+            "theater productions. You can select a set of fixtures that should be used "
+            "and it will automatically add them as well as inter connect it with a Cue "
+            "filter. Last but not least, you may choose a set of properties that you "
+            "would like to control within that scene and this wizard will automatically "
+            "create the required channels and connections for you.<br />Click next to "
+            "continue."
+        )
         self._introduction_page.setFinalPage(False)
         self._introduction_label.setWordWrap(True)
         layout = QVBoxLayout()
@@ -74,9 +92,11 @@ class TheaterSceneWizard(QWizard):
 
         self._fixture_page = ComposableWizardPage()
         self._fixture_page.setTitle("Fixture Selection")
-        self._fixture_page.setSubTitle("Please select the fixtures you'd like to use in your new scene. All other "
-                                       "fixtures will be ignored. The selection of individual properties of the "
-                                       "fixtures is done at a later stage.")
+        self._fixture_page.setSubTitle(
+            "Please select the fixtures you'd like to use in your new scene. All other "
+            "fixtures will be ignored. The selection of individual properties of the "
+            "fixtures is done at a later stage."
+        )
         self._fixture_page.setFinalPage(False)
         layout = QVBoxLayout()
         self._fixture_selection_browser = UniverseTreeBrowserWidget(show, True)
@@ -85,8 +105,10 @@ class TheaterSceneWizard(QWizard):
 
         self._channel_selection_page = ComposableWizardPage(page_activation_function=self._init_channel_selection_page)
         self._channel_selection_page.setTitle("Channel Selection")
-        self._channel_selection_page.setSubTitle("Please select which features of the selected fixtures you'd like to "
-                                                 "use and assign them to property channels.")
+        self._channel_selection_page.setSubTitle(
+            "Please select which features of the selected fixtures you'd like to "
+            "use and assign them to property channels."
+        )
         self._channel_selection_page.setFinalPage(False)
         layout = QHBoxLayout()
         self._fixture_feature_list = QListWidget(self._channel_selection_page)
@@ -116,11 +138,14 @@ class TheaterSceneWizard(QWizard):
         layout.addWidget(self._feature_grouping_list)
         self._channel_selection_page.setLayout(layout)
 
-        self._channel_setup_page = ComposableWizardPage(page_activation_function=self._initialize_channel_setup_page,
-                                                        check_completeness_function=self._finish_channel_setup_page)
+        self._channel_setup_page = ComposableWizardPage(
+            page_activation_function=self._initialize_channel_setup_page,
+            check_completeness_function=self._finish_channel_setup_page,
+        )
         self._channel_setup_page.setTitle("Channel Setup")
-        self._channel_setup_page.setSubTitle("Please assign the names of previous channels and select their "
-                                             "control method.")
+        self._channel_setup_page.setSubTitle(
+            "Please assign the names of previous channels and select their control method."
+        )
         self._channel_setup_page.setFinalPage(False)
         self._channel_setup_widgets: list[tuple[QLineEdit, QButtonGroup, QRadioButton, QRadioButton]] = []
         layout = QHBoxLayout()
@@ -150,8 +175,9 @@ class TheaterSceneWizard(QWizard):
         layout.addWidget(self._cues_page_cue_list_widget)
         self._cues_page.setLayout(layout)
 
-        self._preview_page = ComposableWizardPage(page_activation_function=self._initialize_preview_page,
-                                                  check_completeness_function=self._commit_changes)
+        self._preview_page = ComposableWizardPage(
+            page_activation_function=self._initialize_preview_page, check_completeness_function=self._commit_changes
+        )
         self._preview_page.setTitle("Preview")
         self._preview_page.setSubTitle("Please review and confirm the changes that are about to be made.")
         self._preview_page.setFinalPage(True)
@@ -175,41 +201,55 @@ class TheaterSceneWizard(QWizard):
         selected_fixtures = self._fixture_selection_browser.get_selected_fixtures()
         for f in selected_fixtures:
             # Map color channels
-            fcs = f.color_support()
+            fcs = f.color_support
             for supported_mode, name in [
                 (ColorSupport.HAS_RGB_SUPPORT, "Color"),
                 (ColorSupport.HAS_AMBER_SEGMENT, "Amber"),
                 (ColorSupport.HAS_WHITE_SEGMENT, "White"),
-                (ColorSupport.HAS_UV_SEGMENT, "UV")
+                (ColorSupport.HAS_UV_SEGMENT, "UV"),
             ]:
                 if fcs & supported_mode > 0:
                     item = AnnotatedListWidgetItem(self._fixture_feature_list)
                     item.annotated_data = (f, supported_mode)
-                    item.setText(f"({f.parent_universe}:{f.channels[0].address}) {f.name}: {name}")
+                    item.setText(f"({f.parent_universe}:{f.start_index}) {f.name}: {name}")
                     self._fixture_feature_list.addItem(item)
 
             # Map position Channels
-            for type in [("Pan", f.pan_channels), ("Tilt", f.tilt_channels),
-                         ("Animation Speed", f.animation_speed_channels)]:
-                mode = type[0]
-                for channel in type[1]:
+            for type_ in [
+                ("Pan", f.get_segment_in_universe_by_type(FixtureChannelType.PAN)),
+                ("Tilt", f.get_segment_in_universe_by_type(FixtureChannelType.TILT)),  # TODO public and not np
+                ("Animation Speed", f.get_segment_in_universe_by_type(FixtureChannelType.SPEED)),
+            ]:
+                mode = type_[0]
+                for _ in type_[1]:
                     item = AnnotatedListWidgetItem(self._fixture_feature_list)
                     item.annotated_data = (f, mode)
-                    item.setText(f"({f.parent_universe}:{f.channels[0].address}) {f.name}: {mode}")
+                    item.setText(f"({f.parent_universe}:{f.start_index}) {f.name}: {mode}")
                     self._fixture_feature_list.addItem(item)
 
-            remaining_channels = []
-            already_added_channels = (f.uv_segments + f.white_segments + f.green_segments + f.blue_segments +
-                                      f.red_segments + f.amber_segments + f.pan_channels + f.tilt_channels +
-                                      f.animation_speed_channels)
-            for fc in f.channels:
+            remaining_channels: list[int] = []
+
+            already_added_channels = (
+                f.get_segment_in_universe_by_type(FixtureChannelType.UV)
+                + f.get_segment_in_universe_by_type(FixtureChannelType.WHITE)
+                + f.get_segment_in_universe_by_type(FixtureChannelType.GREEN)
+                + f.get_segment_in_universe_by_type(FixtureChannelType.BLUE)
+                + f.get_segment_in_universe_by_type(FixtureChannelType.RED)
+                + f.get_segment_in_universe_by_type(FixtureChannelType.AMBER)
+                + f.get_segment_in_universe_by_type(FixtureChannelType.PAN)
+                + f.get_segment_in_universe_by_type(FixtureChannelType.TILT)
+                + f.get_segment_in_universe_by_type(FixtureChannelType.SPEED)
+            )  # TODO public and not np
+            for fc in f._fixture_channels:  # TODO public and not np
                 if fc not in already_added_channels:
                     remaining_channels.append(fc)
+
             for c in remaining_channels:
                 item = AnnotatedListWidgetItem(self._fixture_feature_list)
-                item.annotated_data = (f, c)
+                # item.annotated_data = (f, c) #TODO für was
                 item.setText(
-                    f"({f.parent_universe}:{f.channels[0].address}) {f.name}: [undef] {c.address} {c.fixture_channel}/")
+                    f"({f.parent_universe}:{f.start_index}) {f.name}: [undef] {c} {f.get_fixture_channel(c).name}/"
+                )
                 self._fixture_feature_list.addItem(item)
 
     def add_group_to_feature_group_list_pressed(self):
@@ -241,26 +281,34 @@ class TheaterSceneWizard(QWizard):
             selected_feature = selected_feature[0]
         else:
             return
-        if (not isinstance(selected_feature, AnnotatedListWidgetItem) or
-                (not isinstance(selected_group, AnnotatedListWidgetItem) and selected_group is not None)):
+        if not isinstance(selected_feature, AnnotatedListWidgetItem) or (
+            not isinstance(selected_group, AnnotatedListWidgetItem) and selected_group is not None
+        ):
             raise ValueError("Expected Annotated List Widget Item")
         if selected_group:
             first_item_in_group = selected_group.toolTip() == ""
-            selected_group.setToolTip((", " if not first_item_in_group else "") + selected_group.toolTip() +
-                                      selected_feature.text())
+            selected_group.setToolTip(
+                (", " if not first_item_in_group else "") + selected_group.toolTip() + selected_feature.text()
+            )
             if first_item_in_group:
                 selected_group.setIcon(_folder_full_icon)
             selected_group.annotated_data["fixtures"].append(selected_feature.annotated_data)
-            selected_group.setToolTip("Content: " + ",".join(
-                [f"{i[0].parent_universe}/{str(i[0].first_channel)}: {i[0].color_support()}" for i in
-                 selected_group.annotated_data["fixtures"]]))
+            selected_group.setToolTip(
+                "Content: "
+                + ",".join(
+                    [
+                        f"{i[0].parent_universe}/{str(i[0].start_index)}: {i[0].color_support}"
+                        for i in selected_group.annotated_data["fixtures"]
+                    ]
+                )
+            )
         else:
             new_group_item = AnnotatedListWidgetItem(self._feature_grouping_list)
             new_group_item.setText(selected_feature.text())
             new_group_item.setToolTip(selected_feature.text())
             new_group_item.annotated_data = {
                 "name": selected_feature.text(),
-                "fixtures": [selected_feature.annotated_data]
+                "fixtures": [selected_feature.annotated_data],
             }
             self._feature_grouping_list.addItem(new_group_item)
             self._channels.append(new_group_item.annotated_data)
@@ -296,9 +344,12 @@ class TheaterSceneWizard(QWizard):
             button_container.add_button(radio_button_desk)
             layout.addWidget(button_container, i, 1)
             data_type_combo_box = QComboBox(page)
-            data_type_combo_box.addItems([dt.format_for_filters() for dt in [
-                DataType.DT_COLOR, DataType.DT_8_BIT, DataType.DT_16_BIT, DataType.DT_DOUBLE
-            ]])
+            data_type_combo_box.addItems(
+                [
+                    dt.format_for_filters()
+                    for dt in [DataType.DT_COLOR, DataType.DT_8_BIT, DataType.DT_16_BIT, DataType.DT_DOUBLE]
+                ]
+            )
             item_index = 0
             match c.get("data-type"):
                 case DataType.DT_DOUBLE:
@@ -311,7 +362,8 @@ class TheaterSceneWizard(QWizard):
                     item_index = 0
             data_type_combo_box.setCurrentIndex(item_index)
             data_type_combo_box.currentTextChanged.connect(
-                lambda selected_mode, d=c: _d_assign(d, "data-type", DataType.from_filter_str(selected_mode)))
+                lambda selected_mode, d=c: _d_assign(d, "data-type", DataType.from_filter_str(selected_mode))
+            )
             layout.addWidget(data_type_combo_box, i, 2)
             self._channel_setup_widgets.append((text_edit, button_container, radio_button_cue, radio_button_desk))
 
@@ -335,12 +387,18 @@ class TheaterSceneWizard(QWizard):
     def _initialize_preview_page(self, page: ComposableWizardPage):
         text = "Channels:<br /><ul>"
         for c in self._channels:
-            text += ("<li>" + ("[DESK]" if c.get('desk-controlled') == "true" else "[CUE]") + c.get("name") +
-                     ":" + ", ".join([f[0].name for f in c.get("fixtures")]) + "</li>")
+            text += (
+                "<li>"
+                + ("[DESK]" if c.get("desk-controlled") == "true" else "[CUE]")
+                + c.get("name")
+                + ":"
+                + ", ".join([f[0].name for f in c.get("fixtures")])
+                + "</li>"
+            )
         text += "</ul><br>Cues:<br /><ol>"
         for item_c in range(self._cues_page_cue_list_widget.count()):
             item = self._cues_page_cue_list_widget.item(item_c)
-            text += '<li>' + item.text() + "</li>"
+            text += "<li>" + item.text() + "</li>"
         text += "</ol>"
         self._preview_text_area.setText(text)
 
@@ -360,9 +418,7 @@ class TheaterSceneWizard(QWizard):
                 if isinstance(f[1], str):
                     if f[1] == "Pan" or f[1] == "Tilt":
                         position_found = True
-                if isinstance(f[1], PatchingChannel):
-                    # Unknown Feature
-                    pass
+
             if color_found and not position_found:
                 selected_data_type = DataType.DT_COLOR
             elif position_found:
@@ -390,8 +446,8 @@ class TheaterSceneWizard(QWizard):
         pn.close()
         return True
 
-    def _link_output_filters(self, bankset_link_map, cue_link_map: dict[PatchingChannel | str, str], output_map, scene):
-        for c in self._channels:
+    def _link_output_filters(self, bankset_link_map, cue_link_map: dict[str, str], output_map, scene):
+        for c in self._channels:  # TODO  channels have no fixtures
             for fd in c["fixtures"]:
                 fixture = fd[0]
                 if not isinstance(fixture, UsedFixture):
@@ -404,32 +460,31 @@ class TheaterSceneWizard(QWizard):
                         continue
                     output_filter_to_connect: str = output_channel_id[0]
                     filter_channel_to_connect: str = output_channel_id[1]
-                    selected_source_map = bankset_link_map if c.get('desk-controlled') == "true" else cue_link_map
+                    selected_source_map = bankset_link_map if c.get("desk-controlled") == "true" else cue_link_map
                     # TODO this makes only sense in case of 8bit channels. We need to deal with color conversion
                     #  filters as well
                     selected_channel = selected_source_map.get(patching_channel)
                     if selected_channel:
-                        scene.get_filter_by_id(output_filter_to_connect).channel_links[
-                            filter_channel_to_connect] = selected_channel
+                        scene.get_filter_by_id(output_filter_to_connect).channel_links[filter_channel_to_connect] = (
+                            selected_channel
+                        )
 
-    def _generate_cue_filter(self, scene: Scene) -> dict[PatchingChannel | str, str]:
-        time_filter = Filter(filter_id="Time_Input", filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT,
-                             scene=scene, pos=(-10, 0))
+    def _generate_cue_filter(self, scene: Scene) -> dict[str, str]:
+        time_filter = Filter(
+            filter_id="Time_Input", filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, scene=scene, pos=(-10, 0)
+        )
         scene.append_filter(time_filter, filter_page_index=0)
 
         cue_filter = construct_virtual_filter_instance(
-            scene=scene,
-            filter_type=FilterTypeEnumeration.VFILTER_CUES,
-            filter_id="SceneCueFilter",
-            pos=(0, 0)
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_CUES, filter_id="SceneCueFilter", pos=(0, 0)
         )
-        cue_filter.channel_links['time'] = time_filter.filter_id + ":value"
+        cue_filter.channel_links["time"] = time_filter.filter_id + ":value"
         cue_model = CueFilterModel()
-        link_map: dict[PatchingChannel | str, str] = {}
+        link_map: dict[str, str] = {}
         for c in self._channels:
             if c.get("desk-controlled") != "true":
                 associated_channel = c.get("name").replace(" ", "_").replace(":", "")
-                fixture_channels: list[PatchingChannel | str] = []
+                fixture_channels: list[str] = []
                 associated_fixtures = c.get("fixtures") or []
                 match c.get("data-type"):
                     case DataType.DT_8_BIT:
@@ -472,10 +527,10 @@ class TheaterSceneWizard(QWizard):
                 if f not in placed_fixtures:
                     placed_fixtures.append(f)
                     if not place_fixture_filters_in_scene(f, fp, output_map=output_map):
-                        logger.error("Failed to place output filters for fixture %s in scene with id %s.", f,
-                                     scene.scene_id
-                                     )
+                        logger.error(
+                            "Failed to place output filters for fixture %s in scene with id %s.", f, scene.scene_id
+                        )
         return output_map
 
-    def _generate_bank_set(self, scene: Scene) -> dict[PatchingChannel, str]:
+    def _generate_bank_set(self, scene: Scene) -> dict[Channel, str]:
         return {}  # TODO
