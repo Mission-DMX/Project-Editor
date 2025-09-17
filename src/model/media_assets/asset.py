@@ -1,4 +1,7 @@
+import os
 from abc import ABC, abstractmethod
+from logging import getLogger
+from uuid import uuid4
 
 from PySide6.QtGui import QPixmap
 
@@ -6,20 +9,29 @@ from model.media_assets.factory_hint import AssetFactoryObjectHint
 from model.media_assets.media_type import MediaType
 from model.media_assets.registry import register
 
+logger = getLogger(__name__)
+
+GLOBAL_ASSET_FOLDER = "/usr/local/share/missionDMX"
+try:
+    if not os.path.exists(GLOBAL_ASSET_FOLDER):
+        os.mkdir(GLOBAL_ASSET_FOLDER)
+except OSError as e:
+    logger.error("Failed to create global asset folder: %s", str(e))
+
 
 class MediaAsset(ABC):
     # TODO write doc
 
-    def __init__(self, uuid: str) -> None:
+    def __init__(self, uuid: str = "") -> None:
         """Construct a base MediaAsset.
 
         This method also automatically registers the asset.
 
         Args:
-            uuid (str): The UUID of the asset.
+            uuid (str): The UUID of the asset. If an empty string is provided, a random one will be generated.
         """
-        self._id = uuid
-        register(self, uuid)
+        self._id = uuid if len(uuid) > 0 else str(uuid4())
+        register(self, self._id)
 
     @abstractmethod
     def get_type(self) -> MediaType:
