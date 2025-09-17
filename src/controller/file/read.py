@@ -1,5 +1,5 @@
 """Handle reading a xml document."""
-
+import json
 import os
 import xml.etree.ElementTree as ET
 from logging import getLogger
@@ -17,6 +17,8 @@ from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColum
 from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter
 from model.macro import Macro, trigger_factory
+from model.media_assets.asset_loading_factory import load_asset
+from model.media_assets.factory_hint import AssetFactoryObjectHint
 from model.media_assets.registry import clear as clear_media_registry
 from model.ofl.fixture import load_fixture, make_used_fixture
 from model.scene import FilterPage
@@ -159,6 +161,8 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         board_configuration.broadcaster.request_main_brightness_fader_update.emit(fader_value)
     except ValueError as e:
         logger.exception("Unable to parse main brightness setting: %s", e)
+    if board_configuration.ui_hints.get("media_assets"):
+        load_all_media_assets(board_configuration.ui_hints.get("media_assets"), file_name)
 
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name
@@ -723,3 +727,14 @@ def _parse_and_add_macro(elm: ET.Element, board_configuration: BoardConfiguratio
             case _:
                 logger.error("Unexpected child in macro definition: %s.", child.tag)
     board_configuration.add_macro(m)
+
+def load_all_media_assets(media_asset_defintion: str, show_file_path: str) -> None:
+    """Load media assets from provided UI hint."""
+    assets = json.loads(media_asset_defintion)
+    for asset in assets:
+        load_asset(
+            asset.get("uuid", ""),
+            AssetFactoryObjectHint(asset.get("type_hint", "")),
+            asset.get("data", ""),
+            show_file_path
+        )
