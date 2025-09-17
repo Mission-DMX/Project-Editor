@@ -42,7 +42,7 @@ def get_asset_by_uuid(uuid: str) -> "MediaAsset | None":
             return lib[uuid]
     return None
 
-def get_all_assets_of_type(asset_type: MediaType) -> list[MediaAsset]:
+def get_all_assets_of_type(asset_type: MediaType) -> list["MediaAsset"]:
     """Get all media assets of type asset_type."""
     if asset_type not in _asset_library:
         return []
