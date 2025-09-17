@@ -17,6 +17,7 @@ from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColum
 from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter
 from model.macro import Macro, trigger_factory
+from model.media_assets.registry import clear as clear_media_registry
 from model.ofl.fixture import load_fixture, make_used_fixture
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
@@ -97,6 +98,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         pn.close()
         return False
 
+    clear_media_registry()
     board_configuration.broadcaster.clear_board_configuration.emit()
     pn.current_step_number += 1
     tree = parse(file_name)

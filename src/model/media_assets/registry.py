@@ -47,3 +47,7 @@ def get_all_assets_of_type(asset_type: MediaType) -> list["MediaAsset"]:
     if asset_type not in _asset_library:
         return []
     return list(_asset_library[asset_type].values())
+
+def clear() -> None:
+    """Clear all media assets."""
+    _asset_library.clear()
