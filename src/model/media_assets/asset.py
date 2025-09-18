@@ -1,17 +1,20 @@
 """Module contains abstract asset class."""
 
+from __future__ import annotations
+
 import os
 from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from model.media_assets.factory_hint import AssetFactoryObjectHint
-from model.media_assets.media_type import MediaType
 from model.media_assets.registry import register
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QPixmap
+
+    from model.media_assets.factory_hint import AssetFactoryObjectHint
+    from model.media_assets.media_type import MediaType
 
 logger = getLogger(__name__)
 

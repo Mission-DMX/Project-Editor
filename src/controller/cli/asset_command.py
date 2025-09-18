@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, override
+
 from controller.cli.command import Command
 from model.media_assets.asset_loading_factory import load_asset
 
-from typing import TYPE_CHECKING, override
-
 if TYPE_CHECKING:
-    from argparse import Namespace, ArgumentParser
+    from argparse import ArgumentParser, Namespace
 
     from controller.cli.cli_context import CLIContext
 
