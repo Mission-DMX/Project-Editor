@@ -41,6 +41,7 @@ class HelpCommand(Command):
                 self.context.print("\tbank_sets -- Display the available bank sets.")
                 self.context.print("\tmacros -- Display the available macros.")
                 self.context.print("\tvariables -- Display all current variables.")
+                self.context.print("\t<all|image|video|audio|3d|text>-assets -- Display all assets of type.")
             case "print":
                 self.context.print("Print all appended arguments")
             case "set":
