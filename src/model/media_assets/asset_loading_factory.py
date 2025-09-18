@@ -1,4 +1,4 @@
-"""Module contains methods to construct assets based on their descriptions"""
+"""Module contains methods to construct assets based on their descriptions."""
 
 from __future__ import annotations
 

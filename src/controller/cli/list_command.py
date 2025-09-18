@@ -95,7 +95,7 @@ class ListCommand(Command):
                 return False
 
     def _list_assets_by_type(self, type_filter: list[MediaType] | None = None) -> None:
-        """List assets based on the provided filter"""
+        """List assets based on the provided filter."""
         if type_filter is None:
             type_filter = [MediaType.IMAGE, MediaType.VIDEO, MediaType.AUDIO, MediaType.MODEL_3D, MediaType.TEXT]
         self.context.print(" Type  | UUID                                | class                      ")

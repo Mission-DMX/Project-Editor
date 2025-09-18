@@ -70,8 +70,9 @@ class MediaAsset(ABC):
         The pixmap has a size 64x64 pixels.
 
         Returns:
-            QPixmap: The thumbnail of this asset."""
+            QPixmap: The thumbnail of this asset.
 
+        """
         raise NotImplementedError
 
     @abstractmethod
