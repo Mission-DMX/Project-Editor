@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from model.media_assets.media_type import MediaType
-
 if TYPE_CHECKING:
     from model.media_assets.asset import MediaAsset
+    from model.media_assets.media_type import MediaType
 
 _asset_library: dict[MediaType, dict[str, MediaAsset]] = {}
 

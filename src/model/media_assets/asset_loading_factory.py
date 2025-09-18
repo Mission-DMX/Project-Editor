@@ -1,4 +1,7 @@
 """Module contains methods to construct assets based on their descriptions"""
+
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from model.media_assets.factory_hint import AssetFactoryObjectHint
@@ -8,7 +11,7 @@ if TYPE_CHECKING:
     from model.media_assets.asset import MediaAsset
 
 def load_asset(uuid: str, type_hint: AssetFactoryObjectHint, serialized_data: str, show_file_path: str = "")\
-        -> "MediaAsset | None":
+        -> MediaAsset | None:
     """Load a media asset based on type and provided data.
 
     Args:
