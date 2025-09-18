@@ -1,3 +1,4 @@
+"""Saving of UI hints and asset gathering."""
 import json
 import xml.etree.ElementTree as ET
 

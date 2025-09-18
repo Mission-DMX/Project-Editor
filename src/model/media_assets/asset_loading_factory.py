@@ -1,3 +1,4 @@
+"""Module contains methods to construct assets based on their descriptions"""
 from typing import TYPE_CHECKING
 
 from model.media_assets.factory_hint import AssetFactoryObjectHint
@@ -18,6 +19,7 @@ def load_asset(uuid: str, type_hint: AssetFactoryObjectHint, serialized_data: st
 
     Returns:
         MediaAsset | None: The media asset if it was loadable.
+
     """
     match type_hint:
         case AssetFactoryObjectHint.IMAGE_EXTERNAL_FILE:

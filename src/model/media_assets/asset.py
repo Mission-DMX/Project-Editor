@@ -1,3 +1,5 @@
+"""Module contains abstract asset class."""
+
 import os
 from abc import ABC, abstractmethod
 from logging import getLogger
@@ -20,7 +22,11 @@ except OSError as e:
 
 
 class MediaAsset(ABC):
-    # TODO write doc
+    """Abstract Asset class.
+
+    This class takes care of common functionality, such as, registration of asset being created, properties for ID and
+    type as well as methods for show file serialization requirements.
+    """
 
     def __init__(self, uuid: str = "") -> None:
         """Construct a base MediaAsset.
@@ -29,13 +35,14 @@ class MediaAsset(ABC):
 
         Args:
             uuid (str): The UUID of the asset. If an empty string is provided, a random one will be generated.
+
         """
         self._id = uuid if len(uuid) > 0 else str(uuid4())
         register(self, self._id)
 
     @abstractmethod
     def get_type(self) -> MediaType:
-        """This method must be implemented to return the media asset type.
+        """Method must be implemented to return the media asset type.
 
         Furthermore, this method must be working prior to the constructor being finished.
         """
@@ -47,6 +54,7 @@ class MediaAsset(ABC):
 
         Returns:
             str: The UUID of this asset.
+
         """
         return self._id
 
@@ -58,14 +66,15 @@ class MediaAsset(ABC):
 
         Returns:
             QPixmap: The thumbnail of this asset."""
+
         raise NotImplementedError
 
     @abstractmethod
     def serialize_settings(self) -> str:
-        """Serialize the asset properties into a string"""
+        """Serialize the asset properties into a string."""
         raise NotImplementedError
 
     @abstractmethod
     def get_factory_object_hint(self) -> AssetFactoryObjectHint:
-        """This method needs to return the type that the asset factory should load upon show file loading."""
+        """Method needs to return the type that the asset factory should load upon show file loading."""
         raise NotImplementedError

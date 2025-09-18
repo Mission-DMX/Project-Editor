@@ -1,8 +1,10 @@
+"""Module contains MediaType enum."""
+
 from enum import Enum
 
 
 class MediaType(Enum):
-    """This enum provides the distinguished media types."""
+    """Enum provides the distinguished media types."""
 
     TEXT = 0
     IMAGE = 1

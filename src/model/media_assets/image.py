@@ -1,3 +1,5 @@
+"""Module contains image asset implementations."""
+
 import os
 from abc import ABC, abstractmethod
 from logging import getLogger
@@ -18,6 +20,7 @@ class AbstractImageAsset(MediaAsset, ABC):
     """An abstract Image."""
 
     def __init__(self, uuid: str) -> None:
+        """Constructor only calls super constructor."""
         super().__init__(uuid)
 
     @override
@@ -26,10 +29,11 @@ class AbstractImageAsset(MediaAsset, ABC):
 
     @abstractmethod
     def get_image_for_ui(self) -> QImage:
-        """This method must return a QImage to be used inside the editor.
+        """Method must return a QImage to be used inside the editor.
 
         Returns:
             QImage: The image to be used by the UI.
+
         """
         raise NotImplementedError
 
@@ -43,6 +47,7 @@ class LocalImage(AbstractImageAsset):
             path (str): The path to the local file.
             uuid (str): The UUID of the asset.
             show_file_path (str): The path to the current show file. Leave as empty string if none is loaded.
+
         """
         super().__init__(uuid)
         self._path = path

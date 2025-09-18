@@ -1,4 +1,4 @@
-"""This file contains the media registry."""
+"""File contains the media registry."""
 
 from typing import TYPE_CHECKING
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 _asset_library: dict[MediaType, dict[str, "MediaAsset"]] = {}
 
 def register(asset: "MediaAsset", uuid: str) -> bool:
-    """This method registers a media asset.
+    """Method registers a media asset.
 
     Args:
         asset (MediaAsset): the media asset to register
@@ -18,6 +18,7 @@ def register(asset: "MediaAsset", uuid: str) -> bool:
 
     Returns:
         bool: True if registration was successful, False if an Asset with that UUID was already registered.
+
     """
     if get_asset_by_uuid(uuid) is not None:
         return False
@@ -36,6 +37,7 @@ def get_asset_by_uuid(uuid: str) -> "MediaAsset | None":
 
     Returns:
         MediaAsset: the media asset or None if it could not be found.
+
     """
     for lib in _asset_library.values():
         if uuid in lib:
