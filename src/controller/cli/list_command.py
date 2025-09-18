@@ -94,16 +94,16 @@ class ListCommand(Command):
                 self.context.print(f"ERROR: The requested container '{args.section}' was not found.")
                 return False
 
-    def _list_assets_by_type(self, filter: list[MediaType] | None = None) -> None:
+    def _list_assets_by_type(self, type_filter: list[MediaType] | None = None) -> None:
         """List assets based on the provided filter"""
-        if filter is None:
-            filter = [MediaType.IMAGE, MediaType.VIDEO, MediaType.AUDIO, MediaType.MODEL_3D, MediaType.TEXT]
+        if type_filter is None:
+            type_filter = [MediaType.IMAGE, MediaType.VIDEO, MediaType.AUDIO, MediaType.MODEL_3D, MediaType.TEXT]
         self.context.print(" Type  | UUID                                | class                      ")
         self.context.print("=======|=====================================|============================")
-        for asset_type in filter:
+        for asset_type in type_filter:
             for asset in get_all_assets_of_type(asset_type):
-                print(f" {asset.get_type().get_padded_description()} | {asset.id} |"
-                      f" {str(asset.get_factory_object_hint())}")
+                self.context.print(f" {asset.get_type().get_padded_description()} |"
+                                   f" {asset.id} | {asset.get_factory_object_hint()}")
 
     def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str) -> None:
         """Print the entry of a bank set."""

@@ -1,5 +1,7 @@
 """File contains the media registry."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from model.media_assets.media_type import MediaType
@@ -7,9 +9,9 @@ from model.media_assets.media_type import MediaType
 if TYPE_CHECKING:
     from model.media_assets.asset import MediaAsset
 
-_asset_library: dict[MediaType, dict[str, "MediaAsset"]] = {}
+_asset_library: dict[MediaType, dict[str, MediaAsset]] = {}
 
-def register(asset: "MediaAsset", uuid: str) -> bool:
+def register(asset: MediaAsset, uuid: str) -> bool:
     """Method registers a media asset.
 
     Args:
@@ -29,7 +31,7 @@ def register(asset: "MediaAsset", uuid: str) -> bool:
     d[uuid] = asset
     return True
 
-def get_asset_by_uuid(uuid: str) -> "MediaAsset | None":
+def get_asset_by_uuid(uuid: str) -> MediaAsset | None:
     """Get a media asset by its UUID.
 
     Args:
@@ -44,7 +46,7 @@ def get_asset_by_uuid(uuid: str) -> "MediaAsset | None":
             return lib[uuid]
     return None
 
-def get_all_assets_of_type(asset_type: MediaType) -> list["MediaAsset"]:
+def get_all_assets_of_type(asset_type: MediaType) -> list[MediaAsset]:
     """Get all media assets of type asset_type."""
     if asset_type not in _asset_library:
         return []

@@ -8,6 +8,7 @@ from argparse import Namespace
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from controller.cli.asset_command import AssetCommand
 from controller.cli.bankset_command import BankSetCommand
 from controller.cli.event_command import EventCommand
 from controller.cli.help_command import HelpCommand
@@ -98,6 +99,7 @@ class CLIContext:
             SetCommand(self),
             IfCommand(self),
             HelpCommand(self),
+            AssetCommand(self),
         ]
         self._selected_bank: BankSet | None = None
         self._selected_scene: Scene | None = None

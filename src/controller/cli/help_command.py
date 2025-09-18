@@ -77,10 +77,13 @@ class HelpCommand(Command):
                 self.context.print("Control macros.")  # TODO
                 self.context.print("\texec <macro> -- Execute the macro")
                 # TODO
+            case "asset":
+                self.context.print("Manipulate loaded assets.")
+                self.context.print("load <class> <info>")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
-                self.context.print("\tprint\tset\tif")
+                self.context.print("\tprint\tasset\tset\tif")
                 return False
         return True
