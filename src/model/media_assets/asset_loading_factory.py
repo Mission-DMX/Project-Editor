@@ -15,10 +15,10 @@ def load_asset(uuid: str, type_hint: AssetFactoryObjectHint, serialized_data: st
     """Load a media asset based on type and provided data.
 
     Args:
-        uuid (str): The uuid of the media asset
-        type_hint (AssetFactoryObjectHint): The type of the asset
-        serialized_data (str): The serialized data of the asset
-        show_file_path (str): The file path of the asset. Default: empty string if no show file path is available
+        uuid: The uuid of the media asset
+        type_hint: The type of the asset
+        serialized_data: The serialized data of the asset
+        show_file_path: The file path of the asset. Default: empty string if no show file path is available
 
     Returns:
         MediaAsset | None: The media asset if it was loadable.

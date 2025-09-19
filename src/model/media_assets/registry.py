@@ -14,8 +14,8 @@ def register(asset: MediaAsset, uuid: str) -> bool:
     """Method registers a media asset.
 
     Args:
-        asset (MediaAsset): the media asset to register
-        uuid (str): the uuid of the media asset
+        asset: the media asset to register
+        uuid: the uuid of the media asset
 
     Returns:
         bool: True if registration was successful, False if an Asset with that UUID was already registered.
@@ -34,7 +34,7 @@ def get_asset_by_uuid(uuid: str) -> MediaAsset | None:
     """Get a media asset by its UUID.
 
     Args:
-        uuid (str): the uuid of the media asset
+        uuid: the uuid of the media asset
 
     Returns:
         MediaAsset: the media asset or None if it could not be found.

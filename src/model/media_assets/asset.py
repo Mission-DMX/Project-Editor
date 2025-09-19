@@ -39,7 +39,7 @@ class MediaAsset(ABC):
         This method also automatically registers the asset.
 
         Args:
-            uuid (str): The UUID of the asset. If an empty string is provided, a random one will be generated.
+            uuid: The UUID of the asset. If an empty string is provided, a random one will be generated.
 
         """
         self._id = uuid if len(uuid) > 0 else str(uuid4())
@@ -58,7 +58,7 @@ class MediaAsset(ABC):
         """Get the UUID of this asset.
 
         Returns:
-            str: The UUID of this asset.
+            The UUID of this asset.
 
         """
         return self._id
@@ -70,7 +70,7 @@ class MediaAsset(ABC):
         The pixmap has a size 64x64 pixels.
 
         Returns:
-            QPixmap: The thumbnail of this asset.
+            The thumbnail of this asset.
 
         """
         raise NotImplementedError

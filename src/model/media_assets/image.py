@@ -32,7 +32,7 @@ class AbstractImageAsset(MediaAsset, ABC):
         """Method must return a QImage to be used inside the editor.
 
         Returns:
-            QImage: The image to be used by the UI.
+            The image to be used by the UI.
 
         """
         raise NotImplementedError
@@ -44,9 +44,9 @@ class LocalImage(AbstractImageAsset):
         """Load and register an image located in a local file.
 
         Args:
-            path (str): The path to the local file.
-            uuid (str): The UUID of the asset.
-            show_file_path (str): The path to the current show file. Leave as empty string if none is loaded.
+            path: The path to the local file.
+            uuid: The UUID of the asset.
+            show_file_path: The path to the current show file. Leave as empty string if none is loaded.
 
         """
         super().__init__(uuid)
