@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, override
 
 from controller.cli.command import Command
 from model.control_desk import BankSet, ColorDeskColumn
+from model.media_assets.media_type import MediaType
+from model.media_assets.registry import get_all_assets_of_type
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
@@ -70,9 +72,38 @@ class ListCommand(Command):
                 if self.context.selected_bank and not self.context.selected_bank.is_linked:
                     self.print_bank_set_entry(self.context.selected_bank, selected_bank_set_id)
                 return True
+            case "all-assets":
+                self._list_assets_by_type()
+                return True
+            case "image-assets":
+                self._list_assets_by_type([MediaType.IMAGE])
+                return True
+            case "video-assets":
+                self._list_assets_by_type([MediaType.VIDEO])
+                return True
+            case "audio-assets":
+                self._list_assets_by_type([MediaType.AUDIO])
+                return True
+            case "3d-assets":
+                self._list_assets_by_type([MediaType.MODEL_3D])
+                return True
+            case "text-assets":
+                self._list_assets_by_type([MediaType.TEXT])
+                return True
             case _:
                 self.context.print(f"ERROR: The requested container '{args.section}' was not found.")
                 return False
+
+    def _list_assets_by_type(self, type_filter: list[MediaType] | None = None) -> None:
+        """List assets based on the provided filter."""
+        if type_filter is None:
+            type_filter = [MediaType.IMAGE, MediaType.VIDEO, MediaType.AUDIO, MediaType.MODEL_3D, MediaType.TEXT]
+        self.context.print(" Type  | UUID                                | class                      ")
+        self.context.print("=======|=====================================|============================")
+        for asset_type in type_filter:
+            for asset in get_all_assets_of_type(asset_type):
+                self.context.print(f" {asset.get_type().get_padded_description()} |"
+                                   f" {asset.id} | {asset.get_factory_object_hint()}")
 
     def print_bank_set_entry(self, bs: BankSet, selected_bank_set_id: str) -> None:
         """Print the entry of a bank set."""

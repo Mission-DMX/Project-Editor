@@ -41,6 +41,7 @@ class HelpCommand(Command):
                 self.context.print("\tbank_sets -- Display the available bank sets.")
                 self.context.print("\tmacros -- Display the available macros.")
                 self.context.print("\tvariables -- Display all current variables.")
+                self.context.print("\t<all|image|video|audio|3d|text>-assets -- Display all assets of type.")
             case "print":
                 self.context.print("Print all appended arguments")
             case "set":
@@ -76,10 +77,13 @@ class HelpCommand(Command):
                 self.context.print("Control macros.")  # TODO
                 self.context.print("\texec <macro> -- Execute the macro")
                 # TODO
+            case "asset":
+                self.context.print("Manipulate loaded assets.")
+                self.context.print("load <class> <info>")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
-                self.context.print("\tprint\tset\tif")
+                self.context.print("\tprint\tasset\tset\tif")
                 return False
         return True
