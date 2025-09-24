@@ -27,3 +27,8 @@ class MediaType(Enum):
                 return "3D   "
             case _:
                 return "UNKN."
+
+    @classmethod
+    def all_values(cls) -> "list[MediaType]":
+        """Return a list of all possible media types."""
+        return [MediaType.TEXT, MediaType.IMAGE, MediaType.VIDEO, MediaType.AUDIO, MediaType.MODEL_3D]
