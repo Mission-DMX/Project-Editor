@@ -24,7 +24,7 @@ class AssetCommand(Command):
     def configure_parser(self, parser: ArgumentParser) -> None:
         subparsers = parser.add_subparsers(help="Subcommands", dest="action")
         load_parser = subparsers.add_parser("load", help="load asset", exit_on_error=False)
-        load_parser.add_argument("asset-class", help="The asset class to load", type=str)
+        load_parser.add_argument("aclass", help="The asset class to load", type=str)
         load_parser.add_argument("info", help="The info data for that class (for example path or URI)",
                                  type=str)
 
@@ -32,7 +32,7 @@ class AssetCommand(Command):
     def execute(self, args: Namespace) -> bool:
         match args.action:
             case "load":
-                return load_asset("", args.asset_class, args.info,
+                return load_asset("", args.aclass, args.info,
                                   self.context.show.file_path if self.context.show is not None else "") is not None
             case _:
                 self.context.print("Error: Unknown asset action.")

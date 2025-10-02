@@ -91,3 +91,8 @@ class LocalImage(AbstractImageAsset):
     @override
     def get_factory_object_hint(self) -> AssetFactoryObjectHint:
         return AssetFactoryObjectHint.IMAGE_EXTERNAL_FILE
+
+    @property
+    def path(self) -> str:
+        """Get the path of this image."""
+        return self._path
