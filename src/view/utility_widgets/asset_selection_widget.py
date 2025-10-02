@@ -34,6 +34,9 @@ class _AssetTableModel(QAbstractTableModel):
         """
         if types == self._selected_media_types and name == self._name_filter:
             return
+        if len(name) < len(self._name_filter):
+            self._filtered_asset_list.clear()
+            self._selected_media_types.clear()
         types_to_add = types - self._selected_media_types
         types_to_remove = self._selected_media_types - types
         new_asset_list: list[MediaAsset] = [asset for asset in self._filtered_asset_list if
@@ -75,9 +78,8 @@ class _AssetTableModel(QAbstractTableModel):
                 return asset.name
             if index.column() == 3:
                 return ""
-            if index.column() == 4:  # NOQA: SIM102 this check will be expanded as soon as there others
-                if isinstance(asset, LocalImage):
-                    return asset.path
+            if index.column() == 4:
+                return self._get_location_str(asset)
         elif role == Qt.ItemDataRole.EditRole:
             # TODO if column == 1 display drop down or dialog for internalizing
             if index.column() == 2:
@@ -85,22 +87,33 @@ class _AssetTableModel(QAbstractTableModel):
         elif role == Qt.ItemDataRole.DecorationRole:
             if index.column() == 1:
                 return asset.get_type().get_qt_hint_icon()
-            elif index.column() == 3:
+            if index.column() == 3:
                 return asset.get_thumbnail()
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             if index.column() < 2:
                 return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignCenter
         elif role == Qt.ItemDataRole.ToolTipRole:
+            if index.column() == 0:
+                return asset.id
             if index.column() == 1:
-                return f"{asset.get_type().get_long_description()} ({asset.__name__})"
+                return f"{asset.get_type().get_long_description()} ({asset.__class__.__name__})"
+            if index.column() == 4:
+                return self._get_location_str(asset)
+        return None
+
+    def _get_location_str(self, asset: MediaAsset) -> str | None:
+        """Get the media location of the provided asset (if any)."""
+        if isinstance(asset, LocalImage):
+            return asset.path
         return None
 
     @override
-    def setData(self, index: QModelIndex, value: Any) -> None:
+    def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole) -> bool:
         if index.column() != 2:
-            return
+            return False
         asset = self._filtered_asset_list[index.row()]
         asset.name = str(value)
+        return True
 
     @override
     def flags(self, index: QModelIndex, /) -> Qt.ItemFlag:
@@ -121,6 +134,7 @@ class AssetSelectionWidget(QWidget):
         super().__init__(parent)
         layout = QVBoxLayout(self)
 
+        # TODO implement option to force assets of certain types
         self._type_button_bar = QToolBar(self)
         self._type_checkboxes: list[tuple[MediaType, QAction]] = []
         for asset_type in MediaType.all_values():
@@ -146,6 +160,7 @@ class AssetSelectionWidget(QWidget):
         # TODO add timer to apply filter parameters after one second (experiment with 100ms and 500ms
         #  as well) of no changes
         self.setLayout(layout)
+        self._update_filter()
 
     def _update_filter(self) -> None:
         selected_types: set[MediaType] = set()

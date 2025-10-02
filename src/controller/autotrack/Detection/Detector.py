@@ -19,7 +19,7 @@ class Detector(ABC):
     """
 
     @abstractmethod
-    def detect(self, frame):
+    def detect(self, frame) -> np.ndarray:
         """
         Abstract method for detecting objects in a given frame.
 
@@ -31,7 +31,7 @@ class Detector(ABC):
         """
         pass
 
-    def square_image(self, frame):
+    def square_image(self, frame: np.ndarray) -> np.ndarray:
         """
         Resize the input frame into a square image and prepare it for inference.
 

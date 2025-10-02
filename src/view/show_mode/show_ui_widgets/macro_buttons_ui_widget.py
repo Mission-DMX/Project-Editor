@@ -28,6 +28,7 @@ from utility import resource_path
 from view.action_setup_view._command_insertion_dialog import escape_argument
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
 from view.utility_widgets.box_grid_renderer import BoxGridItem, BoxGridRenderer
 
 if TYPE_CHECKING:
@@ -53,7 +54,13 @@ class _AddMacroActionDialog(QDialog):
         layout.addRow("Command: ", self._command_tb)
         self._text_tb = QLineEdit(self)
         layout.addRow("Display Text: ", self._text_tb)
+
         # TODO add Icon selection from show media storage
+        self._icon_selection = AssetSelectionWidget(self)
+        layout.addRow("Select Icon", self._icon_selection)
+        # TODO only allow images
+        # TODO add clear icon button
+
         self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.accepted.connect(self._ok_button_pressed)
         self._button_box.rejected.connect(self._cancel_button_pressed)
