@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QLineEdit, QTableView, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTableView, QToolBar, QVBoxLayout, QWidget
 
 from model.media_assets.image import LocalImage
 from model.media_assets.media_type import MediaType
@@ -124,20 +124,40 @@ class _AssetTableModel(QAbstractTableModel):
             parent_flag &= ~Qt.ItemFlag.ItemIsEditable
         return parent_flag
 
+    def asset_at(self, index: int) -> MediaAsset:
+        """Get the asset at the provided index."""
+        return self._filtered_asset_list[index]
+
+    def get_row_indicies(self, assets: list[MediaAsset]) -> list[int]:
+        """Get the indices of the rows whose assets are in the provided list."""
+        return [index for index, asset in enumerate(self._filtered_asset_list) if asset in assets]
+
 
 class AssetSelectionWidget(QWidget):
     """
     Provide a sortable and searchable selection widget for assets.
     """
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, allowed_types: list[MediaType] | None = None,
+                 multiselection_allowed: bool = True) -> None:
+        """
+        Initialize the asset selection widget.
+
+        Args:
+            parent: The parent widget.
+            allowed_types: The allowed asset types. Passing an empty list or None allows all types. Passing only one
+            type disables the selection buttons.
+            multiselection_allowed: Is the user allowed to select multiple rows?
+        """
         super().__init__(parent)
         layout = QVBoxLayout(self)
 
         # TODO implement option to force assets of certain types
         self._type_button_bar = QToolBar(self)
         self._type_checkboxes: list[tuple[MediaType, QAction]] = []
-        for asset_type in MediaType.all_values():
+        if allowed_types is None or allowed_types == []:
+            allowed_types = MediaType.all_values()
+        for asset_type in allowed_types:
             type_action = QAction(self._type_button_bar)
             type_action.setText(asset_type.name)
             type_action.setCheckable(True)
@@ -146,6 +166,7 @@ class AssetSelectionWidget(QWidget):
             self._type_button_bar.addAction(type_action)
             self._type_checkboxes.append((asset_type, type_action))
         layout.addWidget(self._type_button_bar)
+        self._type_button_bar.setVisible(len(self._type_checkboxes) > 1)
 
         self._search_bar = QLineEdit(self)
         self._search_bar.textChanged.connect(self._update_filter)
@@ -153,6 +174,11 @@ class AssetSelectionWidget(QWidget):
         layout.addWidget(self._search_bar)
 
         self._asset_view = QTableView(self)
+        self._asset_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        if multiselection_allowed:
+            self._asset_view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        else:
+            self._asset_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self._model = _AssetTableModel()
         self._asset_view.setModel(self._model)
         layout.addWidget(self._asset_view)
@@ -171,3 +197,16 @@ class AssetSelectionWidget(QWidget):
         self._model.apply_filter(self._search_bar.text(), selected_types)
         self._asset_view.setEnabled(True)
         self.update()
+
+    @property
+    def selected_asset(self) -> list[MediaAsset]:
+        """Get or set the selected assets."""
+        si = self._asset_view.selectionModel().selectedRows()
+        asset_list: list[MediaAsset] = [self._model.asset_at(index.row()) for index in si]
+        return asset_list
+
+    @selected_asset.setter
+    def selected_asset(self, selection: list[MediaAsset]) -> None:
+        for index in self._model.get_row_indicies(selection):
+            self._asset_view.selectRow(index)
+
