@@ -1,3 +1,5 @@
+"""Module contains AssetSelectionWidget."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, override
@@ -15,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class _AssetTableModel(QAbstractTableModel):
-    """A table model providing the assets"""
+    """A table model providing the assets."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -25,12 +27,14 @@ class _AssetTableModel(QAbstractTableModel):
 
     def apply_filter(self, name: str, types: set[MediaType]) -> None:
         """Apply the filter parameters to the asset selection.
+
         Warning: this operation may be quite expensive. It is therefore better to wait for a filter to be entered
         completely prior to application.
 
         Args:
             name: If set to anything than an empty string, all assets needs to contain this in their name.
             types: The types of assets to show.
+
         """
         if types == self._selected_media_types and name == self._name_filter:
             return
@@ -134,25 +138,22 @@ class _AssetTableModel(QAbstractTableModel):
 
 
 class AssetSelectionWidget(QWidget):
-    """
-    Provide a sortable and searchable selection widget for assets.
-    """
+    """Provide a sortable and searchable selection widget for assets."""
 
     def __init__(self, parent: QWidget | None = None, allowed_types: list[MediaType] | None = None,
                  multiselection_allowed: bool = True) -> None:
-        """
-        Initialize the asset selection widget.
+        """Initialize the asset selection widget.
 
         Args:
             parent: The parent widget.
             allowed_types: The allowed asset types. Passing an empty list or None allows all types. Passing only one
             type disables the selection buttons.
             multiselection_allowed: Is the user allowed to select multiple rows?
+
         """
         super().__init__(parent)
         layout = QVBoxLayout(self)
 
-        # TODO implement option to force assets of certain types
         self._type_button_bar = QToolBar(self)
         self._type_checkboxes: list[tuple[MediaType, QAction]] = []
         if allowed_types is None or allowed_types == []:
@@ -185,6 +186,9 @@ class AssetSelectionWidget(QWidget):
 
         # TODO add timer to apply filter parameters after one second (experiment with 100ms and 500ms
         #  as well) of no changes
+
+        # TODO implement method to retain selection after filter changes
+
         self.setLayout(layout)
         self._update_filter()
 
