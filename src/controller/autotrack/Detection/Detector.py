@@ -1,6 +1,6 @@
 # coding=utf-8
 
-"""This module contains an abstract detector."""
+"""Module contains an abstract detector."""
 
 from abc import ABC, abstractmethod
 
