@@ -221,7 +221,13 @@ class CLIContext:
             args = self._replace_variables(args)
             if len(args) == 0:
                 return True
-            global_args: Namespace = self._parser.parse_args(args=args)
+            try:
+                global_args: Namespace = self._parser.parse_args(args=args)
+            except SystemExit:
+                self.print(f"Syntax error. Failed to parse arguments. Args: {args}")
+                self.print("Usage:")
+                self.print(self._parser.format_help().replace("usage: main.py [-h]", "", 1))
+                return False
             if self._exit_available and global_args.subparser_name == "exit":
                 self._exit_called = True
             elif global_args.subparser_name == "?":
@@ -232,7 +238,7 @@ class CLIContext:
                         return c.execute(global_args)
         except argparse.ArgumentError as e:
             self.print("Failed to parse command: " + str(e))
-            self.print(self._parser.format_usage())
+            self.print(self._parser.format_usage().replace("main.py", "", 1))
         except Exception as e:
             self.print(traceback.format_exc())
             self.print("Execution of command failed: " + str(e))
