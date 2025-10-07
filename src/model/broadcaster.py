@@ -39,6 +39,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     change_run_mode: QtCore.Signal = QtCore.Signal(proto.RealTimeControl_pb2.RunMode.ValueType)  # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(object)
     transmitting_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
+    show_file_applied: QtCore.Signal = QtCore.Signal()
     show_file_loaded: QtCore.Signal = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
     begin_show_file_parsing: QtCore.Signal = QtCore.Signal()

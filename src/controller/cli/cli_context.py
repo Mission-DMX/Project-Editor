@@ -238,7 +238,7 @@ class CLIContext:
                         return c.execute(global_args)
         except argparse.ArgumentError as e:
             self.print("Failed to parse command: " + str(e))
-            self.print(self._parser.format_usage())
+            self.print(self._parser.format_usage().replace("main.py", "", 1))
         except Exception as e:
             self.print(traceback.format_exc())
             self.print("Execution of command failed: " + str(e))
