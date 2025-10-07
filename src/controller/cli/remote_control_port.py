@@ -201,7 +201,11 @@ class RemoteCLIServer:
         """Process incoming clients."""
         with socket(AF_INET6, SOCK_STREAM) as s:
             self._server_socket = s
-            s.bind((self._bind_interface, self._bind_port))
+            try:
+                s.bind((self._bind_interface, self._bind_port))
+            except OSError as e:
+                logger.exception("Failed to bind CLI interface: %s", e)
+                return
             s.settimeout(2)
             s.listen()
             while not self._stopped:

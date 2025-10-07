@@ -51,12 +51,14 @@ class LocalImage(AbstractImageAsset):
         """
         super().__init__(uuid)
         self._path = path
+        self._is_shared_path = False
         if not os.path.isfile(path):
             global_asset_dir = os.path.join(GLOBAL_ASSET_FOLDER, "images")
             if not os.path.exists(global_asset_dir):
                 os.mkdir(global_asset_dir)
             if os.path.isfile(os.path.join(global_asset_dir, path)):
                 path = os.path.join(global_asset_dir, path)
+                self._is_shared_path = True
             elif len(show_file_path) > 0:
                 potential_file_path = os.path.join(os.path.dirname(os.path.abspath(show_file_path)), path)
                 if os.path.isfile(potential_file_path):
@@ -91,3 +93,13 @@ class LocalImage(AbstractImageAsset):
     @override
     def get_factory_object_hint(self) -> AssetFactoryObjectHint:
         return AssetFactoryObjectHint.IMAGE_EXTERNAL_FILE
+
+    @property
+    def path(self) -> str:
+        """Get the path of this image."""
+        return self._path
+
+    @MediaAsset.is_local_resource.getter
+    def is_local_resource(self) -> bool:
+        """Returns true in case of asset being part of shared collection."""
+        return self._is_shared_path

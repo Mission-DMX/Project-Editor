@@ -736,5 +736,6 @@ def load_all_media_assets(media_asset_defintion: str, show_file_path: str) -> No
             asset.get("uuid", ""),
             AssetFactoryObjectHint(asset.get("type_hint", "")),
             asset.get("data", ""),
-            show_file_path
+            show_file_path=show_file_path,
+            name=asset.get("name", "")
         )
