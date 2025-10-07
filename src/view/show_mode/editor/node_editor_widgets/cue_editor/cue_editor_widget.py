@@ -30,7 +30,10 @@ from model.filter_data.cues.cue import Cue, EndAction
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.virtual_filters.cue_vfilter import CueFilter
 from view.dialogs.selection_dialog import SelectionDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
+from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import (
+    ChannelInputDialog,
+    MultiChannelInputDialog,
+)
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 
 from .preview_edit_widget import ExternalChannelDefinition, PreviewEditWidget
@@ -155,6 +158,11 @@ class CueEditor(PreviewEditWidget):
         self._toolbar_add_channel_action.setStatusTip("Add a new channel to the filter")
         self._toolbar_add_channel_action.triggered.connect(self._add_channel_button_pressed)
         toolbar.addAction(self._toolbar_add_channel_action)
+        self._toolbar_add_multi_channel_action = QAction("Add Multiple Channels", self._parent_widget)
+        self._toolbar_add_multi_channel_action.setEnabled(False)
+        self._toolbar_add_multi_channel_action.setStatusTip("Add multiple channels based on parameter set.")
+        self._toolbar_add_multi_channel_action.triggered.connect(self._add_multi_channel_button_pressed)
+        toolbar.addAction(self._toolbar_add_multi_channel_action)
         self._toolbar_remove_channel_action = QAction("Remove Channel", self._parent_widget)
         self._toolbar_remove_channel_action.setStatusTip("Removes a channel from the filter")
         self._toolbar_remove_channel_action.setEnabled(False)
@@ -306,6 +314,7 @@ class CueEditor(PreviewEditWidget):
         if from_manual_input:
             self._cue_list_widget.selectRow(cue_index)
         self._toolbar_add_channel_action.setEnabled(True)
+        self._toolbar_add_multi_channel_action.setEnabled(True)
         self.set_editing_enabled(True)
         self._current_cue_end_action_select_widget.setEnabled(True)
         self._current_cue_another_play_pressed_checkbox.setEnabled(True)
@@ -328,6 +337,11 @@ class CueEditor(PreviewEditWidget):
         The default for all cues is a 0 keyframe at the start.
         """
         self._input_dialog = ChannelInputDialog(self._parent_widget, self._add_channel)
+        self._input_dialog.show()
+
+    def _add_multi_channel_button_pressed(self) -> None:
+        """Same as _add_channel_button_pressed but for multi dialog."""
+        self._input_dialog = MultiChannelInputDialog(self._parent_widget, self._add_channel)
         self._input_dialog.show()
 
     def _add_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool = False) -> None:
