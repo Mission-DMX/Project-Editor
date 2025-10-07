@@ -98,8 +98,8 @@ class ListCommand(Command):
         """List assets based on the provided filter."""
         if type_filter is None:
             type_filter = [MediaType.IMAGE, MediaType.VIDEO, MediaType.AUDIO, MediaType.MODEL_3D, MediaType.TEXT]
-        self.context.print(" Type  | UUID                                | class                      ")
-        self.context.print("=======|=====================================|============================")
+        self.context.print(" Type  | UUID                                 | class                                     ")
+        self.context.print("=======|======================================|===========================================")
         for asset_type in type_filter:
             for asset in get_all_assets_of_type(asset_type):
                 self.context.print(f" {asset.get_type().get_padded_description()} |"

@@ -44,6 +44,7 @@ class MediaAsset(ABC):
         """
         self._id = uuid if len(uuid) > 0 else str(uuid4())
         register(self, self._id)
+        self._human_name: str = ""
 
     @abstractmethod
     def get_type(self) -> MediaType:
@@ -84,3 +85,20 @@ class MediaAsset(ABC):
     def get_factory_object_hint(self) -> AssetFactoryObjectHint:
         """Method needs to return the type that the asset factory should load upon show file loading."""
         raise NotImplementedError
+
+    @property
+    def name(self) -> str:
+        """Get or set the name of the asset."""
+        return self._human_name
+
+    @name.setter
+    def name(self, name: str) -> None:
+        self._human_name = name
+
+    @property
+    def is_local_resource(self) -> bool:
+        """Find out if this asset is a local resource.
+
+        Non-local resources need to be provided and copied together with the show file.
+        """
+        return False

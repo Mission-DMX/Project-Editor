@@ -23,7 +23,8 @@ def update_assets_ui_hint_element(board_configuration: BoardConfiguration) -> No
     for asset_type in [MediaType.IMAGE, MediaType.VIDEO, MediaType.AUDIO, MediaType.MODEL_3D, MediaType.TEXT]:
         assets_list.extend([{
                 "uuid": str(asset.id),
-                "type_hint": str(asset.get_factory_object_hint()),
+                "type_hint": str(asset.get_factory_object_hint().value),
+                "name": str(asset.name),
                 "data": str(asset.serialize_settings())
             } for asset in get_all_assets_of_type(asset_type)])
     board_configuration.ui_hints["media_assets"] = json.dumps(assets_list)

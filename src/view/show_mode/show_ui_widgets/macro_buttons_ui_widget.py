@@ -24,10 +24,13 @@ from PySide6.QtWidgets import (
 )
 
 from model import UIWidget
+from model.media_assets.media_type import MediaType
+from model.media_assets.registry import get_asset_by_uuid
 from utility import resource_path
 from view.action_setup_view._command_insertion_dialog import escape_argument
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
 from view.utility_widgets.box_grid_renderer import BoxGridItem, BoxGridRenderer
 
 if TYPE_CHECKING:
@@ -53,7 +56,12 @@ class _AddMacroActionDialog(QDialog):
         layout.addRow("Command: ", self._command_tb)
         self._text_tb = QLineEdit(self)
         layout.addRow("Display Text: ", self._text_tb)
+
         # TODO add Icon selection from show media storage
+        self._icon_selection = AssetSelectionWidget(self, allowed_types=[MediaType.IMAGE], multiselection_allowed=False)
+        layout.addRow("Select Icon", self._icon_selection)
+        # TODO add clear icon button
+
         self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self._button_box.accepted.connect(self._ok_button_pressed)
         self._button_box.rejected.connect(self._cancel_button_pressed)
@@ -74,7 +82,12 @@ class _AddMacroActionDialog(QDialog):
 
     def _ok_button_pressed(self) -> None:
         model = json.loads(self._ui_widget.configuration.get("items") or "[]")
-        model.append({"text": self._text_tb.text(), "command": self._command_tb.text()})
+        icon_selected_assets = self._icon_selection.selected_asset
+        model.append({
+            "text": self._text_tb.text(),
+            "icon": icon_selected_assets[0].id if len(icon_selected_assets) > 0 else "",
+            "command": self._command_tb.text()
+        })
         self._ui_widget.configuration["items"] = json.dumps(model)
         self._ui_widget._refresh_config_macro_list(self._button_list, update_button=self._update_button)
         self.close()
@@ -96,6 +109,13 @@ class _MacroListWidget(QWidget):
         self._icon_bt.setIcon(self._NO_ICON)
         layout.addWidget(self._icon_bt)
         layout.addStretch()
+        icon_label = QLabel(self)
+        if self._item_def.get("icon", "") != "":
+            asset = get_asset_by_uuid(self._item_def["icon"])
+            if asset is not None:
+                icon_label.setPixmap(asset.get_thumbnail())
+        layout.addWidget(icon_label)
+        layout.addStretch()
         self._text_tb = QLineEdit(self)
         self._text_tb.setText(item_def["text"])
         self._text_tb.textChanged.connect(self._text_changed)
@@ -106,7 +126,7 @@ class _MacroListWidget(QWidget):
         self._command_tb.textChanged.connect(self._command_changed)
         layout.addWidget(self._command_tb)
         self.setLayout(layout)
-        # TODO implement icon display and changing functionality
+        # TODO implement icon changing functionality
 
     def _text_changed(self, text: str) -> None:
         self._item_def["text"] = text
@@ -160,6 +180,9 @@ class MacroButtonUIWidget(UIWidget):
             item = BoxGridItem(w)
             item.text = item_def["text"]
             item.data = item_def["command"]
+            asset = get_asset_by_uuid(item_def.get("icon", ""))
+            if asset is not None:
+                item.set_icon(asset.get_thumbnail())
             item.clicked.connect(self._exec_command)
             w.add_item(item)
 
