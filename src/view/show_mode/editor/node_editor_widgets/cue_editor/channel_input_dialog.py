@@ -2,10 +2,22 @@
 from collections.abc import Callable
 from logging import getLogger
 
-from PySide6 import QtGui, QtCore
+from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QLineEdit, QPushButton, QWidget, QStyle, \
-    QDialogButtonBox, QSpinBox, QVBoxLayout, QTableWidget, QTableWidgetItem
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QLineEdit,
+    QPushButton,
+    QSpinBox,
+    QStyle,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import DataType
 
@@ -111,18 +123,18 @@ class MultiChannelInputDialog(QDialog):
         else:
             name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
 
-    def _perform_insertion(self):
+    def _perform_insertion(self) -> None:
         for i in range(self._iteration_number_box.value()):
             for channel_row in range(self._channel_tabel.rowCount()):
                 data_type_cb = self._channel_tabel.cellWidget(channel_row, 0)
                 if not isinstance(data_type_cb, QComboBox):
-                    logger.error(f"Channel row {channel_row} is not a combo box.")
+                    logger.error("Channel row %s is not a combo box.", channel_row)
                     continue
                 select_data_type = data_type_cb.currentText()
                 if select_data_type != "None" and select_data_type != "":
                     row__text = self._channel_tabel.item(channel_row, 1).text()
                     if len(row__text) == 0:
-                        logger.warning(f"Channel in row {channel_row} was skipped due to empty name.")
+                        logger.warning("Channel in row %s was skipped due to empty name.", channel_row)
                         continue
                     text = self._name_template_tb.text().format(
                         i=i,

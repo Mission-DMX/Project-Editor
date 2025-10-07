@@ -30,8 +30,10 @@ from model.filter_data.cues.cue import Cue, EndAction
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.virtual_filters.cue_vfilter import CueFilter
 from view.dialogs.selection_dialog import SelectionDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog, \
-    MultiChannelInputDialog
+from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import (
+    ChannelInputDialog,
+    MultiChannelInputDialog,
+)
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 
 from .preview_edit_widget import ExternalChannelDefinition, PreviewEditWidget

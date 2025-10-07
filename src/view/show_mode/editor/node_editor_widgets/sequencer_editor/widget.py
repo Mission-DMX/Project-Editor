@@ -13,8 +13,10 @@ from model.filter_data.sequencer.sequencer_filter_model import SequencerFilterMo
 from model.filter_data.sequencer.transition import Transition
 from proto import Console_pb2
 from view.dialogs.selection_dialog import SelectionDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog, \
-    MultiChannelInputDialog
+from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import (
+    ChannelInputDialog,
+    MultiChannelInputDialog,
+)
 from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (
     ExternalChannelDefinition,
     PreviewEditWidget,
