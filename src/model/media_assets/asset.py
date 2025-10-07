@@ -94,3 +94,11 @@ class MediaAsset(ABC):
     @name.setter
     def name(self, name: str) -> None:
         self._human_name = name
+
+    @property
+    def is_local_resource(self) -> bool:
+        """Is this asset a local resource?
+
+        Non-local resources need to be provided and copied together with the show file.
+        """
+        return False

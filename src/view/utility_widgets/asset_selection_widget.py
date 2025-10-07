@@ -2,18 +2,23 @@
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING, Any, override
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTableView, QToolBar, QVBoxLayout, QWidget
 
 from model.media_assets.image import LocalImage
 from model.media_assets.media_type import MediaType
 from model.media_assets.registry import get_all_assets_of_type
+from utility import resource_path
 
 if TYPE_CHECKING:
     from model.media_assets.asset import MediaAsset
+
+
+_LOCAL_RESOURCE_ICON = QIcon(resource_path(os.path.join("resources", "icons", "tag.svg")))
 
 
 class _AssetTableModel(QAbstractTableModel):
@@ -93,6 +98,8 @@ class _AssetTableModel(QAbstractTableModel):
                 return asset.get_type().get_qt_hint_icon()
             if index.column() == 3:
                 return asset.get_thumbnail()
+            if index.column() == 4 and asset.is_local_resource:
+                return _LOCAL_RESOURCE_ICON
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             if index.column() < 2:
                 return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignCenter
