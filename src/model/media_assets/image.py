@@ -101,4 +101,5 @@ class LocalImage(AbstractImageAsset):
 
     @MediaAsset.is_local_resource.getter
     def is_local_resource(self) -> bool:
+        """Returns true in case of asset being part of shared collection."""
         return self._is_shared_path

@@ -97,7 +97,7 @@ class MediaAsset(ABC):
 
     @property
     def is_local_resource(self) -> bool:
-        """Is this asset a local resource?
+        """Find out if this asset is a local resource.
 
         Non-local resources need to be provided and copied together with the show file.
         """
