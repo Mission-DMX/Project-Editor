@@ -221,7 +221,13 @@ class CLIContext:
             args = self._replace_variables(args)
             if len(args) == 0:
                 return True
-            global_args: Namespace = self._parser.parse_args(args=args)
+            try:
+                global_args: Namespace = self._parser.parse_args(args=args)
+            except SystemExit:
+                self.print(f"Syntax error. Failed to parse arguments. Args: {args}")
+                self.print("Usage:")
+                self.print(self._parser.format_help().replace("usage: main.py [-h]", "", 1))
+                return False
             if self._exit_available and global_args.subparser_name == "exit":
                 self._exit_called = True
             elif global_args.subparser_name == "?":
