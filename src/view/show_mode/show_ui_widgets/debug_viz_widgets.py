@@ -153,7 +153,7 @@ class _DebugVizWidget(UIWidget, ABC):
 class ColorLabel(QWidget):
     """Label for displaying colors."""
 
-    def __init__(self, parent: QWidget) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         """Label for displaying colors.
 
         Default color is black.
