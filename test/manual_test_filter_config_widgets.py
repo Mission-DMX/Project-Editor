@@ -1,6 +1,6 @@
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout
-from view.show_mode.node_editor_widgets import ColumnSelect
+from view.show_mode.editor.node_editor_widgets import ColumnSelect
 
 import style
 from model.control_desk import *
@@ -30,7 +30,7 @@ if __name__ == "__main__":
             bs.add_bank(bank)
         bs.link()
     layout = QVBoxLayout()
-    select_widget = ColumnSelect(parent=window)
+    select_widget = ColumnSelect(None, parent=window)
     select_widget.configuration = {}
     layout.addWidget(select_widget.get_widget())
     window.setLayout(layout)
