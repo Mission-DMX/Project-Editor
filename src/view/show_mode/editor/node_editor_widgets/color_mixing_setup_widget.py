@@ -73,6 +73,10 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
         layout.addWidget(self._color_help_widget)
         self._widget.setLayout(layout)
 
+    @override
+    def parent_opened(self) -> None:
+        super().parent_opened()
+
     def _get_configuration(self) -> dict[str, str]:
         return {
             "input_count": str(self._channel_count_spinbox.value()),

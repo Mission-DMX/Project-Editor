@@ -1,3 +1,5 @@
+from typing import override
+
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QListWidget, QTextEdit, QToolBar, QVBoxLayout, QWidget
 
 from model import DataType
@@ -10,6 +12,10 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
 
     def get_widget(self) -> QWidget:
         return self._widget
+
+    @override
+    def parent_opened(self) -> None:
+        super().parent_opened()
 
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         self._script_edit_field.setText(parameters["script"])

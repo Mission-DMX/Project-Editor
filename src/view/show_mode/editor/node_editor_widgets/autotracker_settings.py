@@ -1,3 +1,5 @@
+from typing import override
+
 from PySide6.QtWidgets import QGridLayout, QLabel, QSpinBox, QWidget
 
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
@@ -16,6 +18,10 @@ class AutotrackerSettingsWidget(NodeEditorFilterConfigWidget):
         tracker_count_widget.setValue(1)
         layout.addWidget(tracker_count_widget, 0, 1)
         layout.addWidget(QLabel("Other settings need to be configured from the player widget for now."), 1, 0)
+
+    @override
+    def parent_opened(self) -> None:
+        super().parent_opened()
 
     def _get_configuration(self) -> dict[str, str]:
         return {}
