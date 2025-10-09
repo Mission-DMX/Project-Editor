@@ -1,6 +1,7 @@
 """
 This file provides the column input filter settings widget.
 """
+from typing import override
 
 from PySide6.QtWidgets import QWidget
 
@@ -12,6 +13,10 @@ from .node_editor_widget import NodeEditorFilterConfigWidget
 
 class ColumnSelect(NodeEditorFilterConfigWidget):
     """This class is an adapter to configure the column select filter with the column selection widget."""
+
+    @override
+    def parent_opened(self) -> None:
+        super().parent_opened()
 
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         pass

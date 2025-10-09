@@ -1,5 +1,6 @@
 
 """This widget provides an adapter to view the effect stacking editor widget as a filter config widget."""
+from typing import override
 
 from PySide6.QtWidgets import QWidget
 
@@ -14,6 +15,10 @@ class EffectsStackFilterConfigWidget(NodeEditorFilterConfigWidget):
 
     def __init__(self, f: Filter) -> None:
         self._widget = EffectsStackEditor(f, None)
+
+    @override
+    def parent_opened(self) -> None:
+        super().parent_opened()
 
     def _get_configuration(self) -> dict[str, str]:
         return {}
