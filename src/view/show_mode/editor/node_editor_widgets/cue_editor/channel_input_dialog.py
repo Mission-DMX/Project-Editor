@@ -50,6 +50,8 @@ class ChannelInputDialog(QDialog):
         self._ok_button.pressed.connect(self._ok_pressed)
         self._layout.addRow("", self._ok_button)
         self.setLayout(self._layout)
+        self.setModal(True)
+        self.setWindowTitle("Add Channel")
 
     def _ok_pressed(self) -> None:
         self._ok_function(self._channel_name.text(), DataType.from_filter_str(self._type_box.currentText()))
@@ -80,7 +82,8 @@ class MultiChannelInputDialog(QDialog):
 
         self._name_template_tb = QLineEdit(self)
         self._name_template_tb.setText("{i}_{name}")
-        self._name_template_tb.setToolTip("Please specify the name template. You may use {i} to specify the iteration, "
+        self._name_template_tb.setToolTip("Please specify the name template. You may use {i} (or {ip} to have numbering"
+                                          " start at 1) to specify the iteration, "
                                           "{name} the channel name from the table below abd {dt} for its data type.")
         self._form_layout.addRow("Name Template:", self._name_template_tb)
         self._layout.addLayout(self._form_layout)
@@ -99,6 +102,8 @@ class MultiChannelInputDialog(QDialog):
         self._button_box.rejected.connect(self.close)
         self._layout.addWidget(self._button_box)
         self.setLayout(self._layout)
+        self.setModal(True)
+        self.setWindowTitle("Add Channels")
 
     def _add_row(self) -> None:
         self._channel_tabel.setRowCount(self._channel_tabel.rowCount() + 1)
@@ -138,6 +143,7 @@ class MultiChannelInputDialog(QDialog):
                         continue
                     text = self._name_template_tb.text().format(
                         i=i,
+                        ip=i+1,
                         dt=select_data_type,
                         name=row__text
                     )
