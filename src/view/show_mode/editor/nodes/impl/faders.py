@@ -1,16 +1,21 @@
 """Column fader filter nodes"""
+from logging import getLogger
 
 from model import DataType, Filter, Scene
 from model.control_desk import BankSet
 from model.filter import FilterTypeEnumeration
+from model.virtual_filters.fader_vfilter import FaderUpdatingVFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
+
+logger = getLogger(__name__)
 
 
 class _FaderNode(FilterNode):
     def __init__(self, model: Filter | Scene, filter_type: FilterTypeEnumeration, name: str,
                  terminals: dict[str, dict[str, str]]) -> None:
-        self._bankset_model: BankSet | None = None
         super().__init__(model=model, filter_type=filter_type, name=name, terminals=terminals)
+        self._bankset_model: BankSet | None = self.filter.bankset_model if (
+            isinstance(self.filter, FaderUpdatingVFilter)) else None
 
         try:
             self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
@@ -20,39 +25,14 @@ class _FaderNode(FilterNode):
             self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
         except AttributeError:
             self.filter.filter_configurations["column_id"] = ""
-        self._update_bankset_listener()
-
-    def _update_bankset_listener(self) -> None:
-        set_id = self.filter.filter_configurations["set_id"]
-
-        if self.filter.scene.linked_bankset.id == set_id:
-            self._bankset_model = self.filter.scene.linked_bankset
-        else:
-            for bs in BankSet.linked_bank_sets():
-                if bs.id == set_id:
-                    self._bankset_model = bs
-                    break
-            if self._bankset_model is None:
-                column_candidate = self.filter.scene.linked_bankset.get_column(
-                    self.filter.filter_configurations.get("column_id"))
-                if column_candidate:
-                    self.filter.filter_configurations["set_id"] = self.filter.scene.linked_bankset.id
-                    self._bankset_model = self.filter.scene.linked_bankset
-
-        if self._bankset_model is not None:
-            self._bankset_model.id_update_listeners.append(self)
-
-    def notify_on_new_id(self, new_id: str) -> None:
-        self.filter.filter_configurations["set_id"] = new_id
 
     def update_node_after_settings_changed(self) -> None:
         if self._bankset_model is not None:
             self._bankset_model.id_update_listeners.remove(self)
-        self._update_bankset_listener()
-
-    def __del__(self) -> None:
-        if self._bankset_model is not None:
-            self._bankset_model.id_update_listeners.remove(self)
+        if isinstance(self.filter, FaderUpdatingVFilter):
+            self.filter.update_bankset_listener()
+        else:
+            logger.error("This fader filter has not been updated yet. Please save the show file and reload it NOW!")
 
 
 class FaderRawNode(_FaderNode):
@@ -61,7 +41,7 @@ class FaderRawNode(_FaderNode):
     nodeName = "Raw"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_RAW, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_RAW, name=name, terminals={
             "primary": {"io": "out"},
             "secondary": {"io": "out"},
         })
@@ -75,7 +55,7 @@ class FaderHSINode(_FaderNode):
     nodeName = "HSI"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_HSI, name=name, terminals={
             "color": {"io": "out"},
         })
 
@@ -93,7 +73,7 @@ class FaderHSIANode(_FaderNode):
     nodeName = "HSI-A"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIA, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_HSIA, name=name, terminals={
             "color": {"io": "out"},
             "amber": {"io": "out"},
         })
@@ -113,7 +93,7 @@ class FaderHSIUNode(_FaderNode):
     nodeName = "HSI_U"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIU, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_HSIU, name=name, terminals={
             "color": {"io": "out"},
             "uv": {"io": "out"},
         })
@@ -133,7 +113,7 @@ class FaderHSIAUNode(_FaderNode):
     nodeName = "HSI-AU"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIAU, name=name, terminals={
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_HSIAU, name=name, terminals={
             "color": {"io": "out"},
             "amber": {"io": "out"},
             "uv": {"io": "out"},

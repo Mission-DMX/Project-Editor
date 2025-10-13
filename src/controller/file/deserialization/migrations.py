@@ -27,5 +27,16 @@ def replace_old_filter_configurations(f: Filter) -> Filter:
     """
     if f.filter_type == FilterTypeEnumeration.FILTER_TYPE_CUES:
         f.filter_type = int(FilterTypeEnumeration.VFILTER_CUES)
-        logger.info("Replaced filter type of filter %s to become virtual.", f.filter_id)
+        logger.info("Replaced filter type of filter %s to become virtual on next load. Reloading is advised.",
+                    f.filter_id)
+    if f.filter_type in [
+        FilterTypeEnumeration.FILTER_FADER_RAW,
+        FilterTypeEnumeration.FILTER_FADER_HSI,
+        FilterTypeEnumeration.FILTER_FADER_HSIA,
+        FilterTypeEnumeration.FILTER_FADER_HSIU,
+        FilterTypeEnumeration.FILTER_FADER_HSIAU,
+    ]:
+        f.filter_type = int(int(f.filter_type) * -1)
+        logger.info("Replaced filter type of filter %s to become virtual on next load. Reloading is advised",
+                    f.filter_id)
     return f
