@@ -1,13 +1,16 @@
 """Column fader filter nodes"""
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from model import DataType, Filter, Scene
-from model.control_desk import BankSet
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.fader_vfilter import FaderUpdatingVFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 logger = getLogger(__name__)
+
+if TYPE_CHECKING:
+    from model.control_desk import BankSet
 
 
 class _FaderNode(FilterNode):

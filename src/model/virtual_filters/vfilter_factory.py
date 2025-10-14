@@ -47,7 +47,9 @@ def construct_virtual_filter_instance(
     if not filter_type < 0:
         raise ValueError("The provided filter is not a virtual description.")
     match filter_type:
-        case FilterTypeEnumeration.VFILTER_FADER_RAW | FilterTypeEnumeration.VFILTER_FADER_HSI | FilterTypeEnumeration.VFILTER_FADER_HSIA | FilterTypeEnumeration.FILTER_FADER_HSIU | FilterTypeEnumeration.FILTER_FADER_HSIAU:
+        case (FilterTypeEnumeration.VFILTER_FADER_RAW | FilterTypeEnumeration.VFILTER_FADER_HSI |
+        FilterTypeEnumeration.VFILTER_FADER_HSIA | FilterTypeEnumeration.FILTER_FADER_HSIU |
+        FilterTypeEnumeration.FILTER_FADER_HSIAU):
             return FaderUpdatingVFilter(scene, filter_type, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_COMBINED_FILTER_PRESET:
             # TODO return virtual filter that instantiates a preset (as described in issue #48)

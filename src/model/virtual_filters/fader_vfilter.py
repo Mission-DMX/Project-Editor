@@ -2,15 +2,14 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from model import Filter
-from model.filter import VirtualFilter
 from model.control_desk import BankSet, BanksetIDUpdateListener
+from model.filter import FilterTypeEnumeration, VirtualFilter
 
 if TYPE_CHECKING:
     from model.scene import Scene
-    from model.filter import FilterTypeEnumeration
 
 logger = getLogger(__name__)
 
