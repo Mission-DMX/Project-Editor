@@ -77,6 +77,12 @@ class FilterTypeEnumeration(IntFlag):
     Negative values indicate virtual filters.
     """
 
+    VFILTER_FADER_RAW = -39
+    VFILTER_FADER_HSI = -40
+    VFILTER_FADER_HSIA = -41
+    VFILTER_FADER_HSIU = -42
+    VFILTER_FADER_HSIAU = -43
+
     VFILTER_SEQUENCER = -12
     VFILTER_COLOR_MIXER = -11
     VFILTER_IMPORT = -10
