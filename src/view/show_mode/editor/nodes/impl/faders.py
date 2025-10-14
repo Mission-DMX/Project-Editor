@@ -1,4 +1,5 @@
-"""Column fader filter nodes"""
+"""Column fader filter nodes."""
+
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -39,11 +40,12 @@ class _FaderNode(FilterNode):
 
 
 class FaderRawNode(_FaderNode):
-    """Filter to represent any filter fader"""
+    """Filter to represent any filter fader."""
 
     nodeName = "Raw"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_RAW, name=name, terminals={
             "primary": {"io": "out"},
             "secondary": {"io": "out"},
@@ -54,10 +56,12 @@ class FaderRawNode(_FaderNode):
 
 
 class FaderHSINode(_FaderNode):
-    """Filter to represent a hsi filter fader"""
+    """Filter to represent a hsi filter fader."""
+
     nodeName = "HSI"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_HSI, name=name, terminals={
             "color": {"io": "out"},
         })
@@ -72,10 +76,12 @@ class FaderHSINode(_FaderNode):
 
 
 class FaderHSIANode(_FaderNode):
-    """Filter to represent a hsia filter fader"""
+    """Filter to represent a hsia filter fader."""
+
     nodeName = "HSI-A"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_HSIA, name=name, terminals={
             "color": {"io": "out"},
             "amber": {"io": "out"},
@@ -92,10 +98,12 @@ class FaderHSIANode(_FaderNode):
 
 
 class FaderHSIUNode(_FaderNode):
-    """Filter to represent a hsiu filter fader"""
+    """Filter to represent a hsiu filter fader."""
+
     nodeName = "HSI_U"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_HSIU, name=name, terminals={
             "color": {"io": "out"},
             "uv": {"io": "out"},
@@ -112,10 +120,12 @@ class FaderHSIUNode(_FaderNode):
 
 
 class FaderHSIAUNode(_FaderNode):
-    """Filter to represent a hasiau filter fader"""
+    """Filter to represent a hasiau filter fader."""
+
     nodeName = "HSI-AU"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FADER_HSIAU, name=name, terminals={
             "color": {"io": "out"},
             "amber": {"io": "out"},
@@ -133,10 +143,12 @@ class FaderHSIAUNode(_FaderNode):
 
 
 class FaderMainBrightness(FilterNode):
-    """Filter to the main brightness fader"""
+    """Filter to the main brightness fader."""
+
     nodeName = "global-ilumination"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS, name=name,
                          terminals={"brightness": {"io": "out"}})
 
