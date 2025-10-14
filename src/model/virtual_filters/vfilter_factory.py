@@ -50,7 +50,7 @@ def construct_virtual_filter_instance(
         case (FilterTypeEnumeration.VFILTER_FADER_RAW | FilterTypeEnumeration.VFILTER_FADER_HSI |
         FilterTypeEnumeration.VFILTER_FADER_HSIA | FilterTypeEnumeration.FILTER_FADER_HSIU |
         FilterTypeEnumeration.FILTER_FADER_HSIAU):
-            return FaderUpdatingVFilter(scene, filter_type, filter_id, pos=pos)
+            return FaderUpdatingVFilter(scene, filter_id, filter_type, pos=pos)
         case FilterTypeEnumeration.VFILTER_COMBINED_FILTER_PRESET:
             # TODO return virtual filter that instantiates a preset (as described in issue #48)
             return None

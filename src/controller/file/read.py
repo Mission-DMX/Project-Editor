@@ -126,6 +126,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     _clean_tags(root, prefix)
 
     scene_defs_to_be_parsed = []
+    migration_happened = False
     loaded_banksets: dict[str, BankSet] = {}
 
     pn.total_step_count += len(root)
@@ -149,7 +150,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     pn.total_step_count += len(scene_defs_to_be_parsed)
     for scene_def in scene_defs_to_be_parsed:
-        _parse_scene(scene_def, board_configuration, loaded_banksets)
+        migration_happened |= _parse_scene(scene_def, board_configuration, loaded_banksets)
         pn.current_step_number += 1
 
     pn.current_step_number += 1
@@ -169,6 +170,9 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     board_configuration.broadcaster.end_show_file_parsing.emit()
     board_configuration.broadcaster.show_file_loaded.emit()
     pn.close()
+    if migration_happened:
+        board_configuration.broadcaster.message_box_required.emit("A filter migration was performed. Please save and "
+                                                                  "reload the show file.")
     return True
 
 
@@ -260,7 +264,7 @@ def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pa
 
 def _parse_scene(
     scene_element: ET.Element, board_configuration: BoardConfiguration, loaded_banksets: dict[str, BankSet]
-) -> None:
+) -> bool:
     """Load a scene from the show file data structure.
 
     Args:
@@ -284,12 +288,17 @@ def _parse_scene(
 
     scene = Scene(scene_id=scene_id, human_readable_name=human_readable_name, board_configuration=board_configuration)
 
+    if scene_element.attrib.get("linkedBankset") in loaded_banksets:
+        scene.linked_bankset = loaded_banksets[scene_element.attrib["linkedBankset"]]
+
     filter_pages = []
     ui_page_elements = []
+    migration_happened = False
+
     for child in scene_element:
         match child.tag:
             case "filter":
-                _parse_filter(child, scene)
+                migration_happened |= _parse_filter(child, scene)
             case "filterpage":
                 filter_pages.append(child)
             case "uipage":
@@ -309,13 +318,11 @@ def _parse_scene(
                 logger.error("No suitable parent found while parsing filter pages")
                 break
 
-    if scene_element.attrib.get("linkedBankset") in loaded_banksets:
-        scene.linked_bankset = loaded_banksets[scene_element.attrib["linkedBankset"]]
-
     for ui_page_element in ui_page_elements:
         _append_ui_page(ui_page_element, scene)
 
     board_configuration.broadcaster.scene_created.emit(scene)
+    return migration_happened
 
 
 def _append_ui_page(page_def: ET.Element, scene: Scene) -> None:
@@ -387,12 +394,15 @@ def _append_ui_page(page_def: ET.Element, scene: Scene) -> None:
     scene.ui_pages.append(page)
 
 
-def _parse_filter(filter_element: ET.Element, scene: Scene) -> None:
+def _parse_filter(filter_element: ET.Element, scene: Scene) -> bool:
     """Load a filter from the XML definition.
 
     Args:
         filter_element: The XML data to load the filter from.
         scene: The scene to append the filter to.
+
+    Returns:
+        bool: True if a migration happened and the show file should be saved and reloaded.
 
     """
     filter_id = ""
@@ -427,10 +437,11 @@ def _parse_filter(filter_element: ET.Element, scene: Scene) -> None:
             case _:
                 logger.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
-    filter_ = replace_old_filter_configurations(filter_)
+    filter_, migration_happened = replace_old_filter_configurations(filter_)
     if isinstance(filter_, VirtualFilter):
         filter_.deserialize()
     scene.append_filter(filter_)
+    return migration_happened
 
 
 def _parse_channel_link(initial_parameters_element: ET.Element, filter_: Filter) -> None:

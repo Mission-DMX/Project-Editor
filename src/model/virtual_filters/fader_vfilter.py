@@ -57,6 +57,8 @@ class FaderUpdatingVFilter(VirtualFilter, BanksetIDUpdateListener):
 
     def update_bankset_listener(self) -> None:
         """Update the attached bank set UUID change listener of this fader."""
+        if not "set_id" in self.filter_configurations.keys() or self.scene.linked_bankset is None:
+            return
         set_id = self.filter_configurations["set_id"]
 
         if self.scene.linked_bankset.id == set_id:
@@ -80,6 +82,11 @@ class FaderUpdatingVFilter(VirtualFilter, BanksetIDUpdateListener):
     def notify_on_new_id(self, new_id: str) -> None:
         logger.debug("New bankset ID: %s", new_id)
         self.filter.filter_configurations["set_id"] = new_id
+
+    @override
+    def deserialize(self) -> None:
+        super().deserialize()
+        self.update_bankset_listener()
 
     def __del__(self) -> None:
         """Deregister the bank set update listener."""

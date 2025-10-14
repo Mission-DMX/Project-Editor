@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui, QtWidgets
 from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
-from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
+from PySide6.QtWidgets import QApplication, QProgressBar, QWidget, QMessageBox
 
 import proto.RealTimeControl_pb2
 import style
@@ -132,6 +132,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._utility_wizard: QWizard | None = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
+        self._broadcaster.message_box_required.connect(self._open_message_box)
 
     @property
     def fish_connector(self) -> NetworkManager:
@@ -379,3 +380,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._utility_wizard is not None:
             self._utility_wizard.deleteLater()
             self._utility_wizard = None
+
+    def _open_message_box(self, message: str) -> None:
+        self._settings_dialog = QMessageBox(self)
+        self._settings_dialog.setText(message)
+        self._settings_dialog.setModal(True)
+        self._settings_dialog.show()
