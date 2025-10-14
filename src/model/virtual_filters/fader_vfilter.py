@@ -23,6 +23,18 @@ class FaderUpdatingVFilter(VirtualFilter, BanksetIDUpdateListener):
             filter_type: FilterTypeEnumeration,
             pos: tuple[int] | None = None,
     ) -> None:
+        """Initialize the filter.
+
+        As this virtual filter simply adds the required callbacks to bank set handling, it behaves much like the
+        original filter.
+
+        Args:
+            scene: The scene of the filter.
+            filter_id: The id of the filter.
+            filter_type: The type of the filter. Must be one of the fader ones.
+            pos: The position of the filter inside the filter page.
+
+        """
         super().__init__(scene, filter_id, filter_type=int(filter_type), pos=pos)
         self.bankset_model: BankSet | None = None
         self.update_bankset_listener()
@@ -44,6 +56,7 @@ class FaderUpdatingVFilter(VirtualFilter, BanksetIDUpdateListener):
         filter_list.append(f)
 
     def update_bankset_listener(self) -> None:
+        """Update the attached bank set UUID change listener of this fader."""
         set_id = self.filter_configurations["set_id"]
 
         if self.scene.linked_bankset.id == set_id:
@@ -69,5 +82,6 @@ class FaderUpdatingVFilter(VirtualFilter, BanksetIDUpdateListener):
         self.filter.filter_configurations["set_id"] = new_id
 
     def __del__(self) -> None:
+        """Deregister the bank set update listener."""
         if self._bankset_model is not None:
             self._bankset_model.id_update_listeners.remove(self)
