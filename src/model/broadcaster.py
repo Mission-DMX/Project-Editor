@@ -85,6 +85,9 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     view_to_console_mode: QtCore.Signal = QtCore.Signal()
     view_leave_console_mode: QtCore.Signal = QtCore.Signal()
 
+    view_to_visualizer: QtCore.Signal = QtCore.Signal()
+    view_leave_visualizer: QtCore.Signal = QtCore.Signal()
+
     view_to_action_config: QtCore.Signal = QtCore.Signal()
     view_leave_action_config: QtCore.Signal = QtCore.Signal()
     application_closing: QtCore.Signal = QtCore.Signal()
