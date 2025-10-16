@@ -13,17 +13,7 @@ objects:
   type: truss
   position:
     x: 0.0
-    y: 0.0
-    z: 0.0
-  rotation:
-    x: 0.0
-    y: 0.0
-    z: 0.0
-- id: truss3
-  type: truss
-  position:
-    x: -30.0
-    y: -30.0
+    y: 200.0
     z: 0.0
   rotation:
     x: 0.0

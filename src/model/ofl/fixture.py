@@ -62,7 +62,7 @@ def load_fixture(file: str) -> OflFixture | None:
         return None
     with open(file, "r", encoding="UTF-8") as f:
         ob: dict = json.load(f)
-    ob.update({"fileName": file.split("/fixtures/")[1]})
+    ob.update({"fileName": file.split("\\fixtures\\")[0]})
     return OflFixture.model_validate(ob)
 
 
