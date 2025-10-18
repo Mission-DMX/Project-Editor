@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os.path
 import platform
-from collections.abc import Callable
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui, QtWidgets
@@ -33,6 +32,8 @@ from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizar
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from PySide6.QtWidgets import QWizard
 
 
@@ -66,7 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._patch_controller = PatchController(self._board_configuration, self)  # TODO in controller
 
         # views
-        views: list[tuple[str, QtWidgets.QWidget, callable]] = [
+        views: list[tuple[str, QtWidgets.QWidget, Callable]] = [
             (
                 "Console Mode",
                 MainWidget(UniverseSelector(self._board_configuration, self), self),
