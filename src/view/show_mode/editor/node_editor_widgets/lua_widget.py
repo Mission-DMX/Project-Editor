@@ -1,4 +1,4 @@
-"""Module contains lua filter editor"""
+"""Module contains lua filter editor."""
 from typing import override
 
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QListWidget, QTextEdit, QToolBar, QVBoxLayout, QWidget
