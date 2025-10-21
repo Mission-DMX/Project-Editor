@@ -166,7 +166,7 @@ class UIWidget(ABC):
         """Copy private properties of base class."""
         w._position = self._position
         w._size = self._size
-        w._filter_id = self._filter_id
+        w._associated_filters = self._associated_filters.copy()
         w._configuration = self._configuration.copy()
         return w
 
