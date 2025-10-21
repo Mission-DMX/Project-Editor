@@ -1,3 +1,4 @@
+"""Module contains lua filter editor"""
 from typing import override
 
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QListWidget, QTextEdit, QToolBar, QVBoxLayout, QWidget
@@ -9,7 +10,9 @@ from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
+    """Config widget allowing editing of lua script."""
 
+    @override
     def get_widget(self) -> QWidget:
         return self._widget
 
@@ -17,12 +20,15 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
     def parent_opened(self) -> None:
         super().parent_opened()
 
+    @override
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         self._script_edit_field.setText(parameters["script"])
 
+    @override
     def _get_parameters(self) -> dict[str, str]:
         return {"script": self._script_edit_field.toPlainText()}
 
+    @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
         self._channel_list.clear()
         self._channels.clear()
@@ -62,6 +68,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         return {"in_mapping": ";".join(in_maps), "out_mapping": ";".join(out_maps)}
 
     def __init__(self, parent: QWidget = None) -> None:
+        """Initialize config widget using optional parent widget."""
         super().__init__()
         self._widget = QWidget(parent)
         self._channels: dict[str, tuple[bool, DataType]] = {}

@@ -1,6 +1,4 @@
-"""
-This file provides the column input filter settings widget.
-"""
+"""File provides the column input filter settings widget."""
 from typing import override
 
 from PySide6.QtWidgets import QWidget
@@ -12,26 +10,31 @@ from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class ColumnSelect(NodeEditorFilterConfigWidget):
-    """This class is an adapter to configure the column select filter with the column selection widget."""
+    """Class is an adapter to configure the column select filter with the column selection widget."""
 
     @override
     def parent_opened(self) -> None:
         super().parent_opened()
 
+    @override
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         pass
 
+    @override
     def _get_parameters(self) -> dict[str, str]:
         return {}
 
+    @override
     def get_widget(self) -> QWidget:
         return self._widget
 
     def __init__(self, filter_: Filter, parent: QWidget = None) -> None:
+        """Initialize config widget using provided filter and parent."""
         super().__init__()
         self._widget = FaderColumnSelectorWidget(parent=parent, base_set=filter_.scene.linked_bankset)
         self._filter = filter_
 
+    @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
         if "ignore_main_brightness_control" in conf:
             self._widget.main_brightness_cb_enabled = True
@@ -42,6 +45,7 @@ class ColumnSelect(NodeEditorFilterConfigWidget):
         self._widget.reload_data()
         self._widget.set_selected_item(set_id, column_id)
 
+    @override
     def _get_configuration(self) -> dict[str, str]:
         if not self._widget.selected_item:
             return {}
