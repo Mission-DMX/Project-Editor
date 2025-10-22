@@ -131,6 +131,7 @@ class ArithmeticMinimumNode(FilterNode):
     value = min(param1, param2)
 
     """
+
     nodeName = "min"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING, Final
 
+from PySide6 import QtGui, QtCore
 from PySide6.QtCore import QObject, Signal
 
 from controller.utils.process_notifications import get_process_notifier
@@ -197,4 +198,6 @@ class Macro:
             if not self.c.exec_command(command):
                 success = False
                 logger.error("Failed to execute command: %s", command)
+            else:
+                QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
         return success
