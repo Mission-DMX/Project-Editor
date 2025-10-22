@@ -5,7 +5,7 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING, Final
 
-from PySide6 import QtGui, QtCore
+from PySide6 import QtCore, QtGui
 from PySide6.QtCore import QObject, Signal
 
 from controller.utils.process_notifications import get_process_notifier
