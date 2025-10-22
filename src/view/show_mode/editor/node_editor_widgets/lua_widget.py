@@ -1,3 +1,5 @@
+"""Module contains filter config widgets for Lua script fitlers."""
+
 from typing import override
 
 from PySide6.QtWidgets import (
@@ -19,6 +21,7 @@ from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
+    """Code editor and channel setup for Lua filter."""
 
     @override
     def parent_opened(self) -> None:
@@ -64,6 +67,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         item.annotated_data = (channel_name, data_type, is_input)
         self._channel_list.insertItem(0, item)
 
+    @override
     def _get_configuration(self) -> dict[str, str]:
         in_maps: list[str] = []
         out_maps: list[str] = []
@@ -78,6 +82,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         return {"in_mapping": ";".join(in_maps), "out_mapping": ";".join(out_maps)}
 
     def __init__(self, parent: QWidget = None) -> None:
+        """Initialize LuaScriptConfigWidget."""
         super().__init__()
         self._widget = QWidget(parent)
         self._channels: dict[str, tuple[bool, DataType]] = {}
