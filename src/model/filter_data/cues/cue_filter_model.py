@@ -33,7 +33,7 @@ class CueFilterModel:
         if new_value < -1:
             raise ValueError("Cue value must be >= -1")
         if new_value >= len(self.cues):
-            raise ValueError("Cue value must be < {} (Due to number of cues).".format(len(self.cues)))
+            raise ValueError(f"Cue value must be < {len(self.cues)} (Due to number of cues).")
         self._default_cue = new_value
 
     def get_as_configuration(self) -> dict[str, str]:
