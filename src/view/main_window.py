@@ -260,11 +260,11 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.addWidget(self._status_pbar)
 
         self._status_current_scene_label = QtWidgets.QLabel("")
-        self._fish_connector.active_scene_on_fish_changed.connect(
+        self._broadcaster.active_scene_switched.connect(
             lambda i: self._status_current_scene_label.setText(
-                f"[{i}] {
+                f"[{i if i >= 0 else 'D' if i == -1 else 'No Show on Fish' if i == -2 else f'E{i * -1}'}] {
                     self._board_configuration.get_scene_by_id(i).human_readable_name
-                    if i != -1 and self._board_configuration.get_scene_by_id(i) is not None
+                    if i >= 0 and self._board_configuration.get_scene_by_id(i) is not None
                     else ''
                 }"
             )
