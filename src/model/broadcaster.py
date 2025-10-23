@@ -1,4 +1,4 @@
-"""connector for Signals"""
+"""Connector for Signals."""
 
 from __future__ import annotations
 
@@ -16,29 +16,34 @@ P = ParamSpec("P")
 
 
 class QObjectSingletonMeta(type(QtCore.QObject)):
-    """metaclass for a QObject Singleton"""
+    """Metaclass for a QObject Singleton."""
 
     instance: Any
 
     def __init__(cls: type[QObjectSingletonMeta], name: str, bases: tuple[type, ...], _dict: dict[str, Any]) -> None:
+        """Initialize singleton instance."""
         super().__init__(name, bases, _dict)
         cls.instance = None
 
     def __call__(cls: type[QObjectSingletonMeta], *args: P.args, **kw: P.kwargs) -> QObjectSingletonMeta:
+        """Override __call__ for singleton behavior."""
         if cls.instance is None:
             cls.instance = super().__call__(*args, **kw)
         return cls.instance
 
 
 class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
-    """connector for Signals"""
+    """Connector for Signals."""
 
     connection_state_updated: QtCore.Signal = QtCore.Signal(bool)
     change_run_mode: QtCore.Signal = QtCore.Signal(proto.RealTimeControl_pb2.RunMode.ValueType)  # TODO Remove
     change_active_scene: QtCore.Signal = QtCore.Signal(object)
-    load_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
+    transmitting_show_file: QtCore.Signal = QtCore.Signal(Element, bool)
+    show_file_applied: QtCore.Signal = QtCore.Signal()
     show_file_loaded: QtCore.Signal = QtCore.Signal()
     show_file_path_changed: QtCore.Signal = QtCore.Signal(str)
+    begin_show_file_parsing: QtCore.Signal = QtCore.Signal()
+    end_show_file_parsing: QtCore.Signal = QtCore.Signal()
     add_universe: QtCore.Signal = QtCore.Signal(object)
     add_fixture: QtCore.Signal = QtCore.Signal(object)
     send_universe: QtCore.Signal = QtCore.Signal(object)
@@ -82,11 +87,11 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     view_to_temperature: QtCore.Signal = QtCore.Signal()
     view_leave_temperature: QtCore.Signal = QtCore.Signal()
 
-    view_to_console_mode: QtCore.Signal = QtCore.Signal()
-    view_leave_console_mode: QtCore.Signal = QtCore.Signal()
-
     view_to_visualizer: QtCore.Signal = QtCore.Signal()
     view_leave_visualizer: QtCore.Signal = QtCore.Signal()
+
+    view_to_console_mode: QtCore.Signal = QtCore.Signal()
+    view_leave_console_mode: QtCore.Signal = QtCore.Signal()
 
     view_to_action_config: QtCore.Signal = QtCore.Signal()
     view_leave_action_config: QtCore.Signal = QtCore.Signal()
@@ -117,6 +122,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     event_sender_update: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event_sender)
 
     def __new__(cls) -> Self:
+        """Override __new__ to implement singleton behavior."""
         if not hasattr(cls, "instance") or cls.instance is None:
             cls.instance = super().__new__(cls)
         return cls.instance

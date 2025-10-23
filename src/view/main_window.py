@@ -54,6 +54,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster = Broadcaster()
         self.setWindowTitle("Project-Editor")
 
+        from model.dmx.dmx_test import dmx_test
+
+        self._dmx_test = dmx_test(
+            universe_id=2,
+            start_address_1based=15,
+            parent=self
+        )
+
         # model objects
         self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
