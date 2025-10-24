@@ -1,3 +1,4 @@
+# coding=utf-8
 """Fixture Definitions from OFL."""
 
 from __future__ import annotations

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import platform
 import zipfile
 from logging import getLogger
 from typing import TYPE_CHECKING
@@ -33,7 +32,7 @@ class PatchingSelect(QtWidgets.QScrollArea):
     def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
         super().__init__(parent)
         self._board_configuration = board_configuration
-        cache_path = os.path.join(os.getenv("LOCALAPPDATA", ""), "missionDMX")
+        cache_path = "/var/cache/missionDMX"
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
         fixtures_path = os.path.join(cache_path, "fixtures/")
