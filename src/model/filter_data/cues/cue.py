@@ -41,9 +41,9 @@ class EndAction(Enum):
             case EndAction.HOLD:
                 return "Hold current values"
             case EndAction.START_AGAIN:
-                return "Jump to next cue"
-            case _:
                 return "Restart cue"
+            case _:
+                return "Jump to next cue"
 
         return "Unknown action"
 
