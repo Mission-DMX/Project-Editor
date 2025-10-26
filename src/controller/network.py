@@ -39,7 +39,6 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     status_updated: QtCore.Signal = QtCore.Signal(str)
     last_cycle_time_update: QtCore.Signal = QtCore.Signal(int)
     run_mode_changed: QtCore.Signal = QtCore.Signal(int)
-    active_scene_on_fish_changed: QtCore.Signal = QtCore.Signal(int)
 
     def __new__(cls) -> Self:
         """Override __new__ for singleton behavior."""
@@ -58,6 +57,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._last_run_mode = None
         self._last_active_scene: int = -1
         self._is_running: bool = False
+        self._scene_switch_after_show_upload = False
         self._fish_status: str = ""
         self._server_name = "/tmp/fish.sock"  # noqa: S108 not security relevant
         self._socket.stateChanged.connect(self._on_state_changed)
@@ -264,9 +264,9 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         if msg.current_state != self._last_run_mode:
             self._last_run_mode = msg.current_state
             self.run_mode_changed.emit(int(msg.current_state))
-        if msg.current_scene != self._last_active_scene:
+        if msg.current_scene != self._last_active_scene or self._scene_switch_after_show_upload:
+            self._scene_switch_after_show_upload = False
             self._last_active_scene = msg.current_scene
-            self.active_scene_on_fish_changed.emit(msg.current_scene)
             self._broadcaster.active_scene_switched.emit(msg.current_scene)
 
     def _log_fish(self, msg: proto.RealTimeControl_pb2.long_log_update) -> None:
@@ -395,6 +395,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             goto_default_scene=goto_default_scene,
         )
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_LOAD_SHOW_FILE)
+        self._scene_switch_after_show_upload = True
 
     def enter_scene(self, scene: Scene, push_direct: bool = True) -> None:
         """Tell Fish to load a specific scene.
