@@ -240,7 +240,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._fish_connector.change_server_name(text)
 
     def _setup_status_bar(self) -> None:
-        """Build status bor."""
+        """Build status bar."""
         status_bar = QtWidgets.QStatusBar()
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
