@@ -115,7 +115,7 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         The instantiated settings widget or None.
 
     """
-    if 39 <= filter_.filter_type <= 43:
+    if 39 <= filter_.filter_type <= 43 or -43 <= filter_.filter_type <= -39:
         return ColumnSelect(filter_)
     if filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
         return CueEditor(f=filter_)
