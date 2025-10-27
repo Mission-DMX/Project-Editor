@@ -32,10 +32,6 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         return self._widget
 
     @override
-    def parent_opened(self) -> None:
-        super().parent_opened()
-
-    @override
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         self._script_edit_field.setPlainText(parameters["script"])
 
