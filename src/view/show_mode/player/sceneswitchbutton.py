@@ -39,6 +39,10 @@ class SceneSwitchButton(QPushButton):
         # FIXME: Incorrect switching between scenes?
 
     def _active_scene_switched(self, new_scene_id: int) -> None:
+        if not isinstance(new_scene_id, int):
+            return
+        if new_scene_id < 0:
+            return  # Fish transmitted a scene error
         if new_scene_id == self._scene.scene_id:
             self.setChecked(True)
             self.setStyleSheet(SceneSwitchButton._STYLE_ACTIVE_SCENE)

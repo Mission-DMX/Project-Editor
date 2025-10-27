@@ -1,16 +1,31 @@
-"""Module contains lua filter editor."""
+"""Module contains filter config widgets for Lua script fitlers."""
+
 from typing import override
 
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLineEdit, QListWidget, QTextEdit, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLineEdit,
+    QListWidget,
+    QPlainTextEdit,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model import DataType
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
+from ._lua_syntax_highlighter import LuaSyntaxHighlighter
 from .node_editor_widget import NodeEditorFilterConfigWidget
 
 
 class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
-    """Config widget allowing editing of lua script."""
+    """Code editor and channel setup for Lua filter."""
+
+    @override
+    def parent_opened(self) -> None:
+        super().parent_opened()
 
     @override
     def get_widget(self) -> QWidget:
@@ -22,7 +37,7 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
 
     @override
     def _load_parameters(self, parameters: dict[str, str]) -> None:
-        self._script_edit_field.setText(parameters["script"])
+        self._script_edit_field.setPlainText(parameters["script"])
 
     @override
     def _get_parameters(self) -> dict[str, str]:
@@ -46,14 +61,17 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
             self._channels[channel_name] = (False, DataType.from_filter_str(data_type))
             self._insert_channel_in_list(channel_name, data_type, False)
 
-    def _insert_channel_in_list(self, channel_name: str, data_type: DataType, is_input: bool) -> None:
+    def _insert_channel_in_list(self, channel_name: str, data_type: DataType | str, is_input: bool) -> None:
         # TODO replace with AnnotatedListWidgetItem
         format_str = "{}: input,{}" if is_input else "{}: output,{}"
         item = AnnotatedListWidgetItem(self._channel_list)
         item.setText(format_str.format(channel_name, data_type))
+        if isinstance(data_type, str):
+            data_type = DataType.from_filter_str(data_type)
         item.annotated_data = (channel_name, data_type, is_input)
         self._channel_list.insertItem(0, item)
 
+    @override
     def _get_configuration(self) -> dict[str, str]:
         in_maps: list[str] = []
         out_maps: list[str] = []
@@ -94,9 +112,9 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
 
         side_container.setLayout(side_layout)
         central_layout.addWidget(side_container)
-        self._script_edit_field = QTextEdit(self._widget)
+        self._script_edit_field = QPlainTextEdit(self._widget)
         central_layout.addWidget(self._script_edit_field)
-        # TODO add syntax highlighting support
+        self._highlighter = LuaSyntaxHighlighter(self._script_edit_field.document())
         self._widget.setLayout(central_layout)
 
     def _add_input(self) -> None:

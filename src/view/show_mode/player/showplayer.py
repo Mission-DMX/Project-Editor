@@ -112,8 +112,11 @@ class ShowPlayerWidget(QWidget):
         if scene_index == self._scene_index:
             self._ui_container.check_page_update()
             return
-
+        if scene_index < 0:
+            # We're dealing with direct mode (-1) or show mode without loaded scenes (-2)
+            return
         if not (scene_index < len(self._board_configuration.scenes)):
+            # Some show file is running that is not our current loaded one.
             return
         self._scene_index = scene_index
         self._ui_container.scene = self._board_configuration.get_scene_by_id(scene_index)

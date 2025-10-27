@@ -74,7 +74,7 @@ class CueEditor(PreviewEditWidget):
         if len(self._model.cues) > 0:
             self.select_cue(0)
             self._default_cue_combo_box.setEnabled(True)
-        self._default_cue_combo_box.setCurrentIndex(self._model.default_cue)
+        self._default_cue_combo_box.setCurrentIndex(self._model.default_cue + 1)
         if self._bankset:
             self._bankset.update()
             BankSet.push_messages_now()
@@ -119,6 +119,7 @@ class CueEditor(PreviewEditWidget):
 
         self._default_cue_combo_box = QComboBox(cue_settings_container)
         self._default_cue_combo_box.addItem("No default Cue")
+        self._default_cue_combo_box.setCurrentIndex(0)
         self._default_cue_combo_box.setEnabled(False)
         cue_settings_container_layout.addWidget(self._default_cue_combo_box)
 
@@ -220,6 +221,8 @@ class CueEditor(PreviewEditWidget):
             self._model.cues[index - 1] = self._model.cues[index]
             self._model.cues[index] = old_cue
             self._swap_table_rows(index - 1, index)
+            # TODO check if we need to change the default cue here
+            # TODO rename cues in combo box
         self._ui_widget_update_required = True
 
     def _move_cue_down_clicked(self) -> None:
@@ -230,6 +233,8 @@ class CueEditor(PreviewEditWidget):
             self._model.cues[index + 1] = self._model.cues[index]
             self._model.cues[index] = old_cue
             self._swap_table_rows(index + 1, index)
+            # TODO check if we need to change the default cue here
+            # TODO rename cues in combo box
         self._ui_widget_update_required = True
 
     def _rename_selected_cue(self) -> None:
@@ -258,6 +263,7 @@ class CueEditor(PreviewEditWidget):
             if len(self._input_dialog) == 0 and isinstance(self._parent_widget, QDialog):
                 self._parent_widget.activateWindow()
         self._ui_widget_update_required = True
+        self._default_cue_combo_box.setItemText(index + 1, f"Cue {new_name}")
 
     def add_cue(self, cue: Cue, name: str | None = None) -> int:
         """Add a cue to the model.
