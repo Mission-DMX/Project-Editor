@@ -1,7 +1,9 @@
 """Scene widget for scene player."""
+from collections.abc import Callable
 
 from PySide6.QtWidgets import QPushButton, QWidget
 
+from controller.network import NetworkManager
 from model import Broadcaster, Scene
 
 
@@ -20,7 +22,7 @@ class SceneSwitchButton(QPushButton):
 
     _STYLE_NOT_ACTIVE = None
 
-    def __init__(self, scene: Scene, parent: QWidget = None) -> None:
+    def __init__(self, scene: Scene, parent: QWidget = None, force_reload_callback: Callable | None = None) -> None:
         """Initialize button using scene to switch to as well as parent Qt widget."""
         super().__init__(parent)
         if SceneSwitchButton._STYLE_NOT_ACTIVE is None:
@@ -29,14 +31,17 @@ class SceneSwitchButton(QPushButton):
         self.clicked.connect(self._clicked)
         self.setFixedSize(self.width, self.height)
         self.setText(self._scene.human_readable_name)
+        self._reload_hook: Callable | None = force_reload_callback
         b = Broadcaster()
         b.active_scene_switched.connect(self._active_scene_switched)
 
     def _clicked(self) -> None:
         """Handle behavior when the scene button is clicked."""
-        # transmit_to_fish(self._scene.board_configuration)
-        self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene)
-        # FIXME: Incorrect switching between scenes?
+        if self._scene is not None and self._scene.scene_id == NetworkManager().current_active_scene_id:
+            if self._reload_hook is not None:
+                self._reload_hook()
+        else:
+            self._scene.board_configuration.broadcaster.change_active_scene.emit(self._scene)
 
     def _active_scene_switched(self, new_scene_id: int) -> None:
         if not isinstance(new_scene_id, int):
