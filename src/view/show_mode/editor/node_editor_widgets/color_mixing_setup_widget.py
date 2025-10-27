@@ -1,3 +1,5 @@
+"""Module contains filter config widget for color mixing vfilter."""
+
 import os.path
 from typing import override
 
@@ -50,9 +52,12 @@ class _ColorHelpWidget(QWidget):
 
 
 class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
+    """Configuration widget for color mixing vfilter."""
+
     _help_data = yaml_load(resource_path(os.path.join("resources", "data", "color_mixing.yml")))
 
     def __init__(self, parent: QWidget = None) -> None:
+        """Initialize config widgets using optional parent widget."""
         super().__init__()
         self._widget = QWidget(parent=parent)
         self._color_help_widget = _ColorHelpWidget(parent=self._widget)
@@ -73,12 +78,18 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
         layout.addWidget(self._color_help_widget)
         self._widget.setLayout(layout)
 
+    @override
+    def parent_opened(self) -> None:
+        super().parent_opened()
+
+    @override
     def _get_configuration(self) -> dict[str, str]:
         return {
             "input_count": str(self._channel_count_spinbox.value()),
             "method": str(self._method_selection_box.currentText()),
         }
 
+    @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
         try:
             self._channel_count_spinbox.setValue(int(conf.get("input_count")))
@@ -86,15 +97,19 @@ class ColorMixingSetupWidget(NodeEditorFilterConfigWidget):
             self._channel_count_spinbox.setValue(2)
         self._method_selection_box.setCurrentText(conf.get("method"))
 
+    @override
     def get_widget(self) -> QWidget:
         return self._widget
 
+    @override
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         # We're not using UI parameters
         pass
 
+    @override
     def _get_parameters(self) -> dict[str, str]:
         return {}
 
     def _selected_method_changed(self, new_method: str) -> None:
+        """Callback to update mixing preview help."""
         self._color_help_widget.set_help_content(ColorMixingSetupWidget._help_data.get(new_method))
