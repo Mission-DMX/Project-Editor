@@ -39,11 +39,11 @@ class PanTiltConstantFilter(VirtualFilter):
             case "pan8bit":
                 return f"{self.filter_id}_8bit_pan:value_upper"
             case "tilt8bit":
-                return "{self.filter_id}_8bit_tilt:value_upper"
+                return f"{self.filter_id}_8bit_tilt:value_upper"
             case "pan16bit":
-                return "{self.filter_id}_16bit_pan:value"
+                return f"{self.filter_id}_16bit_pan:value"
             case "tilt16bit":
-                return "{self.filter_id}_16bit_tilt:value"
+                return f"{self.filter_id}_16bit_tilt:value"
         return None
 
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
