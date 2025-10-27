@@ -42,6 +42,7 @@ class ShowPlayerWidget(QWidget):
         current_scene_id = NetworkManager().current_active_scene_id
         if current_scene_id >= 0:
             self._switch_scene(current_scene_id)
+            self._reload()
 
     def _index_to_position(self, index: int) -> tuple[int, int]:
         """Calculate the grid position from index.
@@ -64,7 +65,7 @@ class ShowPlayerWidget(QWidget):
             scene: Scene to be added.
 
         """
-        scene_widget = SceneSwitchButton(scene, self)
+        scene_widget = SceneSwitchButton(scene, self, force_reload_callback=self._reload)
         self._grid.append(scene_widget)
         requested_scene_id = NetworkManager().current_active_scene_id
         if self._scene_index != requested_scene_id and scene.scene_id == requested_scene_id:
