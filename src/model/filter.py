@@ -49,7 +49,12 @@ class DataType(IntFlag):
 
     @staticmethod
     def from_filter_str(type_definition_string: str) -> DataType:
-        """Deserialize from filter string."""
+        """Deserialize from filter string.
+
+        Throws:
+            ValueError if the type definition string is invalid.
+
+        """
         if isinstance(type_definition_string, DataType):
             return type_definition_string
         match type_definition_string.lower():
