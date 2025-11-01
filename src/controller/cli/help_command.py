@@ -90,6 +90,6 @@ class HelpCommand(Command):
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
-                self.context.print("\tprint\tasset\tset\tif")
+                self.context.print("\tprint\tasset\tset\tif\tconnect")
                 return False
         return True

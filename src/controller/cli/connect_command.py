@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from jinja2 import Template
+from jinja2 import Environment
 
 from controller.cli.command import Command
 from model import DataType
@@ -11,8 +11,23 @@ from model import DataType
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
 
+    from jinja2.environment import Template
+
     from controller.cli.cli_context import CLIContext
     from model import Filter
+
+
+def _add(value: str, arg: str) -> str:
+    return str(int(int(value) + int(arg)))
+
+def _sub(value: str, arg: str) -> str:
+    return str(int(int(value) - int(arg)))
+
+def _mul(value: str, arg: str) -> str:
+    return str(int(int(value) + int(arg)))
+
+def _div(value: str, arg: str) -> str:
+    return str(int(int(value) / int(arg)))
 
 class ConnectCommand(Command):
     """Command to connect filters."""
@@ -21,6 +36,11 @@ class ConnectCommand(Command):
         """Initialize the command."""
         super().__init__(context, "connect")
         self._help_text = "Connect filter channels"
+        self._jinja_env = Environment()
+        self._jinja_env.filters["add"] = _add
+        self._jinja_env.filters["sub"] = _sub
+        self._jinja_env.filters["mul"] = _mul
+        self._jinja_env.filters["div"] = _div
 
     @override
     def configure_parser(self, parser: ArgumentParser) -> None:
@@ -41,10 +61,10 @@ class ConnectCommand(Command):
             self.context.print("Error: No scene selected.")
             return False
         success = True
-        src_template = Template(args.source)
+        src_template = self._jinja_env.from_string(args.source[0])
+        dest_templates = [self._jinja_env.from_string(dest_template_str) for dest_template_str in args.targets]
         for i in range(args.source_count):
-            for dest_template_str in args.targets:
-                dest_template = Template(dest_template_str)
+            for dest_template in dest_templates:
                 for j in range(args.destination_count):
                     success &= self._connect(src_template, dest_template, i, j, args.guard)
         return success
@@ -54,8 +74,16 @@ class ConnectCommand(Command):
         source_filter: Filter | None = None
         destination_filter: Filter | None = None
         try:
-            source_template = source_template.render(source_iter=source_iter, destination_iter=destination_iter)
-            source_filter_id, source_channel_name = source_template.split(":")
+            source_template = source_template.render({
+                "si": source_iter,
+                "di": destination_iter
+            })
+            try:
+                source_filter_id, source_channel_name = source_template.split(":")
+            except ValueError:
+                self.context.print("Source filter id and channel name are invalid. Use the following format: "
+                                   "<source_filter_id>:<channel_name>")
+                return False
             source_filter = self.context.selected_scene.get_filter_by_id(source_filter_id)
             if source_filter is None:
                 self.context.print(f"Source filter '{source_filter_id}' does not exist in scene "
@@ -65,9 +93,10 @@ class ConnectCommand(Command):
             self.context.print(f"ERROR: The source filter format is invalid: {e}")
             return False
         try:
-            destination_template = destination_template.render(
-                source_iter=source_iter, destination_iter=destination_iter
-            )
+            destination_template = destination_template.render({
+                "si": source_iter,
+                "di": destination_iter
+            })
             destination_filter_id, destination_channel_name = destination_template.split(":")
             destination_filter = self.context.selected_scene.get_filter_by_id(destination_filter_id)
             if destination_filter is None:
@@ -76,6 +105,10 @@ class ConnectCommand(Command):
                 return False
         except IndexError as e:
             self.context.print(f"ERROR: The destination filter format is invalid: {e}")
+            return False
+        except ValueError as e:
+            self.context.print(f"ERROR: The destination filter format is invalid: {e}. Got: '{destination_template}'."
+                               f" Use the following format: <destination_filter_id>:<channel_name>")
             return False
         source_data_type = source_filter.out_data_types.get(source_channel_name)
         if source_data_type is None:
