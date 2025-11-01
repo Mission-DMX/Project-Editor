@@ -73,6 +73,11 @@ class HelpCommand(Command):
                 self.context.print("commit [--select-default-scene] -- apply the current loaded show file to fish")
             case "delay":
                 self.context.print("delay the execution of the macro by the specified amount of milliseconds")
+            case "fish":
+                self.context.print("Manage fish connection state.")
+                self.context.print("\tconnect -- Connect to the fish")
+                self.context.print("\tdisconnect -- Disconnect from the fish")
+                self.context.print("\tquery -- Query the fish connection state")
             case "macro":
                 self.context.print("Control macros.")  # TODO
                 self.context.print("\texec <macro> -- Execute the macro")
@@ -84,6 +89,6 @@ class HelpCommand(Command):
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
-                self.context.print("\tprint\tasset\tset\tif")
+                self.context.print("\tprint\tasset\tset\tif\tfish")
                 return False
         return True
