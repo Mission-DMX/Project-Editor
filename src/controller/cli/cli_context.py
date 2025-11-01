@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from controller.cli.asset_command import AssetCommand
 from controller.cli.bankset_command import BankSetCommand
 from controller.cli.event_command import EventCommand
+from controller.cli.fish_con_command import FishConnCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
 from controller.cli.macro_command import MacroCommand
@@ -100,6 +101,7 @@ class CLIContext:
             IfCommand(self),
             HelpCommand(self),
             AssetCommand(self),
+            FishConnCommand(self),
         ]
         self._selected_bank: BankSet | None = None
         self._selected_scene: Scene | None = None
