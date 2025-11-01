@@ -36,7 +36,7 @@ class ConnectCommand(Command):
         """Initialize the command."""
         super().__init__(context, "connect")
         self._help_text = "Connect filter channels"
-        self._jinja_env = Environment()
+        self._jinja_env = Environment()  # NOQA: S701 the editor is not a web page.
         self._jinja_env.filters["add"] = _add
         self._jinja_env.filters["sub"] = _sub
         self._jinja_env.filters["mul"] = _mul
