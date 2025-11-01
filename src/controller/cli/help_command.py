@@ -35,6 +35,7 @@ class HelpCommand(Command):
             case "list":
                 self.context.print("This command displays the content of system collections.")
                 self.context.print("The following containers can be queried:")
+                self.context.print("\tconnect -- Connect filter channels")
                 self.context.print("\tscenes -- Display the available scene ids.")
                 self.context.print("\tfilters -- Display the filter ids in the current selected scene.")
                 self.context.print("\tcolumns -- Display the columns in the current selected bank set.")
@@ -80,6 +81,10 @@ class HelpCommand(Command):
             case "asset":
                 self.context.print("Manipulate loaded assets.")
                 self.context.print("load <class> <info>")
+            case "connect":
+                self.context.print("Connect filter channels. Requires to have a scene selected.")
+                self.context.print("\t<source channel ID template> <destination channel ID templates> [--guard <smod:X>"
+                                   "|<dmod:X>|<dt:DT>] [--source-count <count>] [--destination-count <count>]")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
