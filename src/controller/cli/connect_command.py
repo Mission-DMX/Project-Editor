@@ -1,7 +1,7 @@
 """Contains command to connect filter channels in batch mode."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from jinja2 import Template
 
@@ -22,6 +22,7 @@ class ConnectCommand(Command):
         super().__init__(context, "connect")
         self._help_text = "Connect filter channels"
 
+    @override
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument("source", type=str, nargs=1,
                             help="Source filter id and channel name, split by colon.")
@@ -34,6 +35,7 @@ class ConnectCommand(Command):
         parser.add_argument("-d", "--destination-count", type=int, default=1,
                             help="Specify the number of destination channel iterations")
 
+    @override
     def execute(self, args: Namespace) -> bool:
         if self.context.selected_scene is None:
             self.context.print("Error: No scene selected.")
@@ -101,6 +103,14 @@ class ConnectCommand(Command):
                     case "dt":
                         required_dt = DataType.from_filter_str(argument)
                         can_run &= source_data_type == required_dt
+                    case "sfid_contains":
+                        can_run &= argument in source_filter_id
+                    case "dfid_contains":
+                        can_run &= argument in destination_filter_id
+                    case "schan_contains":
+                        can_run &= argument in source_channel_name
+                    case "dchan_contains":
+                        can_run &= argument in destination_channel_name
                     case _:
                         self.context.print(f"ERROR: The guard '{g_filter}' is unknown.")
                         return False

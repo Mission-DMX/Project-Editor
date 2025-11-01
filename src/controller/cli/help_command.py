@@ -84,7 +84,8 @@ class HelpCommand(Command):
             case "connect":
                 self.context.print("Connect filter channels. Requires to have a scene selected.")
                 self.context.print("\t<source channel ID template> <destination channel ID templates> [--guard <smod:X>"
-                                   "|<dmod:X>|<dt:DT>] [--source-count <count>] [--destination-count <count>]")
+                                   "|<dmod:X>|<dt:DT>|<sfid_contains:STR>|<dfid_contains:STR>|<schan_contains:STR>|"
+                                   "<dchan_contains:STR>] [--source-count <count>] [--destination-count <count>]")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
