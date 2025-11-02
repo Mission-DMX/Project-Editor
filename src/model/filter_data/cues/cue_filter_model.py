@@ -28,7 +28,7 @@ class CueFilterModel:
 
         The default cue will be applied after switching to the scene of the filter (unless persistence rules
         kick in). The setter checks for reasonable values and will throw ValueError if they are invalid.
-        
+
         """
         return self._default_cue
 
