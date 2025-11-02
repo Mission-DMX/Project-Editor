@@ -12,6 +12,7 @@ from controller.cli.asset_command import AssetCommand
 from controller.cli.bankset_command import BankSetCommand
 from controller.cli.connect_command import ConnectCommand
 from controller.cli.event_command import EventCommand
+from controller.cli.fish_con_command import FishConnCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
 from controller.cli.macro_command import MacroCommand
@@ -102,6 +103,7 @@ class CLIContext:
             HelpCommand(self),
             AssetCommand(self),
             ConnectCommand(self),
+            FishConnCommand(self),
         ]
         self._selected_bank: BankSet | None = None
         self._selected_scene: Scene | None = None

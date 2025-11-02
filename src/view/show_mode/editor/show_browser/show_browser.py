@@ -212,6 +212,7 @@ class ShowBrowser:
 
         has_scenes = False
         has_filter_pages = False
+        has_ui_page = False
 
         for si in selected_items:
             if isinstance(si, AnnotatedTreeWidgetItem):
