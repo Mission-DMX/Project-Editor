@@ -34,6 +34,7 @@ class FilterSelectionWidget(QTreeWidget):
         self._last_selected_item: AnnotatedTreeWidgetItem | None = None
         self.selectionModel().selectionChanged.connect(self._selection_changed)
         self._allowed_filter_types = allowed_filter_types or []
+        self.excluded_filter_ids: set[str] = set()
 
         if self._scene is not None:
             self.populate_widget()
@@ -75,7 +76,7 @@ class FilterSelectionWidget(QTreeWidget):
         def is_filter_addable(filter_to_add: Filter) -> bool:
             return not (
                 (len(self._allowed_filter_types) > 0) and (filter_to_add.filter_type not in self._allowed_filter_types)
-            )
+            ) and (filter_to_add.filter_id not in self.excluded_filter_ids)
 
         def add_filter_item(filter_to_add: Filter, page_item: AnnotatedTreeWidgetItem) -> AnnotatedTreeWidgetItem:
             nonlocal already_added_filters
