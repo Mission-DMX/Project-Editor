@@ -148,6 +148,9 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         if self._widget is None:
             self._construct_widget()
             return
+        if self._filter is not None:
+            self._tree_widget.excluded_filter_ids.clear()
+            self._tree_widget.excluded_filter_ids.add(self._filter.filter_id)
         found_filter = self._tree_widget.populate_widget()
         self._tree_widget.setEnabled(not found_filter)
         self._clear_selection_action.setEnabled(found_filter)
