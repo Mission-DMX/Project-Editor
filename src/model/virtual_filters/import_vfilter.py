@@ -1,4 +1,6 @@
+"""Virtual Filter for importing filters from other filter pages."""
 from logging import getLogger
+from typing import override
 
 from model import Filter, Scene
 from model.filter import FilterTypeEnumeration, VirtualFilter
@@ -7,14 +9,21 @@ logger = getLogger(__name__)
 
 
 class ImportVFilter(VirtualFilter):
+    """ImportVFilter.
+
+    This virtual filter imports a filter from other filter pages.
+
+    """
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+        """Initialize the virtual filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_IMPORT, pos=pos)
         if "target" not in self.filter_configurations:
             self.filter_configurations["target"] = ""
         if "rename_dict" not in self.filter_configurations:
             self.filter_configurations["rename_dict"] = ""
 
+    @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         target_filter_id = self.filter_configurations.get("target")
         if target_filter_id is None or target_filter_id == "":
@@ -32,6 +41,7 @@ class ImportVFilter(VirtualFilter):
                     break
         return f"{target_filter_id}:{virtual_port_id}"
 
+    @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         # Nothing really to do here as were simply forwarding the filter. However, we need to make sure, that the
         # outputs exist.
