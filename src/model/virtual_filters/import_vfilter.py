@@ -1,5 +1,9 @@
+from logging import getLogger
+
 from model import Filter, Scene
 from model.filter import FilterTypeEnumeration, VirtualFilter
+
+logger = getLogger(__name__)
 
 
 class ImportVFilter(VirtualFilter):
@@ -29,5 +33,12 @@ class ImportVFilter(VirtualFilter):
         return f"{target_filter_id}:{virtual_port_id}"
 
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
-        # Nothing to do here as were simply forwarding the filter.
-        pass
+        # Nothing really to do here as were simply forwarding the filter. However, we need to make sure, that the
+        # outputs exist.
+        for item in self.filter_configurations["rename_dict"].split(';'):
+            if "=" not in item:
+                logger.error("Invalid mapping '{}' in import filter config.", item)
+                continue
+            k, _ = item.split("=")
+            if self.out_data_types.get(k) is None:
+                self.out_data_types[k] = None  # We just need to make sure that init knows about them.
