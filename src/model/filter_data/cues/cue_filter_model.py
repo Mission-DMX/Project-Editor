@@ -5,7 +5,11 @@ from model.filter_data.cues.cue import Cue
 
 
 class CueFilterModel:
-    """Model of a cue filter configuration."""
+    """Model of a cue filter configuration.
+
+    Default Cue parameter encodes -1 as no default cue or 0 to n-1 as the index of the default cue.
+
+    """
 
     def __init__(self, parameters: dict[str, str] | None = None) -> None:
         """Initialize empty model."""
@@ -13,10 +17,29 @@ class CueFilterModel:
         self.cues: list[Cue] = []
         self.channels: list[tuple[str, DataType]] = []  # name, data type
         self.global_restart_on_end: bool = False
-        self.default_cue: int = 0
+        self._default_cue: int = -1
 
         if parameters is not None:
             self.load_from_configuration(parameters)
+
+    @property
+    def default_cue(self) -> int:
+        """Default cue of filter.
+
+        The default cue will be applied after switching to the scene of the filter (unless persistence rules
+        kick in). The setter checks for reasonable values and will throw ValueError if they are invalid.
+
+        """
+        return self._default_cue
+
+    @default_cue.setter
+    def default_cue(self, val: int | str) -> None:
+        new_value = int(val)
+        if new_value < -1:
+            raise ValueError("Cue value must be >= -1")
+        if new_value >= len(self.cues):
+            raise ValueError(f"Cue value must be < {len(self.cues)} (Due to number of cues).")
+        self._default_cue = new_value
 
     def get_as_configuration(self) -> dict[str, str]:
         """Serialize filter configuration."""
@@ -25,7 +48,7 @@ class CueFilterModel:
         else:
             mapping_str = ""
         return {"end_handling": "start_again" if self.global_restart_on_end else "hold", "mapping": mapping_str,
-                "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": self.default_cue}
+                "cuelist": "$".join([c.format_cue() for c in self.cues]), "default_cue": str(self.default_cue)}
 
     def append_cue(self, c: Cue) -> None:
         """Add a cue to the model."""
@@ -85,6 +108,6 @@ class CueFilterModel:
 
         if parameters.get("default_cue"):
             try:
-                self.default_cue = int(parameters.get("default_cue")) + 1
+                self.default_cue = int(parameters.get("default_cue"))
             except:
                 self.default_cue = 0

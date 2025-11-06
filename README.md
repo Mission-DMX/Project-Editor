@@ -21,3 +21,9 @@ may help you passing those tests:
 isort $(git rev-parse --show-toplevel)/src
 pylint --fail-under=9 $(git diff --name-only --cached | grep '.py') || exit 1
 ```
+
+## Installation
+The following directories must exist and be writable by the executing user:
+ * `/usr/local/share/missionDMX` This directory contains global assets collected by the user to be reusable across
+   different show files.
+ * `/var/cache/missionDMX` This directory contains downloaded fixture definitions
