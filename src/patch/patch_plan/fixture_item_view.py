@@ -6,7 +6,7 @@ import style
 from model.ofl.ofl_fixture import OflFixture
 
 
-class FixtureItem(QtWidgets.QPushButton):
+class FixtureItemView(QtWidgets.QPushButton):
     """Widget of a Fixture"""
 
     def __init__(self, fixture: OflFixture) -> None:

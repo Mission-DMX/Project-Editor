@@ -13,8 +13,8 @@ from PySide6 import QtWidgets
 import style
 from layouts.flow_layout import FlowLayout
 from model.ofl.manufacture import Manufacture, generate_manufacturers
+from patch.patch_plan.fixture_item_view import FixtureItemView
 from patch.patching.dialogs.patching_dialog import PatchingDialog
-from view.patch_view.patching.fixture_item import FixtureItem
 from view.patch_view.patching.manufacturer_item import ManufacturerItem
 from view.patch_view.patching.mode_item import ModeItem
 
@@ -85,7 +85,7 @@ class PatchingSelectView(QtWidgets.QScrollArea):
 
         return item
 
-    def _generate_fixture_item(self, fixture: OflFixture) -> FixtureItem:
+    def _generate_fixture_item(self, fixture: OflFixture) -> FixtureItemView:
         fixture_layout = FlowLayout()
         reset_button = QtWidgets.QPushButton("...")
         reset_button.setFixedSize(150, 100)
@@ -100,7 +100,7 @@ class PatchingSelectView(QtWidgets.QScrollArea):
         fixture_widget = QtWidgets.QWidget()
         fixture_widget.setLayout(fixture_layout)
         self.container.addWidget(fixture_widget)
-        fixture_item = FixtureItem(fixture)
+        fixture_item = FixtureItemView(fixture)
         fixture_item.clicked.connect(lambda _, _index=self.index: self.select_fixture(_index))
         self.index += 1
         return fixture_item
