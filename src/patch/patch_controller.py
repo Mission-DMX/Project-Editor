@@ -14,6 +14,7 @@ from model import Universe
 from patch.patch_plan.auto_resize_view import AutoResizeView
 from patch.patch_plan.dialogs.universe_dialog import UniverseDialog
 from patch.patch_plan.patch_item.background_view import BackgroundView
+from patch.patch_plan.patch_item.clickable_view import ClickableView
 from patch.patch_plan.patch_item.log_dmx.log_dmx_model import LogDmxModel
 from patch.patch_plan.patch_item.log_dmx.log_dmx_view import LogDMXView
 from patch.patch_plan.patch_item.used_fixture_view import UsedFixtureView
@@ -93,6 +94,8 @@ class PatchController(QObject):
         log_dmx_model = LogDmxModel()
         dmx_data_log = LogDMXView(log_dmx_model)
         scene.addItem(dmx_data_log)
+        clickable = ClickableView()
+        scene.addItem(clickable)
         self._patch_planes.update({universe.id: (view, log_dmx_model)})
         self._patch_plan_selector_view.insertTab(index, view, str(universe.name))
 
