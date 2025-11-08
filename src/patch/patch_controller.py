@@ -95,6 +95,7 @@ class PatchController(QObject):
         dmx_data_log = LogDMXView(log_dmx_model)
         scene.addItem(dmx_data_log)
         clickable = ClickableView()
+        clickable.click_channel.connect(partial(self._update_value, universe))
         scene.addItem(clickable)
         self._patch_planes.update({universe.id: (view, log_dmx_model)})
         self._patch_plan_selector_view.insertTab(index, view, str(universe.name))
@@ -147,3 +148,7 @@ class PatchController(QObject):
     def _dmx_from_fish(self, dmx: proto.DirectMode_pb2.dmx_output) -> None:
         """Handle dmx data signal from fish."""
         self._patch_planes[dmx.universe_id][1].current_values = list(dmx.channel_data[1:])  # TODO fish of by one
+
+    def _update_value(self, universe: Universe, channel: int, value: int) -> None:
+        """Update the value of a channel."""
+        universe.channels[channel].value = value
