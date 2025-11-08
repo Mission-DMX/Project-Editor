@@ -13,8 +13,8 @@ from PySide6 import QtWidgets
 import style
 from layouts.flow_layout import FlowLayout
 from model.ofl.manufacture import Manufacture, generate_manufacturers
-from patch.patch_plan.fixture_item_view import FixtureItemView
 from patch.patching.dialogs.patching_dialog import PatchingDialog
+from patch.patching.fixture_item_view import FixtureItemView
 from view.patch_view.patching.manufacturer_item import ManufacturerItem
 from view.patch_view.patching.mode_item import ModeItem
 
