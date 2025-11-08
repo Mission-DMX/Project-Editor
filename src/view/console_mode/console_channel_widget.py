@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget
 import style
 from model.channel import Channel
 from model.control_desk import BankSet
-from model.patching.fixture_channel import FixtureChannel
+from model.ofl.fixture_channel import FixtureChannel
 from view.console_mode.console_fader_bank_selector import ConsoleFaderBankSelectorWidget
 
 

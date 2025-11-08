@@ -29,7 +29,7 @@ from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.filter_data.cues.cue import Cue
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.ofl.fixture import ColorSupport, UsedFixture
-from model.patching.fixture_channel import FixtureChannelType
+from model.ofl.fixture_channel import FixtureChannelType
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem

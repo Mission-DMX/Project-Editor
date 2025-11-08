@@ -15,8 +15,8 @@ import numpy as np
 from PySide6 import QtCore
 from PySide6.QtGui import QColor
 
+from model.ofl.fixture_channel import FixtureChannel, FixtureChannelType
 from model.ofl.ofl_fixture import FixtureMode, OflFixture
-from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
