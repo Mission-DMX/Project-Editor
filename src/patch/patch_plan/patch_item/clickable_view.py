@@ -2,6 +2,7 @@
 
 from typing import override
 
+from PySide6 import QtCore
 from PySide6.QtGui import QColor, QPainter, QPixmap, Qt
 from PySide6.QtWidgets import QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QWidget
 
@@ -28,8 +29,9 @@ def create_click_item(active: bool) -> QPixmap:
 class ClickableView(PatchBaseItem):
     """Clickable overview."""
 
-    active_channel = create_click_item(True)
-    inactive_channel = create_click_item(False)
+    click_channel = QtCore.Signal(int, int)
+    _active_channel = create_click_item(True)
+    _inactive_channel = create_click_item(False)
 
     def __init__(self) -> None:
         """Patch Plan Widget for one Universe."""
@@ -43,9 +45,9 @@ class ClickableView(PatchBaseItem):
             x = (i % self._cols) * (style.PATCH_ITEM.width + style.PATCH_ITEM.margin)
             y = (i // self._cols) * (style.PATCH_ITEM.height + style.PATCH_ITEM.margin)
             if i in self._clicked:
-                painter.drawPixmap(x, y, self.active_channel)
+                painter.drawPixmap(x, y, self._active_channel)
             else:
-                painter.drawPixmap(x, y, self.inactive_channel)
+                painter.drawPixmap(x, y, self._inactive_channel)
 
     @override
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -58,9 +60,10 @@ class ClickableView(PatchBaseItem):
 
         if index in self._clicked:
             self._clicked.remove(index)
-
+            self.click_channel.emit(index, 0)
         else:
             self._clicked.add(index)
+            self.click_channel.emit(index, 255)
 
         super().mousePressEvent(event)
         self.update()
