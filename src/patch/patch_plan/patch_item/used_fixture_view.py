@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING, override
 
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import QAction, QColorConstants, QPainter, QPainterPath, QPixmap
-from PySide6.QtWidgets import QGraphicsItem, QGraphicsSceneContextMenuEvent, QStyleOptionGraphicsItem, QWidget
+from PySide6.QtWidgets import (
+    QGraphicsItem,
+    QGraphicsSceneContextMenuEvent,
+    QStyleOptionGraphicsItem,
+    QWidget,
+)
 
 import style
 from patch.patch_plan.channel_item_generator import (
