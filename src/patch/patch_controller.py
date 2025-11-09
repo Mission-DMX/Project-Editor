@@ -95,7 +95,7 @@ class PatchController(QObject):
         dmx_data_log = LogDMXView(log_dmx_model)
         scene.addItem(dmx_data_log)
         clickable = ClickableView()
-        clickable.click_channel.connect(partial(self._update_value, universe))
+        clickable.channel_value_change.connect(partial(self._update_value, universe))
         scene.addItem(clickable)
         self._patch_planes.update({universe.id: (view, log_dmx_model)})
         self._patch_plan_selector_view.insertTab(index, view, str(universe.name))
