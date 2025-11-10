@@ -220,6 +220,15 @@ class AudioExtractEventSender(EventSender):
     def magnitude(self, new_value: float) -> None:
         self.configuration["magnitude"] = str(new_value)
 
+    @property
+    def duration(self) -> int:
+        """Sample window duration."""
+        return int(self.configuration.get("sample_duration", 40))
+
+    @duration.setter
+    def duration(self, new_value: int) -> None:
+        self.configuration["sample_duration"] = str(new_value)
+
 
 def insert_event(
     sender_id: int, sender_function: int = 0, event_type: str = "single", arguments: list[int] | None = None
