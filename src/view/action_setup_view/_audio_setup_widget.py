@@ -197,5 +197,9 @@ class AudioSetupWidget(QWidget):
     def _listen_for_filter_updates(self, msg: proto.FilterMode_pb2.update_parameter) -> None:
         if msg.filter_id == "::fish.builtin.audioextract" and msg.parameter_key == "current_amplitude":
             val = int(msg.parameter_value)
-            self._magnitude_progressbar.setValue(val if val < 100 else 100)
             self._magnitude_label.setText(str(val))
+            val = min(100, val)
+            p_val = self._magnitude_progressbar.value()
+            if val < p_val:
+                val = max(p_val - 1, 0)
+            self._magnitude_progressbar.setValue(val)
