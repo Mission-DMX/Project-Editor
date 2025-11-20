@@ -1,9 +1,25 @@
+from __future__ import annotations
+
 import subprocess
 from logging import getLogger
+from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QComboBox, QDoubleSpinBox, QFormLayout, QLabel, QSpinBox, QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDoubleSpinBox,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QSpinBox,
+    QWidget,
+)
 
+from model import Broadcaster
 from model.events import AudioExtractEventSender, EventSender
+
+if TYPE_CHECKING:
+    import proto.FilterMode_pb2
 
 logger = getLogger(__name__)
 
@@ -70,8 +86,21 @@ class AudioSetupWidget(QWidget):
                 self._channel_label.setText(str(device[2]))
                 self._sample_rate_label.setText(str(device[3]))
                 self._update_device_labels()
-        # TODO add sound level preview progress bar
+        magnitude_container = QWidget(self)
+        magnitude_container_layout = QHBoxLayout()
+        self._magnitude_progressbar = QProgressBar(magnitude_container)
+        self._magnitude_progressbar.setMinimumWidth(100)
+        self._magnitude_progressbar.setMaximumWidth(150)
+        self._magnitude_progressbar.setRange(0, 100)
+        magnitude_container_layout.addWidget(self._magnitude_progressbar)
+        magnitude_container_layout.addWidget(QLabel("Current Magnitude: "))
+        self._magnitude_label = QLabel("0")
+        magnitude_container_layout.addWidget(self._magnitude_label)
+        magnitude_container_layout.addStretch()
+        magnitude_container.setLayout(magnitude_container_layout)
+        audio_layout.addRow("Audio Signal", magnitude_container)
         self.setLayout(audio_layout)
+        Broadcaster().update_filter_parameter.connect(self._listen_for_filter_updates)
 
     def update_from_sender(self, new_sender: EventSender | None) -> None:
         self._sender = new_sender
@@ -164,3 +193,9 @@ class AudioSetupWidget(QWidget):
         self._channel_label.setText(str(device_description[2]))
         self._sample_rate_label.setText(str(device_description[3]))
         self._recalculate_expected_buffer_size()
+
+    def _listen_for_filter_updates(self, msg: proto.FilterMode_pb2.update_parameter) -> None:
+        if msg.filter_id == "::fish.builtin.audioextract" and msg.parameter_key == "current_amplitude":
+            val = int(msg.parameter_value)
+            self._magnitude_progressbar.setValue(val if val < 100 else 100)
+            self._magnitude_label.setText(str(val))
