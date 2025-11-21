@@ -56,11 +56,10 @@ def create_xml(
         else:
             _create_physical_location_element(physical=proto.physical_location, parent=universe_element)
 
-        if fixtures := board_configuration.fixtures:
-            patching_element = ET.SubElement(universe_element, "patching")
-            for fixture in fixtures:
-                if fixture.universe == universe:
-                    _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
+        patching_element = ET.SubElement(universe_element, "patching")
+        for fixture in board_configuration.fixtures:
+            if fixture.universe == universe:
+                _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
 
     pn.total_step_count += 1
     pn.current_step_description = "Storing device list."
