@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 from logging import getLogger
 from typing import TYPE_CHECKING
@@ -140,9 +141,14 @@ class AudioSetupWidget(QWidget):
     def _get_input_devices(self) -> None:
         self._device_list.clear()
         try:
-            results = subprocess.run(["pactl", "list", "sources"], check=False, capture_output=True)  # NOQA: S607
+            program_args = ["pactl", "list", "sources"]
+            env = os.environ
+            env["LANG"] = "C"
+            results = subprocess.run(program_args, check=False, capture_output=True, env=env)  # NOQA: S607
             #  We rely on location lookup of pactl. While an attacker might override the location of pactl, an attacker
             #  must already be root in order to alter the PATH on our installation.
+            del program_args
+            del env
         except FileNotFoundError:
             logger.error("Reading sources failed: Command 'pactl' not found. Is it in path?")
             return
@@ -184,6 +190,8 @@ class AudioSetupWidget(QWidget):
                 samplerate = int(line.strip()[len("audio.samplerate: "):].replace('"', ""))
         if found_source:
             add_source()
+        else:
+            logger.warning("No audio sources have been detected.")
         return
 
     def _update_device_labels(self) -> None:
