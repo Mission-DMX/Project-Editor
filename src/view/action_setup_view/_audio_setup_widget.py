@@ -144,7 +144,7 @@ class AudioSetupWidget(QWidget):
             program_args = ["pactl", "list", "sources"]
             env = os.environ
             env["LANG"] = "C"
-            results = subprocess.run(program_args, check=False, capture_output=True, env=env)  # NOQA: S607
+            results = subprocess.run(program_args, check=False, capture_output=True, env=env)  # NOQA: S603
             #  We rely on location lookup of pactl. While an attacker might override the location of pactl, an attacker
             #  must already be root in order to alter the PATH on our installation.
             del program_args
