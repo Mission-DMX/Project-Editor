@@ -232,27 +232,7 @@ class UsedFixture(QtCore.QObject):
                 if isinstance(channel_name.repeatFor, list):
                     repetition_list = channel_name.repeatFor
                 else:
-                    match channel_name.repeatFor:
-                        # FIXME this is cleary wrong
-                        case "eachPixelABC":
-                            repetition_list = ["A", "B", "C"]
-                        case "eachPixelXYZ":
-                            repetition_list = ["X", "Y", "Z"]
-                        case "eachPixelXZY":
-                            repetition_list = ["X", "Z", "Y"]
-                        case "eachPixelYXZ":
-                            repetition_list = ["Y", "X", "Z"]
-                        case "eachPixelYZX":
-                            repetition_list = ["Y", "Z", "X"]
-                        case "eachPixelZXY":
-                            repetition_list = ["Z", "X", "Y"]
-                        case "eachPixelZYX":
-                            repetition_list = ["Z", "Y", "X"]
-                        case "eachPixelGroup":
-                            repetition_list = ["A", "B", "C"]
-                        case _:
-                            repetition_list = [""]
-
+                    repetition_list = self._fixture.matrix.generate_repetition_list(channel_name.repeatFor)
                 for repeated_name in repetition_list:
                     for template_name in channel_name.templateChannels:
                         append_channel(template_name.replace("$pixelKey", "{}").format(repeated_name), index)
