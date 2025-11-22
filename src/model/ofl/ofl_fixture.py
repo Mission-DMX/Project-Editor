@@ -74,6 +74,86 @@ class FixturePhysical(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
+class FixtureMatrix(BaseModel):
+    """Channel Repetition Matrix."""
+
+    pixelCount: tuple[int, int, int] = [0, 0, 0]
+    """Matrix Dimensions"""
+
+    pixelKeys: list[str | None] | list[list[str | None] | None] | list[list[list[str | None] | None] | None] = []
+    """Names of prefixes"""
+
+    pixelGroup: list = []
+    """Grouping of Pixels"""
+
+    def generate_repetition_list(self, method: str) -> list[str]:
+        """Generate a repetition list based on the matrix configuration.
+
+        Args:
+            method: The method for creation
+
+        Returns:
+            A ready-for-use list of repetition prefixes
+        """
+        repetition_list = []
+        def resolve_list(obj: list | str, prefix=""):
+            if isinstance(obj, str):
+                if len(prefix) > 0:
+                    prefix += " "
+                repetition_list.append(prefix + obj)
+            else:
+                if obj is not None:
+                    if len(obj) > 1:
+                        if len(prefix) > 0:
+                            prefix += ","
+                        for i, x in enumerate(obj):
+                            resolve_list(x, prefix=prefix + str(i))
+                    else:
+                        for x in obj:
+                            resolve_list(x, prefix=prefix)
+        match method:
+            case "eachPixelABC":
+                resolve_list(self.pixelKeys)
+            case "eachPixelXYZ":
+                for x in range(self.pixelCount[0]):
+                    for y in range(self.pixelCount[1]):
+                        for z in range(self.pixelCount[2]):
+                            repetition_list.append("({}, {}, {})".format(x, y, z))
+            case "eachPixelXZY":
+                for x in range(self.pixelCount[0]):
+                    for z in range(self.pixelCount[2]):
+                        for y in range(self.pixelCount[1]):
+                            repetition_list.append("({}, {}, {})".format(x, y, z))
+            case "eachPixelYXZ":
+                for y in range(self.pixelCount[1]):
+                    for x in range(self.pixelCount[0]):
+                        for z in range(self.pixelCount[2]):
+                            repetition_list.append("({}, {}, {})".format(x, y, z))
+            case "eachPixelYZX":
+                for y in range(self.pixelCount[1]):
+                    for z in range(self.pixelCount[2]):
+                        for x in range(self.pixelCount[0]):
+                            repetition_list.append("({}, {}, {})".format(x, y, z))
+            case "eachPixelZXY":
+                for z in range(self.pixelCount[2]):
+                    for x in range(self.pixelCount[0]):
+                        for y in range(self.pixelCount[1]):
+                            repetition_list.append("({}, {}, {})".format(x, y, z))
+            case "eachPixelZYX":
+                for z in range(self.pixelCount[2]):
+                    for y in range(self.pixelCount[1]):
+                        for x in range(self.pixelCount[0]):
+                            repetition_list.append("({}, {}, {})".format(x, y, z))
+            case "eachPixelGroup":
+                raise NotImplementedError("the constraints within pixel groups are very complicated and pixel groups "
+                                          "are rarely used. Therefore this is not yet implemented. As you just got this"
+                                          " error, it might be a good idea to start implementing them. Please provide "
+                                          "fixture causing this.")
+            case _:
+                raise ValueError("Unknown generation method: {}.".format(method))
+        return repetition_list
+
+
 class OflFixture(BaseModel):
     """Complete fixture definition conforming to the Open Fixture Library schema."""
 
@@ -92,7 +172,7 @@ class OflFixture(BaseModel):
     comment: str = ""
     """Description of the fixture."""
 
-    # matrix: FixtureMatrix = FixtureMatrix
+    matrix: FixtureMatrix = FixtureMatrix()
     # """Optional matrix layout and grouping, if the fixture has pixels."""
 
     # templateChannels: dict[str, TemplateChannel]] = {}
