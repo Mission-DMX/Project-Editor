@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
-from model.ofl.ofl_fixture import FixtureMode, OflFixture
+from model.ofl.ofl_fixture import FixtureMode, OflFixture, MatrixChannelInsert
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -220,11 +220,46 @@ class UsedFixture(QtCore.QObject):
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
-        for index, channel_name in enumerate(self.mode.channels):
-            channel = FixtureChannel(channel_name)
+        def append_channel(cn, i):
+            channel = FixtureChannel(cn)
             fixture_channels.append(channel)
             for channel_type in channel.type_as_list:
-                segment_map[channel_type].append(index)
+                segment_map[channel_type].append(i)
+
+        index = 0
+        for channel_name in self.mode.channels:
+            if isinstance(channel_name, MatrixChannelInsert):
+                if isinstance(channel_name.repeatFor, list):
+                    repetition_list = channel_name.repeatFor
+                else:
+                    match channel_name.repeatFor:
+                        # FIXME this is cleary wrong
+                        case "eachPixelABC":
+                            repetition_list = ["A", "B", "C"]
+                        case "eachPixelXYZ":
+                            repetition_list = ["X", "Y", "Z"]
+                        case "eachPixelXZY":
+                            repetition_list = ["X", "Z", "Y"]
+                        case "eachPixelYXZ":
+                            repetition_list = ["Y", "X", "Z"]
+                        case "eachPixelYZX":
+                            repetition_list = ["Y", "Z", "X"]
+                        case "eachPixelZXY":
+                            repetition_list = ["Z", "X", "Y"]
+                        case "eachPixelZYX":
+                            repetition_list = ["Z", "Y", "X"]
+                        case "eachPixelGroup":
+                            repetition_list = ["A", "B", "C"]
+                        case _:
+                            repetition_list = [""]
+
+                for repeated_name in repetition_list:
+                    for template_name in channel_name.templateChannels:
+                        append_channel(template_name.replace("$pixelKey", "{}").format(repeated_name), index)
+                        index += 1
+            else:
+                append_channel(channel_name, index)
+                index += 1
 
         found_color = ColorSupport.NO_COLOR_SUPPORT
         if all(segment_map[t] for t in (FixtureChannelType.RED, FixtureChannelType.GREEN, FixtureChannelType.BLUE)):

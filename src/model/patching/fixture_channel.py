@@ -1,8 +1,11 @@
 """Channels of a Fixture"""
 from enum import IntFlag
+from logging import getLogger
 from typing import Final
 
 from PySide6 import QtCore
+
+logger = getLogger(__name__)
 
 
 class FixtureChannelType(IntFlag):
@@ -61,7 +64,11 @@ class FixtureChannel:
         types: FixtureChannelType = FixtureChannelType.UNDEFINED
         # TODO vielleicht aus OFL sauber extrahieren
         for channel_type in FixtureChannelType:
-            if str(channel_type.name).lower() in self._name.lower():
+            name = self._name
+            if not isinstance(name, str):
+                logger.error("Bug: We did expect strings as the name.")
+                continue
+            if str(channel_type.name).lower() in name.lower():
                 types &= channel_type
                 if channel_type in (FixtureChannelType.PAN, FixtureChannelType.TILT):
                     types &= FixtureChannelType.POSITION
