@@ -96,7 +96,7 @@ class FixtureMatrix(BaseModel):
             A ready-for-use list of repetition prefixes
         """
         repetition_list = []
-        def resolve_list(obj: list | str, prefix=""):
+        def resolve_list(obj: list | str, prefix: str = "") -> None:
             if isinstance(obj, str):
                 if len(prefix) > 0:
                     prefix += " "
@@ -118,39 +118,39 @@ class FixtureMatrix(BaseModel):
                 for x in range(self.pixelCount[0]):
                     for y in range(self.pixelCount[1]):
                         for z in range(self.pixelCount[2]):
-                            repetition_list.append("({}, {}, {})".format(x, y, z))
+                            repetition_list.append(f"({x}, {y}, {z})")
             case "eachPixelXZY":
                 for x in range(self.pixelCount[0]):
                     for z in range(self.pixelCount[2]):
                         for y in range(self.pixelCount[1]):
-                            repetition_list.append("({}, {}, {})".format(x, y, z))
+                            repetition_list.append(f"({x}, {y}, {z})")
             case "eachPixelYXZ":
                 for y in range(self.pixelCount[1]):
                     for x in range(self.pixelCount[0]):
                         for z in range(self.pixelCount[2]):
-                            repetition_list.append("({}, {}, {})".format(x, y, z))
+                            repetition_list.append(f"({x}, {y}, {z})")
             case "eachPixelYZX":
                 for y in range(self.pixelCount[1]):
                     for z in range(self.pixelCount[2]):
                         for x in range(self.pixelCount[0]):
-                            repetition_list.append("({}, {}, {})".format(x, y, z))
+                            repetition_list.append(f"({x}, {y}, {z})")
             case "eachPixelZXY":
                 for z in range(self.pixelCount[2]):
                     for x in range(self.pixelCount[0]):
                         for y in range(self.pixelCount[1]):
-                            repetition_list.append("({}, {}, {})".format(x, y, z))
+                            repetition_list.append(f"({x}, {y}, {z})")
             case "eachPixelZYX":
                 for z in range(self.pixelCount[2]):
                     for y in range(self.pixelCount[1]):
                         for x in range(self.pixelCount[0]):
-                            repetition_list.append("({}, {}, {})".format(x, y, z))
+                            repetition_list.append(f"({x}, {y}, {z})")
             case "eachPixelGroup":
                 raise NotImplementedError("the constraints within pixel groups are very complicated and pixel groups "
                                           "are rarely used. Therefore this is not yet implemented. As you just got this"
                                           " error, it might be a good idea to start implementing them. Please provide "
                                           "fixture causing this.")
             case _:
-                raise ValueError("Unknown generation method: {}.".format(method))
+                raise ValueError(f"Unknown generation method: {method}.")
         return repetition_list
 
 

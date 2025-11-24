@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
-from model.ofl.ofl_fixture import FixtureMode, OflFixture, MatrixChannelInsert
+from model.ofl.ofl_fixture import FixtureMode, MatrixChannelInsert, OflFixture
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -220,7 +220,7 @@ class UsedFixture(QtCore.QObject):
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
-        def append_channel(cn, i):
+        def append_channel(cn: str, i: int) -> None:
             channel = FixtureChannel(cn)
             fixture_channels.append(channel)
             for channel_type in channel.type_as_list:
