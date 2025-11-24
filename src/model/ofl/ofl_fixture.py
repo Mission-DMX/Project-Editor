@@ -117,33 +117,27 @@ class FixtureMatrix(BaseModel):
             case "eachPixelXYZ":
                 for x in range(self.pixelCount[0]):
                     for y in range(self.pixelCount[1]):
-                        for z in range(self.pixelCount[2]):
-                            repetition_list.append(f"({x}, {y}, {z})")
+                        repetition_list.extend([f"({x}, {y}, {z})" for z in range(self.pixelCount[2])])
             case "eachPixelXZY":
                 for x in range(self.pixelCount[0]):
                     for z in range(self.pixelCount[2]):
-                        for y in range(self.pixelCount[1]):
-                            repetition_list.append(f"({x}, {y}, {z})")
+                        repetition_list.extend([f"({x}, {y}, {z})" for y in range(self.pixelCount[1])])
             case "eachPixelYXZ":
                 for y in range(self.pixelCount[1]):
                     for x in range(self.pixelCount[0]):
-                        for z in range(self.pixelCount[2]):
-                            repetition_list.append(f"({x}, {y}, {z})")
+                        repetition_list.extend([f"({x}, {y}, {z})" for z in range(self.pixelCount[2])])
             case "eachPixelYZX":
                 for y in range(self.pixelCount[1]):
                     for z in range(self.pixelCount[2]):
-                        for x in range(self.pixelCount[0]):
-                            repetition_list.append(f"({x}, {y}, {z})")
+                        repetition_list.extend([f"({x}, {y}, {z})" for x in range(self.pixelCount[0])])
             case "eachPixelZXY":
                 for z in range(self.pixelCount[2]):
                     for x in range(self.pixelCount[0]):
-                        for y in range(self.pixelCount[1]):
-                            repetition_list.append(f"({x}, {y}, {z})")
+                        repetition_list.extend([f"({x}, {y}, {z})" for y in range(self.pixelCount[1])])
             case "eachPixelZYX":
                 for z in range(self.pixelCount[2]):
                     for y in range(self.pixelCount[1]):
-                        for x in range(self.pixelCount[0]):
-                            repetition_list.append(f"({x}, {y}, {z})")
+                        repetition_list.extend([f"({x}, {y}, {z})" for x in range(self.pixelCount[0])])
             case "eachPixelGroup":
                 raise NotImplementedError("the constraints within pixel groups are very complicated and pixel groups "
                                           "are rarely used. Therefore this is not yet implemented. As you just got this"
