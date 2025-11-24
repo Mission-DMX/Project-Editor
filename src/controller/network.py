@@ -366,7 +366,10 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     def _on_state_changed(self) -> None:
         """Start or stop sending messages when the connection state changes."""
-        self._broadcaster.connection_state_updated.emit(self.connection_state())
+        try:
+            self._broadcaster.connection_state_updated.emit(self.connection_state())
+        except RuntimeError:
+            logger.error("Signal source was probably deleted.")
 
     def connection_state(self) -> bool:
         """Return the current connection state.
