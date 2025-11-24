@@ -1,4 +1,4 @@
-"""Fixture Definitions from OFL"""
+"""Fixture Definitions from OFL."""
 
 # ruff: noqa: N815
 from __future__ import annotations
@@ -12,6 +12,7 @@ logger = getLogger(__name__)
 
 
 class MatrixChannelInsert(BaseModel):
+    """Defines the order of pixels in a matrix used for automatic generation of channels."""
     insert: Literal["matrixChannels"]
     repeatFor: str | list[str]
 
@@ -94,6 +95,7 @@ class FixtureMatrix(BaseModel):
 
         Returns:
             A ready-for-use list of repetition prefixes
+
         """
         repetition_list = []
         def resolve_list(obj: list | str, prefix: str = "") -> None:
