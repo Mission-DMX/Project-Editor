@@ -13,6 +13,7 @@ logger = getLogger(__name__)
 
 class MatrixChannelInsert(BaseModel):
     """Defines the order of pixels in a matrix used for automatic generation of channels."""
+
     insert: Literal["matrixChannels"]
     repeatFor: str | list[str]
 
