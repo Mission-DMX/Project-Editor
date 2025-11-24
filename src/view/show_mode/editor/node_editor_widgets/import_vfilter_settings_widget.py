@@ -1,3 +1,6 @@
+"""Contains ImportVFilterSettingsWidget."""
+from typing import override
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
@@ -17,8 +20,14 @@ from view.utility_widgets.filter_selection_widget import FilterSelectionWidget
 
 
 class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
+    """Settings widget for ImportVFilter.
+
+    This widget allows selection of a target filter and the ports that should be forwarded.
+
+    """
 
     def __init__(self, imp_filter: Filter, parent: QWidget = None) -> None:
+        """Initialize the widget."""
         super().__init__()
         self._widget: QWidget | None = None
         self._tree_widget: FilterSelectionWidget | None = None
@@ -30,6 +39,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         self._parent = parent
         self._last_selected_item: QTreeWidgetItem | None = None
 
+    @override
     def _get_configuration(self) -> dict[str, str]:
         renaming_data = [
             f"{name}={self._new_name_item_dict[name].text()}"
@@ -43,6 +53,7 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             "rename_dict": ",".join(renaming_data),
         }
 
+    @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
         target_filter_id = conf.get("target") or ""
         if self._widget is None:
@@ -56,14 +67,17 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
             self._rename_dict[k] = v
         self._populate_widget()
 
+    @override
     def get_widget(self) -> QWidget:
         if self._widget is None:
             self._construct_widget()
         return self._widget
 
+    @override
     def _load_parameters(self, parameters: dict[str, str]) -> None:
         pass
 
+    @override
     def _get_parameters(self) -> dict[str, str]:
         return {}
 
@@ -148,6 +162,9 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         if self._widget is None:
             self._construct_widget()
             return
+        if self._filter is not None:
+            self._tree_widget.excluded_filter_ids.clear()
+            self._tree_widget.excluded_filter_ids.add(self._filter.filter_id)
         found_filter = self._tree_widget.populate_widget()
         self._tree_widget.setEnabled(not found_filter)
         self._clear_selection_action.setEnabled(found_filter)
@@ -157,5 +174,6 @@ class ImportVFilterSettingsWidget(NodeEditorFilterConfigWidget):
         self._tree_widget.setEnabled(True)
         self._clear_selection_action.setEnabled(False)
 
+    @override
     def parent_opened(self) -> None:
         self._populate_widget()
