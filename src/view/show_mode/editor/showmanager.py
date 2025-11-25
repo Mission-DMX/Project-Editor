@@ -23,9 +23,9 @@ from .show_browser.show_browser import ShowBrowser
 class ShowEditorWidget(QSplitter):
     """Node Editor to create and manage filters."""
 
-    def __init__(self, board_configuration: BoardConfiguration, bcaster: Broadcaster, parent: QWidget) -> None:
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget) -> None:
         super().__init__(parent)
-        self._broadcaster = bcaster
+        self._broadcaster = Broadcaster()
         self._board_configuration = board_configuration
         self._opened_pages = set()
         self._opened_banksets = set()

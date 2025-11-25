@@ -75,7 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             (
                 "Editor Mode",
-                MainWidget(ShowEditorWidget(self._board_configuration, self._broadcaster, self), self),
+                MainWidget(ShowEditorWidget(self._board_configuration, self), self),
                 self._broadcaster.view_to_file_editor.emit,
             ),
             (
