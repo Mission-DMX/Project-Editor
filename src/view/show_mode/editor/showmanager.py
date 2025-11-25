@@ -46,19 +46,6 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget.tabBarClicked.connect(self._tab_bar_clicked)
         self._open_page_tab_widget.tabCloseRequested.connect(self._remove_tab)
 
-        # Toolbar for io/network actions
-        self._toolbar: list[QAction] = []
-        # save_show_file_button = QAction("Save Show")
-        # load_show_file_button = QAction("Load Show")
-
-        # save_show_file_button.triggered.connect(lambda: show_save_showfile_dialog(self.parent(),
-        #                                                                          self._board_configuration))
-        # load_show_file_button.triggered.connect(lambda: show_load_showfile_dialog(self.parent(),
-        #                                                                          self._board_configuration))
-
-        # self._toolbar.append(save_show_file_button)
-        # self._toolbar.append(load_show_file_button)
-
         self._show_browser = ShowBrowser(parent, board_configuration, self._open_page_tab_widget)
 
         self.addWidget(self._show_browser.widget)
