@@ -11,9 +11,3 @@ class MainWidget(QtWidgets.QMainWindow):
         super().__init__(parent=parent)
         self._widget: QtWidgets.QWidget = widget
         self.setCentralWidget(self._widget)
-        self._toolbar = self.addToolBar("widget")
-        try:
-            for tool in self._widget.toolbar:
-                self._toolbar.addAction(tool)
-        except AttributeError:
-            self.removeToolBar(self._toolbar)
