@@ -5,7 +5,6 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     self.addWidget(node_editor)
 """
 
-from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QInputDialog, QSplitter, QTabBar, QTabWidget, QWidget
 
 from controller.file.transmitting_to_fish import transmit_to_fish
@@ -61,11 +60,6 @@ class ShowEditorWidget(QSplitter):
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
         if ok_button_pressed and 0 <= scene_index < self._open_page_tab_widget.tabBar().count() - 2:
             self._board_configuration.broadcaster.delete_scene()
-
-    @property
-    def toolbar(self) -> list[QAction]:
-        """toolbar for node_mode"""
-        return self._toolbar
 
     def _tab_bar_clicked(self, index: int) -> None:
         """Handles adding/deleting button action.
