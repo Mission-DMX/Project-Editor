@@ -104,6 +104,7 @@ class UIPlayerWidget(QWidget):
 
         Args:
             new_index: The index of the UI page to select.
+
         """
         self._page_combo_box.setCurrentIndex(new_index)
 

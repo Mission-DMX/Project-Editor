@@ -1,3 +1,5 @@
+"""Contains settings dialog class."""
+
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import (
@@ -20,7 +22,13 @@ if TYPE_CHECKING:
 
 
 class SettingsDialog(QDialog):
+    """Settings dialog class.
+
+    Class provides settings that are stored in show file.
+    """
+
     def __init__(self, parent: QWidget | None, show: "BoardConfiguration") -> None:
+        """Initialize the dialog."""
         super().__init__(parent)
         self.setMinimumHeight(300)
         self.setMinimumWidth(300)
@@ -65,8 +73,8 @@ class SettingsDialog(QDialog):
         self._category_tab_bar.addTab(self._editor_tab, "Editor")
 
         self.button_box = QDialogButtonBox(exit_buttons)
-        self.button_box.accepted.connect(self.ok_button_pressed)
-        self.button_box.rejected.connect(self.cancle_button_pressed)
+        self.button_box.accepted.connect(self._ok_button_pressed)
+        self.button_box.rejected.connect(self._cancle_button_pressed)
         self.button_box.button(QDialogButtonBox.StandardButton.Apply).clicked.connect(self.apply)
 
         self.layout = QVBoxLayout()
@@ -79,6 +87,7 @@ class SettingsDialog(QDialog):
 
     @property
     def show_file(self) -> "BoardConfiguration":
+        """Get or set show file whose settings should be edited."""
         return self._show
 
     @show_file.setter
@@ -98,6 +107,7 @@ class SettingsDialog(QDialog):
             self._show_ui_window_count_tb.setValue(0)
 
     def apply(self) -> None:
+        """Apply the current dialed in settings."""
         self._show.show_name = self.show_file_tb.text()
         self._show.notes = self.show_notes_tb.toPlainText()
         self._show.ui_hints["default_main_brightness"] = str(self._default_main_brightness_tb.value())
@@ -106,9 +116,9 @@ class SettingsDialog(QDialog):
         self._show.ui_hints["show_ui_window_count"] = str(self._show_ui_window_count_tb.value())
         update_window_count(self._show_ui_window_count_tb.value(), self._show)
 
-    def ok_button_pressed(self) -> None:
+    def _ok_button_pressed(self) -> None:
         self.apply()
         self.accept()
 
-    def cancle_button_pressed(self) -> None:
+    def _cancle_button_pressed(self) -> None:
         self.reject()

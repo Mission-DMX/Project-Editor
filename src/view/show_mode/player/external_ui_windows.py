@@ -1,3 +1,5 @@
+"""Contains _ExternalUIWidget class and public update method."""
+
 from __future__ import annotations
 
 from logging import getLogger
@@ -22,6 +24,7 @@ class _ExternalUIWindow(QDialog):
     """Non-Focus window to display additional show UI pages."""
 
     def __init__(self, window_index: int, show: BoardConfiguration, parent: QWidget | None = None) -> None:
+        """Initialize the dialog."""
         super().__init__(parent)
         self._show = show
         self._window_index = window_index
@@ -85,11 +88,14 @@ def update_window_count(target: int, show: BoardConfiguration) -> None:
     """Set the amount of external UI windows.
 
     This method opens or closes the external UI windows according to the requested amount.
+
     Note:
         This method does not update the show file ui hints.
 
     Args:
         target: The amount of external UI windows.
+        show: The show file containing the hints that are used to store the dialed in pages per scene.
+
     """
     if target < 0:
         raise ValueError("Show UI window count target must be >= 0.")
