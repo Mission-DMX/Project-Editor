@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from view.show_mode.player.external_ui_windows import update_window_count
+
 if TYPE_CHECKING:
     from model import BoardConfiguration
 
@@ -55,6 +57,10 @@ class SettingsDialog(QDialog):
                                                     "present.")
         self._brightness_mixin_enbled_cb.setChecked(True)
         editor_layout.addRow("Brightness Mixins", self._brightness_mixin_enbled_cb)
+        self._show_ui_window_count_tb = QSpinBox(self._editor_tab)
+        self._show_ui_window_count_tb.setMinimum(0)
+        self._show_ui_window_count_tb.setMaximum(1024)
+        editor_layout.addRow("Additional UI Window Count", self._show_ui_window_count_tb)
         self._editor_tab.setLayout(editor_layout)
         self._category_tab_bar.addTab(self._editor_tab, "Editor")
 
@@ -86,6 +92,10 @@ class SettingsDialog(QDialog):
             self._default_main_brightness_tb.setValue(int(new_show.ui_hints.get("default_main_brightness") or "255"))
         except ValueError:
             self._default_main_brightness_tb.setValue(255)
+        try:
+            self._show_ui_window_count_tb.setValue(int(new_show.ui_hints.get("show_ui_window_count", "0")))
+        except ValueError:
+            self._show_ui_window_count_tb.setValue(0)
 
     def apply(self) -> None:
         self._show.show_name = self.show_file_tb.text()
@@ -93,6 +103,8 @@ class SettingsDialog(QDialog):
         self._show.ui_hints["default_main_brightness"] = str(self._default_main_brightness_tb.value())
         self._show.ui_hints[
             "color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
+        self._show.ui_hints["show_ui_window_count"] = str(self._show_ui_window_count_tb.value())
+        update_window_count(self._show_ui_window_count_tb.value(), self._show)
 
     def ok_button_pressed(self) -> None:
         self.apply()
