@@ -60,14 +60,19 @@ class _ExternalUIWindow(QDialog):
             logger.error("Scene %s does not exist in current loaded show file.", new_scene_index)
 
     def _player_changed_page(self, new_index: int) -> None:
-        window_indices = self._parse_indicies_hint()
         current_scene_index = NetworkManager().current_active_scene_id
-        while len(window_indices) <= current_scene_index:
-            window_indices.append(0)
-        window_indices[current_scene_index] = new_index
-        self._show.ui_hints[f"show_ui_window::{self._window_index}"] = ";".join([str(i) for i in window_indices])
+        self.update_page_index_for_scene(current_scene_index, new_index)
         logger.debug("Player changed page to page %s. Hints were updated.", new_index)
 
+    def update_page_index_for_scene(self, scene_index: int, new_page_index: int, external: bool = False) -> None:
+        """Change the displayed page index for a given scene."""
+        window_indices = self._parse_indicies_hint()
+        while len(window_indices) <= scene_index:
+            window_indices.append(0)
+        window_indices[scene_index] = new_page_index
+        self._show.ui_hints[f"show_ui_window::{self._window_index}"] = ";".join([str(i) for i in window_indices])
+        if external and scene_index == NetworkManager().current_active_scene_id:
+            self._player_widget.goto_page(new_page_index)
 
     def _get_page_index_by_scene(self, new_scene_index: int) -> int:
         window_indices = self._parse_indicies_hint()
@@ -108,3 +113,20 @@ def update_window_count(target: int, show: BoardConfiguration) -> None:
         new_window = _ExternalUIWindow(len(_current_open_windows), show)
         _current_open_windows.append(new_window)
         new_window.showMaximized()
+
+def change_window_page_index(window_index: int, scene_index: int, page_target_index: int) -> None:
+    """Change the window page index for a given scene.
+
+    This method will raise a ValueError or IndexError if the supplied parameters are invalid.
+
+    Args:
+        window_index: The index of the window.
+        scene_index: The index of the scene.
+        page_target_index: The index of the target page.
+
+    """
+    if window_index < 0 or window_index >= len(_current_open_windows):
+        raise ValueError("Show UI window index must be bigger or equal to 0 and must be less than or equal to %d.",
+                         len(_current_open_windows))
+    window = _current_open_windows[window_index]
+    window.update_page_index_for_scene(scene_index, page_target_index, external=True)
