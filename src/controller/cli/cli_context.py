@@ -18,6 +18,7 @@ from controller.cli.list_command import ListCommand
 from controller.cli.macro_command import MacroCommand
 from controller.cli.select_command import SelectCommand
 from controller.cli.show_command import ShowCommand
+from controller.cli.uipage_command import UIPageCommand
 from controller.cli.utility_commands import DelayCommand, IfCommand, PrintCommand, SetCommand
 
 if TYPE_CHECKING:
@@ -104,6 +105,7 @@ class CLIContext:
             AssetCommand(self),
             ConnectCommand(self),
             FishConnCommand(self),
+            UIPageCommand(self),
         ]
         self._selected_bank: BankSet | None = None
         self._selected_scene: Scene | None = None
