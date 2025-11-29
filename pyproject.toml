@@ -64,6 +64,7 @@ exclude = [
     "src/controller/autotrack",
     "test/",
     "src/view/utility_widgets/wizzards/theater_scene_wizard.py",
+    "src/view/misc/termqt",
     "src/view/logging_view/dmx_data_log.py"]
 
 [tool.ruff.lint]
