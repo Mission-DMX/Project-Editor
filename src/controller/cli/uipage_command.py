@@ -1,3 +1,4 @@
+"""CLI command to manipulate UI pages."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
