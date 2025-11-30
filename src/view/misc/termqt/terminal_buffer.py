@@ -1,3 +1,5 @@
+"""TerminalBuffer class."""
+
 from copy import deepcopy
 from typing import NamedTuple
 from enum import Enum
@@ -18,6 +20,8 @@ QT_VERSION = "6"
 
 
 class ControlChar(Enum):
+    """Non-printable and control chars."""
+    
     NUL = 0   # Ctrl-@, null
     SOH = 1   # Ctrl-A, start of heading
     STX = 2   # Ctrl-B, start of text, bash shortcut for left arrow key
@@ -50,21 +54,24 @@ class ControlChar(Enum):
 
 
 class Placeholder(Enum):
-    # Placeholder for correctly display double-width characters
+    """Placeholder for correctly display double-width characters."""
 
-    # This character isn't a placeholder
     NON = 0
+    """This character isn't a placeholder"""
 
-    # Placeholder before the double-width character
-    # In the case that current line has no enough space, LEAD
-    # placeholder is inserted to push this character to the next line
     LEAD = 1
+    """Placeholder before the double-width character.
+    In the case that current line has no enough space, LEAD
+    placeholder is inserted to push this character to the next line
+    """
 
-    # Placeholder after the double-width character
     TAIL = 2
+    """Placeholder after the double-width character"""
 
 
 class Char(NamedTuple):
+    """Formatting information for characters."""
+
     char: str
     char_width: int
     placeholder: Placeholder
@@ -78,12 +85,14 @@ class Char(NamedTuple):
 
 
 class Position(NamedTuple):
+    """Position of a character."""
+
     x: int
     y: int
 
 
 class EscapeProcessor:
-    # A state machine used to process control sequences, etc.
+    """A state machine used to process control sequences, etc."""
 
     class State(Enum):
         # state of the state machine
@@ -142,6 +151,8 @@ class EscapeProcessor:
         # once entered, process the input and return to WAIT_FOR_ESC
 
     def __init__(self, logger):
+        """Initialize the FSM."""
+
         self.logger = logger
         self._state = self.State.WAIT_FOR_ESC
         self._args = []
@@ -278,13 +289,15 @@ class EscapeProcessor:
         #  on: bool, on/off
 
     def input(self, c: int):
-        # process input character c, c is the ASCII code of input.
-        #
-        # return:
-        #   - -1, if input is not part of a control sequence,
-        #   - 0, if input is part of a control sequence,
-        #   - 1, if the input finishes a control sequence
-        # otherwise return True.
+        """process input character c, c is the ASCII code of input.
+
+        Returns:
+           - -1, if input is not part of a control sequence,
+           - 0, if input is part of a control sequence,
+           - 1, if the input finishes a control sequence
+            otherwise return True.
+
+        """
 
         if self._state != self.State.WAIT_FOR_ESC:
             self._buffer += chr(c)
