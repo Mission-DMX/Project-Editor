@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from io import StringIO
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import QDockWidget, QHBoxLayout, QScrollBar, QWidget

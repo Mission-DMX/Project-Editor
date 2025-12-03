@@ -21,7 +21,7 @@ QT_VERSION = "6"
 
 class ControlChar(Enum):
     """Non-printable and control chars."""
-    
+
     NUL = 0   # Ctrl-@, null
     SOH = 1   # Ctrl-A, start of heading
     STX = 2   # Ctrl-B, start of text, bash shortcut for left arrow key
@@ -152,7 +152,6 @@ class EscapeProcessor:
 
     def __init__(self, logger):
         """Initialize the FSM."""
-
         self.logger = logger
         self._state = self.State.WAIT_FOR_ESC
         self._args = []
@@ -289,7 +288,7 @@ class EscapeProcessor:
         #  on: bool, on/off
 
     def input(self, c: int):
-        """process input character c, c is the ASCII code of input.
+        """Process input character c, c is the ASCII code of input.
 
         Returns:
            - -1, if input is not part of a control sequence,
@@ -298,7 +297,6 @@ class EscapeProcessor:
             otherwise return True.
 
         """
-
         if self._state != self.State.WAIT_FOR_ESC:
             self._buffer += chr(c)
 
@@ -1573,4 +1571,3 @@ class TerminalBuffer:
             self._scroll_update_pending = True
         else:
             self.update_scroll_position()
-

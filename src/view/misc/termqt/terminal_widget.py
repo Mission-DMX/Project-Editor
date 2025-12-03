@@ -3,6 +3,7 @@
 import logging
 import math
 from enum import Enum
+from typing import override
 
 #from PySide6.QtWidgets import QWidget, QScrollBar, QMenu, QAction, QApplication
 #from PySide6.QtGui import (QPainter, QColor, QPalette, QFontDatabase,
@@ -20,7 +21,7 @@ from PySide6.QtGui import (QPainter, QColor, QPalette, QFontDatabase,
                       QPen, QFont, QFontInfo, QFontMetrics, QPixmap)
 from PySide6.QtCore import Qt, QTimer, QMutex, Signal
 
-from .terminal_buffer import Position, TerminalBuffer, DEFAULT_BG_COLOR, \
+from ._terminal_buffer import Position, TerminalBuffer, DEFAULT_BG_COLOR, \
     DEFAULT_FG_COLOR, ControlChar, Placeholder
 #from PySide6 import QT_VERSION
 from .colors import colors16
@@ -28,12 +29,14 @@ from .colors import colors16
 QT_VERSION = "6"
 
 class CursorState(Enum):
+    """State of terminal cursor."""
     ON = 1
     OFF = 2
     UNFOCUSED = 3
 
 
 class Terminal(TerminalBuffer, QWidget):
+    """Terminal widget provides buffer and signal mappings but no scroll bar."""
 
     # Terminal widget.
     # Note: One should not call functions that begin with _, especially those
@@ -67,8 +70,19 @@ class Terminal(TerminalBuffer, QWidget):
                  line_height_factor=1.2,
                  font=None,
                  **kwargs
-                 ):
+                 ) -> None:
+        """Initialize the terminal widget.
 
+        Args:
+            width: Initial width of the terminal screen in pixels.
+            height: Initial height of the terminal screen in pixels.
+            logger: Logger instance to save terminal output. Defaults to None.
+            padding: How many white spaces are printed for a tab stop?
+            font_size: Default font size in pixels.
+            line_height_factor: Default line height as a multiple of the character height.
+            font: Font object to use. None indicates the default font.
+
+        """
         QWidget.__init__(self)
 
         self.scroll_bar: QScrollBar = None
@@ -133,6 +147,7 @@ class Terminal(TerminalBuffer, QWidget):
         self.resize(width, height)
         self.set_font()
 
+    @override
     def wheelEvent(self, event):
         # Number of lines to scroll per wheel step
         lines_per_step = 3
@@ -152,6 +167,7 @@ class Terminal(TerminalBuffer, QWidget):
         if self.scroll_bar:
             self.update_scroll_position()
 
+    @override
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             pos = self._align_to_rightmost_char(
@@ -163,6 +179,7 @@ class Terminal(TerminalBuffer, QWidget):
             self._paint_buffer()
             self._restore_cursor_state()
 
+    @override
     def mouseMoveEvent(self, event):
         if event.buttons() & Qt.LeftButton:
             if self._selection_start is not None:
@@ -175,6 +192,7 @@ class Terminal(TerminalBuffer, QWidget):
                     self._paint_buffer()
                     self._restore_cursor_state()
 
+    @override
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.RightButton:
             self._show_context_menu(event.pos())
@@ -214,6 +232,7 @@ class Terminal(TerminalBuffer, QWidget):
 
         return Position(col, row)
 
+    @override
     def set_bg(self, color: QColor):
         TerminalBuffer.set_bg(self, color)
 
@@ -221,6 +240,7 @@ class Terminal(TerminalBuffer, QWidget):
         pal.setColor(QPalette.Window, color)
         self.setPalette(pal)
 
+    @override
     def set_fg(self, color: QColor):
         TerminalBuffer.set_fg(self, color)
 
@@ -229,6 +249,7 @@ class Terminal(TerminalBuffer, QWidget):
         self.setPalette(pal)
 
     def set_font(self, font: QFont = None):
+        """Set a new terminal font."""
         is_qt6 = QT_VERSION.startswith("6")
         qfd = QFontDatabase if is_qt6 else QFontDatabase()
         fix_font_flag = QFontDatabase.SystemFont.FixedFont if is_qt6 else QFontDatabase.FixedFont
@@ -264,6 +285,8 @@ class Terminal(TerminalBuffer, QWidget):
 
         self.row_len = int(self._width / self.char_width)
         self.col_len = int(self._height / self.line_height)
+
+    @override
     def resizeEvent(self, event):
         self.resize(event.size().width(), event.size().height())
 
@@ -271,6 +294,7 @@ class Terminal(TerminalBuffer, QWidget):
     #      PAINT FUNCTIONS
     # ==========================
 
+    @override
     def paintEvent(self, event):
         self._painter_lock.lock()
         _qp = QPainter(self)
@@ -456,6 +480,7 @@ class Terminal(TerminalBuffer, QWidget):
         self._paint_cursor()
         self.repaint()
 
+    @override
     def get_char_width(self, t):
         if len(t.encode("utf-8")) == 1:
             return 1
@@ -466,6 +491,7 @@ class Terminal(TerminalBuffer, QWidget):
     #  SCREEN BUFFER FUNCTIONS
     # ==========================
 
+    @override
     def resize(self, width, height):
         self._save_cursor_state_stop_blinking()
 
@@ -483,10 +509,12 @@ class Terminal(TerminalBuffer, QWidget):
         self._restore_cursor_state()
         # self._log_buffer()
 
+    @override
     def toggle_alt_screen(self, on=True):
         TerminalBuffer.toggle_alt_screen(self, on)
         self._canvas_repaint()
 
+    @override
     def toggle_alt_screen_save_cursor(self, on=True):
         if on:
             # save current buffer
@@ -549,10 +577,16 @@ class Terminal(TerminalBuffer, QWidget):
         self._cursor_blinking_state = self._saved_cursor_state
         self._switch_cursor_blink(self._cursor_blinking_state, True)
 
+    @override
     def stdout(self, string: bytes):
-        # Note that this function accepts UTF-8 only (since python use utf-8).
-        # Normally modern programs will determine the encoding of its stdout
-        # from env variable LC_CTYPE and for most systems, it is set to utf-8.
+        """Method to print to the terminal.
+
+        Used for TerminalIO connection.
+
+        Note that this function accepts UTF-8 only (since python use utf-8).
+        Normally modern programs will determine the encoding of its stdout
+        from env variable LC_CTYPE and for most systems, it is set to utf-8.
+        """
         self._stdout_sig.emit(string)
 
     def _stdout(self, string: bytes):
@@ -570,12 +604,15 @@ class Terminal(TerminalBuffer, QWidget):
             self._paint_buffer()
             self.repaint()
 
+    @override
     def focusInEvent(self, event):
         self._switch_cursor_blink(CursorState.ON, True)
 
+    @override
     def focusOutEvent(self, event):
         self._switch_cursor_blink(CursorState.UNFOCUSED, False)
 
+    @override
     def keyPressEvent(self, event):
         key = event.key()
         modifiers = event.modifiers()
@@ -670,6 +707,7 @@ class Terminal(TerminalBuffer, QWidget):
         if text:
             self.input(text.encode('utf-8'))
 
+    @override
     def showEvent(self, event):
         super().showEvent(event)
 
@@ -686,16 +724,18 @@ class Terminal(TerminalBuffer, QWidget):
         self.scroll_bar.setMaximum(len(self._buffer) - self.col_len)
         self.scroll_bar.setSliderPosition(self._buffer_display_offset)
 
+    @override
     def update_scroll_position(self):
         if self.scroll_bar:
             self.update_scroll_sig.emit()
 
     def connect_scroll_bar(self, scroll_bar: QScrollBar):
+        """Link a scroll bar to this widget."""
         self.scroll_bar = scroll_bar
         self.update_scroll_position()
-        self.scroll_bar.valueChanged.connect(self.scroll_bar_changed)
+        self.scroll_bar.valueChanged.connect(self._scroll_bar_changed)
 
-    def scroll_bar_changed(self, pos):
+    def _scroll_bar_changed(self, pos):
         if 0 <= pos <= len(self._buffer) - self.col_len:
             self._buffer_display_offset = pos
             self._paint_buffer()
