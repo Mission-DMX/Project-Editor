@@ -53,7 +53,7 @@ class AboutWindow(QMessageBox):
         self.setStandardButtons(QMessageBox.StandardButton.Close)
         self.setInformativeText(
             "<br>The Manual for this software can be found by clicking the help button or by "
-            'visiting <a href="https://github.com/Mission-DMX/Docs/blob/main/Editor/Readme.md">'
+            'visiting <a href="https://mission-dmx.org/docs/">'
             "the online manual</a>.<br>Copyright (c) the MissionDMX contributors"
         )
         self.setDetailedText(CONTRIBUTORS_STR)
