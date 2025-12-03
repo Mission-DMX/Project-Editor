@@ -30,6 +30,7 @@ QT_VERSION = "6"
 
 class CursorState(Enum):
     """State of terminal cursor."""
+
     ON = 1
     OFF = 2
     UNFOCUSED = 3
@@ -81,9 +82,10 @@ class Terminal(TerminalBuffer, QWidget):
             font_size: Default font size in pixels.
             line_height_factor: Default line height as a multiple of the character height.
             font: Font object to use. None indicates the default font.
+            kwargs: Further arguments are passed to QWidget.__init__.
 
         """
-        QWidget.__init__(self)
+        QWidget.__init__(self, **kwargs)
 
         self.scroll_bar: QScrollBar = None
 

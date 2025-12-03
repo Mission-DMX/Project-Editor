@@ -24,11 +24,14 @@ _BACKSPACE_CHAR = 8
 class CLITerminalIO(TerminalIO):
     """Terminal IO implementation to adapter CLIContext."""
 
-    def __init__(self, show: BoardConfiguration, stdout_callback: callable) -> None:
+    def __init__(self, show: BoardConfiguration, terminal: Terminal) -> None:
         """Initialize the IO adapter."""
         self._context = CLIContext(show=show, network_manager=NetworkManager())
-        self._stdout_callback = stdout_callback
+        self._stdout_callback = terminal.stdout
         self._buffer = []
+        terminal.stdin_callback = self.write
+        terminal.resize_callback = self.resize
+        self.spawn()
 
     @override
     def spawn(self) -> None:
@@ -85,10 +88,7 @@ class ConsoleDockWidget(QDockWidget):
         self._container_widget.setLayout(layout)
         self.setWidget(self._container_widget)
         self.setWindowTitle("CLI")
-        self._io = CLITerminalIO(show, self._terminal_widget.stdout)
-        self._terminal_widget.stdin_callback = self._io.write
-        self._terminal_widget.resize_callback = self._io.resize
-        self._io.spawn()
+        self._io = CLITerminalIO(show, self._terminal_widget)
         self._scrollbar.setSliderPosition(0)
         self._terminal_widget.setFocus()
 
