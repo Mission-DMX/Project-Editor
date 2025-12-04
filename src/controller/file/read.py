@@ -25,6 +25,7 @@ from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
 from view.dialogs import ExceptionsDialog
+from view.show_mode.player.external_ui_windows import update_window_count
 from view.show_mode.show_ui_widgets import WIDGET_LIBRARY, filter_to_ui_widget
 
 logger = getLogger(__name__)
@@ -167,6 +168,11 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name
     board_configuration.broadcaster.end_show_file_parsing.emit()
+    try:
+        update_window_count(int(board_configuration.ui_hints.get("show_ui_window_count", "0")), board_configuration)
+    except ValueError as e:
+        logger.exception("Unable to update show UI window count: %s", e)
+        update_window_count(0, board_configuration)
     board_configuration.broadcaster.show_file_loaded.emit()
     pn.close()
     return True

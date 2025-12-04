@@ -91,10 +91,13 @@ class HelpCommand(Command):
                 self.context.print("\t<source channel ID template> <destination channel ID templates> [--guard <smod:X>"
                                    "|<dmod:X>|<dt:DT>|<sfid_contains:STR>|<dfid_contains:STR>|<schan_contains:STR>|"
                                    "<dchan_contains:STR>] [--source-count <count>] [--destination-count <count>]")
+            case "uipage":
+                self.context.print("Manipulate content and display of ui pages.")
+                self.context.print("\tset-displayed-index <window> <scene> <page>")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
-                self.context.print("\tprint\tasset\tset\tif\tconnect\tfish")
+                self.context.print("\tprint\tasset\tset\tif\tconnect\tfish\tuipage")
                 return False
         return True
