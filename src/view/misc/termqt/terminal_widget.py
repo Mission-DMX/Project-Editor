@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import math
 from enum import Enum
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from PySide6.QtCore import QMutex, Qt, QTimer, Signal
 from PySide6.QtGui import (
@@ -85,7 +85,7 @@ class Terminal(TerminalBuffer, QWidget):
                  font_size: int = 12,
                  line_height_factor: int = 1.2,
                  font: QFont | None = None,
-                 **kwargs
+                 **kwargs: dict[str, Any] | None
                  ) -> None:
         """Initialize the terminal widget.
 
@@ -198,16 +198,12 @@ class Terminal(TerminalBuffer, QWidget):
 
     @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if event.buttons() & Qt.LeftButton:
-            if self._selection_start is not None:
-                pos = self._align_to_rightmost_char(
-                        self._map_pixel_to_cell(event.pos())
-                        )
-                if pos.y < len(self._buffer) and pos != self._selection_end:
-                    self.set_selection_end(pos)
-
-                    self._paint_buffer()
-                    self._restore_cursor_state()
+        if event.buttons() & Qt.LeftButton and self._selection_start is not None:
+            pos = self._align_to_rightmost_char(self._map_pixel_to_cell(event.pos()))
+            if pos.y < len(self._buffer) and pos != self._selection_end:
+                self.set_selection_end(pos)
+                self._paint_buffer()
+                self._restore_cursor_state()
 
     @override
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -273,11 +269,12 @@ class Terminal(TerminalBuffer, QWidget):
         font, info = self._select_font(qfd, font, fix_font_flag)
         self._apply_font_settings(font, info)
 
-    def _select_font(self, qfd: QFontDatabase, font: QFont, fix_font_flag: QFontDatabase.SystemFont.FixedFont) -> tuple[QFont, QFontInfo]:
+    def _select_font(self, qfd: QFontDatabase, font: QFont, fix_font_flag: QFontDatabase.SystemFont.FixedFont) \
+            -> tuple[QFont, QFontInfo]:
         if font:
             info = QFontInfo(font)
             if info.styleHint() != QFont.StyleHint.Monospace:
-                self.logger.warning(f"font: Please use a monospaced font! Unsupported font {info.family()}.")
+                self.logger.warning("font: Please use a monospaced font! Unsupported font %s.", info.family())
                 font = qfd.systemFont(fix_font_flag) if qfd else QFontDatabase.systemFont(fix_font_flag)
         elif not qfd or "Menlo" in qfd.families():
             font = QFont("Menlo")
@@ -341,7 +338,6 @@ class Terminal(TerminalBuffer, QWidget):
         ch = self.char_height
         lh = self.line_height
         ft = self.font
-        fg_color = self._fg_color
 
         ht = 0
 
@@ -353,7 +349,8 @@ class Terminal(TerminalBuffer, QWidget):
         start_col = start_row = end_col = end_row = None
 
         if self._selection_end:
-            assert self._selection_start
+            if not self._selection_start:
+                raise Exception("Selection start must be prior to selection end.")
             start_col, start_row = self._selection_start
             end_col, end_row = self._selection_end
 
@@ -725,7 +722,7 @@ class Terminal(TerminalBuffer, QWidget):
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
 
-        def resize(*args):
+        def resize(*args: Any) -> None:
             self.resize(self.size().width(), self.size().height())
         QTimer.singleShot(0, resize)
 

@@ -18,22 +18,22 @@ class TerminalIO(ABC):
     """
 
     @abstractmethod
-    def spawn(self):
+    def spawn(self) -> None:
         """Implement process spawning mechanics here."""
 
     @abstractmethod
-    def resize(self, rows: int, cols: int):
+    def resize(self, rows: int, cols: int) -> None:
         """Gets called when terminal is resized.
 
         Unit: width and height in characters.
         """
 
     @abstractmethod
-    def write(self, buffer: bytes):
+    def write(self, buffer: bytes) -> None:
         """Callback will be called when user inputs something into terminal."""
 
     @abstractmethod
-    def terminate(self):
+    def terminate(self) -> None:
         """Method must kill connected process."""
 
     @abstractmethod

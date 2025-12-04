@@ -1,17 +1,22 @@
 """TerminalBuffer class."""
 
+from __future__ import annotations
+
 from collections import deque
 from copy import deepcopy
 from enum import Enum
 from functools import partial
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from PySide6.QtCore import QMutex, QRecursiveMutex, Qt
 
 #from PySide6 import QT_VERSION
-from PySide6.QtGui import QColor
-
 from .colors import colors8, colors16, colors256
+
+if TYPE_CHECKING:
+    from logging import Logger
+
+    from PySide6.QtGui import QColor
 
 DEFAULT_FG_COLOR = Qt.white
 DEFAULT_BG_COLOR = Qt.black
@@ -47,7 +52,7 @@ class ControlChar(Enum):
     SYN = 22  # Ctrl-V
     ETB = 23  # Ctrl-W, end of xmit block, bash shortcut for cut the word before cursor
     CAN = 24  # Ctrl-X, cancel
-    EM = 25,  # Ctrl-Y, end of medium, bash shortcut for paste
+    EM = 25   # Ctrl-Y, end of medium, bash shortcut for paste
     SUB = 26  # Ctrl-Z, substitute
     ESC = 27  # Ctrl-[, escape
 
@@ -150,11 +155,11 @@ class EscapeProcessor:
         G0_COMPLETE = 11
         # once entered, process the input and return to WAIT_FOR_ESC
 
-    def __init__(self, logger):
+    def __init__(self, logger: Logger) -> None:
         """Initialize the FSM."""
         self.logger = logger
         self._state = self.State.WAIT_FOR_ESC
-        self._args = []
+        self._args: list[int | str] = []
         self._arg_buf = ""
         self._cmd = ""
         self._mark = ""
@@ -198,38 +203,38 @@ class EscapeProcessor:
         #      0: from cursor to the end of screen
         #      1: from start of screen to cursor
         #      2: the entire screen
-        self.erase_display_cb = lambda mode: None
+        self.erase_display_cb = lambda mode: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Erase In Line
         #  mode:
         #      0: from cursor to the end of line
         #      1: from start of line to cursor
         #      2: the entire line
-        self.erase_line_cb = lambda mode: None
+        self.erase_line_cb = lambda mode: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Delete Line(s)
         #  lines: number of lines to delete
-        self.delete_line_cb = lambda lines: None
+        self.delete_line_cb = lambda lines: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Cursor Position(absolute position)
         #  set the position of the cursor
         #  pos_r: row (begin from 0)
         #  pos_c: column
-        self.set_cursor_abs_position_cb = lambda pos_r, pos_c: None
+        self.set_cursor_abs_position_cb = lambda pos_r, pos_c: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Cursor Vertical Position Absolute (VPA)
         #   Move cursor to row `pos_r` (begin from 0).
-        self.set_cursor_y_position_cb = lambda pos_r: None
+        self.set_cursor_y_position_cb = lambda pos_r: None  # NOQA: ARG005 This is a compatible placeholder
 
 
         # Cursor Position(relative position)
         #  set the position of the cursor
         #  offset_r: row (begin from 0)
         #  offset_c: column
-        self.set_cursor_rel_position_cb = lambda offset_x, offset_c: None
+        self.set_cursor_rel_position_cb = lambda offset_x, offset_c: None  # NOQA: ARG005 This is a compatible ph.
 
         # Cursor Horizontal Absolute
-        self.set_cursor_x_position_cb = lambda x: None
+        self.set_cursor_x_position_cb = lambda x: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Cursor Position Report
         #  return the position of the cursor in the format of
@@ -249,7 +254,7 @@ class EscapeProcessor:
         #      color, bgcolor is QColor, None means unspecified,
         #      the other three flags: -1 means unspecified,
         #        0 means false, 1 means true
-        self.set_style_cb = lambda color, bgcolor, bold, underlined, reverse: None
+        self.set_style_cb = lambda color, bgcolor, bold, underlined, reverse: None  # NOQA: ARG005 This is a placeholder
 
         # Save Cursor Position
         #  save cursor position and current style
@@ -261,20 +266,20 @@ class EscapeProcessor:
 
         # Set Window Title
         #  set the title of the terminal
-        self.set_window_title_cb = lambda title: None
+        self.set_window_title_cb = lambda title: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Use Alternate Screen Buffer
         #  on: bool, on/off
-        self.use_alt_buffer = lambda on: None
+        self.use_alt_buffer = lambda on: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Save Cursor and Use Alternate Screen Buffer
         #  on: bool, on/off
-        self.save_cursor_use_alt_buffer = lambda on: None
+        self.save_cursor_use_alt_buffer = lambda on: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Enable/Disable wraparound mode
         # https://terminalguide.namepad.de/mode/p7/
         #  on: bool, enable/disable
-        self.enable_auto_wrap = lambda on: None
+        self.enable_auto_wrap = lambda on: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Insert Space
         # https://terminalguide.namepad.de/seq/csi_x40_at/
@@ -282,12 +287,12 @@ class EscapeProcessor:
         # cell contents to the right. The contents of the amount right-most
         # columns in the scroll region are lost. The cursor position is not changed.
         #  num: int, the amount of spaces
-        self.insert_space_cb = lambda num: None
+        self.insert_space_cb = lambda num: None  # NOQA: ARG005 This is a compatible placeholder
 
         # Auto-wrap
         #  on: bool, on/off
 
-    def input(self, c: int):
+    def input(self, c: int) -> int:
         """Process input character c, c is the ASCII code of input.
 
         Returns:
@@ -409,7 +414,7 @@ class EscapeProcessor:
 
         return 0
 
-    def _enter_state(self, _state):
+    def _enter_state(self, _state: State) -> None:
         if _state == self.State.ESC_COMPLETE:
             self._state = self.State.ESC_COMPLETE
             self._process_esc_command()
@@ -429,8 +434,9 @@ class EscapeProcessor:
         else:
             self._state = _state
 
-    def _process_esc_command(self):
-        assert self._state == self.State.ESC_COMPLETE
+    def _process_esc_command(self) -> None:
+        if not self._state == self.State.ESC_COMPLETE:
+            raise ValueError("Expected current state to be ESC_COMPLETE.")
 
         cmd = self._cmd
 
@@ -441,8 +447,9 @@ class EscapeProcessor:
         else:
             self.fail()
 
-    def _process_csi_command(self):
-        assert self._state == self.State.CSI_COMPLETE
+    def _process_csi_command(self) -> None:
+        if not self._state == self.State.CSI_COMPLETE:
+            raise Exception("Expected current state to be CSI_COMPLETE.")
 
         cmd = self._cmd if not self._mark else (self._cmd + self._mark)
 
@@ -453,8 +460,9 @@ class EscapeProcessor:
         else:
             self.fail()
 
-    def _process_osc_command(self):
-        assert self._state == self.State.OSC_COMPLETE
+    def _process_osc_command(self) -> None:
+        if not self._state == self.State.OSC_COMPLETE:
+            raise ValueError("Expected current state to be OSC_COMPLETE.")
         try:
             op = int(self._args[0])
             if op in [0, 1, 2]:
@@ -463,89 +471,89 @@ class EscapeProcessor:
         except (ValueError, IndexError):
             self.fail()
 
-    def _get_args(self, ind, default=None):
+    def _get_args(self, ind: int, default: int | None = None) -> int | None:
         if ind < len(self._args):
             return self._args[ind]
         return default
 
-    def reset(self):
-        self._args = []
+    def reset(self) -> None:
+        self._args.clear()
         self._cmd = ""
         self._buffer = ""
         self._arg_buf = ""
         self._mark = ""
         self._state = self.State.WAIT_FOR_ESC
 
-    def fail(self):
+    def fail(self) -> None:
         buf = self._buffer.encode("utf-8")
         self.reset()
         raise ValueError("Unable to process escape sequence "
                          f"{buf}.")
 
-    def _esc_m(self):
+    def _esc_m(self) -> None:
         # RI - Reverse Index
         # Move the cursor to the previous line in the scrolling region, possibly scrolling.
 
         self.reverse_index_cb()
 
-    def _csi_d(self):
+    def _csi_d(self) -> None:
         self.set_cursor_y_position_cb(self._get_args(0, default=1) - 1)
 
-    def _csi_n(self):
-        # DSR – Device Status Report
+    def _csi_n(self) -> None:
+        # DSR - Device Status Report
         arg = self._get_args(0, default=0)
         if arg == 6:
             self.report_cursor_position_cb()
         else:
             self.report_device_status_cb()
 
-    def _csi_J(self):
-        # ED – Erase In Display
+    def _csi_J(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
+        # ED - Erase In Display
         self.erase_display_cb(self._get_args(0, default=0))
 
-    def _csi_K(self):
-        # EL – Erase In Line
+    def _csi_K(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
+        # EL - Erase In Line
         self.erase_line_cb(self._get_args(0, default=0))
 
-    def _csi_P(self):
+    def _csi_P(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
         self.erase_line_cb(0)
 
-    def _csi_M(self):
+    def _csi_M(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
         self.delete_line_cb(self._get_args(0, default=1))
 
-    def _csi_H(self):
-        # CUP – Cursor On-Screen Position
+    def _csi_H(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
+        # CUP - Cursor On-Screen Position
         self.set_cursor_abs_position_cb(
             self._get_args(1, default=1) - 1,
             self._get_args(0, default=1) - 1  # begin from 1 -> begin from 0
         )
 
-    def _csi_A(self):
+    def _csi_A(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
         # Cursor Up
         self.set_cursor_rel_position_cb(0, -1 * self._get_args(0, default=1))
 
-    def _csi_B(self):
+    def _csi_B(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
         # Cursor Down
         self.set_cursor_rel_position_cb(0, +1 * self._get_args(0, default=1))
 
-    def _csi_C(self):
+    def _csi_C(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
         # Cursor Right
         self.set_cursor_rel_position_cb(+1 * self._get_args(0, default=1), 0)
 
-    def _csi_D(self):
+    def _csi_D(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
         # Cursor Left
         self.set_cursor_rel_position_cb(-1 * self._get_args(0, default=1), 0)
 
-    def _csi_G(self):
+    def _csi_G(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
         # Cursor Horizontal Absolute
         index_in_line = self._get_args(0, default=0) - 1
         self.set_cursor_x_position_cb(index_in_line)
 
-    def _csi_AT(self):
+    def _csi_AT(self) -> None:  # NOQA: N802 upper case esc means upper case for distinguishing
         # ICH - Insert Space
         self.insert_space_cb(self._get_args(0, default=1))
 
-    def _csi_m(self):
+    def _csi_m(self) -> None:
         # Colors and decorators
         color = None
         bg_color = None
@@ -587,10 +595,7 @@ class EscapeProcessor:
                     arg1 = 1
                     i += 1
                 else:
-                    if i + 1 < len(self._args):
-                        arg1 = self._get_args(i+1, default=0)
-                    else:
-                        arg1 = 0
+                    arg1 = self._get_args(i+1, default=0) if i + 1 < len(self._args) else 0
 
                     if arg1 == 0 or arg1 == 1:
                         i += 2
@@ -635,7 +640,7 @@ class EscapeProcessor:
 
         self.set_style_cb(color, bg_color, bold, underline, reverse)
 
-    def _csi_h_l_ext(self, on):
+    def _csi_h_l_ext(self, on: bool) -> None:
         arg = self._get_args(0, default=0)
         if arg == 0:
             self.fail()
@@ -651,21 +656,18 @@ class EscapeProcessor:
 
 class TerminalBuffer:
     def __init__(self,
-                 row_len,
-                 col_len,
+                 row_len: int,
+                 col_len: int,
                  *,
-                 logger=None,
-                 auto_wrap_enabled=True
-                 ):
+                 logger: Logger | None = None,
+                 auto_wrap_enabled: bool = True
+                 ) -> None:
         self.logger = logger
 
         # initialize a buffer to store all characters to display
         # define in _resize()_ as a deque
         self._buffer = None
-        if QT_VERSION.startswith("6"):
-            self._buffer_lock =QRecursiveMutex()
-        else:
-            self._buffer_lock = QMutex(QMutex.Recursive)
+        self._buffer_lock = QRecursiveMutex()
 
         self.auto_wrap_enabled = auto_wrap_enabled
         # used to store the line number of lines that are wrapped automatically
@@ -705,8 +707,8 @@ class TerminalBuffer:
         self._alt_cursor_position = Position(0, 0)
 
         # selection
-        self._selection_start = None
-        self._selection_end = None
+        self._selection_start: Position | None = None
+        self._selection_end: Position | None = None
 
         # scroll bar
         self._postpone_scroll_update = False
@@ -721,8 +723,8 @@ class TerminalBuffer:
         self._register_escape_callbacks()
 
         # callbacks
-        self.stdin_callback = lambda t: print(t)
-        self.resize_callback = lambda rows, cols: None
+        self.stdin_callback = lambda t: None  # NOQA: ARG005 This is a compatible placeholder
+        self.resize_callback = lambda rows, cols: None  # NOQA: ARG005 This is a compatible placeholder
 
         self.maximum_line_history = 5000
 
@@ -730,14 +732,14 @@ class TerminalBuffer:
 
     # Add methods to manage selection state
 
-    def set_selection_start(self, start_position):
+    def set_selection_start(self, start_position: Position) -> None:
         self._selection_start = start_position
         self._selection_end = start_position
 
-    def set_selection_end(self, end_position):
+    def set_selection_end(self, end_position: Position) -> None:
         self._selection_end = end_position
 
-    def set_selection_finish(self, end_position):
+    def set_selection_finish(self, end_position: Position) -> None:
         self.set_selection_end(end_position)
 
         start_col, start_row = self._selection_start
@@ -745,11 +747,11 @@ class TerminalBuffer:
         if (start_row, start_col) == (end_row, end_col):
             self._selection_start = self._selection_end = None
 
-    def reset_selection(self):
+    def reset_selection(self) -> None:
         self._selection_start = None
         self._selection_end = None
 
-    def get_selection(self):
+    def get_selection(self) -> tuple[Position | None, Position | None]:
         # Ensure the selection is ordered correctly
         if self._selection_start and self._selection_end:
             start = min(self._selection_start, self._selection_end)
@@ -757,7 +759,7 @@ class TerminalBuffer:
             return start, end
         return None, None
 
-    def _get_selected_text(self):
+    def _get_selected_text(self) -> str:
         start, end = self.get_selection()
         if start and end:
             selected_text = ""
@@ -769,13 +771,14 @@ class TerminalBuffer:
                         if start.y == end.y:
                             if start.x <= col <= end.x:
                                 line_text += line[col].char if line[col] else " "
-                        elif (row == start.y and col >= start.x) or (row == end.y and col <= end.x) or start.y < row < end.y:
+                        elif ((row == start.y and col >= start.x) or (row == end.y and col <= end.x) or
+                              start.y < row < end.y):
                             line_text += line[col].char if line[col] else " "
                     selected_text += line_text + "\n"
             return selected_text.strip("\n")
         return ""
 
-    def _get_selected_text_rstrip(self):
+    def _get_selected_text_rstrip(self) -> str:
         start, end = self.get_selection()
         if start and end:
             selected_text = ""
@@ -787,20 +790,21 @@ class TerminalBuffer:
                         if start.y == end.y:
                             if start.x <= col <= end.x:
                                 line_text += line[col].char if line[col] else " "
-                        elif (row == start.y and col >= start.x) or (row == end.y and col <= end.x) or start.y < row < end.y:
+                        elif ((row == start.y and col >= start.x) or (row == end.y and col <= end.x) or
+                              start.y < row < end.y):
                             line_text += line[col].char if line[col] else " "
                     selected_text += line_text.rstrip() + "\n"
             return selected_text.strip("\n")
         return ""
 
-    def _get_all_text(self):
+    def _get_all_text(self) -> str:
         all_text = ""
         for row in self._buffer:
             line_text = "".join(c.char if c else " " for c in row)
             all_text += line_text + "\n"
         return all_text.strip("\n")
 
-    def _get_all_text_rstrip(self):
+    def _get_all_text_rstrip(self) -> str:
         all_text = []
         for row in self._buffer:
             line_text = "".join(c.char if c else " " for c in row).rstrip()
@@ -812,7 +816,7 @@ class TerminalBuffer:
 
         return "\n".join(all_text)
 
-    def _register_escape_callbacks(self):
+    def _register_escape_callbacks(self) -> None:
         ep = self.escape_processor
         ep.erase_display_cb = self.erase_display
         ep.erase_line_cb = self.erase_line
@@ -831,13 +835,14 @@ class TerminalBuffer:
         ep.enable_auto_wrap = self.enable_auto_wrap
         ep.insert_space_cb = self.insert_space
 
-    def set_bg(self, color: QColor):
+    def set_bg(self, color: QColor) -> None:
         self._bg_color = color
 
-    def set_fg(self, color: QColor):
+    def set_fg(self, color: QColor) -> None:
         self._fg_color = color
 
-    def set_style(self, color, bg_color, bold, underline, reverse):
+    def set_style(self, color: QColor | None, bg_color: QColor | None,
+                  bold: bool, underline: bool, reverse: bool) -> None:
         self._fg_color = color if color else self._fg_color
         self._bg_color = bg_color if bg_color else self._bg_color
         self._bold = bool(bold) if bold != -1 else self._bold
@@ -849,7 +854,7 @@ class TerminalBuffer:
     #  SCREEN BUFFER FUNCTIONS
     # ==========================
 
-    def clear_buffer(self):
+    def clear_buffer(self) -> None:
         _new_buffer = deque([[None for x in range(self.row_len)]
                              for i in range(self.col_len)])
         _new_wrap = deque([False for i in range(self.col_len)])
@@ -857,13 +862,12 @@ class TerminalBuffer:
         self._buffer = _new_buffer
         self._line_wrapped_flags = _new_wrap
 
-    def create_buffer(self, row_len, col_len):
+    def create_buffer(self, row_len: int, col_len: int) -> None:
         _new_buffer = deque([[None for x in range(row_len)]
                              for i in range(col_len)])
         _new_wrap = deque([False for i in range(col_len)])
 
-        self.logger.info(f"screen: buffer created, size ({row_len}x"
-                         f"{col_len})")
+        self.logger.info("screen: buffer created, size (%sx%s)", row_len, col_len)
 
         self.row_len = row_len
         self.col_len = col_len
@@ -873,13 +877,14 @@ class TerminalBuffer:
         self._line_wrapped_flags = _new_wrap
         self._cursor_position = Position(0, 0)
 
-    def resize(self, row_len, col_len):
+    def resize(self, row_len: int, col_len: int) -> None:
         cur_x = self._cursor_position.x
         cur_y = self._cursor_position.y
 
         do_auto_wrap = self.auto_wrap_enabled
 
-        assert col_len <= self.maximum_line_history
+        if not col_len <= self.maximum_line_history:
+            raise Exception("Colon length must be <= maximum line history.")
 
         if not self._buffer:
             self.create_buffer(row_len, col_len)
@@ -904,8 +909,7 @@ class TerminalBuffer:
             if self._line_wrapped_flags[i]:
                 old_auto_breaks_before_cursor += 1
 
-        self.logger.info(f"screen: resize triggered, new size ({row_len}x"
-                         f"{col_len})")
+        self.logger.info("screen: resize triggered, new size (%sx%s)", row_len, col_len)
 
         _new_buffer = deque([[None for x in range(row_len)]])
         _new_wrap = deque([False])
@@ -928,21 +932,18 @@ class TerminalBuffer:
         # we must be careful not to create two linebreaks but only one.
 
         for y, old_row in enumerate(self._buffer):
-            if y > 0:
+            if y > 0 and not self._line_wrapped_flags[y-1] and not breaked:
                 # if last line was unfinished and was automantically
                 # wrapped into the next line in the old screen, this flag
                 # will be True, which means we don't need to wrap it again
-                if not self._line_wrapped_flags[y-1]:
-                    if not breaked:
-                        # The _breaked_ flag is used to avoid
-                        # breaking the same line twice
-                        # under the case that the new row length is the
-                        # integer multiple of the length of the old row
-                        _new_buffer.append([None for x in range(row_len)])
-                        _new_wrap.append(False)
-                        new_y += 1
-                        new_x = 0
-
+                # The _breaked_ flag is used to avoid
+                # breaking the same line twice
+                # under the case that the new row length is the
+                # integer multiple of the length of the old row
+                _new_buffer.append([None for x in range(row_len)])
+                _new_wrap.append(False)
+                new_y += 1
+                new_x = 0
             x = -1
             while x + 1 < len(old_row):
                 x += 1
@@ -1007,7 +1008,7 @@ class TerminalBuffer:
         if filler > 0:
             cur_y += filler
 
-        for i in range(filler):
+        for _ in range(filler):
             _new_buffer.appendleft([None for x in range(row_len)])
             _new_wrap.appendleft(False)
 
@@ -1031,8 +1032,8 @@ class TerminalBuffer:
         self.resize_callback(col_len, row_len)
         # self._log_buffer()
 
-    def write(self, text, pos: Position = None, set_cursor=False,
-              reset_offset=True):
+    def write(self, text: str, pos: Position | None = None, set_cursor: bool = False,
+              reset_offset: bool = True) -> None:
         # _pos_ is position on the screen, not position on the buffer
 
         self._buffer_lock.lock()
@@ -1107,7 +1108,7 @@ class TerminalBuffer:
         self._buffer_lock.unlock()
         # self._log_buffer()
 
-    def write_at_cursor(self, text):
+    def write_at_cursor(self, text: str) -> None:
         self.write(text, pos=None, set_cursor=True, reset_offset=False)
 
         y_from_screen_top = self._cursor_position.y - self._buffer_display_offset
@@ -1118,14 +1119,12 @@ class TerminalBuffer:
                     len(self._buffer) - self.col_len)
             self.update_scroll_position_postponed()
 
-    def get_char_width(self, char):
+    def get_char_width(self, char: str) -> int:
         return 1
 
-    def _log_buffer(self):
-        self.logger.info(f"buffer: length: {len(self._buffer)}, display offset: {self._buffer_display_offset}")
-        self.logger.info("buffer(00): |" +
-                         "-" * self.row_len +
-                         "|")
+    def _log_buffer(self) -> None:
+        self.logger.info("buffer: length: %i, display offset: %i", len(self._buffer), self._buffer_display_offset)
+        self.logger.info("buffer(00): |%s|", "-" * self.row_len)
 
         cp = self._cursor_position
         for ln in range(len(self._buffer)):
@@ -1150,7 +1149,7 @@ class TerminalBuffer:
                          "-" * self.row_len +
                          "|")
 
-    def _log_screen(self):
+    def _log_screen(self) -> None:
         self.logger.info(f"screen({self.row_len}x{self.col_len}): |" +
                          "-" * self.row_len +
                          "|")
@@ -1183,7 +1182,7 @@ class TerminalBuffer:
                          "-"*self.row_len +
                          "|")
 
-    def delete_at_cursor(self):
+    def delete_at_cursor(self) -> None:
         pos = self._cursor_position
         # self._log_buffer()
         self._buffer_lock.lock()
@@ -1195,7 +1194,7 @@ class TerminalBuffer:
 
         # self._log_buffer()
 
-    def erase_display(self, mode=2):
+    def erase_display(self, mode: int = 2) -> None:
         buf = self._buffer
         cur_pos = self._cursor_position
         offset = self._buffer_display_offset
@@ -1219,7 +1218,7 @@ class TerminalBuffer:
                 for x in range(self.row_len):
                     buf[y][x] = None
 
-    def erase_line(self, mode=3):
+    def erase_line(self, mode: int = 3) -> None:
         buf = self._buffer
         cur_pos = self._cursor_position
 
@@ -1233,7 +1232,7 @@ class TerminalBuffer:
             for x in range(self.row_len):
                 buf[cur_pos.y][x] = None
 
-    def delete_line(self, lines=1):
+    def delete_line(self, lines: int = 1) -> None:
         buf = self._buffer
         self._buffer_lock.lock()
         cur_pos = self._cursor_position
@@ -1255,7 +1254,7 @@ class TerminalBuffer:
 
         self._buffer_lock.unlock()
 
-    def toggle_alt_screen(self, on=True):
+    def toggle_alt_screen(self, on: bool = True) -> None:
         if on:
             # save current buffer
             self._alt_buffer = deepcopy(self._buffer)
@@ -1284,7 +1283,7 @@ class TerminalBuffer:
         self._fg_color = DEFAULT_FG_COLOR
         self._bg_color = DEFAULT_BG_COLOR
 
-    def toggle_alt_screen_save_cursor(self, on=True):
+    def toggle_alt_screen_save_cursor(self, on: bool = True) -> None:
         if on:
             # save current buffer
             self._alt_cursor_position = self._cursor_position
@@ -1295,10 +1294,10 @@ class TerminalBuffer:
 
         self.toggle_alt_screen(on)
 
-    def enable_auto_wrap(self, on=True):
+    def enable_auto_wrap(self, on: bool = True) -> None:
         self.auto_wrap_enabled = on
 
-    def insert_space(self, num):
+    def insert_space(self, num: int) -> None:
         self._buffer_lock.lock()
 
         cur_x = self._cursor_position.x
@@ -1325,17 +1324,17 @@ class TerminalBuffer:
     #       CURSOR CONTROL
     # ==========================
 
-    def set_cursor_position(self, x, y):
+    def set_cursor_position(self, x: int, y: int) -> None:
         self._cursor_position = Position(
             *self._move_screen_with_pos(x, y)
         )
 
-    def set_cursor_on_screen_position(self, x, y):
+    def set_cursor_on_screen_position(self, x: int, y: int) -> None:
         pos_y = self._buffer_display_offset + y
         pos_x = x
         self.set_cursor_position(pos_x, pos_y)
 
-    def _keep_pos_in_screen(self, x, y):
+    def _keep_pos_in_screen(self, x: int, y: int) -> tuple[int, int]:
         if y < self._buffer_display_offset:
             y = self._buffer_display_offset
         elif y >= self._buffer_display_offset + self.col_len:
@@ -1348,7 +1347,7 @@ class TerminalBuffer:
 
         return x, y
 
-    def _move_screen_with_pos(self, x, y):
+    def _move_screen_with_pos(self, x: int, y: int) -> tuple[int, int]:
         while x < 0:
             x = self.row_len + x
             y -= 1
@@ -1373,13 +1372,13 @@ class TerminalBuffer:
 
         return x, y
 
-    def backspace(self, count=1):
+    def backspace(self, count: int = 1) -> None:
         x = self._cursor_position.x - count
         self.set_cursor_position(
             *self._move_screen_with_pos(x, self._cursor_position.y)
         )
 
-    def linefeed(self):
+    def linefeed(self) -> None:
         y = self._cursor_position.y + 1
         x = 0
 
@@ -1387,13 +1386,13 @@ class TerminalBuffer:
             *self._move_screen_with_pos(x, y)
         )
 
-    def carriage_feed(self):
+    def carriage_feed(self) -> None:
         y = self._cursor_position.y
         x = 0
 
         self.set_cursor_position(x, y)
 
-    def set_cursor_rel_pos(self, offset_x, offset_y, keep_pos_in_screen=True):
+    def set_cursor_rel_pos(self, offset_x: int, offset_y: int, keep_pos_in_screen: bool = True) -> None:
         x = self._cursor_position.x + offset_x
         y = self._cursor_position.y + offset_y
 
@@ -1402,17 +1401,17 @@ class TerminalBuffer:
         else:
             self.set_cursor_position(x, y)
 
-    def set_cursor_x_pos(self, x: int):
+    def set_cursor_x_pos(self, x: int) -> None:
         y = self._cursor_position.y
 
         self.set_cursor_position(x, y)
 
-    def set_cursor_y_pos(self,  y):
+    def set_cursor_y_pos(self,  y: int) -> None:
         pos_y = self._buffer_display_offset + y
 
         self.set_cursor_position(self._cursor_position.x, pos_y)
 
-    def report_cursor_pos(self):
+    def report_cursor_pos(self) -> None:
         x = self._cursor_position.x + 1
         y = self._cursor_position.y - self._buffer_display_offset + 1
         self.stdin_callback(f"\x1b[{y};{x}R".encode())
@@ -1425,13 +1424,13 @@ class TerminalBuffer:
     #    self._input_buffer_cursor = 0
     #    self._input_buffer = ''
 
-    def stdout(self, string: bytes):
+    def stdout(self, string: bytes) -> bool:
         # Note that this function accepts UTF-8 only (since python use utf-8).
         # Normally modern programs will determine the encoding of its stdout
         # from env variable LC_CTYPE and for most systems, it is set to utf-8.
-        self._stdout_string(string)
+        return self._stdout_string(string)
 
-    def _stdout_string(self, string: bytes):
+    def _stdout_string(self, string: bytes) -> bool:
         # ret: need_draw
         need_draw = False
         tst_buf = ""
@@ -1502,7 +1501,7 @@ class TerminalBuffer:
 
         return need_draw
 
-    def input(self, char):
+    def input(self, char: bytes | int) -> None:
         if isinstance(char, bytes):
             self.stdin_callback(char)
         elif isinstance(char, int):
@@ -1535,24 +1534,24 @@ class TerminalBuffer:
     #        SCROLLING
     # ==========================
 
-    def scroll_down(self, lines):
+    def scroll_down(self, lines: int) -> None:
         if self._buffer_display_offset + self.col_len + lines <= len(self._buffer):
             self._buffer_display_offset += lines
         else:
             self._buffer_display_offset = len(self._buffer) - self.col_len
         self.update_scroll_position()
 
-    def scroll_up(self, lines):
+    def scroll_up(self, lines: int) -> None:
         if self._buffer_display_offset - lines > 0:
             self._buffer_display_offset -= lines
         else:
             self._buffer_display_offset = 0
         self.update_scroll_position()
 
-    def update_scroll_position(self):
+    def update_scroll_position(self) -> None:
         pass
 
-    def update_scroll_position_postponed(self):
+    def update_scroll_position_postponed(self) -> None:
         if self._postpone_scroll_update:
             self._scroll_update_pending = True
         else:
