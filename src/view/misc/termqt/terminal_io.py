@@ -1,12 +1,12 @@
 """Terminal IO Adapter abstract class."""
 
+import logging
 import os
-import time
-import struct
 import select
 import signal
-import logging
+import struct
 import threading
+import time
 from abc import ABC, abstractmethod
 
 
@@ -20,7 +20,6 @@ class TerminalIO(ABC):
     @abstractmethod
     def spawn(self):
         """Implement process spawning mechanics here."""
-        pass
 
     @abstractmethod
     def resize(self, rows: int, cols: int):
@@ -28,17 +27,14 @@ class TerminalIO(ABC):
 
         Unit: width and height in characters.
         """
-        pass
 
     @abstractmethod
     def write(self, buffer: bytes):
         """Callback will be called when user inputs something into terminal."""
-        pass
 
     @abstractmethod
     def terminate(self):
         """Method must kill connected process."""
-        pass
 
     @abstractmethod
     def is_alive(self) -> bool:

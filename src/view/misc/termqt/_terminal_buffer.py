@@ -1,15 +1,15 @@
 """TerminalBuffer class."""
 
+from collections import deque
 from copy import deepcopy
-from typing import NamedTuple
 from enum import Enum
 from functools import partial
-from collections import deque
+from typing import NamedTuple
+
+from PySide6.QtCore import QMutex, QRecursiveMutex, Qt
 
 #from PySide6 import QT_VERSION
-
 from PySide6.QtGui import QColor
-from PySide6.QtCore import Qt, QRecursiveMutex, QMutex
 
 from .colors import colors8, colors16, colors256
 
@@ -161,27 +161,27 @@ class EscapeProcessor:
         self._buffer = ""
 
         self._esc_func = {
-            'M': self._esc_m,
+            "M": self._esc_m,
         }
 
         self._csi_func = {
-            'd': self._csi_d,
-            'n': self._csi_n,
-            'n?': self._csi_n,
-            'm': self._csi_m,
-            'P': self._csi_P,
-            'A': self._csi_A,
-            'B': self._csi_B,
-            'C': self._csi_C,
-            'D': self._csi_D,
-            'G': self._csi_G,
-            'H': self._csi_H,
-            'J': self._csi_J,
-            'K': self._csi_K,
-            'M': self._csi_M,
-            '@': self._csi_AT,
-            'h?': partial(self._csi_h_l_ext, True),
-            'l?': partial(self._csi_h_l_ext, False)
+            "d": self._csi_d,
+            "n": self._csi_n,
+            "n?": self._csi_n,
+            "m": self._csi_m,
+            "P": self._csi_P,
+            "A": self._csi_A,
+            "B": self._csi_B,
+            "C": self._csi_C,
+            "D": self._csi_D,
+            "G": self._csi_G,
+            "H": self._csi_H,
+            "J": self._csi_J,
+            "K": self._csi_K,
+            "M": self._csi_M,
+            "@": self._csi_AT,
+            "h?": partial(self._csi_h_l_ext, True),
+            "l?": partial(self._csi_h_l_ext, False)
         }
 
         # ==== Callbacks ====
@@ -321,7 +321,7 @@ class EscapeProcessor:
                 self.fail()
 
         elif self._state == self.State.CSI_WAIT_FOR_MARKS:
-            if c in [ord('?'), ord('#'), ord('<'), ord('>'), ord('=')]:
+            if c in [ord("?"), ord("#"), ord("<"), ord(">"), ord("=")]:
                 self._mark = chr(c)
                 self._enter_state(self.State.CSI_WAIT_FOR_NEXT_ARG)
             elif 48 <= c <= 57:  # digits, 0-9
@@ -373,24 +373,22 @@ class EscapeProcessor:
                 self._arg_buf += chr(c)
                 self._enter_state(self.State.OSC_WAIT_FOR_ARG_FINISH)
                 return 1
-            else:
-                self.fail()
+            self.fail()
 
         elif self._state == self.State.OSC_WAIT_FOR_ARG_FINISH:
             if 20 <= c <= 126 and c != 59:  # every visible thing except ;
                 self._arg_buf += chr(c)
                 return 1
-            elif c == 59:  # ord(';')
+            if c == 59:  # ord(';')
                 self._args.append(self._arg_buf)
                 self._arg_buf = ""
                 self._enter_state(self.State.OSC_WAIT_FOR_NEXT_ARG)
                 return 1
-            elif c == 7 or c == 27:  # BEL, \x07 or ESC, \x1b
+            if c == 7 or c == 27:  # BEL, \x07 or ESC, \x1b
                 self._args.append(self._arg_buf)
                 self._enter_state(self.State.OSC_COMPLETE)
                 return 1
-            else:
-                self.fail()
+            self.fail()
 
         elif self._state == self.State.OSC_COMPLETE:
             # this branch should never be reached
@@ -426,7 +424,7 @@ class EscapeProcessor:
             self.reset()
         elif _state == self.State.G0_COMPLETE:
             self._state = self.State.G0_COMPLETE
-            pass # Not implemented
+            # Not implemented
             self.reset()
         else:
             self._state = _state
@@ -468,8 +466,7 @@ class EscapeProcessor:
     def _get_args(self, ind, default=None):
         if ind < len(self._args):
             return self._args[ind]
-        else:
-            return default
+        return default
 
     def reset(self):
         self._args = []
@@ -480,7 +477,7 @@ class EscapeProcessor:
         self._state = self.State.WAIT_FOR_ESC
 
     def fail(self):
-        buf = self._buffer.encode('utf-8')
+        buf = self._buffer.encode("utf-8")
         self.reset()
         raise ValueError("Unable to process escape sequence "
                          f"{buf}.")
@@ -583,7 +580,7 @@ class EscapeProcessor:
                     reverse = 0
                 continue
 
-            elif 30 <= arg <= 37 or 40 <= arg <= 47 or \
+            if 30 <= arg <= 37 or 40 <= arg <= 47 or \
                     90 <= arg <= 97 or 100 <= arg <= 107:
                 if arg >= 90:
                     arg -= 60
@@ -612,31 +609,29 @@ class EscapeProcessor:
                         bg_color = colors16[arg - 10]
                 continue
 
-            elif arg == 39:
+            if arg == 39:
                 i += 1
                 color = DEFAULT_FG_COLOR
                 continue
 
-            elif arg == 49:
+            if arg == 49:
                 i += 1
                 bg_color = DEFAULT_BG_COLOR
                 continue
 
-            else:
-                if i + 2 < len(self._args):  # need two consecuted args
-                    arg1 = self._get_args(i+1, default=0)
-                    arg2 = self._get_args(i+2, default=0)
-                    i += 3
-                    if arg == 38 and arg1 == 5 and 0 <= arg2 <= 255:
-                        # xterm 256 colors
-                        color = colors256[arg2]
+            if i + 2 < len(self._args):  # need two consecuted args
+                arg1 = self._get_args(i+1, default=0)
+                arg2 = self._get_args(i+2, default=0)
+                i += 3
+                if arg == 38 and arg1 == 5 and 0 <= arg2 <= 255:
+                    # xterm 256 colors
+                    color = colors256[arg2]
 
-                    elif arg == 48 and arg1 == 5 and 0 <= arg2 <= 255:
-                        # xterm 256 colors
-                        bg_color = colors256[arg2]
-                    continue
-                else:
-                    break
+                elif arg == 48 and arg1 == 5 and 0 <= arg2 <= 255:
+                    # xterm 256 colors
+                    bg_color = colors256[arg2]
+                continue
+            break
 
         self.set_style_cb(color, bg_color, bold, underline, reverse)
 
@@ -667,7 +662,7 @@ class TerminalBuffer:
         # initialize a buffer to store all characters to display
         # define in _resize()_ as a deque
         self._buffer = None
-        if QT_VERSION.startswith('6'):
+        if QT_VERSION.startswith("6"):
             self._buffer_lock =QRecursiveMutex()
         else:
             self._buffer_lock = QMutex(QMutex.Recursive)
@@ -773,15 +768,11 @@ class TerminalBuffer:
                     for col in range(len(line)):
                         if start.y == end.y:
                             if start.x <= col <= end.x:
-                                line_text += line[col].char if line[col] else ' '
-                        elif row == start.y and col >= start.x:
-                            line_text += line[col].char if line[col] else ' '
-                        elif row == end.y and col <= end.x:
-                            line_text += line[col].char if line[col] else ' '
-                        elif start.y < row < end.y:
-                            line_text += line[col].char if line[col] else ' '
-                    selected_text += line_text + '\n'
-            return selected_text.strip('\n')
+                                line_text += line[col].char if line[col] else " "
+                        elif (row == start.y and col >= start.x) or (row == end.y and col <= end.x) or start.y < row < end.y:
+                            line_text += line[col].char if line[col] else " "
+                    selected_text += line_text + "\n"
+            return selected_text.strip("\n")
         return ""
 
     def _get_selected_text_rstrip(self):
@@ -795,35 +786,31 @@ class TerminalBuffer:
                     for col in range(len(line)):
                         if start.y == end.y:
                             if start.x <= col <= end.x:
-                                line_text += line[col].char if line[col] else ' '
-                        elif row == start.y and col >= start.x:
-                            line_text += line[col].char if line[col] else ' '
-                        elif row == end.y and col <= end.x:
-                            line_text += line[col].char if line[col] else ' '
-                        elif start.y < row < end.y:
-                            line_text += line[col].char if line[col] else ' '
-                    selected_text += line_text.rstrip() + '\n'
-            return selected_text.strip('\n')
+                                line_text += line[col].char if line[col] else " "
+                        elif (row == start.y and col >= start.x) or (row == end.y and col <= end.x) or start.y < row < end.y:
+                            line_text += line[col].char if line[col] else " "
+                    selected_text += line_text.rstrip() + "\n"
+            return selected_text.strip("\n")
         return ""
 
     def _get_all_text(self):
         all_text = ""
         for row in self._buffer:
-            line_text = ''.join(c.char if c else ' ' for c in row)
-            all_text += line_text + '\n'
-        return all_text.strip('\n')
+            line_text = "".join(c.char if c else " " for c in row)
+            all_text += line_text + "\n"
+        return all_text.strip("\n")
 
     def _get_all_text_rstrip(self):
         all_text = []
         for row in self._buffer:
-            line_text = ''.join(c.char if c else ' ' for c in row).rstrip()
+            line_text = "".join(c.char if c else " " for c in row).rstrip()
             all_text.append(line_text)
 
         # Remove empty lines at the end of the buffer
         while all_text and not all_text[-1]:
             all_text.pop()
 
-        return '\n'.join(all_text)
+        return "\n".join(all_text)
 
     def _register_escape_callbacks(self):
         ep = self.escape_processor
@@ -836,7 +823,7 @@ class TerminalBuffer:
         ep.set_cursor_rel_position_cb = self.set_cursor_rel_pos
         ep.set_cursor_x_position_cb = self.set_cursor_x_pos
         ep.report_device_status_cb = lambda: self.stdin_callback(
-            "\x1b[0n".encode("utf-8"))
+            b"\x1b[0n")
         ep.report_cursor_position_cb = self.report_cursor_pos
         ep.set_style_cb = self.set_style
         ep.use_alt_buffer = self.toggle_alt_screen
@@ -1005,15 +992,14 @@ class TerminalBuffer:
                             not self._line_wrapped_flags[y]:
                         # avoid wrapping a bunch of spaces into next line
                         break
-                    else:
-                        # set the flag for a new auto-line wrap.
-                        new_auto_break_y = new_y - 1
-                        _new_wrap[new_auto_break_y] = True
+                    # set the flag for a new auto-line wrap.
+                    new_auto_break_y = new_y - 1
+                    _new_wrap[new_auto_break_y] = True
 
-                        if new_auto_break_y < cur_y:
-                            new_auto_breaks_before_cursor += 1
-                            if new_auto_breaks_before_cursor > old_auto_breaks_before_cursor:
-                                cur_y += 1
+                    if new_auto_break_y < cur_y:
+                        new_auto_breaks_before_cursor += 1
+                        if new_auto_breaks_before_cursor > old_auto_breaks_before_cursor:
+                            cur_y += 1
 
         cur_y -= max(0, old_auto_breaks_before_cursor - new_auto_breaks_before_cursor)
 
@@ -1076,7 +1062,7 @@ class TerminalBuffer:
             i += 1
             t = char_list[i]
 
-            if t.char == '\n':
+            if t.char == "\n":
                 pos_x = 0
                 pos_y += 1
                 if pos_y == len(buf):
@@ -1429,7 +1415,7 @@ class TerminalBuffer:
     def report_cursor_pos(self):
         x = self._cursor_position.x + 1
         y = self._cursor_position.y - self._buffer_display_offset + 1
-        self.stdin_callback(f"\x1b[{y};{x}R".encode("utf-8"))
+        self.stdin_callback(f"\x1b[{y};{x}R".encode())
 
     # ==========================
     #      USER INPUT EVENT

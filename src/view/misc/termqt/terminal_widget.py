@@ -1,9 +1,29 @@
 """Terminal widget."""
 
+from __future__ import annotations
+
 import logging
 import math
 from enum import Enum
-from typing import override
+from typing import TYPE_CHECKING, override
+
+from PySide6.QtCore import QMutex, Qt, QTimer, Signal
+from PySide6.QtGui import (
+    QAction,
+    QColor,
+    QFont,
+    QFontDatabase,
+    QFontInfo,
+    QFontMetrics,
+    QPainter,
+    QPalette,
+    QPen,
+    QPixmap,
+)
+
+if TYPE_CHECKING:
+    from PySide6.QtCore import QPoint
+    from PySide6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QPaintEvent, QResizeEvent, QShowEvent, QWheelEvent
 
 #from PySide6.QtWidgets import QWidget, QScrollBar, QMenu, QAction, QApplication
 #from PySide6.QtGui import (QPainter, QColor, QPalette, QFontDatabase,
@@ -14,15 +34,10 @@ from typing import override
 #    DEFAULT_FG_COLOR, ControlChar, Placeholder
 #from PySide6 import QT_VERSION
 #from .colors import colors16
+from PySide6.QtWidgets import QApplication, QMenu, QScrollBar, QWidget
 
-from PySide6.QtWidgets import QWidget, QScrollBar, QMenu,  QApplication
-from PySide6.QtGui import QAction
-from PySide6.QtGui import (QPainter, QColor, QPalette, QFontDatabase,
-                      QPen, QFont, QFontInfo, QFontMetrics, QPixmap)
-from PySide6.QtCore import Qt, QTimer, QMutex, Signal
+from ._terminal_buffer import DEFAULT_BG_COLOR, DEFAULT_FG_COLOR, ControlChar, Placeholder, Position, TerminalBuffer
 
-from ._terminal_buffer import Position, TerminalBuffer, DEFAULT_BG_COLOR, \
-    DEFAULT_FG_COLOR, ControlChar, Placeholder
 #from PySide6 import QT_VERSION
 from .colors import colors16
 
@@ -62,14 +77,14 @@ class Terminal(TerminalBuffer, QWidget):
     update_scroll_sig = Signal()
 
     def __init__(self,
-                 width,
-                 height,
+                 width: int,
+                 height: int,
                  *,
-                 logger=None,
-                 padding=4,
-                 font_size=12,
-                 line_height_factor=1.2,
-                 font=None,
+                 logger: logging.Logger | None = None,
+                 padding: int = 4,
+                 font_size: int = 12,
+                 line_height_factor: int = 1.2,
+                 font: QFont | None = None,
                  **kwargs
                  ) -> None:
         """Initialize the terminal widget.
@@ -150,7 +165,7 @@ class Terminal(TerminalBuffer, QWidget):
         self.set_font()
 
     @override
-    def wheelEvent(self, event):
+    def wheelEvent(self, event: QWheelEvent) -> None:
         # Number of lines to scroll per wheel step
         lines_per_step = 3
 
@@ -170,7 +185,7 @@ class Terminal(TerminalBuffer, QWidget):
             self.update_scroll_position()
 
     @override
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.LeftButton:
             pos = self._align_to_rightmost_char(
                     self._map_pixel_to_cell(event.pos())
@@ -182,7 +197,7 @@ class Terminal(TerminalBuffer, QWidget):
             self._restore_cursor_state()
 
     @override
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if event.buttons() & Qt.LeftButton:
             if self._selection_start is not None:
                 pos = self._align_to_rightmost_char(
@@ -195,11 +210,11 @@ class Terminal(TerminalBuffer, QWidget):
                     self._restore_cursor_state()
 
     @override
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.RightButton:
             self._show_context_menu(event.pos())
 
-    def _show_context_menu(self, position):
+    def _show_context_menu(self, position: QPoint) -> None:
         menu = QMenu(self)
 
         copy_action = QAction("Copy", self)
@@ -212,22 +227,22 @@ class Terminal(TerminalBuffer, QWidget):
 
         menu.exec_(self.mapToGlobal(position))
 
-    def _copy_all(self):
+    def _copy_all(self) -> None:
         all_text = self._get_all_text_rstrip()
         clipboard = QApplication.clipboard()
         clipboard.setText(all_text)
 
-    def _copy_selection(self):
+    def _copy_selection(self) -> None:
         selected_text = self._get_selected_text_rstrip()
         clipboard = QApplication.clipboard()
         clipboard.setText(selected_text)
 
-    def _map_pixel_to_cell(self, pos):
+    def _map_pixel_to_cell(self, pos: QPoint) -> Position:
         col = int((pos.x() - self._padding / 2) / self.char_width)
         row = int((pos.y() - self._padding / 2) / self.line_height)
         return Position(col, row + self._buffer_display_offset)
 
-    def _align_to_rightmost_char(self, pos):
+    def _align_to_rightmost_char(self, pos: Position) -> Position:
         col, row = pos
         while not self._buffer[row][col] and col > 0:
             col -= 1
@@ -235,7 +250,7 @@ class Terminal(TerminalBuffer, QWidget):
         return Position(col, row)
 
     @override
-    def set_bg(self, color: QColor):
+    def set_bg(self, color: QColor) -> None:
         TerminalBuffer.set_bg(self, color)
 
         pal = self.palette()
@@ -243,25 +258,25 @@ class Terminal(TerminalBuffer, QWidget):
         self.setPalette(pal)
 
     @override
-    def set_fg(self, color: QColor):
+    def set_fg(self, color: QColor) -> None:
         TerminalBuffer.set_fg(self, color)
 
         pal = self.palette()
         pal.setColor(QPalette.WindowText, color)
         self.setPalette(pal)
 
-    def set_font(self, font: QFont = None):
+    def set_font(self, font: QFont | None = None) -> None:
         """Set a new terminal font."""
         is_qt6 = QT_VERSION.startswith("6")
         qfd = QFontDatabase if is_qt6 else QFontDatabase()
-        fix_font_flag = QFontDatabase.SystemFont.FixedFont if is_qt6 else QFontDatabase.FixedFont
+        fix_font_flag = QFontDatabase.SystemFont.FixedFont
         font, info = self._select_font(qfd, font, fix_font_flag)
         self._apply_font_settings(font, info)
 
-    def _select_font(self, qfd, font: QFont, fix_font_flag):
+    def _select_font(self, qfd: QFontDatabase, font: QFont, fix_font_flag: QFontDatabase.SystemFont.FixedFont) -> tuple[QFont, QFontInfo]:
         if font:
             info = QFontInfo(font)
-            if info.styleHint() != QFont.Monospace:
+            if info.styleHint() != QFont.StyleHint.Monospace:
                 self.logger.warning(f"font: Please use a monospaced font! Unsupported font {info.family()}.")
                 font = qfd.systemFont(fix_font_flag) if qfd else QFontDatabase.systemFont(fix_font_flag)
         elif not qfd or "Menlo" in qfd.families():
@@ -275,7 +290,7 @@ class Terminal(TerminalBuffer, QWidget):
             info = QFontInfo(font)
         return font, info
 
-    def _apply_font_settings(self, font: QFont, info: QFontInfo):
+    def _apply_font_settings(self, font: QFont, info: QFontInfo) -> None:
         font.setPointSize(self.font_size)
         self.font = font
         self.metrics = QFontMetrics(font)
@@ -289,7 +304,7 @@ class Terminal(TerminalBuffer, QWidget):
         self.col_len = int(self._height / self.line_height)
 
     @override
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent) -> None:
         self.resize(event.size().width(), event.size().height())
 
     # ==========================
@@ -297,7 +312,7 @@ class Terminal(TerminalBuffer, QWidget):
     # ==========================
 
     @override
-    def paintEvent(self, event):
+    def paintEvent(self, event: QPaintEvent) -> None:
         self._painter_lock.lock()
         _qp = QPainter(self)
         _qp.setRenderHint(QPainter.Antialiasing)
@@ -309,7 +324,7 @@ class Terminal(TerminalBuffer, QWidget):
         QWidget.paintEvent(self, event)
         self._painter_lock.unlock()
 
-    def _paint_buffer(self):
+    def _paint_buffer(self) -> None:
         self._painter_lock.lock()
 
         self._canvas = QPixmap(self.row_len * self.char_width * self.dpr,
@@ -401,7 +416,7 @@ class Terminal(TerminalBuffer, QWidget):
         qp.end()
         self._painter_lock.unlock()
 
-    def _is_selected(self, col, row):
+    def _is_selected(self, col: int, row: int) -> None:
         if not self._selection_start or not self._selection_end:
             return False
         start_col, start_row = self._selection_start
@@ -409,14 +424,14 @@ class Terminal(TerminalBuffer, QWidget):
         if start_row <= row <= end_row:
             if row == start_row and row == end_row:
                 return start_col <= col <= end_col
-            elif row == start_row:
+            if row == start_row:
                 return col >= start_col
-            elif row == end_row:
+            if row == end_row:
                 return col <= end_col
             return True
         return False
 
-    def _paint_cursor(self):
+    def _paint_cursor(self) -> None:
         if not self._buffer:
             return
 
@@ -477,24 +492,23 @@ class Terminal(TerminalBuffer, QWidget):
         qp.end()
         self._painter_lock.unlock()
 
-    def _canvas_repaint(self):
+    def _canvas_repaint(self) -> None:
         self._paint_buffer()
         self._paint_cursor()
         self.repaint()
 
     @override
-    def get_char_width(self, t):
+    def get_char_width(self, t: str) -> int:
         if len(t.encode("utf-8")) == 1:
             return 1
-        else:
-            return math.ceil(self.metrics.horizontalAdvance(t) / self.char_width)
+        return math.ceil(self.metrics.horizontalAdvance(t) / self.char_width)
 
     # ==========================
     #  SCREEN BUFFER FUNCTIONS
     # ==========================
 
     @override
-    def resize(self, width, height):
+    def resize(self, width: int, height: int) -> None:
         self._save_cursor_state_stop_blinking()
 
         QWidget.resize(self, width, height)
@@ -512,12 +526,12 @@ class Terminal(TerminalBuffer, QWidget):
         # self._log_buffer()
 
     @override
-    def toggle_alt_screen(self, on=True):
+    def toggle_alt_screen(self, on: bool = True) -> None:
         TerminalBuffer.toggle_alt_screen(self, on)
         self._canvas_repaint()
 
     @override
-    def toggle_alt_screen_save_cursor(self, on=True):
+    def toggle_alt_screen_save_cursor(self, on: bool = True) -> None:
         if on:
             # save current buffer
             self._alt_cursor_position = self._cursor_position
@@ -532,7 +546,7 @@ class Terminal(TerminalBuffer, QWidget):
     #       CURSOR CONTROL
     # ==========================
 
-    def _blink_cursor(self):
+    def _blink_cursor(self) -> None:
         self._cursor_blinking_lock.lock()
 
         if self._cursor_blinking_state == CursorState.ON:  # On
@@ -541,16 +555,14 @@ class Terminal(TerminalBuffer, QWidget):
                 self._cursor_blinking_elapse += 50
                 self._cursor_blinking_lock.unlock()
                 return
-            else:
-                self._cursor_blinking_state = CursorState.OFF
+            self._cursor_blinking_state = CursorState.OFF
         elif self._cursor_blinking_state == CursorState.OFF:  # Off
             if self._cursor_blinking_elapse < 250:
                 # 50 is the period of the timer
                 self._cursor_blinking_elapse += 50
                 self._cursor_blinking_lock.unlock()
                 return
-            else:
-                self._cursor_blinking_state = CursorState.ON
+            self._cursor_blinking_state = CursorState.ON
 
         self._cursor_blinking_elapse = 0
         self._cursor_blinking_lock.unlock()
@@ -558,7 +570,7 @@ class Terminal(TerminalBuffer, QWidget):
         self._paint_cursor()
         self.repaint()
 
-    def _switch_cursor_blink(self, state, blink=True):
+    def _switch_cursor_blink(self, state: CursorState, blink: bool = True) -> None:
         self._cursor_blinking_lock.lock()
 
         if state != CursorState.UNFOCUSED and blink:
@@ -571,16 +583,16 @@ class Terminal(TerminalBuffer, QWidget):
         self._paint_cursor()
         self.repaint()
 
-    def _save_cursor_state_stop_blinking(self):
+    def _save_cursor_state_stop_blinking(self) -> None:
         self._saved_cursor_state = self._cursor_blinking_state
         self._switch_cursor_blink(CursorState.ON, False)
 
-    def _restore_cursor_state(self):
+    def _restore_cursor_state(self) -> None:
         self._cursor_blinking_state = self._saved_cursor_state
         self._switch_cursor_blink(self._cursor_blinking_state, True)
 
     @override
-    def stdout(self, string: bytes):
+    def stdout(self, string: bytes) -> None:
         """Method to print to the terminal.
 
         Used for TerminalIO connection.
@@ -591,7 +603,7 @@ class Terminal(TerminalBuffer, QWidget):
         """
         self._stdout_sig.emit(string)
 
-    def _stdout(self, string: bytes):
+    def _stdout(self, string: bytes) -> None:
         # Note that this function accepts UTF-8 only (since python use utf-8).
         # Normally modern programs will determine the encoding of its stdout
         # from env variable LC_CTYPE and for most systems, it is set to utf-8.
@@ -607,15 +619,15 @@ class Terminal(TerminalBuffer, QWidget):
             self.repaint()
 
     @override
-    def focusInEvent(self, event):
+    def focusInEvent(self, event: QFocusEvent) -> None:
         self._switch_cursor_blink(CursorState.ON, True)
 
     @override
-    def focusOutEvent(self, event):
+    def focusOutEvent(self, event: QFocusEvent) -> None:
         self._switch_cursor_blink(CursorState.UNFOCUSED, False)
 
     @override
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         key = event.key()
         modifiers = event.modifiers()
         text = event.text()
@@ -625,13 +637,13 @@ class Terminal(TerminalBuffer, QWidget):
             # This is a one-shot loop, because I want to use 'break'
             # to jump out of this block
             if key == Qt.Key_Up:
-                self.input(b'\x1b[A')
+                self.input(b"\x1b[A")
             elif key == Qt.Key_Down:
-                self.input(b'\x1b[B')
+                self.input(b"\x1b[B")
             elif key == Qt.Key_Right:
-                self.input(b'\x1b[C')
+                self.input(b"\x1b[C")
             elif key == Qt.Key_Left:
-                self.input(b'\x1b[D')
+                self.input(b"\x1b[D")
             else:
                 break  # avoid the execution of 'return'
             return
@@ -707,10 +719,10 @@ class Terminal(TerminalBuffer, QWidget):
             return
 
         if text:
-            self.input(text.encode('utf-8'))
+            self.input(text.encode("utf-8"))
 
     @override
-    def showEvent(self, event):
+    def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
 
         def resize(*args):
@@ -721,23 +733,23 @@ class Terminal(TerminalBuffer, QWidget):
     #        SCROLL BAR
     # ==========================
 
-    def _update_scroll_position(self):
+    def _update_scroll_position(self) -> None:
         self.scroll_bar.setMinimum(0)
         self.scroll_bar.setMaximum(len(self._buffer) - self.col_len)
         self.scroll_bar.setSliderPosition(self._buffer_display_offset)
 
     @override
-    def update_scroll_position(self):
+    def update_scroll_position(self) -> None:
         if self.scroll_bar:
             self.update_scroll_sig.emit()
 
-    def connect_scroll_bar(self, scroll_bar: QScrollBar):
+    def connect_scroll_bar(self, scroll_bar: QScrollBar) -> None:
         """Link a scroll bar to this widget."""
         self.scroll_bar = scroll_bar
         self.update_scroll_position()
         self.scroll_bar.valueChanged.connect(self._scroll_bar_changed)
 
-    def _scroll_bar_changed(self, pos):
+    def _scroll_bar_changed(self, pos: int) -> None:
         if 0 <= pos <= len(self._buffer) - self.col_len:
             self._buffer_display_offset = pos
             self._paint_buffer()
