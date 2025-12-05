@@ -13,6 +13,7 @@ from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from model.virtual_filters.color_mixer_vfilter import ColorMixerVFilter
 from model.virtual_filters.cue_vfilter import CueFilter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
+from model.virtual_filters.fader_vfilter import FaderUpdatingVFilter
 from model.virtual_filters.import_vfilter import ImportVFilter
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
 from model.virtual_filters.range_adapters import (
@@ -46,6 +47,10 @@ def construct_virtual_filter_instance(
     if not filter_type < 0:
         raise ValueError("The provided filter is not a virtual description.")
     match filter_type:
+        case (FilterTypeEnumeration.VFILTER_FADER_RAW | FilterTypeEnumeration.VFILTER_FADER_HSI |
+        FilterTypeEnumeration.VFILTER_FADER_HSIA | FilterTypeEnumeration.FILTER_FADER_HSIU |
+        FilterTypeEnumeration.FILTER_FADER_HSIAU):
+            return FaderUpdatingVFilter(scene, filter_id, filter_type, pos=pos)
         case FilterTypeEnumeration.VFILTER_COMBINED_FILTER_PRESET:
             # TODO return virtual filter that instantiates a preset (as described in issue #48)
             return None
