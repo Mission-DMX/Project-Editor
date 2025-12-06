@@ -54,7 +54,10 @@ class CLITerminalIO(TerminalIO):
                 executed_command = True
             elif b == _BACKSPACE_CHAR:
                 if len(buffer) > 0:
-                    self._buffer.pop(-1)
+                    try:
+                        self._buffer.pop(-1)
+                    except IndexError:
+                        pass  # Simply catching this exception is cheaper than sync
             else:
                 self._buffer.append(b)
         self._stdout_callback(buffer)

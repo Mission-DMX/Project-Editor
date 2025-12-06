@@ -973,7 +973,7 @@ class TerminalBuffer:
                         new_x = row_len - 1
                         continue
 
-                    empty_ahead = all((not c or c.placeholder != Placeholder.NON for c in old_row[x + 1:]))
+                    empty_ahead = all(not c or c.placeholder != Placeholder.NON for c in old_row[x + 1:])
 
                     if y == old_buf_col_len - 1 and empty_ahead:
                         # avoid creating extra new lines after last line
