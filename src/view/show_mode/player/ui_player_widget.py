@@ -2,7 +2,7 @@
 
 from typing import override
 
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QPoint, Signal
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QComboBox, QGridLayout, QWidget
 
@@ -12,6 +12,9 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_edi
 
 class UIPlayerWidget(QWidget):
     """Container for Show UI widgets to be used in the UI page player."""
+
+    selected_page_changed = Signal(int)
+    """Signal gets emitted, when user changes selected UI page."""
 
     def __init__(self, parent: QWidget) -> None:
         """UI container widget.
@@ -34,6 +37,7 @@ class UIPlayerWidget(QWidget):
         b = Broadcaster()
         b.view_to_show_player.connect(self.check_page_update)
         b.uipage_renamed.connect(self._page_renamed)
+        self.selected_page_changed_locked: bool = False
 
     @override
     def resizeEvent(self, event: QResizeEvent, /) -> None:
@@ -92,6 +96,17 @@ class UIPlayerWidget(QWidget):
         if self._ui_page_window_index is None:
             self._ui_page_window_index = 0
         self._update_page()
+        if not self.selected_page_changed_locked:
+            self.selected_page_changed.emit(self._ui_page_window_index)
+
+    def goto_page(self, new_index: int) -> None:
+        """Select a specific UI page by its index.
+
+        Args:
+            new_index: The index of the UI page to select.
+
+        """
+        self._page_combo_box.setCurrentIndex(new_index)
 
     def _page_renamed(self, scene_id: int) -> None:
         if self._scene is None:
