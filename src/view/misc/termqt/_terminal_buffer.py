@@ -973,8 +973,7 @@ class TerminalBuffer:
                         new_x = row_len - 1
                         continue
 
-                    empty_ahead = all(map(lambda c: not c or c.placeholder != Placeholder.NON,
-                                          old_row[x + 1:]))
+                    empty_ahead = all(map(lambda c: not c or c.placeholder != Placeholder.NON, old_row[x + 1:]))
 
                     if y == old_buf_col_len - 1 and empty_ahead:
                         # avoid creating extra new lines after last line
@@ -1124,6 +1123,7 @@ class TerminalBuffer:
         self.logger.info("buffer(00): |%s|", "-" * self.row_len)
 
         cp = self._cursor_position
+        ln = 0
         for ln in range(len(self._buffer)):
             line = self._buffer[ln]
             s = ""
@@ -1136,18 +1136,16 @@ class TerminalBuffer:
                     s += " "
 
             if cp.y == ln and cp.x == self.row_len:
-                self.logger.info("buffer(%s): |%s█%s", str(ln), s,
+                self.logger.info("buffer(%02d): |%s█%s", ln, s,
                                  ("x" if self._line_wrapped_flags[ln] else ""))
             else:
-                self.logger.info(f"buffer(%s): |%s|%s", str(ln), s,
+                self.logger.info(f"buffer(%02d): |%s|%s", ln, s,
                                  ("x" if self._line_wrapped_flags[ln] else ""))
 
-        self.logger.info("buffer(%s): |%s|", str(ln), "-" * self.row_len)
+        self.logger.info("buffer(%02d): |%s|", ln, "-" * self.row_len)
 
     def _log_screen(self) -> None:
-        self.logger.info(f"screen({self.row_len}x{self.col_len}): |" +
-                         "-" * self.row_len +
-                         "|")
+        self.logger.info("screen(%dx%d): |%s|", self.row_len, self.col_len, "-" * self.row_len)
 
         offset = len(self._buffer) - self.col_len
 
@@ -1163,19 +1161,9 @@ class TerminalBuffer:
                 else:
                     s += " "
 
-            if cp.y == ln and cp.x == self.row_len:
-                self.logger.info(f"screen({self.row_len}x{self.col_len}): "
-                                 f"|{s}█" +
-                                 ("x" if self._line_wrapped_flags[ln + offset]
-                                  else ""))
-            else:
-                self.logger.info(f"screen({self.row_len}x{self.col_len}): "
-                                 f"|{s}|" +
-                                 ("x" if self._line_wrapped_flags[ln + offset]
-                                  else ""))
-        self.logger.info(f"screen({self.row_len}x{self.col_len}): |" +
-                         "-" * self.row_len +
-                         "|")
+            self.logger.info("screen(%dx%d): |%s|%s", self.row_len, self.col_len, s,
+                             ("x" if self._line_wrapped_flags[ln + offset] else ""))
+        self.logger.info("screen(%dx%d): |%s|", self.row_len, self.col_len, "-" * self.row_len)
 
     def delete_at_cursor(self) -> None:
         pos = self._cursor_position

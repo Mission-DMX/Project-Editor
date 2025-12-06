@@ -295,7 +295,8 @@ class Terminal(TerminalBuffer, QWidget):
         self.char_height = self.metrics.height()
         self.line_height = int(self.char_height * self._line_height_factor)
 
-        self.logger.info(f"font: Font {info.family()} selected, character size {self.char_width}x{self.char_height}.")
+        self.logger.info("font: Font %s selected, character size %dx%d.",
+                         info.family(), self.char_width, self.char_height)
 
         self.row_len = int(self._width / self.char_width)
         self.col_len = int(self._height / self.line_height)
@@ -722,7 +723,7 @@ class Terminal(TerminalBuffer, QWidget):
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
 
-        def resize(*args: Any) -> None:
+        def resize(_) -> None:
             self.resize(self.size().width(), self.size().height())
         QTimer.singleShot(0, resize)
 
