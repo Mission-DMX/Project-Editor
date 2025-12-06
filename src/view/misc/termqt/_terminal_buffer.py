@@ -973,7 +973,7 @@ class TerminalBuffer:
                         new_x = row_len - 1
                         continue
 
-                    empty_ahead = all(map(lambda c: not c or c.placeholder != Placeholder.NON, old_row[x + 1:]))
+                    empty_ahead = all((not c or c.placeholder != Placeholder.NON for c in old_row[x + 1:]))
 
                     if y == old_buf_col_len - 1 and empty_ahead:
                         # avoid creating extra new lines after last line
@@ -1139,7 +1139,7 @@ class TerminalBuffer:
                 self.logger.info("buffer(%02d): |%s█%s", ln, s,
                                  ("x" if self._line_wrapped_flags[ln] else ""))
             else:
-                self.logger.info(f"buffer(%02d): |%s|%s", ln, s,
+                self.logger.info("buffer(%02d): |%s|%s", ln, s,
                                  ("x" if self._line_wrapped_flags[ln] else ""))
 
         self.logger.info("buffer(%02d): |%s|", ln, "-" * self.row_len)

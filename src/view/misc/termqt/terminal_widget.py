@@ -723,7 +723,7 @@ class Terminal(TerminalBuffer, QWidget):
     def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
 
-        def resize(_) -> None:
+        def resize(_: Any) -> None:
             self.resize(self.size().width(), self.size().height())
         QTimer.singleShot(0, resize)
 
