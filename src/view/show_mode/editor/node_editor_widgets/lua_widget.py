@@ -22,7 +22,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 
 from ._lua_syntax_highlighter import LuaSyntaxHighlighter
 from .node_editor_widget import NodeEditorFilterConfigWidget
-from .sequencer_editor.channel_label import generate_channel_label
+from .sequencer_editor.channel_label import generate_datatype_label
 
 
 class _ChannelListItemWidget(QWidget):
@@ -42,7 +42,7 @@ class _ChannelListItemWidget(QWidget):
         self._direction_label.setStyleSheet(style.LABEL_STYLE_BULLET)
         layout.addWidget(self._direction_label)
         layout.addSpacing(10)
-        self._dt_label = generate_channel_label(self, data_type)
+        self._dt_label = generate_datatype_label(self, data_type)
         layout.addWidget(self._dt_label)
         layout.addSpacing(10)
         self._name_label = QLabel(name)
