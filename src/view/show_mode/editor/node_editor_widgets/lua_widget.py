@@ -1,10 +1,12 @@
 """Module contains filter config widgets for Lua script fitlers."""
-
+import os
 from typing import override
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QListWidget,
     QPlainTextEdit,
@@ -13,11 +15,38 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+import style
 from model import DataType
+from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 from ._lua_syntax_highlighter import LuaSyntaxHighlighter
 from .node_editor_widget import NodeEditorFilterConfigWidget
+from .sequencer_editor.channel_label import generate_channel_label
+
+
+class _ChannelListItemWidget(QWidget):
+
+    _input_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter-input.svg"))).pixmap(16, 16)
+    _output_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter-output.svg"))).pixmap(16, 16)
+
+    def __init__(self, name: str, data_type: DataType, is_input: bool):
+        super().__init__()
+        layout = QHBoxLayout()
+        self._direction_label = QLabel(self)
+        self._direction_label.setPixmap(
+            _ChannelListItemWidget._input_icon if is_input else _ChannelListItemWidget._output_icon
+        )
+        self._direction_label.setStyleSheet(style.LABEL_STYLE_BULLET)
+        layout.addWidget(self._direction_label)
+        layout.addSpacing(10)
+        self._dt_label = generate_channel_label(self, data_type)
+        layout.addWidget(self._dt_label)
+        layout.addSpacing(10)
+        self._name_label = QLabel(name)
+        layout.addWidget(self._name_label)
+        layout.addStretch()
+        self.setLayout(layout)
 
 
 class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
@@ -58,14 +87,16 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
             self._insert_channel_in_list(channel_name, data_type, False)
 
     def _insert_channel_in_list(self, channel_name: str, data_type: DataType | str, is_input: bool) -> None:
-        # TODO replace with AnnotatedListWidgetItem
         format_str = "{}: input,{}" if is_input else "{}: output,{}"
         item = AnnotatedListWidgetItem(self._channel_list)
-        item.setText(format_str.format(channel_name, data_type))
+        item.setToolTip(format_str.format(channel_name, data_type))
         if isinstance(data_type, str):
             data_type = DataType.from_filter_str(data_type)
         item.annotated_data = (channel_name, data_type, is_input)
+        widget = _ChannelListItemWidget(channel_name, data_type, is_input)
+        item.setSizeHint(widget.sizeHint())
         self._channel_list.insertItem(0, item)
+        self._channel_list.setItemWidget(item, widget)
 
     @override
     def _get_configuration(self) -> dict[str, str]:
