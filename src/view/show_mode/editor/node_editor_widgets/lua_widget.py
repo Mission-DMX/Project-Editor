@@ -26,11 +26,13 @@ from .sequencer_editor.channel_label import generate_channel_label
 
 
 class _ChannelListItemWidget(QWidget):
+    """Label widget to display direction type and name of channel."""
 
     _input_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter-input.svg"))).pixmap(16, 16)
     _output_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter-output.svg"))).pixmap(16, 16)
 
-    def __init__(self, name: str, data_type: DataType, is_input: bool):
+    def __init__(self, name: str, data_type: DataType, is_input: bool) -> None:
+        """Initialize the label."""
         super().__init__()
         layout = QHBoxLayout()
         self._direction_label = QLabel(self)
