@@ -69,9 +69,6 @@ class FixtureChannel:
         # TODO vielleicht aus OFL sauber extrahieren
         for channel_type in FixtureChannelType:
             name = self._name
-            if not isinstance(name, str):
-                logger.error("Bug: We did expect strings as the name.")
-                continue
             if str(channel_type.name).lower() in name.lower():
                 types &= channel_type
                 if channel_type in (FixtureChannelType.PAN, FixtureChannelType.TILT):

@@ -238,7 +238,7 @@ class UsedFixture(QtCore.QObject):
                         append_channel(template_name.replace("$pixelKey", "{}").format(repeated_name), index)
                         index += 1
             else:
-                append_channel(channel_name, index)
+                append_channel(channel_name if channel_name is not None else "", index)
                 index += 1
 
         found_color = ColorSupport.NO_COLOR_SUPPORT
