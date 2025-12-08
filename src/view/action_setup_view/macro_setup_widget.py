@@ -6,7 +6,7 @@ import os
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction, QFont, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -149,6 +149,9 @@ class MacroSetupWidget(QSplitter):
         self._editor_area = QPlainTextEdit(self._content_panel)
         self._editor_area.setEnabled(False)
         self._editor_area.textChanged.connect(self._editor_area_text_changed)
+        font = QFont("Monospace")
+        font.setStyleHint(QFont.StyleHint.Monospace)
+        self._editor_area.setFont(font)
         self._highlighter = CLISyntaxHighlighter(self._editor_area.document())
         layout.addWidget(self._editor_area)
         self._content_panel.setLayout(layout)

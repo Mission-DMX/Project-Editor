@@ -17,7 +17,8 @@ class LuaSyntaxHighlighter(QSyntaxHighlighter):
                 r"\b(and|break|do|else|elseif|end|for|function|if|in|local|repeat|return|then|until|while)\b",
                 Qt.GlobalColor.green, False, False
             ),
-            (r"\b\d+\.?\d*\b", Qt.GlobalColor.blue, False, False),  # Numbers
+            (r"\b\d+\.?\d*\b", Qt.GlobalColor.cyan, False, False),  # Numbers
+            (r"\b(math\.maxinteger|nil)\b", Qt.GlobalColor.cyan, False, False),  # Built in values
             (r'\".*?\"|\'[^\']*\'', Qt.GlobalColor.darkYellow, False, False),  # Strings
             (r"--\[\[", Qt.GlobalColor.darkGray, True, False), # multi line comments start
             (r"--\]\]", Qt.GlobalColor.darkGray, False, True),

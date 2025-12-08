@@ -1,10 +1,12 @@
 """Module contains filter config widgets for Lua script fitlers."""
-
+import os
 from typing import override
 
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QListWidget,
     QPlainTextEdit,
@@ -13,11 +15,40 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+import style
 from model import DataType
+from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 from ._lua_syntax_highlighter import LuaSyntaxHighlighter
 from .node_editor_widget import NodeEditorFilterConfigWidget
+from .sequencer_editor.channel_label import generate_datatype_label
+
+
+class _ChannelListItemWidget(QWidget):
+    """Label widget to display direction type and name of channel."""
+
+    _input_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter-input.svg"))).pixmap(16, 16)
+    _output_icon = QIcon(resource_path(os.path.join("resources", "icons", "filter-output.svg"))).pixmap(16, 16)
+
+    def __init__(self, name: str, data_type: DataType, is_input: bool) -> None:
+        """Initialize the label."""
+        super().__init__()
+        layout = QHBoxLayout()
+        self._direction_label = QLabel(self)
+        self._direction_label.setPixmap(
+            _ChannelListItemWidget._input_icon if is_input else _ChannelListItemWidget._output_icon
+        )
+        self._direction_label.setStyleSheet(style.LABEL_STYLE_BULLET)
+        layout.addWidget(self._direction_label)
+        layout.addSpacing(10)
+        self._dt_label = generate_datatype_label(self, data_type)
+        layout.addWidget(self._dt_label)
+        layout.addSpacing(10)
+        self._name_label = QLabel(name)
+        layout.addWidget(self._name_label)
+        layout.addStretch()
+        self.setLayout(layout)
 
 
 class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
@@ -58,14 +89,16 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
             self._insert_channel_in_list(channel_name, data_type, False)
 
     def _insert_channel_in_list(self, channel_name: str, data_type: DataType | str, is_input: bool) -> None:
-        # TODO replace with AnnotatedListWidgetItem
         format_str = "{}: input,{}" if is_input else "{}: output,{}"
         item = AnnotatedListWidgetItem(self._channel_list)
-        item.setText(format_str.format(channel_name, data_type))
+        item.setToolTip(format_str.format(channel_name, data_type))
         if isinstance(data_type, str):
             data_type = DataType.from_filter_str(data_type)
         item.annotated_data = (channel_name, data_type, is_input)
+        widget = _ChannelListItemWidget(channel_name, data_type, is_input)
+        item.setSizeHint(widget.sizeHint())
         self._channel_list.insertItem(0, item)
+        self._channel_list.setItemWidget(item, widget)
 
     @override
     def _get_configuration(self) -> dict[str, str]:
@@ -106,12 +139,21 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         self._channel_list = QListWidget(side_container)
         side_layout.addWidget(self._channel_list)
 
+        self._editor_state_label = QLabel(side_container)
+        self._editor_state_label.setText("1:1")
+        side_layout.addWidget(self._editor_state_label)
+
         side_container.setLayout(side_layout)
         central_layout.addWidget(side_container)
         self._script_edit_field = QPlainTextEdit(self._widget)
+        self._script_edit_field.cursorPositionChanged.connect(self._cursor_position_changed)
         central_layout.addWidget(self._script_edit_field)
         self._highlighter = LuaSyntaxHighlighter(self._script_edit_field.document())
         self._widget.setLayout(central_layout)
+
+        font = QFont("Monospace")
+        font.setStyleHint(QFont.StyleHint.Monospace)
+        self._script_edit_field.setFont(font)
 
     def _add_input(self) -> None:
         name = self._new_channel_name.text()
@@ -137,3 +179,21 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
                 continue
             self._channels.pop(item.annotated_data[0])
             self._channel_list.takeItem(self._channel_list.row(item))
+
+    def _cursor_position_changed(self) -> None:
+        cursor = self._script_edit_field.textCursor().position()
+        line = 1
+        col = 0
+        saw_linebreak = False
+        for i, c in enumerate(self._script_edit_field.toPlainText()):
+            if saw_linebreak:
+                line += 1
+                col = 0
+                saw_linebreak = False
+            if c == "\n":
+                saw_linebreak = True
+            else:
+                col += 1
+            if i == cursor:
+                break
+        self._editor_state_label.setText(f"{line}:{col} [{cursor}]")
