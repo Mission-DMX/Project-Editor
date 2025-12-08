@@ -2,7 +2,7 @@
 import os
 from typing import override
 
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -151,6 +151,10 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         self._highlighter = LuaSyntaxHighlighter(self._script_edit_field.document())
         self._widget.setLayout(central_layout)
 
+        font = QFont("Monospace")
+        font.setStyleHint(QFont.StyleHint.Monospace)
+        self._script_edit_field.setFont(font)
+
     def _add_input(self) -> None:
         name = self._new_channel_name.text()
         if name and name not in self._channels:
@@ -179,11 +183,15 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
     def _cursor_position_changed(self) -> None:
         cursor = self._script_edit_field.textCursor().position()
         line = 1
-        col = 1
+        col = 0
+        saw_linebreak = False
         for i, c in enumerate(self._script_edit_field.toPlainText()):
-            if c == "\n":
+            if saw_linebreak:
                 line += 1
-                col = 1
+                col = 0
+                saw_linebreak = False
+            if c == "\n":
+                saw_linebreak = True
             else:
                 col += 1
             if i == cursor:
