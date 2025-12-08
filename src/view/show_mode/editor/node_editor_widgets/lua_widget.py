@@ -139,9 +139,14 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
         self._channel_list = QListWidget(side_container)
         side_layout.addWidget(self._channel_list)
 
+        self._editor_state_label = QLabel(side_container)
+        self._editor_state_label.setText("1:1")
+        side_layout.addWidget(self._editor_state_label)
+
         side_container.setLayout(side_layout)
         central_layout.addWidget(side_container)
         self._script_edit_field = QPlainTextEdit(self._widget)
+        self._script_edit_field.cursorPositionChanged.connect(self._cursor_position_changed)
         central_layout.addWidget(self._script_edit_field)
         self._highlighter = LuaSyntaxHighlighter(self._script_edit_field.document())
         self._widget.setLayout(central_layout)
@@ -170,3 +175,17 @@ class LuaScriptConfigWidget(NodeEditorFilterConfigWidget):
                 continue
             self._channels.pop(item.annotated_data[0])
             self._channel_list.takeItem(self._channel_list.row(item))
+
+    def _cursor_position_changed(self) -> None:
+        cursor = self._script_edit_field.textCursor().position()
+        line = 1
+        col = 1
+        for i, c in enumerate(self._script_edit_field.toPlainText()):
+            if c == "\n":
+                line += 1
+                col = 1
+            else:
+                col += 1
+            if i == cursor:
+                break
+        self._editor_state_label.setText(f"{line}:{col} [{cursor}]")
