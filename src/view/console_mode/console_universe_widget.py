@@ -113,6 +113,8 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
                 fixtures_per_bank = 0
 
     def _add_fixture(self, fixture: UsedFixture) -> None:
+        if fixture.universe_id != self._universe.id:
+            return
         layout = self._universe_widget.layout()
         for channel_index in range(fixture.channel_length):
             channel_widget = ChannelWidget(
