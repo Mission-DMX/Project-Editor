@@ -42,8 +42,7 @@ class ImportVFilter(VirtualFilter):
         filter_candidate = self.scene.get_filter_by_id(target_filter_id)
         if isinstance(filter_candidate, VirtualFilter):
             return filter_candidate.resolve_output_port_id(virtual_port_id)
-        else:
-            return f"{target_filter_id}:{virtual_port_id}"
+        return f"{target_filter_id}:{virtual_port_id}"
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
