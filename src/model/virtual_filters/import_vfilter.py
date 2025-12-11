@@ -39,13 +39,17 @@ class ImportVFilter(VirtualFilter):
                         return None
                     virtual_port_id = v
                     break
-        return f"{target_filter_id}:{virtual_port_id}"
+        filter_candidate = self.scene.get_filter_by_id(target_filter_id)
+        if isinstance(filter_candidate, VirtualFilter):
+            return filter_candidate.resolve_output_port_id(virtual_port_id)
+        else:
+            return f"{target_filter_id}:{virtual_port_id}"
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         # Nothing really to do here as were simply forwarding the filter. However, we need to make sure, that the
         # outputs exist.
-        for item in self.filter_configurations["rename_dict"].split(";"):
+        for item in self.filter_configurations["rename_dict"].split(","):
             if "=" not in item:
                 logger.error("Invalid mapping '%s' in import filter config.", item)
                 continue
