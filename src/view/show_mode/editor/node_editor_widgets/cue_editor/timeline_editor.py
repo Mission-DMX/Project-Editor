@@ -24,7 +24,10 @@ def _get_column_from_name(channel_name: str) -> DeskColumn | None:
         The bank set column or None if no bank set column is found.
 
     """
-    for c in BankSet.active_bank_set().get_all_columns():
+    active_bs = BankSet.active_bank_set()
+    if active_bs is None:
+        return None
+    for c in active_bs.get_all_columns():
         if c.display_name == channel_name:
             return c
     return None

@@ -365,9 +365,10 @@ class NumberDebugVizWidget(_DebugVizWidget):
         super().__del__()
 
     def _delete_callback(self) -> None:
-        self.parent.scene.board_configuration.remove_filter_update_callback(
-            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
-        )
+        if len(self.filter_ids) > 0 and self._callback_registered:
+            self.parent.scene.board_configuration.remove_filter_update_callback(
+                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
+            )
         if self._show_widget is not None:
             self._show_widget.deleteLater()
             self._placeholder_widget.deleteLater()
