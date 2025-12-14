@@ -115,6 +115,93 @@ class EightBitToFloatRange(VirtualFilter):
         filter_list.append(filter_)
 
 
+class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
+    """V-Filter that allows brightness mixin for 8bit and 16bit values."""
+
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | None = None) -> None:
+        """Instantiate a new dimmer brightness mixin vfilter."""
+        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, pos=pos)
+        self._configuration_supported = True
+        self._out_data_types["dimmer_out8b"] = DataType.DT_8_BIT
+        self._out_data_types["dimmer_out16b"] = DataType.DT_16_BIT
+        self._in_data_types["input"] = DataType.DT_16_BIT  # TODO make this configurable
+        self._in_data_types["mixin"] = DataType.DT_16_BIT
+
+    @override
+    def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
+        out_16b = self.filter_configurations.get("has_16bit_output") == "true"
+        out_8b = self.filter_configurations.get("has_8bit_output") == "true"
+        if virtual_port_id == "dimmer_out8b":
+            if out_8b and out_16b:
+                return f"{self.filter_id}_16b_downsampler:upper"
+            if out_8b:
+                return f"{self._filter_id}_8b_range:value"
+            raise ValueError("Requested 8bit output port but 8bit output is disabled.")
+        if virtual_port_id == "dimmer_out16b":
+            if out_16b:
+                return f"{self._filter_id}_16b_range:value"
+            raise ValueError("Requested 8bit output port but 16bit output is disabled.")
+        raise ValueError("Unknown output port")
+
+    @override
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
+        out_16b = self.filter_configurations.get("has_16bit_output") == "true"
+        out_8b = self.filter_configurations.get("has_8bit_output") == "true"
+        needs_8bit_input = self.filter_configurations["input_method"] == "8bit"
+        needs_global_brightness_input = self.channel_links.get("mixin") is None
+        # TODO place const float 1.0 if mixin port not connected
+        # TODO add input global brightness dimmer if input port not connected
+
+        # TODO add 8bit to float range adapter if required
+        # TODO add 16bit to float range adapter if required
+
+        # TODO inst mac filter with offset = 0
+
+        if out_16b:
+            range16b_out_filter = Filter(
+                self.scene,
+                f"{self._filter_id}_16b_range",
+                FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE,
+                pos=self.pos,
+                filter_configurations={
+                    "lower_bound_in": "0.0",
+                    "upper_bound_in": "1.0",
+                    "lower_bound_out": "0",
+                    "upper_bound_out": "65565",
+                    "limit_range": "1"
+                }
+            )
+            # TODO configure input of range16b_out_filter
+            filter_list.append(range16b_out_filter)
+            if out_8b:
+                pass # TODO inst 16bit to 8bit adapter as f"{self.filter_id}_16b_downsampler"
+        else:
+            range8b_out_filter = Filter(
+                self.scene,
+                f"{self._filter_id}_8b_range",
+                FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE,
+                pos=self.pos,
+                filter_configurations={
+                    "lower_bound_in": "0.0",
+                    "upper_bound_in": "1.0",
+                    "lower_bound_out": "0",
+                    "upper_bound_out": "255",
+                    "limit_range": "1"
+                }
+            )
+            # TODO configure input of range8b_out_filter
+            filter_list.append(range8b_out_filter)
+
+    @override
+    def deserialize(self) -> None:
+        if self.filter_configurations.get("has_8bit_output") is None:
+            self.filter_configurations["has_8bit_output"] = "true"
+        if self.filter_configurations.get("has_16bit_output") is None:
+            self.filter_configurations["has_16bit_output"] = "false"
+        if self.filter_configurations.get("input_method") is None:
+            self.filter_configurations["input_method"] = "16bit"
+
+
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
     """V-Filter that provides the global brightness property."""
 

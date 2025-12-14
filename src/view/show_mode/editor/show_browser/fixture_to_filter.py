@@ -165,6 +165,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                     #    output_map[c[c_i]] = adapter_name + ":value" #TODO
                 i += 1
             elif channel.name == "Dimmer":
+                # TODO replace with brightness mixin vfilter
                 dimmer_name = _sanitize_name(f"dimmer_{i}_{name}")
                 global_dimmer_filter = Filter(scene=fp.parent_scene,
                                               filter_id=dimmer_name,
