@@ -1,3 +1,5 @@
+"""Module contains dimmer brightness mixin node config widget."""
+
 from typing import override
 
 from PySide6.QtWidgets import QButtonGroup, QCheckBox, QFormLayout, QHBoxLayout, QLabel, QRadioButton, QWidget
