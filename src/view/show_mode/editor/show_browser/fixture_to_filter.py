@@ -6,6 +6,7 @@ from model import Filter
 from model.filter import FilterTypeEnumeration
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.scene import FilterPage
+from model.virtual_filters.range_adapters import DimmerGlobalBrightnessMixinVFilter
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 
 logger = getLogger(__name__)
@@ -179,14 +180,15 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                     # if output_map is not None:
                     #    output_map[c[c_i]] = adapter_name + ":value" # FIXME
                 i += 1
-            elif channel.name == "Dimmer":
-                # TODO replace with brightness mixin vfilter
+            elif channel.name == "Dimmer" or channel.name == "Intensity":
                 dimmer_name = _sanitize_name(f"dimmer_{i}_{name}")
-                global_dimmer_filter = Filter(scene=fp.parent_scene,
+                global_dimmer_filter = DimmerGlobalBrightnessMixinVFilter(scene=fp.parent_scene,
                                               filter_id=dimmer_name,
-                                              filter_type=49,
-                                              pos=(x - 2 * _additional_filter_depth,
-                                                   compute_filter_height(channel_count, i)))
+                                              pos=(int(x - 2 * _additional_filter_depth),
+                                                   int(compute_filter_height(channel_count, i))))
+                global_dimmer_filter.filter_configurations["has_16bit_output"] = "true"
+                global_dimmer_filter.filter_configurations["has_8bit_output"] = "false"
+                global_dimmer_filter.deserialize()
                 added_depth = max(added_depth, 2 * _additional_filter_depth)
                 global_dimmer_found = True
                 fp.filters.append(global_dimmer_filter)
@@ -194,6 +196,9 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 already_added_filters.append(global_dimmer_filter)
                 dimmer_name = global_dimmer_filter.filter_id
                 x += 10
+
+                # TODO if we only have a single dimmer port we can output 8bit directly, reducing overhead; this
+                #  requires having a dimmer feature in the fixture definition
                 adapter_name = _sanitize_name(f"dimmer2byte_{i}_{name}")
                 dimmer_to_byte_filter = Filter(scene=fp.parent_scene,
                                                filter_id=adapter_name,
@@ -203,7 +208,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 fp.parent_scene.append_filter(dimmer_to_byte_filter)
                 already_added_filters.append(dimmer_to_byte_filter)
                 adapter_name = dimmer_to_byte_filter.filter_id
-                dimmer_to_byte_filter.channel_links["value"] = dimmer_name + ":brightness"
+                dimmer_to_byte_filter.channel_links["value"] = dimmer_name + ":dimmer_out16b"
                 universe_filter.channel_links[_sanitize_name(channel.name)] = adapter_name + ":value_upper"
                 fp.filters.append(dimmer_to_byte_filter)
                 i += 1
