@@ -1,6 +1,6 @@
 from typing import override
 
-from PySide6.QtWidgets import QWidget, QFormLayout, QCheckBox, QButtonGroup, QRadioButton, QHBoxLayout, QLabel
+from PySide6.QtWidgets import QButtonGroup, QCheckBox, QFormLayout, QHBoxLayout, QLabel, QRadioButton, QWidget
 
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 
@@ -48,7 +48,7 @@ class DimmerBrightnessMixinConfigWidget(NodeEditorFilterConfigWidget):
 
         self._widget.setLayout(layout)
 
-    def _update_warning_visibility(self):
+    def _update_warning_visibility(self) -> None:
         self._output_warning_label.setVisible(not self._cb_has_8bit.isChecked() and not self._cb_has_16bit.isChecked())
 
     @override
