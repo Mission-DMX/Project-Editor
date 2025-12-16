@@ -39,6 +39,7 @@ def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, Col
 
     Returns:
         True if the operation was successful.
+
     """
     # TODO output_map do nothing
     if isinstance(fixture, tuple):

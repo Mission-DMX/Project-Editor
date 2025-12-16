@@ -27,6 +27,7 @@ class Adapter16BitTo8BitNode(FilterNode):
 
 class Adapter16BitToBoolNode(FilterNode):
     """Filter to convert a 16 bit value to a boolean.
+
     If input is 0, output is 0, else 1.
     """
 
