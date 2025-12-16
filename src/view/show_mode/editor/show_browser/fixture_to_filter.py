@@ -182,9 +182,9 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 i += 1
             elif channel.name.lower() == "dimmer" or channel.name.lower() == "intensity":
                 dimmer_name = _sanitize_name(f"dimmer_{i}_{name}")
-                double_channel_dimmer_required = any([
+                double_channel_dimmer_required = any(
                     ("dimmer" in fc.name.lower() or "intensity" in fc.name.lower()) and "fine" in fc.name.lower()
-                    for fc in fixture.fixture_channels])
+                    for fc in fixture.fixture_channels)
                 global_dimmer_filter = DimmerGlobalBrightnessMixinVFilter(scene=fp.parent_scene,
                                               filter_id=dimmer_name,
                                               pos=(int(x - 2 * _additional_filter_depth),
