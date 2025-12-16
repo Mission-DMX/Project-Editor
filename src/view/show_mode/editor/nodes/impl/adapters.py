@@ -1,6 +1,8 @@
 """Adapters and converters filter nodes"""
+from typing import override
+
 from model import DataType, Scene
-from model.filter import Filter, FilterTypeEnumeration
+from model.filter import Filter, FilterTypeEnumeration, VirtualFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -316,3 +318,32 @@ class ColorBrightnessMixinNode(FilterNode):
         self.filter.in_data_types["brightness"] = DataType.DT_8_BIT
         self.channel_hints["brightness"] = "[0-255, optional]"
         self.filter._configuration_supported = False
+
+
+class DimmerBrightnessMixinNode(FilterNode):
+    nodeName = "Dimmer Brightness Mixin"  # noqa: N815
+
+    def __init__(self, model: Filter | Scene, name: str) -> None:
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, name=name,
+                         terminals={"input": {"io": "in"}, "mixin": {"io": "in"}, "offset": {"io": "in"}})
+        self.channel_hints["offset"] = "[(-1, 1), optional]"
+        self.channel_hints["input"] = "[default: global brightness]"
+        self.channel_hints["mixin"] = "[optional]"
+        self._update_output_terminals()
+
+    def _update_output_terminals(self) -> None:
+        for setting, term_name in [("has_8bit_output", "dimmer_out8b"), ("has_16bit_output", "dimmer_out16b")]:
+            if self.filter.filter_configurations.get(setting) == "true":
+                if self.outputs().get(term_name) is None:
+                    self.addOutput(term_name)
+            else:
+                if self.outputs().get(term_name) is not None:
+                    self.removeTerminal(term_name)
+
+    @override
+    def update_node_after_settings_changed(self) -> None:
+        if isinstance(self.filter, VirtualFilter):
+            self.filter.deserialize()
+        else:
+            raise ValueError("Expected filter instance to be a DimmerGlobalBrightnessMixinVFilter, implying a vFilter.")
+        self._update_output_terminals()

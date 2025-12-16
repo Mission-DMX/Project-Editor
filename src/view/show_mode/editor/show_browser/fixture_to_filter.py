@@ -1,4 +1,4 @@
-"""write fixture to file"""
+"""write fixture to file."""
 from logging import getLogger
 from typing import Union
 
@@ -26,6 +26,20 @@ def _sanitize_name(input_: str | dict) -> str:
 def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, ColorSupport], filter_page: FilterPage,
                                    output_map: dict[Union[
                                        ColorSupport, str], str] | None = None) -> bool:
+    """Generate fixture control filters from a given fixture.
+
+    Purpose of the output map: A fixture has certain features (such as color segments). These features receive special
+    filters to drive them. Their input ports are placed in this map in order to enable higher level automated tools
+    (such as the effects stack system) to find them and connect to them.
+
+    Args:
+        fixture: The fixture to generate filters from.
+        filter_page: The page to place the new filters in.
+        output_map: A map that should receive the mapped fixture features.
+
+    Returns:
+        True if the operation was successful.
+    """
     # TODO output_map do nothing
     if isinstance(fixture, tuple):
         fixture = fixture[0]
@@ -116,7 +130,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                     _sanitize_name(channel.name)] = adapter_name + ":value_upper"
                 fp.filters.append(split_filter)
                 # if output_map is not None:
-                #    output_map[c[c_i]] = split_filter.filter_id + ":value" #TODO
+                #    output_map[c[c_i]] = split_filter.filter_id + ":value" #FIXME
                 already_added_filters.append(split_filter)
                 i += 1
             elif channel.name.startswith("Red"):
@@ -162,7 +176,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         fp.filters.append(rgb_filter)
                         already_added_filters.append(rgb_filter)
                     # if output_map is not None:
-                    #    output_map[c[c_i]] = adapter_name + ":value" #TODO
+                    #    output_map[c[c_i]] = adapter_name + ":value" # FIXME
                 i += 1
             elif channel.name == "Dimmer":
                 # TODO replace with brightness mixin vfilter
