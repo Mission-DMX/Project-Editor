@@ -1,9 +1,14 @@
+import logging
 import unittest
+from logging import getLogger, basicConfig
 
 from model import BoardConfiguration, Scene, Filter
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.range_adapters import DimmerGlobalBrightnessMixinVFilter
-from test.unittests.utilities import execute_board_configuratiuon
+from test.unittests.utilities import execute_board_configuration
+
+
+logger = getLogger(__name__)
 
 
 class DimmerBrightnessMixinTest(unittest.TestCase):
@@ -29,13 +34,15 @@ class DimmerBrightnessMixinTest(unittest.TestCase):
 
         def create_output(is_8b: bool):
             output_filter = Filter(
-                scene, f"output_8b_{row}", FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT if is_8b else FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT,
+                scene, f"output_{"8b" if is_8b else "16b"}_{row}", FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT if is_8b else FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT,
                 pos=(5, row * 15 + (-5 if is_8b else 5))
             )
             scene.append_filter(output_filter)
-            output_filter.channel_links["value"] = mixin_filter.filter_id + ":dimmer_out8b"
+            output_filter.channel_links["value"] = mixin_filter.filter_id + (":dimmer_out8b" if is_8b else ":dimmer_out16b")
+            expected_output = (255 if is_8b else 65565) * calculate_dimmer_val(input_method, mixin_method, has_offset)
+            logger.info("Registering output %s => %s.", output_filter.filter_id, expected_output)
             output_list.append(
-                (output_filter.filter_id, (255 if is_8b else 65565) * calculate_dimmer_val(input_method, mixin_method, has_offset)))
+                (output_filter.filter_id, expected_output))
 
         def calculate_dimmer_val(in_m: str, mixin_m: str, has_offset: bool) -> float:
             in_stream = 1.0 if "-" in in_m else 0.5
@@ -48,6 +55,7 @@ class DimmerBrightnessMixinTest(unittest.TestCase):
                 for output_8b_enabled in [True, False]:
                     for output_16b_enabled in [True, False]:
                         for has_offset in [True, False]:
+                            logger.info("Creating Config Row: %s, Input: %s, Mixin: %s, Out bit: %s, Out 16bit: %s, has Offset: %s", row, input_method, mixin_method, output_8b_enabled, output_16b_enabled, has_offset)
                             mixin_filter = DimmerGlobalBrightnessMixinVFilter(scene, f"mixin_filter_r{row}", (0, row * 15))
                             create_input(input_method, mixin_filter, False)
                             create_input(mixin_method, mixin_filter, True)
@@ -69,13 +77,14 @@ class DimmerBrightnessMixinTest(unittest.TestCase):
         return show, output_list
 
     def test_inst(self):
+        basicConfig(level=logging.DEBUG)
         show, expected_output_list = self._prepare_show_config()
         recorded_output_list = []
         expected_output_dict = {}
         for key, expected_val in expected_output_list:
             expected_output_dict[key] = expected_val
-        self.assertTrue(execute_board_configuratiuon(show, recorded_gui_updates=recorded_output_list))
-        for scene_id, filter_id, value_str in recorded_output_list:
+        self.assertTrue(execute_board_configuration(show, recorded_gui_updates=recorded_output_list))
+        for scene_id, filter_id, key, value_str in recorded_output_list:
             self.assertEqual(scene_id, 0, "Expected scene ID to be 0.")
             self.assertTrue(expected_output_dict[filter_id] - 5 < int(value_str) < expected_output_dict[filter_id] + 5,
                             f"Expected configuration of {filter_id} to be {expected_output_dict[filter_id]} but got {value_str} instead.")
