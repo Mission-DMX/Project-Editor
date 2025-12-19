@@ -1,3 +1,4 @@
+"""Unit test for dimmer brightness mixin."""
 import logging
 import unittest
 from logging import getLogger, basicConfig
@@ -12,6 +13,8 @@ logger = getLogger(__name__)
 
 
 class DimmerBrightnessMixinTest(unittest.TestCase):
+    """Unit test for dimmer brightness mixin."""
+
     def _prepare_show_config(self) -> tuple[BoardConfiguration, list[tuple[str, float]]]:
         show = BoardConfiguration()
         scene = Scene(0, "Test Scene for dimmer brightness mixin", show)
@@ -77,6 +80,7 @@ class DimmerBrightnessMixinTest(unittest.TestCase):
         return show, output_list
 
     def test_inst(self):
+        """Test instanciation and results of v filter."""
         basicConfig(level=logging.DEBUG)
         show, expected_output_list = self._prepare_show_config()
         recorded_output_list = []
