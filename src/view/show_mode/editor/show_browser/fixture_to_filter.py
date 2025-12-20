@@ -1,4 +1,4 @@
-"""write fixture to file"""
+"""write fixture to file."""
 from logging import getLogger
 from typing import Union
 
@@ -6,6 +6,7 @@ from model import Filter
 from model.filter import FilterTypeEnumeration
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.scene import FilterPage
+from model.virtual_filters.range_adapters import DimmerGlobalBrightnessMixinVFilter
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 
 logger = getLogger(__name__)
@@ -26,6 +27,21 @@ def _sanitize_name(input_: str | dict) -> str:
 def place_fixture_filters_in_scene(fixture: UsedFixture | tuple[UsedFixture, ColorSupport], filter_page: FilterPage,
                                    output_map: dict[Union[
                                        ColorSupport, str], str] | None = None) -> bool:
+    """Generate fixture control filters from a given fixture.
+
+    Purpose of the output map: A fixture has certain features (such as color segments). These features receive special
+    filters to drive them. Their input ports are placed in this map in order to enable higher level automated tools
+    (such as the effects stack system) to find them and connect to them.
+
+    Args:
+        fixture: The fixture to generate filters from.
+        filter_page: The page to place the new filters in.
+        output_map: A map that should receive the mapped fixture features.
+
+    Returns:
+        True if the operation was successful.
+
+    """
     # TODO output_map do nothing
     if isinstance(fixture, tuple):
         fixture = fixture[0]
@@ -116,7 +132,7 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                     _sanitize_name(channel.name)] = adapter_name + ":value_upper"
                 fp.filters.append(split_filter)
                 # if output_map is not None:
-                #    output_map[c[c_i]] = split_filter.filter_id + ":value" #TODO
+                #    output_map[c[c_i]] = split_filter.filter_id + ":value" #FIXME
                 already_added_filters.append(split_filter)
                 i += 1
             elif channel.name.startswith("Red"):
@@ -162,15 +178,24 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                         fp.filters.append(rgb_filter)
                         already_added_filters.append(rgb_filter)
                     # if output_map is not None:
-                    #    output_map[c[c_i]] = adapter_name + ":value" #TODO
+                    #    output_map[c[c_i]] = adapter_name + ":value" # FIXME
                 i += 1
-            elif channel.name == "Dimmer":
+            elif channel.name.lower() == "dimmer" or channel.name.lower() == "intensity":
                 dimmer_name = _sanitize_name(f"dimmer_{i}_{name}")
-                global_dimmer_filter = Filter(scene=fp.parent_scene,
+                double_channel_dimmer_required = any(
+                    ("dimmer" in fc.name.lower() or "intensity" in fc.name.lower()) and "fine" in fc.name.lower()
+                    for fc in fixture.fixture_channels)
+                global_dimmer_filter = DimmerGlobalBrightnessMixinVFilter(scene=fp.parent_scene,
                                               filter_id=dimmer_name,
-                                              filter_type=49,
-                                              pos=(x - 2 * _additional_filter_depth,
-                                                   compute_filter_height(channel_count, i)))
+                                              pos=(int(x - 2 * _additional_filter_depth),
+                                                   int(compute_filter_height(channel_count, i))))
+                if double_channel_dimmer_required:
+                    global_dimmer_filter.filter_configurations["has_16bit_output"] = "true"
+                    global_dimmer_filter.filter_configurations["has_8bit_output"] = "false"
+                else:
+                    global_dimmer_filter.filter_configurations["has_16bit_output"] = "false"
+                    global_dimmer_filter.filter_configurations["has_8bit_output"] = "true"
+                global_dimmer_filter.deserialize()
                 added_depth = max(added_depth, 2 * _additional_filter_depth)
                 global_dimmer_found = True
                 fp.filters.append(global_dimmer_filter)
@@ -178,18 +203,29 @@ def _check_and_add_auxiliary_filters(fixture: UsedFixture, fp: FilterPage, unive
                 already_added_filters.append(global_dimmer_filter)
                 dimmer_name = global_dimmer_filter.filter_id
                 x += 10
-                adapter_name = _sanitize_name(f"dimmer2byte_{i}_{name}")
-                dimmer_to_byte_filter = Filter(scene=fp.parent_scene,
-                                               filter_id=adapter_name,
-                                               filter_type=8,
-                                               pos=(x - _additional_filter_depth,
-                                                    compute_filter_height(channel_count, i)))
-                fp.parent_scene.append_filter(dimmer_to_byte_filter)
-                already_added_filters.append(dimmer_to_byte_filter)
-                adapter_name = dimmer_to_byte_filter.filter_id
-                dimmer_to_byte_filter.channel_links["value"] = dimmer_name + ":brightness"
-                universe_filter.channel_links[_sanitize_name(channel.name)] = adapter_name + ":value_upper"
-                fp.filters.append(dimmer_to_byte_filter)
+
+                if double_channel_dimmer_required:
+                    adapter_name = _sanitize_name(f"dimmer2byte_{i}_{name}")
+                    dimmer_to_byte_filter = Filter(scene=fp.parent_scene,
+                                                   filter_id=adapter_name,
+                                                   filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
+                                                   pos=(x - _additional_filter_depth,
+                                                        compute_filter_height(channel_count, i)))
+                    fp.parent_scene.append_filter(dimmer_to_byte_filter)
+                    already_added_filters.append(dimmer_to_byte_filter)
+                    adapter_name = dimmer_to_byte_filter.filter_id
+                    dimmer_to_byte_filter.channel_links["value"] = dimmer_name + ":dimmer_out16b"
+                    fp.filters.append(dimmer_to_byte_filter)
+
+                if double_channel_dimmer_required:
+                    universe_filter.channel_links[_sanitize_name(channel.name)] = adapter_name + ":value_upper"
+                    for fc in fixture.fixture_channels:
+                        if (("dimmer" in fc.name.lower() or "intensity" in fc.name.lower())
+                                and "fine" in fc.name.lower()):
+                            universe_filter.channel_links[_sanitize_name(fc.name)] = adapter_name + ":value_lower"
+                else:
+                    universe_filter.channel_links[_sanitize_name(channel.name)] = dimmer_name + ":dimmer_out8b"
+
                 i += 1
         except IndexError:
             continue
