@@ -30,7 +30,7 @@ def _stall_until_stdout_reached_target(process: subprocess.Popen, target: str):
 
 
 _last_error_message = ""
-_GOOD_MESSAGES = ["No Error occured", "Showfile Applied"]
+_GOOD_MESSAGES = ["No Error occured", "Showfile Applied."]
 
 def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, recorded_gui_updates: list[tuple[int, str, str, str]] | None = None, main_brightness: int = 65565) -> bool:
     """Execute a board configuration.
@@ -97,6 +97,7 @@ def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, record
         application.processEvents()
         sleep(0.01)
     if _last_error_message != _GOOD_MESSAGES[1]:
+        logger.error("Final error state from fish was: %s. Failing execution.", _last_error_message)
         error_occurred = True
     nm.set_main_brightness_fader_position(int((main_brightness / 65565) * 255))
     logger.info("Evaluating execution...")
@@ -112,4 +113,6 @@ def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, record
     del application
     process.stdin.write("k\n")
     process.communicate()
-    return process.returncode == 0 and not error_occurred
+    if process.returncode != 0:
+        logger.error("Fish terminated with code %s", process.returncode)
+    return not error_occurred

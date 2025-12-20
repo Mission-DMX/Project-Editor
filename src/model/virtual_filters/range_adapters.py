@@ -145,7 +145,7 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
         out_8b = self.filter_configurations.get("has_8bit_output") == "true"
         if virtual_port_id == "dimmer_out8b":
             if out_8b and out_16b:
-                return f"{self.filter_id}_16b_downsampler:upper"
+                return f"{self.filter_id}_16b_downsampler:value_upper"
             if out_8b:
                 return f"{self._filter_id}_8b_range:value"
             raise ValueError("Requested 8bit output port but 8bit output is disabled.")
@@ -165,7 +165,7 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
         needs_const_mixin = self.channel_links.get("mixin") is None
         needs_offset = self.channel_links.get("offset") is None
 
-        if needs_const_mixin and (not needs_global_brightness_input and not needs_offset):
+        if needs_const_mixin and (not needs_global_brightness_input or not needs_offset):
             const_mixin_filter = Filter(
                 self.scene,
                 f"{self.filter_id}_const_mixin",
@@ -176,6 +176,9 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
             filter_list.append(const_mixin_filter)
             mixin_port_name = f"{self.filter_id}_const_mixin:value"
             required_mixin_input_method = 0
+        elif needs_const_mixin:
+            required_mixin_input_method = 0
+            mixin_port_name = None
         else:
             mixin_port_name = self.channel_links.get("mixin")
 

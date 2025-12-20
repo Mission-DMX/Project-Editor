@@ -58,7 +58,7 @@ class DimmerBrightnessMixinTest(unittest.TestCase):
                 for output_8b_enabled in [True, False]:
                     for output_16b_enabled in [True, False]:
                         for has_offset in [True, False]:
-                            logger.info("Creating Config Row: %s, Input: %s, Mixin: %s, Out bit: %s, Out 16bit: %s, has Offset: %s", row, input_method, mixin_method, output_8b_enabled, output_16b_enabled, has_offset)
+                            logger.info("Creating Config Row: %s, Input: %s, Mixin: %s, Out 8bit: %s, Out 16bit: %s, has Offset: %s", row, input_method, mixin_method, output_8b_enabled, output_16b_enabled, has_offset)
                             mixin_filter = DimmerGlobalBrightnessMixinVFilter(scene, f"mixin_filter_r{row}", (0, row * 15))
                             create_input(input_method, mixin_filter, False)
                             create_input(mixin_method, mixin_filter, True)
@@ -71,6 +71,8 @@ class DimmerBrightnessMixinTest(unittest.TestCase):
                                 offset_filter.initial_parameters["value"] = "0.25"
                                 scene.append_filter(offset_filter)
                                 mixin_filter.channel_links["offset"] = offset_filter.filter_id + ":value"
+
+                            scene.append_filter(mixin_filter)
 
                             if output_8b_enabled:
                                 create_output(True)
