@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
+from PySide6.QtCore import QTimer
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
@@ -83,11 +84,40 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._broadcaster.change_active_scene.connect(self.enter_scene)
 
         x_touch.XTouchMessages(self._broadcaster, self.button_msg_to_x_touch)
+        self._gui_update_ready_queue: list[proto.FilterMode_pb2.update_parameter] = []
+        self._in_ready_wait_mode: bool = False
 
     @property
     def is_running(self) -> bool:
         """Check if the Fish socket is already running."""
         return self._is_running
+
+    def enter_readymode(self):
+        if self._in_ready_wait_mode:
+            return
+        self._in_ready_wait_mode = True
+        self._broadcaster.switched_gui_wait_mode.emit(True)
+        # TODO send message to fish
+
+    @property
+    def in_readymode(self) -> bool:
+        return self._in_ready_wait_mode
+
+    def abort_readymode(self):
+        if self._in_ready_wait_mode:
+            self._in_ready_wait_mode = False
+            self._broadcaster.switched_gui_wait_mode.emit(False)
+            self._gui_update_ready_queue.clear()
+            # TODO send message to fish
+
+    def commit_readymode(self):
+        if self._in_ready_wait_mode:
+            self._in_ready_wait_mode = False
+            self._broadcaster.switched_gui_wait_mode.emit(False)
+            for msg in self._gui_update_ready_queue:
+                self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+            self._gui_update_ready_queue.clear()
+            # TODO send message to fish
 
     def change_server_name(self, name: str) -> None:
         """Change Fish socket name.
@@ -491,10 +521,13 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         msg.scene_id = scene_id
         msg.parameter_key = key
         msg.parameter_value = value
-        if enque:
-            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+        if self._in_ready_wait_mode:
+            self._gui_update_ready_queue.append(msg)
         else:
-            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+            if enque:
+                self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+            else:
+                self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
 
     def send_event_sender_update(self, msg: proto.Events_pb2.event_sender, push_direct: bool = False) -> None:
         """Send event that Sender has updated to Fish."""
