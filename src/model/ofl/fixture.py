@@ -8,13 +8,14 @@ import random
 from collections import defaultdict
 from enum import IntFlag
 from logging import getLogger
-from typing import TYPE_CHECKING, Final
+from typing import Final, TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import numpy as np
 from PySide6 import QtCore
 from PySide6.QtGui import QColor
 
+from model import Universe
 from model.ofl.fixture_channel import FixtureChannel, FixtureChannelType
 from model.ofl.ofl_fixture import FixtureMode, OflFixture
 
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from model import BoardConfiguration, Universe
+    from model import BoardConfiguration
 
 logger = getLogger(__name__)
 
@@ -71,18 +72,11 @@ class UsedFixture(QtCore.QObject):
     """Fixture in use with a specific mode."""
 
     static_data_changed: QtCore.Signal = QtCore.Signal()
-    universe_changed: QtCore.Signal = QtCore.Signal(int)
+    universe_changed: QtCore.Signal = QtCore.Signal(Universe)
 
-    def __init__(
-        self,
-        board_configuration: BoardConfiguration,
-        fixture: OflFixture,
-        mode_index: int,
-        parent_universe: Universe,
-        start_index: int,
-        uuid: UUID | None = None,
-        color_on_stage: str | None = None,
-    ) -> None:
+    def __init__(self, board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int,
+            parent_universe: Universe, start_index: int, uuid: UUID | None = None,
+            color_on_stage: str | None = None, ) -> None:
         """Fixture in use with a specific mode."""
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
@@ -100,7 +94,8 @@ class UsedFixture(QtCore.QObject):
         self._color_support: Final[ColorSupport] = color_support
 
         self._color_on_stage: QColor = QColor(
-            color_on_stage if color_on_stage else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+            color_on_stage if color_on_stage else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])
+            # noqa: S311 not a secret
         )
         self._name_on_stage: str = self.short_name if self.short_name else self.name
 
@@ -172,9 +167,9 @@ class UsedFixture(QtCore.QObject):
     @universe.setter
     def universe(self, universe: Universe) -> None:
         if universe != self._universe:
-            old_id = self._universe
+            old_universe = self._universe
             self._universe = universe
-            self.universe_changed.emit(old_id)
+            self.universe_changed.emit(old_universe)
 
     @property
     def channel_length(self) -> int:
@@ -222,9 +217,8 @@ class UsedFixture(QtCore.QObject):
         """Get a segment by type."""
         return tuple((self._segment_map[segment_type] + self.start_index).tolist())
 
-    def _generate_fixture_channels(
-        self,
-    ) -> tuple[list[FixtureChannel], dict[FixtureChannelType, NDArray[np.int_]], ColorSupport]:
+    def _generate_fixture_channels(self, ) -> tuple[
+        list[FixtureChannel], dict[FixtureChannelType, NDArray[np.int_]], ColorSupport]:
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
@@ -244,11 +238,8 @@ class UsedFixture(QtCore.QObject):
         if segment_map[FixtureChannelType.WHITE]:
             found_color |= ColorSupport.HAS_WHITE_SEGMENT
 
-        return (
-            fixture_channels,
-            {key: np.array(segment_map[key], dtype=np.int_) for key in FixtureChannelType},
-            found_color,
-        )
+        return (fixture_channels, {key: np.array(segment_map[key], dtype=np.int_) for key in FixtureChannelType},
+                found_color,)
 
     def get_fixture_channel(self, index: int) -> FixtureChannel:
         """Get a fixture channel by index."""
@@ -259,14 +250,7 @@ class UsedFixture(QtCore.QObject):
         return f"Fixture {self.name_on_stage or self.name} at {self.parent_universe}/{self.start_index}"
 
 
-def make_used_fixture(
-    board_configuration: BoardConfiguration,
-    fixture: OflFixture,
-    mode_index: int,
-    universe: Universe,
-    start_index: int,
-    uuid: UUID | None = None,
-    color: str | None = None,
-) -> UsedFixture:
+def make_used_fixture(board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe: Universe,
+        start_index: int, uuid: UUID | None = None, color: str | None = None, ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
     return UsedFixture(board_configuration, fixture, mode_index, universe, start_index, uuid, color)

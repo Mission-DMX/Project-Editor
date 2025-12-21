@@ -40,7 +40,7 @@ class PatchController(QObject):
         self._dialog = None
         self._log_interval: int = 1
 
-        self._patch_planes: dict[int, tuple[AutoResizeView, LogDmxModel]] = {}
+        self._patch_planes: dict[Universe, tuple[AutoResizeView, LogDmxModel]] = {}
         self._fixture_items: dict[UsedFixture, UsedFixtureView] = {}
 
         self._patch_view: QStackedWidget = QStackedWidget(parent_view)
@@ -97,24 +97,24 @@ class PatchController(QObject):
         clickable = ClickableView()
         clickable.channel_value_change.connect(partial(self._update_value, universe))
         scene.addItem(clickable)
-        self._patch_planes.update({universe.id: (view, log_dmx_model)})
+        self._patch_planes.update({universe: (view, log_dmx_model)})
         self._patch_plan_selector_view.insertTab(index, view, str(universe.name))
 
     def _delete_universe_index(self, index: int) -> None:
-        universe_id = list(self._patch_planes.keys())[index]
-        self._broadcaster.delete_universe.emit(self._board_configuration.universe(universe_id))
+        universe: Universe = list(self._patch_planes.keys())[index]
+        self._broadcaster.delete_universe.emit(universe)
 
     def _delete_universe(self, universe: Universe) -> None:
         """Handle remove a universe."""
-        widget = self._patch_planes[universe.id][0]
+        widget = self._patch_planes[universe][0]
         self._patch_plan_selector_view.removeTab(self._patch_plan_selector_view.indexOf(widget))
-        del self._patch_planes[universe.id]
+        del self._patch_planes[universe]
 
     def _rename_universe(self, index: int) -> None:
-        universe_id = list(self._patch_planes.keys())[index]
-        dialog = UniverseDialog(self._board_configuration.universe(universe_id).universe_proto)
+        universe: Universe = list(self._patch_planes.keys())[index]
+        dialog = UniverseDialog(universe.universe_proto)
         if dialog.exec():
-            self._board_configuration.universe(universe_id).universe_proto = dialog.output
+            universe.universe_proto = dialog.output
             self._broadcaster.send_universe.emit(self._board_configuration.universe(index))
 
     def _add_fixture(self, fixture: UsedFixture) -> None:
@@ -122,12 +122,12 @@ class PatchController(QObject):
         new_widget.modify_fixture.connect(self._modify_fixture)
         fixture.universe_changed.connect(partial(self._switch_universe, fixture))
         self._fixture_items[fixture] = new_widget
-        self._patch_planes[fixture.universe.id][0].scene().addItem(new_widget)
+        self._patch_planes[fixture.universe][0].scene().addItem(new_widget)
 
-    def _switch_universe(self, fixture: UsedFixture, old_universe_id: int) -> None:
+    def _switch_universe(self, fixture: UsedFixture, old_universe: Universe) -> None:
         widget = self._fixture_items[fixture]
-        self._patch_planes[old_universe_id][0].scene().removeItem(widget)
-        self._patch_planes[fixture.universe.id][0].scene().addItem(widget)
+        self._patch_planes[old_universe][0].scene().removeItem(widget)
+        self._patch_planes[fixture.universe][0].scene().addItem(widget)
 
     def _modify_fixture(self, fixture: UsedFixture) -> None:
         """Modify clicked Fixture."""
@@ -147,7 +147,8 @@ class PatchController(QObject):
 
     def _dmx_from_fish(self, dmx: proto.DirectMode_pb2.dmx_output) -> None:
         """Handle dmx data signal from fish."""
-        self._patch_planes[dmx.universe_id][1].current_values = list(dmx.channel_data[1:])  # TODO fish of by one
+        self._patch_planes[self._board_configuration.universe(dmx.universe_id)][1].current_values = list(
+            dmx.channel_data[1:])  # TODO fish of by one
 
     def _update_value(self, universe: Universe, channel: int, value: int) -> None:
         """Update the value of a channel."""
