@@ -5,6 +5,7 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING, Final
 
+from PySide6 import QtCore, QtGui
 from PySide6.QtCore import QObject, Signal
 
 from controller.utils.process_notifications import get_process_notifier
@@ -23,6 +24,8 @@ def trigger_factory(trigger_type: str) -> Trigger:
             return _StartupTrigger()
         case "f_keys":
             return _FKeysTrigger()
+        case "showfile_applied":
+            return _ShowfileAppliedTrigger()
         case _:
             raise ValueError("Unsupported trigger type")
 
@@ -30,7 +33,7 @@ def trigger_factory(trigger_type: str) -> Trigger:
 class Trigger(QObject):
     """Macro Trigger."""
 
-    SUPPORTED_TYPES: Final[list[str]] = ["startup", "f_keys"]
+    SUPPORTED_TYPES: Final[list[str]] = ["startup", "f_keys", "showfile_applied"]
 
     enabled_changed: Signal = Signal(bool)
 
@@ -96,6 +99,15 @@ class _StartupTrigger(Trigger):
         from model import Broadcaster
 
         Broadcaster().board_configuration_loaded.connect(self.exec)
+
+
+class _ShowfileAppliedTrigger(Trigger):
+    """Trigger ofter successful application of show file to fish."""
+
+    def __init__(self) -> None:
+        super().__init__("showfile_applied")
+        from model import Broadcaster
+        Broadcaster().show_file_applied.connect(self.exec)
 
 
 class _FKeysTrigger(Trigger):
@@ -186,4 +198,6 @@ class Macro:
             if not self.c.exec_command(command):
                 success = False
                 logger.error("Failed to execute command: %s", command)
+            else:
+                QtGui.QGuiApplication.processEvents(QtCore.QEventLoop.ProcessEventsFlag.AllEvents)
         return success

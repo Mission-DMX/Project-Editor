@@ -13,7 +13,10 @@ from model.filter_data.sequencer.sequencer_filter_model import SequencerFilterMo
 from model.filter_data.sequencer.transition import Transition
 from proto import Console_pb2
 from view.dialogs.selection_dialog import SelectionDialog
-from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import ChannelInputDialog
+from view.show_mode.editor.node_editor_widgets.cue_editor.channel_input_dialog import (
+    ChannelInputDialog,
+    MultiChannelInputDialog,
+)
 from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (
     ExternalChannelDefinition,
     PreviewEditWidget,
@@ -59,6 +62,9 @@ class SequencerEditor(PreviewEditWidget):
         add_channel_action.setShortcut("Ctrl+K")
         add_channel_action.triggered.connect(self._add_channel_pressed)
         channel_toolbar.addAction(add_channel_action)
+        add_multi_channel_action = QAction("Add Multiple Channels", channel_toolbar)
+        add_multi_channel_action.triggered.connect(self._add_multi_channel_action_triggered)
+        channel_toolbar.addAction(add_multi_channel_action)
         remove_channel_action = QAction("Remove Channel", channel_toolbar)
         remove_channel_action.setShortcut("Ctrl+R")
         remove_channel_action.triggered.connect(self._remove_channel_pressed)
@@ -253,6 +259,14 @@ class SequencerEditor(PreviewEditWidget):
         """Handle the user activating the add_channel action."""
         self._input_dialog = ChannelInputDialog(
             self._parent_widget, lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
+        )
+        self._input_dialog.show()
+
+    def _add_multi_channel_action_triggered(self) -> None:
+        """Same as _add_channel_pressed but for multi dialog."""
+        self._input_dialog = MultiChannelInputDialog(
+            self._parent_widget,
+            lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
         )
         self._input_dialog.show()
 

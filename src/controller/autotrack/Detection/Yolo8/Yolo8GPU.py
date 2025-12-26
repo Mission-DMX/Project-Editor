@@ -3,15 +3,24 @@
 import os
 import time
 from logging import getLogger
+from typing import override
+
+logger = getLogger(__name__)
 
 import cv2
 import numpy as np
-import onnxruntime as rt
+
+_import_successful = False
+try:
+    import onnxruntime as rt
+    _import_successful = True
+except ImportError as e:
+    logger.error("Failed to load onnxruntime: %s", e)
 
 from controller.autotrack.Detection.Detector import Detector
 from utility import resource_path
 
-logger = getLogger(__name__)
+
 
 
 class Yolo8GPU(Detector):
@@ -31,6 +40,7 @@ class Yolo8GPU(Detector):
         """Initialize the Yolo8 object."""
         self.model = None
 
+    @override
     def detect(self, frame):
         """Detect objects in a given frame.
 
@@ -43,6 +53,7 @@ class Yolo8GPU(Detector):
         """
         if self.model is None:
             self.loadModel()
+            return np.zeros(4)
         img = self.square_image(frame)
         input_name = self.model.get_inputs()[0].name
         # Perform inference on the GPU
@@ -60,6 +71,9 @@ class Yolo8GPU(Detector):
 
     def loadModel(self):
         """Load the Yolo8 models from the ONNX file."""
+        if not _import_successful:
+            logger.error("Failed to load model, as onnxruntime is not initialized.")
+            return
         # self.model = cv2.dnn.readNetFromONNX("./Detection/Yolo8/models/yolov8n.onnx")
         self.model = rt.InferenceSession(
             resource_path(os.path.join("resources", "autotrack_models", "yolov8n.onnx")),

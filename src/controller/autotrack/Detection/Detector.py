@@ -1,4 +1,7 @@
 # coding=utf-8
+
+"""Module contains an abstract detector."""
+
 from abc import ABC, abstractmethod
 
 import cv2
@@ -6,9 +9,7 @@ import numpy as np
 
 
 class Detector(ABC):
-    """
-    The `Detector` class is an abstract base class for object detection.
-
+    """The `Detector` class is an abstract base class for object detection.
 
     Methods:
         - `detect(frame)`: Abstract method for detecting objects in a given frame.
@@ -16,30 +17,31 @@ class Detector(ABC):
 
     Attributes:
         None
+
     """
 
     @abstractmethod
-    def detect(self, frame):
-        """
-        Abstract method for detecting objects in a given frame.
+    def detect(self, frame) -> np.ndarray:
+        """Abstract method for detecting objects in a given frame.
 
         Args:
             frame (numpy.ndarray): Input image frame.
 
         Returns:
             numpy.ndarray: Detected objects in the frame.
+
         """
         pass
 
-    def square_image(self, frame):
-        """
-        Resize the input frame into a square image and prepare it for inference.
+    def square_image(self, frame: np.ndarray) -> np.ndarray:
+        """Resize the input frame into a square image and prepare it for inference.
 
         Args:
             frame (numpy.ndarray): Input image frame.
 
         Returns:
             numpy.ndarray: A preprocessed square image.
+
         """
         h, w, *_ = frame.shape
 

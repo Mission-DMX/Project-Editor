@@ -37,7 +37,7 @@ class TimelineChannelLabel(QWidget):
     @property
     def active_channels(self) -> MappingProxyType[str, bool]:
         """Active channels."""
-        return MappingProxyType(self.active_channels)
+        return MappingProxyType(self._active_channels)
 
     @property
     def sb_offset(self) -> int:

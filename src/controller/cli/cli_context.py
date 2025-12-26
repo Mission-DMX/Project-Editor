@@ -8,13 +8,17 @@ from argparse import Namespace
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from controller.cli.asset_command import AssetCommand
 from controller.cli.bankset_command import BankSetCommand
+from controller.cli.connect_command import ConnectCommand
 from controller.cli.event_command import EventCommand
+from controller.cli.fish_con_command import FishConnCommand
 from controller.cli.help_command import HelpCommand
 from controller.cli.list_command import ListCommand
 from controller.cli.macro_command import MacroCommand
 from controller.cli.select_command import SelectCommand
 from controller.cli.show_command import ShowCommand
+from controller.cli.uipage_command import UIPageCommand
 from controller.cli.utility_commands import DelayCommand, IfCommand, PrintCommand, SetCommand
 
 if TYPE_CHECKING:
@@ -98,6 +102,10 @@ class CLIContext:
             SetCommand(self),
             IfCommand(self),
             HelpCommand(self),
+            AssetCommand(self),
+            ConnectCommand(self),
+            FishConnCommand(self),
+            UIPageCommand(self),
         ]
         self._selected_bank: BankSet | None = None
         self._selected_scene: Scene | None = None
@@ -219,7 +227,13 @@ class CLIContext:
             args = self._replace_variables(args)
             if len(args) == 0:
                 return True
-            global_args: Namespace = self._parser.parse_args(args=args)
+            try:
+                global_args: Namespace = self._parser.parse_args(args=args)
+            except SystemExit:
+                self.print(f"Syntax error. Failed to parse arguments. Args: {args}")
+                self.print("Usage:")
+                self.print(self._parser.format_help().replace("usage: main.py [-h]", "", 1))
+                return False
             if self._exit_available and global_args.subparser_name == "exit":
                 self._exit_called = True
             elif global_args.subparser_name == "?":
@@ -230,7 +244,7 @@ class CLIContext:
                         return c.execute(global_args)
         except argparse.ArgumentError as e:
             self.print("Failed to parse command: " + str(e))
-            self.print(self._parser.format_usage())
+            self.print(self._parser.format_usage().replace("main.py", "", 1))
         except Exception as e:
             self.print(traceback.format_exc())
             self.print("Execution of command failed: " + str(e))

@@ -85,7 +85,7 @@ class ConstantUpdateInsertionDialog(_CommandInsertionDialog):
         self._color_picker.accepted.connect(self._select_color)
         color_layout = QVBoxLayout()
         color_label_layout = QHBoxLayout()
-        self._color_label = ColorLabel()
+        self._color_label = ColorLabel(self)
         self._color_label.setFixedWidth(16)
         self._color_label.setFixedHeight(16)
         color_label_layout.addWidget(QLabel("Current Color:"))

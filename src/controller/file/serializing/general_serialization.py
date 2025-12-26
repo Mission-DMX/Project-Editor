@@ -1,9 +1,9 @@
-"""serialization functions"""
+"""Contains general serialization functions."""
 import xml.etree.ElementTree as ET
 
 from controller.file.serializing.events_and_macros import _write_event_sender, _write_macro
 from controller.file.serializing.scene_serialization import generate_scene_xml_description
-from controller.file.serializing.ui_settings_serialization import _create_ui_hint_element
+from controller.file.serializing.ui_settings_serialization import _create_ui_hint_element, update_assets_ui_hint_element
 from controller.file.serializing.universe_serialization import (
     _create_artnet_location_element,
     _create_fixture_element,
@@ -22,12 +22,14 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
 
     Args:
         board_configuration: The board configuration to be converted.
+        pn (ProcessNotifier): The process notifier to update about progress.
         assemble_for_fish_loading: Pass True if the XML is build for fish.
                                     This will skip the UI and resolve virtual filters
 
     Returns:
         The XML element containing the board configuration.
         See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information
+
     """
     pn.current_step_description = "Creating document root."
     pn.total_step_count += 1 + len(board_configuration.scenes) + 3
@@ -59,13 +61,11 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
 
     pn.total_step_count += 1
     pn.current_step_description = "Storing device list."
-
-    for device in board_configuration.devices:
-        _create_device_element(device=device, parent=root)
     pn.total_step_count += 1
 
     pn.current_step_description = "Saving GUI state."
     if not assemble_for_fish_loading:
+        update_assets_ui_hint_element(board_configuration)
         for ui_hint in board_configuration.ui_hints.items():
             _create_ui_hint_element(ui_hint=ui_hint, parent=root)
         for event_source in get_all_senders():
@@ -95,10 +95,3 @@ def _create_board_configuration_element(board_configuration: BoardConfiguration)
         "default_active_scene": str(board_configuration.default_active_scene),
         "notes": str(board_configuration.notes),
     })
-
-
-def _create_device_element(device: Device, parent: ET.Element) -> ET.Element:
-    """TODO implement patching of devices
-
-    <device channel="0" name="name" type="type" universe_id="0">
-    """

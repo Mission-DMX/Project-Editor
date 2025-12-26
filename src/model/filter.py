@@ -49,10 +49,15 @@ class DataType(IntFlag):
 
     @staticmethod
     def from_filter_str(type_definition_string: str) -> DataType:
-        """Deserialize from filter string."""
+        """Deserialize from filter string.
+
+        Throws:
+            ValueError if the type definition string is invalid.
+
+        """
         if isinstance(type_definition_string, DataType):
             return type_definition_string
-        match type_definition_string:
+        match type_definition_string.lower():
             case "8bit":
                 return DataType.DT_8_BIT
             case "16bit":
@@ -62,7 +67,7 @@ class DataType(IntFlag):
             case "color":
                 return DataType.DT_COLOR
             case _:
-                return DataType.DT_8_BIT
+                raise ValueError(f"Unknown filter type: {type_definition_string}")
 
     def __str__(self) -> str:
         """Get a human-readable representation of the data type."""
