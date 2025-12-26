@@ -70,8 +70,9 @@ class HelpCommand(Command):
                 self.context.print("\tload <show file> -- Load the provided show file and make it the current one")
                 self.context.print("\tfiltermsg <scene id> <filter id> <key> <value> -- Update the parameter <key> of "
                                    "\n\t\tfilter <filter id> from scene <scene id> to value <value>.")
-                self.context.print("select-scene <scene id> -- switch to scene with ID <scene id>")
-                self.context.print("commit [--select-default-scene] -- apply the current loaded show file to fish")
+                self.context.print("\tselect-scene <scene id> -- switch to scene with ID <scene id>")
+                self.context.print("\tcommit [--select-default-scene] -- apply the current loaded show file to fish")
+                self.content.print("\treadymode <enable|abort|commit|query> -- Control the ready mode state.")
             case "delay":
                 self.context.print("delay the execution of the macro by the specified amount of milliseconds")
             case "fish":

@@ -2,10 +2,12 @@
 
 from typing import override
 
-from PySide6.QtCore import QPoint, Signal
+from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QResizeEvent
-from PySide6.QtWidgets import QComboBox, QGridLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QGridLayout, QPushButton, QWidget
 
+import style
+from controller.network import NetworkManager
 from model import Broadcaster, Scene
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import UIWidgetHolder
 
@@ -34,9 +36,17 @@ class UIPlayerWidget(QWidget):
         self._page_combo_box.pos = QPoint(10, self.height() - 35)
         self._page_combo_box.show()
         self._page_combo_box.currentIndexChanged.connect(self._switch_page_index)
+        self._readymode_indicator = QPushButton("RDY", self)
+        self._readymode_indicator.setFixedSize(130, 25)
+        self._readymode_indicator.show()
+        self._readymode_indicator.pos = QPoint(10, self.height() - 70)
+        self._readymode_indicator.setStyleSheet(style.READY_MODE_INDICATOR_STYLE)
+        self._readymode_indicator.setVisible(False)
         b = Broadcaster()
+        b.switched_gui_wait_mode.connect(self._readymode_indicator.setVisible)
         b.view_to_show_player.connect(self.check_page_update)
         b.uipage_renamed.connect(self._page_renamed)
+        self._readymode_indicator.clicked.connect(self._commit_readymode_action)
         self.selected_page_changed_locked: bool = False
 
     @override
@@ -113,3 +123,6 @@ class UIPlayerWidget(QWidget):
             return
         if scene_id == self._scene.scene_id:
             self._update_page_cb()
+
+    def _commit_readymode_action(self) -> None:
+        NetworkManager().commit_readymode()

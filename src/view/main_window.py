@@ -168,6 +168,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Disconnect", self._fish_connector.disconnect, None),
                 ("Change", self._change_server_name, None),
                 ("---", None, None),
+                ("Enter Readymode", self._fish_connector.enter_readymode, None),
+                ("Abort Readymode", self._fish_connector.abort_readymode, None),
+                ("---", None, None),
                 (
                     "&Filter Mode",
                     lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_FILTER),
