@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest import case
 
 from controller.cli.command import Command
 from controller.file.read import read_document
@@ -62,6 +63,10 @@ class ShowCommand(Command):
         filtercmd_parser.add_argument("parameterkey", help="The key of the parameter to update")
         filtercmd_parser.add_argument("parametervalue", help="The value to transmit")
 
+        readymode_parser: ArgumentParser = subparsers.add_parser("readymode", help="Ready mode controls", exit_on_error=False)
+        readymode_parser.add_argument("action", type=str, help="The action to perform",
+                                      choices=["enable", "abort", "commit", "query"])
+
     def execute(self, args: Namespace) -> bool:
         """Execute the showctl command based on parsed arguments.
 
@@ -89,4 +94,14 @@ class ShowCommand(Command):
                     args.sceneid, args.filterid, args.parameterkey, args.parametervalue, enque=True
                 )
                 return True
+            case "readymode":
+                match args.action:
+                    case "enable":
+                        self.context.network_manager.enter_readymode()
+                    case "abort":
+                        self.context.network_manager.abort_readymode()
+                    case "commit":
+                        self.context.network_manager.commit_readymode()
+                    case "query":
+                        self.context.print(str(self.context.network_manager.in_readymode))
         return False
