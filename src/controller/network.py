@@ -93,6 +93,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         return self._is_running
 
     def enter_readymode(self) -> None:
+        """Enter the readymode."""
         if self._in_ready_wait_mode:
             return
         self._in_ready_wait_mode = True
@@ -101,9 +102,11 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     @property
     def in_readymode(self) -> bool:
+        """Returns true if the ready mode is in progress."""
         return self._in_ready_wait_mode
 
     def abort_readymode(self) -> None:
+        """Abort the ready mode."""
         if self._in_ready_wait_mode:
             self._in_ready_wait_mode = False
             self._broadcaster.switched_gui_wait_mode.emit(False)
@@ -111,6 +114,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             # TODO send message to fish
 
     def commit_readymode(self) -> None:
+        """Commit the ready mode."""
         if self._in_ready_wait_mode:
             self._in_ready_wait_mode = False
             self._broadcaster.switched_gui_wait_mode.emit(False)
