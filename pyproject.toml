@@ -122,4 +122,3 @@ source-roots = ["src"]
 [tool.mypy]
 mypy_path = ["src"]
 generated-members = ['proto/']
-
