@@ -92,7 +92,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         """Check if the Fish socket is already running."""
         return self._is_running
 
-    def enter_readymode(self):
+    def enter_readymode(self) -> None:
         if self._in_ready_wait_mode:
             return
         self._in_ready_wait_mode = True
@@ -103,14 +103,14 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     def in_readymode(self) -> bool:
         return self._in_ready_wait_mode
 
-    def abort_readymode(self):
+    def abort_readymode(self) -> None:
         if self._in_ready_wait_mode:
             self._in_ready_wait_mode = False
             self._broadcaster.switched_gui_wait_mode.emit(False)
             self._gui_update_ready_queue.clear()
             # TODO send message to fish
 
-    def commit_readymode(self):
+    def commit_readymode(self) -> None:
         if self._in_ready_wait_mode:
             self._in_ready_wait_mode = False
             self._broadcaster.switched_gui_wait_mode.emit(False)

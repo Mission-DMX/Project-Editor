@@ -2,9 +2,9 @@
 
 from typing import override
 
-from PySide6.QtCore import QPoint, Signal, Qt
+from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QResizeEvent
-from PySide6.QtWidgets import QComboBox, QGridLayout, QWidget, QLabel
+from PySide6.QtWidgets import QComboBox, QGridLayout, QLabel, QWidget
 
 import style
 from controller.network import NetworkManager

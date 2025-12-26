@@ -75,5 +75,5 @@ READY_MODE_INDICATOR_STYLE = """
   border-radius: 5px;
   padding: 3px;
   color: #000000;
-  text-align: center; 
+  text-align: center;
 """

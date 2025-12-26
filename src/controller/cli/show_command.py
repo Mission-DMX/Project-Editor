@@ -63,7 +63,8 @@ class ShowCommand(Command):
         filtercmd_parser.add_argument("parameterkey", help="The key of the parameter to update")
         filtercmd_parser.add_argument("parametervalue", help="The value to transmit")
 
-        readymode_parser: ArgumentParser = subparsers.add_parser("readymode", help="Ready mode controls", exit_on_error=False)
+        readymode_parser: ArgumentParser = subparsers.add_parser("readymode", help="Ready mode controls",
+                                                                 exit_on_error=False)
         readymode_parser.add_argument("action", type=str, help="The action to perform",
                                       choices=["enable", "abort", "commit", "query"])
 
@@ -98,10 +99,14 @@ class ShowCommand(Command):
                 match args.action:
                     case "enable":
                         self.context.network_manager.enter_readymode()
+                        return True
                     case "abort":
                         self.context.network_manager.abort_readymode()
+                        return True
                     case "commit":
                         self.context.network_manager.commit_readymode()
+                        return True
                     case "query":
                         self.context.print(str(self.context.network_manager.in_readymode))
+                        return True
         return False
