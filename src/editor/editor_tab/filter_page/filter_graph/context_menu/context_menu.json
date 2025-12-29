@@ -1,0 +1,22 @@
+[
+  {
+    "type": "menu",
+    "label": "&Nodes",
+    "items": [
+      {
+        "type": "command",
+        "label": "Node Search",
+        "file": "./context_menu_functions.py",
+        "function_name": "toggle_node_search",
+        "shortcut": "Tab"
+      },
+      {
+        "type":"command",
+        "label":"Expand Group Node",
+        "file":"./context_menu_functions.py",
+        "function_name":"expand_group_node",
+        "shortcut":"Alt+Enter"
+      }
+    ]
+  }
+]
