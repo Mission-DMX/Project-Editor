@@ -8,16 +8,14 @@ Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
 from PySide6.QtWidgets import QInputDialog, QSplitter, QTabBar, QTabWidget, QWidget
 
 from controller.file.transmitting_to_fish import transmit_to_fish
+from editor.editor_tab.filter_page.filter_page_tab_view import FilterPageTabWidget
+from editor.show_browser.show_browser_view import ShowBrowserView
 from model.board_configuration import BoardConfiguration, Broadcaster
 from model.scene import FilterPage, Scene
-from view.show_mode.editor.editor_tab_widgets.scenetab import SceneTabWidget
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_editor_widget import (
-    SceneUIPageEditorWidget,
-)
-
+    SceneUIPageEditorWidget, )
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
-from .show_browser.show_browser import ShowBrowser
 
 
 class ShowEditorWidget(QSplitter):
@@ -35,26 +33,24 @@ class ShowEditorWidget(QSplitter):
         self._open_page_tab_widget = QTabWidget(self)
         self._open_page_tab_widget.setTabsClosable(True)
         self._open_page_tab_widget.addTab(QWidget(), "+")
-        plus_button = self._open_page_tab_widget.tabBar().tabButton(
-            self._open_page_tab_widget.count() - 1,
-            QTabBar.ButtonPosition.RightSide,
-        )
+        plus_button = self._open_page_tab_widget.tabBar().tabButton(self._open_page_tab_widget.count() - 1,
+            QTabBar.ButtonPosition.RightSide, )
         if plus_button:
             plus_button.resize(0, 0)
 
         self._open_page_tab_widget.tabBarClicked.connect(self._tab_bar_clicked)
         self._open_page_tab_widget.tabCloseRequested.connect(self._remove_tab)
 
-        self._show_browser = ShowBrowser(parent, board_configuration, self._open_page_tab_widget)
+        self._show_browser = ShowBrowserView(parent, self._open_page_tab_widget)
 
         self.addWidget(self._show_browser.widget)
         self.addWidget(self._open_page_tab_widget)
 
-        board_configuration.broadcaster.scene_created.connect(self._add_scene_tab)
-        board_configuration.broadcaster.scene_open_in_editor_requested.connect(self._add_scene_tab)
-        board_configuration.broadcaster.bankset_open_in_editor_requested.connect(self._add_bankset_tab)
-        board_configuration.broadcaster.uipage_opened_in_editor_requested.connect(self._add_uipage_tab)
-        board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
+        #board_configuration.broadcaster.scene_created.connect(self._add_scene_tab)
+        #board_configuration.broadcaster.scene_open_in_editor_requested.connect(self._add_scene_tab)
+        #board_configuration.broadcaster.bankset_open_in_editor_requested.connect(self._add_bankset_tab)
+        #board_configuration.broadcaster.uipage_opened_in_editor_requested.connect(self._add_uipage_tab)
+        #board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
 
     def _select_scene_to_be_removed(self) -> None:
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
@@ -73,7 +69,7 @@ class ShowEditorWidget(QSplitter):
     def _add_button_clicked(self) -> None:
         add_scene_to_show(self, self._board_configuration)
 
-    def _add_scene_tab(self, page: Scene | FilterPage) -> SceneTabWidget | None:
+    def _add_scene_tab(self, page: Scene | FilterPage) -> FilterPageTabWidget | None:
         """Creates a tab for a scene
         Args:
             page: The scene to be added
@@ -84,25 +80,20 @@ class ShowEditorWidget(QSplitter):
         if page in self._opened_pages:
             for tab_index in range(self._open_page_tab_widget.count()):
                 tab = self._open_page_tab_widget.widget(tab_index)
-                if isinstance(tab, SceneTabWidget) and tab.scene == page:
+                if isinstance(tab, FilterPageTabWidget) and tab.scene == page:
                     self._open_page_tab_widget.setCurrentIndex(tab_index)
                     return tab
             return None
 
         # Each scene is represented by its own editor
         self._opened_pages.add(page)
-        scene_tab = SceneTabWidget(page)
+        #scene_tab = SceneTabWidget(page)
         # Move +/- buttons one to the right and insert new tab for the scene
-        self._open_page_tab_widget.insertTab(
-            self._open_page_tab_widget.tabBar().count() - 1,
-            scene_tab,
-            page.parent_scene.human_readable_name + "/" + page.name,
-        )
+        self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, scene_tab,
+                                             page.parent_scene.human_readable_name + "/" + page.name, )
         # When loading scene from a file, set displayed tab to first loaded scene
         if (
-            self._open_page_tab_widget.count() == 2
-            or self._board_configuration.default_active_scene == page.parent_scene.scene_id
-        ):
+                self._open_page_tab_widget.count() == 2 or self._board_configuration.default_active_scene == page.parent_scene.scene_id):
             self._open_page_tab_widget.setCurrentWidget(scene_tab)
         return scene_tab
 
@@ -118,11 +109,8 @@ class ShowEditorWidget(QSplitter):
 
         self._opened_banksets.add(bankset)
         tab = BankSetTabWidget(self._open_page_tab_widget, bankset)
-        self._open_page_tab_widget.insertTab(
-            self._open_page_tab_widget.tabBar().count() - 1,
-            tab,
-            bankset.description,
-        )
+        self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, tab,
+            bankset.description, )
         self._open_page_tab_widget.setCurrentWidget(tab)
         return None
 
@@ -138,10 +126,8 @@ class ShowEditorWidget(QSplitter):
 
         self._opened_uieditors.add(uipage)
         tab = SceneUIPageEditorWidget(uipage, self._open_page_tab_widget)
-        self._open_page_tab_widget.insertTab(
-            self._open_page_tab_widget.tabBar().count() - 1,
-            tab,
-            uipage.scene.human_readable_name + "/UI Page",  # TODO query index
+        self._open_page_tab_widget.insertTab(self._open_page_tab_widget.tabBar().count() - 1, tab,
+                                             uipage.parent_scene.human_readable_name + "/UI Page",  # TODO query index
         )
         self._open_page_tab_widget.setCurrentWidget(tab)
         return None
@@ -155,7 +141,7 @@ class ShowEditorWidget(QSplitter):
         if isinstance(scene_or_index, Scene):
             for index in range(self._open_page_tab_widget.count() - 1):
                 tab_widget = self._open_page_tab_widget.widget(index)
-                if not isinstance(tab_widget, SceneTabWidget):
+                if not isinstance(tab_widget, FilterPageTabWidget):
                     continue
                 if tab_widget.scene == scene_or_index:
                     widget_index = self._open_page_tab_widget.indexOf(tab_widget)
@@ -166,7 +152,7 @@ class ShowEditorWidget(QSplitter):
                     return
         else:
             widget = self._open_page_tab_widget.widget(scene_or_index)
-            if isinstance(widget, SceneTabWidget):
+            if isinstance(widget, FilterPageTabWidget):
                 self._opened_pages.remove(widget.filter_page)
             elif isinstance(widget, BankSetTabWidget):
                 self._opened_banksets.remove(widget.bankset)
