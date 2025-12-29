@@ -73,10 +73,11 @@ class UsedFixture(QtCore.QObject):
 
     static_data_changed: QtCore.Signal = QtCore.Signal()
     universe_changed: QtCore.Signal = QtCore.Signal(Universe)
+    delete_fixture: QtCore.Signal = QtCore.Signal()
 
     def __init__(self, board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int,
-            parent_universe: Universe, start_index: int, uuid: UUID | None = None,
-            color_on_stage: str | None = None, ) -> None:
+                 parent_universe: Universe, start_index: int, uuid: UUID | None = None,
+                 color_on_stage: str | None = None, ) -> None:
         """Fixture in use with a specific mode."""
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
@@ -101,6 +102,9 @@ class UsedFixture(QtCore.QObject):
 
         self.parent_universe: int = parent_universe.id  # TODO remove
         self._board_configuration.broadcaster.add_fixture.emit(self)
+
+    def __del__(self):
+        self.delete_fixture.emit()
 
     @property
     def uuid(self) -> UUID:
@@ -251,6 +255,6 @@ class UsedFixture(QtCore.QObject):
 
 
 def make_used_fixture(board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe: Universe,
-        start_index: int, uuid: UUID | None = None, color: str | None = None, ) -> UsedFixture:
+                      start_index: int, uuid: UUID | None = None, color: str | None = None, ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
     return UsedFixture(board_configuration, fixture, mode_index, universe, start_index, uuid, color)
