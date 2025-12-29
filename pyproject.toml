@@ -56,6 +56,10 @@ organization = { name = "missionDMX", domain = "technikradio.org" }
 [tool.pdm]
 distribution = false
 
+[tool.pdm.dev-dependencies]
+dev = [
+    "-e file:///${PROJECT_ROOT}/submodules/NodeGraphQt#egg=NodeGraphQt",
+]
 [tool.ruff]
 line-length = 120
 exclude = [

@@ -4,3 +4,7 @@
 [submodule "submodules/docs"]
 	path = submodules/docs
 	url = https://github.com/Mission-DMX/Docs.git
+[submodule "submodules/NodeGraphQt"]
+	path = submodules/NodeGraphQt
+	url = git@github.com:CorsCodini/NodeGraphQt.git
+	branch = fixed
