@@ -195,7 +195,7 @@ class Bit16ToRangeFloat(RegisteredBaseNode):
     """Adapter to convert a 16-bit value to a range of float values."""
     NODE_NAME = "16-Bit to float range Adapter"
     __identifier__ = "adapter"
-    __representation__ = 52
+    __representation__ = -7
 
     def __init__(self) -> None:
         super().__init__()
@@ -208,7 +208,7 @@ class Bit8ToRangeFloat(RegisteredBaseNode):
     """Adapter to convert an 8-bit value to a range of float values."""
     NODE_NAME = "8-Bit to float range Adapter"
     __identifier__ = "adapter"
-    __representation__ = 51
+    __representation__ = -8
 
     def __init__(self) -> None:
         super().__init__()
