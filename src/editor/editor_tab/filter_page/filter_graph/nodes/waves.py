@@ -21,6 +21,7 @@ class SquareWaveNode(TrigonometricNode):
     """Filter to generate a square wave."""
     NODE_NAME = "Square Wave"
     __identifier__ = "wave"
+    __representation__ = 25
 
     def __init__(self) -> None:
         super().__init__()
@@ -31,9 +32,11 @@ class TriangleWaveNode(TrigonometricNode):
     """Filter to generate a triangle wave."""
     NODE_NAME = "Triangle Wave"
     __identifier__ = "wave"
+    __representation__ = 26
 
 
 class SawtoothWaveNode(TrigonometricNode):
     """Filter to generate a sawtooth wave."""
     NODE_NAME = "Sawtooth Wave"
     __identifier__ = "wave"
+    __representation__ = 27

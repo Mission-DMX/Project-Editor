@@ -2,6 +2,7 @@
 from NodeGraphQt import BaseNode, NodeGraph
 
 from editor.editor_tab.filter_page.filter_graph.nodes.ports import DOUBLE_PORT
+from editor.editor_tab.filter_page.filter_graph.nodes.registered_base_node import RegisteredBaseNode
 
 
 def register_trigonometric_nodes(graph: NodeGraph) -> None:
@@ -19,7 +20,7 @@ def register_trigonometric_nodes(graph: NodeGraph) -> None:
     graph.register_node(ArcTanNode)
 
 
-class TrigonometricNode(BaseNode):
+class TrigonometricNode(RegisteredBaseNode):
     """Base class for trigonometric nodes."""
 
     def __init__(self):
@@ -39,6 +40,7 @@ class SinNode(TrigonometricNode):
     """
     NODE_NAME = "Sin"
     __identifier__ = "trigonometric"
+    __representation__ = 19
 
 
 class CosNode(TrigonometricNode):
@@ -48,6 +50,7 @@ class CosNode(TrigonometricNode):
     """
     NODE_NAME = "Cos"
     __identifier__ = "trigonometric"
+    __representation__ = 20
 
 
 class TanNode(TrigonometricNode):
@@ -57,15 +60,17 @@ class TanNode(TrigonometricNode):
     """
     NODE_NAME = "Tan"
     __identifier__ = "trigonometric"
+    __representation__ =21
 
 
-class ArcSinNode(BaseNode):
+class ArcSinNode(RegisteredBaseNode):
     """Filter to calculate arcSin value.
 
     value = arcSin(value_in)
     """
     NODE_NAME = "ArcSin"
     __identifier__ = "trigonometric"
+    __representation__ =22
 
     def __init__(self):
         super().__init__()
@@ -73,13 +78,14 @@ class ArcSinNode(BaseNode):
         self.add_output("value", data_type=DOUBLE_PORT)
 
 
-class ArcCosNode(BaseNode):
+class ArcCosNode(RegisteredBaseNode):
     """Filter to calculate arcCos value.
 
     value = arcCos(value_in)
     """
     NODE_NAME = "ArcCos"
     __identifier__ = "trigonometric"
+    __representation__ =23
 
     def __init__(self):
         super().__init__()
@@ -87,13 +93,14 @@ class ArcCosNode(BaseNode):
         self.add_output("value", data_type=DOUBLE_PORT)
 
 
-class ArcTanNode(BaseNode):
+class ArcTanNode(RegisteredBaseNode):
     """Filter to calculate arcTan value.
 
     value = arcTan(value_in)
     """
     NODE_NAME = "ArcTan"
     __identifier__ = "trigonometric"
+    __representation__ = 24
 
     def __init__(self):
         super().__init__()

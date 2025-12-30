@@ -1,7 +1,8 @@
 """Constant nodes for the Node Editor."""
-from NodeGraphQt import BaseNode, NodeGraph
+from NodeGraphQt import NodeGraph
 
 from editor.editor_tab.filter_page.filter_graph.nodes.ports import BIT_16_PORT, BIT_8_PORT, DOUBLE_PORT
+from editor.editor_tab.filter_page.filter_graph.nodes.registered_base_node import RegisteredBaseNode
 
 
 def register_arithmetic_nodes(graph: NodeGraph) -> None:
@@ -23,13 +24,14 @@ def register_arithmetic_nodes(graph: NodeGraph) -> None:
     graph.register_node(SumFloatNode)
 
 
-class MACNode(BaseNode):
+class MACNode(RegisteredBaseNode):
     """Filter to calculate MAC value.
 
     value = (factor1 * factor2) + summand.
     """
     NODE_NAME = "MAC Filter"
     __identifier__ = "arithmetic"
+    __representation__ = 10
 
     def __init__(self) -> None:
         super().__init__()
@@ -39,10 +41,11 @@ class MACNode(BaseNode):
         self.add_output("value", data_type=DOUBLE_PORT)
 
 
-class FloatTo8BitNode(BaseNode):
+class FloatTo8BitNode(RegisteredBaseNode):
     """Filter to round a float/double value to an 8-bit value."""
     NODE_NAME = "Float To 8-Bit"
     __identifier__ = "arithmetic"
+    __representation__ = 13
 
     def __init__(self) -> None:
         super().__init__()
@@ -50,10 +53,11 @@ class FloatTo8BitNode(BaseNode):
         self.add_output("value", data_type=BIT_8_PORT)
 
 
-class FloatTo16BitNode(BaseNode):
+class FloatTo16BitNode(RegisteredBaseNode):
     """Filter to round a float/double value to an 8-bit value."""
     NODE_NAME = "Float To 16-Bit"
     __identifier__ = "arithmetic"
+    __representation__ = 12
 
     def __init__(self) -> None:
         super().__init__()
@@ -61,10 +65,11 @@ class FloatTo16BitNode(BaseNode):
         self.add_output("value", data_type=BIT_16_PORT)
 
 
-class RoundNode(BaseNode):
+class RoundNode(RegisteredBaseNode):
     """Filter to round a float/double value to a float/double value."""
     NODE_NAME = "Round"
     __identifier__ = "arithmetic"
+    __representation__ = 14
 
     def __init__(self) -> None:
         super().__init__()
@@ -72,7 +77,7 @@ class RoundNode(BaseNode):
         self.add_output("value", data_type=DOUBLE_PORT)
 
 
-class LogarithmNode(BaseNode):
+class LogarithmNode(RegisteredBaseNode):
     """Filter to calculate a logarithm value.
 
        value = ln(value_in).
@@ -80,6 +85,7 @@ class LogarithmNode(BaseNode):
     """
     NODE_NAME = "log"
     __identifier__ = "arithmetic"
+    __representation__ = 28
 
     def __init__(self) -> None:
         super().__init__()
@@ -87,7 +93,7 @@ class LogarithmNode(BaseNode):
         self.add_output("value", data_type=DOUBLE_PORT)
 
 
-class ExponentialNode(BaseNode):
+class ExponentialNode(RegisteredBaseNode):
     """Filter to calculate an exponential value.
 
         value = exp(value_in)
@@ -95,6 +101,7 @@ class ExponentialNode(BaseNode):
     """
     NODE_NAME = "exp"
     __identifier__ = "arithmetic"
+    __representation__ = 29
 
     def __init__(self) -> None:
         super().__init__()
@@ -102,13 +109,14 @@ class ExponentialNode(BaseNode):
         self.add_output("value", data_type=DOUBLE_PORT)
 
 
-class MinimumNode(BaseNode):
+class MinimumNode(RegisteredBaseNode):
     """Filter to calculate the minimum value.
 
      value = min(param1, param2)
     """
     NODE_NAME = "min"
     __identifier__ = "arithmetic"
+    __representation__ = 30
 
     def __init__(self) -> None:
         super().__init__()
@@ -117,13 +125,14 @@ class MinimumNode(BaseNode):
         self.add_output("value", data_type=DOUBLE_PORT)
 
 
-class MaximumNode(BaseNode):
+class MaximumNode(RegisteredBaseNode):
     """Filter to calculate the maximum of two values.
 
         value = max(param1, param2)
    """
     NODE_NAME = "max"
     __identifier__ = "arithmetic"
+    __representation__ = 31
 
     def __init__(self) -> None:
         super().__init__()
@@ -132,10 +141,11 @@ class MaximumNode(BaseNode):
         self.add_output("value", data_type=DOUBLE_PORT)
 
 
-class SumBit8Node(BaseNode):
+class SumBit8Node(RegisteredBaseNode):
     """Filter to calculate the sum of 8-bit values."""
     NODE_NAME = "8-Bit Sum"
     __identifier__ = "arithmetic"
+    __representation__ = 62
 
     def __init__(self) -> None:
         super().__init__()
@@ -153,10 +163,11 @@ class SumBit8Node(BaseNode):
         self.delete_input("value" + str(len(self.inputs()) - 1))
 
 
-class SumBit16Node(BaseNode):
+class SumBit16Node(RegisteredBaseNode):
     """Filter to calculate the sum of 16-bit values."""
     NODE_NAME = "16-Bit Sum"
     __identifier__ = "arithmetic"
+    __representation__ = 63
 
     def __init__(self) -> None:
         super().__init__()
@@ -174,10 +185,11 @@ class SumBit16Node(BaseNode):
         self.delete_input("value" + str(len(self.inputs()) - 1))
 
 
-class SumFloatNode(BaseNode):
+class SumFloatNode(RegisteredBaseNode):
     """Filter to calculate the sum of float values."""
     NODE_NAME = "Float Sum"
     __identifier__ = "arithmetic"
+    __representation__ = 64
 
     def __init__(self) -> None:
         super().__init__()
