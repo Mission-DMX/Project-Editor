@@ -8,12 +8,12 @@ class RegisteredBaseNode(BaseNode, ABC):
     _Filter_Types: bidict[str, str] = bidict({"nodeGraphQt.nodes.BackdropNode": "-100"})
     __representation__: int = None
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs) -> None:  # noqa: ANN003
         super().__init_subclass__(**kwargs)
         if cls.__representation__ is not None:
             cls._Filter_Types.update({cls.type_: str(cls.__representation__)})
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._filter_configuration: set[str] = set()
 
