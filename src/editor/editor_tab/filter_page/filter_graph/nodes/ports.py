@@ -23,17 +23,17 @@ def draw_square_port(painter: QtGui.QPainter, rect: QtCore.QRectF, info: dict) -
     painter.save()
 
     # mouse over port color.
-    if info['hovered']:
+    if info["hovered"]:
         color = QtGui.QColor(14, 45, 59)
         border_color = QtGui.QColor(136, 255, 35, 255)
     # port connected color.
-    elif info['connected']:
+    elif info["connected"]:
         color = QtGui.QColor(195, 60, 60)
         border_color = QtGui.QColor(200, 130, 70)
     # default port color
     else:
-        color = QtGui.QColor(*info['color'])
-        border_color = QtGui.QColor(*info['border_color'])
+        color = QtGui.QColor(*info["color"])
+        border_color = QtGui.QColor(*info["border_color"])
 
     pen = QtGui.QPen(border_color, 1.8)
     pen.setJoinStyle(QtCore.Qt.PenJoinStyle.MiterJoin)
@@ -47,22 +47,22 @@ def draw_square_port(painter: QtGui.QPainter, rect: QtCore.QRectF, info: dict) -
 
 def draw_triangle_port(painter, rect, info):
     """
-       Custom paint function for drawing a Triangle shaped port.
+    Custom paint function for drawing a Triangle shaped port.
 
-       Args:
-           painter: painter object.
-           rect: port rect used to describe parameters needed to draw.
-           info: information describing the ports current state.
-               {
-                   'port_type': 'in',
-                   'color': (0, 0, 0),
-                   'border_color': (255, 255, 255),
-                   'multi_connection': False,
-                   'connected': False,
-                   'hovered': False,
-               }
+    Args:
+        painter: painter object.
+        rect: port rect used to describe parameters needed to draw.
+        info: information describing the ports current state.
+            {
+                'port_type': 'in',
+                'color': (0, 0, 0),
+                'border_color': (255, 255, 255),
+                'multi_connection': False,
+                'connected': False,
+                'hovered': False,
+            }
 
-       """
+    """
 
     painter.save()
 
@@ -88,16 +88,14 @@ def draw_triangle_port(painter, rect, info):
 
     # mouse over port color.
 
-    if info['hovered']:
-
+    if info["hovered"]:
         color = QtGui.QColor(14, 45, 59)
 
         border_color = QtGui.QColor(136, 255, 35)
 
     # port connected color.
 
-    elif info['connected']:
-
+    elif info["connected"]:
         color = QtGui.QColor(195, 60, 60)
 
         border_color = QtGui.QColor(200, 130, 70)
@@ -105,10 +103,9 @@ def draw_triangle_port(painter, rect, info):
     # default port color
 
     else:
+        color = QtGui.QColor(*info["color"])
 
-        color = QtGui.QColor(*info['color'])
-
-        border_color = QtGui.QColor(*info['border_color'])
+        border_color = QtGui.QColor(*info["border_color"])
 
     pen = QtGui.QPen(border_color, 1.8)
 
@@ -123,10 +120,19 @@ def draw_triangle_port(painter, rect, info):
     painter.restore()
 
 
-BIT_8_PORT = PortDatatypeModel("8-Bit", (0, 200, 0), draw_square_port)
-BIT_16_PORT = PortDatatypeModel("8-Bit", (200, 0, 0), draw_square_port)
+BIT_8_PORT = PortDatatypeModel("8bit", (0, 200, 0), draw_square_port)
+BIT_16_PORT = PortDatatypeModel("16bit", (200, 0, 0), draw_square_port)
 
-DOUBLE_PORT = PortDatatypeModel("Float", (0, 200, 0), draw_triangle_port)
+DOUBLE_PORT = PortDatatypeModel("float", (0, 200, 0), draw_triangle_port)
 
-COLOR_PORT = PortDatatypeModel("Color", (200, 200, 0))
-BOOL_PORT = PortDatatypeModel("Bool", (0, 200, 200))
+COLOR_PORT = PortDatatypeModel("color", (200, 0, 0))
+BOOL_PORT = PortDatatypeModel("bool", (0, 200, 0))
+TIME_PORT = PortDatatypeModel("time", (0, 200, 200))
+
+PORT_NAMES: dict[str, PortDatatypeModel] = {
+    BIT_8_PORT.name: BIT_8_PORT,
+    BIT_16_PORT.name: BIT_16_PORT,
+    DOUBLE_PORT.name: DOUBLE_PORT,
+    COLOR_PORT.name: COLOR_PORT,
+    BOOL_PORT.name: BOOL_PORT
+}
