@@ -1,6 +1,19 @@
 [
   {
     "type": "menu",
+    "label": "&Edit",
+    "items": [
+      {
+        "type": "command",
+        "label": "Delete",
+        "file": "./context_menu_functions.py",
+        "function_name": "delete_nodes_and_pipes",
+        "shortcut": "QtGui.QKeySequence.Delete"
+      }
+    ]
+  },
+  {
+    "type": "menu",
     "label": "&Nodes",
     "items": [
       {
@@ -11,11 +24,11 @@
         "shortcut": "Tab"
       },
       {
-        "type":"command",
-        "label":"Expand Group Node",
-        "file":"./context_menu_functions.py",
-        "function_name":"expand_group_node",
-        "shortcut":"Alt+Enter"
+        "type": "command",
+        "label": "Expand Group Node",
+        "file": "./context_menu_functions.py",
+        "function_name": "expand_group_node",
+        "shortcut": "Alt+Enter"
       }
     ]
   }
