@@ -5,7 +5,7 @@ from NodeGraphQt import BaseNode
 
 
 class RegisteredBaseNode(BaseNode, ABC):
-    _Filter_Types: bidict[str, str] = bidict()
+    _Filter_Types: bidict[str, str] = bidict({"nodeGraphQt.nodes.BackdropNode": "-100"})
     __representation__: int = None
 
     def __init_subclass__(cls, **kwargs):
