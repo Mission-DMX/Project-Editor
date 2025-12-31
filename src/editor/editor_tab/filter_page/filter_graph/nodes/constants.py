@@ -1,7 +1,7 @@
 """Constant nodes for the Node Editor."""
 from NodeGraphQt import NodeGraph
 
-from editor.editor_tab.filter_page.filter_graph.nodes.ports import BIT_16_PORT, BIT_8_PORT, DOUBLE_PORT
+from editor.editor_tab.filter_page.filter_graph.nodes.ports import BIT_8_PORT, BIT_16_PORT, DOUBLE_PORT
 from editor.editor_tab.filter_page.filter_graph.nodes.registered_base_node import RegisteredBaseNode
 
 
@@ -25,7 +25,7 @@ class Bit8Node(RegisteredBaseNode):
 
     def __init__(self) -> None:
         super().__init__()
-        self.add_output("Value", data_type=BIT_8_PORT)
+        self.add_output("value", data_type=BIT_8_PORT)
         self.add_spinbox("value", "value", 0, 0, 255)
 
 
@@ -37,7 +37,7 @@ class Bit16Node(RegisteredBaseNode):
 
     def __init__(self) -> None:
         super().__init__()
-        self.add_output("Value", data_type=BIT_16_PORT)
+        self.add_output("value", data_type=BIT_16_PORT)
         self.add_spinbox("value", "value", 0, 0, 65535)
 
 
@@ -49,7 +49,7 @@ class FloatNode(RegisteredBaseNode):
 
     def __init__(self) -> None:
         super().__init__()
-        self.add_output("Value", data_type=DOUBLE_PORT)
+        self.add_output("value", data_type=DOUBLE_PORT)
         self.add_spinbox("value", "value", 0.0, double=True)
 
 # class ColorNode(RegisteredBaseNode):
