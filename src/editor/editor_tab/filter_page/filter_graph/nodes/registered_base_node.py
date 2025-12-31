@@ -29,4 +29,8 @@ class RegisteredBaseNode(BaseNode, ABC):
 
     @property
     def filter_configuration(self) -> frozenset[str]:
+        """Properties that are filter configurations."""
         return frozenset(self._filter_configuration)
+
+    def refresh_node(self) -> None:
+        """Refresh the node after loading con be overwritten in subclasses."""
