@@ -98,13 +98,13 @@ class ShowCommand(Command):
             case "readymode":
                 match args.action:
                     case "enable":
-                        self.context.network_manager.enter_readymode()
+                        self.context.network_manager.enter_readymode(send_immediately=False)
                         return True
                     case "abort":
-                        self.context.network_manager.abort_readymode()
+                        self.context.network_manager.abort_readymode(send_immediately=False)
                         return True
                     case "commit":
-                        self.context.network_manager.commit_readymode()
+                        self.context.network_manager.commit_readymode(send_immediately=False)
                         return True
                     case "query":
                         self.context.print(str(self.context.network_manager.in_readymode))

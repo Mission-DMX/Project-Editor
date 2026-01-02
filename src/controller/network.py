@@ -92,28 +92,36 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         """Check if the Fish socket is already running."""
         return self._is_running
 
-    def enter_readymode(self) -> None:
+    def enter_readymode(self, send_immediately: bool = True) -> None:
         """Enter the readymode."""
         if self._in_ready_wait_mode:
             return
         self._in_ready_wait_mode = True
         self._broadcaster.switched_gui_wait_mode.emit(True)
-        # TODO send message to fish
+        msg = proto.RealTimeControl_pb2.readymode_update()
+        msg.cause = proto.RealTimeControl_pb2.ReadymodeUpdateCause.RUC_ENTERED
+        self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE)
+        if send_immediately:
+            self.push_messages()
 
     @property
     def in_readymode(self) -> bool:
         """Returns true if the ready mode is in progress."""
         return self._in_ready_wait_mode
 
-    def abort_readymode(self) -> None:
+    def abort_readymode(self, send_immediately: bool = True) -> None:
         """Abort the ready mode."""
         if self._in_ready_wait_mode:
             self._in_ready_wait_mode = False
             self._broadcaster.switched_gui_wait_mode.emit(False)
             self._gui_update_ready_queue.clear()
-            # TODO send message to fish
+            msg = proto.RealTimeControl_pb2.readymode_update()
+            msg.cause = proto.RealTimeControl_pb2.ReadymodeUpdateCause.RUC_ABORTED
+            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE)
+            if send_immediately:
+                self.push_messages()
 
-    def commit_readymode(self) -> None:
+    def commit_readymode(self, send_immediately: bool = True) -> None:
         """Commit the ready mode."""
         if self._in_ready_wait_mode:
             self._in_ready_wait_mode = False
@@ -121,7 +129,11 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             for msg in self._gui_update_ready_queue:
                 self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
             self._gui_update_ready_queue.clear()
-            # TODO send message to fish
+            msg = proto.RealTimeControl_pb2.readymode_update()
+            msg.cause = proto.RealTimeControl_pb2.ReadymodeUpdateCause.RUC_COMMITED
+            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE)
+            if send_immediately:
+                self.push_messages()
 
     def change_server_name(self, name: str) -> None:
         """Change Fish socket name.
