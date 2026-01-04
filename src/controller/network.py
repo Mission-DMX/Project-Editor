@@ -289,10 +289,20 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                         message: proto.Events_pb2.event_sender = proto.Events_pb2.event()
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.fish_event_received.emit(message)
+                    case proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE:
+                        message: proto.RealTimeControl_pb2.readymode_update = proto.RealTimeControl_pb2.readymode_update()
+                        message.ParseFromString(bytes(msg))
+                        match message.cause:
+                            case proto.RealTimeControl_pb2.RUC_COMMITED:
+                                self.commit_readymode(False)
+                            case proto.RealTimeControl_pb2.RUC_ABORTED:
+                                self.abort_readymode(False)
+                            case proto.RealTimeControl_pb2.RUC_ENTERED:
+                                self.enter_readymode(False)
                     case _:
                         logger.warning("Received not implemented message type: %s", msg_type)
-            except:
-                logger.error("Failed to parse message.")
+            except Exception as e:
+                logger.exception("Failed to parse message.", exc_info=e, stack_info=True)
         self.push_messages()
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
