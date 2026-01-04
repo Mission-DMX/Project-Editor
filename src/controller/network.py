@@ -290,9 +290,9 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.fish_event_received.emit(message)
                     case proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE:
-                        message: proto.RealTimeControl_pb2.readymode_update = proto.RealTimeControl_pb2.readymode_update()
-                        message.ParseFromString(bytes(msg))
-                        match message.cause:
+                        msg_p: proto.RealTimeControl_pb2.readymode_update = proto.RealTimeControl_pb2.readymode_update()
+                        msg_p.ParseFromString(bytes(msg))
+                        match msg_p.cause:
                             case proto.RealTimeControl_pb2.RUC_COMMITED:
                                 self.commit_readymode(False)
                             case proto.RealTimeControl_pb2.RUC_ABORTED:
