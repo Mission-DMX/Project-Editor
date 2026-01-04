@@ -210,7 +210,7 @@ class AssetSelectionWidget(QWidget):
         self._asset_view.setEnabled(True)
         self.update()
 
-    def reload_model(self):
+    def reload_model(self) -> None:
         """Forcefully update the model."""
         self._update_filter(force=True)
 

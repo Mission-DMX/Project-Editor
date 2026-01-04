@@ -399,6 +399,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self._terminal_widget.show()
             self._terminal_widget.focusWidget()
 
-    def _open_asset_mgmt_dialog(self):
+    def _open_asset_mgmt_dialog(self) -> None:
         self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
         self._settings_dialog.show()

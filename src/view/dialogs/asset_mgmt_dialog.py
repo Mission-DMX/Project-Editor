@@ -57,7 +57,7 @@ class AssetManagementDialog(QDialog):
         self._dialog = QFileDialog(self, "Open file")
         self._dialog.setModal(True)
         self._dialog.setNameFilters(
-            [f"{k.get_long_description()} ({" ".join("*{}".format(va) for va in v)})"
+            [f"{k.get_long_description()} ({" ".join(f"*{va}" for va in v)})"
              for k, v in _SUPPORTED_FILE_ENDINGS.items()]
         )
         self._dialog.setDefaultSuffix(".jpg")
