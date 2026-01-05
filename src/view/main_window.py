@@ -21,6 +21,7 @@ from model.control_desk import BankSet, ColorDeskColumn
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_universe_selector import UniverseSelector
+from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
@@ -199,6 +200,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "Tools": [
                 # ("Scene Wizard", self._open_scene_setup_wizard, None),
                 ("Patch Plan Export", self._open_patch_plan_export_dialog, None),
+                ("Asset Management", self._open_asset_mgmt_dialog, None),
+                ("---", None, None),
                 ("&Toggle Terminal", self._toggle_terminal, "T"),
             ],
             "Help": [
@@ -395,3 +398,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self._terminal_widget.show()
             self._terminal_widget.focusWidget()
+
+    def _open_asset_mgmt_dialog(self) -> None:
+        self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
+        self._settings_dialog.show()
