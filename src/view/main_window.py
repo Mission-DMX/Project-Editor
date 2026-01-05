@@ -21,10 +21,10 @@ from model.control_desk import BankSet, ColorDeskColumn
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_universe_selector import UniverseSelector
+from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
-from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.misc.console_dock_widget import ConsoleDockWidget
 from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_view.patch_mode import PatchMode

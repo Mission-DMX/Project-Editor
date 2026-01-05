@@ -5,13 +5,12 @@ from __future__ import annotations
 import os
 
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QDialogButtonBox, QToolBar, QFileDialog
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QMessageBox, QToolBar, QVBoxLayout, QWidget
 
 from controller.utils.process_notifications import ProcessNotifier, get_process_notifier
 from model.media_assets.image import LocalImage
 from model.media_assets.media_type import MediaType
 from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
-
 
 _SUPPORTED_FILE_ENDINGS: dict[MediaType, list[str]] = {
     MediaType.TEXT: [".txt"],
@@ -67,11 +66,27 @@ class AssetManagementDialog(QDialog):
         self._dialog.open()
 
     def _process_loading_files(self, list_of_files: list[str]) -> None:
+        self._dialog.close()
         if len(list_of_files) == 0:
             return
+        accumulated_errors = ""
         pn = get_process_notifier("Asset Loading", len(list_of_files))
         for file_path in list_of_files:
             pn.current_step_description = f"Loading Asset from {file_path}"
-            LocalImage(file_path, show_file_path=self._show_file_path)
+            extension = os.path.splitext(file_path)[1]
+            try:
+                if extension in _SUPPORTED_FILE_ENDINGS[MediaType.IMAGE]:
+                    LocalImage(file_path, show_file_path=self._show_file_path)
+                else:
+                    accumulated_errors += f"Unable to load asset from {file_path}: extension {extension} unknown.\n"
+            except Exception as e:
+                accumulated_errors += f"Unable to load asset from {file_path}: {e}\n"
             pn.current_step_number += 1
         self._asset_display.reload_model()
+        pn.close()
+        if len(accumulated_errors) > 0:
+            msg_box = QMessageBox(QMessageBox.Icon.Critical, "Loading Assets Failed",
+                                  "Errors occurred during asset loading:", parent=self,
+                                  detailedText=accumulated_errors)
+            msg_box.show()
+            self._dialog = msg_box
