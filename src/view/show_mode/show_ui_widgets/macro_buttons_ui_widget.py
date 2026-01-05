@@ -57,7 +57,6 @@ class _AddMacroActionDialog(QDialog):
         self._text_tb = QLineEdit(self)
         layout.addRow("Display Text: ", self._text_tb)
 
-        # TODO add Icon selection from show media storage
         self._icon_selection = AssetSelectionWidget(self, allowed_types=[MediaType.IMAGE], multiselection_allowed=False)
         layout.addRow("Select Icon", self._icon_selection)
         # TODO add clear icon button

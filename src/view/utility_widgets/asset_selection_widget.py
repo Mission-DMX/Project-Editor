@@ -30,7 +30,7 @@ class _AssetTableModel(QAbstractTableModel):
         self._name_filter: str = ""
         self._filtered_asset_list: list[MediaAsset] = []
 
-    def apply_filter(self, name: str, types: set[MediaType]) -> None:
+    def apply_filter(self, name: str, types: set[MediaType], force_update: bool = False) -> None:
         """Apply the filter parameters to the asset selection.
 
         Warning: this operation may be quite expensive. It is therefore better to wait for a filter to be entered
@@ -39,11 +39,12 @@ class _AssetTableModel(QAbstractTableModel):
         Args:
             name: If set to anything than an empty string, all assets needs to contain this in their name.
             types: The types of assets to show.
+            force_update: If set to true, updating the model is forced.
 
         """
-        if types == self._selected_media_types and name == self._name_filter:
+        if (types == self._selected_media_types and name == self._name_filter) and not force_update:
             return
-        if len(name) < len(self._name_filter):
+        if len(name) < len(self._name_filter) or force_update:
             self._filtered_asset_list.clear()
             self._selected_media_types.clear()
         types_to_add = types - self._selected_media_types
@@ -199,15 +200,19 @@ class AssetSelectionWidget(QWidget):
         self.setLayout(layout)
         self._update_filter()
 
-    def _update_filter(self) -> None:
+    def _update_filter(self, force: bool = False) -> None:
         selected_types: set[MediaType] = set()
         for asset_type, action in self._type_checkboxes:
             if action.isChecked():
                 selected_types.add(asset_type)
         self._asset_view.setEnabled(False)
-        self._model.apply_filter(self._search_bar.text(), selected_types)
+        self._model.apply_filter(self._search_bar.text(), selected_types, force_update=force)
         self._asset_view.setEnabled(True)
         self.update()
+
+    def reload_model(self) -> None:
+        """Forcefully update the model."""
+        self._update_filter(force=True)
 
     @property
     def selected_asset(self) -> list[MediaAsset]:
