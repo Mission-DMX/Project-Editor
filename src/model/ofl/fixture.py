@@ -61,7 +61,10 @@ def load_fixture(file: str) -> OflFixture | None:
         logger.error("Fixture definition %s not found.", file)
         return None
     with open(file, "r", encoding="UTF-8") as f:
-        ob: dict = json.load(f)
+        try:
+            ob: dict = json.load(f)
+        except json.decoder.JSONDecodeError as e:
+            logger.error("Fixture definition (%s) JSON error: %s", file, e)
     ob.update({"fileName": file.split("/fixtures/")[1]})
     return OflFixture.model_validate(ob)
 

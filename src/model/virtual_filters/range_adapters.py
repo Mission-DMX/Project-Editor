@@ -148,11 +148,11 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
                 return f"{self.filter_id}_16b_downsampler:value_upper"
             if out_8b:
                 return f"{self._filter_id}_8b_range:value"
-            raise ValueError("Requested 8bit output port but 8bit output is disabled.")
+            raise ValueError(f"Requested 8bit output port but 8bit output is disabled. Filter ID: {self.filter_id}")
         if virtual_port_id == "dimmer_out16b":
             if out_16b:
                 return f"{self._filter_id}_16b_range:value"
-            raise ValueError("Requested 8bit output port but 16bit output is disabled.")
+            raise ValueError(f"Requested 16bit output port but 16bit output is disabled. Filter ID: {self.filter_id}")
         raise ValueError("Unknown output port")
 
     @override

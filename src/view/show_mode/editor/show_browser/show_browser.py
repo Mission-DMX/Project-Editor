@@ -343,7 +343,14 @@ class ShowBrowser:
                 current_widget.refresh()
 
     def _upload_showfile(self) -> None:
-        transmit_to_fish(self._show, False)
+        try:
+            transmit_to_fish(self._show, False)
+        except ValueError as e:
+            self._input_dialog = QMessageBox(QMessageBox.Icon.Critical, "Uploading Showfile Failed",
+                                             "An error occurred while uploading the show file to fish:",
+                                             parent=self.widget, detailedText=str(e))
+            self._input_dialog.setModal(True)
+            self._input_dialog.show()
 
     def _duplicate_scene(self, selected_items: list[QTreeWidgetItem]) -> None:
         i: int = 1
