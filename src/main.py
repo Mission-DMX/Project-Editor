@@ -2,12 +2,13 @@
 
 if __name__ == "__main__":
     import os
+    import sys
 
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QSplashScreen
 
     QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
-    app = QApplication([])
+    app = QApplication(sys.argv)
     from PySide6.QtGui import QPixmap
 
     from utility import resource_path
@@ -44,7 +45,6 @@ if __name__ == "__main__":
     import logging.config
     import logging.handlers
     import pathlib
-    import sys
 
     from PySide6.QtCore import QEventLoop
 

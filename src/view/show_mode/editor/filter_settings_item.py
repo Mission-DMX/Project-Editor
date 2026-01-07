@@ -29,6 +29,7 @@ from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilter
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
 from .node_editor_widgets.column_select import ColumnSelect
+from .node_editor_widgets.dimmer_brightness_mixin_config_widget import DimmerBrightnessMixinConfigWidget
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
 from .node_editor_widgets.sequencer_editor.widget import SequencerEditor
@@ -133,7 +134,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return ColorMixingSetupWidget()
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_SEQUENCER:
         return SequencerEditor(f=filter_)
-
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN:
+        return DimmerBrightnessMixinConfigWidget()
     return None
 
 
