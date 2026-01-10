@@ -28,6 +28,7 @@ from model.media_assets.media_type import MediaType
 from model.media_assets.registry import get_asset_by_uuid
 from utility import resource_path
 from view.action_setup_view._command_insertion_dialog import escape_argument
+from view.dialogs.asset_selection_dialog import AssetSelectionDialog
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
@@ -35,6 +36,7 @@ from view.utility_widgets.box_grid_renderer import BoxGridItem, BoxGridRenderer
 
 if TYPE_CHECKING:
     from model import UIPage
+    from model.media_assets.asset import MediaAsset
 
 
 class _AddMacroActionDialog(QDialog):
@@ -108,12 +110,9 @@ class _MacroListWidget(QWidget):
         self._icon_bt.setIcon(self._NO_ICON)
         layout.addWidget(self._icon_bt)
         layout.addStretch()
-        icon_label = QLabel(self)
-        if self._item_def.get("icon", "") != "":
-            asset = get_asset_by_uuid(self._item_def["icon"])
-            if asset is not None:
-                icon_label.setPixmap(asset.get_thumbnail())
-        layout.addWidget(icon_label)
+        self.icon_label = QLabel(self)
+        self._update_displayed_icon()
+        layout.addWidget(self.icon_label)
         layout.addStretch()
         self._text_tb = QLineEdit(self)
         self._text_tb.setText(item_def["text"])
@@ -125,7 +124,18 @@ class _MacroListWidget(QWidget):
         self._command_tb.textChanged.connect(self._command_changed)
         layout.addWidget(self._command_tb)
         self.setLayout(layout)
-        # TODO implement icon changing functionality
+        self._dialog: QDialog | None = None
+        self._icon_bt.pressed.connect(self._change_icon_of_button)
+
+    def _update_displayed_icon(self):
+        found_icon = False
+        if self._item_def.get("icon", "") != "":
+            asset = get_asset_by_uuid(self._item_def["icon"])
+            if asset is not None:
+                self.icon_label.setPixmap(asset.get_thumbnail())
+                found_icon = True
+        if not found_icon:
+            self.icon_label.setPixmap(self._NO_ICON.pixmap(64, 64))
 
     def _text_changed(self, text: str) -> None:
         self._item_def["text"] = text
@@ -134,6 +144,24 @@ class _MacroListWidget(QWidget):
     def _command_changed(self, text: str) -> None:
         self._item_def["command"] = text
         self._update_button.setEnabled(True)
+
+    def _change_icon_of_button(self) -> None:
+        self._dialog = AssetSelectionDialog(self, allowed_types=[MediaType.IMAGE], multiselection_allowed=False)
+        self._dialog.setModal(True)
+        self._dialog.asset_selected.connect(self._icon_changed)
+        self._dialog.open()
+
+    def _icon_changed(self, asset: list[MediaAsset]) -> None:
+        self._dialog = None
+        if len(asset) == 0:
+            asset_id = ""
+        else:
+            asset = asset[-1]
+            asset_id = asset.id if asset is not None else ""
+        if asset_id != self._item_def.get("icon", ""):
+            self._update_button.setEnabled(True)
+        self._item_def["icon"] = asset_id
+        self._update_displayed_icon()
 
     @property
     def item_def(self) -> dict[str, str]:
