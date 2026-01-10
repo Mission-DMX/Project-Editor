@@ -127,7 +127,7 @@ class _MacroListWidget(QWidget):
         self._dialog: QDialog | None = None
         self._icon_bt.pressed.connect(self._change_icon_of_button)
 
-    def _update_displayed_icon(self):
+    def _update_displayed_icon(self) -> None:
         found_icon = False
         if self._item_def.get("icon", "") != "":
             asset = get_asset_by_uuid(self._item_def["icon"])

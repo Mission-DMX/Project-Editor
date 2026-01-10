@@ -20,7 +20,8 @@ class AssetSelectionDialog(QDialog):
 
     asset_selected: Signal = Signal(MediaAsset)
 
-    def __init__(self, parent: QWidget | None = None, allowed_types: list[MediaType] | None = None, multiselection_allowed: bool = False) -> None:
+    def __init__(self, parent: QWidget | None = None,
+                 allowed_types: list[MediaType] | None = None, multiselection_allowed: bool = False) -> None:
         """Initialize the dialog."""
         super().__init__(parent)
         layout = QVBoxLayout()
