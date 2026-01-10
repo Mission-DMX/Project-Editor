@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Any, override
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTableView, QToolBar, QVBoxLayout, QWidget
 
@@ -148,6 +148,8 @@ class _AssetTableModel(QAbstractTableModel):
 class AssetSelectionWidget(QWidget):
     """Provide a sortable and searchable selection widget for assets."""
 
+    asset_selection_changed: Signal = Signal()
+
     def __init__(self, parent: QWidget | None = None, allowed_types: list[MediaType] | None = None,
                  multiselection_allowed: bool = True) -> None:
         """Initialize the asset selection widget.
@@ -199,6 +201,7 @@ class AssetSelectionWidget(QWidget):
 
         self.setLayout(layout)
         self._update_filter()
+        self._asset_view.selectionModel().selectionChanged.connect(lambda: self.asset_selection_changed.emit())
 
     def _update_filter(self, force: bool = False) -> None:
         selected_types: set[MediaType] = set()
