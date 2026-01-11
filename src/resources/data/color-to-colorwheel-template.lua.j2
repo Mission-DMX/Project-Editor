@@ -1,0 +1,71 @@
+----------------- Parameters ---------------------
+wheel_slots_hue = {{% for hv in hue_values %}{{ hv }}{{ ", " if not loop last }}{% endfor %}}
+wheel_slots_saturation = {{% for sv in saturation_values %}{{ sv }}{{ ", " if not loop last }}{% endfor %}}
+wheel_values = {{% for slot in slots %}{{ slot }}{{ ", " if not loop last }}{% endfor %}}
+------------ End of  Parameters ---------------
+
+------------ Required Ports -------------------
+-- input      : color in
+-- time       : float in
+{% if input_dimmer_channel_connected %}
+-- in_dimmer  : {{ input_dimmer_channel_data_type }} in
+{% endif %}
+-- dimmer     : {{ output_dimmer_data_type }} out
+-- colorwheel : {{ colorwheel_datatype }} out
+-----------------------------------------------
+
+current_wheel_pos = -1
+last_change_time = 0
+
+-- Convert colors to cartesian coordinates in order to save redoing it every time
+for i = 1, #wheel_slots_hue do
+    h = math.rad(wheel_slots_hue[i])
+    s = wheel_slots_saturation[i]
+    wheel_slots_hue[i] = s * math.cos(h)
+    wheel_slots_saturation[i] = s * math.sin(h)
+end
+
+function get_target_position(hue, saturation)
+    best_diff = 361
+    best_position = 0
+    target_x = saturation * math.cos(hue)
+    target_y = saturation * math.sin(hue)
+    for i = 1, #wheel_slots_hue do
+        diff = math.sqrt(math.pow(target_x - wheel_slots_hue[i], 2) + math.pow(target_y - wheel_slots_saturation[i], 2))
+        if diff < best_diff then
+            best_diff = diff
+            best_position = i
+        end
+    end
+    return best_position
+end
+
+function update()
+    target_position = get_target_position(math.rad(input["h"]), input["s"])
+    {% if dim_when_off %}
+    if current_wheel_pos ~= target_position then
+        dimmer = 0
+    else
+        dimmer = {% if output_dimmer_multiplier != "1" %}{{ output_dimmer_multiplier }} * {% endif %}input["i"]{% if input_dimmer_channel_connected %} * (in_dimmer{% if input_dimmer_multiplier != "1" %} / {{ input_dimmer_multiplier }}{% endif %}){% endif %}
+    end
+    {% else %}
+    dimmer = {% if output_dimmer_multiplier != "1" %}{{ output_dimmer_multiplier }} * {% endif %}input["i"]{% if input_dimmer_channel_connected %} * (in_dimmer{% if input_dimmer_multiplier != "1" %} / {{ input_dimmer_multiplier }}{% endif %}){% endif %}
+    {% endif %}
+    if last_change_time + {{ wheel_speed }} < time then
+        if current_wheel_pos < target_position then
+            current_wheel_pos = current_wheel_pos + 1
+        end
+        if current_wheel_pos > target_position then
+            current_wheel_pos = current_wheel_pos - 1
+        end
+        last_change_time = time
+    end
+    colorwheel = wheel_values[target_position]
+end
+
+function scene_activated()
+    current_wheel_pos = -1
+    if time ~= nil then
+        last_change_time = time
+    end
+end
