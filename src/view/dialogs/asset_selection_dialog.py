@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QDialog, QWidget, QVBoxLayout, QDialogButtonBox
+from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QWidget
 from qasync import QApplication
 
 from model.media_assets.asset import MediaAsset

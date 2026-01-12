@@ -218,14 +218,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
 
-    @override
-    def closeEvent(self, event: QCloseEvent, /) -> None:
-        # TODO use event.ignore() here is there's still stuff to do
-        super().closeEvent(event)
-        QApplication.processEvents()
-        self._broadcaster.application_closing.emit()
-        QApplication.processEvents()
-
     def _start_connection(self) -> None:  # TODO rework to signals
         self._fish_connector.start(True)
 
@@ -412,9 +404,17 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._close_now:
             super().closeEvent(event)
+            QApplication.processEvents()
+            self._broadcaster.application_closing.emit()
+            QApplication.processEvents()
         else:
             event.ignore()
-            self._settings_dialog = YesNoDialog(self, "Close Editor", "Do you really want to close this window? Any unsaved changes will be lost.", self.close_callback)
+            self._settings_dialog = YesNoDialog(
+                self,
+                "Close Editor",
+                "Do you really want to close this window? Any unsaved changes will be lost.",
+                self.close_callback
+            )
             self._settings_dialog.setModal(True)
             self._settings_dialog.show()
 
