@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, override
 
 from jinja2 import Environment
 
-from model.filter import Filter, VirtualFilter, FilterTypeEnumeration
+from model.filter import Filter, FilterTypeEnumeration, VirtualFilter
 from utility import resource_path
 
 if TYPE_CHECKING:
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from model import Scene
 
 with open(resource_path(os.path.join("resources", "data", "color-to-colorwheel-template.lua.j2")), "r") as f:
-    _FILTER_CONTENT_TEMPLATE: Template = Environment().from_string(f.read())
+    _FILTER_CONTENT_TEMPLATE: Template = Environment().from_string(f.read())  # NOQA: S701 the editor is not a web page.
 
 
 class ColorToColorWheel(VirtualFilter):
@@ -60,9 +60,9 @@ class ColorToColorWheel(VirtualFilter):
             self.filter_configurations["dimmer-output"] = ""
         if "colorwheel-datatype" not in self._filter_configurations:
             self.filter_configurations["colorwheel-datatype"] = "8bit"
-        if not "wheel_speed" in self.filter_configurations:
+        if "wheel_speed" not in self.filter_configurations:
             self.filter_configurations["wheel_speed"] = "300"
-        if not "dim_when_off" in self.filter_configurations:
+        if "dim_when_off" not in self.filter_configurations:
             self.filter_configurations["dim_when_off"] = "true"
 
     @override
