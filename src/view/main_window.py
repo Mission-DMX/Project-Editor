@@ -413,11 +413,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self,
                 "Close Editor",
                 "Do you really want to close this window? Any unsaved changes will be lost.",
-                self.close_callback
+                self._close_callback
             )
             self._settings_dialog.setModal(True)
             self._settings_dialog.show()
 
-    def close_callback(self) -> None:
+    def _close_callback(self) -> None:
         self._close_now = True
         self.close()
