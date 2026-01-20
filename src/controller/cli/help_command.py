@@ -35,6 +35,7 @@ class HelpCommand(Command):
             case "list":
                 self.context.print("This command displays the content of system collections.")
                 self.context.print("The following containers can be queried:")
+                self.context.print("\tconnect -- Connect filter channels")
                 self.context.print("\tscenes -- Display the available scene ids.")
                 self.context.print("\tfilters -- Display the filter ids in the current selected scene.")
                 self.context.print("\tcolumns -- Display the columns in the current selected bank set.")
@@ -69,10 +70,16 @@ class HelpCommand(Command):
                 self.context.print("\tload <show file> -- Load the provided show file and make it the current one")
                 self.context.print("\tfiltermsg <scene id> <filter id> <key> <value> -- Update the parameter <key> of "
                                    "\n\t\tfilter <filter id> from scene <scene id> to value <value>.")
-                self.context.print("select-scene <scene id> -- switch to scene with ID <scene id>")
-                self.context.print("commit [--select-default-scene] -- apply the current loaded show file to fish")
+                self.context.print("\tselect-scene <scene id> -- switch to scene with ID <scene id>")
+                self.context.print("\tcommit [--select-default-scene] -- apply the current loaded show file to fish")
+                self.content.print("\treadymode <enable|abort|commit|query> -- Control the ready mode state.")
             case "delay":
                 self.context.print("delay the execution of the macro by the specified amount of milliseconds")
+            case "fish":
+                self.context.print("Manage fish connection state.")
+                self.context.print("\tconnect -- Connect to the fish")
+                self.context.print("\tdisconnect -- Disconnect from the fish")
+                self.context.print("\tquery -- Query the fish connection state")
             case "macro":
                 self.context.print("Control macros.")  # TODO
                 self.context.print("\texec <macro> -- Execute the macro")
@@ -80,10 +87,18 @@ class HelpCommand(Command):
             case "asset":
                 self.context.print("Manipulate loaded assets.")
                 self.context.print("load <class> <info>")
+            case "connect":
+                self.context.print("Connect filter channels. Requires to have a scene selected.")
+                self.context.print("\t<source channel ID template> <destination channel ID templates> [--guard <smod:X>"
+                                   "|<dmod:X>|<dt:DT>|<sfid_contains:STR>|<dfid_contains:STR>|<schan_contains:STR>|"
+                                   "<dchan_contains:STR>] [--source-count <count>] [--destination-count <count>]")
+            case "uipage":
+                self.context.print("Manipulate content and display of ui pages.")
+                self.context.print("\tset-displayed-index <window> <scene> <page>")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
-                self.context.print("\tprint\tasset\tset\tif")
+                self.context.print("\tprint\tasset\tset\tif\tconnect\tfish\tuipage")
                 return False
         return True

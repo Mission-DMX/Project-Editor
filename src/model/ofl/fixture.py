@@ -15,7 +15,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
-from model.ofl.ofl_fixture import FixtureMode, OflFixture
+from model.ofl.ofl_fixture import FixtureMode, MatrixChannelInsert, OflFixture
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -221,11 +221,26 @@ class UsedFixture(QtCore.QObject):
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
-        for index, channel_name in enumerate(self.mode.channels):
-            channel = FixtureChannel(channel_name)
+        def append_channel(cn: str, i: int) -> None:
+            channel = FixtureChannel(cn)
             fixture_channels.append(channel)
             for channel_type in channel.type_as_list:
-                segment_map[channel_type].append(index)
+                segment_map[channel_type].append(i)
+
+        index = 0
+        for channel_name in self.mode.channels:
+            if isinstance(channel_name, MatrixChannelInsert):
+                if isinstance(channel_name.repeatFor, list):
+                    repetition_list = channel_name.repeatFor
+                else:
+                    repetition_list = self._fixture.matrix.generate_repetition_list(channel_name.repeatFor)
+                for repeated_name in repetition_list:
+                    for template_name in channel_name.templateChannels:
+                        append_channel(template_name.replace("$pixelKey", "{}").format(repeated_name), index)
+                        index += 1
+            else:
+                append_channel(channel_name if channel_name is not None else "", index)
+                index += 1
 
         found_color = ColorSupport.NO_COLOR_SUPPORT
         if all(segment_map[t] for t in (FixtureChannelType.RED, FixtureChannelType.GREEN, FixtureChannelType.BLUE)):

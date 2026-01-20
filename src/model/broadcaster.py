@@ -115,6 +115,8 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     #################################################################
     update_filter_parameter: QtCore.Signal = QtCore.Signal(proto.FilterMode_pb2.update_parameter)
     active_scene_switched: QtCore.Signal = QtCore.Signal(int)
+    switched_gui_wait_mode: QtCore.Signal = QtCore.Signal(bool)
+    """Signal is supplied with true if the state is now in wait mode."""
     #################################################################
     select_column_id: QtCore.Signal = QtCore.Signal(str)
     log_message: QtCore.Signal = QtCore.Signal(str)

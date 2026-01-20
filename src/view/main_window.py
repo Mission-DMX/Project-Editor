@@ -1,4 +1,4 @@
-"""main Window for the Editor"""
+"""main Window for the Editor."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import platform
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
+from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap, Qt
 from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
@@ -21,9 +21,11 @@ from model.control_desk import BankSet, ColorDeskColumn
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_universe_selector import UniverseSelector
+from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
+from view.misc.console_dock_widget import ConsoleDockWidget
 from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
@@ -47,6 +49,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         Args:
             parent: Qt parent of the widget.
+
         """
         super().__init__(parent)
         # first logging to don't miss logs
@@ -144,12 +147,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._about_window = None
         self._settings_dialog = None
         self._utility_wizard: QWizard | None = None
+        self._terminal_widget: ConsoleDockWidget | None = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
 
     @property
     def fish_connector(self) -> NetworkManager:
-        """NetworkManager"""
+        """NetworkManager."""
         return self._fish_connector
 
     def _to_widget(self, index: int) -> None:
@@ -178,6 +182,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Connect", self._start_connection, None),
                 ("&Disconnect", self._fish_connector.disconnect, None),
                 ("Change", self._change_server_name, None),
+                ("---", None, None),
+                ("Enter Readymode", self._fish_connector.enter_readymode, None),
+                ("Abort Readymode", self._fish_connector.abort_readymode, None),
                 ("---", None, None),
                 (
                     "&Filter Mode",
@@ -210,6 +217,9 @@ class MainWindow(QtWidgets.QMainWindow):
             "Tools": [
                 # ("Scene Wizard", self._open_scene_setup_wizard, None),
                 ("Patch Plan Export", self._open_patch_plan_export_dialog, None),
+                ("Asset Management", self._open_asset_mgmt_dialog, None),
+                ("---", None, None),
+                ("&Toggle Terminal", self._toggle_terminal, "T"),
             ],
             "Help": [
                 ("&About", self._open_about_window, None),
@@ -232,7 +242,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._fish_connector.start(True)
 
     def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
-        """add entries to a menu"""
+        """Add entries to a menu."""
         for entry in entries:
             if entry[0] == "---":
                 menu.addSeparator()
@@ -247,13 +257,13 @@ class MainWindow(QtWidgets.QMainWindow):
             menu.addAction(menu_entry)
 
     def _change_server_name(self) -> None:
-        """change fish socket name"""
+        """Change fish socket name."""
         text, run = QtWidgets.QInputDialog.getText(self, "Server Name", "Enter Server Name:")
         if run:
             self._fish_connector.change_server_name(text)
 
     def _setup_status_bar(self) -> None:
-        """build status bor"""
+        """Build status bar."""
         status_bar = QtWidgets.QStatusBar()
         status_bar.setMaximumHeight(50)
         self.setStatusBar(status_bar)
@@ -274,11 +284,11 @@ class MainWindow(QtWidgets.QMainWindow):
         status_bar.addWidget(self._status_pbar)
 
         self._status_current_scene_label = QtWidgets.QLabel("")
-        self._fish_connector.active_scene_on_fish_changed.connect(
+        self._broadcaster.active_scene_switched.connect(
             lambda i: self._status_current_scene_label.setText(
-                f"[{i}] {
+                f"[{i if i >= 0 else 'D' if i == -1 else 'No Show on Fish' if i == -2 else f'E{i * -1}'}] {
                     self._board_configuration.get_scene_by_id(i).human_readable_name
-                    if i != -1 and self._board_configuration.get_scene_by_id(i) is not None
+                    if i >= 0 and self._board_configuration.get_scene_by_id(i) is not None
                     else ''
                 }"
             )
@@ -321,7 +331,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._last_cycle_time_widget.setVisible(False)
 
     def _update_last_cycle_time(self, new_value: int) -> None:
-        """update plot of fish last cycle Time"""
+        """Update plot of fish last cycle Time."""
         self._last_cycle_time = self._last_cycle_time[1:]  # Remove the first y element.
         self._last_cycle_time.append(new_value)  # Add a new value
 
@@ -336,7 +346,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._last_cycle_time_widget.setStyleSheet(style.LABEL_ERROR)
 
     def _show_column_dialog(self, index: str) -> None:
-        """Dialog modify tho selected Column"""
+        """Dialog modify tho selected Column."""
         active_bank_set = BankSet.active_bank_set()
         column = active_bank_set.get_column(index)
         if active_bank_set.active_column != column:
@@ -373,9 +383,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @property
     def show_configuration(self) -> BoardConfiguration:
+        """Get the show model used in main window instance."""
         return self._board_configuration
 
     def open_show_settings(self) -> None:
+        """Open the show file settings dialog."""
         self._settings_dialog = SettingsDialog(self, self._board_configuration)
         self._settings_dialog.show()
 
@@ -393,3 +405,17 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._utility_wizard is not None:
             self._utility_wizard.deleteLater()
             self._utility_wizard = None
+
+    def _toggle_terminal(self) -> None:
+        if self._terminal_widget is None:
+            self._terminal_widget = ConsoleDockWidget(self, self._board_configuration)
+            self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._terminal_widget)
+        if not self._terminal_widget.isHidden():
+            self._terminal_widget.hide()
+        else:
+            self._terminal_widget.show()
+            self._terminal_widget.focusWidget()
+
+    def _open_asset_mgmt_dialog(self) -> None:
+        self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
+        self._settings_dialog.show()
