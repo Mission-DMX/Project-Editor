@@ -7,7 +7,7 @@ import platform
 from typing import TYPE_CHECKING, override
 
 from PySide6 import QtGui, QtWidgets
-from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
+from PySide6.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap, Qt
 from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
@@ -21,9 +21,11 @@ from model.control_desk import BankSet, ColorDeskColumn
 from utility import resource_path
 from view.action_setup_view.combined_action_setup_widget import CombinedActionSetupWidget
 from view.console_mode.console_universe_selector import UniverseSelector
+from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.dialogs.colum_dialog import ColumnDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
+from view.misc.console_dock_widget import ConsoleDockWidget
 from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
@@ -131,6 +133,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._about_window = None
         self._settings_dialog = None
         self._utility_wizard: QWizard | None = None
+        self._terminal_widget: ConsoleDockWidget | None = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
 
@@ -166,6 +169,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Disconnect", self._fish_connector.disconnect, None),
                 ("Change", self._change_server_name, None),
                 ("---", None, None),
+                ("Enter Readymode", self._fish_connector.enter_readymode, None),
+                ("Abort Readymode", self._fish_connector.abort_readymode, None),
+                ("---", None, None),
                 (
                     "&Filter Mode",
                     lambda: self._broadcaster.change_run_mode.emit(proto.RealTimeControl_pb2.RunMode.RM_FILTER),
@@ -197,6 +203,9 @@ class MainWindow(QtWidgets.QMainWindow):
             "Tools": [
                 # ("Scene Wizard", self._open_scene_setup_wizard, None),
                 ("Patch Plan Export", self._open_patch_plan_export_dialog, None),
+                ("Asset Management", self._open_asset_mgmt_dialog, None),
+                ("---", None, None),
+                ("&Toggle Terminal", self._toggle_terminal, "T"),
             ],
             "Help": [
                 ("&About", self._open_about_window, None),
@@ -382,3 +391,17 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._utility_wizard is not None:
             self._utility_wizard.deleteLater()
             self._utility_wizard = None
+
+    def _toggle_terminal(self) -> None:
+        if self._terminal_widget is None:
+            self._terminal_widget = ConsoleDockWidget(self, self._board_configuration)
+            self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._terminal_widget)
+        if not self._terminal_widget.isHidden():
+            self._terminal_widget.hide()
+        else:
+            self._terminal_widget.show()
+            self._terminal_widget.focusWidget()
+
+    def _open_asset_mgmt_dialog(self) -> None:
+        self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
+        self._settings_dialog.show()

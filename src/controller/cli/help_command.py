@@ -70,8 +70,9 @@ class HelpCommand(Command):
                 self.context.print("\tload <show file> -- Load the provided show file and make it the current one")
                 self.context.print("\tfiltermsg <scene id> <filter id> <key> <value> -- Update the parameter <key> of "
                                    "\n\t\tfilter <filter id> from scene <scene id> to value <value>.")
-                self.context.print("select-scene <scene id> -- switch to scene with ID <scene id>")
-                self.context.print("commit [--select-default-scene] -- apply the current loaded show file to fish")
+                self.context.print("\tselect-scene <scene id> -- switch to scene with ID <scene id>")
+                self.context.print("\tcommit [--select-default-scene] -- apply the current loaded show file to fish")
+                self.content.print("\treadymode <enable|abort|commit|query> -- Control the ready mode state.")
             case "delay":
                 self.context.print("delay the execution of the macro by the specified amount of milliseconds")
             case "fish":
@@ -91,10 +92,13 @@ class HelpCommand(Command):
                 self.context.print("\t<source channel ID template> <destination channel ID templates> [--guard <smod:X>"
                                    "|<dmod:X>|<dt:DT>|<sfid_contains:STR>|<dfid_contains:STR>|<schan_contains:STR>|"
                                    "<dchan_contains:STR>] [--source-count <count>] [--destination-count <count>]")
+            case "uipage":
+                self.context.print("Manipulate content and display of ui pages.")
+                self.context.print("\tset-displayed-index <window> <scene> <page>")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
-                self.context.print("\tprint\tasset\tset\tif\tconnect\tfish")
+                self.context.print("\tprint\tasset\tset\tif\tconnect\tfish\tuipage")
                 return False
         return True

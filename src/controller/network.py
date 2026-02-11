@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from PySide6 import QtCore, QtNetwork
+from PySide6.QtCore import QTimer
 
 import proto.Console_pb2
 import proto.DirectMode_pb2
@@ -83,11 +84,56 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         self._broadcaster.change_active_scene.connect(self.enter_scene)
 
         x_touch.XTouchMessages(self._broadcaster, self.button_msg_to_x_touch)
+        self._gui_update_ready_queue: list[proto.FilterMode_pb2.update_parameter] = []
+        self._in_ready_wait_mode: bool = False
 
     @property
     def is_running(self) -> bool:
         """Check if the Fish socket is already running."""
         return self._is_running
+
+    def enter_readymode(self, send_immediately: bool = True) -> None:
+        """Enter the readymode."""
+        if self._in_ready_wait_mode:
+            return
+        self._in_ready_wait_mode = True
+        self._broadcaster.switched_gui_wait_mode.emit(True)
+        msg = proto.RealTimeControl_pb2.readymode_update()
+        msg.cause = proto.RealTimeControl_pb2.ReadymodeUpdateCause.RUC_ENTERED
+        self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE)
+        if send_immediately:
+            self.push_messages()
+
+    @property
+    def in_readymode(self) -> bool:
+        """Returns true if the ready mode is in progress."""
+        return self._in_ready_wait_mode
+
+    def abort_readymode(self, send_immediately: bool = True) -> None:
+        """Abort the ready mode."""
+        if self._in_ready_wait_mode:
+            self._in_ready_wait_mode = False
+            self._broadcaster.switched_gui_wait_mode.emit(False)
+            self._gui_update_ready_queue.clear()
+            msg = proto.RealTimeControl_pb2.readymode_update()
+            msg.cause = proto.RealTimeControl_pb2.ReadymodeUpdateCause.RUC_ABORTED
+            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE)
+            if send_immediately:
+                self.push_messages()
+
+    def commit_readymode(self, send_immediately: bool = True) -> None:
+        """Commit the ready mode."""
+        if self._in_ready_wait_mode:
+            self._in_ready_wait_mode = False
+            self._broadcaster.switched_gui_wait_mode.emit(False)
+            for msg in self._gui_update_ready_queue:
+                self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+            self._gui_update_ready_queue.clear()
+            msg = proto.RealTimeControl_pb2.readymode_update()
+            msg.cause = proto.RealTimeControl_pb2.ReadymodeUpdateCause.RUC_COMMITED
+            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE)
+            if send_immediately:
+                self.push_messages()
 
     def change_server_name(self, name: str) -> None:
         """Change Fish socket name.
@@ -243,10 +289,20 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                         message: proto.Events_pb2.event_sender = proto.Events_pb2.event()
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.fish_event_received.emit(message)
+                    case proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE:
+                        msg_p: proto.RealTimeControl_pb2.readymode_update = proto.RealTimeControl_pb2.readymode_update()
+                        msg_p.ParseFromString(bytes(msg))
+                        match msg_p.cause:
+                            case proto.RealTimeControl_pb2.RUC_COMMITED:
+                                self.commit_readymode(False)
+                            case proto.RealTimeControl_pb2.RUC_ABORTED:
+                                self.abort_readymode(False)
+                            case proto.RealTimeControl_pb2.RUC_ENTERED:
+                                self.enter_readymode(False)
                     case _:
                         logger.warning("Received not implemented message type: %s", msg_type)
-            except:
-                logger.error("Failed to parse message.")
+            except Exception as e:
+                logger.exception("Failed to parse message.", exc_info=e, stack_info=True)
         self.push_messages()
 
     def _fish_update(self, msg: proto.RealTimeControl_pb2.current_state_update) -> None:
@@ -366,7 +422,10 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
     def _on_state_changed(self) -> None:
         """Start or stop sending messages when the connection state changes."""
-        self._broadcaster.connection_state_updated.emit(self.connection_state())
+        try:
+            self._broadcaster.connection_state_updated.emit(self.connection_state())
+        except RuntimeError:
+            logger.error("Signal source was probably deleted.")
 
     def connection_state(self) -> bool:
         """Return the current connection state.
@@ -488,10 +547,13 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
         msg.scene_id = scene_id
         msg.parameter_key = key
         msg.parameter_value = value
-        if enque:
-            self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+        if self._in_ready_wait_mode:
+            self._gui_update_ready_queue.append(msg)
         else:
-            self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+            if enque:
+                self._enqueue_message(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
+            else:
+                self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_UPDATE_PARAMETER)
 
     def send_event_sender_update(self, msg: proto.Events_pb2.event_sender, push_direct: bool = False) -> None:
         """Send event that Sender has updated to Fish."""
