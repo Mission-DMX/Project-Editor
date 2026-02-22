@@ -1,0 +1,1 @@
+FISH_EXEC_PATH = "../realtime-fish/bin/fish"
