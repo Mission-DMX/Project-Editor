@@ -1,6 +1,12 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from model import Filter, Scene
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
-from view.show_mode.show_ui_widgets.autotracker.v_filter_light_controller import VFilterLightController
+
+if TYPE_CHECKING:
+    from view.show_mode.show_ui_widgets.autotracker.v_filter_light_controller import VFilterLightController
 
 
 class _MHControlInstance:
