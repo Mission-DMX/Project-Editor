@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from model import BoardConfiguration
+    from model import BoardConfiguration, ColorHSI
 
 logger = getLogger(__name__)
 
@@ -108,6 +108,9 @@ class UsedFixture(QtCore.QObject):
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
+        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = []
+        # TODO populate list
+
         self._color_on_stage: str = (
             color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
         )
@@ -120,6 +123,19 @@ class UsedFixture(QtCore.QObject):
     def uuid(self) -> UUID:
         """UUID of the fixture."""
         return self._uuid
+
+    @property
+    def colorwheel_mappings(self) -> list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
+        """Get the color wheels of this fixture.
+
+        This list contains tuples of the channels that contain color wheels as well as their colors.
+        Each slot is a tuple of the DMX value that should be send in order to get the color as well as the colors of the
+        position. If the third parameter of this tuple is not None, the position is right in between two slots.
+
+        Returns:
+            A copy of the list.
+        """
+        return list(self._colorwheel_mappings)
 
     @property
     def power(self) -> float:

@@ -14,9 +14,31 @@ if TYPE_CHECKING:
     from jinja2.environment import Template
 
     from model import Scene
+    from model.ofl.fixture import UsedFixture
 
 with open(resource_path(os.path.join("resources", "data", "color-to-colorwheel-template.lua.j2")), "r") as f:
     _FILTER_CONTENT_TEMPLATE: Template = Environment().from_string(f.read())  # NOQA: S701 the editor is not a web page.
+
+
+def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index: int = 0) -> str:
+    """Get a color mapping from the provided fixture.
+
+    Args:
+        f: The fixture to extract the filter configuration from.
+        selected_slot_index: Which color wheel slot of the fixture should be used?
+
+    Returns:
+        A string usable as the color-mappings property of the filter configuration.
+
+    """
+    color_mappings: list[tuple[float, float, int]] = []
+    for channel, mappings in f.colorwheel_mappings[selected_slot_index]:
+        for selection_value, color1, color2 in mappings:
+            if color2 is not None:
+                # We have a value that is in the middle between two slots.
+                continue
+            color_mappings.append((color1.hue, color1.saturation, selection_value))
+    return ";".join([f"{hue}:{saturation}:{slot}" for hue, saturation, slot in color_mappings])
 
 
 class ColorToColorWheel(VirtualFilter):
@@ -74,7 +96,7 @@ class ColorToColorWheel(VirtualFilter):
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         if self.filter_configurations["mode"] == "automatic":
-            # TODO
+            # TODO use extract_colorwheel_mappings_from_fixture method
             raise ValueError(f"Automatic mode is currently not implemented. Filter ID: {self.filter_id}")
         input_dimmer_channel = self.channel_links.get("in_dimmer", "")
         hue_values: list[float] = []
