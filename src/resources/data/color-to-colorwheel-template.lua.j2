@@ -1,7 +1,7 @@
 ----------------- Parameters ---------------------
-wheel_slots_hue = {{% for hv in hue_values %}{{ hv }}{{ ", " if not loop last }}{% endfor %}}
-wheel_slots_saturation = {{% for sv in saturation_values %}{{ sv }}{{ ", " if not loop last }}{% endfor %}}
-wheel_values = {{% for slot in slots %}{{ slot }}{{ ", " if not loop last }}{% endfor %}}
+wheel_slots_hue = {% raw %}{{% endraw %}{% for hv in hue_values %}{{ hv }}{{ ", " if not loop.last }}{% endfor %}{% raw %}}{% endraw %}
+wheel_slots_saturation = {% raw %}{{% endraw %}{% for sv in saturation_values %}{{ sv }}{{ ", " if not loop.last }}{% endfor %}{% raw %}}{% endraw %}
+wheel_values = {% raw %}{{% endraw %}{% for slot in slots %}{{ slot }}{{ ", " if not loop.last }}{% endfor %}{% raw %}}{% endraw %}
 ------------ End of  Parameters ---------------
 
 ------------ Required Ports -------------------

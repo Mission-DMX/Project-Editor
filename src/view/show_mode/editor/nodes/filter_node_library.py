@@ -19,7 +19,7 @@ from view.show_mode.editor.nodes.impl.adapters import (
     AdapterFloatToRange,
     ColorBrightnessMixinNode,
     CombineTwo8BitToSingle16Bit,
-    Map8BitTo16Bit,
+    Map8BitTo16Bit, ColorToColorwheelAdapterNode,
 )
 from view.show_mode.editor.nodes.impl.arithmetics import (
     ArithmeticExponentialNode,
@@ -159,6 +159,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(CombineTwo8BitToSingle16Bit, [("Adapters",)])
         self.addNodeType(Map8BitTo16Bit, [("Adapters",)])
         self.addNodeType(ColorBrightnessMixinNode, [("Adapters",)])
+        self.addNodeType(ColorToColorwheelAdapterNode, [("Adapters",)])
 
     def _register_arithmetic_nodes(self) -> None:
         """Register all the arithmetics nodes."""

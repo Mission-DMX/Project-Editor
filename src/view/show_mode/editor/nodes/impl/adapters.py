@@ -316,3 +316,37 @@ class ColorBrightnessMixinNode(FilterNode):
         self.filter.in_data_types["brightness"] = DataType.DT_8_BIT
         self.channel_hints["brightness"] = "[0-255, optional]"
         self.filter._configuration_supported = False
+
+class ColorToColorwheelAdapterNode(FilterNode):
+    nodeName = "Color to Color Wheel Adapter"
+
+    def __init__(self, model: Filter | Scene, name: str) -> None:
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, name=name,
+                         terminals={
+                             "input": {"io": "in"},
+                             "in_dimmer": {"io": "in"},
+                             "dimmer": {"io": "out"},
+                             "colorwheel": {"io": "out"}
+                         })
+        self.filter.in_data_types["input"] = DataType.DT_COLOR
+        match self.filter.filter_configurations.get("dimmer-input"):
+            case "16bit":
+                self.filter.in_data_types["in_dimmer"] = DataType.DT_16_BIT
+            case "float":
+                self.filter.in_data_types["in_dimmer"] = DataType.DT_DOUBLE
+            case _:
+                self.filter.in_data_types["in_dimmer"] = DataType.DT_8_BIT
+        match self.filter.filter_configurations.get("dimmer-output"):
+            case "16bit":
+                self.filter.out_data_types["dimmer"] = DataType.DT_16_BIT
+            case "float":
+                self.filter.out_data_types["dimmer"] = DataType.DT_DOUBLE
+            case _:
+                self.filter.out_data_types["dimmer"] = DataType.DT_8_BIT
+        match self.filter.filter_configurations.get("colorwheel-datatype"):
+            case "16bit":
+                self.filter.out_data_types["colorwheel"] = DataType.DT_16_BIT
+            case "float":
+                self.filter.out_data_types["colorwheel"] = DataType.DT_DOUBLE
+            case _:
+                self.filter.out_data_types["colorwheel"] = DataType.DT_8_BIT
