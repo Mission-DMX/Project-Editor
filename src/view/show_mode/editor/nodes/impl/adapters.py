@@ -1,4 +1,6 @@
 """Adapters and converters filter nodes"""
+from typing import override
+
 from model import DataType, Scene
 from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -328,6 +330,10 @@ class ColorToColorwheelAdapterNode(FilterNode):
                              "dimmer": {"io": "out"},
                              "colorwheel": {"io": "out"}
                          })
+        self.update_node_after_settings_changed()
+
+    @override
+    def update_node_after_settings_changed(self):
         self.filter.in_data_types["input"] = DataType.DT_COLOR
         match self.filter.filter_configurations.get("dimmer-input"):
             case "16bit":
