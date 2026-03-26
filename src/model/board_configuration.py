@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Sequence
 from logging import getLogger
+from uuid import UUID
 
 import numpy as np
 from PySide6 import QtCore, QtGui
@@ -30,7 +31,7 @@ class BoardConfiguration:
         self._scenes_index: dict[int, int] = {}
         self._devices: list[Device] = []
         self._universes: dict[int, Universe] = {}
-        self._fixtures: list[UsedFixture] = []
+        self._fixtures: dict[str, UsedFixture] = {}
         self._ui_hints: dict[str, str] = {}
         self._macros: list[Macro] = []
 
@@ -100,7 +101,7 @@ class BoardConfiguration:
         self._universes.update({universe.id: universe})
 
     def _add_fixture(self, used_fixture: UsedFixture) -> None:
-        self._fixtures.append(used_fixture)
+        self._fixtures[str(used_fixture.uuid)] = used_fixture
 
     def _delete_universe(self, universe: Universe) -> None:
         """Remove the passed universe from the list of universes.
@@ -146,7 +147,7 @@ class BoardConfiguration:
     @property
     def fixtures(self) -> Sequence[UsedFixture]:
         """Fixtures associated with this Show."""
-        return self._fixtures
+        return self._fixtures.values()
 
     @property
     def show_name(self) -> str:
@@ -312,3 +313,11 @@ class BoardConfiguration:
         ]
 
         return np.concatenate(ranges) if ranges else np.array([], dtype=int)
+
+    def get_fixture(self, fixture_id: str | UUID) -> UsedFixture | None:
+        """Get the fixture specified by its id."""
+        if fixture_id == "" or fixture_id is None:
+            return None
+        if isinstance(fixture_id, UUID):
+            fixture_id = str(fixture_id)
+        return self._fixtures.get(fixture_id)

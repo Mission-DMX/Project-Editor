@@ -56,6 +56,7 @@ class ColorToColorWheel(VirtualFilter):
          - colorwheel-datatype: The data type of the color wheel slot. Can either be "8bit" or "16bit".
          - wheel_speed: Time in ms to switch between two adjacent wheel slots in manual mode.
          - dim_when_off: If true, the brightness will be suspended as long as the wrong color wheel slot is dialed in.
+         - colorwheel-id: If in automatic mode, specifies which color wheel to use.
 
         The following ports are provided:
          - input: The color input channel (input, color)
@@ -86,6 +87,8 @@ class ColorToColorWheel(VirtualFilter):
             self.filter_configurations["wheel_speed"] = "300"
         if "dim_when_off" not in self.filter_configurations:
             self.filter_configurations["dim_when_off"] = "true"
+        if "colorwheel-id" not in self.filter_configurations:
+            self.filter_configurations["colorwheel-id"] = "0"
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -93,11 +96,23 @@ class ColorToColorWheel(VirtualFilter):
             raise ValueError(f"Invalid virtual port ID. Filter ID: {self.filter_id}, Requested Port: {virtual_port_id}")
         return f"{self.filter_id}:{virtual_port_id}"
 
+    def _get_fixture(self) -> UsedFixture:
+        fixture_id = self.filter_configurations["fixture-uuid"]
+        if fixture_id == "":
+            raise ValueError(f"Fixture UUID cannot be empty. Filter-ID: {self.filter_id}")
+        f = self.scene.board_configuration.get_fixture(fixture_id)
+        if f is None:
+            raise ValueError(f"Fixture with UUID {fixture_id} not found in showfile. Filter-ID: {self.filter_id}")
+        return f
+
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         if self.filter_configurations["mode"] == "automatic":
-            # TODO use extract_colorwheel_mappings_from_fixture method
-            raise ValueError(f"Automatic mode is currently not implemented. Filter ID: {self.filter_id}")
+            color_mapping_string = extract_colorwheel_mappings_from_fixture(
+                self._get_fixture(), selected_slot_index=int(self.filter_configurations["colorwheel-id"])
+            )
+        else:
+            color_mapping_string = self.filter_configurations.get("color-mappings", "")
         input_dimmer_channel = self.channel_links.get("in_dimmer", "")
         hue_values: list[float] = []
         saturation_values: list[float] = []
@@ -111,7 +126,7 @@ class ColorToColorWheel(VirtualFilter):
         dimmer_output_required = required_dimmer_output_data_type != ""
         wheel_speed = self.filter_configurations.get("wheel_speed", "300")
 
-        for mapping_str in self.filter_configurations.get("color-mappings", "").split(";"):
+        for mapping_str in color_mapping_string.split(";"):
             hue, saturation, slot = mapping_str.split(":")
             hue_values.append(float(hue))
             saturation_values.append(float(saturation))
