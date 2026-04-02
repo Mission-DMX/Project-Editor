@@ -14,7 +14,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
-from model.ofl.ofl_fixture import FixtureMode, MatrixChannelInsert, OflFixture
+from model.ofl.ofl_fixture import FixtureMode, MatrixChannelInsert, OflFixture, CapabilityType
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -66,6 +66,22 @@ def load_fixture(file: str) -> OflFixture | None:
     return OflFixture.model_validate(ob)
 
 
+def _load_colorwheel_mappings(f: OflFixture, channels: list[FixtureChannel]) -> \
+    list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
+    """Load color wheel mappings from OFL model."""
+    l = []
+    for channel in channels:
+        if not channel.type == FixtureChannelType.COLORWHEEL:
+            continue
+        if channel.channel_template is None:
+            logger.error("The channel %s is a color wheel but the template was not found.", channel.name)
+            continue
+        for capability in channel.channel_template.get_capabilities():
+            if capability.type == CapabilityType.WHEEL_SLOT:
+                # TODO query parameters, add them to the list
+                pass
+    return l
+
 class UsedFixture(QtCore.QObject):
     """Fixture in use with a specific mode."""
 
@@ -102,14 +118,14 @@ class UsedFixture(QtCore.QObject):
         self._mode_index: int = mode_index
         self._universe_id: int = parent_universe
 
-        channels, segment_map, color_support = self._generate_fixture_channels()
+        channels, segment_map, color_support = self._generate_fixture_channels(fixture)
 
         self._fixture_channels: Final[list[FixtureChannel]] = channels
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
-        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = []
-        # TODO populate list
+        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = \
+            _load_colorwheel_mappings(OflFixture, self._fixture_channels)
 
         self._color_on_stage: str = (
             color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
@@ -231,13 +247,13 @@ class UsedFixture(QtCore.QObject):
         return tuple((self._segment_map[segment_type] + self.start_index).tolist())
 
     def _generate_fixture_channels(
-        self,
+        self, fixture_template: OflFixture
     ) -> tuple[list[FixtureChannel], dict[FixtureChannelType, NDArray[np.int_]], ColorSupport]:
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
         def append_channel(cn: str, i: int) -> None:
-            channel = FixtureChannel(cn)
+            channel = FixtureChannel(cn, fixture_template)
             fixture_channels.append(channel)
             for channel_type in channel.type_as_list:
                 segment_map[channel_type].append(i)

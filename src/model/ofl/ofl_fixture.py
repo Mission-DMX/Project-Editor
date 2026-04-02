@@ -3,6 +3,7 @@
 # ruff: noqa: N815
 from __future__ import annotations
 
+from enum import Enum
 from logging import getLogger
 from typing import Literal
 
@@ -151,6 +152,98 @@ class FixtureMatrix(BaseModel):
         return repetition_list
 
 
+class CapabilityType(Enum):
+    """Defines the capability type as used by OFL."""
+
+    NO_FUNCTION = "NoFunction"
+    GENERIC = "Generic"
+    SHUTTER_STROBE = "ShutterStrobe"
+    STROBE_SPEED = "StrobeSpeed"
+    STROBE_DURATION = "StrobeDuration"
+    INTENSITY = "Intensity"
+    COLOR_INTENSITY = "ColorIntensity"
+    COLOR_PRESET = "ColorPreset"
+    COLOR_TEMPERATURE = "ColorTemperature"
+    PAN = "Pan"
+    PAN_CONTINUOUS = "PanContinuous"
+    TILT = "Tilt"
+    TILT_CONTINUOUS = "TiltContinuous"
+    PAN_TILT_SPEED = "PanTiltSpeed"
+    WHEEL_SLOT = "WheelSlot"
+    WHEEL_SHAKE = "WheelShake"
+    WHEEL_SLOT_ROTATION = "WheelSlotRotation"
+    WHEEL_ROTATION = "WheelRotation"
+    EFFECT = "Effect"
+    EFFECT_SPEED = "EffectSpeed"
+    EFFECT_DURATION = "EffectDuration"
+    EFFECT_PARAMETER ="EffectParameter"
+    SOUND_SENSITIVITY = "SoundSensitivity"
+    BEAM_ANGLE = "BeamAngle"
+    BEAM_POSITION = "BeamPosition"
+    FOCUS = "Focus"
+    ZOOM = "Zoom"
+    IRIS = "Iris"
+    IRIS_EFFECT = "IrisEffect"
+    FROST = "Frost"
+    FROST_EFFECT = "FrostEffect"
+    PRISM = "Prism"
+    PRISM_ROTATION = "PrismRotation"
+    BLADE_INSERTION = "BladeInsertion"
+    BLADE_ROTATION = "BladeRotation"
+    BLADE_SYSTEM_ROTATION = "BladeSystemRotation"
+    FOG = "Fog"
+    FOG_OUTPUT = "FogOutput"
+    FOG_TYPE = "FogType"
+    ROTATION = "Rotation"
+    SPEED = "Speed"
+    TIME = "Time"
+    MAINTENANCE = "Maintenance"
+
+
+class Capability(BaseModel):
+    """Capability of a channel."""
+
+    dmxRange: tuple[int, int] = (0, 0)
+    """Defines the range in which this capability is active."""
+
+    type: CapabilityType = CapabilityType.GENERIC
+    """Capability type."""
+
+    comment: str = ""
+    """Description of the capability if not obvious."""
+
+    # TODO how do we model the settings? for example a wheel slot has the parameter "slotNumber" and the linked wheel
+    #  (found by the name of the channel) should be linked in order to let the software fetch the color or gobo picture
+
+
+class ChannelTemplate(BaseModel):
+    """Capability templates of channel."""
+
+    fineChannelAliases: list[str] | None = None
+    """Channels matching this name will be associated as a file channel for this template."""
+
+    capabilities: list[Capability] = []
+    """The capabilities of this channel."""
+
+    capability: Capability | None = None
+    """If this channel has only a single capability, this will be set and capabilities left empty"""
+
+    switchChannels: dict[str, str] = {}
+    """Defines possible functionality switches based on the value of other channels."""
+
+    defaultValue: int | str = 0
+    """The default DMX value that should be output. If a string is found, if is most likely a number followed by %."""
+
+    dmxValueResolution: str = "8bit"
+    """Defines the resolution of the channel. This might be 8bit 16bit or 24bit."""
+
+    def get_capabilities(self) -> list[Capability]:
+        """A unified method to access the capabilities."""
+        if len(self.capabilities) > 0:
+            return self.capabilities
+        return [self.capability] if self.capability is not None else []
+
+
 class OflFixture(BaseModel):
     """Complete fixture definition conforming to the Open Fixture Library schema."""
 
@@ -200,5 +293,8 @@ class OflFixture(BaseModel):
     """File name of the fixture.
     Extended
     """
+
+    availableChannels: dict[str, ChannelTemplate] = {}
+    """Contains the capability mappings of the channels."""
 
     model_config = ConfigDict(frozen=True)
