@@ -111,7 +111,10 @@ class BoardConfiguration:
 
         """
         try:
-            del self._universes[universe.id]
+            id = universe.id if isinstance(universe, Universe) else universe if isinstance(universe, int) else None
+            if id is None:
+                raise ValueError("Expected a universe.")
+            del self._universes[id]
         except ValueError:
             logger.exception("Unable to remove universe %s", universe.name)
 
@@ -321,3 +324,19 @@ class BoardConfiguration:
         if isinstance(fixture_id, UUID):
             fixture_id = str(fixture_id)
         return self._fixtures.get(fixture_id)
+
+    def get_fixture_by_address(self, fixture_univ: int, fixture_chan: int) -> UsedFixture | None:
+        """Search for a fixture matching the provided address.
+
+        Args:
+            fixture_univ: The universe of the fixture.
+            fixture_chan: The first channel of the fixture.
+
+        Returns:
+            The fixture or None if no fixture was found.
+
+        """
+        for fixture in self._fixtures.values():
+            if fixture.universe_id == fixture_univ and fixture.start_index == fixture_chan:
+                return fixture
+        return None

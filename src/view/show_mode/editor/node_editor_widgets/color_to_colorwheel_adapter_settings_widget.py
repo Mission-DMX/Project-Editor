@@ -9,12 +9,14 @@ from PySide6.QtWidgets import QWidget, QFormLayout, QHBoxLayout, QLabel, QPushBu
 
 from model import ColorHSI
 from model.ofl.fixture import UsedFixture
+from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
+from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
 
 if TYPE_CHECKING:
     from view.show_mode.editor.nodes import FilterNode
-    from model.virtual_filters.color_to_colorwheel import ColorToColorWheel, extract_colorwheel_mappings_from_fixture
+    from model.virtual_filters.color_to_colorwheel import ColorToColorWheel
 
 
 class _ColorMappingListWidgetItem(QListWidgetItem):
@@ -83,7 +85,7 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
     def __init__(self, filter: ColorToColorWheel) -> None:
         """Initialize the configuration widget."""
         super().__init__()
-        self._input_dialog: _ColorSlotInputDialog | None = None
+        self._input_dialog: _ColorSlotInputDialog | SelectionDialog | None = None
         self._widget = QWidget()
         layout = QFormLayout()
 
@@ -95,6 +97,7 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         self._selected_fixture_label = QLabel("No Fixture Selected.")
         fixture_selection_container.layout().addWidget(self._selected_fixture_label)
         self._fixture_selection_or_clear_button = QPushButton("Select Fixture")
+        self._fixture_selection_or_clear_button.clicked.connect(self._load_from_fixture_clicked)
         fixture_selection_container.layout().addWidget(self._fixture_selection_or_clear_button)
         layout.addRow("Selected Fixture: ", fixture_selection_container)
         self._colorwheel_index_spinbox = QSpinBox()
@@ -157,12 +160,29 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
             self._color_mapping_list.takeItem(item)
 
     def _load_from_fixture_clicked(self) -> None:
-        # TODO show selection dialog with callback self._update_selected_fixture
-        pass
+        if self._selected_fixture is not None:
+            self._selected_fixture = None
+            self._update_selected_fixture()
+            return
+        fixture_names = [f"[{f.universe_id}:{f.start_index}] {f.name}" for f in self._filter.scene.board_configuration.fixtures]
+        self._input_dialog = SelectionDialog("Select Fixture", "Please select the target fixture",
+                                             fixture_names, parent=self._widget, multi_selection_allowed=False,
+                                             selected_callback=self._fixture_selected_callback)
+        self._input_dialog.setModal(True)
+        self._input_dialog.show()
+
+    def _fixture_selected_callback(self, sd: SelectionDialog) -> None:
+        fixture_univ, fixture_chan = sd.selected_items[0].split("] ", 1)[0].replace("[", "").split(":")
+        fixture_chan = int(fixture_chan)
+        fixture_univ = int(fixture_univ)
+        self._selected_fixture = self._filter.scene.board_configuration.get_fixture_by_address(fixture_univ, fixture_chan)
+        self._update_selected_fixture()
 
     def _parse_color_mapping(self, mapping: str) -> None:
         self._color_mapping_list.clear()
         for entry_str in mapping.split(';'):
+            if len(entry_str) == 0:
+                continue
             hue, saturation, slot = entry_str.split(':')
             hue = float(hue)
             saturation = float(saturation)
@@ -184,10 +204,10 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
             self._selected_fixture_label.setText(self._selected_fixture.name)
             self._remove_mapping_button.setEnabled(False)
             self._add_mapping_button.setEnabled(False)
-        self._parse_color_mapping(extract_colorwheel_mappings_from_fixture(
-            self._selected_fixture,
-            selected_slot_index=self._colorwheel_index_spinbox.value()
-        ))
+            self._parse_color_mapping(extract_colorwheel_mappings_from_fixture(
+                self._selected_fixture,
+                selected_slot_index=self._colorwheel_index_spinbox.value()
+            ))
 
     def _compile_color_mapping_string(self) -> str:
         parts: list[_ColorMappingListWidgetItem] = []
@@ -230,11 +250,11 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
 
     @override
     def _load_parameters(self, parameters: dict[str, str]) -> dict:
-        pass  # Nothing to do here
+        return parameters  # Nothing to do here
 
     @override
     def _get_parameters(self) -> dict[str, str]:
-        pass  # Nothing to do here
+        return {}  # Nothing to do here
 
     @override
     def parent_opened(self) -> None:

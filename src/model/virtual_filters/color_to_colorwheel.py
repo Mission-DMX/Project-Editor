@@ -34,6 +34,8 @@ def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index
     if f is None:
         return ""
     color_mappings: list[tuple[float, float, int]] = []
+    if len(f.colorwheel_mappings) < 1:
+        return ""
     for _, mappings in f.colorwheel_mappings[selected_slot_index]:
         for selection_value, color1, color2 in mappings:
             if color2 is not None:
