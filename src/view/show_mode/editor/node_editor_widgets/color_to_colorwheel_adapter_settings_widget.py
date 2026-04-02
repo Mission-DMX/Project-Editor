@@ -112,13 +112,16 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         self._enable_dimmer_input_cb = QCheckBox("Enable Dimmer Input")
         layout.addRow("Enable Dimmer Input", self._enable_dimmer_input_cb)
         self._dimmer_input_datatype_combobox = QComboBox()
-        # TODO add options and disable other texts
+        self._dimmer_input_datatype_combobox.setEditable(False)
+        self._dimmer_input_datatype_combobox.addItems(["8bit", "16bit", "float", ""])
         layout.addRow("Dimmer Input Type", self._dimmer_input_datatype_combobox)
         self._dimmer_output_datatype_combobox = QComboBox()
-        # TODO add options and disable other texts
+        self._dimmer_output_datatype_combobox.setEditable(False)
+        self._dimmer_output_datatype_combobox.addItems(["8bit", "16bit", "float", ""])
         layout.addRow("Dimmer Output Type", self._dimmer_output_datatype_combobox)
         self._colorwheel_datatype_combobox = QComboBox()
-        # TODO add options and disable other texts
+        self._colorwheel_datatype_combobox.setEditable(False)
+        self._colorwheel_datatype_combobox.addItems(["8bit", "16bit"])
         layout.addRow("Color Wheel Data Type", self._colorwheel_datatype_combobox)
 
         self._color_mapping_list = QListWidget()
