@@ -7,7 +7,7 @@ from typing import override, TYPE_CHECKING
 from PySide6.QtWidgets import QWidget, QFormLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QCheckBox, QListWidget, \
     QSpinBox, QSpacerItem, QSizePolicy, QListWidgetItem, QDialog, QDoubleSpinBox, QDialogButtonBox
 
-from model import ColorHSI
+from model.color_hsi import ColorHSI
 from model.ofl.fixture import UsedFixture
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget

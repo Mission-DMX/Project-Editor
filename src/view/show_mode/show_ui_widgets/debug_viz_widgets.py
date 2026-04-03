@@ -15,7 +15,8 @@ from typing import TYPE_CHECKING, override
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
 
-from model import ColorHSI, UIWidget
+from model import UIWidget
+from model.color_hsi import ColorHSI
 
 if TYPE_CHECKING:
     from collections.abc import Callable

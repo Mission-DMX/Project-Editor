@@ -12,7 +12,8 @@ import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
 from controller.utils.process_notifications import get_process_notifier
-from model import BoardConfiguration, ColorHSI, Filter, Scene, UIPage, Universe
+from model import BoardConfiguration, Filter, Scene, UIPage, Universe
+from model.color_hsi import ColorHSI
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter

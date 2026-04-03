@@ -25,7 +25,7 @@ def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index
 
     Args:
         f: The fixture to extract the filter configuration from.
-        selected_slot_index: Which color wheel slot of the fixture should be used?
+        selected_slot_index: Which color wheel of the fixture should be used?
 
     Returns:
         A string usable as the color-mappings property of the filter configuration.
@@ -34,9 +34,11 @@ def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index
     if f is None:
         return ""
     color_mappings: list[tuple[float, float, int]] = []
-    if len(f.colorwheel_mappings) < 1:
+    template_colorwheel_mappings = f.colorwheel_mappings
+    if len(template_colorwheel_mappings) < 1:
         return ""
-    for _, mappings in f.colorwheel_mappings[selected_slot_index]:
+    # FIXME for some reason, the tuple stored in the colorwheel mappings gets automatically unpacked to the first entry
+    for _, mappings in template_colorwheel_mappings[selected_slot_index]:
         for selection_value, color1, color2 in mappings:
             if color2 is not None:
                 # We have a value that is in the middle between two slots.

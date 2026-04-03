@@ -5,9 +5,15 @@ from __future__ import annotations
 
 from enum import Enum
 from logging import getLogger
-from typing import Literal
+from typing import Literal, Any, TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
+from setuptools.wheel import Wheel
+
+from model.ofl.color_name_dict import get_color_by_name
+
+if TYPE_CHECKING:
+    from model.color_hsi import ColorHSI
 
 logger = getLogger(__name__)
 
@@ -212,8 +218,20 @@ class Capability(BaseModel):
     comment: str = ""
     """Description of the capability if not obvious."""
 
-    # TODO how do we model the settings? for example a wheel slot has the parameter "slotNumber" and the linked wheel
-    #  (found by the name of the channel) should be linked in order to let the software fetch the color or gobo picture
+    capabilityProperties: dict[str, Any] = {}
+    """Contains the properties of the capability."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        if "capabilityProperties" in kwargs:
+            raise ValueError("Fixme: this should not be a property of the OFL JSON model.")
+
+        # This is an ugly hack. Once we know how to deal with the fact that the capabilities are only available based
+        # on the specified type, we should improve this.
+        for k, v in kwargs.items():
+            if k not in ["type", "comment", "dmxRange"]:
+                self.capabilityProperties[k] = v
 
 
 class ChannelTemplate(BaseModel):
@@ -242,6 +260,54 @@ class ChannelTemplate(BaseModel):
         if len(self.capabilities) > 0:
             return self.capabilities
         return [self.capability] if self.capability is not None else []
+
+
+class WheelSlotType(Enum):
+    """The type of wheel slot."""
+
+    GENERIC = ""
+    OPEN = "Open"
+    COLOR = "Color"
+    GOBO = "Gobo"
+    ANIMATED_GOBO_START = "AnimationGoboStart"
+    ANIMATED_GOBO_END = "AnimationGoboEnd"
+    IRIS = "Iris"
+    PRISM = "Prism"
+    FROST = "Frost"
+    CLOSED = "Closed"
+
+
+class WheelSlot(BaseModel):
+    """Defines a rotatable wheel slot."""
+
+    type: WheelSlotType = WheelSlotType.GENERIC
+    """The type of wheel slot."""
+
+    name: str = ""
+
+    colorTemperature: str = ""
+
+    resource: dict[str, Any] = {}
+    """Contains the gobo image, if any."""
+
+    @property
+    def resulting_color(self) -> ColorHSI:
+        """Returns the color of the wheel slot."""
+        # query color parameters and use name as last resort
+        if self.type == WheelSlotType.OPEN:
+            return get_color_by_name("white")
+        elif self.type == WheelSlotType.CLOSED:
+            return get_color_by_name("black")
+        # TODO figure out what to do for hex color codes
+        # TODO query color temperature
+        return get_color_by_name(self.name)
+
+
+class Wheel(BaseModel):
+    """Defines a rotatable wheel."""
+
+    slots: list[WheelSlot] = []
+    """The slots of the wheel."""
 
 
 class OflFixture(BaseModel):
@@ -296,5 +362,8 @@ class OflFixture(BaseModel):
 
     availableChannels: dict[str, ChannelTemplate] = {}
     """Contains the capability mappings of the channels."""
+
+    wheels: dict[str, Wheel] = {}
+    """Containts the rotatable wheels"""
 
     model_config = ConfigDict(frozen=True)

@@ -12,7 +12,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model import ColorHSI, Filter, UIPage, UIWidget
+from model import Filter, UIPage, UIWidget
+from model.color_hsi import ColorHSI
 
 
 class ColorSelectionUIWidget(UIWidget):

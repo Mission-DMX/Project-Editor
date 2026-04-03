@@ -2,7 +2,7 @@
 import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from model import ColorHSI
+from model.color_hsi import ColorHSI
 from model.control_desk import BankSet, ColorDeskColumn
 
 

@@ -3,7 +3,8 @@ from logging import getLogger
 
 from PySide6.QtGui import QBrush, QColor, QFontMetrics, QPainter
 
-from model import ColorHSI, DataType, Scene
+from model import DataType, Scene
+from model.color_hsi import ColorHSI
 from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 

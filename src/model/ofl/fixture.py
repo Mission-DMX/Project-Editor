@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import random
 from collections import defaultdict
@@ -71,15 +72,33 @@ def _load_colorwheel_mappings(f: OflFixture, channels: list[FixtureChannel]) -> 
     """Load color wheel mappings from OFL model."""
     l = []
     for channel in channels:
+        fcl: list[tuple[int, ColorHSI, ColorHSI | None]] = []
         if not channel.type == FixtureChannelType.COLORWHEEL:
             continue
         if channel.channel_template is None:
             logger.error("The channel %s is a color wheel but the template was not found.", channel.name)
             continue
+        color_wheel = f.wheels.get(channel.name)
+        if color_wheel is None:
+            logger.warning("The channel %s is has a color wheel but the wheel definition was not found.",
+                           channel.name)
+            continue
         for capability in channel.channel_template.get_capabilities():
             if capability.type == CapabilityType.WHEEL_SLOT:
-                # TODO query parameters, add them to the list
-                pass
+                slot_number = capability.capabilityProperties.get("slotNumber")
+                if len(capability.dmxRange) > 1:
+                    capability_dmx_value = int((capability.dmxRange[0] + capability.dmxRange[1]) / 2)
+                else:
+                    capability_dmx_value = capability.dmxRange[0]
+                if isinstance(slot_number, int):
+                    wheel_slot = color_wheel.slots[slot_number % len(color_wheel.slots)]
+                    fcl.append((capability_dmx_value, wheel_slot, None))
+                else:
+                    wheel_slot_a = color_wheel.slots[math.floor(slot_number) % len(color_wheel.slots)]
+                    wheel_slot_b = color_wheel.slots[math.ceil(slot_number) % len(color_wheel.slots)]
+                    fcl.append((capability_dmx_value, wheel_slot_a, wheel_slot_b))
+        if len(fcl) > 0:
+            l.append((channel, fcl))
     return l
 
 class UsedFixture(QtCore.QObject):
@@ -125,7 +144,7 @@ class UsedFixture(QtCore.QObject):
         self._color_support: Final[ColorSupport] = color_support
 
         self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = \
-            _load_colorwheel_mappings(OflFixture, self._fixture_channels)
+            _load_colorwheel_mappings(fixture, self._fixture_channels)
 
         self._color_on_stage: str = (
             color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
