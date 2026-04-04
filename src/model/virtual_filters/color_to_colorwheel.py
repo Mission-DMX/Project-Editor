@@ -37,13 +37,14 @@ def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index
     template_colorwheel_mappings = f.colorwheel_mappings
     if len(template_colorwheel_mappings) < 1:
         return ""
-    # FIXME for some reason, the tuple stored in the colorwheel mappings gets automatically unpacked to the first entry
-    for _, mappings in template_colorwheel_mappings[selected_slot_index]:
-        for selection_value, color1, color2 in mappings:
-            if color2 is not None:
-                # We have a value that is in the middle between two slots.
-                continue
-            color_mappings.append((color1.hue, color1.saturation, selection_value))
+    template_colorwheel_mappings = template_colorwheel_mappings[selected_slot_index]
+    mappings = template_colorwheel_mappings[1]
+    for selection_value, color1, color2 in mappings:
+        if color2 is not None:
+            # We have a value that is in the middle between two slots.
+            continue
+        resulting_color = color1.resulting_color
+        color_mappings.append((resulting_color.hue, resulting_color.saturation, selection_value))
     return ";".join([f"{hue}:{saturation}:{slot}" for hue, saturation, slot in color_mappings])
 
 
