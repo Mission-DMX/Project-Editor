@@ -15,7 +15,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
-from model.ofl.ofl_fixture import FixtureMode, MatrixChannelInsert, OflFixture, CapabilityType
+from model.ofl.ofl_fixture import CapabilityType, FixtureMode, MatrixChannelInsert, OflFixture
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -70,10 +70,10 @@ def load_fixture(file: str) -> OflFixture | None:
 def _load_colorwheel_mappings(f: OflFixture, channels: list[FixtureChannel]) -> \
     list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
     """Load color wheel mappings from OFL model."""
-    l = []
+    outer_mapping_list = []
     for channel in channels:
         fcl: list[tuple[int, ColorHSI, ColorHSI | None]] = []
-        if not channel.type == FixtureChannelType.COLORWHEEL:
+        if channel.type != FixtureChannelType.COLORWHEEL:
             continue
         if channel.channel_template is None:
             logger.error("The channel %s is a color wheel but the template was not found.", channel.name)
@@ -98,8 +98,8 @@ def _load_colorwheel_mappings(f: OflFixture, channels: list[FixtureChannel]) -> 
                     wheel_slot_b = color_wheel.slots[math.ceil(slot_number) % len(color_wheel.slots)]
                     fcl.append((capability_dmx_value, wheel_slot_a, wheel_slot_b))
         if len(fcl) > 0:
-            l.append((channel, fcl))
-    return l
+            outer_mapping_list.append((channel, fcl))
+    return outer_mapping_list
 
 class UsedFixture(QtCore.QObject):
     """Fixture in use with a specific mode."""

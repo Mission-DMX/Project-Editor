@@ -17,8 +17,9 @@ from view.show_mode.editor.nodes.impl.adapters import (
     AdapterFloatToColorNode,
     AdapterFloatToRange,
     ColorBrightnessMixinNode,
+    ColorToColorwheelAdapterNode,
     CombineTwo8BitToSingle16Bit,
-    Map8BitTo16Bit, ColorToColorwheelAdapterNode,
+    Map8BitTo16Bit,
 )
 from view.show_mode.editor.nodes.impl.arithmetics import (
     ArithmeticExponentialNode,

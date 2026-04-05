@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from enum import IntFlag
 from logging import getLogger
-from typing import Final, TYPE_CHECKING
-
-from model.ofl.ofl_fixture import CapabilityType
+from typing import TYPE_CHECKING, Final
 
 from PySide6 import QtCore
 
+from model.ofl.ofl_fixture import CapabilityType
+
 if TYPE_CHECKING:
-    from model.ofl.ofl_fixture import OflFixture, ChannelTemplate
+    from model.ofl.ofl_fixture import ChannelTemplate, OflFixture
 
 logger = getLogger(__name__)
 
@@ -105,7 +105,8 @@ class FixtureChannel:
                         types |= FixtureChannelType.TILT
                     case CapabilityType.ROTATION:
                         types |= FixtureChannelType.ROTATION
-                    case CapabilityType.SPEED | CapabilityType.EFFECT_SPEED | CapabilityType.STROBE_SPEED | CapabilityType.PAN_TILT_SPEED:
+                    case CapabilityType.SPEED | CapabilityType.EFFECT_SPEED | CapabilityType.STROBE_SPEED | \
+                         CapabilityType.PAN_TILT_SPEED:
                         types |= FixtureChannelType.SPEED
                     case CapabilityType.WHEEL_SLOT:
                         if "color" in name:

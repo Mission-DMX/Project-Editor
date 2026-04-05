@@ -111,10 +111,10 @@ class BoardConfiguration:
 
         """
         try:
-            id = universe.id if isinstance(universe, Universe) else universe if isinstance(universe, int) else None
-            if id is None:
+            uid = universe.id if isinstance(universe, Universe) else universe if isinstance(universe, int) else None
+            if uid is None:
                 raise ValueError("Expected a universe.")
-            del self._universes[id]
+            del self._universes[uid]
         except ValueError:
             logger.exception("Unable to remove universe %s", universe.name)
 

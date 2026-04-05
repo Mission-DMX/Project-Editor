@@ -2,8 +2,8 @@
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 
-from model.color_hsi import ColorHSI
 from model.broadcaster import Broadcaster
+from model.color_hsi import ColorHSI
 from model.control_desk import BankSet, ColorDeskColumn
 from view.dialogs.temperature_dialog import TemperatureDialog
 

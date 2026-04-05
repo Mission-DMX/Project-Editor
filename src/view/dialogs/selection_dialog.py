@@ -1,9 +1,10 @@
 """Contains a selection dialog."""
 
-from typing import override, Callable
+from collections.abc import Callable
+from typing import override
 
 from PySide6.QtGui import QStandardItem, QStandardItemModel, Qt
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QListView, QWidget, QAbstractItemView
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QLabel, QListView, QWidget
 
 
 class SelectionDialog(QDialog):

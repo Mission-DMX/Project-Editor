@@ -2,27 +2,41 @@
 
 from __future__ import annotations
 
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from PySide6.QtWidgets import QWidget, QFormLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QCheckBox, QListWidget, \
-    QSpinBox, QSpacerItem, QSizePolicy, QListWidgetItem, QDialog, QDoubleSpinBox, QDialogButtonBox
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QDoubleSpinBox,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QSpinBox,
+    QWidget,
+)
 
 from model.color_hsi import ColorHSI
-from model.ofl.fixture import UsedFixture
+from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
 from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
-from model.virtual_filters.color_to_colorwheel import extract_colorwheel_mappings_from_fixture
 
 if TYPE_CHECKING:
-    from view.show_mode.editor.nodes import FilterNode
     from model.virtual_filters.color_to_colorwheel import ColorToColorWheel
+    from model.ofl.fixture import UsedFixture
 
 
 class _ColorMappingListWidgetItem(QListWidgetItem):
     """Purpose of this widget is to display a single mapping."""
 
-    def __init__(self, parent: QListWidget, color: ColorHSI, slot_value: int):
+    def __init__(self, parent: QListWidget, color: ColorHSI, slot_value: int) -> None:
         """Initializes and adds the widget based on the provided color and slot value."""
         super().__init__()
         self.color = color
@@ -45,7 +59,7 @@ class _ColorMappingListWidgetItem(QListWidgetItem):
 class _ColorSlotInputDialog(QDialog):
     """Query a color and a slot."""
 
-    def __init__(self, parent: QWidget, list_widget: QListWidget):
+    def __init__(self, parent: QWidget, list_widget: QListWidget) -> None:
         """Initializes the dialog."""
         super().__init__(parent)
 
@@ -73,7 +87,7 @@ class _ColorSlotInputDialog(QDialog):
         self.setLayout(layout)
 
     @override
-    def accept(self):
+    def accept(self) -> None:
         _ColorMappingListWidgetItem(self._list_widget,
                                     ColorHSI(self._hue_tb.value(), self._saturation_tb.value(), 0.5),
                                     self._slot_tb.value())
@@ -83,7 +97,7 @@ class _ColorSlotInputDialog(QDialog):
 class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
     """Configuration widget for color to colorwheel vfilter."""
 
-    def __init__(self, filter: ColorToColorWheel) -> None:
+    def __init__(self, _filter: ColorToColorWheel) -> None:
         """Initialize the configuration widget."""
         super().__init__()
         self._input_dialog: _ColorSlotInputDialog | SelectionDialog | None = None
@@ -91,7 +105,7 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         layout = QFormLayout()
 
         self._selected_fixture: UsedFixture | None = None
-        self._filter = filter
+        self._filter = _filter
 
         fixture_selection_container = QWidget(parent=self._widget)
         fixture_selection_container.setLayout(QHBoxLayout())
@@ -144,7 +158,9 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         self._wheel_speed_spinbox.setMinimum(0)
         self._wheel_speed_spinbox.setMaximum(65565)
         self._wheel_speed_spinbox.setValue(300)
-        self._wheel_speed_spinbox.setToolTip("How many ms does it take to switch between two adjacent color wheel slots?")
+        self._wheel_speed_spinbox.setToolTip(
+            "How many ms does it take to switch between two adjacent color wheel slots?"
+        )
         layout.addRow("Color Wheel Speed [ms]", self._wheel_speed_spinbox)
         self._dimm_when_wheel_is_moving_cb = QCheckBox("Dim when Wheel Moving")
         self._dimm_when_wheel_is_moving_cb.setChecked(True)
@@ -184,10 +200,10 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
 
     def _parse_color_mapping(self, mapping: str) -> None:
         self._color_mapping_list.clear()
-        for entry_str in mapping.split(';'):
+        for entry_str in mapping.split(";"):
             if len(entry_str) == 0:
                 continue
-            hue, saturation, slot = entry_str.split(':')
+            hue, saturation, slot = entry_str.split(":")
             hue = float(hue)
             saturation = float(saturation)
             slot = int(slot)

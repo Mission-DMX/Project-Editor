@@ -3,9 +3,8 @@ import os
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from utility import resource_path
-
 from model.color_hsi import ColorHSI
+from utility import resource_path
 
 logger = getLogger(__name__)
 _COLOR_DICT: dict[str, tuple[float, float, float]] = {}

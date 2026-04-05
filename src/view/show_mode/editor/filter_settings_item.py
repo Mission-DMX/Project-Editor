@@ -66,7 +66,8 @@ class FilterSettingsItem(QGraphicsSvgItem):
         self._filter = filter_
         self._mb_updated: bool = False
 
-    def update_position(self):
+    def update_position(self) -> None:
+        """Updates the position of the button after the filter node size changed."""
         self.setPos(0, 0)
         self.moveBy(self._parent.boundingRect().width() / 2 - 6, self._parent.boundingRect().height() - 20)
 

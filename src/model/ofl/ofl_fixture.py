@@ -5,10 +5,9 @@ from __future__ import annotations
 
 from enum import Enum
 from logging import getLogger
-from typing import Literal, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict
-from setuptools.wheel import Wheel
 
 from model.ofl.color_name_dict import get_color_by_name
 
@@ -221,7 +220,8 @@ class Capability(BaseModel):
     capabilityProperties: dict[str, Any] = {}
     """Contains the properties of the capability."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Overrides default constructor and populates capability settings."""
         super().__init__(*args, **kwargs)
 
         if "capabilityProperties" in kwargs:
@@ -296,7 +296,7 @@ class WheelSlot(BaseModel):
         # query color parameters and use name as last resort
         if self.type == WheelSlotType.OPEN:
             return get_color_by_name("white")
-        elif self.type == WheelSlotType.CLOSED:
+        if self.type == WheelSlotType.CLOSED:
             return get_color_by_name("black")
         # TODO figure out what to do for hex color codes
         # TODO query color temperature
