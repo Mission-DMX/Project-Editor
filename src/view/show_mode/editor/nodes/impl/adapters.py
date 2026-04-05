@@ -3,6 +3,7 @@ from typing import override
 
 from model import DataType, Scene
 from model.filter import Filter, FilterTypeEnumeration
+from view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -326,8 +327,6 @@ class ColorToColorwheelAdapterNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, name=name,
                          terminals={
                              "input": {"io": "in"},
-                             "in_dimmer": {"io": "in"},
-                             "dimmer": {"io": "out"},
                              "colorwheel": {"io": "out"}
                          })
         self.update_node_after_settings_changed()
@@ -335,20 +334,35 @@ class ColorToColorwheelAdapterNode(FilterNode):
     @override
     def update_node_after_settings_changed(self):
         self.filter.in_data_types["input"] = DataType.DT_COLOR
-        match self.filter.filter_configurations.get("dimmer-input"):
-            case "16bit":
-                self.filter.in_data_types["in_dimmer"] = DataType.DT_16_BIT
-            case "float":
-                self.filter.in_data_types["in_dimmer"] = DataType.DT_DOUBLE
-            case _:
-                self.filter.in_data_types["in_dimmer"] = DataType.DT_8_BIT
-        match self.filter.filter_configurations.get("dimmer-output"):
-            case "16bit":
-                self.filter.out_data_types["dimmer"] = DataType.DT_16_BIT
-            case "float":
-                self.filter.out_data_types["dimmer"] = DataType.DT_DOUBLE
-            case _:
-                self.filter.out_data_types["dimmer"] = DataType.DT_8_BIT
+
+        dimmer_input_dt_str = self.filter.filter_configurations.get("dimmer-input", "")
+        if len(dimmer_input_dt_str) > 0:
+            if "in_dimmer" not in self.inputs().keys():
+                self.addInput("in_dimmer")
+            match dimmer_input_dt_str:
+                case "16bit":
+                    self.filter.in_data_types["in_dimmer"] = DataType.DT_16_BIT
+                case "float":
+                    self.filter.in_data_types["in_dimmer"] = DataType.DT_DOUBLE
+                case _:
+                    self.filter.in_data_types["in_dimmer"] = DataType.DT_8_BIT
+        else:
+            if "in_dimmer" in self.inputs().keys():
+                self.removeTerminal("in_dimmer")
+        dimmer_output_dt_str = self.filter.filter_configurations.get("dimmer-output", "")
+        if len(dimmer_output_dt_str) > 0:
+            if "dimmer" not in self.outputs().keys():
+                self.addOutput("dimmer")
+            match dimmer_output_dt_str:
+                case "16bit":
+                    self.filter.out_data_types["dimmer"] = DataType.DT_16_BIT
+                case "float":
+                    self.filter.out_data_types["dimmer"] = DataType.DT_DOUBLE
+                case _:
+                    self.filter.out_data_types["dimmer"] = DataType.DT_8_BIT
+        else:
+            if "dimmer" in self.outputs().keys():
+                self.removeTerminal("dimmer")
         match self.filter.filter_configurations.get("colorwheel-datatype"):
             case "16bit":
                 self.filter.out_data_types["colorwheel"] = DataType.DT_16_BIT

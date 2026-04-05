@@ -60,10 +60,15 @@ class FilterSettingsItem(QGraphicsSvgItem):
         self._dialog = None
         self._filter_node = filter_node
         self._on_update = lambda: None
+        self._parent = parent
         self.setScale(0.2)
-        self.moveBy(parent.boundingRect().width() / 2 - 6, parent.boundingRect().height() - 20)
+        self.update_position()
         self._filter = filter_
         self._mb_updated: bool = False
+
+    def update_position(self):
+        self.setPos(0, 0)
+        self.moveBy(self._parent.boundingRect().width() / 2 - 6, self._parent.boundingRect().height() - 20)
 
     @override
     def focusOutEvent(self, ev: QFocusEvent) -> None:
@@ -237,6 +242,8 @@ class FilterSettingsDialog(QDialog):
             self._special_widget.parent_closed(self._filter_node)
         else:
             self._filter_node.update_node_after_settings_changed()
+            if self._filter_node.fsi is not None:
+                self._filter_node.fsi.update_position()
         super().closeEvent(arg__1)
 
     @override

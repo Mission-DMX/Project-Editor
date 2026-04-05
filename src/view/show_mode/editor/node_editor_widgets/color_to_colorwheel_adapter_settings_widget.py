@@ -31,6 +31,7 @@ class _ColorMappingListWidgetItem(QListWidgetItem):
         widget = QWidget()
         widget.setLayout(QHBoxLayout())
         self._color_label = ColorLabel()
+        self._color_label.setFixedWidth(16)
         self._color_label.set_color(self.color)
         widget.layout().addWidget(self._color_label)
         self._slot_label = QLabel(str(slot_value))

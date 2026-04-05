@@ -55,6 +55,8 @@ class NodeEditorFilterConfigWidget(ABC):
         Arguments:
             filter_node -- might be used to alter the filter being presented."""
         filter_node.update_node_after_settings_changed()
+        if filter_node.fsi is not None:
+            filter_node.fsi.update_position()
 
     @abstractmethod
     def parent_opened(self) -> None:
