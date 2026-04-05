@@ -220,9 +220,9 @@ class Capability(BaseModel):
     capabilityProperties: dict[str, Any] = {}
     """Contains the properties of the capability."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: dict[str, Any]) -> None:
         """Overrides default constructor and populates capability settings."""
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
         if "capabilityProperties" in kwargs:
             raise ValueError("Fixme: this should not be a property of the OFL JSON model.")

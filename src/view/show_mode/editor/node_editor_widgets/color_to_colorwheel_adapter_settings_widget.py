@@ -29,8 +29,8 @@ from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidg
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
 
 if TYPE_CHECKING:
-    from model.virtual_filters.color_to_colorwheel import ColorToColorWheel
     from model.ofl.fixture import UsedFixture
+    from model.virtual_filters.color_to_colorwheel import ColorToColorWheel
 
 
 class _ColorMappingListWidgetItem(QListWidgetItem):
@@ -174,7 +174,7 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         self._input_dialog.show()
 
     def _remove_mapping_clicked(self) -> None:
-        items_to_remove = [index for index in self._color_mapping_list.selectedIndexes()]
+        items_to_remove = [index.row() for index in self._color_mapping_list.selectedIndexes()]
         items_to_remove.sort(reverse=True)
         for item in items_to_remove:
             self._color_mapping_list.takeItem(item)
@@ -184,7 +184,9 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
             self._selected_fixture = None
             self._update_selected_fixture()
             return
-        fixture_names = [f"[{f.universe_id}:{f.start_index}] {f.name}" for f in self._filter.scene.board_configuration.fixtures]
+        fixture_names = [
+            f"[{f.universe_id}:{f.start_index}] {f.name}" for f in self._filter.scene.board_configuration.fixtures
+        ]
         self._input_dialog = SelectionDialog("Select Fixture", "Please select the target fixture",
                                              fixture_names, parent=self._widget, multi_selection_allowed=False,
                                              selected_callback=self._fixture_selected_callback)
@@ -195,7 +197,8 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         fixture_univ, fixture_chan = sd.selected_items[0].split("] ", 1)[0].replace("[", "").split(":")
         fixture_chan = int(fixture_chan)
         fixture_univ = int(fixture_univ)
-        self._selected_fixture = self._filter.scene.board_configuration.get_fixture_by_address(fixture_univ, fixture_chan)
+        self._selected_fixture = self._filter.scene.board_configuration.\
+                                 get_fixture_by_address(fixture_univ, fixture_chan)
         self._update_selected_fixture()
 
     def _parse_color_mapping(self, mapping: str) -> None:

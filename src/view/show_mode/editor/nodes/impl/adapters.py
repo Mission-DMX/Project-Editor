@@ -321,7 +321,7 @@ class ColorBrightnessMixinNode(FilterNode):
         self.filter._configuration_supported = False
 
 class ColorToColorwheelAdapterNode(FilterNode):
-    nodeName = "Color to Color Wheel Adapter"
+    nodeName = "Color to Color Wheel Adapter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, name=name,
@@ -332,12 +332,12 @@ class ColorToColorwheelAdapterNode(FilterNode):
         self.update_node_after_settings_changed()
 
     @override
-    def update_node_after_settings_changed(self):
+    def update_node_after_settings_changed(self) -> None:
         self.filter.in_data_types["input"] = DataType.DT_COLOR
 
         dimmer_input_dt_str = self.filter.filter_configurations.get("dimmer-input", "")
         if len(dimmer_input_dt_str) > 0:
-            if "in_dimmer" not in self.inputs().keys():
+            if "in_dimmer" not in self.inputs():
                 self.addInput("in_dimmer")
             match dimmer_input_dt_str:
                 case "16bit":
@@ -347,11 +347,11 @@ class ColorToColorwheelAdapterNode(FilterNode):
                 case _:
                     self.filter.in_data_types["in_dimmer"] = DataType.DT_8_BIT
         else:
-            if "in_dimmer" in self.inputs().keys():
+            if "in_dimmer" in self.inputs():
                 self.removeTerminal("in_dimmer")
         dimmer_output_dt_str = self.filter.filter_configurations.get("dimmer-output", "")
         if len(dimmer_output_dt_str) > 0:
-            if "dimmer" not in self.outputs().keys():
+            if "dimmer" not in self.outputs():
                 self.addOutput("dimmer")
             match dimmer_output_dt_str:
                 case "16bit":
@@ -361,7 +361,7 @@ class ColorToColorwheelAdapterNode(FilterNode):
                 case _:
                     self.filter.out_data_types["dimmer"] = DataType.DT_8_BIT
         else:
-            if "dimmer" in self.outputs().keys():
+            if "dimmer" in self.outputs():
                 self.removeTerminal("dimmer")
         match self.filter.filter_configurations.get("colorwheel-datatype"):
             case "16bit":
