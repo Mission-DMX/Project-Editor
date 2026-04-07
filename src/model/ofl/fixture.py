@@ -131,7 +131,7 @@ class UsedFixture(QtCore.QObject):
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[OflFixture] = fixture
-        self._uuid: Final[UUID] = uuid if uuid else uuid4()
+        self._uuid: Final[UUID] = uuid or uuid4()
 
         self._start_index: int = start_index
         self._mode_index: int = mode_index
@@ -147,9 +147,9 @@ class UsedFixture(QtCore.QObject):
             _load_colorwheel_mappings(fixture, self._fixture_channels)
 
         self._color_on_stage: str = (
-            color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+            color or "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
         )
-        self._name_on_stage: str = self.short_name if self.short_name else self.name
+        self._name_on_stage: str = self.short_name or self.name
 
         self.parent_universe: int = parent_universe
         self._board_configuration.broadcaster.add_fixture.emit(self)

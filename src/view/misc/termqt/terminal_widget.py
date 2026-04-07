@@ -104,7 +104,7 @@ class Terminal(TerminalBuffer, QWidget):
 
         self.scroll_bar: QScrollBar = None
 
-        self.logger = logger if logger else logging.getLogger()
+        self.logger = logger or logging.getLogger()
         self.logger.info("Initializing Terminal...")
 
         TerminalBuffer.__init__(self, max(int(height / 10), 1), max(int(width / 10), 1), logger=self.logger, **kwargs)
