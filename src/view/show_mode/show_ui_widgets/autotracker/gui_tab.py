@@ -43,7 +43,7 @@ class GuiTab(QWidget):
         Args:
             index (int): The new index of the tab.
         """
-        if index == self.id:
+        if index == self.tab_id:
             self.tab_activated()
         else:
             self.tab_deactivated()
@@ -61,7 +61,7 @@ class GuiTab(QWidget):
         self.active = False
 
     @property
-    def id(self) -> int:
+    def tab_id(self) -> int:
         """
         Get or set the tab's internal identifier.
 
@@ -70,8 +70,8 @@ class GuiTab(QWidget):
         """
         return self._id
 
-    @id.setter
-    def id(self, value: int) -> None:
+    @tab_id.setter
+    def tab_id(self, value: int) -> None:
         self._id = value
 
     def video_update(self) -> None:

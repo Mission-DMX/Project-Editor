@@ -95,7 +95,7 @@ class AutoTrackDialogWidget(QTabWidget):
         first = True
         for tab in tabs:
             self.addTab(tab, tab.name)
-            tab.id = self.count() - 1
+            tab.tab_id = self.count() - 1
             if first:
                 tab.tab_activated()
                 first = False

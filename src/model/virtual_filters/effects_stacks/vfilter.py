@@ -112,12 +112,10 @@ class EffectsStack(VirtualFilter):
                         ("b", socket_target.get_segment_in_universe_by_type(FixtureChannelType.BLUE)),
                         ("w", socket_target.get_segment_in_universe_by_type(FixtureChannelType.WHITE)),
                         ("a", socket_target.get_segment_in_universe_by_type(FixtureChannelType.AMBER))]:
-                        i = 0
-                        for segment in segment_list:
+                        for i, segment in enumerate(segment_list):
                             universe_filter.filter_configurations[str(segment)] = str(segment)
                             universe_filter.channel_links[str(segment)] = \
                                 f"{adapter_filters[i % len(adapter_filters)].filter_id}:{segment_channel_name}"
-                            i += 1
                 else:
                     for segment_list in [socket_target.get_segment_in_universe_by_type(FixtureChannelType.RED),
                                          socket_target.get_segment_in_universe_by_type(FixtureChannelType.GREEN),

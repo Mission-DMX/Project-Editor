@@ -24,12 +24,12 @@ class ColumnDialog(QtWidgets.QDialog):
         # self.colorD.finished.connect(self._select_color)
         # color_label = QtWidgets.QLabel(column.color.format_for_filter())
         color_picker = QtWidgets.QPushButton("pick Color")
-        color_picker.clicked.connect(lambda: self._broadcaster.view_to_color.emit())
-        self.color_d.finished.connect(lambda: self._broadcaster.view_leave_color.emit())
+        color_picker.clicked.connect(self._broadcaster.view_to_color.emit)
+        self.color_d.finished.connect(self._broadcaster.view_leave_color.emit)
 
         temperature_picker = QtWidgets.QPushButton("pick Temperature")
-        temperature_picker.clicked.connect(lambda: self._broadcaster.view_to_temperature.emit())
-        self.temperature_d.finished.connect(lambda: self._broadcaster.view_leave_temperature.emit())
+        temperature_picker.clicked.connect(self._broadcaster.view_to_temperature.emit)
+        self.temperature_d.finished.connect(self._broadcaster.view_leave_temperature.emit)
 
         color_layout = QtWidgets.QVBoxLayout()
         color_layout.addWidget(color_picker)
@@ -39,7 +39,7 @@ class ColumnDialog(QtWidgets.QDialog):
         color_widget.setLayout(color_layout)
 
         button = QtWidgets.QPushButton("close")
-        button.clicked.connect(lambda: self._broadcaster.view_leave_colum_select.emit())
+        button.clicked.connect(self._broadcaster.view_leave_colum_select.emit)
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(color_widget)
         layout.addWidget(button)

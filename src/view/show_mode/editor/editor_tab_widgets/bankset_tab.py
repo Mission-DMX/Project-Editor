@@ -29,8 +29,8 @@ class BankSetTabWidget(QWidget):
         self._tool_bar = QToolBar()
         self._tool_bar.addAction(QIcon.fromTheme("system-software-update"), "Refresh bankset on fish",
                                  lambda: self._bankset.update() if self._bankset is not None else False)
-        self._tool_bar.addAction(QIcon.fromTheme("document-new"), "Add Bank", lambda: self._add_bank())
-        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Column to current Bank", lambda: self._add_column())
+        self._tool_bar.addAction(QIcon.fromTheme("document-new"), "Add Bank", self._add_bank)
+        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Column to current Bank", self._add_column)
         self._new_column_type_cbox = QComboBox()
         self._new_column_type_cbox.insertItems(0, ["Numbers", "Color"])
         self._new_column_type_cbox.setCurrentIndex(1)
