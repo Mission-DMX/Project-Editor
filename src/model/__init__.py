@@ -1,4 +1,4 @@
-"""Public classes and methods from the model package"""
+"""Public classes and methods from the model package."""
 
 from .board_configuration import BoardConfiguration
 from .broadcaster import Broadcaster

@@ -1,3 +1,5 @@
+"""Contains method to query color by name."""
+
 import csv
 import os
 from logging import getLogger
@@ -15,7 +17,7 @@ with open(resource_path(os.path.join("resources", "data", "colornames.csv")), "r
         _COLOR_DICT[name.lower()] = (float(hue), float(saturation), float(value))
 
 def get_color_by_name(name: str) -> ColorHSI:
-    """This method queries the color name database and returns black if none was found.
+    """Method queries the color name database and returns black if none was found.
 
     HTML color codes are supported.
 

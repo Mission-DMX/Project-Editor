@@ -169,6 +169,7 @@ class UsedFixture(QtCore.QObject):
 
         Returns:
             A copy of the list.
+
         """
         return list(self._colorwheel_mappings)
 

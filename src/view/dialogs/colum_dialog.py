@@ -1,4 +1,4 @@
-"""modify a colum of XTouch"""
+"""modify a colum of XTouch."""
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 
@@ -9,9 +9,10 @@ from view.dialogs.temperature_dialog import TemperatureDialog
 
 
 class ColumnDialog(QtWidgets.QDialog):
-    """select how to modify a colum of XTouch"""
+    """Select how to modify a colum of XTouch."""
 
     def __init__(self, column: ColorDeskColumn, parent: object = None) -> None:
+        """Initialize dialog for provided column."""
         super().__init__(parent)
         self._broadcaster = Broadcaster()
         self.setWindowTitle(f"Change Column {column.id}")
