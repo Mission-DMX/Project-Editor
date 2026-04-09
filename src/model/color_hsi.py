@@ -5,6 +5,7 @@ from __future__ import annotations
 import colorsys
 from typing import TYPE_CHECKING
 
+import numpy as np
 from PySide6.QtGui import QColor
 
 if TYPE_CHECKING:
@@ -54,6 +55,62 @@ class ColorHSI:
         elif intensity > 1:
             intensity = 1.0
         return ColorHSI(hue, saturation, intensity)
+
+    @classmethod
+    def from_rgb(cls, red: int, green: int, blue: int) -> ColorHSI:
+        """Initialize an HSI color from the given RGB color.
+
+        Args:
+            red: Red component of the color. It must be in the range [0, 255]
+            green: Green component of the color. It must be in the range [0, 255]
+            blue: Blue component of the color. It must be in the range [0, 255]
+
+        Returns:
+            The HSI color object.
+
+        """
+        hue, luminescence, saturation = colorsys.rgb_to_hls(red / 255, green / 255, blue / 255)
+        return ColorHSI(hue, luminescence, saturation)
+
+    @classmethod
+    def from_color_temperature(cls, temperature: float | str) -> ColorHSI:
+        """Initialize an HSI color from the given color temperature.
+
+        If a string is provided it will be converted automatically.
+
+        Args:
+            temperature: Color temperature in degrees Kelvin.
+
+        Returns:
+            A ColorHSI object representing the given color temperature.
+
+        """
+
+        def cutoff(value: float, min_val: int, max_val: int) -> int:
+            return max(min(int(value), max_val), min_val)
+
+        if isinstance(temperature, str):
+            temperature = float(temperature.lower().replace(" ", "").replace("k", ""))
+        temperature = temperature / 100
+        if temperature <= 66:
+            red = 255
+            green = temperature
+            green = 99.4708025861 * np.log(green) - 161.1195681661
+            if temperature <= 19:
+                blue = 0
+            else:
+                blue = temperature - 10
+                blue = 138.5177312231 * np.log(blue) - 305.0447927307
+        else:
+            red = temperature - 60
+            red = 329.698727446 * (red ** -0.1332047592)
+            green = temperature - 60
+            green = 288.1221695283 * (green ** -0.0755148492)
+            blue = 255
+        red = cutoff(red, 0, 255)
+        green = cutoff(green, 0, 255)
+        blue = cutoff(blue, 0, 255)
+        return ColorHSI.from_rgb(red, green, blue)
 
     @property
     def hue(self) -> confloat(ge=0, le=360):

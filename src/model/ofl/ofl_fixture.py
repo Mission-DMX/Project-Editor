@@ -5,14 +5,12 @@ from __future__ import annotations
 
 from enum import Enum
 from logging import getLogger
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from model.color_hsi import ColorHSI
 from model.ofl.color_name_dict import get_color_by_name
-
-if TYPE_CHECKING:
-    from model.color_hsi import ColorHSI
 
 logger = getLogger(__name__)
 
@@ -290,6 +288,9 @@ class WheelSlot(BaseModel):
     resource: dict[str, Any] = {}
     """Contains the gobo image, if any."""
 
+    colors: list[str] = []
+    """Some fixtures contain a colors array instead of a name."""
+
     @property
     def resulting_color(self) -> ColorHSI:
         """Returns the color of the wheel slot."""
@@ -298,8 +299,10 @@ class WheelSlot(BaseModel):
             return get_color_by_name("white")
         if self.type == WheelSlotType.CLOSED:
             return get_color_by_name("black")
-        # TODO figure out what to do for hex color codes
-        # TODO query color temperature
+        if self.colorTemperature != "":
+            return ColorHSI.from_color_temperature(self.colorTemperature)
+        if len(self.colors) > 0:
+            return get_color_by_name(self.colors[0])
         return get_color_by_name(self.name)
 
 
