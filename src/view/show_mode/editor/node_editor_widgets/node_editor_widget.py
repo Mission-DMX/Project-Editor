@@ -66,7 +66,7 @@ class NodeEditorFilterConfigWidget(ABC):
         """Method might be overridden to listen for parent close events.
 
         Args:
-            filter_node -- might be used to alter the filter being presented.
+            filter_node: might be used to alter the filter being presented.
 
         """
         filter_node.update_node_after_settings_changed()
