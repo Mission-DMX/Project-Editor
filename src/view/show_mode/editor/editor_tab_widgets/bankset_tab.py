@@ -1,3 +1,5 @@
+"""Contains BankSet editor tab widget"""
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
@@ -21,7 +23,10 @@ from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColum
 
 
 class BankSetTabWidget(QWidget):
+    """Editor Tab to edit BankSets."""
+
     def __init__(self, parent: QWidget, bankset: BankSet) -> None:
+        """Initialize tab widget for given BankSet."""
         super().__init__(parent)
         self._bankset: BankSet | None = None
 
@@ -53,6 +58,7 @@ class BankSetTabWidget(QWidget):
 
     @property
     def bankset(self) -> BankSet:
+        """Get or set the used BankSet."""
         return self._bankset
 
     @bankset.setter
