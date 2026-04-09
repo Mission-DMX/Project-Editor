@@ -1,3 +1,5 @@
+"""Module contains auto tracker control widget."""
+
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QTimer
@@ -18,8 +20,7 @@ if TYPE_CHECKING:
 
 
 class AutoTrackDialogWidget(QTabWidget):
-    """
-    The `MainWindow` class represents the main application window.
+    """The `MainWindow` class represents the main application window.
 
     Attributes:
         instance (InstanceManager): An instance manager for managing application instances and settings.
@@ -30,12 +31,11 @@ class AutoTrackDialogWidget(QTabWidget):
         - `video_update_all()`: Update video content for all active tabs.
         - `tab_changed(index)`: Handle tab change events.
         - `register_tabs(tab_widget, tabs)`: Register tabs in the main window.
+
     """
 
     def __init__(self, f: "AutoTrackerFilter", provided_instance: InstanceManager | None) -> None:
-        """
-        Initialize the main application window.
-        """
+        """Initialize the main application window."""
         super().__init__()
         if not provided_instance:
             # We're constructing the player widget
@@ -64,9 +64,7 @@ class AutoTrackDialogWidget(QTabWidget):
         self.video_timer.start(1)
 
     def video_update_all(self) -> None:
-        """
-        Update video content for all active tabs.
-        """
+        """Update video content for all active tabs."""
         for i in range(self.count()):
             tab = self.widget(i)
             if isinstance(tab, GuiTab):
@@ -74,11 +72,11 @@ class AutoTrackDialogWidget(QTabWidget):
         # TODO call generate_update_content from ui widget
 
     def tab_changed(self, index: int) -> None:
-        """
-        Handle tab change events.
+        """Handle tab change events.
 
         Args:
-            index (int): The index of the selected tab.
+            index: The index of the selected tab.
+
         """
         for i in range(self.count()):
             tab = self.widget(i)
@@ -86,11 +84,11 @@ class AutoTrackDialogWidget(QTabWidget):
                 tab.tab_changed(index)
 
     def register_tabs(self, tabs: list[GuiTab]) -> None:
-        """
-        Register tabs in the main window.
+        """Register tabs in the main window.
 
         Args:
-            tabs : A list of tab objects to register.
+            tabs: A list of tab objects to register.
+
         """
         first = True
         for tab in tabs:

@@ -24,6 +24,7 @@ class TextPreviewRendererMixin(FilterNode):
                  terminals: dict[str, dict[str, str]] | None = None,
                  allow_add_input: bool = False,
                  allow_add_output: bool = False) -> None:
+        """Initialize."""
         super().__init__(model, filter_type, name, terminals, allow_add_input, allow_add_output)
         self.graphicsItem().additional_rendering_method = self._draw_preview
 

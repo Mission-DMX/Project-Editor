@@ -1,4 +1,4 @@
-"""This file provides the main control widget for the filter stacking v-filter."""
+"""Provides the main control widget for the filter stacking v-filter."""
 
 from typing import override
 
@@ -26,9 +26,10 @@ from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowse
 
 
 class EffectsStackEditor(QWidget):
-    """This configuration widget provides an editor enabling the user to compose effect onto sockets."""
+    """Configuration widget provides an editor enabling the user to compose effect onto sockets."""
 
     def __init__(self, f: Filter, parent: QWidget | None) -> None:
+        """Initializes the widget."""
         super().__init__(parent=parent)
         if not isinstance(f, EffectsStack):
             raise ValueError("This filter is supposed to be an instance of the EffectsStack virtual filter.")
