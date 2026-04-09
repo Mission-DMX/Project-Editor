@@ -1,4 +1,4 @@
-"""Contains BankSet editor tab widget"""
+"""Contains BankSet editor tab widget."""
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon

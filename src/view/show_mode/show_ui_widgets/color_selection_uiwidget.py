@@ -1,3 +1,5 @@
+"""Module contains color selection widget."""
+
 from typing import override
 
 from PySide6.QtGui import QAction, QColor
@@ -17,8 +19,15 @@ from model.color_hsi import ColorHSI
 
 
 class ColorSelectionUIWidget(UIWidget):
+    """UI widget allowing the user to select a color."""
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the widget.
+
+        Configuration Parameters: number_of_presets (integer) -- How many presets should be available in total?
+        stored_presets: ; separated list of filter-encoded colors.
+
+        """
         super().__init__(parent, configuration)
 
         self._value: ColorHSI = ColorHSI.from_filter_str("")
@@ -31,6 +40,7 @@ class ColorSelectionUIWidget(UIWidget):
         self._config_widget: QWidget | None = None
         self._filter = None
 
+    @override
     def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
@@ -43,7 +53,7 @@ class ColorSelectionUIWidget(UIWidget):
     def generate_update_content(self) -> list[tuple[str, str]]:
         return [("value", self._value.format_for_filter())]
 
-    def push_value(self, new_value: ColorHSI) -> None:
+    def _push_value(self, new_value: ColorHSI) -> None:
         self._value = new_value
         self.push_update()
 
@@ -80,7 +90,7 @@ class ColorSelectionUIWidget(UIWidget):
             column_layout.addWidget(color_label)
             transmit_button = QPushButton("Set", w)
             transmit_button.setEnabled(for_player)
-            transmit_button.clicked.connect(lambda _i=i: self.push_value(self._presets[_i]))
+            transmit_button.clicked.connect(lambda _i=i: self._push_value(self._presets[_i]))
             column_layout.addWidget(transmit_button)
             layout.addLayout(column_layout)
         self._presets: list[ColorHSI] = color_presets
