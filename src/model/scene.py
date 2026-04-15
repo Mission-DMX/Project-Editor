@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections import namedtuple
 from typing import TYPE_CHECKING, override
+
+from .universe import Universe
 
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
@@ -62,6 +65,9 @@ class FilterPage:
         return new_fp
 
 
+DmxDefaultValue = namedtuple("DmxDefaultValue", ['universe_id', 'channel', 'value'])
+
+
 class Scene:
     """Scene for a show file."""
 
@@ -75,6 +81,7 @@ class Scene:
         self._filter_pages: list[FilterPage] = []
         self._associated_bankset: BankSet | None = None
         self._ui_pages: list[UIPage] = []
+        self._dmx_default_values: list[DmxDefaultValue] = []
 
     @property
     def scene_id(self) -> int:
@@ -115,6 +122,34 @@ class Scene:
                 default_page.filters.append(f)
             self._filter_pages.append(default_page)
         return self._filter_pages
+
+    @property
+    def dmx_default_values(self) -> list[DmxDefaultValue]:
+        """Get the list of default values to be applied on scene switch."""
+        return self._dmx_default_values.copy()
+
+    def insert_dmx_default_value(self, universe: Universe | int, channel: int, value: int) -> None:
+        """Add a new default value to the scene.
+
+        Existing values will be updated.
+
+        Args:
+            universe: target universe or its ID.
+            channel: target channel.
+            value: value to set on scene entry.
+
+        """
+        if isinstance(universe, Universe):
+            universe_id = universe.id
+        else:
+            universe_id = universe
+        value_to_remove = None
+        for existing_value in self._dmx_default_values:
+            if existing_value.universe_id == universe_id and existing_value.channel == channel:
+                value_to_remove = existing_value
+        if value_to_remove is not None:
+            self._dmx_default_values.remove(value_to_remove)
+        self._dmx_default_values.append(DmxDefaultValue(universe_id, channel, value))
 
     def insert_filterpage(self, fp: FilterPage) -> None:
         """Add a filterpage to the scene."""
@@ -184,6 +219,8 @@ class Scene:
         scene.linked_bankset = self._associated_bankset.copy()
         for page in self._ui_pages:
             scene._ui_pages.append(page.copy(scene))
+        for ddv in self._dmx_default_values:
+            scene._dmx_default_values.append(ddv)
         return scene
 
     def get_filter_by_id(self, fid: str) -> Filter | None:

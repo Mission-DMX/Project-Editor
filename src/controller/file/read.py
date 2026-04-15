@@ -264,6 +264,10 @@ def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pa
     return True
 
 
+def _parse_dmx_default_value(scene: Scene, child: ET.Element) -> None:
+    scene.insert_dmx_default_value(int(child.attrib["universe"]), int(child.attrib["channel"]), int(child.attrib["value"]))
+
+
 def _parse_scene(
     scene_element: ET.Element, board_configuration: BoardConfiguration, loaded_banksets: dict[str, BankSet]
 ) -> None:
@@ -300,6 +304,8 @@ def _parse_scene(
                 filter_pages.append(child)
             case "uipage":
                 ui_page_elements.append(child)
+            case "dmxdefaultvalue":
+                _parse_dmx_default_value(scene, child)
             case _:
                 logger.warning("Scene %s contains unknown element: %s", human_readable_name, child.tag)
 

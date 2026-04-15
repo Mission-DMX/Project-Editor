@@ -107,6 +107,12 @@ def generate_scene_xml_description(
 
         for ui_page in scene.ui_pages:
             _add_ui_page_to_element(scene_element, ui_page)
+    for default_value in scene.dmx_default_values:
+        ET.SubElement(scene_element, "dmxdefaultvalue", attrib={
+            "universe": default_value.universe_id,
+            "channel": str(default_value.channel),
+            "value": str(default_value.value),
+        })
 
 
 def _create_scene_element(scene: Scene, parent: ET.Element) -> ET.Element:
