@@ -41,6 +41,7 @@ class ShowBrowser:
     _filter_browser_tab_icon = QIcon(resource_path(os.path.join("resources", "icons", "showbrowser-filterpages.svg")))
     _fader_icon = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
     _uipage_icon = QIcon(resource_path(os.path.join("resources", "icons", "uipage.svg")))
+    _dmx_default_value_tab_icon = QIcon(resource_path(os.path.join("resources", "icons", "dmx-values-default.svg")))
 
     def __init__(self, parent: QWidget, show: BoardConfiguration, editor_tab_browser: QTabWidget) -> None:
         """Initialize a ShowBrowser.
@@ -178,6 +179,12 @@ class ShowBrowser:
         bankset_item.setIcon(0, ShowBrowser._fader_icon)
         bankset_item.setText(1, s.linked_bankset.description)
         bankset_item.annotated_data = s.linked_bankset
+        default_value_item = AnnotatedTreeWidgetItem(item)
+        default_value_item.setText(0, "Default DMX values")
+        default_value_item.setIcon(0, ShowBrowser._dmx_default_value_tab_icon)
+        default_value_item.setData(1, Qt.ItemDataRole.WhatsThisRole, "DMXDEFAULTDATA")
+        default_value_item.annotated_data = s
+
         if len(s.ui_pages) < 1:
             s.ui_pages.append(UIPage(s))
 
@@ -282,7 +289,8 @@ class ShowBrowser:
 
         for si in items:
             if isinstance(si, AnnotatedTreeWidgetItem):
-                if isinstance(si.annotated_data, Scene):
+                if (isinstance(si.annotated_data, Scene) and
+                        not si.data(1, Qt.ItemDataRole.WhatsThisRole) == "DMXDEFAULTDATA"):
                     scene_to_rename = si.annotated_data
                     self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
@@ -316,11 +324,13 @@ class ShowBrowser:
     def _scene_item_double_clicked(self, item: AnnotatedTreeWidgetItem) -> None:
         if isinstance(item, AnnotatedTreeWidgetItem):
             data = item.annotated_data
-            if isinstance(data, Scene):
+            if isinstance(data, Scene) and not item.data(1, Qt.ItemDataRole.WhatsThisRole) == "DMXDEFAULTDATA":
                 self._show.broadcaster.scene_open_in_editor_requested.emit(data.pages[0])
                 if self._selected_scene != data:
                     self._selected_scene = data
                     self._refresh_filter_browser()
+            elif isinstance(data, Scene) and item.data(1, Qt.ItemDataRole.WhatsThisRole) == "DMXDEFAULTDATA":
+                self._show.broadcaster.default_dmx_value_editor_opening_requested.emit(data)
             elif isinstance(data, FilterPage):
                 # TODO exchange for correct loading of page
                 self._show.broadcaster.scene_open_in_editor_requested.emit(data)

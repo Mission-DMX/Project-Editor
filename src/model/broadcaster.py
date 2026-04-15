@@ -57,6 +57,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     scene_open_in_editor_requested: QtCore.Signal = QtCore.Signal(object)  # FilterPage
     bankset_open_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
     uipage_opened_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
+    default_dmx_value_editor_opening_requested: QtCore.Signal = QtCore.Signal(object)
     delete_scene: QtCore.Signal = QtCore.Signal(object)
     delete_universe: QtCore.Signal = QtCore.Signal(object)
     device_created: QtCore.Signal = QtCore.Signal(object)  # device
@@ -119,6 +120,9 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
     event_sender_update: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event_sender)
+
+    def __init__(self, /, parent: PySide6.QtCore.QObject | None = ..., *, objectName: str | None = ...):
+        super().__init__(null, parent, null, objectName)
 
     def __new__(cls) -> Self:
         """Override __new__ to implement singleton behavior."""

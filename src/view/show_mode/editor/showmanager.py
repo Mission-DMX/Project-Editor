@@ -67,6 +67,9 @@ class ShowEditorWidget(QSplitter):
         board_configuration.broadcaster.bankset_open_in_editor_requested.connect(self._add_bankset_tab)
         board_configuration.broadcaster.uipage_opened_in_editor_requested.connect(self._add_uipage_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
+        board_configuration.broadcaster.default_dmx_value_editor_opening_requested.connect(
+            self._open_dmx_default_value_editor
+        )
 
     def _select_scene_to_be_removed(self) -> None:
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
@@ -189,3 +192,8 @@ class ShowEditorWidget(QSplitter):
     def _send_show_file(self) -> None:
         """Send the current board configuration as a xml file to fish"""
         transmit_to_fish(self._board_configuration)
+
+    def _open_dmx_default_value_editor(self, s: Scene) -> None:
+        # TODO iterate over all open tabs and jump to open tab if correct was found and exit
+        # TODO create editor tab and add it to list
+        pass
