@@ -330,13 +330,14 @@ class BoardConfiguration:
 
         Args:
             fixture_univ: The universe of the fixture.
-            fixture_chan: The first channel of the fixture.
+            fixture_chan: A channel of the fixture.
 
         Returns:
             The fixture or None if no fixture was found.
 
         """
         for fixture in self._fixtures.values():
-            if fixture.universe_id == fixture_univ and fixture.start_index == fixture_chan:
+            if fixture.universe_id == fixture_univ and \
+                fixture.start_index <= fixture_chan <= fixture.start_index + fixture.channel_length:
                 return fixture
         return None

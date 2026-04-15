@@ -133,7 +133,7 @@ class Scene:
         """Get the list of default values to be applied on scene switch."""
         return self._dmx_default_values.copy()
 
-    def insert_dmx_default_value(self, universe: Universe | int, channel: int, value: int) -> None:
+    def insert_dmx_default_value(self, universe: Universe | int, channel: int, value: int) -> bool:
         """Add a new default value to the scene.
 
         Existing values will be updated.
@@ -142,6 +142,9 @@ class Scene:
             universe: target universe or its ID.
             channel: target channel.
             value: value to set on scene entry.
+
+        Returns:
+            True if a value was updated and false if it was added.
 
         """
         universe_id = universe.id if isinstance(universe, Universe) else universe
@@ -152,6 +155,7 @@ class Scene:
         if value_to_remove is not None:
             self._dmx_default_values.remove(value_to_remove)
         self._dmx_default_values.append(DmxDefaultValue(universe_id, channel, value))
+        return value_to_remove is None
 
     def insert_filterpage(self, fp: FilterPage) -> None:
         """Add a filterpage to the scene."""
