@@ -3,6 +3,7 @@
 Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
+
 """
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QInputDialog, QSplitter, QTabBar, QTabWidget, QWidget
@@ -25,6 +26,7 @@ class ShowEditorWidget(QSplitter):
     """Node Editor to create and manage filters."""
 
     def __init__(self, board_configuration: BoardConfiguration, bcaster: Broadcaster, parent: QWidget) -> None:
+        """Initialize the widget."""
         super().__init__(parent)
         self._broadcaster = bcaster
         self._board_configuration = board_configuration
@@ -80,13 +82,15 @@ class ShowEditorWidget(QSplitter):
 
     @property
     def toolbar(self) -> list[QAction]:
-        """toolbar for node_mode"""
+        """toolbar for node_mode."""
         return self._toolbar
 
     def _tab_bar_clicked(self, index: int) -> None:
         """Handles adding/deleting button action.
+
         Args:
             index: Index of the clicked tab
+
         """
         # Left to right, first "+" button, second "-" button
         if index == self._open_page_tab_widget.tabBar().count() - 1:
@@ -96,9 +100,11 @@ class ShowEditorWidget(QSplitter):
         add_scene_to_show(self, self._board_configuration)
 
     def _add_scene_tab(self, page: Scene | FilterPage) -> SceneTabWidget | None:
-        """Creates a tab for a scene
+        """Creates a tab for a scene.
+
         Args:
             page: The scene to be added
+
         """
         if isinstance(page, Scene):
             page = page.pages[0]
@@ -168,6 +174,7 @@ class ShowEditorWidget(QSplitter):
 
         Args:
             scene_or_index: The that is being removed.
+
         """
         if isinstance(scene_or_index, Scene):
             for index in range(self._open_page_tab_widget.count() - 1):
@@ -194,7 +201,7 @@ class ShowEditorWidget(QSplitter):
             self._open_page_tab_widget.removeTab(scene_or_index)
 
     def _send_show_file(self) -> None:
-        """Send the current board configuration as a xml file to fish"""
+        """Send the current board configuration as a xml file to fish."""
         transmit_to_fish(self._board_configuration)
 
     def _open_dmx_default_value_editor(self, s: Scene) -> None:
