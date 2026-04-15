@@ -155,7 +155,7 @@ class Scene:
         if value_to_remove is not None:
             self._dmx_default_values.remove(value_to_remove)
         self._dmx_default_values.append(DmxDefaultValue(universe_id, channel, value))
-        return value_to_remove is None
+        return value_to_remove is not None
 
     def insert_filterpage(self, fp: FilterPage) -> None:
         """Add a filterpage to the scene."""
