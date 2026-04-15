@@ -2,6 +2,7 @@
 from typing import override
 
 from model import DataType, Scene
+from model.filter import Filter, FilterTypeEnumeration, VirtualFilter
 from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -13,7 +14,7 @@ class Adapter16BitTo8BitNode(FilterNode):
     nodeName = "16 bit to 8 bit converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize 16bit to 8bit splitter adapter node."""
         super().__init__(model=model, filter_type=int(FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT),
                          name=name, terminals={
                 "value": {"io": "in"},
@@ -35,7 +36,7 @@ class Adapter16BitToBoolNode(FilterNode):
     nodeName = "16 bit to bool converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize 16bit to boolean adapter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -47,12 +48,12 @@ class Adapter16BitToBoolNode(FilterNode):
 
 
 class Adapter16bitToFloat(FilterNode):
-    """Filter to convert a 16 bit value to a float."""
+    """Filter node to convert a 16 bit value to a float."""
 
     nodeName = "16bit to Float converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize 16bit to float adapter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -65,12 +66,12 @@ class Adapter16bitToFloat(FilterNode):
 
 
 class Adapter8bitToFloat(FilterNode):
-    """Filter to convert a 8bit value to a float."""
+    """Filter node to convert a 8bit value to a float."""
 
     nodeName = "8bit to Float converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize 8bit to float adapter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -88,7 +89,7 @@ class AdapterColorToRGBNode(FilterNode):
     nodeName = "Color to rgb converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize Color to rgb adapter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGB, name=name,
                          terminals={
                              "value": {"io": "in"},
@@ -109,7 +110,7 @@ class AdapterColorToRGBWNode(FilterNode):
     nodeName = "Color to rgb-w converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize Color to rgb-w adapter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBW, name=name,
                          terminals={
                              "value": {"io": "in"},
@@ -132,7 +133,7 @@ class AdapterColorToRGBWANode(FilterNode):
     nodeName = "Color to rgb-wa converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize Color to rgb-wa adapter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBWA, name=name,
                          terminals={
                              "value": {"io": "in"},
@@ -157,7 +158,7 @@ class AdapterFloatToColorNode(FilterNode):
     nodeName = "Float to color converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize Float to color combining converter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR, name=name,
                          terminals={
                              "h": {"io": "in"},
@@ -179,7 +180,7 @@ class AdapterColorToFloatsNode(FilterNode):
     nodeName = "Color to Float converter"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize Color to Float converter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_FLOAT, name=name,
                          terminals={
                              "input": {"io": "in"},
@@ -202,7 +203,7 @@ class AdapterFloatToRange(FilterNode):
     def __init__(self, model: Filter | Scene, name: str,
                  filter_type: FilterTypeEnumeration =
                  FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE) -> None:
-        """Initialize."""
+        """Initialize float range to float range template node."""
         super().__init__(model, int(filter_type), name, terminals={
             "value_in": {"io": "in"},
             "value": {"io": "out"},
@@ -243,7 +244,7 @@ class AdapterFloatTo8BitRange(AdapterFloatToRange):
     nodeName = "Float range to 8bit"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize float range to 8bit range node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_8BIT_RANGE, name=name)
         try:
             self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
@@ -258,7 +259,7 @@ class AdapterFloatTo16BitRange(AdapterFloatToRange):
     nodeName = "Float range to 16bit"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize float range to 16bit range node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE, name=name)
         try:
             self.filter.initial_parameters["upper_bound_out"] = model.initial_parameters["upper_bound_out"]
@@ -273,7 +274,7 @@ class Adapter16BitToRangeFloat(AdapterFloatToRange):
     nodeName = "16bit range to Float"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize 16bit to float range node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE,
                          name=name)
         try:
@@ -290,7 +291,7 @@ class Adapter8BitToRangeFloat(AdapterFloatToRange):
     nodeName = "8bit range to Float"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize 8bit to float range node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE,
                          name=name)
         try:
@@ -307,7 +308,7 @@ class CombineTwo8BitToSingle16Bit(FilterNode):
     nodeName = "Dual 8bit to single 16bit"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize Dual 8bit to single 16bit combiner node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_DUAL_BYTE_TO_16BIT, name=name,
                          terminals={
                              "lower": {"io": "in"},
@@ -326,7 +327,7 @@ class Map8BitTo16Bit(FilterNode):
     nodeName = "Map 8bit to 16bit"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize Map 8bit to 16bit map node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_8BIT_TO_16BIT, name=name,
                          terminals={
                              "value_in": {"io": "in"},
@@ -338,12 +339,16 @@ class Map8BitTo16Bit(FilterNode):
 
 
 class ColorBrightnessMixinNode(FilterNode):
-    """Filter node to mix brightness values conveniently."""
+    """Filter node to mix brightness values conveniently.
+
+    It supports the brightness mixin v-filter.
+
+    """
 
     nodeName = "Color Brightness Mixin"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize."""
+        """Initialize Color Brightness Mixin node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
                          name=name, terminals={
                 "out": {"io": "out"},
@@ -410,3 +415,35 @@ class ColorToColorwheelAdapterNode(FilterNode):
                 self.filter.out_data_types["colorwheel"] = DataType.DT_DOUBLE
             case _:
                 self.filter.out_data_types["colorwheel"] = DataType.DT_8_BIT
+
+
+class DimmerBrightnessMixinNode(FilterNode):
+    """Node for dimmer brightness mixin v-filter."""
+
+    nodeName = "Dimmer Brightness Mixin"  # noqa: N815
+
+    def __init__(self, model: Filter | Scene, name: str) -> None:
+        """Initialize Dimmer Brightness Mixin node."""
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, name=name,
+                         terminals={"input": {"io": "in"}, "mixin": {"io": "in"}, "offset": {"io": "in"}})
+        self.channel_hints["offset"] = "[(-1, 1), optional]"
+        self.channel_hints["input"] = "[default: global brightness]"
+        self.channel_hints["mixin"] = "[optional]"
+        self._update_output_terminals()
+
+    def _update_output_terminals(self) -> None:
+        for setting, term_name in [("has_8bit_output", "dimmer_out8b"), ("has_16bit_output", "dimmer_out16b")]:
+            if self.filter.filter_configurations.get(setting) == "true":
+                if self.outputs().get(term_name) is None:
+                    self.addOutput(term_name)
+            else:
+                if self.outputs().get(term_name) is not None:
+                    self.removeTerminal(term_name)
+
+    @override
+    def update_node_after_settings_changed(self) -> None:
+        if isinstance(self.filter, VirtualFilter):
+            self.filter.deserialize()
+        else:
+            raise ValueError("Expected filter instance to be a DimmerGlobalBrightnessMixinVFilter, implying a vFilter.")
+        self._update_output_terminals()
