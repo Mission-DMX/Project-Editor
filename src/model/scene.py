@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, NamedTuple, override
 
 from .universe import Universe
 
@@ -65,7 +65,12 @@ class FilterPage:
         return new_fp
 
 
-DmxDefaultValue = namedtuple("DmxDefaultValue", ['universe_id', 'channel', 'value'])
+class DmxDefaultValue(NamedTuple):
+    """Contains a single default entry to be applied on scene activation by fish."""
+
+    universe_id: int
+    channel: int
+    value: int
 
 
 class Scene:
@@ -139,10 +144,7 @@ class Scene:
             value: value to set on scene entry.
 
         """
-        if isinstance(universe, Universe):
-            universe_id = universe.id
-        else:
-            universe_id = universe
+        universe_id = universe.id if isinstance(universe, Universe) else universe
         value_to_remove = None
         for existing_value in self._dmx_default_values:
             if existing_value.universe_id == universe_id and existing_value.channel == channel:

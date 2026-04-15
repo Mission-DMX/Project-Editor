@@ -266,7 +266,11 @@ def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pa
 
 
 def _parse_dmx_default_value(scene: Scene, child: ET.Element) -> None:
-    scene.insert_dmx_default_value(int(child.attrib["universe"]), int(child.attrib["channel"]), int(child.attrib["value"]))
+    scene.insert_dmx_default_value(
+        int(child.attrib["universe"]),
+        int(child.attrib["channel"]),
+        int(child.attrib["value"])
+    )
 
 
 def _parse_scene(

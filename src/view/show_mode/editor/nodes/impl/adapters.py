@@ -3,7 +3,6 @@ from typing import override
 
 from model import DataType, Scene
 from model.filter import Filter, FilterTypeEnumeration, VirtualFilter
-from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
