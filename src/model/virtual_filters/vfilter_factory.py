@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from model.filter import FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from model.virtual_filters.color_mixer_vfilter import ColorMixerVFilter
+from model.virtual_filters.color_to_colorwheel import ColorToColorWheel
 from model.virtual_filters.cue_vfilter import CueFilter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.import_vfilter import ImportVFilter
@@ -76,5 +77,7 @@ def construct_virtual_filter_instance(
             return ColorMixerVFilter(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_SEQUENCER:
             return SequencerFilter(scene, filter_id, pos=pos)
+        case FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL:
+            return ColorToColorWheel(scene, filter_id, pos=pos)
         case _:
             raise ValueError(f"The requested filter type {filter_type} is not yet implemented.")

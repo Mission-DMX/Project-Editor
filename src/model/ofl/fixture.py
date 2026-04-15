@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import random
 from collections import defaultdict
@@ -14,7 +15,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
-from model.ofl.ofl_fixture import FixtureMode, MatrixChannelInsert, OflFixture
+from model.ofl.ofl_fixture import CapabilityType, FixtureMode, MatrixChannelInsert, OflFixture
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from model import BoardConfiguration
+    from model import BoardConfiguration, ColorHSI
 
 logger = getLogger(__name__)
 
@@ -66,6 +67,40 @@ def load_fixture(file: str) -> OflFixture | None:
     return OflFixture.model_validate(ob)
 
 
+def _load_colorwheel_mappings(f: OflFixture, channels: list[FixtureChannel]) -> \
+    list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
+    """Load color wheel mappings from OFL model."""
+    outer_mapping_list = []
+    for channel in channels:
+        fcl: list[tuple[int, ColorHSI, ColorHSI | None]] = []
+        if channel.type != FixtureChannelType.COLORWHEEL:
+            continue
+        if channel.channel_template is None:
+            logger.error("The channel %s is a color wheel but the template was not found.", channel.name)
+            continue
+        color_wheel = f.wheels.get(channel.name)
+        if color_wheel is None:
+            logger.warning("The channel %s is has a color wheel but the wheel definition was not found.",
+                           channel.name)
+            continue
+        for capability in channel.channel_template.get_capabilities():
+            if capability.type == CapabilityType.WHEEL_SLOT:
+                slot_number = capability.capabilityProperties.get("slotNumber")
+                if len(capability.dmxRange) > 1:
+                    capability_dmx_value = int((capability.dmxRange[0] + capability.dmxRange[1]) / 2)
+                else:
+                    capability_dmx_value = capability.dmxRange[0]
+                if isinstance(slot_number, int):
+                    wheel_slot = color_wheel.slots[slot_number % len(color_wheel.slots)]
+                    fcl.append((capability_dmx_value, wheel_slot, None))
+                else:
+                    wheel_slot_a = color_wheel.slots[math.floor(slot_number) % len(color_wheel.slots)]
+                    wheel_slot_b = color_wheel.slots[math.ceil(slot_number) % len(color_wheel.slots)]
+                    fcl.append((capability_dmx_value, wheel_slot_a, wheel_slot_b))
+        if len(fcl) > 0:
+            outer_mapping_list.append((channel, fcl))
+    return outer_mapping_list
+
 class UsedFixture(QtCore.QObject):
     """Fixture in use with a specific mode."""
 
@@ -96,22 +131,25 @@ class UsedFixture(QtCore.QObject):
         super().__init__()
         self._board_configuration: Final[BoardConfiguration] = board_configuration
         self._fixture: Final[OflFixture] = fixture
-        self._uuid: Final[UUID] = uuid if uuid else uuid4()
+        self._uuid: Final[UUID] = uuid or uuid4()
 
         self._start_index: int = start_index
         self._mode_index: int = mode_index
         self._universe_id: int = parent_universe
 
-        channels, segment_map, color_support = self._generate_fixture_channels()
+        channels, segment_map, color_support = self._generate_fixture_channels(fixture)
 
         self._fixture_channels: Final[list[FixtureChannel]] = channels
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
+        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = \
+            _load_colorwheel_mappings(fixture, self._fixture_channels)
+
         self._color_on_stage: str = (
-            color if color else "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
+            color or "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
         )
-        self._name_on_stage: str = self.short_name if self.short_name else self.name
+        self._name_on_stage: str = self.short_name or self.name
 
         self.parent_universe: int = parent_universe
         self._board_configuration.broadcaster.add_fixture.emit(self)
@@ -120,6 +158,20 @@ class UsedFixture(QtCore.QObject):
     def uuid(self) -> UUID:
         """UUID of the fixture."""
         return self._uuid
+
+    @property
+    def colorwheel_mappings(self) -> list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
+        """Get the color wheels of this fixture.
+
+        This list contains tuples of the channels that contain color wheels as well as their colors.
+        Each slot is a tuple of the DMX value that should be send in order to get the color as well as the colors of the
+        position. If the third parameter of this tuple is not None, the position is right in between two slots.
+
+        Returns:
+            A copy of the list.
+
+        """
+        return list(self._colorwheel_mappings)
 
     @property
     def power(self) -> float:
@@ -215,13 +267,13 @@ class UsedFixture(QtCore.QObject):
         return tuple((self._segment_map[segment_type] + self.start_index).tolist())
 
     def _generate_fixture_channels(
-        self,
+        self, fixture_template: OflFixture
     ) -> tuple[list[FixtureChannel], dict[FixtureChannelType, NDArray[np.int_]], ColorSupport]:
         segment_map: dict[FixtureChannelType, list[int]] = defaultdict(list)
         fixture_channels: list[FixtureChannel] = []
 
         def append_channel(cn: str, i: int) -> None:
-            channel = FixtureChannel(cn)
+            channel = FixtureChannel(cn, fixture_template)
             fixture_channels.append(channel)
             for channel_type in channel.type_as_list:
                 segment_map[channel_type].append(i)

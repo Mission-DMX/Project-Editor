@@ -1,15 +1,16 @@
-"""dialog for change of Temperature"""
+"""dialog for change of Temperature."""
 import numpy as np
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from model import ColorHSI
+from model.color_hsi import ColorHSI
 from model.control_desk import BankSet, ColorDeskColumn
 
 
 class TemperatureDialog(QtWidgets.QDialog):
-    """dialog for change of Temperature"""
+    """dialog for change of Temperature."""
 
     def __init__(self, column: ColorDeskColumn, parent: object = None) -> None:
+        """Initialize dialog for provided column."""
         super().__init__(parent)
         self._column = column
         self.temperature = QtWidgets.QSpinBox(self)

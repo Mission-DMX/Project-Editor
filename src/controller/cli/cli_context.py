@@ -118,7 +118,7 @@ class CLIContext:
             help="subcommands help", dest="subparser_name"
         )
         for c in self._commands:
-            c.configure_parser(subparsers.add_parser(c.name, help=c.help, exit_on_error=False))
+            c.configure_parser(subparsers.add_parser(c.name, help=c.help_text, exit_on_error=False))
         if exit_available:
             subparsers.add_parser("exit", exit_on_error=False, help="Close this remote connection")
         self._return_text = ""
