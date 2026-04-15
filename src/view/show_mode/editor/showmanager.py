@@ -82,7 +82,7 @@ class ShowEditorWidget(QSplitter):
 
     @property
     def toolbar(self) -> list[QAction]:
-        """toolbar for node_mode."""
+        """Toolbar for node_mode."""
         return self._toolbar
 
     def _tab_bar_clicked(self, index: int) -> None:
