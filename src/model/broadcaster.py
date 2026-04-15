@@ -121,9 +121,6 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
     event_sender_update: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event_sender)
 
-    def __init__(self, /, parent: PySide6.QtCore.QObject | None = ..., *, objectName: str | None = ...):
-        super().__init__(null, parent, null, objectName)
-
     def __new__(cls) -> Self:
         """Override __new__ to implement singleton behavior."""
         if not hasattr(cls, "instance") or cls.instance is None:

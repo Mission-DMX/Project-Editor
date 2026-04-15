@@ -290,7 +290,7 @@ class ShowBrowser:
         for si in items:
             if isinstance(si, AnnotatedTreeWidgetItem):
                 if (isinstance(si.annotated_data, Scene) and
-                        not si.data(1, Qt.ItemDataRole.WhatsThisRole) == "DMXDEFAULTDATA"):
+                        si.data(1, Qt.ItemDataRole.WhatsThisRole) != "DMXDEFAULTDATA"):
                     scene_to_rename = si.annotated_data
                     self._input_dialog = QInputDialog(self.widget)
                     self._input_dialog.setInputMode(QInputDialog.TextInput)
@@ -324,7 +324,7 @@ class ShowBrowser:
     def _scene_item_double_clicked(self, item: AnnotatedTreeWidgetItem) -> None:
         if isinstance(item, AnnotatedTreeWidgetItem):
             data = item.annotated_data
-            if isinstance(data, Scene) and not item.data(1, Qt.ItemDataRole.WhatsThisRole) == "DMXDEFAULTDATA":
+            if isinstance(data, Scene) and item.data(1, Qt.ItemDataRole.WhatsThisRole) != "DMXDEFAULTDATA":
                 self._show.broadcaster.scene_open_in_editor_requested.emit(data.pages[0])
                 if self._selected_scene != data:
                     self._selected_scene = data

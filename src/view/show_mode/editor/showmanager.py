@@ -17,6 +17,7 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_edi
 
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
+from .editor_tab_widgets.dmx_default_value_editor import DMXDefaultValueEditorWidget
 from .show_browser.show_browser import ShowBrowser
 
 
@@ -30,6 +31,7 @@ class ShowEditorWidget(QSplitter):
         self._opened_pages = set()
         self._opened_banksets = set()
         self._opened_uieditors = set()
+        self._open_dmx_value_editors = set()
 
         # Buttons to add or remove scenes from show
         self._open_page_tab_widget = QTabWidget(self)
@@ -187,6 +189,8 @@ class ShowEditorWidget(QSplitter):
                 self._opened_banksets.remove(widget.bankset)
             elif isinstance(widget, SceneUIPageEditorWidget):
                 self._opened_uieditors.remove(widget.ui_page)
+            elif isinstance(widget, DMXDefaultValueEditorWidget):
+                self._open_dmx_value_editors.remove(widget.scene)
             self._open_page_tab_widget.removeTab(scene_or_index)
 
     def _send_show_file(self) -> None:
@@ -194,6 +198,17 @@ class ShowEditorWidget(QSplitter):
         transmit_to_fish(self._board_configuration)
 
     def _open_dmx_default_value_editor(self, s: Scene) -> None:
-        # TODO iterate over all open tabs and jump to open tab if correct was found and exit
-        # TODO create editor tab and add it to list
-        pass
+        if s in self._open_dmx_value_editors:
+            for tab_index in range(self._open_page_tab_widget.count()):
+                tab = self._open_page_tab_widget.widget(tab_index)
+                if isinstance(tab, DMXDefaultValueEditorWidget) and tab.scene == s:
+                    self._open_page_tab_widget.setCurrentIndex(tab_index)
+                    return
+        self._open_dmx_value_editors.add(s)
+        tab = DMXDefaultValueEditorWidget(s, self._open_page_tab_widget)
+        self._open_page_tab_widget.insertTab(
+            self._open_page_tab_widget.tabBar().count() - 1,
+            tab,
+            s.human_readable_name + "/Defaults",
+        )
+        self._open_page_tab_widget.setCurrentWidget(tab)
