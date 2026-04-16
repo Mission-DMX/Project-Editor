@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections import namedtuple
 from typing import TYPE_CHECKING, NamedTuple, override
+
+from PySide6.QtCore import QObject, Signal
 
 from .universe import Universe
 
@@ -73,11 +74,14 @@ class DmxDefaultValue(NamedTuple):
     value: int
 
 
-class Scene:
+class Scene(QObject):
     """Scene for a show file."""
+
+    default_values_changed = Signal()
 
     def __init__(self, scene_id: int, human_readable_name: str, board_configuration: BoardConfiguration) -> None:
         """Scene for a show file."""
+        super().__init__()
         self._scene_id: int = scene_id
         self._human_readable_name: str = human_readable_name
         self._board_configuration: BoardConfiguration = board_configuration
@@ -133,7 +137,8 @@ class Scene:
         """Get the list of default values to be applied on scene switch."""
         return self._dmx_default_values.copy()
 
-    def insert_dmx_default_value(self, universe: Universe | int, channel: int, value: int) -> bool:
+    def insert_dmx_default_value(self, universe: Universe | int, channel: int, value: int,
+                                 supress_emission: bool = False) -> bool:
         """Add a new default value to the scene.
 
         Existing values will be updated.
@@ -142,6 +147,8 @@ class Scene:
             universe: target universe or its ID.
             channel: target channel.
             value: value to set on scene entry.
+            supress_emission: If this is enabled to change signal will be enabled. Only use this if you're certain
+                            you're taking care of all updates yourself.
 
         Returns:
             True if a value was updated and false if it was added.
@@ -155,7 +162,27 @@ class Scene:
         if value_to_remove is not None:
             self._dmx_default_values.remove(value_to_remove)
         self._dmx_default_values.append(DmxDefaultValue(universe_id, channel, value))
+        if not supress_emission:
+            self.default_values_changed.emit()
         return value_to_remove is not None
+
+    def remove_dmx_default_value(self, universe: Universe | int, channel: int, supress_emission: bool = False) -> None:
+        """Remove a default DMX value from the scene.
+
+        Args:
+            universe: target universe or its ID.
+            channel: target channel.
+            supress_emission: If this is enabled to change signal will be enabled. Only use this if you're certain
+                            you're taking care of all updates yourself.
+
+        """
+        universe_id = universe.id if isinstance(universe, Universe) else universe
+        values_to_remove = [val for val in self._dmx_default_values if
+                            val.universe_id == universe_id and val.channel == channel]
+        for item in values_to_remove:
+            self._dmx_default_values.remove(item)
+        if len(values_to_remove) > 0 and not supress_emission:
+            self.default_values_changed.emit()
 
     def insert_filterpage(self, fp: FilterPage) -> None:
         """Add a filterpage to the scene."""
