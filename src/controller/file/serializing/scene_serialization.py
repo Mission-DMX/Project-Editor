@@ -107,6 +107,7 @@ def generate_scene_xml_description(
 
         for ui_page in scene.ui_pages:
             _add_ui_page_to_element(scene_element, ui_page)
+    scene.sort_dmx_default_values()
     for default_value in scene.dmx_default_values:
         ET.SubElement(scene_element, "dmxdefaultvalue", attrib={
             "universe": default_value.universe_id,

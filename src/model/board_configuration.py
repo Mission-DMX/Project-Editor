@@ -338,6 +338,6 @@ class BoardConfiguration:
         """
         for fixture in self._fixtures.values():
             if fixture.universe_id == fixture_univ and \
-                fixture.start_index <= fixture_chan <= fixture.start_index + fixture.channel_length:
+                fixture.start_index <= fixture_chan < fixture.start_index + fixture.channel_length:
                 return fixture
         return None

@@ -336,3 +336,12 @@ class Scene(QObject):
         for page in self._ui_pages:
             for widget in page.widgets:
                 widget.notify_id_rename(old_id, sender.filter_id)
+
+    def sort_dmx_default_values(self) -> None:
+        """Sorts the dmx defaults by their universe and channel.
+
+        This improves human interaction and performance of fish.
+
+        """
+        self._dmx_default_values.sort(key=lambda x: (x.universe_id * 512) + x.channel)
+        self.default_values_changed.emit()
