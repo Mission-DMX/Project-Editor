@@ -1,7 +1,16 @@
-import logging, os
+"""Top-level widget of the stage visualizer.
+
+Combines the 3D viewport, the editor panel and the DMX poller behind a
+single QSplitter and relays signals between them.
+"""
+
+import logging
+
 from PySide6 import QtWidgets, QtCore
-from utility import resource_path
-from model.stage import StageConfig
+
+from model.stage import (StageConfig, FixtureGroup, get_default_stage_path,
+                         backup_stage_file)
+from model.dmx.dmx_visualizer import DmxVisualizer, auto_detect_mapping, MOVEMENT_ROLES
 from view.visualizer.stage_gl_widget import Stage3DWidget
 from view.visualizer.stage_editor_widget import StageEditorWidget
 
@@ -9,6 +18,7 @@ logger = logging.getLogger(__file__)
 
 
 class StageVisualizerWidget(QtWidgets.QSplitter):
+    """Horizontal split: 3D viewport on the left, editor panel on the right."""
 
     def __init__(self, board_configuration, broadcaster, parent=None):
         super().__init__(parent)
@@ -17,21 +27,136 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         self.setOrientation(QtCore.Qt.Orientation.Horizontal)
 
-        stage_yaml_path = resource_path(os.path.join("resources", "data", "stage.yaml"))
-        self._stage_config = StageConfig(stage_yaml_path)
+        stage_path = get_default_stage_path()
+        logger.info("Loading stage from %s", stage_path)
+        self._stage_config = StageConfig(stage_path)
 
         self._gl_widget = Stage3DWidget(self._stage_config, parent=self)
-        self._editor_widget = StageEditorWidget(self._stage_config, parent=self)
+        self._editor_widget = StageEditorWidget(
+            self._stage_config,
+            used_fixtures=self._get_fixtures(),
+            parent=self,
+        )
         self.addWidget(self._gl_widget)
         self.addWidget(self._editor_widget)
 
+        # 3D viewport takes most of the width.
+        self.setStretchFactor(0, 1)
+        self.setStretchFactor(1, 0)
+        self.setSizes([2200, 360])
+
+        # Editor -> mediator
         self._editor_widget.addObjectRequested.connect(self._on_add_object)
         self._editor_widget.removeObjectRequested.connect(self._on_remove_object)
         self._editor_widget.objectChanged.connect(self._on_object_changed)
+        self._editor_widget.selectionChanged.connect(self._on_selection_changed)
+        self._editor_widget.groupRequested.connect(self._on_group_requested)
+        self._editor_widget.removeGroupRequested.connect(self._on_remove_group)
+        self._editor_widget.dmxToggled.connect(self._on_dmx_toggled)
 
-    def _on_add_object(self, object_type: type):
-        new_id = self._stage_config.get_new_id(object_type.__name__.lower())
-        new_obj = object_type(new_id)
+        # 3D viewport -> mediator
+        self._gl_widget.fixtureClicked.connect(self._on_fixture_clicked)
+        self._gl_widget.deselectAllRequested.connect(self._on_deselect_all)
+
+        self._dmx_vis = DmxVisualizer(
+            self._stage_config,
+            board_configuration=board_configuration,
+            parent=self,
+        )
+        self._dmx_vis.fixtures_updated.connect(self._on_dmx_updated)
+
+        # Refresh fixture list when the show file changes.
+        self._broadcaster.show_file_loaded.connect(self._refresh_fixtures)
+        self._broadcaster.show_file_path_changed.connect(lambda _: self._refresh_fixtures())
+        self._broadcaster.connection_state_updated.connect(
+            lambda connected: QtCore.QTimer.singleShot(500, self._refresh_fixtures)
+            if connected else None)
+        self._broadcaster.add_fixture.connect(lambda _fix: self._refresh_fixtures())
+
+        self._broadcaster.application_closing.connect(self._on_app_closing)
+
+    def _on_app_closing(self):
+        self._stage_config.save()
+        logger.info("Stage saved to %s", self._stage_config.file_path)
+
+    def load_stage_file(self):
+        from model.stage import STAGE_DIR
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Load Stagefile", STAGE_DIR,
+            "Stage Files (*.yaml *.yml);;All Files (*)")
+        if not path:
+            return
+
+        backup = backup_stage_file(self._stage_config.file_path)
+        if backup:
+            logger.info("Current stage backed up to %s", backup)
+
+        self._reload_stage(path)
+
+    def save_stage_file(self):
+        from model.stage import STAGE_DIR
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save Stagefile", STAGE_DIR,
+            "Stage Files (*.yaml *.yml);;All Files (*)")
+        if not path:
+            return
+        self._stage_config.save_to(path)
+        logger.info("Stage saved to %s", path)
+
+    def _reload_stage(self, new_path: str):
+        logger.info("Loading new stage: %s", new_path)
+
+        new_config = StageConfig(new_path)
+        new_config.save_to(get_default_stage_path())
+        new_config.file_path = get_default_stage_path()
+
+        self._stage_config = new_config
+        self._dmx_vis._stage_config = new_config
+
+        self._gl_widget.makeCurrent()
+        self._gl_widget._stage_config = new_config
+        self._gl_widget._load_all_objects()
+        self._gl_widget.doneCurrent()
+        self._gl_widget.update()
+
+        self._editor_widget._stage_config = new_config
+        self._editor_widget.refresh_list()
+
+        logger.info("Stage loaded: %d objects", len(new_config.objects))
+
+    def _get_fixtures(self):
+        try:
+            return list(self._board_configuration.fixtures)
+        except Exception:
+            return []
+
+    def _refresh_fixtures(self):
+        self._editor_widget._used_fixtures = self._get_fixtures()
+
+    def _on_add_object(self, fixture_key: str, name: str, device):
+        new_id = self._stage_config.get_new_id(fixture_key)
+        try:
+            from model.stage import create_object_from_key
+            new_obj = create_object_from_key(fixture_key, new_id, name)
+        except Exception as e:
+            logger.error("Failed to create object: %s", e)
+            return
+
+        # Auto-link the selected DMX device, if any.
+        if device is not None:
+            try:
+                ch_names = [ch.name for ch in device.fixture_channels]
+                mapping = auto_detect_mapping(ch_names, MOVEMENT_ROLES)
+                new_obj.device_config = {
+                    "movement": {
+                        "universe": device.universe_id,
+                        "start_channel": device.start_index,
+                        "channel_count": device.channel_length,
+                        "mapping": mapping,
+                    }
+                }
+            except Exception as e:
+                logger.warning("Could not auto-link device: %s", e)
 
         self._stage_config.add_object(new_obj)
         self._editor_widget.add_object_to_list(new_obj)
@@ -40,26 +165,71 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._gl_widget.load_object(new_obj)
         self._gl_widget.doneCurrent()
         self._gl_widget.update()
-
         self._stage_config.save()
-        logger.info("Added new object: %s (type: %s)", new_obj.id, object_type)
 
     def _on_remove_object(self, object_id: str):
         obj = self._stage_config.remove_object(object_id)
-        if obj:
-            self._editor_widget.remove_object_from_list(object_id)
-            self._gl_widget.makeCurrent()
-            self._gl_widget.remove_object(obj)
-            self._gl_widget.doneCurrent()
-            self._gl_widget.update()
-
-            self._stage_config.save()
-            logger.info("Removed object: %s", object_id)
-        else:
-            logger.warning("Object with id %s not found for removal", object_id)
-
-    def _on_object_changed(self, object_id: str):
-
+        if not obj:
+            return
+        self._editor_widget.remove_object_from_list(object_id)
+        self._gl_widget.makeCurrent()
+        self._gl_widget.remove_object(obj)
+        self._gl_widget.doneCurrent()
         self._gl_widget.update()
         self._stage_config.save()
-        logger.info("Updated object transform: %s", object_id)
+        self._editor_widget.refresh_list()
+
+    def _on_object_changed(self, object_id: str):
+        self._gl_widget.update()
+        self._stage_config.save()
+
+    def _on_selection_changed(self, object_ids: list, is_multi: bool):
+        self._gl_widget.set_selected_objects(object_ids, is_multi)
+        self._gl_widget.update()
+
+    def _on_group_requested(self, fixture_ids: list, group_name: str):
+        if len(fixture_ids) < 2:
+            return
+
+        # Pull fixtures out of any existing group first.
+        for fid in fixture_ids:
+            old_grp = self._stage_config.get_group_for_fixture(fid)
+            if old_grp:
+                old_grp.member_ids.remove(fid)
+                if len(old_grp.member_ids) < 2:
+                    self._stage_config.remove_group(old_grp.id)
+
+        # Use the centroid of the members as the group origin.
+        positions = [self._stage_config.get_object(fid).position
+                     for fid in fixture_ids
+                     if self._stage_config.get_object(fid)]
+        n = max(len(positions), 1)
+        cx = sum(p[0] for p in positions) / n
+        cy = sum(p[1] for p in positions) / n
+        cz = sum(p[2] for p in positions) / n
+
+        group_id = self._stage_config.get_new_id("group")
+        new_group = FixtureGroup(
+            group_id=group_id, name=group_name,
+            position=(cx, cy, cz), rotation=(0.0, 0.0, 0.0),
+            member_ids=fixture_ids)
+        self._stage_config.add_group(new_group)
+        self._stage_config.save()
+        self._editor_widget.refresh_list()
+
+    def _on_remove_group(self, group_id: str):
+        if self._stage_config.remove_group(group_id):
+            self._stage_config.save()
+            self._editor_widget.refresh_list()
+
+    def _on_fixture_clicked(self, object_id: str):
+        self._editor_widget.select_fixture_by_id(object_id)
+
+    def _on_deselect_all(self):
+        self._editor_widget.deselect_all()
+
+    def _on_dmx_toggled(self, enabled: bool):
+        self._dmx_vis.enabled = enabled
+
+    def _on_dmx_updated(self):
+        self._editor_widget.update_live_values()

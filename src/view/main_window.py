@@ -57,14 +57,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster = Broadcaster()
         self.setWindowTitle("Project-Editor")
 
-        from model.dmx.dmx_test import dmx_test
-
-        self._dmx_test = dmx_test(
-            universe_id=2,
-            start_address_1based=15,
-            parent=self
-        )
-
         # model objects
         self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
@@ -100,6 +92,9 @@ class MainWindow(QtWidgets.QMainWindow):
             ("Visualizer", MainWidget(StageVisualizerWidget(self._board_configuration, self._broadcaster, self), self),
              self._broadcaster.view_to_visualizer.emit),
         ]
+
+        # Keep reference to visualizer for stage file menu actions
+        self._stage_visualizer = views[6][1].findChild(StageVisualizerWidget)
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -207,6 +202,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
                 ("Save Showfile", self._save_show, "S"),
                 ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
+                ("---", None, None),
+                ("Load Stagefile", self._load_stage_file, None),
+                ("Save Stagefile As", self._save_stage_file, None),
                 ("---", None, None),
                 ("Settings", self.open_show_settings, ","),
             ],
@@ -373,6 +371,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 _save_show_file(self._board_configuration.file_path, self._board_configuration)
             else:
                 show_save_showfile_dialog(self, self._board_configuration)
+
+    def _load_stage_file(self) -> None:
+        if self._stage_visualizer:
+            self._stage_visualizer.load_stage_file()
+
+    def _save_stage_file(self) -> None:
+        if self._stage_visualizer:
+            self._stage_visualizer.save_stage_file()
 
     def _open_about_window(self) -> None:
         if not self._about_window:
