@@ -372,11 +372,13 @@ class NumberDebugVizWidget(_DebugVizWidget):
             )
         if self._show_widget is not None:
             try:
-                self._show_widget.deleteLater()
+                if self._show_widget is not None:
+                    self._show_widget.deleteLater()
             except RuntimeError:
                 pass
             try:
-                self._placeholder_widget.deleteLater()
+                if self._placeholder_widget is not None:
+                    self._placeholder_widget.deleteLater()
             except RuntimeError:
                 pass
             self._show_widget = None
