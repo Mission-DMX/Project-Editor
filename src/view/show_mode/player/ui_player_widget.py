@@ -1,5 +1,5 @@
 """Qt widget to display show UI widgets."""
-
+import random
 from typing import override
 
 from PySide6.QtCore import QPoint, Qt, Signal
@@ -27,7 +27,8 @@ class UIPlayerWidget(QWidget):
         """
         super().__init__(parent)
         self._scene: Scene | None = None
-        self.setLayout(QGridLayout(self))
+        layout = QGridLayout(self)
+        self.setLayout(layout)
         self._widgets: list[UIWidgetHolder] = []
         self._ui_page_window_index: int = 0
         self._page_combo_box = QComboBox(self)
@@ -86,6 +87,7 @@ class UIPlayerWidget(QWidget):
             for uiw in scene.ui_pages[self._ui_page_window_index].widgets:
                 widget = UIWidgetHolder(uiw, self, False)
                 self._widgets.append(widget)
+                widget.update_size()
         else:
             self._ui_page_window_index = max(len(scene.ui_pages) - 1, 0)
 
