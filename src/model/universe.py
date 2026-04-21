@@ -14,7 +14,7 @@ class Universe:
     def __init__(self, universe_proto: proto.UniverseControl_pb2.Universe) -> None:
         self._broadcaster = Broadcaster()
         self._universe_proto: proto.UniverseControl_pb2 = universe_proto
-        self._channels: Final[list[Channel]] = [Channel(channel_address) for channel_address in
+        self._channels: Final[list[Channel]] = [Channel(self, channel_address) for channel_address in
                                                 range(NUMBER_OF_CHANNELS)]
 
         self._name = f"Universe {self.universe_proto.id + 1}"

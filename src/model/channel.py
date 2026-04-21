@@ -1,15 +1,23 @@
 """Basic dmx channel with 256 values"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from PySide6 import QtCore
 
+if TYPE_CHECKING:
+    from model import Universe
 
 class Channel(QtCore.QObject):
     """Basic dmx channel with 256 values"""
 
     updated: QtCore.Signal = QtCore.Signal(int)
 
-    def __init__(self, channel_address: int) -> None:
+    def __init__(self, parent_universe: Universe, channel_address: int) -> None:
         """Constructs a channel."""
         super().__init__(None)
+        self.parent_universe = parent_universe
         if not (0 <= channel_address <= 511):
             raise ValueError(f"Tried to create a channel with address {channel_address}")
         self._address: int = channel_address
