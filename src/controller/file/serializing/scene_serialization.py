@@ -110,7 +110,7 @@ def generate_scene_xml_description(
     scene.sort_dmx_default_values()
     for default_value in scene.dmx_default_values:
         ET.SubElement(scene_element, "dmxdefaultvalue", attrib={
-            "universe": default_value.universe_id,
+            "universe": str(default_value.universe_id),
             "channel": str(default_value.channel),
             "value": str(default_value.value),
         })

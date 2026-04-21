@@ -96,16 +96,17 @@ class UniverseSelector(QtWidgets.QTabWidget):
             return
         scene_list = [f"{scene.scene_id}: {scene.human_readable_name}" for scene in self._board_configuration.scenes]
         self._dialog = SelectionDialog("Select Scene", "Please select the scene to apply the values to",
-                                       scene_list, self, False,
+                                       scene_list, self, True,
                                        self._scene_selected_for_default_value_add)
         self._dialog.show()
 
     def _scene_selected_for_default_value_add(self, dialog: SelectionDialog) -> None:
-        scene = self._board_configuration.get_scene_by_id(int(dialog.selected_items[0].split(": ", 1)[0]))
-        if scene is None:
-            return
-        for univ_widget in self._universe_widgets:
-            univ_widget.add_settings_to_scenes_default_values(scene)
-        scene.sort_dmx_default_values()
+        for selected_item in dialog.selected_items:
+            scene = self._board_configuration.get_scene_by_id(int(selected_item.split(": ", 1)[0]))
+            if scene is None:
+                return
+            for univ_widget in self._universe_widgets:
+                univ_widget.add_settings_to_scenes_default_values(scene)
+            scene.sort_dmx_default_values()
         self._dialog.deleteLater()
         self._dialog = None
