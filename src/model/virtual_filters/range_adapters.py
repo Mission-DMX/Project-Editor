@@ -282,9 +282,9 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
             f"{self.filter_id}_16bit_to_float",
             pos=self.pos
         )
-        range_16b_to_float_filter.filter_configurations.update({
+        range_16b_to_float_filter.initial_parameters.update({
             "lower_bound_in": "0",
-            "upper_bound_in": "65565",
+            "upper_bound_in": "65535",
             "lower_bound_out": "0.0",
             "upper_bound_out": "1.0",
             "limit_range": "1"
@@ -299,7 +299,7 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
             f"{self.filter_id}_8bit_to_float",
             pos=self.pos
         )
-        range_8b_to_float_filter.filter_configurations.update({
+        range_8b_to_float_filter.initial_parameters.update({
             "lower_bound_in": "0",
             "upper_bound_in": "255",
             "lower_bound_out": "0.0",
