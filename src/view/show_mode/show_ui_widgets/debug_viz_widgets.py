@@ -16,6 +16,7 @@ from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
 
 from model import ColorHSI, UIWidget
+from model.filter import FilterTypeEnumeration
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -267,11 +268,12 @@ class ColorDebugVizWidget(_DebugVizWidget):
 
 
 class _NumberLabel(QWidget):
-    def __init__(self, parent: QWidget) -> None:
+    def __init__(self, parent: QWidget, is_16bit: bool) -> None:
         super().__init__(parent)
         self.mode: str = ""
         self._number: float = 0.0
         self._text: str = "0"
+        self._divider: float = 65535.0 if is_16bit else 255.0
 
     @override
     def paintEvent(self, event: QPaintEvent, /) -> None:
@@ -279,7 +281,7 @@ class _NumberLabel(QWidget):
         painter = QPainter(self)
         painter.drawRect(0, 0, self.width(), self.height())
         if self.mode == "Illumination":
-            alpha = self._number / 255.0
+            alpha = self._number / self._divider
             indicator_color = QColor.fromRgbF(1.0, 1.0, 0, alpha)
             painter.fillRect(1, 1, self.width() - 2, self.height() - 2, indicator_color)
         fm = painter.fontMetrics()
@@ -322,7 +324,9 @@ class NumberDebugVizWidget(_DebugVizWidget):
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        self._show_widget = _NumberLabel(parent)
+        self._show_widget = _NumberLabel(parent,
+                                         self.parent.scene.get_filter_by_id(self.filter_ids[0]).filter_type ==
+                                         FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT)
         self._dimensions_changed()
         if not self._callback_registered:
             self.parent.scene.board_configuration.register_filter_update_callback(
