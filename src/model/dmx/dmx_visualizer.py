@@ -99,9 +99,9 @@ class DmxVisualizer(QtCore.QObject):
         except Exception as e:
             logger.warning("Could not connect broadcaster signals: %s", e)
 
-        # Request fresh DMX data at ~60 Hz.
+        # Request fresh DMX data at ~45 Hz.
         self._poll_timer = QtCore.QTimer(self)
-        self._poll_timer.setInterval(16)
+        self._poll_timer.setInterval(22)
         self._poll_timer.timeout.connect(self._request_dmx)
         self._poll_timer.start()
 
