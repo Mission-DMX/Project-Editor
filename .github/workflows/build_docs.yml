@@ -15,9 +15,7 @@ jobs:
         submodules: true
 
       - name: Build Documentation
-        run: |
-          pdm install --dev
-          doxygen Doxyfile
+        run: doxygen Doxyfile
 
       - name: Deploy class documentation
         run: cd docs-build/html && sudo /home/deploy/deploy.bash . docs/editor-class-doc
