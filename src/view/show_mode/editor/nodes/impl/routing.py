@@ -37,7 +37,16 @@ class SwitchFilterNode(FilterNode):
 
     def _setup_input_terminals(self) -> None:
         existing_inputs = list(self.inputs())
-        required_input_count = int(self._filter.filter_configurations["nr_inputs"])
+        try:
+            required_input_count = int(self._filter.filter_configurations["nr_inputs"])
+        except ValueError:
+            logger.error("Invalid number of inputs: %s. Resetting to 0.", len(self._filter.filter_configurations))
+            required_input_count = 0
+            self._filter.filter_configurations["nr_inputs"] = "0"
+        if required_input_count < 0:
+            logger.error("Invalid number of inputs: %s. Resetting to 0.", required_input_count)
+            required_input_count = 0
+            self._filter.filter_configurations["nr_inputs"] = "0"
         for input_key in existing_inputs:
             if input_key != "select" and int(input_key) >= required_input_count:
                 self.removeTerminal(input_key)
