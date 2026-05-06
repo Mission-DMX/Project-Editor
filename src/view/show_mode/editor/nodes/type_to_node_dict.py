@@ -64,7 +64,7 @@ from view.show_mode.editor.nodes.impl.effects import (
     Shift8BitNode,
     Shift16BitNode,
     ShiftColorNode,
-    ShiftFloatNode,
+    ShiftFloatNode, ChaserNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
     FaderHSIANode,
@@ -178,4 +178,5 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT: DebugRemoteFloatNode.nodeName,
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL: DebugRemoteColorNode.nodeName,
     FilterTypeEnumeration.FILTER_EVENT_COUNTER: EventCounterFilterNode.nodeName,
+    FilterTypeEnumeration.FILTER_COLOR_CHASER: ChaserNode.nodeName,
 }

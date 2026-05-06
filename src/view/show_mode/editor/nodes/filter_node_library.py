@@ -60,7 +60,7 @@ from view.show_mode.editor.nodes.impl.effects import (
     Shift8BitNode,
     Shift16BitNode,
     ShiftColorNode,
-    ShiftFloatNode,
+    ShiftFloatNode, ChaserNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
     FaderHSIANode,
@@ -212,6 +212,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(FaderHSIAUNode, [("Filter Fader",)])
 
     def _register_effect_nodes(self) -> None:
+        self.addNodeType(ChaserNode, [("Effects",)])
         self.addNodeType(CueListNode, [("Effects",)])
         self.addNodeType(AutoTrackerNode, [("Effects",)])
         self.addNodeType(Shift8BitNode, [("Effects",)])
