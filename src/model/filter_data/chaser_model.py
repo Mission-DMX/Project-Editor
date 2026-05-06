@@ -68,9 +68,6 @@ class ChaserLayer:
         return "|".join(parts)
 
 
-# TODO introduce a dictionary containing layer_identifiers as key and human name, a description and GIF as value
-
-
 class ChaserConfig:
     """Represents an individual chaser configuration."""
 
