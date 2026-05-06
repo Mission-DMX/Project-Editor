@@ -165,6 +165,7 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_REMOTE_DEBUG_PIXEL = 68
     FILTER_SEQUENCER = 69
     FILTER_EVENT_COUNTER = 70
+    FILTER_COLOR_CHASER = 75
 
 
 class Filter:
