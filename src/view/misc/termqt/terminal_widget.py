@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import logging
 import math
 from enum import Enum
+from logging import getLogger
 from typing import TYPE_CHECKING, Any, override
 
 from PySide6.QtCore import QMutex, Qt, QTimer, Signal
@@ -22,6 +22,8 @@ from PySide6.QtGui import (
 )
 
 if TYPE_CHECKING:
+    from logging import Logger
+
     from PySide6.QtCore import QPoint
     from PySide6.QtGui import QFocusEvent, QKeyEvent, QMouseEvent, QPaintEvent, QResizeEvent, QShowEvent, QWheelEvent
 
@@ -80,7 +82,7 @@ class Terminal(TerminalBuffer, QWidget):
                  width: int,
                  height: int,
                  *,
-                 logger: logging.Logger | None = None,
+                 logger: Logger | None = None,
                  padding: int = 4,
                  font_size: int = 12,
                  line_height_factor: int = 1.2,
@@ -104,7 +106,7 @@ class Terminal(TerminalBuffer, QWidget):
 
         self.scroll_bar: QScrollBar = None
 
-        self.logger = logger or logging.getLogger()
+        self.logger = logger or getLogger(__name__)
         self.logger.info("Initializing Terminal...")
 
         TerminalBuffer.__init__(self, max(int(height / 10), 1), max(int(width / 10), 1), logger=self.logger, **kwargs)
