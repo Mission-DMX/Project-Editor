@@ -133,6 +133,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return ColorMixingSetupWidget()
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_SEQUENCER:
         return SequencerEditor(f=filter_)
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
+        return ColorChaserFilterConfigWidget(filter=filter_)
 
     return None
 

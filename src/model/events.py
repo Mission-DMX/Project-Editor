@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from logging import getLogger
+from typing import NamedTuple
 
 import proto.Events_pb2
 from controller.network import NetworkManager
@@ -61,6 +62,34 @@ def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
 
 
 _broadcaster_instance.event_sender_update.connect(handle_incoming_sender_update)
+
+
+class EventFilter(NamedTuple):
+    """Event Filter Description."""
+
+    event_sender: int
+    event_sender_function: int
+    args: list[int]
+
+    @staticmethod
+    def from_filter_str(filter_str: str) -> "EventFilter":
+        """Create a EventFilter instance from a filter string."""
+        parts = filter_str.split(':')
+        if len(parts) < 2:
+            raise ValueError("Invalid filter string: '%s'" % filter_str)
+        ef = EventFilter()
+        ef.event_sender = int(parts[0])
+        ef.event_sender_function = int(parts[1])
+        parts.pop(0)
+        parts.pop(0)
+        for arg in parts:
+            ef.args.append(int(arg))
+
+    def format_for_filters(self) -> str:
+        """Serialize the event filter into a string representation."""
+        mlist = [str(self.event_sender), str(self.event_sender_function)]
+        mlist.extend(str(i) for i in self.args)
+        return ":".join(mlist)
 
 
 class EventSender:
