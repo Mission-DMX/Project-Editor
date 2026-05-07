@@ -6,6 +6,7 @@ added_files = [
          ( 'src/resources/data', 'resources/data' ),
          ( 'src/resources/fonts', 'resources/fonts' ),
          ( 'src/resources/icons', 'resources/icons' ),
+         ( 'src/resources/chaser_layer_help', 'resources/chaser_layer_help' ),
          ( 'src/configs','configs')
          ]
 
