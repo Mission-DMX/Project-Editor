@@ -285,19 +285,43 @@ class ChaserConfig:
                 raise ValueError(f"Unsupported layer identifier: {identifier}")
 
     def format_for_filter_str(self) -> str:
-        pass  # TODO
+        """Format the setup to be stored in a filter configuration."""
+        layer_strings: list[str] = [l.format_for_filters() for l in self.layers]
+        return ";".join(layer_strings)
 
 
 class ChaserModel:
     """Contains representation of chaser configurations."""
 
     def __init__(self, config_parameter: dict[str, str]):
-        self.number_of_pixels = int(config_parameter["number_of_pixels"])
-        self.color_parameters = config_parameter["color_parameters"].split(":")
-        self.number_parameters = config_parameter["number_parameters"].split(":")
+        """Initialize the model using the given configuration parameters.
+
+        A default configuration must be set after the fact.
+
+        Args:
+            config_parameter: Configuration parameters as a dictionary to deserialize the model from.
+
+        """
+        self.number_of_pixels: int = int(config_parameter["number_of_pixels"])
+        self.color_parameters: list[str] = config_parameter["color_parameters"].split(":")
+        self.number_parameters: list[str] = config_parameter["number_parameters"].split(":")
         self.presets: list[ChaserConfig] = [ChaserConfig(s) for s in config_parameter["presets"].split("#")]
         self.default_config: ChaserConfig | None = None
         self.trigger_event: EventFilter | None = None
 
     def get_as_configuration(self) -> dict[str, str]:
-        return {}  # TODO
+        """Serializes the model into a set of configuration parameters.
+
+        This does not include the default configuration.
+
+        Returns:
+            A dictionary with the required values filled in.
+
+        """
+        return {
+            "number_of_pixels": str(self.number_of_pixels),
+            "color_parameters": ':'.join(self.color_parameters),
+            "number_parameters": ":".join(self.number_parameters),
+            "presets": '#'.join(p.format_for_filter_str() for p in self.presets),
+            "trigger_event": self.trigger_event.format_for_filters() if self.trigger_event is not None else "",
+        }
