@@ -284,6 +284,9 @@ class ChaserConfig:
             else:
                 raise ValueError(f"Unsupported layer identifier: {identifier}")
 
+    def format_for_filter_str(self) -> str:
+        pass  # TODO
+
 
 class ChaserModel:
     """Contains representation of chaser configurations."""
@@ -293,4 +296,8 @@ class ChaserModel:
         self.color_parameters = config_parameter["color_parameters"].split(":")
         self.number_parameters = config_parameter["number_parameters"].split(":")
         self.presets: list[ChaserConfig] = [ChaserConfig(s) for s in config_parameter["presets"].split("#")]
+        self.default_config: ChaserConfig | None = None
         self.trigger_event: EventFilter | None = None
+
+    def get_as_configuration(self) -> dict[str, str]:
+        return {}  # TODO

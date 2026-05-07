@@ -8,12 +8,14 @@ For the model, please have a look under model.filter_data.chaser_model
 from __future__ import annotations
 
 import os
+from logging import getLogger
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtGui import QMovie, QImage
-from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QMovie, QImage, Qt
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QSlider, QFormLayout, QSplitter, QLabel, QListWidget, QHBoxLayout, \
+    QPushButton, QSpinBox
 
-from model.filter_data.chaser_model import ChaserModel
+from model.filter_data.chaser_model import ChaserModel, ChaserConfig
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
@@ -21,6 +23,9 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog
     from model import Filter
+
+
+logger = getLogger(__name__)
 
 
 LAYER_DESCRIPTION: dict[str, tuple[str, str, QImage | QMovie]] = {
@@ -152,6 +157,17 @@ LAYER_DESCRIPTION: dict[str, tuple[str, str, QImage | QMovie]] = {
 }
 
 
+class ChaserLayerConfigWidget(QWidget):
+    """Widget to edit chaser layer setup instance.
+
+    Widget provides a list of all layers, options to create and remove layers as well as an area allowing configuration
+    of selected layer.
+
+    """
+
+    # TODO
+
+
 class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     """Editor widget for color chaser."""
 
@@ -163,12 +179,47 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._live_updates_enabled = False
         self._model: ChaserModel | None = None
 
+        top_layout = QVBoxLayout()
+        general_settings_layout = QFormLayout()
+        self._number_of_pixels_tb = QSpinBox()
+        general_settings_layout.addRow("Number of Pixels: ", self._number_of_pixels_tb)
+        # TODO add trigger event selector
+        # TODO add widgets to manage color parameters
+        # TODO add widgets to manage number parameters
+        top_layout.addLayout(general_settings_layout)
+
+        configlist_layer_slider = QSplitter(Qt.Orientation.Horizontal)
+        configlist_container = QWidget()
+        configlist_container_layout = QVBoxLayout()
+        self._default_configuration_button = QLabel("TODO put button here selecting default configuration")
+        configlist_container_layout.addWidget(self._default_configuration_button)
+        self._additional_configurations_list = QListWidget()
+        configlist_container_layout.addWidget(self._additional_configurations_list)
+        add_del_configuration_layout = QHBoxLayout()
+        self._add_configuration_button = QPushButton("Add Configuration")
+        add_del_configuration_layout.addWidget(self._add_configuration_button)
+        self._delete_configuration_button = QPushButton("Delete Configuration")
+        add_del_configuration_layout.addWidget(self._delete_configuration_button)
+        add_del_configuration_layout.addStretch()
+        configlist_container_layout.addLayout(add_del_configuration_layout)
+        configlist_container.setLayout(configlist_container_layout)
+        configlist_layer_slider.addWidget(configlist_container)
+
+        self._layer_config_widget = ChaserLayerConfigWidget()
+        configlist_layer_slider.addWidget(self._layer_config_widget)
+
+        top_layout.addWidget(configlist_layer_slider)
+        self._widget.setLayout(top_layout)
+
     def _enable_live_updates(self):
+        # TODO disable general settings widgets
         self._live_updates_enabled = True
 
     @override
     def _get_configuration(self) -> dict[str, str]:
-        return {}  # TODO
+        if self._model is None:
+            return {}
+        return self._model.get_as_configuration()
 
     @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
@@ -180,15 +231,30 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
 
     @override
     def _load_parameters(self, parameters: dict[str, str]) -> dict:
-        pass  # TODO
+        if self._model is None:
+            logger.critical("Model should not be None at this point.")
+            return {}
+        default_config_str = parameters.get("config")
+        if default_config_str is not None:
+            self._model.default_config = ChaserConfig(default_config_str)
+        return parameters
 
     @override
     def _get_parameters(self) -> dict[str, str]:
-        return {}  # TODO
+        model = self._model
+        if model is None:
+            return {}
+        default_config = model.default_config
+        if default_config is None:
+            return {}
+        return {
+            'config': default_config.format_for_filter_str()
+        }
 
     @override
     def parent_opened(self) -> None:
         self._live_updates_enabled = False
+        # TODO only query this, if parameters are configured
         self._input_dialog = YesNoDialog(
             self.get_widget(), "Preview", "Would you like to switch to live preview?", self._enable_live_updates
         )
