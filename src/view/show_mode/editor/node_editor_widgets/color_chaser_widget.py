@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QMovie, QImage, Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QSlider, QFormLayout, QSplitter, QLabel, QListWidget, QHBoxLayout, \
-    QPushButton, QSpinBox
+    QPushButton, QSpinBox, QGroupBox
 
 from model.events import EventFilter
 from model.filter_data.chaser_model import ChaserModel, ChaserConfig
@@ -21,6 +21,7 @@ from utility import resource_path
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.event_selection_dialog import EventSelectionDialog
+from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog
@@ -180,23 +181,49 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._input_dialog: QDialog | None = None
         self._live_updates_enabled = False
         self._model: ChaserModel | None = None
+        self._filter: Filter = filter
 
         top_layout = QVBoxLayout()
         general_settings_layout = QFormLayout()
         self._number_of_pixels_tb = QSpinBox()
+        self._number_of_pixels_tb.setRange(1, 65535)
         general_settings_layout.addRow("Number of Pixels: ", self._number_of_pixels_tb)
-        event_selection_container = QWidget()
         event_selection_layout = QHBoxLayout()
         self._event_label = QLabel("Time Mode")
         event_selection_layout.addWidget(self._event_label)
         event_selection_layout.addStretch()
         self._event_select_clear_button = QPushButton("Select Event")
-        self._event_select_clear_button.clicked = self._event_select_or_clear_clicked
+        self._event_select_clear_button.clicked.connect(self._event_select_or_clear_clicked)
         event_selection_layout.addWidget(self._event_select_clear_button)
-        event_selection_container.setLayout(event_selection_layout)
-        general_settings_layout.addRow("Trigger Event: ", event_selection_container)
-        # TODO add widgets to manage color parameters
-        # TODO add widgets to manage number parameters
+        general_settings_layout.addRow("Trigger Event: ", event_selection_layout)
+        parameter_layout = QHBoxLayout()
+
+        self._number_parameter_box = QGroupBox()
+        self._number_parameter_list_widget = QListWidget()
+        number_parameter_layout = QVBoxLayout()
+        number_parameter_layout.addWidget(self._number_parameter_list_widget)
+        self._add_number_parameter_button = QPushButton("Add Number Parameter")
+        self._add_number_parameter_button.clicked.connect(self._add_number_parameter_pressed)
+        number_parameter_layout.addWidget(self._add_number_parameter_button)
+        self._delete_number_parameter_button = QPushButton("Delete Number Parameter")
+        self._delete_number_parameter_button.clicked.connect(self._remove_number_parameter_pressed)
+        number_parameter_layout.addWidget(self._delete_number_parameter_button)
+        self._number_parameter_box.setLayout(number_parameter_layout)
+        parameter_layout.addWidget(self._number_parameter_box)
+
+        self._color_parameter_box = QGroupBox()
+        self._color_parameter_list_widget = QListWidget()
+        color_parameter_layout = QVBoxLayout()
+        color_parameter_layout.addWidget(self._color_parameter_list_widget)
+        self._add_color_parameter_button = QPushButton("Add Color Parameter")
+        self._add_color_parameter_button.clicked.connect(self._add_color_parameter_pressed)
+        color_parameter_layout.addWidget(self._add_color_parameter_button)
+        self._delete_color_parameter_button = QPushButton("Delete Color Parameter")
+        self._delete_color_parameter_button.clicked.connect(self._remove_color_parameter_pressed)
+        color_parameter_layout.addWidget(self._delete_color_parameter_button)
+        self._color_parameter_box.setLayout(color_parameter_layout)
+        parameter_layout.addWidget(self._color_parameter_box)
+        general_settings_layout.addRow("Parameters", parameter_layout)
         top_layout.addLayout(general_settings_layout)
 
         configlist_layer_slider = QSplitter(Qt.Orientation.Horizontal)
@@ -223,7 +250,10 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._widget.setLayout(top_layout)
 
     def _enable_live_updates(self):
-        # TODO disable general settings widgets
+        self._color_parameter_box.setEnabled(False)
+        self._number_parameter_box.setEnabled(False)
+        self._number_of_pixels_tb.setEnabled(False)
+        self._event_select_clear_button.setEnabled(False)
         self._live_updates_enabled = True
 
     @override
@@ -235,6 +265,23 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
         self._model = ChaserModel(conf)
+        self._number_of_pixels_tb.setValue(self._model.number_of_pixels)
+        for i, np in enumerate(self._model.number_parameters):
+            item = AnnotatedListWidgetItem(self._number_parameter_list_widget)
+            item.setText(np)
+            item.annotated_data = i
+            self._number_parameter_list_widget.addItem(item)
+        for i, cp in enumerate(self._model.color_parameters):
+            item = AnnotatedListWidgetItem(self._color_parameter_list_widget)
+            item.setText(cp)
+            item.annotated_data = i
+            self._color_parameter_list_widget.addItem(item)
+        if self._model.trigger_event is not None:
+            sender, function, args = self._model.trigger_event
+            self._event_label.setText(f"Trigger Event: {sender}:{function} -> {", ".join(args)}")
+            self._event_select_clear_button.setText("Clear")
+        # TODO populate default configuration
+        # TODO populate presets
 
     @override
     def get_widget(self) -> QWidget:
@@ -291,3 +338,15 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._model.trigger_event = EventFilter(sender, function, [ord(c) for c in args])
         self._input_dialog.deleteLater()
         self._input_dialog = None
+
+    def _add_number_parameter_pressed(self):
+        pass  # TODO
+
+    def _remove_number_parameter_pressed(self):
+        pass  # TODO
+
+    def _add_color_parameter_pressed(self):
+        pass  # TODO
+
+    def _remove_color_parameter_pressed(self):
+        pass  # TODO
