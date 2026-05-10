@@ -73,11 +73,11 @@ class ShowBrowser:
         self._filter_browsing_tree.setColumnCount(1)
 
         self._tool_bar = QToolBar()
-        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Scene", lambda: self._add_element_pressed())
-        self._tool_bar.addAction(QIcon.fromTheme("document-properties"), "Edit", lambda: self._edit_element_pressed())
-        self._tool_bar.addAction(QIcon.fromTheme("view-refresh"), "Refresh", lambda: self._refresh_all())
+        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Scene", self._add_element_pressed)
+        self._tool_bar.addAction(QIcon.fromTheme("document-properties"), "Edit", self._edit_element_pressed)
+        self._tool_bar.addAction(QIcon.fromTheme("view-refresh"), "Refresh", self._refresh_all)
         self._tool_bar.addAction(
-            QIcon.fromTheme("document-send"), "Send showfile to fish", lambda: self._upload_showfile()
+            QIcon.fromTheme("document-send"), "Send showfile to fish", self._upload_showfile
         )
 
         self._toolbar_edit_action = self._tool_bar.actions()[1]

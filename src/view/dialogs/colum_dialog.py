@@ -1,17 +1,18 @@
-"""modify a colum of XTouch"""
+"""modify a colum of XTouch."""
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 
-from model import ColorHSI
 from model.broadcaster import Broadcaster
+from model.color_hsi import ColorHSI
 from model.control_desk import BankSet, ColorDeskColumn
 from view.dialogs.temperature_dialog import TemperatureDialog
 
 
 class ColumnDialog(QtWidgets.QDialog):
-    """select how to modify a colum of XTouch"""
+    """Select how to modify a colum of XTouch."""
 
     def __init__(self, column: ColorDeskColumn, parent: object = None) -> None:
+        """Initialize dialog for provided column."""
         super().__init__(parent)
         self._broadcaster = Broadcaster()
         self.setWindowTitle(f"Change Column {column.id}")
@@ -24,12 +25,12 @@ class ColumnDialog(QtWidgets.QDialog):
         # self.colorD.finished.connect(self._select_color)
         # color_label = QtWidgets.QLabel(column.color.format_for_filter())
         color_picker = QtWidgets.QPushButton("pick Color")
-        color_picker.clicked.connect(lambda: self._broadcaster.view_to_color.emit())
-        self.color_d.finished.connect(lambda: self._broadcaster.view_leave_color.emit())
+        color_picker.clicked.connect(self._broadcaster.view_to_color.emit)
+        self.color_d.finished.connect(self._broadcaster.view_leave_color.emit)
 
         temperature_picker = QtWidgets.QPushButton("pick Temperature")
-        temperature_picker.clicked.connect(lambda: self._broadcaster.view_to_temperature.emit())
-        self.temperature_d.finished.connect(lambda: self._broadcaster.view_leave_temperature.emit())
+        temperature_picker.clicked.connect(self._broadcaster.view_to_temperature.emit)
+        self.temperature_d.finished.connect(self._broadcaster.view_leave_temperature.emit)
 
         color_layout = QtWidgets.QVBoxLayout()
         color_layout.addWidget(color_picker)
@@ -39,7 +40,7 @@ class ColumnDialog(QtWidgets.QDialog):
         color_widget.setLayout(color_layout)
 
         button = QtWidgets.QPushButton("close")
-        button.clicked.connect(lambda: self._broadcaster.view_leave_colum_select.emit())
+        button.clicked.connect(self._broadcaster.view_leave_colum_select.emit)
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(color_widget)
         layout.addWidget(button)

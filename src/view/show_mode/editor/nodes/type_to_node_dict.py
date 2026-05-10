@@ -17,6 +17,7 @@ from view.show_mode.editor.nodes.impl.adapters import (
     AdapterFloatToColorNode,
     AdapterFloatToRange,
     ColorBrightnessMixinNode,
+    ColorToColorwheelAdapterNode,
     CombineTwo8BitToSingle16Bit,
     Map8BitTo16Bit,
 )
@@ -98,6 +99,7 @@ from view.show_mode.editor.nodes.impl.waves import SawtoothWaveNode, SquareWaveN
 from view.show_mode.editor.nodes.import_node import ImportNode
 
 type_to_node: dict[int, str] = {
+    FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL: ColorToColorwheelAdapterNode.nodeName,
     FilterTypeEnumeration.VFILTER_SEQUENCER: SequencerNode.nodeName,
     FilterTypeEnumeration.VFILTER_COLOR_MIXER: ColorMixerVFilterNode.nodeName,
     FilterTypeEnumeration.VFILTER_IMPORT: ImportNode.nodeName,
