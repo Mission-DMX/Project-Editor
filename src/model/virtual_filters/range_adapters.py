@@ -276,7 +276,8 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
             range8b_out_filter.channel_links["value_in"] = input_port_name
             filter_list.append(range8b_out_filter)
 
-    def _generate_16b_to_float_range(self, filter_list: list[Filter], input_port_name: str, suffixname: str) -> SixteenBitToFloatRange:
+    def _generate_16b_to_float_range(self, filter_list: list[Filter], input_port_name: str, suffixname: str)\
+            -> SixteenBitToFloatRange:
         range_16b_to_float_filter = SixteenBitToFloatRange(
             self.scene,
             f"{self.filter_id}_16bit_to_float_{suffixname}",
@@ -293,7 +294,8 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
         range_16b_to_float_filter.instantiate_filters(filter_list)
         return range_16b_to_float_filter
 
-    def _generate_8b_to_float_range(self, filter_list: list[Filter], input_port_name: str, suffixname: str) -> EightBitToFloatRange:
+    def _generate_8b_to_float_range(self, filter_list: list[Filter], input_port_name: str, suffixname: str)\
+            -> EightBitToFloatRange:
         range_8b_to_float_filter = EightBitToFloatRange(
             self.scene,
             f"{self.filter_id}_8bit_to_float_{suffixname}",

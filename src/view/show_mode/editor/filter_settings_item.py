@@ -28,6 +28,7 @@ from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilter
 
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
+from .node_editor_widgets.color_to_colorwheel_adapter_settings_widget import ColorToColorwheelAdapterSetupWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.dimmer_brightness_mixin_config_widget import DimmerBrightnessMixinConfigWidget
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
@@ -60,10 +61,16 @@ class FilterSettingsItem(QGraphicsSvgItem):
         self._dialog = None
         self._filter_node = filter_node
         self._on_update = lambda: None
+        self._parent = parent
         self.setScale(0.2)
-        self.moveBy(parent.boundingRect().width() / 2 - 6, parent.boundingRect().height() - 20)
+        self.update_position()
         self._filter = filter_
         self._mb_updated: bool = False
+
+    def update_position(self) -> None:
+        """Updates the position of the button after the filter node size changed."""
+        self.setPos(0, 0)
+        self.moveBy(self._parent.boundingRect().width() / 2 - 6, self._parent.boundingRect().height() - 20)
 
     @override
     def focusOutEvent(self, ev: QFocusEvent) -> None:
@@ -132,6 +139,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return ImportVFilterSettingsWidget(filter_)
     if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_MIXER):
         return ColorMixingSetupWidget()
+    if filter_.filter_type == int(FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL):
+        return ColorToColorwheelAdapterSetupWidget(filter_)
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_SEQUENCER:
         return SequencerEditor(f=filter_)
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN:
@@ -236,6 +245,8 @@ class FilterSettingsDialog(QDialog):
             self._special_widget.parent_closed(self._filter_node)
         else:
             self._filter_node.update_node_after_settings_changed()
+            if self._filter_node.fsi is not None:
+                self._filter_node.fsi.update_position()
         super().closeEvent(arg__1)
 
     @override

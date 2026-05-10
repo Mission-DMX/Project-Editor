@@ -840,8 +840,8 @@ class TerminalBuffer:
 
     def set_style(self, color: QColor | None, bg_color: QColor | None,
                   bold: bool, underline: bool, reverse: bool) -> None:
-        self._fg_color = color if color else self._fg_color
-        self._bg_color = bg_color if bg_color else self._bg_color
+        self._fg_color = color or self._fg_color
+        self._bg_color = bg_color or self._bg_color
         self._bold = bool(bold) if bold != -1 else self._bold
         self._underline = bool(underline) if underline != -1 else \
             self._underline

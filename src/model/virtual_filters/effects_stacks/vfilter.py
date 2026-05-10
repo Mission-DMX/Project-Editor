@@ -1,6 +1,7 @@
-"""This file provides the v-filter implementation of the effects stack system"""
+"""Provides the v-filter implementation of the effects stack system."""
 
 from logging import getLogger
+from typing import override
 
 from model import Filter, Scene
 from model.filter import FilterTypeEnumeration, VirtualFilter
@@ -14,18 +15,24 @@ logger = getLogger(__name__)
 
 
 class EffectsStack(VirtualFilter):
-    """The v-filter providing the effects stack. This filter provides a system enabling one to assign stackable effects
-    to fixtures, groups of fixtures or configurable output ports."""
+    """The v-filter providing the effects stack.
+
+    This filter provides a system enabling one to assign stackable effects
+    to fixtures, groups of fixtures or configurable output ports.
+    """
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+        """Initialize vFilter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_EFFECTSSTACK, pos=pos)
         self.sockets: list[EffectsSocket] = []
         self.deserialize()
 
+    @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         # We only need to resolve ports for explicitly configured outputs
         pass
 
+    @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         for socket in self.sockets:
             socket_target = socket.target
@@ -112,12 +119,10 @@ class EffectsStack(VirtualFilter):
                         ("b", socket_target.get_segment_in_universe_by_type(FixtureChannelType.BLUE)),
                         ("w", socket_target.get_segment_in_universe_by_type(FixtureChannelType.WHITE)),
                         ("a", socket_target.get_segment_in_universe_by_type(FixtureChannelType.AMBER))]:
-                        i = 0
-                        for segment in segment_list:
+                        for i, segment in enumerate(segment_list):
                             universe_filter.filter_configurations[str(segment)] = str(segment)
                             universe_filter.channel_links[str(segment)] = \
                                 f"{adapter_filters[i % len(adapter_filters)].filter_id}:{segment_channel_name}"
-                            i += 1
                 else:
                     for segment_list in [socket_target.get_segment_in_universe_by_type(FixtureChannelType.RED),
                                          socket_target.get_segment_in_universe_by_type(FixtureChannelType.GREEN),
@@ -144,6 +149,7 @@ class EffectsStack(VirtualFilter):
                 constant_filter.initial_parameters["value"] = "0.0"
                 filter_list.append(constant_filter)
 
+    @override
     def serialize(self) -> None:
         d = self.filter_configurations
         d.clear()
@@ -152,6 +158,7 @@ class EffectsStack(VirtualFilter):
             # TODO Encode start addresses in case of group or use uuid of fixture
             d[name] = s.serialize()
 
+    @override
     def deserialize(self) -> None:
         self.sockets.clear()
         for k, v in self._filter_configurations.items():
