@@ -31,7 +31,7 @@ class BoardConfiguration:
         self._scenes_index: dict[int, int] = {}
         self._devices: list[Device] = []
         self._universes: dict[int, Universe] = {}
-        self._fixtures: dict[str, UsedFixture] = {}
+        self._fixtures: dict[UUID, UsedFixture] = {}
         self._ui_hints: dict[str, str] = {}
         self._macros: list[Macro] = []
 
@@ -101,7 +101,7 @@ class BoardConfiguration:
         self._universes.update({universe.id: universe})
 
     def _add_fixture(self, used_fixture: UsedFixture) -> None:
-        self._fixtures[str(used_fixture.uuid)] = used_fixture
+        self._fixtures[used_fixture.uuid] = used_fixture
 
     def _delete_universe(self, universe: Universe) -> None:
         """Remove the passed universe from the list of universes.
@@ -321,8 +321,8 @@ class BoardConfiguration:
         """Get the fixture specified by its id."""
         if fixture_id == "" or fixture_id is None:
             return None
-        if isinstance(fixture_id, UUID):
-            fixture_id = str(fixture_id)
+        if not isinstance(fixture_id, UUID):
+            fixture_id = UUID(fixture_id)
         return self._fixtures.get(fixture_id)
 
     def get_fixture_by_address(self, fixture_univ: int, fixture_chan: int) -> UsedFixture | None:

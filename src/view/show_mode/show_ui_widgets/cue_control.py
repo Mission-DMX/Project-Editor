@@ -277,3 +277,7 @@ class CueControlUIWidget(UIWidget):
                         self._player_cue_list_widget.item(active_cue)
                     ).playing = True
             self._last_active_cue = active_cue
+
+    def __str__(self) -> str:
+        """Generate description of widget."""
+        return f"Cue control for: {self._filter.filter_id}"
