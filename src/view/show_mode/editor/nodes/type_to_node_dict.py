@@ -76,7 +76,7 @@ from view.show_mode.editor.nodes.impl.faders import (
     FaderMainBrightness,
     FaderRawNode,
 )
-from view.show_mode.editor.nodes.impl.routing import Switch8BitNode, Switch16BitNode, SwitchFloatNode, SwitchColorNode
+from view.show_mode.editor.nodes.impl.routing import Switch8BitNode, Switch16BitNode, SwitchColorNode, SwitchFloatNode
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
     EventCounterFilterNode,
