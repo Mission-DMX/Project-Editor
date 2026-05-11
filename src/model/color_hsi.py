@@ -139,12 +139,12 @@ class ColorHSI:
 
     def to_rgb(self) -> tuple[int, int, int]:
         """RGB representations as int between 0 and 255."""
-        rr, rg, rb = colorsys.hls_to_rgb((self._hue % 360) / 360.0, self._intensity, self._saturation)
+        rr, rg, rb = colorsys.hsv_to_rgb((self._hue % 360) / 360.0, self._saturation, self._intensity)
         return int(rr * 255), int(rg * 255), int(rb * 255)
 
     def to_qt_color(self) -> QColor:
         """Return color in qt color format."""
-        return QColor.fromHslF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)
+        return QColor.fromHsvF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)
 
     def copy(self) -> ColorHSI:
         """Return a copy of The color object."""
@@ -153,7 +153,7 @@ class ColorHSI:
     @classmethod
     def from_qt_color(cls, c: QColor) -> ColorHSI:
         """Generate a HSI color from qt color format."""
-        return ColorHSI(c.hslHueF() * 360.0, c.hslSaturationF(), c.lightnessF())
+        return ColorHSI(c.hsvHueF() * 360.0, c.hsvSaturationF(), c.lightnessF())
 
     def __str__(self) -> str:
         """Format color as HTML color code."""
