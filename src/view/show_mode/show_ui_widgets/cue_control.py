@@ -152,7 +152,7 @@ class CueControlUIWidget(UIWidget):
             cue_list.clear()
             for cue in self._cues:
                 item = AnnotatedListWidgetItem(cue_list)
-                label = _CueLabel(cue_list, cue[0] if cue[0] else "No Name")
+                label = _CueLabel(cue_list, cue[0] or "No Name")
                 item.annotated_data = cue
                 item.setSizeHint(label.sizeHint())
                 cue_list.addItem(item)
@@ -277,3 +277,7 @@ class CueControlUIWidget(UIWidget):
                         self._player_cue_list_widget.item(active_cue)
                     ).playing = True
             self._last_active_cue = active_cue
+
+    def __str__(self) -> str:
+        """Generate description of widget."""
+        return f"Cue control for: {self._filter.filter_id}"

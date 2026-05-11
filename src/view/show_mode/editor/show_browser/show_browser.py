@@ -73,11 +73,11 @@ class ShowBrowser:
         self._filter_browsing_tree.setColumnCount(1)
 
         self._tool_bar = QToolBar()
-        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Scene", lambda: self._add_element_pressed())
-        self._tool_bar.addAction(QIcon.fromTheme("document-properties"), "Edit", lambda: self._edit_element_pressed())
-        self._tool_bar.addAction(QIcon.fromTheme("view-refresh"), "Refresh", lambda: self._refresh_all())
+        self._tool_bar.addAction(QIcon.fromTheme("list-add"), "Add Scene", self._add_element_pressed)
+        self._tool_bar.addAction(QIcon.fromTheme("document-properties"), "Edit", self._edit_element_pressed)
+        self._tool_bar.addAction(QIcon.fromTheme("view-refresh"), "Refresh", self._refresh_all)
         self._tool_bar.addAction(
-            QIcon.fromTheme("document-send"), "Send showfile to fish", lambda: self._upload_showfile()
+            QIcon.fromTheme("document-send"), "Send showfile to fish", self._upload_showfile
         )
 
         self._toolbar_edit_action = self._tool_bar.actions()[1]
@@ -343,7 +343,14 @@ class ShowBrowser:
                 current_widget.refresh()
 
     def _upload_showfile(self) -> None:
-        transmit_to_fish(self._show, False)
+        try:
+            transmit_to_fish(self._show, False)
+        except ValueError as e:
+            self._input_dialog = QMessageBox(QMessageBox.Icon.Critical, "Uploading Showfile Failed",
+                                             "An error occurred while uploading the show file to fish:",
+                                             parent=self.widget, detailedText=str(e))
+            self._input_dialog.setModal(True)
+            self._input_dialog.show()
 
     def _duplicate_scene(self, selected_items: list[QTreeWidgetItem]) -> None:
         i: int = 1

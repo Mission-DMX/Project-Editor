@@ -68,7 +68,8 @@ class UIWidgetHolder(QWidget):
             minimum_size = child_layout.totalMinimumSize()
         else:
             minimum_size = self._child.minimumSize()
-            minimum_size = QSize(max(250, minimum_size.width()), max(100, minimum_size.height()))
+            if minimum_size.height() < 5 and minimum_size.width() < 5:
+                minimum_size = QSize(max(250, minimum_size.width()), max(100, minimum_size.height()))
         w = max(minimum_size.width() + 50, self.minimumWidth())
         h = max(minimum_size.height() + 50, self.minimumHeight())
         self._label.resize(w, 20)
@@ -102,6 +103,8 @@ class UIWidgetHolder(QWidget):
         """
         if event.button() is Qt.MouseButton.LeftButton and self._instance_for_editor:
             self._old_pos = event.globalPos()
+        else:
+            event.ignore()
 
     @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
