@@ -24,6 +24,7 @@ class SelectionDialog(QDialog):
 
         """
         super().__init__(parent)
+        self._multi_selection_allowed = multi_selection_allowed
         form = QFormLayout(self)
         form.addRow(QLabel(message))
         self.list_view = QListView(self)
@@ -33,7 +34,7 @@ class SelectionDialog(QDialog):
         for item_name in items:
             item = QStandardItem(item_name)
             # TODO use radio buttons if multi_selection_allowed == False
-            item.setCheckable(True)
+            item.setCheckable(multi_selection_allowed)
             model.appendRow(item)
         self.list_view.setModel(model)
         button_box = QDialogButtonBox(
@@ -50,14 +51,16 @@ class SelectionDialog(QDialog):
     @property
     def selected_items(self) -> list[str]:
         """Get the items the user selected."""
-        selected = []
         model = self.list_view.model()
-        i = 0
-        while model.item(i):
-            if model.item(i).checkState() == Qt.CheckState.Checked:
-                selected.append(model.item(i).text())
-            i += 1
-        return selected
+        if self._multi_selection_allowed:
+            selected = []
+            i = 0
+            while model.item(i):
+                if model.item(i).checkState() == Qt.CheckState.Checked:
+                    selected.append(model.item(i).text())
+                i += 1
+            return selected
+        return [model.item(index.row()).text() for index in self.list_view.selectedIndexes()]
 
     @override
     def accept(self) -> None:

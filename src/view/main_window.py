@@ -12,6 +12,8 @@ from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
 import style
+from controller.file.read import read_document
+from controller.file.recently_used import get_recently_used_files
 from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
 from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
@@ -23,6 +25,7 @@ from view.action_setup_view.combined_action_setup_widget import CombinedActionSe
 from view.console_mode.console_universe_selector import UniverseSelector
 from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.dialogs.colum_dialog import ColumnDialog
+from view.dialogs.selection_dialog import SelectionDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.console_dock_widget import ConsoleDockWidget
@@ -191,6 +194,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ],
             "File": [
                 ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
+                ("Open Recent", self._open_recent, "Shift+O"),
                 ("Save Showfile", self._save_show, "S"),
                 ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
                 ("---", None, None),
@@ -405,3 +409,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def _open_asset_mgmt_dialog(self) -> None:
         self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
         self._settings_dialog.show()
+
+    def _open_recent(self) -> None:
+        recently_opened_show_files = get_recently_used_files()
+        self._settings_dialog = SelectionDialog("Open Recent", "Please select the show file to load.",
+                                                recently_opened_show_files, self, False,
+                                                self._open_file_selected)
+        self._settings_dialog.show()
+
+    def _open_file_selected(self, diag: SelectionDialog) -> None:
+        if len(diag.selected_items) < 1:
+            return
+        read_document(diag.selected_items[0], self._board_configuration)
+        self._settings_dialog = None
