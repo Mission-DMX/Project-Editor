@@ -33,6 +33,7 @@ from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
+from view.utility_widgets.file_list_label import FileListLabel, FileListLabelDelegate
 from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
 
@@ -414,7 +415,9 @@ class MainWindow(QtWidgets.QMainWindow):
         recently_opened_show_files = get_recently_used_files()
         self._settings_dialog = SelectionDialog("Open Recent", "Please select the show file to load.",
                                                 recently_opened_show_files, self, False,
-                                                self._open_file_selected)
+                                                self._open_file_selected, FileListLabelDelegate())
+        self._settings_dialog.setMinimumWidth(800)
+        self._settings_dialog.setMinimumHeight(600)
         self._settings_dialog.show()
 
     def _open_file_selected(self, diag: SelectionDialog) -> None:
