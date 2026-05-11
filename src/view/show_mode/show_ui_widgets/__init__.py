@@ -117,7 +117,7 @@ def filter_to_ui_widget(
 
     We used to construct widgets this way, but the WIDGET_LIBRARY method should be used instead.
     """
-    selected_configuration = configuration if configuration else {}
+    selected_configuration = configuration or {}
     match filter_.filter_type:
         case 0 | 1 | 2:
             # number constants
