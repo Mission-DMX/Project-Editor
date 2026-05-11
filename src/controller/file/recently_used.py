@@ -16,10 +16,11 @@ if not os.path.exists(_STORAGE_FILE):
     del f
 
 def get_recently_used_files() -> list[str]:
-    """This method returns the list of recently used files.
+    """Method returns the list of recently used files.
 
     Returns:
         A list of the recently used files in descending order.
+
     """
     real_entries = []
     with open(_STORAGE_FILE, "r") as f:
