@@ -72,11 +72,11 @@ class EventFilter(NamedTuple):
     args: list[int]
 
     @staticmethod
-    def from_filter_str(filter_str: str) -> "EventFilter":
+    def from_filter_str(filter_str: str) -> EventFilter:
         """Create a EventFilter instance from a filter string."""
-        parts = filter_str.split(':')
+        parts = filter_str.split(":")
         if len(parts) < 2:
-            raise ValueError("Invalid filter string: '%s'" % filter_str)
+            raise ValueError(f"Invalid filter string: '{filter_str}'")
         ef = EventFilter()
         ef.event_sender = int(parts[0])
         ef.event_sender_function = int(parts[1])

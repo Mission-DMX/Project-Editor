@@ -1,9 +1,12 @@
 """Contains chaser model."""
 
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from model import ColorHSI
-from model.events import EventFilter
+from model.color_hsi import ColorHSI
+
+if TYPE_CHECKING:
+    from model.events import EventFilter
 
 
 class ParameterType(Enum):
@@ -19,7 +22,7 @@ class ChaserLayer:
 
     def __init__(
         self,
-        type_description,
+        type_description: str,
         variant_template: list[list[str]],
         parameter_template: list[tuple[str, ParameterType, str]],
         parameter_data: list[str],
@@ -140,11 +143,7 @@ class ChaserConfig:
                         parts,
                     )
                 )
-            elif identifier == "mask_shift":
-                self.layers.append(
-                    ChaserLayer(identifier, [], [("Shift period [ms]", ParameterType.NUMBER_ABSOLUTE, "")], parts)
-                )
-            elif identifier == "color_shift":
+            elif identifier == "mask_shift" or identifier == "color_shift":
                 self.layers.append(
                     ChaserLayer(identifier, [], [("Shift period [ms]", ParameterType.NUMBER_ABSOLUTE, "")], parts)
                 )
@@ -267,7 +266,7 @@ class ChaserConfig:
                         parts,
                     )
                 )
-            elif identifier.startswith("segwave") or identifier.startswith("wave"):
+            elif identifier.startswith(("segwave", "wave")):
                 self.layers.append(
                     ChaserLayer(
                         identifier,
@@ -286,14 +285,14 @@ class ChaserConfig:
 
     def format_for_filter_str(self) -> str:
         """Format the setup to be stored in a filter configuration."""
-        layer_strings: list[str] = [l.format_for_filters() for l in self.layers]
+        layer_strings: list[str] = [layer.format_for_filters() for layer in self.layers]
         return ";".join(layer_strings)
 
 
 class ChaserModel:
     """Contains representation of chaser configurations."""
 
-    def __init__(self, config_parameter: dict[str, str]):
+    def __init__(self, config_parameter: dict[str, str]) -> None:
         """Initialize the model using the given configuration parameters.
 
         A default configuration must be set after the fact.
@@ -320,8 +319,8 @@ class ChaserModel:
         """
         return {
             "number_of_pixels": str(self.number_of_pixels),
-            "color_parameters": ':'.join(self.color_parameters),
+            "color_parameters": ":".join(self.color_parameters),
             "number_parameters": ":".join(self.number_parameters),
-            "presets": '#'.join(p.format_for_filter_str() for p in self.presets),
+            "presets": "#".join(p.format_for_filter_str() for p in self.presets),
             "trigger_event": self.trigger_event.format_for_filters() if self.trigger_event is not None else "",
         }

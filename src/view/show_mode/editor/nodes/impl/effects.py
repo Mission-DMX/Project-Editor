@@ -267,7 +267,7 @@ class SequencerNode(FilterNode):
 class ChaserNode(FilterNode):
     """Filter node for color chaser filter."""
 
-    nodeName = "chase_filter"
+    nodeName = "chase_filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
@@ -331,7 +331,7 @@ class ChaserNode(FilterNode):
                 self.filter.in_data_types[color_input] = DataType.DT_COLOR
                 self.filter.default_values[color_input] = "360.0,1.0,1.0"
 
-        required_outputs = set(str(i) for i in range(int(self.filter.filter_configurations["number_of_pixels"])))
+        required_outputs = {str(i) for i in range(int(self.filter.filter_configurations["number_of_pixels"]))}
         existing_outputs = set(self.outputs())
         for output_to_remove in existing_outputs - required_outputs:
             self.removeTerminal(output_to_remove)

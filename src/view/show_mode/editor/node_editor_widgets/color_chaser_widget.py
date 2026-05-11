@@ -11,12 +11,23 @@ import os
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtGui import QMovie, QImage, Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QSlider, QFormLayout, QSplitter, QLabel, QListWidget, QHBoxLayout, \
-    QPushButton, QSpinBox, QGroupBox
+from PySide6.QtGui import QImage, QMovie, Qt
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QPushButton,
+    QSlider,
+    QSpinBox,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model.events import EventFilter
-from model.filter_data.chaser_model import ChaserModel, ChaserConfig
+from model.filter_data.chaser_model import ChaserConfig, ChaserModel
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
@@ -25,6 +36,7 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog
+
     from model import Filter
 
 
@@ -114,7 +126,7 @@ LAYER_DESCRIPTION: dict[str, tuple[str, str, QImage | QMovie]] = {
     ),
     "random_color": (
         "Random Color",
-        "Generates N random colors and changes them every M ms.",
+        "Generates N random colors and changes them every M ms.",
         QMovie(resource_path(os.path.join("resources", "chaser_layer_help", "random_color.gif"))),
     ),
     "gaussian_blur": (
@@ -174,14 +186,15 @@ class ChaserLayerConfigWidget(QWidget):
 class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     """Editor widget for color chaser."""
 
-    def __init__(self, filter: Filter):
+    def __init__(self, _filter: Filter) -> None:
+        """Initialize config widget using instance of color chaser filter."""
         super().__init__()
 
         self._widget: QWidget = QWidget()
         self._input_dialog: QDialog | None = None
         self._live_updates_enabled = False
         self._model: ChaserModel | None = None
-        self._filter: Filter = filter
+        self._filter: Filter = _filter
 
         top_layout = QVBoxLayout()
         general_settings_layout = QFormLayout()
@@ -249,7 +262,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         top_layout.addWidget(configlist_layer_slider)
         self._widget.setLayout(top_layout)
 
-    def _enable_live_updates(self):
+    def _enable_live_updates(self) -> None:
         self._color_parameter_box.setEnabled(False)
         self._number_parameter_box.setEnabled(False)
         self._number_of_pixels_tb.setEnabled(False)
@@ -306,7 +319,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         if default_config is None:
             return {}
         return {
-            'config': default_config.format_for_filter_str()
+            "config": default_config.format_for_filter_str()
         }
 
     @override
@@ -317,7 +330,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
             self.get_widget(), "Preview", "Would you like to switch to live preview?", self._enable_live_updates
         )
 
-    def _event_select_or_clear_clicked(self):
+    def _event_select_or_clear_clicked(self) -> None:
         if self._model.trigger_event is None:
             self._input_dialog = EventSelectionDialog(self._widget)
             self._input_dialog.accepted.connect(self._event_selected_callback)
@@ -326,9 +339,8 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
             self._event_label.setText("Time Mode")
             self._event_select_clear_button.setText("Select Event")
             self._model.trigger_event = None
-        pass
 
-    def _event_selected_callback(self):
+    def _event_selected_callback(self) -> None:
         if not isinstance(self._input_dialog, EventSelectionDialog):
             logger.critical("Event selection dialog expected.")
             return
@@ -339,14 +351,14 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._input_dialog.deleteLater()
         self._input_dialog = None
 
-    def _add_number_parameter_pressed(self):
+    def _add_number_parameter_pressed(self) -> None:
         pass  # TODO
 
-    def _remove_number_parameter_pressed(self):
+    def _remove_number_parameter_pressed(self) -> None:
         pass  # TODO
 
-    def _add_color_parameter_pressed(self):
+    def _add_color_parameter_pressed(self) -> None:
         pass  # TODO
 
-    def _remove_color_parameter_pressed(self):
+    def _remove_color_parameter_pressed(self) -> None:
         pass  # TODO

@@ -56,13 +56,14 @@ from view.show_mode.editor.nodes.impl.debug import (
 )
 from view.show_mode.editor.nodes.impl.effects import (
     AutoTrackerNode,
+    ChaserNode,
     CueListNode,
     EffectsStackNode,
     SequencerNode,
     Shift8BitNode,
     Shift16BitNode,
     ShiftColorNode,
-    ShiftFloatNode, ChaserNode,
+    ShiftFloatNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
     FaderHSIANode,

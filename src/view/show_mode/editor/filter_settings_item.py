@@ -27,6 +27,7 @@ from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_consta
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
 
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
+from .node_editor_widgets.color_chaser_widget import ColorChaserFilterConfigWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
 from .node_editor_widgets.color_to_colorwheel_adapter_settings_widget import ColorToColorwheelAdapterSetupWidget
 from .node_editor_widgets.column_select import ColumnSelect
