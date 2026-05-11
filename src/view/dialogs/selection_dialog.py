@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QStandardItem, QStandardItemModel, Qt
 from PySide6.QtWidgets import QAbstractItemView, QDialog, QDialogButtonBox, QFormLayout, QLabel, QListView, QWidget
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from PySide6.QtWidgets import QStyledItemDelegate
 
 

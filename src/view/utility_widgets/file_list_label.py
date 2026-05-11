@@ -2,16 +2,16 @@
 from __future__ import annotations
 
 import os
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFontMetrics, QColor
-from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle
+from PySide6.QtGui import QColor, QFontMetrics
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QStyle, QStyledItemDelegate, QVBoxLayout, QWidget
 
 if TYPE_CHECKING:
+    from PySide6.QtCore import QModelIndex
     from PySide6.QtGui import QPainter
     from PySide6.QtWidgets import QStyleOptionViewItem
-    from PySide6.QtCore import QModelIndex
 
 
 class FileListLabel(QWidget):
@@ -43,7 +43,7 @@ class FileListLabelDelegate(QStyledItemDelegate):
         self._color_selected = QColor(64, 64, 100)
 
     @override
-    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex, /):
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex, /) -> None:
         sh = super().sizeHint(option, index)
         sh.setHeight(sh.height() * 3)
         return sh
