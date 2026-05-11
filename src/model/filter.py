@@ -82,6 +82,8 @@ class FilterTypeEnumeration(IntFlag):
     Negative values indicate virtual filters.
     """
 
+    VFILTER_COLOR_TO_COLORWHEEL = -14
+    VFILTER_DIMMER_BRIGHTNESS_MIXIN = -13
     VFILTER_SEQUENCER = -12
     VFILTER_COLOR_MIXER = -11
     VFILTER_IMPORT = -10
@@ -165,6 +167,10 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_REMOTE_DEBUG_PIXEL = 68
     FILTER_SEQUENCER = 69
     FILTER_EVENT_COUNTER = 70
+    FILTER_RESPONDING_CONSTANT_8BIT = 71
+    FILTER_RESPONDING_CONSTANT_16BIT = 72
+    FILTER_RESPONDING_CONSTANT_FLOAT = 73
+    FILTER_RESPONDING_CONSTANT_COLOR = 74
 
 
 class Filter:
@@ -303,16 +309,16 @@ class Filter:
 
         if self.is_virtual_filter:
             f = construct_virtual_filter_instance(
-                new_scene if new_scene else self.scene,
+                new_scene or self.scene,
                 self._filter_type,
-                new_id if new_id else self._filter_id,
+                new_id or self._filter_id,
                 pos=self._pos,
             )
             f.filter_configurations.update(self.filter_configurations.copy())
         else:
             f = Filter(
-                new_scene if new_scene else self.scene,
-                new_id if new_id else self._filter_id,
+                new_scene or self.scene,
+                new_id or self._filter_id,
                 self._filter_type,
                 self._pos,
                 self.filter_configurations.copy(),

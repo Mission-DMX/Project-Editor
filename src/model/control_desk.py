@@ -34,7 +34,7 @@ class DeskColumn(ABC):
         uid: Unique identifier for the column.
 
         """
-        self.id = uid if uid else _generate_unique_id()
+        self.id = uid or _generate_unique_id()
         self.bank_set: BankSet | None = None
         self._bottom_display_line_inverted = False
         self._top_display_line_inverted = False

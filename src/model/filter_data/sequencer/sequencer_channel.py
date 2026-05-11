@@ -5,7 +5,8 @@ from __future__ import annotations
 from enum import Enum
 from logging import getLogger
 
-from model import ColorHSI, DataType
+from model import DataType
+from model.color_hsi import ColorHSI
 from model.filter_data.sequencer._utils import _rf
 
 logger = getLogger(__name__)
