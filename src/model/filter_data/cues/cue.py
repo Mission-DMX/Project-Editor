@@ -18,7 +18,8 @@ from enum import Enum
 from logging import getLogger
 from typing import TYPE_CHECKING, Never, Union, override
 
-from model import ColorHSI, DataType
+from model import DataType
+from model.color_hsi import ColorHSI
 from model.filter_data.transfer_function import TransferFunction
 from model.filter_data.utility import format_seconds
 
