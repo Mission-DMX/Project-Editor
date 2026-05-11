@@ -1,4 +1,4 @@
-"""Basic dmx channel with 256 values"""
+"""Basic dmx channel with 256 values."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from model import Universe
 
 class Channel(QtCore.QObject):
-    """Basic dmx channel with 256 values"""
+    """Basic dmx channel with 256 values."""
 
     updated: QtCore.Signal = QtCore.Signal(int)
 
@@ -25,21 +25,23 @@ class Channel(QtCore.QObject):
 
     @property
     def address(self) -> int:
-        """Address of the channel. 0-indexed"""
+        """Address of the channel. 0-indexed."""
         return self._address
 
     @property
     def value(self) -> int:
-        """The current value of the channel"""
+        """The current value of the channel."""
         return self._value
 
     @value.setter
     def value(self, value: int) -> None:
         """Updates the value of the channel.
+
         Must be between 0 and 255.
 
         Raises:
             ValueError: The value is below 0 or above 255.
+
         """
         if not (0 <= value <= 511):
             raise ValueError(f"Tried to set channel {self._address} to {value}.")
