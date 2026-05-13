@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QSplitter,
     QVBoxLayout,
-    QWidget,
+    QWidget, QInputDialog, QMessageBox,
 )
 
 from model.events import EventFilter
@@ -289,22 +289,32 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     def _load_configuration(self, conf: dict[str, str]) -> None:
         self._model = ChaserModel(conf)
         self._number_of_pixels_tb.setValue(self._model.number_of_pixels)
-        for i, np in enumerate(self._model.number_parameters):
-            item = AnnotatedListWidgetItem(self._number_parameter_list_widget)
-            item.setText(np)
-            item.annotated_data = i
-            self._number_parameter_list_widget.addItem(item)
-        for i, cp in enumerate(self._model.color_parameters):
-            item = AnnotatedListWidgetItem(self._color_parameter_list_widget)
-            item.setText(cp)
-            item.annotated_data = i
-            self._color_parameter_list_widget.addItem(item)
+        self._load_number_parameter_list()
+        self._load_color_parameter_list()
         if self._model.trigger_event is not None:
             sender, function, args = self._model.trigger_event
             self._event_label.setText(f"Trigger Event: {sender}:{function} -> {", ".join(args)}")
             self._event_select_clear_button.setText("Clear")
         # TODO populate default configuration
         # TODO populate presets
+
+    def _load_number_parameter_list(self) -> None:
+        if self._model is None:
+            return
+        for i, np in enumerate(self._model.number_parameters):
+            item = AnnotatedListWidgetItem(self._number_parameter_list_widget)
+            item.setText(np)
+            item.annotated_data = i
+            self._number_parameter_list_widget.addItem(item)
+
+    def _load_color_parameter_list(self) -> None:
+        if self._model is None:
+            return
+        for i, cp in enumerate(self._model.color_parameters):
+            item = AnnotatedListWidgetItem(self._color_parameter_list_widget)
+            item.setText(cp)
+            item.annotated_data = i
+            self._color_parameter_list_widget.addItem(item)
 
     @override
     def get_widget(self) -> QWidget:
@@ -362,13 +372,76 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._input_dialog = None
 
     def _add_number_parameter_pressed(self) -> None:
-        pass  # TODO
+        self._input_dialog = QInputDialog(self._widget)
+        self._input_dialog.setModal(True)
+        self._input_dialog.setWindowTitle("Enter Name of Number Parameter")
+        self._input_dialog.setTextValue("")
+        self._input_dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        self._input_dialog.accepted.connect(self._add_number_parameter_dialog_callback)
+        self._input_dialog.show()
+
+    def _add_number_parameter_dialog_callback(self) -> None:
+        if not isinstance(self._input_dialog, QInputDialog):
+            return
+        text = self._input_dialog.textValue()
+        if not self._check_channel_input_name(text):
+            return
+        if self._model is None:
+            return
+        self._model.number_parameters.append(text)
+        item = AnnotatedListWidgetItem(self._number_parameter_list_widget)
+        item.setText(text)
+        self._number_parameter_list_widget.addItem(item)
+
+    def _check_channel_input_name(self, text: str) -> bool:
+        if text in self._model.number_parameters or text in self._model.color_parameters or text in {"time", "time_scale"}:
+            self._input_dialog = QMessageBox(QMessageBox.Icon.Critical, "Invalid parameter name",
+                                             "An input channel with that name already exists.")
+            self._input_dialog.setModal(True)
+            self._input_dialog.show()
+            return False
+        if "|" in text or ":" in text or "," in text or ";" in text or "#" in text:
+            self._input_dialog = QMessageBox(QMessageBox.Icon.Critical, "Invalid parameter name",
+                                             "Input channels must not contain special characters.")
+            self._input_dialog.setModal(True)
+            self._input_dialog.show()
+            return False
+        return True
 
     def _remove_number_parameter_pressed(self) -> None:
-        pass  # TODO
+        if self._model is None:
+            return
+        for selected_item in self._number_parameter_list_widget.selectedItems():
+            self._model.number_parameters.remove(selected_item.text())
+        self._number_parameter_list_widget.clear()
+        self._load_number_parameter_list()
 
     def _add_color_parameter_pressed(self) -> None:
-        pass  # TODO
+        self._input_dialog = QInputDialog(self._widget)
+        self._input_dialog.setModal(True)
+        self._input_dialog.setWindowTitle("Enter Name of Color Parameter")
+        self._input_dialog.setTextValue("")
+        self._input_dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        self._input_dialog.accepted.connect(self._add_color_parameter_dialog_callback)
+        self._input_dialog.show()
+
+    def _add_color_parameter_dialog_callback(self) -> None:
+        if not isinstance(self._input_dialog, QInputDialog):
+            return
+        text = self._input_dialog.textValue()
+        if not self._check_channel_input_name(text):
+            return
+        if self._model is None:
+            return
+        self._model.color_parameters.append(text)
+        item = AnnotatedListWidgetItem(self._color_parameter_list_widget)
+        item.setText(text)
+        self._color_parameter_list_widget.addItem(item)
 
     def _remove_color_parameter_pressed(self) -> None:
-        pass  # TODO
+        if self._model is None:
+            return
+        for selected_item in self._color_parameter_list_widget.selectedItems():
+            self._model.color_parameters.remove(selected_item.text())
+        self._color_parameter_list_widget.clear()
+        self._load_color_parameter_list()
