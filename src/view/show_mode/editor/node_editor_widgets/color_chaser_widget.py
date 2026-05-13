@@ -345,10 +345,12 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     @override
     def parent_opened(self) -> None:
         self._live_updates_enabled = False
-        # TODO only query this, if parameters are configured
-        self._input_dialog = YesNoDialog(
-            self.get_widget(), "Preview", "Would you like to switch to live preview?", self._enable_live_updates
-        )
+        if self._model is not None:
+            if len(self._model.number_parameters) > 0 or len(self._model.color_parameters) > 0:
+                self._input_dialog = YesNoDialog(
+                    self.get_widget(), "Preview", "Would you like to switch to live preview?",
+                    self._enable_live_updates
+                )
 
     def _event_select_or_clear_clicked(self) -> None:
         if self._model.trigger_event is None:
