@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QSplitter,
     QVBoxLayout,
-    QWidget, QInputDialog, QMessageBox,
+    QWidget, QInputDialog, QMessageBox, QAbstractItemView,
 )
 
 from model.events import EventFilter
@@ -190,7 +190,40 @@ class ChaserLayerConfigWidget(QWidget):
 
     """
 
-    # TODO
+    def __init__(self, parent: QWidget | None = None) -> None:
+        """Initialize the widget."""
+        super().__init__(parent)
+        self._config: ChaserConfig | None = None
+
+        layout = QHBoxLayout()
+        layer_layout = QVBoxLayout()
+        self._layer_list: QListWidget = QListWidget(self)
+        self._layer_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        layer_layout.addWidget(self._layer_list)
+        self._add_layer_button = QPushButton("Add Layer")
+        self._add_layer_button.setEnabled(False)
+        self._add_layer_button.clicked.connect(self._add_layer_pressed)
+        layer_layout.addWidget(self._add_layer_button)
+        layout.addLayout(layer_layout)
+        # TODO add configuration widget with fixed delete button for layer
+        #  maybe a table widget?
+        self.setLayout(layout)
+
+    @property
+    def config(self) -> ChaserConfig | None:
+        """Set or get the chaser configuration under edit."""
+        return self._config
+
+    @config.setter
+    def config(self, value: ChaserConfig | None) -> None:
+        self._config = value
+        self._layer_list.clear()
+        # TODO add layers using custom widget
+        self._add_layer_button.setEnabled(value is not None)
+        # TODO set widgets if not None
+
+    def _add_layer_pressed(self) -> None:
+        pass  # TODO
 
 
 class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
