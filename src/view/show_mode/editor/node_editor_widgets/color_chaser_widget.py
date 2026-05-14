@@ -13,17 +13,20 @@ from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QImage, QMovie, Qt
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QListWidget,
+    QMessageBox,
     QPushButton,
     QSlider,
     QSpinBox,
     QSplitter,
     QVBoxLayout,
-    QWidget, QInputDialog, QMessageBox, QAbstractItemView,
+    QWidget,
 )
 
 from model.events import EventFilter
@@ -378,8 +381,8 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     @override
     def parent_opened(self) -> None:
         self._live_updates_enabled = False
-        if self._model is not None:
-            if len(self._model.number_parameters) > 0 or len(self._model.color_parameters) > 0:
+        if self._model is not None and (
+                len(self._model.number_parameters) > 0 or len(self._model.color_parameters) > 0):
                 self._input_dialog = YesNoDialog(
                     self.get_widget(), "Preview", "Would you like to switch to live preview?",
                     self._enable_live_updates
@@ -429,7 +432,8 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._number_parameter_list_widget.addItem(item)
 
     def _check_channel_input_name(self, text: str) -> bool:
-        if text in self._model.number_parameters or text in self._model.color_parameters or text in {"time", "time_scale"}:
+        if (text in self._model.number_parameters or text in self._model.color_parameters or
+                text in {"time", "time_scale"}):
             self._input_dialog = QMessageBox(QMessageBox.Icon.Critical, "Invalid parameter name",
                                              "An input channel with that name already exists.")
             self._input_dialog.setModal(True)
