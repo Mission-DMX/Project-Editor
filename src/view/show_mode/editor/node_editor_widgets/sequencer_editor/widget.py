@@ -6,7 +6,8 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, Qt
-from PySide6.QtWidgets import QDialog, QListWidget, QMessageBox, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDialog, QListWidget, QMessageBox, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget, \
+    QInputDialog
 
 from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 from model.filter_data.sequencer.sequencer_filter_model import SequencerFilterModel
@@ -96,6 +97,10 @@ class SequencerEditor(PreviewEditWidget):
         self._link_event_action.setShortcut("Ctrl+L")
         self._link_event_action.triggered.connect(self._link_event_action_clicked)
         transition_toolbar.addAction(self._link_event_action)
+        self._rename_transition_action = QAction("Rename Transition", transition_toolbar)
+        self._rename_transition_action.setEnabled(False)
+        self._rename_transition_action.triggered.connect(self._rename_transition_triggered)
+        transition_toolbar.addAction(self._rename_transition_action)
         transition_toolbar.addSeparator()
         self._remove_transition_action = QAction("Remove Transition", transition_toolbar)
         self._remove_transition_action.triggered.connect(self._remove_transition_clicked)
@@ -180,12 +185,14 @@ class SequencerEditor(PreviewEditWidget):
             self.set_editing_enabled(True)
             self.transition_add_channel_action.setEnabled(True)
             self._link_event_action.setEnabled(True)
+            self._rename_transition_action.setEnabled(True)
         else:
             self._timeline_container.cue = None
             self._remove_transition_action.setEnabled(False)
             self.set_editing_enabled(False)
             self.transition_add_channel_action.setEnabled(False)
             self._link_event_action.setEnabled(False)
+            self._rename_transition_action.setEnabled(False)
         self._selected_transition = new_transition
         self._recolor_bankset()
 
@@ -463,3 +470,27 @@ class SequencerEditor(PreviewEditWidget):
             return
         self._input_dialog = ChannelEditDialog(selected_channel_items[0], self._channel_list_widget)
         self._input_dialog.show()
+
+    def _rename_transition_triggered(self) -> None:
+        if self._selected_transition is None:
+            logger.error("No transition for renaming selected.")
+            return
+        self._input_dialog = QInputDialog(self._parent_widget)
+        self._input_dialog.setModal(True)
+        self._input_dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        self._input_dialog.setLabelText(f"Please enter a new name for transition '{self._selected_transition.name}'.")
+        self._input_dialog.setWindowTitle("Rename Transition")
+        self._input_dialog.setTextValue(self._selected_transition.name)
+        self._input_dialog.accepted.connect(self._transition_rename_dialog_accepted)
+        self._input_dialog.show()
+
+    def _transition_rename_dialog_accepted(self) -> None:
+        if self._selected_transition is None:
+            logger.error("Expected selected transition for renaming to exist.")
+            return
+        if not isinstance(self._input_dialog, QInputDialog):
+            logger.error("Expected input dialog for renaming to exist.")
+            return
+        self._selected_transition.name = self._input_dialog.textValue()
+        self._transition_widget_map[self._selected_transition].update_labels(self._selected_transition)
+        self._input_dialog = None
