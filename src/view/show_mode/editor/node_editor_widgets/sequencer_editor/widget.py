@@ -6,8 +6,17 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, Qt
-from PySide6.QtWidgets import QDialog, QListWidget, QMessageBox, QScrollArea, QSplitter, QToolBar, QVBoxLayout, QWidget, \
-    QInputDialog
+from PySide6.QtWidgets import (
+    QDialog,
+    QInputDialog,
+    QListWidget,
+    QMessageBox,
+    QScrollArea,
+    QSplitter,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 from model.filter_data.sequencer.sequencer_channel import SequencerChannel
 from model.filter_data.sequencer.sequencer_filter_model import SequencerFilterModel
