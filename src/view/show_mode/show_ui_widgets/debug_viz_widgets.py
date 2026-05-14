@@ -163,6 +163,8 @@ class ColorLabel(QWidget):
         super().__init__(parent)
         self._last_color: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self._last_color_processed: QColor = QColor()
+        self.setMinimumWidth(16)
+        self.setMinimumHeight(16)
 
     def set_color(self, c: ColorHSI) -> None:
         """Set the color to display.

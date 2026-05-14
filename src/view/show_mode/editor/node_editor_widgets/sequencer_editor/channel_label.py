@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest import case
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 import style
 from model import DataType
+from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
 
 if TYPE_CHECKING:
     from model.filter_data.sequencer.sequencer_channel import SequencerChannel
@@ -39,6 +41,19 @@ def generate_datatype_label(parent: QWidget, channel_data_type: DataType) -> QLa
     dtype_label.setFixedWidth(64)
     return dtype_label
 
+
+def _get_default_value_label(channel: SequencerChannel) -> QWidget:
+    """Get a label representing the default value of the channel."""
+    match channel.data_type:
+        case DataType.DT_8_BIT | DataType.DT_16_BIT | DataType.DT_DOUBLE:
+            return QLabel(str(channel.default_value))
+        case DataType.DT_COLOR:
+            cl = ColorLabel()
+            cl.set_color(channel.default_value)
+            return cl
+    return QLabel("Error")
+
+
 class ChannelLabel(QWidget):
     """Label to represent a sequencer channel in a QListWidget."""
 
@@ -52,5 +67,14 @@ class ChannelLabel(QWidget):
         layout.addSpacing(10)
         name_label = QLabel(channel.name)
         layout.addWidget(name_label)
+        layout.addStretch()
+        layout.addWidget(_get_default_value_label(channel))
+        layout.addSpacing(10)
+        if channel.apply_default_on_empty:
+            layout.addWidget(QLabel("E"))
+        if channel.apply_default_on_scene_switch:
+            layout.addWidget(QLabel("S"))
+        layout.addSpacing(10)
+        layout.addWidget(QLabel(channel.interleave_method.name))
         self.setLayout(layout)
         self.setToolTip(channel.tooltip)
