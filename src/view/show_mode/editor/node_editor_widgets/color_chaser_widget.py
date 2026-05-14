@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, override
 from PySide6.QtGui import QImage, QMovie, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QCheckBox,
+    QComboBox,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -22,7 +24,9 @@ from PySide6.QtWidgets import (
     QListWidget,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QSlider,
+    QSpacerItem,
     QSpinBox,
     QSplitter,
     QVBoxLayout,
@@ -30,7 +34,7 @@ from PySide6.QtWidgets import (
 )
 
 from model.events import EventFilter
-from model.filter_data.chaser_model import ChaserConfig, ChaserModel
+from model.filter_data.chaser_model import ChaserConfig, ChaserLayer, ChaserModel, ParameterType
 from utility import resource_path
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
@@ -185,6 +189,64 @@ LAYER_DESCRIPTION: dict[str, tuple[str, str, QImage | QMovie | None]] = {
 }
 
 
+class _ColorParameter(QWidget):
+    """Widget to configure a color parameter."""
+
+    # TODO add widget with color label and color picker
+
+
+class _AbsoluteNumParameter(QWidget):
+    """Widget to configure a absolute number parameter."""
+
+    # TODO add widget with QSpinBox, maybe use inheritance
+
+
+class _PercentNumParameter(QWidget):
+    """A widget to configure a relative number parameter."""
+
+    def __init__(self, parameter_name: str, help_text: str, index_of_parameter_in_layer: int, layer: ChaserLayer,
+                 parent_model: ChaserModel, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._layer = layer
+        self._index_of_parameter_in_layer = index_of_parameter_in_layer
+        layout = QVBoxLayout()
+        top_layout = QHBoxLayout()
+        top_layout.addWidget(QLabel(parameter_name))
+        self._use_channel_cb = QCheckBox("Use parameter")
+        top_layout.addWidget(self._use_channel_cb)
+        self._channel_combo_box = QComboBox()
+        self._channel_combo_box.setEditable(False)
+        self._channel_combo_box.setEnabled(False)
+        self._channel_combo_box.addItems(parent_model.number_parameters)
+        self._channel_combo_box.currentTextChanged.connect(self._channel_selected)
+        top_layout.addWidget(self._channel_combo_box)
+        self._control_widget = QSlider()
+        self._control_widget.setRange(0, 65535)
+        try:
+            self._control_widget.setValue(int(layer.parameter_data[index_of_parameter_in_layer]))
+        except ValueError:
+            self._channel_combo_box.setCurrentText(layer.parameter_data[index_of_parameter_in_layer])
+            self._use_channel_cb.setChecked(True)
+        self._control_widget.valueChanged.connect(self._value_changed)
+        layout.addLayout(top_layout)
+        layout.addWidget(QLabel(help_text))
+        self.setLayout(layout)
+
+    def _use_param_cb_checked_changed(self) -> None:
+        state = self._use_channel_cb.isChecked()
+        self._channel_combo_box.setEnabled(state)
+        self._control_widget.setEnabled(not state)
+
+    def _channel_selected(self) -> None:
+        if self._use_channel_cb.isChecked():
+            self._layer.parameter_data[self._index_of_parameter_in_layer] = self._channel_combo_box.currentText()
+
+    def _value_changed(self) -> None:
+        if self._use_channel_cb.isChecked():
+            return
+        self._layer.parameter_data[self._index_of_parameter_in_layer] = str(self._control_widget.value())
+
+
 class ChaserLayerConfigWidget(QWidget):
     """Widget to edit chaser layer setup instance.
 
@@ -193,14 +255,16 @@ class ChaserLayerConfigWidget(QWidget):
 
     """
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent_model: ChaserModel, parent: QWidget | None = None) -> None:
         """Initialize the widget."""
         super().__init__(parent)
         self._config: ChaserConfig | None = None
+        self._model: ChaserModel = parent_model
 
         layout = QHBoxLayout()
         layer_layout = QVBoxLayout()
         self._layer_list: QListWidget = QListWidget(self)
+        self._layer_list.itemSelectionChanged.connect(self._selected_layer_changed)
         self._layer_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         layer_layout.addWidget(self._layer_list)
         self._add_layer_button = QPushButton("Add Layer")
@@ -208,8 +272,14 @@ class ChaserLayerConfigWidget(QWidget):
         self._add_layer_button.clicked.connect(self._add_layer_pressed)
         layer_layout.addWidget(self._add_layer_button)
         layout.addLayout(layer_layout)
-        # TODO add configuration widget with fixed delete button for layer
-        #  maybe a table widget?
+        edit_layout = QVBoxLayout()
+        self._remove_layer_button = QPushButton("Remove This Layer")
+        self._remove_layer_button.setEnabled(False)
+        self._remove_layer_button.clicked.connect(self._remove_layer_clicked)
+        edit_layout.addWidget(self._remove_layer_button)
+        self._layer_config_panel = QWidget()
+        edit_layout.addWidget(self._layer_config_panel)
+        layout.addLayout(edit_layout)
         self.setLayout(layout)
 
     @property
@@ -221,12 +291,51 @@ class ChaserLayerConfigWidget(QWidget):
     def config(self, value: ChaserConfig | None) -> None:
         self._config = value
         self._layer_list.clear()
-        # TODO add layers using custom widget
+        # TODO add layers using custom widget, use AnnotatedListWidgetItem and store layer as data
         self._add_layer_button.setEnabled(value is not None)
-        # TODO set widgets if not None
+
+    def _construct_config_panel(self, layer: ChaserLayer) -> None:
+        layout = self._layer_config_panel.layout()
+        widget_to_delete = layout.takeAt(0)
+        while widget_to_delete is not None:
+            widget_to_delete = widget_to_delete.widget()
+            widget_to_delete.deleteLater()
+            widget_to_delete.setParent(None)
+            widget_to_delete = layout.takeAt(0)
+        del widget_to_delete
+        if layer is None:
+            self._remove_layer_button.setEnabled(False)
+            return
+        self._remove_layer_button.setEnabled(True)
+        for i, parameter_template in enumerate(layer.parameter_templates):
+            parameter_name, parameter_type, help_text = parameter_template
+            layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.ShrinkFlag))
+            if parameter_type == ParameterType.COLOR:
+                layout.addWidget(_ColorParameter(parameter_name, help_text, i, layer, self._model))
+            elif parameter_type == ParameterType.NUMBER_ABSOLUTE:
+                layout.addWidget(_AbsoluteNumParameter(parameter_name, help_text, i, layer, self._model))
+            elif parameter_type == ParameterType.NUMBER_PERCENTAGE:
+                layout.addWidget(_PercentNumParameter(parameter_name, help_text, i, layer, self._model))
+        layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
 
     def _add_layer_pressed(self) -> None:
         pass  # TODO
+
+    def _remove_layer_clicked(self) -> None:
+        pass  # TODO
+
+    def _selected_layer_changed(self) -> None:
+        layer_item = self._layer_list.selectedItems()[0]
+        if not isinstance(layer_item, AnnotatedListWidgetItem):
+            logger.critical("Expected layer list item to be of type AnnotatedListWidgetItem.")
+            return
+        data = layer_item.annotated_data
+        if data is None:
+            return
+        if not isinstance(data, ChaserLayer):
+            logger.critical("Expected layer list item data to be of type ChaserLayer.")
+            return
+        self._construct_config_panel(data)
 
 
 class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
@@ -302,7 +411,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         configlist_container.setLayout(configlist_container_layout)
         configlist_layer_slider.addWidget(configlist_container)
 
-        self._layer_config_widget = ChaserLayerConfigWidget()
+        self._layer_config_widget = ChaserLayerConfigWidget(self._model)
         configlist_layer_slider.addWidget(self._layer_config_widget)
 
         top_layout.addWidget(configlist_layer_slider)

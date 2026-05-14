@@ -74,7 +74,7 @@ class ChaserLayer:
 class ChaserConfig:
     """Represents an individual chaser configuration."""
 
-    def __init(self, filter_str: str) -> None:
+    def __init__(self, filter_str: str) -> None:
         """Initialize the chaser configuration."""
         super().__init__()
         self.layers: list[ChaserLayer] = []
@@ -302,8 +302,10 @@ class ChaserModel:
 
         """
         self.number_of_pixels: int = int(config_parameter["number_of_pixels"])
-        self.color_parameters: list[str] = config_parameter["color_parameters"].split(":")
-        self.number_parameters: list[str] = config_parameter["number_parameters"].split(":")
+        self.color_parameters: list[str] = config_parameter["color_parameters"].split(":") if (
+                len(config_parameter["color_parameters"]) > 0) else []
+        self.number_parameters: list[str] = config_parameter["number_parameters"].split(":") if (
+                len(config_parameter["number_parameters"]) > 0) else []
         self.presets: list[ChaserConfig] = [ChaserConfig(s) for s in config_parameter["presets"].split("#")]
         self.default_config: ChaserConfig | None = None
         self.trigger_event: EventFilter | None = None
