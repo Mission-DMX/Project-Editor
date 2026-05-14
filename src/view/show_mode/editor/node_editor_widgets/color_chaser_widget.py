@@ -47,7 +47,7 @@ logger = getLogger(__name__)
 
 
 def _load_label_resource(path: str) -> QImage | QMovie | None:
-    basename, ext = os.path.splitext(path)
+    _, ext = os.path.splitext(path)
     if not os.path.exists(path):
         logger.critical("Failed to load label resource: File %s not found.", path)
         return None
