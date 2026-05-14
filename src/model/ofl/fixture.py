@@ -214,6 +214,11 @@ class UsedFixture(QtCore.QObject):
     @property
     def mode(self) -> FixtureMode:
         """Mode of theFixture."""
+        if len(self._fixture.modes) <= self._mode_index:
+            raise FixtureDefNotFoundError(
+                self._fixture.fileName,
+                "Fixture does not have requested mode. Are the fixture defintions up to date?"
+            )
         return self._fixture.modes[self._mode_index]
 
     @property
@@ -340,4 +345,8 @@ def make_used_fixture(
     board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
 ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
-    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    try:
+        return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    except ValueError as e:
+        logger.error(e)
+        raise FixtureDefNotFoundError(fixture.fileName, str(e))
