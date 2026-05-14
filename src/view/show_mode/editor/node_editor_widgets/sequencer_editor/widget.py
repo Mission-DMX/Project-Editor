@@ -22,6 +22,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget im
     PreviewEditWidget,
 )
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
+from view.show_mode.editor.node_editor_widgets.sequencer_editor.channel_edit_dialog import ChannelEditDialog
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.channel_label import ChannelLabel
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.event_selection_dialog import EventSelectionDialog
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.transition_label import TransitionLabel
@@ -65,6 +66,10 @@ class SequencerEditor(PreviewEditWidget):
         add_multi_channel_action = QAction("Add Multiple Channels", channel_toolbar)
         add_multi_channel_action.triggered.connect(self._add_multi_channel_action_triggered)
         channel_toolbar.addAction(add_multi_channel_action)
+        self._edit_channel_action = QAction("Edit Channel", channel_toolbar)
+        self._edit_channel_action.triggered.connect(self._edit_channel_triggered)
+        channel_toolbar.addAction(self._edit_channel_action)
+        channel_toolbar.addSeparator()
         remove_channel_action = QAction("Remove Channel", channel_toolbar)
         remove_channel_action.setShortcut("Ctrl+R")
         remove_channel_action.triggered.connect(self._remove_channel_pressed)
@@ -449,3 +454,12 @@ class SequencerEditor(PreviewEditWidget):
         self._input_dialog = YesNoDialog(
             self.get_widget(), "Live Preview", "Would you like to switch to live preview now?", self._link_bankset
         )
+
+    def _edit_channel_triggered(self) -> None:
+        selected_channel_items = self._channel_list_widget.selectedItems()
+        if len(selected_channel_items) == 0:
+            return
+        if not isinstance(selected_channel_items[0], AnnotatedListWidgetItem):
+            return
+        self._input_dialog = ChannelEditDialog(selected_channel_items[0], self._channel_list_widget)
+        self._input_dialog.show()
