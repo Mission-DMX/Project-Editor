@@ -7,15 +7,11 @@ For the model, please have a look under model.filter_data.chaser_model
 
 from __future__ import annotations
 
-import os
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtGui import QImage, QMovie, Qt
+from PySide6.QtGui import Qt
 from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QCheckBox,
-    QComboBox,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -24,9 +20,6 @@ from PySide6.QtWidgets import (
     QListWidget,
     QMessageBox,
     QPushButton,
-    QSizePolicy,
-    QSlider,
-    QSpacerItem,
     QSpinBox,
     QSplitter,
     QVBoxLayout,
@@ -34,9 +27,9 @@ from PySide6.QtWidgets import (
 )
 
 from model.events import EventFilter
-from model.filter_data.chaser_model import ChaserConfig, ChaserLayer, ChaserModel, ParameterType
-from utility import resource_path
+from model.filter_data.chaser_model import ChaserConfig, ChaserModel
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.chaser_editor.layer_config_widget import ChaserLayerConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.event_selection_dialog import EventSelectionDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -48,294 +41,6 @@ if TYPE_CHECKING:
 
 
 logger = getLogger(__name__)
-
-
-def _load_label_resource(path: str) -> QImage | QMovie | None:
-    _, ext = os.path.splitext(path)
-    if not os.path.exists(path):
-        logger.critical("Failed to load label resource: File %s not found.", path)
-        return None
-    if ext.lower() == ".png":
-        return QImage(path)
-    return QMovie(path)
-
-
-LAYER_DESCRIPTION: dict[str, tuple[str, str, QImage | QMovie | None]] = {
-    "plain_color": (
-        "Plain Color",
-        "This layer loads the provided color on the canvas using the mask value.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "plain_color.png"))),
-    ),
-    "rainbow": (
-        "Rainbow",
-        "Created a color gradient between two provided colors.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "rainbow.gif"))),
-    ),
-    "sprinkles": (
-        "Sprinkles",
-        "Draws random dots on the mask.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "sprinkles.gif"))),
-    ),
-    "dots": (
-        "Dots",
-        "Draws evenly distributed dots on the mask.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "dots.gif"))),
-    ),
-    "scale": (
-        "Scale",
-        "Draws a scale between two defined points on the mask.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "scale.gif"))),
-    ),
-    "scale_inv": (
-        "Inverted Scale",
-        "Draws a scale between two defined points on the mask.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "scale_inv.gif"))),
-    ),
-    "flat_mask": (
-        "Flat Mask",
-        "Sets the entire mask to a single constant value.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "flat_mask.png"))),
-    ),
-    "mask_shift": (
-        "Mask Shift",
-        "Shifts the mask after the specified number of milliseconds.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "mask_shift.gif"))),
-    ),
-    "color_shift": (
-        "Color Shift",
-        "Shifts pixel colors after the specified number of milliseconds.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "color_shift.gif"))),
-    ),
-    "trig": (
-        "Trigonometric",
-        "Updates the alpha mask using a trig function (sin, cos, tan) with specified parameters.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "trig.gif"))),
-    ),
-    "strobe": (
-        "Strobe",
-        "Enables and disables the alpha mask based on a BPM value.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "strobe.gif"))),
-    ),
-    "maskmod": (
-        "Mask Modifier",
-        "Modifies mask values (add, mul, div) over a selected width range.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "maskmod.png"))),
-    ),
-    "johnson": (
-        "Johnson Counter",
-        "Generates a Johnson counter effect on the mask (forward or reverse).",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "johnson.gif"))),
-    ),
-    "colormix": (
-        "Color Mix",
-        "Mixes two supplied colors and applies the result using the mask.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "colormix.png"))),
-    ),
-    "color_chanmod": (
-        "Channel Set",
-        "Sets a single channel (r, g, b, h, s, i) to the supplied numeric value.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "color_chanmod.png"))),
-    ),
-    "color_chancalc": (
-        "Channel Calculation",
-        "Modifies a channel (r, g, b, h, s, i) with an operation (add, sub, mult, div).",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "color_chancalc.png"))),
-    ),
-    "random_color": (
-        "Random Color",
-        "Generates N random colors and changes them every M ms.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "random_color.gif"))),
-    ),
-    "gaussian_blur": (
-        "Gaussian Blur",
-        "Applies a blur to pixels where the mask permits, using a size given in % of pixel width.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "gaussian_blur.png"))),
-    ),
-    "gaussian_curve_on_mask": (
-        "Gaussian Curve on Mask",
-        "Draws a Gaussian curve on the alpha mask (position, width, height).",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "gaussian_curve.png"))),
-    ),
-    "invert_color": (
-        "Invert Color",
-        "Inverts all color values on the canvas.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "invert_color.png"))),
-    ),
-    "invert_mask": (
-        "Invert Mask",
-        "Inverts the alpha mask.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "invert_mask.png"))),
-    ),
-    "close_to_center": (
-        "Close to Center",
-        "Pattern travels from edges toward the centre.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "close_to_center.gif"))),
-    ),
-    "open_from_center": (
-        "Open from Center",
-        "Pattern travels from the centre outward.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "open_from_center.gif"))),
-    ),
-    "segwave": (
-        "Segmented Wave",
-        "Generates segmented waves on the mask (forward or reverse).",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "segwave.gif"))),
-    ),
-    "wave": (
-        "Wave",
-        "Generates a decaying wave on the mask (forward or reverse).",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "wave.gif"))),
-    ),
-}
-
-
-class _ColorParameter(QWidget):
-    """Widget to configure a color parameter."""
-
-    # TODO add widget with color label and color picker
-
-
-class _AbsoluteNumParameter(QWidget):
-    """Widget to configure a absolute number parameter."""
-
-    # TODO add widget with QSpinBox, maybe use inheritance
-
-
-class _PercentNumParameter(QWidget):
-    """A widget to configure a relative number parameter."""
-
-    def __init__(self, parameter_name: str, help_text: str, index_of_parameter_in_layer: int, layer: ChaserLayer,
-                 parent_model: ChaserModel, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self._layer = layer
-        self._index_of_parameter_in_layer = index_of_parameter_in_layer
-        layout = QVBoxLayout()
-        top_layout = QHBoxLayout()
-        top_layout.addWidget(QLabel(parameter_name))
-        self._use_channel_cb = QCheckBox("Use parameter")
-        top_layout.addWidget(self._use_channel_cb)
-        self._channel_combo_box = QComboBox()
-        self._channel_combo_box.setEditable(False)
-        self._channel_combo_box.setEnabled(False)
-        self._channel_combo_box.addItems(parent_model.number_parameters)
-        self._channel_combo_box.currentTextChanged.connect(self._channel_selected)
-        top_layout.addWidget(self._channel_combo_box)
-        self._control_widget = QSlider()
-        self._control_widget.setRange(0, 65535)
-        try:
-            self._control_widget.setValue(int(layer.parameter_data[index_of_parameter_in_layer]))
-        except ValueError:
-            self._channel_combo_box.setCurrentText(layer.parameter_data[index_of_parameter_in_layer])
-            self._use_channel_cb.setChecked(True)
-        self._control_widget.valueChanged.connect(self._value_changed)
-        layout.addLayout(top_layout)
-        layout.addWidget(QLabel(help_text))
-        self.setLayout(layout)
-
-    def _use_param_cb_checked_changed(self) -> None:
-        state = self._use_channel_cb.isChecked()
-        self._channel_combo_box.setEnabled(state)
-        self._control_widget.setEnabled(not state)
-
-    def _channel_selected(self) -> None:
-        if self._use_channel_cb.isChecked():
-            self._layer.parameter_data[self._index_of_parameter_in_layer] = self._channel_combo_box.currentText()
-
-    def _value_changed(self) -> None:
-        if self._use_channel_cb.isChecked():
-            return
-        self._layer.parameter_data[self._index_of_parameter_in_layer] = str(self._control_widget.value())
-
-
-class ChaserLayerConfigWidget(QWidget):
-    """Widget to edit chaser layer setup instance.
-
-    Widget provides a list of all layers, options to create and remove layers as well as an area allowing configuration
-    of selected layer.
-
-    """
-
-    def __init__(self, parent_model: ChaserModel, parent: QWidget | None = None) -> None:
-        """Initialize the widget."""
-        super().__init__(parent)
-        self._config: ChaserConfig | None = None
-        self._model: ChaserModel = parent_model
-
-        layout = QHBoxLayout()
-        layer_layout = QVBoxLayout()
-        self._layer_list: QListWidget = QListWidget(self)
-        self._layer_list.itemSelectionChanged.connect(self._selected_layer_changed)
-        self._layer_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        layer_layout.addWidget(self._layer_list)
-        self._add_layer_button = QPushButton("Add Layer")
-        self._add_layer_button.setEnabled(False)
-        self._add_layer_button.clicked.connect(self._add_layer_pressed)
-        layer_layout.addWidget(self._add_layer_button)
-        layout.addLayout(layer_layout)
-        edit_layout = QVBoxLayout()
-        self._remove_layer_button = QPushButton("Remove This Layer")
-        self._remove_layer_button.setEnabled(False)
-        self._remove_layer_button.clicked.connect(self._remove_layer_clicked)
-        edit_layout.addWidget(self._remove_layer_button)
-        self._layer_config_panel = QWidget()
-        edit_layout.addWidget(self._layer_config_panel)
-        layout.addLayout(edit_layout)
-        self.setLayout(layout)
-
-    @property
-    def config(self) -> ChaserConfig | None:
-        """Set or get the chaser configuration under edit."""
-        return self._config
-
-    @config.setter
-    def config(self, value: ChaserConfig | None) -> None:
-        self._config = value
-        self._layer_list.clear()
-        # TODO add layers using custom widget, use AnnotatedListWidgetItem and store layer as data
-        self._add_layer_button.setEnabled(value is not None)
-
-    def _construct_config_panel(self, layer: ChaserLayer) -> None:
-        layout = self._layer_config_panel.layout()
-        widget_to_delete = layout.takeAt(0)
-        while widget_to_delete is not None:
-            widget_to_delete = widget_to_delete.widget()
-            widget_to_delete.deleteLater()
-            widget_to_delete.setParent(None)
-            widget_to_delete = layout.takeAt(0)
-        del widget_to_delete
-        if layer is None:
-            self._remove_layer_button.setEnabled(False)
-            return
-        self._remove_layer_button.setEnabled(True)
-        for i, parameter_template in enumerate(layer.parameter_templates):
-            parameter_name, parameter_type, help_text = parameter_template
-            layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.ShrinkFlag))
-            if parameter_type == ParameterType.COLOR:
-                layout.addWidget(_ColorParameter(parameter_name, help_text, i, layer, self._model))
-            elif parameter_type == ParameterType.NUMBER_ABSOLUTE:
-                layout.addWidget(_AbsoluteNumParameter(parameter_name, help_text, i, layer, self._model))
-            elif parameter_type == ParameterType.NUMBER_PERCENTAGE:
-                layout.addWidget(_PercentNumParameter(parameter_name, help_text, i, layer, self._model))
-        layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
-
-    def _add_layer_pressed(self) -> None:
-        pass  # TODO
-
-    def _remove_layer_clicked(self) -> None:
-        pass  # TODO
-
-    def _selected_layer_changed(self) -> None:
-        layer_item = self._layer_list.selectedItems()[0]
-        if not isinstance(layer_item, AnnotatedListWidgetItem):
-            logger.critical("Expected layer list item to be of type AnnotatedListWidgetItem.")
-            return
-        data = layer_item.annotated_data
-        if data is None:
-            return
-        if not isinstance(data, ChaserLayer):
-            logger.critical("Expected layer list item data to be of type ChaserLayer.")
-            return
-        self._construct_config_panel(data)
 
 
 class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
