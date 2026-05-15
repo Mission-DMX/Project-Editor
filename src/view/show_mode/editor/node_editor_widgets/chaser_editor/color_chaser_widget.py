@@ -102,14 +102,19 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         configlist_layer_slider = QSplitter(Qt.Orientation.Horizontal)
         configlist_container = QWidget()
         configlist_container_layout = QVBoxLayout()
-        self._default_configuration_button = QLabel("TODO put button here selecting default configuration")
+        self._default_configuration_button = QPushButton("Default Configuration")
+        self._default_configuration_button.clicked.connect(self._default_configuration_button_clicked)
         configlist_container_layout.addWidget(self._default_configuration_button)
         self._additional_configurations_list = QListWidget()
+        self._additional_configurations_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
+        self._additional_configurations_list.itemSelectionChanged.connect(self._selected_configuration_changed)
         configlist_container_layout.addWidget(self._additional_configurations_list)
         add_del_configuration_layout = QHBoxLayout()
         self._add_configuration_button = QPushButton("Add Configuration")
+        self._add_configuration_button.clicked.connect(self._add_configuration_pressed)
         add_del_configuration_layout.addWidget(self._add_configuration_button)
         self._delete_configuration_button = QPushButton("Delete Configuration")
+        self._delete_configuration_button.clicked.connect(self._delete_configuration_pressed)
         add_del_configuration_layout.addWidget(self._delete_configuration_button)
         add_del_configuration_layout.addStretch()
         configlist_container_layout.addLayout(add_del_configuration_layout)
@@ -145,8 +150,10 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
             sender, function, args = self._model.trigger_event
             self._event_label.setText(f"Trigger Event: {sender}:{function} -> {", ".join(args)}")
             self._event_select_clear_button.setText("Clear")
-        # TODO populate default configuration
-        # TODO populate presets
+        if len(self._model.presets) == 0:
+            self._default_configuration_button_clicked()
+        for preset in self._model.presets:
+            self._insert_preset_item(preset)
 
     def _load_number_parameter_list(self) -> None:
         if self._model is None:
@@ -298,3 +305,57 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
             self._model.color_parameters.remove(selected_item.text())
         self._color_parameter_list_widget.clear()
         self._load_color_parameter_list()
+
+    def _default_configuration_button_clicked(self) -> None:
+        self._additional_configurations_list.clearSelection()
+        if self._model is None:
+            return
+        self._layer_config_widget.config = self._model.default_config
+        self._default_configuration_button.setDown(True)
+
+    def _selected_configuration_changed(self) -> None:
+        selected_items = self._additional_configurations_list.selectedItems()
+        if len(selected_items) == 0:
+            return
+        selected_item = selected_items[0]
+        if not isinstance(selected_item, AnnotatedListWidgetItem):
+            logger.critical("Expected list widget to contain annotated items")
+            return
+        config = selected_item.annotated_data
+        if not isinstance(config, ChaserConfig):
+            logger.critical("Expected config widget to contain chaser configuration")
+            return
+        self._layer_config_widget.config = config
+        self._default_configuration_button.setDown(False)
+
+    def _add_configuration_pressed(self) -> None:
+        if self._model is None:
+            return
+        new_config = ChaserConfig("")
+        self._model.presets.append(new_config)
+        self._insert_preset_item(new_config)
+
+    def _insert_preset_item(self, config: ChaserConfig) -> None:
+        item = AnnotatedListWidgetItem(self._additional_configurations_list)
+        item.annotated_data = config
+        self._additional_configurations_list.addItem(item)
+        item.setText(str(self._additional_configurations_list.count()))
+
+    def _delete_configuration_pressed(self) -> None:
+        selected_items = self._additional_configurations_list.selectedItems()
+        if len(selected_items) == 0:
+            return
+        if self._model is None:
+            return
+        selected_item = selected_items[0]
+        if not isinstance(selected_item, AnnotatedListWidgetItem):
+            logger.critical("Expected list widget to contain annotated items")
+            return
+        config = selected_item.annotated_data
+        if not isinstance(config, ChaserConfig):
+            logger.critical("Expected config widget to contain chaser configuration")
+            return
+        self._additional_configurations_list.takeItem(self._additional_configurations_list.selectedIndexes()[0].row())
+        self._model.presets.remove(config)
+        if len(self._model.presets) == 0:
+            self._default_configuration_button_clicked()
