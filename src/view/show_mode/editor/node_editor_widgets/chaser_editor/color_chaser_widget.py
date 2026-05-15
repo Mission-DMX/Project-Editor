@@ -342,6 +342,18 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         item.setText(str(self._additional_configurations_list.count()))
 
     def _delete_configuration_pressed(self) -> None:
+        self._input_dialog = YesNoDialog(
+            self._widget,
+            "Are you sure?",
+            "Do you really want to remove this preset?",
+            self._delete_configuration_confirmed,
+            QMessageBox.Icon.Warning
+        )
+        self._input_dialog.show()
+
+    def _delete_configuration_confirmed(self) -> None:
+        self._input_dialog.deleteLater()
+        self._input_dialog = None
         selected_items = self._additional_configurations_list.selectedItems()
         if len(selected_items) == 0:
             return

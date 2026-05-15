@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QListWidget,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QSpacerItem,
@@ -16,11 +17,14 @@ from PySide6.QtWidgets import (
 )
 
 from model.filter_data.chaser_model import ChaserConfig, ChaserLayer, ChaserModel, ParameterType
+from view.show_mode.editor.node_editor_widgets.chaser_editor._layer_add_dialog import AddLayerDialog
 from view.show_mode.editor.node_editor_widgets.chaser_editor._parameter_editors import (
     AbsoluteNumParameter,
     ColorParameter,
     PercentNumParameter,
 )
+from view.show_mode.editor.node_editor_widgets.chaser_editor.layer_list_item_widget import LayerListItemWidget
+from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 logger = getLogger(__name__)
@@ -39,6 +43,7 @@ class ChaserLayerConfigWidget(QWidget):
         super().__init__(parent)
         self._config: ChaserConfig | None = None
         self._model: ChaserModel = parent_model
+        self._dialog = None
 
         layout = QHBoxLayout()
         layer_layout = QVBoxLayout()
@@ -70,7 +75,8 @@ class ChaserLayerConfigWidget(QWidget):
     def config(self, value: ChaserConfig | None) -> None:
         self._config = value
         self._layer_list.clear()
-        # TODO add layers using custom widget, use AnnotatedListWidgetItem and store layer as data
+        for layer in self._config.layers:
+            self._add_layer_item(layer)
         self._add_layer_button.setEnabled(value is not None)
 
     def _construct_config_panel(self, layer: ChaserLayer) -> None:
@@ -98,10 +104,51 @@ class ChaserLayerConfigWidget(QWidget):
         layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
 
     def _add_layer_pressed(self) -> None:
-        pass  # TODO
+        self._dialog = AddLayerDialog(self)
+        self._dialog.accepted.connect(self._add_layer_selected)
+        self._dialog.show()
+
+    def _add_layer_selected(self) -> None:
+        layer = self._dialog.layer
+        if layer is None:
+            return
+        self._config.layers.append(layer)
+        self._add_layer_item(layer)
+
+    def _add_layer_item(self, layer: ChaserLayer) -> None:
+        item = AnnotatedListWidgetItem(self._layer_list)
+        item.annotated_data = layer
+        w = LayerListItemWidget(layer)
+        item.setSizeHint(w.sizeHint())
+        self._layer_list.addItem(item)
+        self._layer_list.setItemWidget(item, w)
+
 
     def _remove_layer_clicked(self) -> None:
-        pass  # TODO
+        self._dialog = YesNoDialog(
+            self,
+            "Are you sure?",
+            "Do you really want to remove this layer?",
+            self._remove_layer_confirmed,
+            QMessageBox.Icon.Warning
+        )
+        self._dialog.show()
+
+    def _remove_layer_confirmed(self) -> None:
+        self._dialog.deleteLater()
+        self._dialog = None
+        selected_items = self._layer_list.selectedItems()
+        indexes_to_remove: list[int] = []
+        for item in selected_items:
+            if not isinstance(item, AnnotatedListWidgetItem):
+                continue
+            if not isinstance(item.annotated_data, ChaserLayer):
+                continue
+            self._config.layers.remove(item.annotated_data)
+            indexes_to_remove.append(self._layer_list.indexFromItem(item))
+        indexes_to_remove.sort(reverse=True)
+        for index in indexes_to_remove:
+            self._layer_list.takeItem(index)
 
     def _selected_layer_changed(self) -> None:
         layer_item = self._layer_list.selectedItems()[0]
