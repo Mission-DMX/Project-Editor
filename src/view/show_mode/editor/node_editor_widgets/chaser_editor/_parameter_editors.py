@@ -13,7 +13,49 @@ if TYPE_CHECKING:
 class ColorParameter(QWidget):
     """Widget to configure a color parameter."""
 
-    # TODO add widget with color label and color picker
+    def __init__(self, parameter_name: str, help_text: str, index_of_parameter_in_layer: int, layer: ChaserLayer,
+                 parent_model: ChaserModel, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._layer_index = index_of_parameter_in_layer
+        self._layer = layer
+
+        layout = QVBoxLayout()
+        top_layout = QHBoxLayout()
+        top_layout.addWidget(QLabel(parameter_name))
+        self._use_channel_cb = QCheckBox("Use parameter")
+        top_layout.addWidget(self._use_channel_cb)
+        self._channel_combo_box = QComboBox()
+        self._channel_combo_box.setEditable(False)
+        self._channel_combo_box.setEnabled(False)
+        self._channel_combo_box.addItems(parent_model.color_parameters)
+        self._channel_combo_box.currentTextChanged.connect(self._channel_selected)
+        top_layout.addWidget(self._channel_combo_box)
+        # TODO add control_widget with color label and color picker from PR#406
+        self._control_widget = QWidget()
+        # end of TODO
+        self._use_channel_cb.setChecked(
+            layer.parameter_data[index_of_parameter_in_layer] in parent_model.color_parameters
+        )
+        # TODO connect control widget value changed
+        layout.addLayout(top_layout)
+        layout.addWidget(QLabel(help_text))
+        self.setLayout(layout)
+
+    def _use_param_cb_checked_changed(self) -> None:
+        state = self._use_channel_cb.isChecked()
+        self._channel_combo_box.setEnabled(state)
+        self._control_widget.setEnabled(not state)
+        if not state:
+            pass  # TODO load control widget color from self._layer.parameter_data[index_of_parameter_in_layer]
+
+    def _channel_selected(self) -> None:
+        if self._use_channel_cb.isChecked():
+            self._layer.parameter_data[self._layer_index] = self._channel_combo_box.currentText()
+
+    def _value_changed(self) -> None:
+        if self._use_channel_cb.isChecked():
+            return
+        self._layer.parameter_data[self._layer_index] = str(self._control_widget.value.format_for_filter())
 
 
 class NumberParameter(QWidget):
