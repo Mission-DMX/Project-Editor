@@ -72,9 +72,9 @@ class ColorParameter(QWidget):
 
     def _change_color_clicked(self) -> None:
         self._color_dialog = QColorDialog()
-        self._color_dialog.setCurrentColor(ColorHSI.from_filter_str(
-                self._layer.parameter_data[self._layer_index]
-            ).to_qt_color())
+        parameter_data = self._layer.parameter_data[self._layer_index]
+        if isinstance(parameter_data, ColorHSI):
+            self._color_dialog.setCurrentColor(parameter_data.to_qt_color())
         self._color_dialog.setModal(True)
         self._color_dialog.accepted.connect(self._color_selected)
         self._color_dialog.show()

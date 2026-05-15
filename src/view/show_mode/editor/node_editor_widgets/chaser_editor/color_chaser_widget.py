@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QSpinBox,
     QSplitter,
     QVBoxLayout,
@@ -73,34 +74,47 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         parameter_layout = QHBoxLayout()
 
         self._number_parameter_box = QGroupBox()
+        self._number_parameter_box.setTitle("Number Parameters")
+        self._number_parameter_box.setMaximumHeight(200)
+        self._number_parameter_box.setMinimumHeight(150)
         self._number_parameter_list_widget = QListWidget()
         number_parameter_layout = QVBoxLayout()
+        number_parameter_button_layout = QHBoxLayout()
         number_parameter_layout.addWidget(self._number_parameter_list_widget)
         self._add_number_parameter_button = QPushButton("Add Number Parameter")
         self._add_number_parameter_button.clicked.connect(self._add_number_parameter_pressed)
-        number_parameter_layout.addWidget(self._add_number_parameter_button)
+        number_parameter_button_layout.addWidget(self._add_number_parameter_button)
         self._delete_number_parameter_button = QPushButton("Delete Number Parameter")
         self._delete_number_parameter_button.clicked.connect(self._remove_number_parameter_pressed)
-        number_parameter_layout.addWidget(self._delete_number_parameter_button)
+        number_parameter_button_layout.addWidget(self._delete_number_parameter_button)
+        number_parameter_button_layout.addStretch()
+        number_parameter_layout.addLayout(number_parameter_button_layout)
         self._number_parameter_box.setLayout(number_parameter_layout)
         parameter_layout.addWidget(self._number_parameter_box)
 
         self._color_parameter_box = QGroupBox()
+        self._color_parameter_box.setTitle("Color Parameter")
+        self._color_parameter_box.setMaximumHeight(200)
+        self._color_parameter_box.setMinimumHeight(150)
         self._color_parameter_list_widget = QListWidget()
         color_parameter_layout = QVBoxLayout()
         color_parameter_layout.addWidget(self._color_parameter_list_widget)
+        color_parameter_button_layout = QHBoxLayout()
         self._add_color_parameter_button = QPushButton("Add Color Parameter")
         self._add_color_parameter_button.clicked.connect(self._add_color_parameter_pressed)
-        color_parameter_layout.addWidget(self._add_color_parameter_button)
+        color_parameter_button_layout.addWidget(self._add_color_parameter_button)
         self._delete_color_parameter_button = QPushButton("Delete Color Parameter")
         self._delete_color_parameter_button.clicked.connect(self._remove_color_parameter_pressed)
-        color_parameter_layout.addWidget(self._delete_color_parameter_button)
+        color_parameter_button_layout.addWidget(self._delete_color_parameter_button)
+        color_parameter_button_layout.addStretch()
+        color_parameter_layout.addLayout(color_parameter_button_layout)
         self._color_parameter_box.setLayout(color_parameter_layout)
         parameter_layout.addWidget(self._color_parameter_box)
         general_settings_layout.addRow("Parameters", parameter_layout)
         top_layout.addLayout(general_settings_layout)
 
         configlist_layer_slider = QSplitter(Qt.Orientation.Horizontal)
+        configlist_layer_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         configlist_container = QWidget()
         configlist_container_layout = QVBoxLayout()
         self._default_configuration_button = QPushButton("Default Configuration")
@@ -125,7 +139,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._layer_config_widget = ChaserLayerConfigWidget(self._model)
         configlist_layer_slider.addWidget(self._layer_config_widget)
 
-        top_layout.addWidget(configlist_layer_slider)
+        top_layout.addWidget(configlist_layer_slider, 1)
         self._widget.setLayout(top_layout)
 
     def _enable_live_updates(self) -> None:
@@ -144,6 +158,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
         self._model = ChaserModel(conf)
+        self._layer_config_widget.parent_model = self._model
         self._number_of_pixels_tb.setValue(self._model.number_of_pixels)
         self._load_number_parameter_list()
         self._load_color_parameter_list()

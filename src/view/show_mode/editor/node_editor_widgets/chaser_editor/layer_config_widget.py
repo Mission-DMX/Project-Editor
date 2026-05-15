@@ -51,19 +51,22 @@ class ChaserLayerConfigWidget(QWidget):
         self._layer_list.itemSelectionChanged.connect(self._selected_layer_changed)
         self._layer_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         layer_layout.addWidget(self._layer_list)
+        edit_layout = QHBoxLayout()
         self._add_layer_button = QPushButton("Add Layer")
         self._add_layer_button.setEnabled(False)
         self._add_layer_button.clicked.connect(self._add_layer_pressed)
-        layer_layout.addWidget(self._add_layer_button)
+        edit_layout.addWidget(self._add_layer_button)
         layout.addLayout(layer_layout)
-        edit_layout = QVBoxLayout()
         self._remove_layer_button = QPushButton("Remove This Layer")
         self._remove_layer_button.setEnabled(False)
         self._remove_layer_button.clicked.connect(self._remove_layer_clicked)
         edit_layout.addWidget(self._remove_layer_button)
+        edit_layout.addStretch()
         self._layer_config_panel = QWidget()
-        edit_layout.addWidget(self._layer_config_panel)
-        layout.addLayout(edit_layout)
+        self._layer_config_panel.setMinimumWidth(400)
+        self._layer_config_panel.setLayout(QVBoxLayout())
+        layout.addWidget(self._layer_config_panel)
+        layer_layout.addLayout(edit_layout)
         self.setLayout(layout)
 
     @property
@@ -82,6 +85,15 @@ class ChaserLayerConfigWidget(QWidget):
             self._add_layer_item(layer)
         self._add_layer_button.setEnabled(value is not None)
 
+    @property
+    def parent_model(self) -> ChaserModel | None:
+        """Set or get the parent chaser model."""
+        return self._model
+
+    @parent_model.setter
+    def parent_model(self, value: ChaserModel | None) -> None:
+        self._model = value
+
     def _construct_config_panel(self, layer: ChaserLayer) -> None:
         layout = self._layer_config_panel.layout()
         if layout is not None:
@@ -91,14 +103,14 @@ class ChaserLayerConfigWidget(QWidget):
                 widget_to_delete.deleteLater()
                 widget_to_delete.setParent(None)
                 widget_to_delete = layout.takeAt(0)
-        del widget_to_delete
+            del widget_to_delete
         if layer is None:
             self._remove_layer_button.setEnabled(False)
             return
         self._remove_layer_button.setEnabled(True)
         for i, parameter_template in enumerate(layer.parameter_templates):
             parameter_name, parameter_type, help_text = parameter_template
-            layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.ShrinkFlag))
+            layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding))
             if parameter_type == ParameterType.COLOR:
                 layout.addWidget(ColorParameter(parameter_name, help_text, i, layer, self._model))
             elif parameter_type == ParameterType.NUMBER_ABSOLUTE:
