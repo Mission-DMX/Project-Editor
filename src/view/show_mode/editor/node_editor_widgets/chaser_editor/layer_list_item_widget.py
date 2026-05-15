@@ -1,4 +1,4 @@
-"""Contains LayerListItemWidget"""
+"""Contains LayerListItemWidget."""
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 

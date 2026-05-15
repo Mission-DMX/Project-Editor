@@ -147,7 +147,7 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN:
         return DimmerBrightnessMixinConfigWidget()
     if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
-        return ColorChaserFilterConfigWidget(filter=filter_)
+        return ColorChaserFilterConfigWidget(filter_)
     return None
 
 

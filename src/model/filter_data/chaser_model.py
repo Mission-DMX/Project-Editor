@@ -303,6 +303,8 @@ class ChaserConfig:
         super().__init__()
         self.layers: list[ChaserLayer] = []
         for layer_str in filter_str.split(";"):
+            if len(layer_str) == 0:
+                continue
             parts = layer_str.split("|")
             identifier = parts[0]
             parts.pop(0)
@@ -332,7 +334,8 @@ class ChaserModel:
                 len(config_parameter["color_parameters"]) > 0) else []
         self.number_parameters: list[str] = config_parameter["number_parameters"].split(":") if (
                 len(config_parameter["number_parameters"]) > 0) else []
-        self.presets: list[ChaserConfig] = [ChaserConfig(s) for s in config_parameter["presets"].split("#")]
+        self.presets: list[ChaserConfig] = [ChaserConfig(s) for s in config_parameter["presets"].split("#")] if (
+                len(config_parameter["presets"]) > 0) else []
         self.default_config: ChaserConfig | None = None
         self.trigger_event: EventFilter | None = None
 

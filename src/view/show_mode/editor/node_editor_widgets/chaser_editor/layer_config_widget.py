@@ -75,18 +75,22 @@ class ChaserLayerConfigWidget(QWidget):
     def config(self, value: ChaserConfig | None) -> None:
         self._config = value
         self._layer_list.clear()
+        if self._config is None:
+            self._add_layer_button.setEnabled(False)
+            return
         for layer in self._config.layers:
             self._add_layer_item(layer)
         self._add_layer_button.setEnabled(value is not None)
 
     def _construct_config_panel(self, layer: ChaserLayer) -> None:
         layout = self._layer_config_panel.layout()
-        widget_to_delete = layout.takeAt(0)
-        while widget_to_delete is not None:
-            widget_to_delete = widget_to_delete.widget()
-            widget_to_delete.deleteLater()
-            widget_to_delete.setParent(None)
+        if layout is not None:
             widget_to_delete = layout.takeAt(0)
+            while widget_to_delete is not None:
+                widget_to_delete = widget_to_delete.widget()
+                widget_to_delete.deleteLater()
+                widget_to_delete.setParent(None)
+                widget_to_delete = layout.takeAt(0)
         del widget_to_delete
         if layer is None:
             self._remove_layer_button.setEnabled(False)
@@ -109,7 +113,7 @@ class ChaserLayerConfigWidget(QWidget):
         self._dialog.show()
 
     def _add_layer_selected(self) -> None:
-        layer = self._dialog.layer
+        layer = self._dialog.selected_layer
         if layer is None:
             return
         self._config.layers.append(layer)

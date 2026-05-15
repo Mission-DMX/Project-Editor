@@ -59,6 +59,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         top_layout = QVBoxLayout()
         general_settings_layout = QFormLayout()
         self._number_of_pixels_tb = QSpinBox()
+        self._number_of_pixels_tb.valueChanged.connect(self._number_of_pixels_changed)
         self._number_of_pixels_tb.setRange(1, 65535)
         general_settings_layout.addRow("Number of Pixels: ", self._number_of_pixels_tb)
         event_selection_layout = QHBoxLayout()
@@ -371,3 +372,8 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._model.presets.remove(config)
         if len(self._model.presets) == 0:
             self._default_configuration_button_clicked()
+
+    def _number_of_pixels_changed(self) -> None:
+        if self._model is None:
+            return
+        self._model.number_of_pixels = self._number_of_pixels_tb.value()
