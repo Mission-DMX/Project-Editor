@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QSlider, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QSlider, QSpinBox, QVBoxLayout, QWidget
 
 if TYPE_CHECKING:
     from model.filter_data.chaser_model import ChaserLayer, ChaserModel
@@ -16,17 +16,12 @@ class ColorParameter(QWidget):
     # TODO add widget with color label and color picker
 
 
-class AbsoluteNumParameter(QWidget):
-    """Widget to configure a absolute number parameter."""
-
-    # TODO add widget with QSpinBox, maybe use inheritance
-
-
-class PercentNumParameter(QWidget):
-    """A widget to configure a relative number parameter."""
+class NumberParameter(QWidget):
+    """Base class for both number parameters."""
 
     def __init__(self, parameter_name: str, help_text: str, index_of_parameter_in_layer: int, layer: ChaserLayer,
-                 parent_model: ChaserModel, parent: QWidget | None = None) -> None:
+                 parent_model: ChaserModel, widget_class: QSlider | QSpinBox, parent: QWidget | None = None) -> None:
+        """Initialize the widget using the given widget class."""
         super().__init__(parent)
         self._layer = layer
         self._index_of_parameter_in_layer = index_of_parameter_in_layer
@@ -41,7 +36,7 @@ class PercentNumParameter(QWidget):
         self._channel_combo_box.addItems(parent_model.number_parameters)
         self._channel_combo_box.currentTextChanged.connect(self._channel_selected)
         top_layout.addWidget(self._channel_combo_box)
-        self._control_widget = QSlider()
+        self._control_widget: QSlider | QSpinBox = widget_class
         self._control_widget.setRange(0, 65535)
         try:
             self._control_widget.setValue(int(layer.parameter_data[index_of_parameter_in_layer]))
@@ -66,3 +61,37 @@ class PercentNumParameter(QWidget):
         if self._use_channel_cb.isChecked():
             return
         self._layer.parameter_data[self._index_of_parameter_in_layer] = str(self._control_widget.value())
+
+
+class AbsoluteNumParameter(NumberParameter):
+    """Widget to configure a absolute number parameter."""
+
+    def __init__(self, parameter_name: str, help_text: str, index_of_parameter_in_layer: int, layer: ChaserLayer,
+                 parent_model: ChaserModel, parent: QWidget | None = None) -> None:
+        """Initialize the widget."""
+        super().__init__(
+            parameter_name,
+            help_text,
+            index_of_parameter_in_layer,
+            layer,
+            parent_model,
+            QSpinBox(),
+            parent
+        )
+
+
+class PercentNumParameter(NumberParameter):
+    """A widget to configure a relative number parameter."""
+
+    def __init__(self, parameter_name: str, help_text: str, index_of_parameter_in_layer: int, layer: ChaserLayer,
+                 parent_model: ChaserModel, parent: QWidget | None = None) -> None:
+        """Initialize the widget."""
+        super().__init__(
+            parameter_name,
+            help_text,
+            index_of_parameter_in_layer,
+            layer,
+            parent_model,
+            QSlider(),
+            parent
+        )
