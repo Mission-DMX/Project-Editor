@@ -4,7 +4,21 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QSlider, QSpinBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QColorDialog,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSlider,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
+
+from model.color_hsi import ColorHSI
+from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
 
 if TYPE_CHECKING:
     from model.filter_data.chaser_model import ChaserLayer, ChaserModel
@@ -30,13 +44,15 @@ class ColorParameter(QWidget):
         self._channel_combo_box.addItems(parent_model.color_parameters)
         self._channel_combo_box.currentTextChanged.connect(self._channel_selected)
         top_layout.addWidget(self._channel_combo_box)
-        # TODO add control_widget with color label and color picker from PR#406
-        self._control_widget = QWidget()
-        # end of TODO
+        self._color_label = ColorLabel()
+        top_layout.addWidget(self._color_label)
+        self._color_dialog: QColorDialog | None = None
+        self._select_color_button = QPushButton("Select color")
+        self._select_color_button.clicked.connect(self._change_color_clicked)
+        top_layout.addWidget(self._select_color_button)
         self._use_channel_cb.setChecked(
             layer.parameter_data[index_of_parameter_in_layer] in parent_model.color_parameters
         )
-        # TODO connect control widget value changed
         layout.addLayout(top_layout)
         layout.addWidget(QLabel(help_text))
         self.setLayout(layout)
@@ -44,13 +60,31 @@ class ColorParameter(QWidget):
     def _use_param_cb_checked_changed(self) -> None:
         state = self._use_channel_cb.isChecked()
         self._channel_combo_box.setEnabled(state)
-        self._control_widget.setEnabled(not state)
+        self._select_color_button.setEnabled(not state)
         if not state:
-            pass  # TODO load control widget color from self._layer.parameter_data[index_of_parameter_in_layer]
+            self._color_label.set_color(ColorHSI.from_filter_str(
+                self._layer.parameter_data[self._layer_index]
+            ))
 
     def _channel_selected(self) -> None:
         if self._use_channel_cb.isChecked():
             self._layer.parameter_data[self._layer_index] = self._channel_combo_box.currentText()
+
+    def _change_color_clicked(self) -> None:
+        self._color_dialog = QColorDialog()
+        self._color_dialog.setCurrentColor(ColorHSI.from_filter_str(
+                self._layer.parameter_data[self._layer_index]
+            ).to_qt_color())
+        self._color_dialog.setModal(True)
+        self._color_dialog.accepted.connect(self._color_selected)
+        self._color_dialog.show()
+
+    def _color_selected(self) -> None:
+        new_color = ColorHSI.from_qt_color(self._color_dialog.currentColor())
+        self._layer.parameter_data[self._layer_index] = new_color.format_for_filter()
+        self._color_label.set_color(new_color)
+        self._color_dialog.deleteLater()
+        self._color_dialog = None
 
     def _value_changed(self) -> None:
         if self._use_channel_cb.isChecked():
