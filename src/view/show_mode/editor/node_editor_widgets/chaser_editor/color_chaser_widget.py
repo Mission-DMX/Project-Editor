@@ -365,7 +365,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     def _add_configuration_final(self) -> None:
         name = self._input_dialog.textValue() if isinstance(self._input_dialog, QInputDialog) else "Error"
         new_config = ChaserConfig("")
-        new_config.name = name
+        new_config.name = name.replace(";", "")
         self._model.presets.append(new_config)
         self._insert_preset_item(new_config)
 
