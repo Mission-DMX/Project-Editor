@@ -24,6 +24,7 @@ from view.show_mode.editor.node_editor_widgets.chaser_editor._parameter_editors 
     ColorParameter,
     PercentNumParameter,
 )
+from view.show_mode.editor.node_editor_widgets.chaser_editor._variant_editor import VariantEditor
 from view.show_mode.editor.node_editor_widgets.chaser_editor.layer_list_item_widget import LayerListItemWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
@@ -123,6 +124,8 @@ class ChaserLayerConfigWidget(QWidget):
             self._remove_layer_button.setEnabled(False)
             return
         self._remove_layer_button.setEnabled(True)
+        if len(layer.variant_template) > 0:
+            layout.addWidget(VariantEditor(layer))
         for i, parameter_template in enumerate(layer.parameter_templates):
             parameter_name, parameter_type, help_text = parameter_template
             layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding))

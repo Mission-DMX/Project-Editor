@@ -57,6 +57,9 @@ class ChaserLayer:
                     self.parameter_data.append(ColorHSI.from_filter_str(parameter))
                 else:
                     self.parameter_data.append(int(parameter))
+        for i, variant_template in enumerate(self.variant_template):
+            if i >= len(self.variant_data):
+                self.variant_data.append(variant_template[0])
 
     def format_for_filters(self) -> str:
         """Serialize the chaser layer into a string representation."""
