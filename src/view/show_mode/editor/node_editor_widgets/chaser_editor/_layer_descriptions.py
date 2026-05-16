@@ -16,7 +16,10 @@ def _load_label_resource(path: str) -> QImage | QMovie | None:
         return None
     if ext.lower() == ".png":
         return QImage(path)
-    return QMovie(path)
+    movie = QMovie(path)
+    movie.setCacheMode(QMovie.CacheMode.CacheAll)
+    movie.setSpeed(100)
+    return movie
 
 
 LAYER_DESCRIPTION: dict[str, tuple[str, str, QImage | QMovie | None]] = {

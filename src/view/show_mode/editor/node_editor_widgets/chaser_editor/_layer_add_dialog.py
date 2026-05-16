@@ -26,6 +26,7 @@ class _LayerLabel(QWidget):
             label.setText("")
         elif isinstance(image, QMovie):
             label.setMovie(image)
+            image.start()
         elif isinstance(image, QImage):
             label.setPixmap(QPixmap.fromImage(image))
         layout.addWidget(label)
