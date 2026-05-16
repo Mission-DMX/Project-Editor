@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -29,6 +30,9 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidge
 
 logger = getLogger(__name__)
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 class ChaserLayerConfigWidget(QWidget):
     """Widget to edit chaser layer setup instance.
@@ -43,6 +47,7 @@ class ChaserLayerConfigWidget(QWidget):
         super().__init__(parent)
         self._config: ChaserConfig | None = None
         self._model: ChaserModel = parent_model
+        self._apply_test_function: Callable[[ChaserConfig], None] | None = None
         self._dialog = None
 
         layout = QHBoxLayout()
@@ -62,6 +67,10 @@ class ChaserLayerConfigWidget(QWidget):
         self._remove_layer_button.clicked.connect(self._remove_layer_clicked)
         edit_layout.addWidget(self._remove_layer_button)
         edit_layout.addStretch()
+        self._test_config_button = QPushButton("Test Configuration")
+        self._test_config_button.setEnabled(False)
+        self._test_config_button.clicked.connect(self._test_clicked)
+        edit_layout.addWidget(self._test_config_button)
         self._layer_config_panel = QWidget()
         self._layer_config_panel.setMinimumWidth(400)
         self._layer_config_panel.setLayout(QVBoxLayout())
@@ -84,6 +93,11 @@ class ChaserLayerConfigWidget(QWidget):
         for layer in self._config.layers:
             self._add_layer_item(layer)
         self._add_layer_button.setEnabled(value is not None)
+        self._test_config_button.setEnabled(value is not None and self._apply_test_function is not None)
+
+    def set_test_method(self, test_function: Callable[[ChaserConfig], None] | None) -> None:
+        """Set the function that should be executed if the test button is clicked."""
+        self._apply_test_function = test_function
 
     @property
     def parent_model(self) -> ChaserModel | None:
@@ -168,7 +182,10 @@ class ChaserLayerConfigWidget(QWidget):
             self._layer_list.takeItem(index)
 
     def _selected_layer_changed(self) -> None:
-        layer_item = self._layer_list.selectedItems()[0]
+        selected_items = self._layer_list.selectedItems()
+        if len(selected_items) == 0:
+            return
+        layer_item = selected_items[0]
         if not isinstance(layer_item, AnnotatedListWidgetItem):
             logger.critical("Expected layer list item to be of type AnnotatedListWidgetItem.")
             return
@@ -179,3 +196,7 @@ class ChaserLayerConfigWidget(QWidget):
             logger.critical("Expected layer list item data to be of type ChaserLayer.")
             return
         self._construct_config_panel(data)
+
+    def _test_clicked(self) -> None:
+        if self._apply_test_function is not None and self._config is not None:
+            self._apply_test_function(self._config)

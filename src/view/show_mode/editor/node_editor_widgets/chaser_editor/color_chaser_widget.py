@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from controller.network import NetworkManager
 from model.events import EventFilter
 from model.filter_data.chaser_model import ChaserConfig, ChaserModel
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
@@ -148,6 +149,12 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         self._number_of_pixels_tb.setEnabled(False)
         self._event_select_clear_button.setEnabled(False)
         self._live_updates_enabled = True
+        self._layer_config_widget.set_test_method(self._test_clicked)
+
+    def _test_clicked(self, config: ChaserConfig) -> None:
+        fid = self._filter.filter_id
+        scene_id = self._filter.scene.scene_id
+        NetworkManager().send_gui_update_to_fish(scene_id, fid, "config", config.format_for_filter_str())
 
     @override
     def _get_configuration(self) -> dict[str, str]:
