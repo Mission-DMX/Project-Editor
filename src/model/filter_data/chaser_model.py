@@ -287,9 +287,9 @@ def construct_chaser_layer(identifier: str, parameter_data: list[str]) -> Chaser
     for i in range(len(layer.parameter_data), len(layer.parameter_templates)):
         match layer.parameter_templates[i][1]:
             case ParameterType.NUMBER_PERCENTAGE | ParameterType.NUMBER_ABSOLUTE:
-                layer.parameter_data.append("0")
+                layer.parameter_data.append(0)
             case ParameterType.COLOR:
-                layer.parameter_data.append("0.0,0.0,1.0")
+                layer.parameter_data.append(ColorHSI(0.0, 0.0, 1.0))
             case _:
                 raise NotImplementedError(f"Unexpected parameter type: {layer.parameter_templates[i][1]}")
     return layer

@@ -20,6 +20,8 @@ class _LayerLabel(QWidget):
         super().__init__()
         layout = QHBoxLayout()
         label = QLabel()
+        label.setFixedWidth(200)
+        label.setFixedHeight(25)
         if image is None:
             label.setText("")
         elif isinstance(image, QMovie):

@@ -37,6 +37,7 @@ class ColorParameter(QWidget):
         top_layout = QHBoxLayout()
         top_layout.addWidget(QLabel(parameter_name))
         self._use_channel_cb = QCheckBox("Use parameter")
+        self._use_channel_cb.checkStateChanged.connect(self._use_param_cb_checked_changed)
         top_layout.addWidget(self._use_channel_cb)
         self._channel_combo_box = QComboBox()
         self._channel_combo_box.setEditable(False)
@@ -50,9 +51,12 @@ class ColorParameter(QWidget):
         self._select_color_button = QPushButton("Select color")
         self._select_color_button.clicked.connect(self._change_color_clicked)
         top_layout.addWidget(self._select_color_button)
-        self._use_channel_cb.setChecked(
-            layer.parameter_data[index_of_parameter_in_layer] in parent_model.color_parameters
-        )
+        param_data = layer.parameter_data[index_of_parameter_in_layer]
+        self._use_channel_cb.setChecked(param_data in parent_model.color_parameters)
+        if isinstance(param_data, ColorHSI):
+            self._color_label.set_color(param_data)
+        else:
+            self._channel_combo_box.setCurrentText(param_data)
         layout.addLayout(top_layout)
         layout.addWidget(QLabel(help_text))
         self.setLayout(layout)
@@ -61,10 +65,10 @@ class ColorParameter(QWidget):
         state = self._use_channel_cb.isChecked()
         self._channel_combo_box.setEnabled(state)
         self._select_color_button.setEnabled(not state)
-        if not state:
-            self._color_label.set_color(ColorHSI.from_filter_str(
-                self._layer.parameter_data[self._layer_index]
-            ))
+        if state:
+            self._layer.parameter_data[self._layer_index] = self._channel_combo_box.currentText()
+        else:
+            self._layer.parameter_data[self._layer_index] = self._color_label.get_color()
 
     def _channel_selected(self) -> None:
         if self._use_channel_cb.isChecked():
@@ -81,15 +85,10 @@ class ColorParameter(QWidget):
 
     def _color_selected(self) -> None:
         new_color = ColorHSI.from_qt_color(self._color_dialog.currentColor())
-        self._layer.parameter_data[self._layer_index] = new_color.format_for_filter()
+        self._layer.parameter_data[self._layer_index] = new_color
         self._color_label.set_color(new_color)
         self._color_dialog.deleteLater()
         self._color_dialog = None
-
-    def _value_changed(self) -> None:
-        if self._use_channel_cb.isChecked():
-            return
-        self._layer.parameter_data[self._layer_index] = str(self._control_widget.value.format_for_filter())
 
 
 class NumberParameter(QWidget):
@@ -105,6 +104,7 @@ class NumberParameter(QWidget):
         top_layout = QHBoxLayout()
         top_layout.addWidget(QLabel(parameter_name))
         self._use_channel_cb = QCheckBox("Use parameter")
+        self._use_channel_cb.checkStateChanged.connect(self._use_param_cb_checked_changed)
         top_layout.addWidget(self._use_channel_cb)
         self._channel_combo_box = QComboBox()
         self._channel_combo_box.setEditable(False)
@@ -114,12 +114,15 @@ class NumberParameter(QWidget):
         top_layout.addWidget(self._channel_combo_box)
         self._control_widget: QSlider | QSpinBox = widget_class
         self._control_widget.setRange(0, 65535)
-        try:
-            self._control_widget.setValue(int(layer.parameter_data[index_of_parameter_in_layer]))
-        except ValueError:
-            self._channel_combo_box.setCurrentText(layer.parameter_data[index_of_parameter_in_layer])
+
+        param_data = layer.parameter_data[index_of_parameter_in_layer]
+        if isinstance(param_data, int):
+            self._control_widget.setValue(param_data)
+        else:
+            self._channel_combo_box.setCurrentText(param_data)
             self._use_channel_cb.setChecked(True)
         self._control_widget.valueChanged.connect(self._value_changed)
+        top_layout.addWidget(self._control_widget)
         layout.addLayout(top_layout)
         layout.addWidget(QLabel(help_text))
         self.setLayout(layout)
@@ -128,6 +131,10 @@ class NumberParameter(QWidget):
         state = self._use_channel_cb.isChecked()
         self._channel_combo_box.setEnabled(state)
         self._control_widget.setEnabled(not state)
+        if state:
+            self._layer.parameter_data[self._index_of_parameter_in_layer] = self._channel_combo_box.currentText()
+        else:
+            self._layer.parameter_data[self._index_of_parameter_in_layer] = self._control_widget.value()
 
     def _channel_selected(self) -> None:
         if self._use_channel_cb.isChecked():
@@ -136,7 +143,7 @@ class NumberParameter(QWidget):
     def _value_changed(self) -> None:
         if self._use_channel_cb.isChecked():
             return
-        self._layer.parameter_data[self._index_of_parameter_in_layer] = str(self._control_widget.value())
+        self._layer.parameter_data[self._index_of_parameter_in_layer] = self._control_widget.value()
 
 
 class AbsoluteNumParameter(NumberParameter):

@@ -100,8 +100,9 @@ class ChaserLayerConfigWidget(QWidget):
             widget_to_delete = layout.takeAt(0)
             while widget_to_delete is not None:
                 widget_to_delete = widget_to_delete.widget()
-                widget_to_delete.deleteLater()
-                widget_to_delete.setParent(None)
+                if widget_to_delete is not None:
+                    widget_to_delete.deleteLater()
+                    widget_to_delete.setParent(None)
                 widget_to_delete = layout.takeAt(0)
             del widget_to_delete
         if layer is None:
