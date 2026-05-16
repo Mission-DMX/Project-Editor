@@ -310,6 +310,16 @@ class ChaserConfig:
             parts.pop(0)
             layer = construct_chaser_layer(identifier, parts)
             self.layers.append(layer)
+        self._name = "NO NAME"
+
+    @property
+    def name(self) -> str:
+        """Get or set the name of the preset config."""
+        return self._name
+
+    @name.setter
+    def name(self, name: str) -> None:
+        self._name = name
 
     def format_for_filter_str(self) -> str:
         """Format the setup to be stored in a filter configuration."""
@@ -336,6 +346,9 @@ class ChaserModel:
                 len(config_parameter["number_parameters"]) > 0) else []
         self.presets: list[ChaserConfig] = [ChaserConfig(s) for s in config_parameter["presets"].split("#")] if (
                 len(config_parameter["presets"]) > 0) else []
+        for i, name in enumerate(config_parameter.get("preset_names", "").split(";")):
+            if i < len(self.presets):
+                self.presets[i].name = name if name != "" else "NO NAME"
         self.default_config: ChaserConfig | None = None
         self.trigger_event: EventFilter | None = None
 
@@ -354,4 +367,5 @@ class ChaserModel:
             "number_parameters": ":".join(self.number_parameters),
             "presets": "#".join(p.format_for_filter_str() for p in self.presets),
             "trigger_event": self.trigger_event.format_for_filters() if self.trigger_event is not None else "",
+            "preset_names": ";".join(p.name for p in self.presets),
         }

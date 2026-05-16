@@ -354,7 +354,18 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
     def _add_configuration_pressed(self) -> None:
         if self._model is None:
             return
+        self._input_dialog = QInputDialog(self._widget)
+        self._input_dialog.setModal(True)
+        self._input_dialog.setWindowTitle("Enter Name of new Preset")
+        self._input_dialog.setTextValue("")
+        self._input_dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        self._input_dialog.accepted.connect(self._add_configuration_final)
+        self._input_dialog.show()
+
+    def _add_configuration_final(self) -> None:
+        name = self._input_dialog.textValue() if isinstance(self._input_dialog, QInputDialog) else "Error"
         new_config = ChaserConfig("")
+        new_config.name = name
         self._model.presets.append(new_config)
         self._insert_preset_item(new_config)
 
@@ -362,7 +373,7 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         item = AnnotatedListWidgetItem(self._additional_configurations_list)
         item.annotated_data = config
         self._additional_configurations_list.addItem(item)
-        item.setText(str(self._additional_configurations_list.count()))
+        item.setText(f"[{self._additional_configurations_list.count()}] {config.name}")
 
     def _delete_configuration_pressed(self) -> None:
         self._input_dialog = YesNoDialog(
