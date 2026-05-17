@@ -12,6 +12,7 @@ from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.show_ui_widgets.autotracker.ui_widget import AutoTrackerUIWidget
 from view.show_mode.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
+from view.show_mode.show_ui_widgets.chaser_apply_preset_uiwidget import ChaserApplyPresetUIWidget
 from view.show_mode.show_ui_widgets.clock_ui_widget import ClockUIWidget
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
@@ -70,6 +71,11 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
         "Sequence Listing",
         SequencerControlUIWidget,
         [[FilterTypeEnumeration.VFILTER_SEQUENCER, FilterTypeEnumeration.FILTER_SEQUENCER]],
+    ),
+    "chaser-preset-selector": (
+        "Chaser Preset Selector",
+        ChaserApplyPresetUIWidget,
+        [[FilterTypeEnumeration.FILTER_COLOR_CHASER]]
     ),
     "label": ("Text Label", ShowLabelUIWidget, []),
     "clock": ("BF Clock", ClockUIWidget, []),
