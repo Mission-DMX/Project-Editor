@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QDialog, QFormLayout, QListWidget, QPushButton, QS
 
 from model import UIPage, UIWidget
 from model.filter_data.chaser_model import ChaserConfig, ChaserModel
+from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 
@@ -19,9 +20,9 @@ class ChaserApplyPresetUIWidget(UIWidget):
         super().__init__(parent_page, configuration)
         self._pending_update: str | None = None
 
-    def _construct_widget(self) -> QWidget:
+    def _construct_widget(self, parent: QWidget | None) -> QWidget:
         model = ChaserModel(self.parent.scene.get_filter_by_id(self.filter_ids[0]).filter_configurations)
-        widget = QWidget()
+        widget = QWidget(parent)
         layout = QVBoxLayout()
         list_widget = QListWidget()
         list_widget.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
@@ -36,8 +37,8 @@ class ChaserApplyPresetUIWidget(UIWidget):
             item.annotated_data = preset
             list_widget.addItem(item)
         widget.setLayout(layout)
-        widget.setFixedWidth(int(self.configuration.get("width") or "64"))
-        widget.setFixedHeight(int(self.configuration.get("height") or "64"))
+        list_widget.setMinimumWidth(int(self.configuration.get("width") or "64"))
+        list_widget.setMinimumHeight(int(self.configuration.get("height") or "64"))
         return widget
 
     def _apply_preset_from_item(self, item: AnnotatedListWidgetItem) -> None:
@@ -59,14 +60,12 @@ class ChaserApplyPresetUIWidget(UIWidget):
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        w: QWidget = self._construct_widget()
-        w.setParent(parent)
+        w: QWidget = self._construct_widget(parent)
         return w
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        w: QWidget = self._construct_widget()
-        w.setParent(parent)
+        w: QWidget = self._construct_widget(parent)
         w.setEnabled(False)
         return w
 
