@@ -187,7 +187,13 @@ def construct_chaser_layer(identifier: str, parameter_data: list[str]) -> Chaser
             ChaserLayer(
                 identifier,
                 [["add", "sub", "mul", "div"]],
-                [("Modifier value", ParameterType.NUMBER_ABSOLUTE, "")],
+                [
+                    ("Modifier value", ParameterType.NUMBER_ABSOLUTE, "The value to modify the mask with"),
+                    ("Start Position", ParameterType.NUMBER_PERCENTAGE,
+                     "The position in the mask, where the modification should start."),
+                    ("End Position", ParameterType.NUMBER_PERCENTAGE,
+                     "The position in the mask, where the modification should end."),
+                ],
                 parameter_data,
             )
         )
