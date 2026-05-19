@@ -5,6 +5,7 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFrame,
@@ -56,6 +57,7 @@ class ChaserLayerConfigWidget(QWidget):
         self._model: ChaserModel = parent_model
         self._apply_test_function: Callable[[ChaserConfig], None] | None = None
         self._dialog = None
+        self._last_selected_item: ChaserLayer | None = None
 
         layout = QHBoxLayout()
         layer_layout = QVBoxLayout()
@@ -69,6 +71,16 @@ class ChaserLayerConfigWidget(QWidget):
         self._add_layer_button.setEnabled(False)
         self._add_layer_button.clicked.connect(self._add_layer_pressed)
         edit_layout.addWidget(self._add_layer_button)
+        self._move_up_button = QPushButton("Up")
+        self._move_up_button.setIcon(QIcon.fromTheme("go-up"))
+        self._move_up_button.clicked.connect(self._move_up_clicked)
+        self._move_up_button.setEnabled(False)
+        edit_layout.addWidget(self._move_up_button)
+        self._move_down_button = QPushButton("Down")
+        self._move_down_button.setIcon(QIcon.fromTheme("go-down"))
+        self._move_down_button.clicked.connect(self._move_down_clicked)
+        self._move_down_button.setEnabled(False)
+        edit_layout.addWidget(self._move_down_button)
         layout.addLayout(layer_layout)
         self._remove_layer_button = QPushButton("Remove This Layer")
         self._remove_layer_button.setEnabled(False)
@@ -95,14 +107,20 @@ class ChaserLayerConfigWidget(QWidget):
     @config.setter
     def config(self, value: ChaserConfig | None) -> None:
         self._config = value
-        self._layer_list.clear()
+        self._last_selected_item = None
         if self._config is None:
             self._add_layer_button.setEnabled(False)
+            self._layer_list.clear()
             return
-        for layer in self._config.layers:
-            self._add_layer_item(layer)
+        self._rebuild_layer_list()
+        self._construct_config_panel(None)
         self._add_layer_button.setEnabled(value is not None)
         self._test_config_button.setEnabled(value is not None and self._apply_test_function is not None)
+
+    def _rebuild_layer_list(self) -> None:
+        self._layer_list.clear()
+        for layer in self._config.layers:
+            self._add_layer_item(layer)
 
     def set_test_method(self, test_function: Callable[[ChaserConfig], None] | None) -> None:
         """Set the function that should be executed if the test button is clicked.
@@ -121,7 +139,7 @@ class ChaserLayerConfigWidget(QWidget):
     def parent_model(self, value: ChaserModel | None) -> None:
         self._model = value
 
-    def _construct_config_panel(self, layer: ChaserLayer) -> None:
+    def _construct_config_panel(self, layer: ChaserLayer | None) -> None:
         layout = self._layer_config_panel.layout()
         if layout is not None:
             widget_to_delete = layout.takeAt(0)
@@ -134,6 +152,8 @@ class ChaserLayerConfigWidget(QWidget):
             del widget_to_delete
         if layer is None:
             self._remove_layer_button.setEnabled(False)
+            self._move_up_button.setEnabled(False)
+            self._move_down_button.setEnabled(False)
             return
         self._remove_layer_button.setEnabled(True)
         if len(layer.variant_template) > 0:
@@ -216,8 +236,46 @@ class ChaserLayerConfigWidget(QWidget):
         if not isinstance(data, ChaserLayer):
             logger.critical("Expected layer list item data to be of type ChaserLayer.")
             return
+        if data == self._last_selected_item:
+            return
+        self._last_selected_item = data
         self._construct_config_panel(data)
+        item_row = self._layer_list.indexFromItem(layer_item).row()
+        self._move_down_button.setEnabled(
+            item_row < self._layer_list.count() - 1
+        )
+        self._move_up_button.setEnabled(item_row > 0)
 
     def _test_clicked(self) -> None:
         if self._apply_test_function is not None and self._config is not None:
             self._apply_test_function(self._config)
+
+    def _move_up_clicked(self) -> None:
+        new_index = -1
+        for item in self._layer_list.selectedItems():
+            index = self._layer_list.indexFromItem(item).row()
+            if index == 0:
+                logger.critical("Layer index 0 should not have been selected and clickable.")
+                return
+            previous = self._config.layers[index - 1]
+            self._config.layers[index - 1] = self._config.layers[index]
+            self._config.layers[index] = previous
+            new_index = index - 1
+        self._rebuild_layer_list()
+        if new_index != -1:
+            self._layer_list.setCurrentRow(new_index)
+
+    def _move_down_clicked(self) -> None:
+        new_index = -1
+        for item in self._layer_list.selectedItems():
+            index = self._layer_list.indexFromItem(item).row()
+            if index >= self._layer_list.count() - 1:
+                logger.critical("Last layer index should not have been selected and clickable.")
+                return
+            previous = self._config.layers[index + 1]
+            self._config.layers[index + 1] = self._config.layers[index]
+            self._config.layers[index] = previous
+            new_index = index + 1
+        self._rebuild_layer_list()
+        if new_index != -1:
+            self._layer_list.setCurrentRow(new_index)
