@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QFrame,
     QHBoxLayout,
     QListWidget,
     QMessageBox,
@@ -80,6 +81,7 @@ class ChaserLayerConfigWidget(QWidget):
         edit_layout.addWidget(self._test_config_button)
         self._layer_config_panel = QWidget()
         self._layer_config_panel.setMinimumWidth(400)
+        self._layer_config_panel.setMinimumHeight(550)
         self._layer_config_panel.setLayout(QVBoxLayout())
         layout.addWidget(self._layer_config_panel)
         layer_layout.addLayout(edit_layout)
@@ -138,7 +140,13 @@ class ChaserLayerConfigWidget(QWidget):
             layout.addWidget(VariantEditor(layer))
         for i, parameter_template in enumerate(layer.parameter_templates):
             parameter_name, parameter_type, help_text = parameter_template
-            layout.addItem(QSpacerItem(1, 16, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding))
+            if i > 0:
+                separator = QFrame()
+                separator.setFrameShape(QFrame.Shape.HLine)
+                separator.setFixedHeight(5)
+                separator.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+                separator.setLineWidth(3)
+                layout.addWidget(separator)
             if parameter_type == ParameterType.COLOR:
                 layout.addWidget(ColorParameter(parameter_name, help_text, i, layer, self._model))
             elif parameter_type == ParameterType.NUMBER_ABSOLUTE:

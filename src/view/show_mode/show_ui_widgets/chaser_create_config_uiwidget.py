@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import override
 
-from PySide6.QtWidgets import QDialog, QLabel, QWidget
+from PySide6.QtWidgets import QDialog, QGroupBox, QLabel, QVBoxLayout, QWidget
 
 from model import UIPage, UIWidget
 from model.filter_data.chaser_model import ChaserConfig, ChaserModel
@@ -20,11 +20,16 @@ class ChaserCreateConfigUIWidget(UIWidget):
         self._pending_update: str | None = None
 
     def _construct_widget(self, parent: QWidget | None) -> QWidget:
+        gb = QGroupBox("Chaser Config", parent)
         model = ChaserModel(self.parent.scene.get_filter_by_id(self.filter_ids[0]).filter_configurations)
-        w = ChaserLayerConfigWidget(model, parent, "Apply")
+        w = ChaserLayerConfigWidget(model, gb, "Apply")
         w.config = ChaserConfig("")
         w.set_test_method(self._apply_configuration)
-        return w
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(f"Target: {self.filter_ids[0]}"))
+        layout.addWidget(w)
+        gb.setLayout(layout)
+        return gb
 
     def _apply_configuration(self, config: ChaserConfig) -> None:
         if config is None:
