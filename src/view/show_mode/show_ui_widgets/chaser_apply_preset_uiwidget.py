@@ -29,7 +29,7 @@ class ChaserApplyPresetUIWidget(UIWidget):
         layout.addWidget(list_widget)
         apply_button = QPushButton()
         apply_button.setText("Apply")
-        apply_button.clicked.connect(lambda checked, lw=list_widget: self._apply_preset_from_item(lw.selectedItems()[0]))
+        apply_button.clicked.connect(lambda _, lw=list_widget: self._apply_preset_from_item(lw.selectedItems()[0]))
         layout.addWidget(apply_button)
         for preset in model.presets:
             item = AnnotatedListWidgetItem(list_widget)

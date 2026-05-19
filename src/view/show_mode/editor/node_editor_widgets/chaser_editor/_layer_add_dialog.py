@@ -32,7 +32,9 @@ class _LayerLabel(QWidget):
         layout.addWidget(label)
         descr_layout = QVBoxLayout()
         descr_layout.addWidget(QLabel(name))
-        descr_layout.addWidget(QLabel(description))
+        descr_label = QLabel(description)
+        descr_label.setWordWrap(True)
+        descr_layout.addWidget(descr_label)
         layout.addLayout(descr_layout)
         self.setLayout(layout)
 
