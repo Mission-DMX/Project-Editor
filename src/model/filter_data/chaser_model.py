@@ -94,7 +94,13 @@ def construct_chaser_layer(identifier: str, parameter_data: list[str]) -> Chaser
             ChaserLayer(
                 identifier,
                 [],
-                [("Start Color", ParameterType.COLOR, ""), ("End Color", ParameterType.COLOR, "")],
+                [
+                    ("Start Color", ParameterType.COLOR, ""),
+                    ("End Color", ParameterType.COLOR, ""),
+                    ("Number of Segments", ParameterType.NUMBER_ABSOLUTE,
+                     "Divides the pixel map into the specified number of segments and applies the effect on each "
+                     "layer individually."),
+                ],
                 parameter_data,
             )
         )

@@ -58,7 +58,9 @@ class ColorParameter(QWidget):
         else:
             self._channel_combo_box.setCurrentText(param_data)
         layout.addLayout(top_layout)
-        layout.addWidget(QLabel(help_text))
+        help_label = QLabel(help_text)
+        help_label.setWordWrap(True)
+        layout.addWidget(help_label)
         self.setLayout(layout)
 
     def _use_param_cb_checked_changed(self) -> None:
@@ -124,7 +126,9 @@ class NumberParameter(QWidget):
         self._control_widget.valueChanged.connect(self._value_changed)
         top_layout.addWidget(self._control_widget)
         layout.addLayout(top_layout)
-        layout.addWidget(QLabel(help_text))
+        help_label = QLabel(help_text)
+        help_label.setWordWrap(True)
+        layout.addWidget(help_label)
         self.setLayout(layout)
 
     def _use_param_cb_checked_changed(self) -> None:

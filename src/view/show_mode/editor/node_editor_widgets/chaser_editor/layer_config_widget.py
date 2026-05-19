@@ -179,7 +179,7 @@ class ChaserLayerConfigWidget(QWidget):
             if not isinstance(item.annotated_data, ChaserLayer):
                 continue
             self._config.layers.remove(item.annotated_data)
-            indexes_to_remove.append(self._layer_list.indexFromItem(item))
+            indexes_to_remove.append(self._layer_list.indexFromItem(item).row())
         indexes_to_remove.sort(reverse=True)
         for index in indexes_to_remove:
             self._layer_list.takeItem(index)
