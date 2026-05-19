@@ -41,9 +41,14 @@ class ChaserLayerConfigWidget(QWidget):
     Widget provides a list of all layers, options to create and remove layers as well as an area allowing configuration
     of selected layer.
 
+    Use the config property to change the configuration under edit.
+    Use the parent_model property to notify the widget about the chaser context.
+    Use the set_test_method method in order to register the test button callback.
+
     """
 
-    def __init__(self, parent_model: ChaserModel, parent: QWidget | None = None) -> None:
+    def __init__(self, parent_model: ChaserModel, parent: QWidget | None = None,
+                 apply_button_text: str = "Test Configuration") -> None:
         """Initialize the widget."""
         super().__init__(parent)
         self._config: ChaserConfig | None = None
@@ -55,6 +60,7 @@ class ChaserLayerConfigWidget(QWidget):
         layer_layout = QVBoxLayout()
         self._layer_list: QListWidget = QListWidget(self)
         self._layer_list.itemSelectionChanged.connect(self._selected_layer_changed)
+        self._layer_list.setMinimumHeight(250)
         self._layer_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         layer_layout.addWidget(self._layer_list)
         edit_layout = QHBoxLayout()
@@ -68,7 +74,7 @@ class ChaserLayerConfigWidget(QWidget):
         self._remove_layer_button.clicked.connect(self._remove_layer_clicked)
         edit_layout.addWidget(self._remove_layer_button)
         edit_layout.addStretch()
-        self._test_config_button = QPushButton("Test Configuration")
+        self._test_config_button = QPushButton(apply_button_text)
         self._test_config_button.setEnabled(False)
         self._test_config_button.clicked.connect(self._test_clicked)
         edit_layout.addWidget(self._test_config_button)
@@ -97,7 +103,11 @@ class ChaserLayerConfigWidget(QWidget):
         self._test_config_button.setEnabled(value is not None and self._apply_test_function is not None)
 
     def set_test_method(self, test_function: Callable[[ChaserConfig], None] | None) -> None:
-        """Set the function that should be executed if the test button is clicked."""
+        """Set the function that should be executed if the test button is clicked.
+
+        The provided method must accept a ChaserConfig instance as argument.
+
+        """
         self._apply_test_function = test_function
 
     @property

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QColorDialog,
@@ -12,6 +13,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSlider,
+    QSpacerItem,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -103,17 +105,19 @@ class NumberParameter(QWidget):
         self._layer = layer
         self._index_of_parameter_in_layer = index_of_parameter_in_layer
         layout = QVBoxLayout()
-        top_layout = QHBoxLayout()
-        top_layout.addWidget(QLabel(parameter_name))
+        config_layout = QHBoxLayout()
+        config_layout.addSpacerItem(QSpacerItem(1, 1))
+        param_layout = QHBoxLayout()
+        param_layout.addWidget(QLabel(parameter_name))
         self._use_channel_cb = QCheckBox("Use parameter")
         self._use_channel_cb.checkStateChanged.connect(self._use_param_cb_checked_changed)
-        top_layout.addWidget(self._use_channel_cb)
+        param_layout.addWidget(self._use_channel_cb)
         self._channel_combo_box = QComboBox()
         self._channel_combo_box.setEditable(False)
         self._channel_combo_box.setEnabled(False)
         self._channel_combo_box.addItems(parent_model.number_parameters)
         self._channel_combo_box.currentTextChanged.connect(self._channel_selected)
-        top_layout.addWidget(self._channel_combo_box)
+        param_layout.addWidget(self._channel_combo_box)
         self._control_widget: QSlider | QSpinBox = widget_class
         self._control_widget.setRange(0, 65535)
 
@@ -124,8 +128,9 @@ class NumberParameter(QWidget):
             self._channel_combo_box.setCurrentText(param_data)
             self._use_channel_cb.setChecked(True)
         self._control_widget.valueChanged.connect(self._value_changed)
-        top_layout.addWidget(self._control_widget)
-        layout.addLayout(top_layout)
+        config_layout.addWidget(self._control_widget)
+        layout.addLayout(param_layout)
+        layout.addLayout(config_layout)
         help_label = QLabel(help_text)
         help_label.setWordWrap(True)
         layout.addWidget(help_label)
@@ -179,6 +184,6 @@ class PercentNumParameter(NumberParameter):
             index_of_parameter_in_layer,
             layer,
             parent_model,
-            QSlider(),
+            QSlider(Qt.Orientation.Horizontal, tickPosition=QSlider.TickPosition.NoTicks),
             parent
         )

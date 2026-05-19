@@ -8,7 +8,6 @@ from PySide6.QtWidgets import QDialog, QFormLayout, QListWidget, QPushButton, QS
 
 from model import UIPage, UIWidget
 from model.filter_data.chaser_model import ChaserConfig, ChaserModel
-from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
 
