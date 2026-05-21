@@ -12,7 +12,12 @@ from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
 import style
-from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
+from controller.file.showfile_dialogs import (
+    _save_show_file,
+    open_show_export_dialog,
+    show_load_showfile_dialog,
+    show_save_showfile_dialog,
+)
 from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
@@ -193,6 +198,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
                 ("Save Showfile", self._save_show, "S"),
                 ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
+                ("---", None, None),
+                ("Export to Standalone", lambda: open_show_export_dialog(self, self._board_configuration), None),
                 ("---", None, None),
                 ("Settings", self.open_show_settings, ","),
             ],
