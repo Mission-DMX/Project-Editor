@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
+from controller.utils.graph_sorting import spring_layout
+
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
     from .control_desk import BankSet
@@ -60,6 +62,10 @@ class FilterPage:
             new_fp._child_pages.append(child_fp.copy(new_scene))
         new_fp._name = self.name
         return new_fp
+
+    def sort(self) -> None:
+        """Applies the spring layout to the contained filters."""
+        spring_layout(self._filters)
 
 
 class Scene:

@@ -48,7 +48,6 @@ def spring_layout(
             The iteration stops if the error is below this threshold.
 
     """
-
     dim = 2
     scale = 1
     if len(filter_list) == 0:

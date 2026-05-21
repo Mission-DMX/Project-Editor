@@ -23,6 +23,7 @@ from view.action_setup_view.combined_action_setup_widget import CombinedActionSe
 from view.console_mode.console_universe_selector import UniverseSelector
 from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.dialogs.colum_dialog import ColumnDialog
+from view.dialogs.selection_dialog import SelectionDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.console_dock_widget import ConsoleDockWidget
@@ -199,8 +200,6 @@ class MainWindow(QtWidgets.QMainWindow):
             "Edit": [
                 ("&Undo", None, "Z"),  # TODO implement edit history
                 ("&Redo", None, "Shift+Z"),
-                ("---", None, None),
-                ("Sort Graph in current Page", self._sort_graph, None),
             ],
             "Tools": [
                 # ("Scene Wizard", self._open_scene_setup_wizard, None),
@@ -407,9 +406,3 @@ class MainWindow(QtWidgets.QMainWindow):
     def _open_asset_mgmt_dialog(self) -> None:
         self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
         self._settings_dialog.show()
-
-    def _sort_graph(self) -> None:
-        # TODO get current open filter page or open selection dialog
-        #   if no page is open display a message box complaining about it
-        # TODO sort the graph in the filter page
-        pass

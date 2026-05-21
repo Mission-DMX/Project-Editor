@@ -242,6 +242,10 @@ class ShowBrowser:
         add_filter_page_action.triggered.connect(lambda: self._add_filter_page(selected_items))
         add_filter_page_action.setEnabled(has_scenes or has_filter_pages)
         menu.addAction(add_filter_page_action)
+        sort_filter_page_action = QAction("Sort Filter Page", menu)
+        sort_filter_page_action.triggered.connect(lambda: self._sort_selected_filter_pages(selected_items))
+        sort_filter_page_action.setEnabled(has_filter_pages)
+        menu.addAction(sort_filter_page_action)
         add_ui_page_action = QAction("Add UI page", menu)
         add_ui_page_action.triggered.connect(lambda: self._add_ui_page(selected_items))
         add_ui_page_action.setEnabled(has_scenes)
@@ -388,6 +392,15 @@ class ShowBrowser:
                 self._input_dialog.setLabelText("Please enter the name of the new page.")
                 self._input_dialog.setWindowTitle("Enter Name")
                 self._input_dialog.open()
+
+    def _sort_selected_filter_pages(self, selected_items: list[QTreeWidgetItem]) -> None:
+        for item in selected_items:
+            if not isinstance(item, AnnotatedTreeWidgetItem):
+                continue
+            data = item.annotated_data
+            if not isinstance(data, FilterPage):
+                continue
+            data.sort()
 
     def _add_ui_page(self, selected_items: list[QTreeWidgetItem]) -> None:
         update_occurred = False
