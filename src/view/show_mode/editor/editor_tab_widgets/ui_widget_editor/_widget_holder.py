@@ -58,8 +58,8 @@ class UIWidgetHolder(QWidget):
 
     def update_size(self) -> None:
         """Update dimensions of show UI widget."""
-        self.setMinimumWidth(100)
-        self.setMinimumHeight(30)
+        self.setMinimumWidth(max(100, self._child.minimumSizeHint().width()))
+        self.setMinimumHeight(max(30, self._child.minimumSizeHint().height()))
         self.setMaximumHeight(65565)
         self.setMaximumWidth(65565)
 

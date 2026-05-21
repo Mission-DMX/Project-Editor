@@ -33,9 +33,9 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
         AutoTrackerUIWidget,
         [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]],
     ),
-    "buttonarray": (
-        "Button Array",
-        ConstantNumberButtonList,
+    "buttonarray_submit": (
+        "Button Array w/ Submit",
+        ButtonsWithValueSubmit,
         [
             [
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
@@ -47,9 +47,9 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
             ]
         ],
     ),
-    "buttonarray_submit": (
-        "Button Array w/ Submit",
-        ButtonsWithValueSubmit,
+    "buttonarray": (
+        "Button Array",
+        ConstantNumberButtonList,
         [
             [
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,

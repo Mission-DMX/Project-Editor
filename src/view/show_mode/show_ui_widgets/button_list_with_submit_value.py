@@ -3,89 +3,62 @@ with a new value or predefined one in fish"""
 from __future__ import annotations
 
 import sys
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from PySide6.QtWidgets import QDialog, QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
-from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 
+if TYPE_CHECKING:
+    from model import UIPage
 
-class ButtonsWithValueSubmit(UIWidget):
+class ButtonsWithValueSubmit(ConstantNumberButtonList):
     """ UI widget for the show mode (extended with ConstantNumberButtonList also for the editor mode).
     Provides a textfield with a submit-button to update a value (of a constant node).
     Provides also (from ConstantNumberButtonList) a button list to send pre-defined values
     """
 
-    @override
-    def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
-        return self._button_list.get_config_dialog_widget(parent)
-
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._filter_type = None
         self._player_widget: QWidget | None = None
-        self._button_list = ConstantNumberButtonList(self.parent, configuration)
-
-    def set_filter(self, f: Filter, i: int) -> None:
-        super().set_filter(f, i)
-        self._filter_type = f.filter_type
-        self._button_list.set_filter(f, i)
-        self.associated_filters["constant"] = f.filter_id
-
-    @override
-    def generate_update_content(self) -> list[tuple[str, str]]:
-        return self._button_list.generate_update_content()
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if self._player_widget:
-            self._player_widget.deleteLater()
-        self.construct_player_widget(parent)
-        return self._player_widget
+        w = super().get_player_widget(parent)
+        return self._append_direct_widget(w)
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        return self._button_list.get_configuration_widget(parent)
+        w = super().get_configuration_widget(parent)
+        return self._append_direct_widget(w)
 
-    @override
-    def copy(self, new_parent: UIPage) -> UIWidget:
-        fid = self.associated_filters.get("constant")
-        w = ButtonsWithValueSubmit(self.parent, self.configuration.copy())
-        w.set_filter(Filter(None, fid, self._filter_type, None, None), 0)
-        super().copy_base(w)
-        return w
-
-    def construct_player_widget(self, parent: QWidget | None) -> None:
-        widget = QWidget(parent)
-        self._player_widget = QWidget(parent)
-        self._player_widget.setMinimumWidth(50)
-        self._player_widget.setMinimumHeight(30)
-        layout = QHBoxLayout(widget)
-        layout_submit_own_value = QVBoxLayout(widget)
-        valuefield = QDoubleSpinBox(widget)
+    def _append_direct_widget(self, existing_widget: QWidget) -> QWidget:
+        top_widget = QWidget()
+        top_layout = QHBoxLayout()
+        layout_submit_own_value = QVBoxLayout()
+        valuefield = QDoubleSpinBox(top_widget)
         if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
             valuefield.setMaximum(sys.float_info.max)
             valuefield.setMinimum(-sys.float_info.max)
             valuefield.setDecimals(20)
         else:
-            valuefield.setMaximum(self._button_list._maximum)
+            valuefield.setMaximum(self._maximum)
+            valuefield.setMinimum(0)
             valuefield.setDecimals(0)
-        submit_button = QPushButton("Send Value", widget)
+        submit_button = QPushButton("Send Value", top_widget)
 
         def pressed_button() -> None:
             value = valuefield.value() if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(
                 valuefield.value())
-            self._button_list._set_value(value)
+            self._set_value(value)
 
         submit_button.clicked.connect(pressed_button)
         layout_submit_own_value.addWidget(valuefield)
         layout_submit_own_value.addWidget(submit_button)
-        layout.addLayout(layout_submit_own_value)
-        buttons = self._button_list.get_player_widget(parent)
-        layout.addWidget(buttons)
-        self._player_widget.setLayout(layout)
+        top_layout.addLayout(layout_submit_own_value)
 
-    def __str__(self) -> str:
-        return str(self.configuration.get("constant"))
+        top_layout.addWidget(existing_widget)
+        top_widget.setLayout(top_layout)
+        return top_widget
