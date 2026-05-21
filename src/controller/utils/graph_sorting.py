@@ -5,9 +5,70 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+from pyelk import ELK
 
 if TYPE_CHECKING:
     from model import Filter
+
+
+def layered_layout(filter_list: list[Filter]) -> None:
+    """Sort provided _filter list using Sugiyama algorithm.
+
+    This method modifies the positions of the provided filters in place.
+
+    Args:
+        filter_list: List of filters to sort.
+
+    """
+    elk = ELK()
+    child_array = []
+    edge_array = []
+    edge_counter = 0
+    for _filter in filter_list:
+        port_array = [{
+            "id": f"{_filter.filter_id}:{in_port}",
+            "layoutOptions": {"elk.port.side": "EAST"}
+        } for in_port in _filter.in_data_types]
+        port_array.extend([{
+            "id": f"{_filter.filter_id}:{out_port}",
+            "layoutOptions": {"elk.port.side": "WEST"}
+        } for out_port in _filter.out_data_types])
+        node = {
+            "id": _filter.filter_id,
+            "width": max(min(250, len(_filter.filter_id) * 10), 80),
+            "height": 30 * max(len(_filter.in_data_types.keys()), len(_filter.out_data_types.keys())) + 30,
+            "layoutOptions": {"elk.portConstraints": "FIXED_SIDE"},
+            "x": _filter.pos[0],
+            "y": _filter.pos[1],
+            "ports": port_array,
+        }
+        child_array.append(node)
+        for input_port, connected_output in _filter.channel_links.items():
+            edge_array.append({
+                "id": f"e{edge_counter}",
+                "sources": [connected_output],
+                "targets": [f"{_filter.filter_id}:{input_port}"],
+            })
+            edge_counter += 1
+    graph = {
+        "id": "root",
+        "layoutOptions": {
+            "elk.algorithm": "layered",
+            "elk.direction": "RIGHT",
+        },
+        "children": child_array,
+        "edges": edge_array
+    }
+    result = elk.layout(graph)["children"]
+    for _filter in filter_list:
+        result_node = None
+        for r in result:
+            if r["id"] == _filter.filter_id:
+                result_node = r
+                break
+        if result_node is None:
+            raise ValueError(f"Expected a result with id {_filter.filter_id} to exist.")
+        _filter.pos = (result_node["x"], result_node["y"])
 
 
 def spring_layout(
@@ -18,7 +79,7 @@ def spring_layout(
 ) -> np.ndarray:
     """Position nodes using Fruchterman-Reingold force-directed algorithm.
 
-    This method modifies the positions of the provided fitlers in place.
+    This method modifies the positions of the provided filters in place.
 
     The algorithm simulates a force-directed representation of the network
     treating edges as springs holding nodes close, while treating nodes
@@ -49,7 +110,7 @@ def spring_layout(
 
     """
     dim = 2
-    scale = 1
+    scale = 250
     if len(filter_list) == 0:
         return None
 
@@ -74,6 +135,9 @@ def spring_layout(
     )
 
     pos = _rescale_layout(pos, scale=scale) + center
+    # FIXME we need to move all following connected nodes as input port != output port
+    # FIXME successor nodes should be placed behind prior nodes
+    # Maybe Eclipse Layout Kernel Layered would help here?
     for node, new_pos in zip(filter_list, pos, strict=True):
         node.pos = new_pos
 
@@ -154,7 +218,7 @@ def _fruchterman_reingold(
             break
     return pos
 
-def _rescale_layout(pos: np.ndarray, scale: float = 1) -> np.ndarray:
+def _rescale_layout(pos: np.ndarray, scale: float = 100) -> np.ndarray:
     """Returns scaled position array to (-scale, scale) in all axes."""
     # Find max length over all dimensions
     pos -= pos.mean(axis=0)

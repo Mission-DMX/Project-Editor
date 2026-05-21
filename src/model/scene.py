@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from controller.utils.graph_sorting import spring_layout
+from controller.utils.graph_sorting import layered_layout, spring_layout
 
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
@@ -65,7 +65,7 @@ class FilterPage:
 
     def sort(self) -> None:
         """Applies the spring layout to the contained filters."""
-        spring_layout(self._filters)
+        layered_layout(self._filters)
 
 
 class Scene:

@@ -23,7 +23,6 @@ from view.action_setup_view.combined_action_setup_widget import CombinedActionSe
 from view.console_mode.console_universe_selector import UniverseSelector
 from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.dialogs.colum_dialog import ColumnDialog
-from view.dialogs.selection_dialog import SelectionDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.console_dock_widget import ConsoleDockWidget
