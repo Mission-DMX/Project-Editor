@@ -41,6 +41,9 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT,
             ]
         ],
     ),

@@ -173,8 +173,6 @@ class ConstantNumberButtonList(UIWidget):
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
         self._player_widget.setLayout(layout)
-        if isinstance(parent, UIWidgetHolder):
-            parent.update_size()
 
     def _construct_configuration_widget(self, parent: QWidget | None) -> None:
         """Construct placeholder widget."""
@@ -192,8 +190,6 @@ class ConstantNumberButtonList(UIWidget):
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
         self._configuration_widget.setLayout(layout)
-        if isinstance(parent, UIWidgetHolder):
-            parent.update_size()
 
     def __str__(self) -> str:
         """Get the filter id string or an error message."""
