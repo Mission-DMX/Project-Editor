@@ -56,6 +56,7 @@ from view.show_mode.editor.nodes.impl.debug import (
 )
 from view.show_mode.editor.nodes.impl.effects import (
     AutoTrackerNode,
+    ChaserNode,
     CueListNode,
     EffectsStackNode,
     SequencerNode,
@@ -218,6 +219,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(FaderHSIAUNode, [("Filter Fader",)])
 
     def _register_effect_nodes(self) -> None:
+        self.addNodeType(ChaserNode, [("Effects",)])
         self.addNodeType(CueListNode, [("Effects",)])
         self.addNodeType(AutoTrackerNode, [("Effects",)])
         self.addNodeType(EffectsStackNode, [("Effects",)])
