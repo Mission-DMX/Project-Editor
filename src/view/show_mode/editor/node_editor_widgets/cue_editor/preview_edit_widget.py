@@ -6,17 +6,20 @@ PreviewEditWidget -- The editor base class.
 
 from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget, QDialog, QVBoxLayout, QRadioButton
 
 from controller.file.transmitting_to_fish import transmit_to_fish
-from model import Broadcaster, DataType, Filter
+from model import Broadcaster, DataType, Filter, Scene
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
+from model.media_assets.media_type import MediaType
 from model.virtual_filters.cue_vfilter import PreviewFilter
+from view.show_mode.editor.node_editor_widgets.cue_editor.gen_keyframs_from_image import generate_keyframes_from_image
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
+from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
 
 logger = getLogger(__name__)
 
@@ -280,5 +283,42 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         super().parent_closed(filter_node)
 
     def _rec_from_image_pressed(self) -> None:
-        # TODO open asset dialog
-        pass  # TODO call generate_keyframes_from_image with own state and catch possible errors, displaying message box
+        self._add_from_image_dialog = _AddKFFromImageDialog(self._timeline_container)
+        self._add_from_image_dialog.show()
+
+
+class _AddKFFromImageDialog(QDialog):
+    """Dialog to set up key frames from selected image."""
+
+    def __init__(self, timeline_container: TimelineContainer) -> None:
+        """Initialize."""
+        super().__init__(timeline_container)
+        self._timeline_container = timeline_container
+
+        self.setModal(True)
+        self.setWindowTitle("Add Key Frames From Image")
+        self.setMinimumSize(600, 800)
+
+        layout = QVBoxLayout()
+        self._image_selection = AssetSelectionWidget(allowed_types=[MediaType.IMAGE], multiselection_allowed=False)
+        layout.addWidget(self._image_selection)
+        radio_button_layout = QHBoxLayout()
+        self._columns_first_rb = QRadioButton("Columns First")
+        self._columns_first_rb.setChecked(True)
+        radio_button_layout.addWidget(self._columns_first_rb)
+        self._rows_first_rb = QRadioButton("Rows first")
+        radio_button_layout.addWidget(self._rows_first_rb)
+        radio_button_layout.addStretch()
+        layout.addLayout(radio_button_layout)
+
+        # TODO add cancel submit buttons
+        self.setLayout(layout)
+
+    @override
+    def accept(self) -> None:
+        if not generate_keyframes_from_image(
+                self._image_selection.selected_asset[0],
+                self._columns_first_rb.isChecked(),
+                self._timeline_container.cue):
+            pass  # TODO with own state and catch possible errors, displaying message box
+        self._timeline_container.update_cue_display()

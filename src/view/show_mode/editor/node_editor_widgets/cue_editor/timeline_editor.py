@@ -124,15 +124,19 @@ class TimelineContainer(QWidget):
     @cue.setter
     def cue(self, c: Cue) -> None:
         self._cue = c
+        self.update_cue_display()
+
+    def update_cue_display(self):
+        """Updates the display of the set cue."""
         # TODO clear keyframes_panel
         self._keyframes_panel.clear_cue()
         self._channel_label.clear_labels()
-        if c is not None:
-            for channel in c.channels:
+        if self._cue is not None:
+            for channel in self._cue.channels:
                 self.add_channel(channel[1], channel[0])
-            self._keyframes_panel.cue_index = c.index_in_editor
+            self._keyframes_panel.cue_index = self._cue.index_in_editor
             # TODO introduce property
-            self._keyframes_panel.frames = c._frames
+            self._keyframes_panel.frames = self._cue._frames
         else:
             self._keyframes_panel.frames = []
             self._keyframes_panel.cue_index = 0
