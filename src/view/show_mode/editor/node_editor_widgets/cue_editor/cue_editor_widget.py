@@ -177,6 +177,7 @@ class CueEditor(PreviewEditWidget):
         toolbar.addSeparator()
         toolbar.addWidget(self.transition_type_select_widget)
         toolbar.addAction(self._gui_rec_action)
+        toolbar.addAction(self._record_from_image_action)
         top_layout.addWidget(toolbar)
 
     def _table_context_popup(self, pos: QPoint) -> None:

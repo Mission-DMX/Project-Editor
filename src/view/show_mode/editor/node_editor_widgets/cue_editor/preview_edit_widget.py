@@ -73,6 +73,11 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._gui_rec_action.setEnabled(False)
         self._gui_rec_action.triggered.connect(self._rec_pressed)
 
+        self._record_from_image_action = QAction("Record from image")
+        self._record_from_image_action.setStatusTip("Insert Keyframes at the current cursor position from image.")
+        self._record_from_image_action.setEnabled(False)
+        self._record_from_image_action.triggered.connect(self._rec_from_image_pressed)
+
         self._zoom_label: QLabel | None = QLabel()
         self.zoom_panel = QWidget()
         zoom_panel_layout = QHBoxLayout()
@@ -218,6 +223,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         """Set or reset editing capability."""
         self._timeline_container.setEnabled(new_state)
         self._gui_rec_action.setEnabled(new_state)
+        self._record_from_image_action.setEnabled(new_state)
 
     def link_column_to_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool) -> None:
         """Link a bank set column to a channel in the model.
@@ -272,3 +278,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
                 transmit_to_fish(self._filter_instance.scene.board_configuration, False)
                 # TODO switch to scene of filter
         super().parent_closed(filter_node)
+
+    def _rec_from_image_pressed(self) -> None:
+        # TODO open asset dialog
+        pass  # TODO call generate_keyframes_from_image with own state and catch possible errors, displaying message box

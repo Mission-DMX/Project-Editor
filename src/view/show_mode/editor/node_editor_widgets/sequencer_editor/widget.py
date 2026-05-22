@@ -129,6 +129,7 @@ class SequencerEditor(PreviewEditWidget):
         timeline_toolbar = QToolBar(timeline_panel)
         timeline_toolbar.addWidget(self.transition_type_select_widget)
         timeline_toolbar.addAction(self._gui_rec_action)
+        timeline_toolbar.addAction(self._record_from_image_action)
         timeline_toolbar.addWidget(self.zoom_panel)
         layout.addWidget(timeline_toolbar)
         layout.addWidget(self._timeline_container)
