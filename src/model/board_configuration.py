@@ -231,7 +231,7 @@ class BoardConfiguration:
             for c in candidate_list:
                 c(param)
 
-    def register_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
+    def register_filter_update_callback(self, target_scene: int | Scene, target_filter_id: str, c: Callable) -> None:
         """Register a new callback for filter update messages.
 
         If filter update messages are received, they need to be routed to their intended destination. This is done using
@@ -243,6 +243,8 @@ class BoardConfiguration:
             c: The callable to register.
 
         """
+        if isinstance(target_scene, Scene):
+            target_scene = target_scene.scene_id
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
             callable_list = set()
