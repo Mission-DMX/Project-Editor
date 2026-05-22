@@ -56,11 +56,26 @@ class ColorSupport(IntFlag):
         return "+".join(s)
 
 
+class FixtureDefNotFoundError(Exception):
+    """Exception raised when fixture definition could not be found on disk."""
+
+    def __init__(self, fixture_path: str, further_info: str) -> None:
+        """Initialize with default message and provided fixture info."""
+        super().__init__("Fixture Definition Not Found")
+        self.fixture_path = fixture_path
+        self.further_info = further_info
+
+    def __str__(self) -> str:
+        """Generate reasonable error message for observing human."""
+        return f"Failed to load fixture {self.fixture_path}.\n{"File not Found.\n" if not
+        os.path.exists(self.fixture_path) else ""}Further info: {self.further_info}"
+
+
 def load_fixture(file: str) -> OflFixture | None:
     """Load fixture from OFL JSON."""
     if not os.path.isfile(file):
         logger.error("Fixture definition %s not found.", file)
-        return None
+        raise FixtureDefNotFoundError(file, "Path is no file. Does it exist?")
     with open(file, "r", encoding="UTF-8") as f:
         try:
             ob: dict = json.load(f)
@@ -198,7 +213,17 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def mode(self) -> FixtureMode:
-        """Mode of theFixture."""
+        """Mode of theFixture.
+
+        Raises:
+            FixtureDefNotFoundError if the fixture mode does not exist.
+
+        """
+        if len(self._fixture.modes) <= self._mode_index:
+            raise FixtureDefNotFoundError(
+                self._fixture.fileName,
+                "Fixture does not have requested mode. Are the fixture defintions up to date?"
+            )
         return self._fixture.modes[self._mode_index]
 
     @property
@@ -325,4 +350,8 @@ def make_used_fixture(
     board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
 ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
-    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    try:
+        return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    except ValueError as e:
+        logger.error(e)
+        raise FixtureDefNotFoundError(fixture.fileName, str(e)) from e
