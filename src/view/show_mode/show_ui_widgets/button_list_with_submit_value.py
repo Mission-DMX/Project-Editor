@@ -31,8 +31,8 @@ class ButtonsWithValueSubmit(ConstantNumberButtonList):
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        w = super().get_player_widget(parent, player=True)
-        return self._append_direct_widget(w)
+        w = super().get_player_widget(parent)
+        return self._append_direct_widget(w, player=True)
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:

@@ -109,7 +109,6 @@ class ConstantNumberButtonList(UIWidget):
         self._value = 0
         self._ui_update_callback_initialized = False
         self._player_buttons: dict[int, QPushButton] = {}
-        self._last_updated_button: QPushButton | None = None
 
     def __del__(self) -> None:
         """Unregister callbacks."""
@@ -190,13 +189,12 @@ class ConstantNumberButtonList(UIWidget):
         layout = QHBoxLayout()
         total_min_width = 0
         self._player_buttons.clear()
-        self._last_updated_button = None
         if "buttons" in self.configuration:
             for value_name_tuple in self.configuration["buttons"].split(";"):
                 name, value = value_name_tuple.split(":")
                 value = float(value) if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(value)
                 button = QPushButton(name, self._player_widget)
-                button.clicked.connect(lambda _value=value: self._set_value(_value))
+                button.clicked.connect(lambda _, _value=value: self._set_value(_value))
                 min_width = max(30, len(name) * 15)
                 button.setMinimumWidth(min_width)
                 total_min_width += button.minimumSizeHint().width()
@@ -233,10 +231,8 @@ class ConstantNumberButtonList(UIWidget):
     def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         if param.parameter_key != "value":
             return
-        if self._last_updated_button is not None:
-            self._last_updated_button.setDisabled(False)
-            self._last_updated_button = False
+        for button in self._player_buttons.values():
+            button.setDown(False)
         next_button = self._player_buttons.get(int(param.parameter_value))
         if next_button is not None:
-            self._last_updated_button = next_button
-            self._last_updated_button.setDown(True)
+            next_button.setDown(True)
