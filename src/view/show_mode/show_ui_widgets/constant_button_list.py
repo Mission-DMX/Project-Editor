@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sys
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -21,6 +21,8 @@ from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 
+if TYPE_CHECKING:
+    import proto.FilterMode_pb2
 
 class ConstantNumberButtonList(UIWidget):
     """Show UI widget to provide the user with configurable buttons that alter the content of a constant filter."""
@@ -105,6 +107,18 @@ class ConstantNumberButtonList(UIWidget):
             self._value = int(value_str)
         self._filter_type = None
         self._value = 0
+        self._ui_update_callback_initialized = False
+        self._player_buttons: dict[int, QPushButton] = {}
+        self._last_updated_button: QPushButton | None = None
+
+    def __del__(self) -> None:
+        """Unregister callbacks."""
+        if self._ui_update_callback_initialized:
+            self._model.scene.board_configuration.remove_filter_update_callback(
+                self._model.scene.scene_id,
+                self._model.filter_id,
+                self._update_from_fish
+            )
 
     def set_filter(self, f: Filter, i: int) -> None:
         """Set the filter associated with this UI widget for a specific button.
@@ -132,6 +146,9 @@ class ConstantNumberButtonList(UIWidget):
             if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT
             else (2**16) - 1
         )
+        if not self._ui_update_callback_initialized:
+            f.scene.board_configuration.register_filter_update_callback(f.scene, f.filter_id, self._update_from_fish)
+            self._ui_update_callback_initialized = True
 
     def _set_value(self, new_value: float) -> None:
         self._value = new_value
@@ -172,6 +189,8 @@ class ConstantNumberButtonList(UIWidget):
         self._player_widget.setMinimumHeight(30)
         layout = QHBoxLayout()
         total_min_width = 0
+        self._player_buttons.clear()
+        self._last_updated_button = None
         if "buttons" in self.configuration:
             for value_name_tuple in self.configuration["buttons"].split(";"):
                 name, value = value_name_tuple.split(":")
@@ -183,6 +202,7 @@ class ConstantNumberButtonList(UIWidget):
                 total_min_width += button.minimumSizeHint().width()
                 button.setMinimumHeight(30)
                 layout.addWidget(button)
+                self._player_buttons[int(value)] = button
         self._player_widget.setLayout(layout)
         self._player_widget.setMinimumWidth(max(50, 2 * total_min_width))
 
@@ -209,3 +229,14 @@ class ConstantNumberButtonList(UIWidget):
     def __str__(self) -> str:
         """Get the filter id string or an error message."""
         return str(self._model.filter_id if self._model else "Error: No Filter configured.")
+
+    def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        if param.parameter_key != "value":
+            return
+        if self._last_updated_button is not None:
+            self._last_updated_button.setDisabled(False)
+            self._last_updated_button = False
+        next_button = self._player_buttons.get(int(param.parameter_value))
+        if next_button is not None:
+            self._last_updated_button = next_button
+            self._last_updated_button.setDown(True)
