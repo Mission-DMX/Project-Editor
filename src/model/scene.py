@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, NamedTuple, override
 
 from PySide6.QtCore import QObject, Signal
 
-from .universe import Universe
-
 from controller.utils.graph_sorting import layered_layout, spring_layout
+
+from .universe import Universe
 
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
