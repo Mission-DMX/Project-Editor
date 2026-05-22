@@ -42,6 +42,7 @@ from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.file_list_label import FileListLabel, FileListLabelDelegate
 from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
+from view.visualizer.visualizer_widget import StageVisualizerWidget
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWizard
@@ -98,7 +99,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 MainWidget(CombinedActionSetupWidget(self, self._broadcaster, self._board_configuration), self),
                 self._broadcaster.view_to_action_config.emit,
             ),
+            ("Visualizer", MainWidget(StageVisualizerWidget(self._board_configuration, self._broadcaster, self), self),
+             self._broadcaster.view_to_visualizer.emit),
         ]
+
+        # Keep reference to visualizer for stage file menu actions
+        self._stage_visualizer = views[6][1].findChild(StageVisualizerWidget)
 
         # select Views
         self._widgets = QtWidgets.QStackedWidget(self)
@@ -128,6 +134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._broadcaster.view_to_temperature.connect(self._is_column_dialog)
         self._broadcaster.save_button_pressed.connect(self._save_show)
         self._broadcaster.view_to_action_config.connect(lambda: self._to_widget(5))
+        self._broadcaster.view_to_visualizer.connect(lambda: self._to_widget(6))
 
         self._fish_connector.start()
         if self._fish_connector:
@@ -140,6 +147,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self._broadcaster.view_leave_color.emit()
             self._broadcaster.view_leave_temperature.emit()
             self._broadcaster.view_leave_console_mode.emit()
+            self._broadcaster.view_leave_visualizer.emit()
+
         self._about_window = None
         self._settings_dialog = None
         self._utility_wizard: QWizard | None = None
@@ -207,6 +216,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
                 ("---", None, None),
                 ("Export to Standalone", lambda: open_show_export_dialog(self, self._board_configuration), None),
+                ("---", None, None),
+                ("Load Stagefile", self._load_stage_file, None),
+                ("Save Stagefile As", self._save_stage_file, None),
                 ("---", None, None),
                 ("Settings", self.open_show_settings, ","),
             ],
@@ -365,6 +377,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 _save_show_file(self._board_configuration.file_path, self._board_configuration)
             else:
                 show_save_showfile_dialog(self, self._board_configuration)
+
+    def _load_stage_file(self) -> None:
+        if self._stage_visualizer:
+            self._stage_visualizer.load_stage_file()
+
+    def _save_stage_file(self) -> None:
+        if self._stage_visualizer:
+            self._stage_visualizer.save_stage_file()
 
     def _open_about_window(self) -> None:
         if not self._about_window:
