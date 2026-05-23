@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from model.media_assets.image import AbstractImageAsset
 
 
-def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool, timestamp: float,
+def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool, timestamp: float, break_point: int,
                                   transition_types: list[str], c: Cue) -> list[KeyFrame]:
     """Extract color values from image asset pixels.
 
@@ -24,12 +24,15 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
         asset: The asset to extract the pixels from.
         columns_first: If true, the pixels will be extracted columns by rows. If false: rows by columns.
         timestamp: The timestamp to insert the keyframe to.
+        break_point: After this many pixels, the pixel cursor advances to the next column or row (depending on
+                     columns_first). If an invalid number is supplied (for example 0), it will break after the asset
+                     height (row).
         transition_types: For each channel, specified the transition type from the last key frame.
         c: The cue to extract previous values from and to insert the key frames into.
 
     """
     if not isinstance(asset, AbstractImageAsset):
-        raise ValueError("Asset must be an image asset.")
+        raise ValueError(f"Asset must be an image asset. Got: {type(asset)}")
     if len(c.channels) != len(transition_types):
         raise ValueError("Expected a transition type for each channel.")
     number_of_color_channels = 0
@@ -42,6 +45,12 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
     image_height = image_size.height()
     if number_of_color_channels > image_width * image_height:
         raise ValueError("Number of color channels must not be greater than asset pixel count.")
+    if columns_first:
+        if break_point < 1 or break_point >= image_height:
+            break_point = image_height - 1
+    else:
+        if break_point < 1 or break_point >= image_width:
+            break_point = image_width - 1
     x: int = 0
     y: int = 0
     kf = KeyFrame(c)
@@ -55,12 +64,12 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
             state.color = ColorHSI.from_qt_color(pixel)
             if columns_first:
                 y += 1
-                if y >= image_height:
+                if y > break_point:
                     y = 0
                     x += 1
             else:
                 x += 1
-                if x >= image_width:
+                if x >= break_point:
                     x = 0
                     y += 1
             kf.append_state(state)

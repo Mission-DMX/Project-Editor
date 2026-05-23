@@ -8,8 +8,9 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget, QDialog, QVBoxLayout, QRadioButton
+from PySide6.QtGui import QAction, QIcon, Qt
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget, QDialog, QVBoxLayout, QRadioButton, \
+    QSpinBox, QMessageBox, QDialogButtonBox
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import Broadcaster, DataType, Filter, Scene
@@ -296,6 +297,7 @@ class _AddKFFromImageDialog(QDialog):
         super().__init__(timeline_container)
         self._timeline_container = timeline_container
         self._transition_type = transition_method
+        self._message_box: QMessageBox | None = None
 
         self.setModal(True)
         self.setWindowTitle("Add Key Frames From Image")
@@ -303,7 +305,9 @@ class _AddKFFromImageDialog(QDialog):
 
         layout = QVBoxLayout()
         self._image_selection = AssetSelectionWidget(allowed_types=[MediaType.IMAGE], multiselection_allowed=False)
+        self._image_selection.setFixedHeight(600)
         layout.addWidget(self._image_selection)
+        layout.addStretch()
         radio_button_layout = QHBoxLayout()
         self._columns_first_rb = QRadioButton("Columns First")
         self._columns_first_rb.setChecked(True)
@@ -313,16 +317,44 @@ class _AddKFFromImageDialog(QDialog):
         radio_button_layout.addStretch()
         layout.addLayout(radio_button_layout)
 
-        # TODO add cancel submit buttons
+        self._break_point_sb = QSpinBox()
+        self._break_point_sb.setRange(0, 65535)
+        self._break_point_sb.setValue(0)
+        self._break_point_sb.setSingleStep(1)
+        self._break_point_sb.setToolTip("After this many pixels, the cursor should break. Leave this at 0 in order to "
+                                        "use the image width or height (depending on columns or rows first).")
+        layout.addWidget(self._break_point_sb)
+
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, Qt.Orientation.Horizontal, self
+        )
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
         self.setLayout(layout)
 
     @override
     def accept(self) -> None:
-        if not generate_keyframes_from_image(
-                self._image_selection.selected_asset[0],
-                self._columns_first_rb.isChecked(),
-                self._timeline_container._keyframes_panel.cursor_position,
-                [self._transition_type] * len(self._timeline_container.cue.channels),
-                self._timeline_container.cue):
-            pass  # TODO displaying message box
-        self._timeline_container.update_cue_display()
+        try:
+            if not generate_keyframes_from_image(
+                    self._image_selection.selected_asset[0],
+                    self._columns_first_rb.isChecked(),
+                    self._timeline_container._keyframes_panel.cursor_position,
+                    self._break_point_sb.value(),
+                    [self._transition_type] * len(self._timeline_container.cue.channels),
+                    self._timeline_container.cue):
+                self._message_box = QMessageBox(
+                    QMessageBox.Icon.Critical,
+                    "Failed to inset key frame",
+                    "An error occurred during insertion of key frame.")
+                self._message_box.setModal(True)
+                self._message_box.show()
+            else:
+                self._timeline_container.update_cue_display()
+                super().accept()
+        except ValueError | NotADirectoryError as e:
+            self._message_box = QMessageBox(
+                QMessageBox.Icon.Warning,
+                "KeyFrame generation failed",
+                str(e)
+            )
