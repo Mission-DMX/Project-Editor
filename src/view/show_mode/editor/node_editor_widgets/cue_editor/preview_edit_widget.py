@@ -283,17 +283,19 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         super().parent_closed(filter_node)
 
     def _rec_from_image_pressed(self) -> None:
-        self._add_from_image_dialog = _AddKFFromImageDialog(self._timeline_container)
+        self._add_from_image_dialog = _AddKFFromImageDialog(self._timeline_container,
+                                                            self.transition_type_select_widget.currentText())
         self._add_from_image_dialog.show()
 
 
 class _AddKFFromImageDialog(QDialog):
     """Dialog to set up key frames from selected image."""
 
-    def __init__(self, timeline_container: TimelineContainer) -> None:
+    def __init__(self, timeline_container: TimelineContainer, transition_method: str) -> None:
         """Initialize."""
         super().__init__(timeline_container)
         self._timeline_container = timeline_container
+        self._transition_type = transition_method
 
         self.setModal(True)
         self.setWindowTitle("Add Key Frames From Image")
@@ -319,6 +321,8 @@ class _AddKFFromImageDialog(QDialog):
         if not generate_keyframes_from_image(
                 self._image_selection.selected_asset[0],
                 self._columns_first_rb.isChecked(),
+                self._timeline_container._keyframes_panel.cursor_position,
+                [self._transition_type] * len(self._timeline_container.cue.channels),
                 self._timeline_container.cue):
-            pass  # TODO with own state and catch possible errors, displaying message box
+            pass  # TODO displaying message box
         self._timeline_container.update_cue_display()

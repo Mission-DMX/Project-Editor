@@ -1,14 +1,20 @@
+"""Contains generate_keyframes_from_image method."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from model.filter_data.cues.cue import KeyFrame, Cue
+from model import DataType
+from model.color_hsi import ColorHSI
+from model.filter_data.cues.cue import KeyFrame, Cue, StateEightBit, StateColor, StateSixteenBit, StateDouble
 
 if TYPE_CHECKING:
+    from PySide6.QtGui import QColor
     from model.media_assets.image import AbstractImageAsset
 
 
-def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool, c: Cue) -> list[KeyFrame]:
+def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool, timestamp: float,
+                                  transition_types: list[str], c: Cue) -> list[KeyFrame]:
     """Extract color values from image asset pixels.
 
     This will fill in the provided channels for the key frame.
@@ -17,11 +23,62 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
     Args:
         asset: The asset to extract the pixels from.
         columns_first: If true, the pixels will be extracted columns by rows. If false: rows by columns.
+        timestamp: The timestamp to insert the keyframe to.
+        transition_types: For each channel, specified the transition type from the last key frame.
         c: The cue to extract previous values from and to insert the key frames into.
 
     """
-    # TODO check if asset is image
-    # TODO check number of accepted color channels
-    # TODO raise error if #color channels != #pixels
-    # TODO for each channel: if type == color: apply next pixel else get previous value or 0
-    pass
+    if not isinstance(asset, AbstractImageAsset):
+        raise ValueError("Asset must be an image asset.")
+    if len(c.channels) != len(transition_types):
+        raise ValueError("Expected a transition type for each channel.")
+    number_of_color_channels = 0
+    for _, data_type in c.channels:
+        if data_type == DataType.DT_COLOR:
+            number_of_color_channels += 1
+    image = asset.get_image_for_ui()
+    image_size = image.size()
+    image_width = image_size.width()
+    image_height = image_size.height()
+    if number_of_color_channels > image_width * image_height:
+        raise ValueError("Number of color channels must not be greater than asset pixel count.")
+    x: int = 0
+    y: int = 0
+    kf = KeyFrame(c)
+    kf.timestamp = timestamp
+    last_frame: KeyFrame | None = c.get_keyframe_before(timestamp)
+    for i, channel in enumerate(c.channels):
+        channel_name, data_type = channel
+        if data_type == DataType.DT_COLOR:
+            pixel: QColor = image.pixelColor(x, y)
+            state = StateColor(transition_types[i])
+            state.color = ColorHSI.from_qt_color(pixel)
+            if columns_first:
+                y += 1
+                if y >= image_height:
+                    y = 0
+                    x += 1
+            else:
+                x += 1
+                if x >= image_width:
+                    x = 0
+                    y += 1
+            kf.append_state(state)
+        else:
+            if last_frame is not None:
+                state = last_frame.state_at(i).copy()
+                state.transition = transition_types[i]
+                kf.append_state(state)
+            else:
+                match data_type:
+                    case DataType.DT_8_BIT:
+                        state = StateEightBit(transition_types[i])
+                    case DataType.DT_16_BIT:
+                        state = StateSixteenBit(transition_types[i])
+                    case DataType.DT_DOUBLE:
+                        state = StateDouble(transition_types[i])
+                    case _:
+                        raise NotImplementedError(f"Data type {data_type} not implemented for initialization yet.")
+                kf.append_state(state)
+
+    c.insert_frame(kf)
