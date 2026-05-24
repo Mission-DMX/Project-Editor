@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidg
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import Broadcaster, DataType, Filter, Scene
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
+from model.media_assets.image import AbstractImageAsset
 from model.media_assets.media_type import MediaType
 from model.virtual_filters.cue_vfilter import PreviewFilter
 from view.show_mode.editor.node_editor_widgets.cue_editor.gen_keyframs_from_image import generate_keyframes_from_image
@@ -336,8 +337,21 @@ class _AddKFFromImageDialog(QDialog):
     @override
     def accept(self) -> None:
         try:
+            selection = self._image_selection.selected_asset
+            if len(selection) == 0:
+                return
+            selection = selection[0]
+            if not isinstance(selection, AbstractImageAsset):
+                self._message_box = QMessageBox(
+                    QMessageBox.Icon.Information,
+                    "Select Image First",
+                    "Please select an image first.",
+                parent=self)
+                self._message_box.setModal(True)
+                self._message_box.show()
+                return
             if not generate_keyframes_from_image(
-                    self._image_selection.selected_asset[0],
+                    selection,
                     self._columns_first_rb.isChecked(),
                     self._timeline_container._keyframes_panel.cursor_position,
                     self._break_point_sb.value(),
@@ -346,15 +360,29 @@ class _AddKFFromImageDialog(QDialog):
                 self._message_box = QMessageBox(
                     QMessageBox.Icon.Critical,
                     "Failed to inset key frame",
-                    "An error occurred during insertion of key frame.")
+                    "An error occurred during insertion of key frame.",
+                    parent=self
+                )
                 self._message_box.setModal(True)
                 self._message_box.show()
             else:
                 self._timeline_container.update_cue_display()
                 super().accept()
-        except ValueError | NotADirectoryError as e:
+        except ValueError as e:
             self._message_box = QMessageBox(
                 QMessageBox.Icon.Warning,
                 "KeyFrame generation failed",
-                str(e)
+                str(e),
+                parent=self
             )
+            self._message_box.setModal(True)
+            self._message_box.show()
+        except NotImplementedError as e:
+            self._message_box = QMessageBox(
+                QMessageBox.Icon.Critical,
+                "KeyFrame generation failed",
+                str(e),
+                parent=self
+            )
+            self._message_box.setModal(True)
+            self._message_box.show()

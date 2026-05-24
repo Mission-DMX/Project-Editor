@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool, timestamp: float, break_point: int,
-                                  transition_types: list[str], c: Cue) -> list[KeyFrame]:
+                                  transition_types: list[str], c: Cue) -> bool:
     """Extract color values from image asset pixels.
 
     This will fill in the provided channels for the key frame.
@@ -91,3 +91,4 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
                 kf.append_state(state)
 
     c.insert_frame(kf)
+    return True
