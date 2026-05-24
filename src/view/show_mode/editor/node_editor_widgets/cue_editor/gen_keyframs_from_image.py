@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING
 
 from model import DataType
 from model.color_hsi import ColorHSI
+from model.media_assets.image import AbstractImageAsset
 from model.filter_data.cues.cue import KeyFrame, Cue, StateEightBit, StateColor, StateSixteenBit, StateDouble
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QColor
-    from model.media_assets.image import AbstractImageAsset
 
 
 def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool, timestamp: float, break_point: int,
@@ -64,7 +64,7 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
             state.color = ColorHSI.from_qt_color(pixel)
             if columns_first:
                 y += 1
-                if y > break_point:
+                if y >= break_point:
                     y = 0
                     x += 1
             else:
