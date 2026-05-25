@@ -66,7 +66,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         save_as_scene_default_button = QPushButton("Save as Scene default")
         save_as_scene_default_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         save_as_scene_default_button.setToolTip("Save the current setup as a default for a scene.")
-        save_as_scene_default_button.clicked.connect(self.save_to_scene_default_clicked)
+        save_as_scene_default_button.clicked.connect(lambda _: self.save_to_scene_default_clicked())
         row_layout.addWidget(save_as_scene_default_button)
         row_layout.addStretch()
         layout.addLayout(row_layout)
