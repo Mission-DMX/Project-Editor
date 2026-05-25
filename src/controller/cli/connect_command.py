@@ -29,6 +29,9 @@ def _mul(value: str, arg: str) -> str:
 def _div(value: str, arg: str) -> str:
     return str(int(int(value) / int(arg)))
 
+def _mod(value: str, arg: str) -> str:
+    return str(int(int(value) % int(arg)))
+
 class ConnectCommand(Command):
     """Command to connect filters."""
 
@@ -41,6 +44,7 @@ class ConnectCommand(Command):
         self._jinja_env.filters["sub"] = _sub
         self._jinja_env.filters["mul"] = _mul
         self._jinja_env.filters["div"] = _div
+        self._jinja_env.filters["mod"] = _mod
 
     @override
     def configure_parser(self, parser: ArgumentParser) -> None:
