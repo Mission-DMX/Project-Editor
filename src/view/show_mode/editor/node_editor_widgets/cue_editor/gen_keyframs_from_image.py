@@ -53,6 +53,7 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
             break_point = image_width - 1
     x: int = 0
     y: int = 0
+    break_point_offset: int = 0
     kf = KeyFrame(c)
     kf.timestamp = timestamp
     last_frame: KeyFrame | None = c.get_keyframe_before(timestamp)
@@ -64,14 +65,22 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
             state.color = ColorHSI.from_qt_color(pixel)
             if columns_first:
                 y += 1
-                if y >= break_point:
+                if (y - break_point_offset) >= break_point:
                     y = 0
                     x += 1
+                if x >= image_height:
+                    x = 0
+                    y = break_point
+                    break_point_offset += break_point
             else:
                 x += 1
-                if x >= break_point:
+                if (x - break_point_offset) >= break_point:
                     x = 0
                     y += 1
+                if y >= image_width:
+                    y = 0
+                    x = break_point
+                    break_point_offset += break_point
             kf.append_state(state)
         else:
             if last_frame is not None:
