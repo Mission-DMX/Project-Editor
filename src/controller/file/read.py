@@ -740,7 +740,7 @@ def _parse_and_add_event_source(elm: ET.Element) -> None:
 
 
 def _parse_and_add_macro(elm: ET.Element, board_configuration: BoardConfiguration) -> None:
-    m = Macro(board_configuration)
+    m = Macro(board_configuration, shared_context=elm.attrib.get("contextID"))
     m.name = elm.attrib["name"]
     for child in elm:
         match child.tag:
