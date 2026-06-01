@@ -231,6 +231,10 @@ class MacroSetupWidget(QSplitter):
         self._dialog.setComboBoxEditable(True)
         self._dialog.setComboBoxItems(get_available_shared_context_identifiers())
         self._dialog.setModal(True)
+        self._dialog.setWindowTitle("Specify Context")
+        self._dialog.setLabelText("Specify Macro Context (leave empty to create a private one):")
+        self._dialog.setOption(QInputDialog.InputDialogOption.UseListViewForComboBoxItems)
+        self._dialog.setInputMode(QInputDialog.InputMode.TextInput)
         self._dialog.accepted.connect(self._add_macro_final)
         self._dialog.show()
 
