@@ -24,6 +24,8 @@ _BACKSPACE_CHAR = 8
 _ESCAPE_CHAR = 27
 _ESC_UP_CHAR = 65
 _ESC_DOWN_CHAR = 66
+_ESC_RIGHT_CHAR = 67
+_ESC_LEFT_CHAR = 68
 _ESC_SEQUENCE_CHAR = 91
 
 
@@ -59,8 +61,9 @@ atexit.register(_write_history)
 class CLITerminalIO(TerminalIO):
     """Terminal IO implementation to adapter CLIContext."""
 
-    def __init__(self, show: BoardConfiguration, terminal: Terminal) -> None:
+    def __init__(self, show: BoardConfiguration, terminal: Terminal, clear_span: int) -> None:
         """Initialize the IO adapter."""
+        self._clear_span = clear_span
         self._context = CLIContext(show=show, network_manager=NetworkManager())
         self._stdout_callback = terminal.stdout
         self._buffer = []
@@ -70,9 +73,11 @@ class CLITerminalIO(TerminalIO):
         self._history_cursor = 0
         self._history_cmd_stash = ""
         self._in_escape = False
+        self._cursor_in_buffer = 0
 
     @override
     def spawn(self) -> None:
+        self._stdout_callback(b"\n" * self._clear_span)
         self._stdout_callback(b"> ")
 
     @override
@@ -84,7 +89,6 @@ class CLITerminalIO(TerminalIO):
         executed_command = False
         execution_successful = True
         supress_echo = False
-        # TODO implement cursor left / right functionality here
         # TODO implement tab completion here
         for b in buffer:
             if b == _NEWLINE_CHAR:
@@ -98,7 +102,7 @@ class CLITerminalIO(TerminalIO):
                 executed_command = True
                 self._history_cursor = 0
             elif b == _BACKSPACE_CHAR:
-                self._stdout_callback(bytes([8, ord(" ")]))
+                self._stdout_callback(bytes([8, ord(" ")] if self._cursor_in_buffer == 0 else [8]))
                 if len(buffer) > 0:
                     try:
                         self._buffer.pop(-1)
@@ -111,6 +115,7 @@ class CLITerminalIO(TerminalIO):
                 pass
             elif self._in_escape and b == _ESC_UP_CHAR:
                 if len(_history) <= (self._history_cursor + 1):
+                    self._in_escape = False
                     continue
                 if self._history_cursor == 0:
                     self._history_cmd_stash = bytes(self._buffer).decode()
@@ -123,9 +128,10 @@ class CLITerminalIO(TerminalIO):
                 self._buffer.clear()
                 self._buffer.extend(next_cmd)
                 self._in_escape = False
+                self._cursor_in_buffer = 0
             elif self._in_escape and b == _ESC_DOWN_CHAR:
-                #self._stdout_callback(bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, 49, _ESC_UP_CHAR]))
                 if self._history_cursor == 0:
+                    self._in_escape = False
                     continue
                 self._history_cursor -= 1
                 self._stdout_callback(b"\r> ")
@@ -140,10 +146,31 @@ class CLITerminalIO(TerminalIO):
                 self._buffer.clear()
                 self._buffer.extend(next_buffer)
                 self._in_escape = False
+                self._cursor_in_buffer = 0
+            elif self._in_escape and b == _ESC_LEFT_CHAR:
+                if self._cursor_in_buffer == len(self._buffer):
+                    self._in_escape = False
+                    continue
+                self._cursor_in_buffer += 1
+                self._stdout_callback(bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_LEFT_CHAR]))
+                self._in_escape = False
+            elif self._in_escape and b == _ESC_RIGHT_CHAR:
+                if self._cursor_in_buffer == 0:
+                    self._in_escape = False
+                    continue
+                self._cursor_in_buffer -= 1
+                self._stdout_callback(bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_RIGHT_CHAR]))
+                self._in_escape = False
             else:
-                self._buffer.append(b)
+                self._buffer.insert(len(self._buffer) - self._cursor_in_buffer, b)
         if not supress_echo:
             self._stdout_callback(buffer)
+            if self._cursor_in_buffer > 0:
+                b = bytes(self._buffer[len(self._buffer) - self._cursor_in_buffer:])
+                self._stdout_callback(b)
+                self._stdout_callback(
+                    bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_LEFT_CHAR] * self._cursor_in_buffer)
+                )
         if executed_command:
             if execution_successful:
                 self._stdout_callback(b"\r\n> ")
@@ -178,7 +205,7 @@ class ConsoleDockWidget(QDockWidget):
         self._container_widget.setLayout(layout)
         self.setWidget(self._container_widget)
         self.setWindowTitle("CLI")
-        self._io = CLITerminalIO(show, self._terminal_widget)
+        self._io = CLITerminalIO(show, self._terminal_widget, 200)
         self._scrollbar.setSliderPosition(0)
         self._terminal_widget.setFocus()
         # FIXME scroll to top
