@@ -59,6 +59,14 @@ class TimelineContentWidget(QWidget):
         """Current cursor position."""
         return self._cursor_position
 
+    @cursor_position.setter
+    def cursor_position(self, value: float) -> None:
+        self._cursor_position = value
+        self._last_clicked_kf_state = None
+        self._update_7seg_text()
+        self._compute_resize()
+        self.update()
+
     @property
     def cue_index(self) -> int:
         """Current cue index.

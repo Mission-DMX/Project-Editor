@@ -350,10 +350,11 @@ class _AddKFFromImageDialog(QDialog):
                 self._message_box.setModal(True)
                 self._message_box.show()
                 return
+            cursor_position = self._timeline_container._keyframes_panel.cursor_position
             if not generate_keyframes_from_image(
                     selection,
                     self._columns_first_rb.isChecked(),
-                    self._timeline_container._keyframes_panel.cursor_position,
+                    cursor_position,
                     self._break_point_sb.value(),
                     [self._transition_type] * len(self._timeline_container.cue.channels),
                     self._timeline_container.cue):
@@ -367,6 +368,7 @@ class _AddKFFromImageDialog(QDialog):
                 self._message_box.show()
             else:
                 self._timeline_container.update_cue_display()
+                self._timeline_container._keyframes_panel.cursor_position = cursor_position
                 super().accept()
         except ValueError as e:
             self._message_box = QMessageBox(
