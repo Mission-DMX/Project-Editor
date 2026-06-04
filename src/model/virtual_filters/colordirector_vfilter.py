@@ -157,3 +157,7 @@ class ColordirectorVFilter(VirtualFilter):
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
         pass  # TODO
+
+    @override
+    def handle_filter_message(self, key: str, value: str) -> bool:
+        pass  # TODO

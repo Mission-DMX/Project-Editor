@@ -8,6 +8,7 @@ from unittest import case
 from controller.cli.command import Command
 from controller.file.read import read_document
 from controller.file.transmitting_to_fish import transmit_to_fish
+from model.filter import VirtualFilter
 
 if TYPE_CHECKING:
     import argparse
@@ -91,6 +92,17 @@ class ShowCommand(Command):
                 self.context.network_manager.enter_scene(scene, push_direct=False)
                 return True
             case "filtermsg":
+                scene = self.context.show.get_scene_by_id(args.sceneid)
+                if scene is not None:
+                    filter_inst = scene.get_filter_by_id(args.filterid)
+                    if isinstance(filter_inst, VirtualFilter):
+                        return filter_inst.handle_filter_message(args.parameterkey, args.parametervalue)
+                    if filter_inst is None:
+                        self.context.print(
+                            f"WARNING: no filter with ID '{args.filterid}' found in scene '{args.sceneid}'."
+                        )
+                else:
+                    self.context.print(f"WARNING: scene with ID '{args.sceneid}' not found.")
                 self.context.network_manager.send_gui_update_to_fish(
                     args.sceneid, args.filterid, args.parameterkey, args.parametervalue, enque=True
                 )
