@@ -6,10 +6,13 @@ from typing import TYPE_CHECKING, override
 
 from model.color_hsi import ColorHSI
 from model.filter import FilterTypeEnumeration, VirtualFilter
+from model.filter_data.cues.cue import Cue, KeyFrame, StateColor
+from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.filter_data.transfer_function import TransferFunction
+from model.virtual_filters.cue_vfilter import CueFilter
 
 if TYPE_CHECKING:
-    from model import Filter
+    from model import Filter, DataType
     from model.scene import Scene
 
 
@@ -35,7 +38,8 @@ class _ColorPreset:
 
 
 def _sanitize_channel_name(name: str) -> str:
-    return name.replace(":", "").replace("#", "").replace("|", "").strip()
+    return (name.replace(":", "").replace("#", "").replace("|", "").
+            replace("__", "-").replace(" ", "_").strip())
 
 
 class ColordirectorVFilter(VirtualFilter):
@@ -44,6 +48,8 @@ class ColordirectorVFilter(VirtualFilter):
     A Color Director is a filter that provides color values to defined color groups.
     Color sequences and accent colors can be defined. Accent colors will be evenly distributed into the channels of
     each color group.
+
+    Saved recalls can set color selections based on the stored settings.
 
     Internally cue filters are used for each color group and presets are cues within them.
     Accent colors are distributed using the formula `SubOut[i] = accent colors[i mod #accent colors]`.
@@ -57,6 +63,7 @@ class ColordirectorVFilter(VirtualFilter):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, pos=pos)
         self._color_groups: dict[str, list[str]] = {}
         self._presets: list[_ColorPreset] = []
+        self._recalls: list[list[int]] = []
         # TODO setup time and timescale input channels
 
     def _deserialize_color_groups(self) -> None:
@@ -85,6 +92,25 @@ class ColordirectorVFilter(VirtualFilter):
 
     def _serialize_presets(self) -> None:
         self._filter_configurations["presets"] = "$".join(c.serialize() for c in self._presets)
+
+    def _serialize_recalls(self) -> None:
+        self.filter_configurations["recalls"] = (
+            ";".join(",".join(str(state) for state in states) for states in self._recalls))
+
+    def _deserialize_recalls(self) -> None:
+        self._recalls.clear()
+        recalls_def = self.filter_configurations.get("recalls", "")
+        if len(recalls_def) == 0:
+            return
+        for recall_def in recalls_def.split(";"):
+            if len(recall_def) == 0:
+                continue
+            recall = []
+            for state in recall_def.split(","):
+                if len(state) == 0:
+                    continue
+                recall.append(int(state))
+            self._recalls.append(recall)
 
     def populate_presets_with_initial_data(self, short: bool) -> None:
         """Populate the color presets with common initial data.
@@ -142,21 +168,67 @@ class ColordirectorVFilter(VirtualFilter):
         super().serialize()
         self._serialize_color_groups()
         self._serialize_presets()
+        self._serialize_recalls()
 
     @override
     def deserialize(self) -> None:
         super().deserialize()
         self._deserialize_color_groups()
         self._deserialize_presets()
+        self._deserialize_recalls()
         self._update_outputs()
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
-        pass  # TODO
+        color_group_name, group_output_channel = virtual_port_id.split("__")
+        if color_group_name not in self._color_groups:
+            return None
+        color_group = self._color_groups[color_group_name]
+        if group_output_channel not in color_group:
+            return None
+        return f"{self.filter_id}__cue__{color_group_name}:{group_output_channel}"
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
-        pass  # TODO
+        timescale_input = self.channel_links.get("timescale")
+        if timescale_input is None:
+            float_const = Filter(self.scene, f"{self.filter_id}__timescale_const",
+                                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, pos=self.pos,
+                                 initial_parameters={"value": "1.0"})
+            timescale_input = float_const.filter_id + ":value"
+            filter_list.append(float_const)
+        time_input = self.channel_links.get("time")
+        if time_input is None:
+            time_filter = Filter(self.scene, f"{self.filter_id}__time",
+                                 FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, pos=self.pos)
+            time_input = time_filter.filter_id + ":value"
+            filter_list.append(time_filter)
+        for color_group_name, output_channels in self._color_groups.items():
+            cue_filter = CueFilter(self.scene,
+                                   f"{self.filter_id}__cue__{_sanitize_channel_name(color_group_name)}",
+                                   pos=self.pos)
+            cue_filter.channel_links["time"] = time_input
+            cue_filter.channel_links["time_scale"] = timescale_input
+            cfm = CueFilterModel()
+            for channel_name in output_channels:
+                cfm.add_channel(channel_name, DataType.DT_COLOR)
+            for preset in self._presets:
+                cue = Cue()
+                cfm.append_cue(cue)
+                last_time: float = 0
+                for fadein_time, transfer_function, colors in preset.colors:
+                    kf = KeyFrame(cue)
+                    last_time += fadein_time * 40
+                    kf.timestamp = last_time / 1000.0
+                    for i, output_channel in enumerate(output_channels):
+                        state = StateColor(transfer_function.value)
+                        state.color = colors[i % len(colors)]
+                        kf.append_state(state)
+                    cue.insert_frame(kf)
+            if len(self._presets) > 0:
+                cfm.default_cue = 0
+            cue_filter.filter_configurations.update(cfm.get_as_configuration())
+            cue_filter.instantiate_filters(filter_list)
 
     @override
     def handle_filter_message(self, key: str, value: str) -> bool:
