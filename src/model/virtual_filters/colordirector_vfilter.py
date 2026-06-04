@@ -48,6 +48,7 @@ class ColordirectorVFilter(VirtualFilter):
     Internally cue filters are used for each color group and presets are cues within them.
     Accent colors are distributed using the formula `SubOut[i] = accent colors[i mod #accent colors]`.
     If the apply all buttons of the UI widget are pressed, the state will be applied to all cues.
+    Fade-in curves are stored with the new steps per second time reference.
 
     """
 
@@ -85,14 +86,53 @@ class ColordirectorVFilter(VirtualFilter):
     def _serialize_presets(self) -> None:
         self._filter_configurations["presets"] = "$".join(c.serialize() for c in self._presets)
 
-    def populate_presets_with_initial_data(self) -> None:
+    def populate_presets_with_initial_data(self, short: bool) -> None:
         """Populate the color presets with common initial data.
 
         This method will generate color presets for the most common color choices.
         The default fade-in is linear with a fade-in time of three seconds.
 
+        Args:
+            short: If set to true, a smaller preset field will be generated.
+
         """
-        # TODO
+        steps_per_second: int = int(1000 / 40)
+        three_secs: int = steps_per_second * 3
+
+        white = _ColorPreset()
+        white.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(0, 0, 1)]))
+        self._presets.append(white)
+
+        if short:
+            pink = _ColorPreset()
+            pink.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(296.0, 0.89, 1)]))
+            self._presets.append(pink)
+            red = _ColorPreset()
+            red.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(360.0, 1, 1)]))
+            self._presets.append(red)
+            orange = _ColorPreset()
+            orange.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(25, 1, 1)]))
+            self._presets.append(orange)
+            yellow = _ColorPreset()
+            yellow.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(60.0, 1, 1)]))
+            self._presets.append(yellow)
+            green = _ColorPreset()
+            green.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(114.0, 1, 1)]))
+            self._presets.append(green)
+            cyan = _ColorPreset()
+            cyan.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(170.0, 1, 1)]))
+            self._presets.append(cyan)
+            blue = _ColorPreset()
+            blue.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(227, 1, 1)]))
+            self._presets.append(blue)
+            purple = _ColorPreset()
+            purple.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(265.0, 1, 1)]))
+            self._presets.append(purple)
+        else:
+            for hue in range(0, 360, 18):
+                color = _ColorPreset()
+                color.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(hue, 1, 1)]))
+                self._presets.append(color)
 
     def _update_outputs(self) -> None:
         pass  # TODO
