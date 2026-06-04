@@ -80,6 +80,7 @@ class FilterTypeEnumeration(IntFlag):
     """Filter type enumeration.
 
     Negative values indicate virtual filters.
+
     """
     VFILTER_COLORDIRECTOR = -15
     VFILTER_COLOR_TO_COLORWHEEL = -14
