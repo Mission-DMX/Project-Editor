@@ -64,20 +64,24 @@ class ColordirectorVFilter(VirtualFilter):
         self._color_groups: dict[str, list[str]] = {}
         self._presets: list[_ColorPreset] = []
         self._recalls: list[list[int]] = []
-        # TODO setup time and timescale input channels
+        self.in_data_types["time"] = DataType.DT_DOUBLE
+        self._in_data_types["time_scale"] = DataType.DT_DOUBLE
 
     def _deserialize_color_groups(self) -> None:
         self._color_groups.clear()
         color_group_def = self.filter_configurations.get("colorgroups", "")
         if len(color_group_def) == 0:
             return
+        self.out_data_types.clear()
         for group_def in color_group_def.split("#"):
-            output_channel = group_def.split("|")
-            if len(output_channel) < 1:
+            output_channels = group_def.split("|")
+            if len(output_channels) < 1:
                 raise ValueError("A least a name of the color group must be defined.")
-            name = output_channel[0]
-            output_channel.pop(0)
-            self._color_groups[name] = output_channel
+            name = output_channels[0]
+            output_channels.pop(0)
+            self._color_groups[name] = output_channels
+            for chan_name in output_channels:
+                self.out_data_types[chan_name] = DataType.DT_COLOR
 
     def _serialize_color_groups(self) -> None:
         self.filter_configurations["colorgroups"] = "#".join(f"{_sanitize_channel_name(name)}|{
@@ -160,8 +164,9 @@ class ColordirectorVFilter(VirtualFilter):
                 color.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(hue, 1, 1)]))
                 self._presets.append(color)
 
-    def _update_outputs(self) -> None:
-        pass  # TODO
+    def get_outputs(self) -> list[str]:
+        """Get the outputs of this filter."""
+        return list(self._color_groups.keys())
 
     @override
     def serialize(self) -> None:
@@ -176,7 +181,6 @@ class ColordirectorVFilter(VirtualFilter):
         self._deserialize_color_groups()
         self._deserialize_presets()
         self._deserialize_recalls()
-        self._update_outputs()
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -190,7 +194,7 @@ class ColordirectorVFilter(VirtualFilter):
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
-        timescale_input = self.channel_links.get("timescale")
+        timescale_input = self.channel_links.get("time_scale")
         if timescale_input is None:
             float_const = Filter(self.scene, f"{self.filter_id}__timescale_const",
                                  FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, pos=self.pos,
@@ -220,7 +224,7 @@ class ColordirectorVFilter(VirtualFilter):
                     kf = KeyFrame(cue)
                     last_time += fadein_time * 40
                     kf.timestamp = last_time / 1000.0
-                    for i, output_channel in enumerate(output_channels):
+                    for i in range(len(output_channels)):
                         state = StateColor(transfer_function.value)
                         state.color = colors[i % len(colors)]
                         kf.append_state(state)
@@ -232,4 +236,8 @@ class ColordirectorVFilter(VirtualFilter):
 
     @override
     def handle_filter_message(self, key: str, value: str) -> bool:
+        # TODO implement save-selection-to-recall <int>
+        # TODO implement recall <int | str>
+        # TODO implement call <int> <int>
+        # TODO implement call-column <int>
         pass  # TODO

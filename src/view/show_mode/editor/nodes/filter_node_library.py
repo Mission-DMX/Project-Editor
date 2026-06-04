@@ -36,7 +36,7 @@ from view.show_mode.editor.nodes.impl.arithmetics import (
     Sum16BitNode,
     SumFloatNode,
 )
-from view.show_mode.editor.nodes.impl.color_manip_nodes import ColorMixerVFilterNode
+from view.show_mode.editor.nodes.impl.color_manip_nodes import ColorMixerVFilterNode, ColorDirectorVFilterNode
 from view.show_mode.editor.nodes.impl.constants import (
     Constants8BitNode,
     Constants16BitNode,
@@ -216,6 +216,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(FaderHSIAUNode, [("Filter Fader",)])
 
     def _register_effect_nodes(self) -> None:
+        self.addNodeType(ColorDirectorVFilterNode, [("Effects",)])
         self.addNodeType(CueListNode, [("Effects",)])
         self.addNodeType(AutoTrackerNode, [("Effects",)])
         self.addNodeType(Shift8BitNode, [("Effects",)])
