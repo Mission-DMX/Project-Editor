@@ -82,6 +82,7 @@ class FilterTypeEnumeration(IntFlag):
     Negative values indicate virtual filters.
 
     """
+
     VFILTER_COLORDIRECTOR = -15
     VFILTER_COLOR_TO_COLORWHEEL = -14
     VFILTER_DIMMER_BRIGHTNESS_MIXIN = -13
