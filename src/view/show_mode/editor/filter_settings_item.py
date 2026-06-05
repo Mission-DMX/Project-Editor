@@ -29,6 +29,7 @@ from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilter
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
 from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidget
 from .node_editor_widgets.color_to_colorwheel_adapter_settings_widget import ColorToColorwheelAdapterSetupWidget
+from .node_editor_widgets.colordirector_editor.widget import ColordirectorEditorWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.dimmer_brightness_mixin_config_widget import DimmerBrightnessMixinConfigWidget
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
@@ -145,6 +146,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return SequencerEditor(f=filter_)
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN:
         return DimmerBrightnessMixinConfigWidget()
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_COLORDIRECTOR:
+        return ColordirectorEditorWidget(filter_)
     return None
 
 
@@ -157,7 +160,7 @@ class FilterSettingsDialog(QDialog):
         self._filter_node = filter_node
         self.filter = filter_node.filter
 
-        self.setWindowTitle("Filter Settings")
+        self.setWindowTitle(f"Filter Settings: {filter_node.filter.filter_id}")
         # Form layout:
         # Initial Parameters
         # ip1_name: ip1_value_editable

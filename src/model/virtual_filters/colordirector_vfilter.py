@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
+from model import DataType
 from model.color_hsi import ColorHSI
 from model.filter import FilterTypeEnumeration, VirtualFilter
 from model.filter_data.cues.cue import Cue, KeyFrame, StateColor
@@ -12,12 +13,24 @@ from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.cue_vfilter import CueFilter
 
 if TYPE_CHECKING:
-    from model import Filter, DataType
+    from model import Filter
     from model.scene import Scene
 
 
-class _ColorPreset:
+class ColorPreset:
+    """A color preset.
+
+    Contains all color steps with their fade in time (steps), transfer function and accent colors.
+
+    """
+
     def __init__(self, filter_str: str = "") -> None:
+        """Initialize a color preset.
+
+        Args:
+            filter_str: Filter string representation to deserialize. An empty string will initialize an empty preset.
+
+        """
         self.colors: list[tuple[int, TransferFunction, list[ColorHSI]]] = []
         if len(filter_str) > 0:
             for step_str in filter_str.split("#"):
@@ -28,9 +41,15 @@ class _ColorPreset:
                 self.colors.append((duration, transf, colors))
 
     def get_button_visualization(self) -> list[ColorHSI]:
+        """Get the representation sequence for highlighting purposes in buttons.
+
+        Returns:
+            The first accent color of each step.
+        """
         return [t[2][0] for t in self.colors]
 
     def serialize(self) -> str:
+        """Serialize the preset to a string."""
         parts: list[str] = []
         for duration, transfer_function, colors in self.colors:
             parts.append(f"{duration}|{transfer_function.value}|{"@".join(c.format_for_filter() for c in colors)}")
@@ -62,10 +81,27 @@ class ColordirectorVFilter(VirtualFilter):
         """Initializes the virtual filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, pos=pos)
         self._color_groups: dict[str, list[str]] = {}
-        self._presets: list[_ColorPreset] = []
+        self._presets: list[ColorPreset] = []
         self._recalls: list[list[int]] = []
         self.in_data_types["time"] = DataType.DT_DOUBLE
         self._in_data_types["time_scale"] = DataType.DT_DOUBLE
+
+    @property
+    def presets(self) -> list[ColorPreset]:
+        """Returns the list of color presets."""
+        return self._presets
+
+    @presets.setter
+    def presets(self, presets: list[ColorPreset]) -> None:
+        self._presets = presets
+
+    def get_ambient_color_count(self) -> int:
+        """Get the maximum number of ambient colors in presets."""
+        maximum = 0
+        for preset in self.presets:
+            for _, _, colors in preset.colors:
+                maximum = max(maximum, len(colors))
+        return maximum
 
     def _deserialize_color_groups(self) -> None:
         self._color_groups.clear()
@@ -92,7 +128,7 @@ class ColordirectorVFilter(VirtualFilter):
         presets_def = self.filter_configurations.get("presets", "")
         if len(presets_def) == 0:
             return
-        self._presets.extend(_ColorPreset(p_str) for p_str in presets_def.split("$"))
+        self._presets.extend(ColorPreset(p_str) for p_str in presets_def.split("$"))
 
     def _serialize_presets(self) -> None:
         self._filter_configurations["presets"] = "$".join(c.serialize() for c in self._presets)
@@ -129,38 +165,38 @@ class ColordirectorVFilter(VirtualFilter):
         steps_per_second: int = int(1000 / 40)
         three_secs: int = steps_per_second * 3
 
-        white = _ColorPreset()
+        white = ColorPreset()
         white.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(0, 0, 1)]))
         self._presets.append(white)
 
         if short:
-            pink = _ColorPreset()
+            pink = ColorPreset()
             pink.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(296.0, 0.89, 1)]))
             self._presets.append(pink)
-            red = _ColorPreset()
+            red = ColorPreset()
             red.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(360.0, 1, 1)]))
             self._presets.append(red)
-            orange = _ColorPreset()
+            orange = ColorPreset()
             orange.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(25, 1, 1)]))
             self._presets.append(orange)
-            yellow = _ColorPreset()
+            yellow = ColorPreset()
             yellow.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(60.0, 1, 1)]))
             self._presets.append(yellow)
-            green = _ColorPreset()
+            green = ColorPreset()
             green.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(114.0, 1, 1)]))
             self._presets.append(green)
-            cyan = _ColorPreset()
+            cyan = ColorPreset()
             cyan.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(170.0, 1, 1)]))
             self._presets.append(cyan)
-            blue = _ColorPreset()
+            blue = ColorPreset()
             blue.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(227, 1, 1)]))
             self._presets.append(blue)
-            purple = _ColorPreset()
+            purple = ColorPreset()
             purple.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(265.0, 1, 1)]))
             self._presets.append(purple)
         else:
             for hue in range(0, 360, 18):
-                color = _ColorPreset()
+                color = ColorPreset()
                 color.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(hue, 1, 1)]))
                 self._presets.append(color)
 
