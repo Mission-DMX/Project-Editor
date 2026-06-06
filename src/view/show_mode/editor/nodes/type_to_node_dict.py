@@ -36,10 +36,11 @@ from view.show_mode.editor.nodes.impl.arithmetics import (
     SumFloatNode,
 )
 from view.show_mode.editor.nodes.impl.color_manip_nodes import (
+    ColorDirectorVFilterNode,
     ColorMixerAdditiveRGBNode,
     ColorMixerHSVNode,
     ColorMixerNormativeRGBNode,
-    ColorMixerVFilterNode, ColorDirectorVFilterNode,
+    ColorMixerVFilterNode,
 )
 from view.show_mode.editor.nodes.impl.constants import (
     Constants8BitNode,

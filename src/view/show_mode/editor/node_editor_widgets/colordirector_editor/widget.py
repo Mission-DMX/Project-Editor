@@ -1,13 +1,14 @@
 """Contains node editor widget."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QTabWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QMenu, \
-    QTableWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QMenu, QPushButton, QTableWidget, QTabWidget, QVBoxLayout, QWidget
 
 from model.color_hsi import ColorHSI
+from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter, ColorPreset
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTableWidgetItem
@@ -88,7 +89,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
     @override
     def parent_opened(self) -> None:
         super().parent_opened()
-        pass  # TODO update outputs of filter
+        # TODO update outputs of filter
 
     def _reload_presets_table(self) -> None:
         tw = self._preset_table
@@ -139,7 +140,20 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                     accent_color_item.setBackground(accent_color.to_qt_color())
                     # TODO make editable
                     tw.setItem(i + offsets, 4 + color_index, accent_color_item)
-            pass # TODO add option to add additional steps for last step
+            add_step_widget = QWidget()
+            add_step_layout = QHBoxLayout()
+            add_step_layout.addWidget(QLabel(str(i)))
+            add_step_layout.addStretch()
+            add_step_button = QPushButton("↓")
+            add_step_button.clicked.connect(lambda _, p=preset: self._add_step_to_preset(p))
+            add_step_layout.addWidget(add_step_button)
+            if len(preset.colors) > 1:
+                remove_last_step_button = QPushButton("🗑")
+                remove_last_step_button.clicked.connect(lambda _, p=preset: self._remove_last_step_from_preset(p))
+                add_step_layout.addSpacing(10)
+                add_step_layout.addWidget(remove_last_step_button)
+            add_step_widget.setLayout(add_step_layout)
+            tw.setCellWidget(i + offsets, 0, add_step_widget)
 
     def _load_default_colors_clicked_short(self) -> None:
         self._model.populate_presets_with_initial_data(True)
@@ -155,4 +169,14 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
     def _add_accent_color(self, ambient_color_list: list[ColorHSI]) -> None:
         ambient_color_list.append(ColorHSI(0.0, 0.0, 1.0))
+        self._reload_presets_table()
+
+    def _add_step_to_preset(self, preset: ColorPreset) -> None:
+        preset.colors.append((0, TransferFunction.LINEAR, []))
+        self._reload_presets_table()
+
+    def _remove_last_step_from_preset(self, preset: ColorPreset) -> None:
+        if len(preset.colors) == 0:
+            return
+        preset.colors.pop(-1)
         self._reload_presets_table()

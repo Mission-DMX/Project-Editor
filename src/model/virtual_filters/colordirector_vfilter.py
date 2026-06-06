@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from model import DataType
+from model import DataType, Filter
 from model.color_hsi import ColorHSI
 from model.filter import FilterTypeEnumeration, VirtualFilter
 from model.filter_data.cues.cue import Cue, KeyFrame, StateColor
@@ -13,7 +13,6 @@ from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.cue_vfilter import CueFilter
 
 if TYPE_CHECKING:
-    from model import Filter
     from model.scene import Scene
 
 
