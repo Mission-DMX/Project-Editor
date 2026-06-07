@@ -65,9 +65,9 @@ class HelpCommand(Command):
                 self.context.print("\tstart channel -- The start channel of the first fixture")
                 self.context.print("\toffset -- The number of gap channels between fixtures (excluding the"
                                    "own length of the fixture)")
-            case "bank_set":
-                self.context.print("Modify the selected bank set. Usage: bank_set commit/create <description>"
-                                   "/add --bank <bank> --col-type <type>/info/activate")
+            case "bankset":
+                self.context.print("Modify the selected bank set. Usage: bankset commit/create <description>"
+                                   "\n\tadd --bank <bank> --col-type <type>\n\tinfo\n\tactivate\n\tcommit\n\tcreate")
             case "event":
                 self.context.print("Manage the fish event system")
                 self.context.print("\tadd-sender -- Add a bew event sender to fish")
@@ -105,7 +105,7 @@ class HelpCommand(Command):
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
-                self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
+                self.context.print("\tevent\tselect\tlist\tpatch\tbankset\tshowctl\tdelay\tmacro")
                 self.context.print("\tprint\tasset\tset\tif\tconnect\tfish\tuipage\textract")
                 return False
         return True
