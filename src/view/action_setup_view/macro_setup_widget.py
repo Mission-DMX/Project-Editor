@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from model import Broadcaster
-from model.macro import Macro, Trigger
+from model.macro import Macro, Trigger, get_available_shared_context_identifiers
 from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
 from view.action_setup_view.chaser_preset_selection_dialog import _ChaserPresetSelectionDialog
 from view.action_setup_view.constant_update_dialog import ConstantUpdateInsertionDialog
@@ -105,6 +105,8 @@ class MacroSetupWidget(QSplitter):
         self._trigger_panel = QWidget(self)
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Triggers"))
+        self._context_label = QLabel(self)
+        layout.addWidget(self._context_label)
         self._trigger_actions = QToolBar(self._trigger_panel)
         self._trigger_actions.setEnabled(False)
         self._new_trigger_action = QAction()
@@ -186,11 +188,14 @@ class MacroSetupWidget(QSplitter):
             for trigger in self._selected_macro.all_triggers:
                 self._trigger_added(trigger)
             self._editor_area.document().setPlainText(self._selected_macro.content)
+            self._context_label.setText(f"Context: {"Private" if self._selected_macro.shared_context_id is None else 
+            f"[shared] {self._selected_macro.shared_context_id}"}")
         else:
             self._trigger_actions.setEnabled(False)
             self._content_panel_actions.setEnabled(False)
             self._editor_area.setEnabled(False)
             self._editor_area.document().clear()
+            self._context_label.setText("")
 
     def clear(self) -> None:
         """Clear the widget data."""
@@ -222,7 +227,23 @@ class MacroSetupWidget(QSplitter):
             self._macro_list.setCurrentIndex(self._macro_list.model().index(0, 0))
 
     def _add_macro_pressed(self) -> None:
-        m = Macro(self._show)
+        self._dialog = QInputDialog(self)
+        self._dialog.setComboBoxEditable(True)
+        self._dialog.setComboBoxItems(get_available_shared_context_identifiers())
+        self._dialog.setModal(True)
+        self._dialog.setWindowTitle("Specify Context")
+        self._dialog.setLabelText("Specify Macro Context (leave empty to create a private one):")
+        self._dialog.setOption(QInputDialog.InputDialogOption.UseListViewForComboBoxItems)
+        self._dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        self._dialog.accepted.connect(self._add_macro_final)
+        self._dialog.show()
+
+    def _add_macro_final(self) -> None:
+        context_id = self._dialog.textValue().strip()
+        if context_id == "":
+            context_id = None
+        self._dialog.deleteLater()
+        m = Macro(self._show, shared_context=context_id)
         m.name = "New Macro"
         self._show.add_macro(m)
 

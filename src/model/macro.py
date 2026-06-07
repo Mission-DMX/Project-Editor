@@ -142,11 +142,26 @@ class _FKeysTrigger(Trigger):
             NetworkManager().button_msg_to_x_touch(msg)
 
 
+_SHARED_CONTEXT_REGISTRY = {}
+
+
+def get_available_shared_context_identifiers() -> list[str]:
+    """Get the IDs of available shared contexts."""
+    return list(_SHARED_CONTEXT_REGISTRY.keys())
+
+
 class Macro:
     """Macro."""
 
-    def __init__(self, parent: BoardConfiguration) -> None:
-        """Empty macro."""
+    def __init__(self, parent: BoardConfiguration, shared_context: str | None = None) -> None:
+        """Empty macro.
+
+        Params:
+            parent: The parent board configuration
+            shared_context: If the macro should use a shared context, the id of it. If None (default) is provided, a
+                private context will be created.
+
+        """
         self.content: str = ""
         self.name: str = ""
         self._show: BoardConfiguration = parent
@@ -154,7 +169,15 @@ class Macro:
         from controller.cli.cli_context import CLIContext
         from controller.network import NetworkManager
 
-        self.c = CLIContext(self._show, NetworkManager(), exit_available=False)
+        if shared_context is None:
+            self.c = CLIContext(self._show, NetworkManager(), exit_available=False)
+        else:
+            context = _SHARED_CONTEXT_REGISTRY.get(shared_context)
+            if context is None:
+                context = CLIContext(self._show, NetworkManager(), exit_available=False)
+                _SHARED_CONTEXT_REGISTRY[shared_context] = context
+            self.c = context
+        self._shared_context_id = shared_context
 
     @property
     def trigger_conditions(self) -> list[Trigger]:
@@ -169,6 +192,10 @@ class Macro:
     def all_triggers(self) -> list[Trigger]:
         """All Triggers of a Macro."""
         return list(self._triggers.keys())
+
+    @property
+    def shared_context_id(self) -> str | None:
+        return self._shared_context_id
 
     def add_trigger(self, t: Trigger, active: bool = True) -> None:
         """Register a new trigger.

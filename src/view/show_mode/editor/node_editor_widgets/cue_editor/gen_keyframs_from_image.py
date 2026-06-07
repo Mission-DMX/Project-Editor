@@ -66,21 +66,21 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
             if columns_first:
                 y += 1
                 if (y - break_point_offset) >= break_point:
-                    y = 0
+                    y = break_point_offset
                     x += 1
-                if x >= image_height:
+                if x >= image_width:
                     x = 0
-                    y = break_point
                     break_point_offset += break_point
+                    y = break_point_offset
             else:
                 x += 1
                 if (x - break_point_offset) >= break_point:
-                    x = 0
+                    x = break_point_offset
                     y += 1
-                if y >= image_width:
+                if y >= image_height:
                     y = 0
-                    x = break_point
                     break_point_offset += break_point
+                    x = break_point_offset
             kf.append_state(state)
         else:
             if last_frame is not None:
