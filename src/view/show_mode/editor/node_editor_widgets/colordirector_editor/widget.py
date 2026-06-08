@@ -9,12 +9,16 @@ from mypyc.irbuild.specialize import str_encode_fast_path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QMenu, QPushButton, QTableWidget, QTabWidget, QVBoxLayout, QWidget
 
+from controller.file.transmitting_to_fish import transmit_to_fish
 from model.color_hsi import ColorHSI
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter, ColorPreset
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.colordirector_editor.fadein_time_cell_delegate import (
     FadeinTimeCellDelegate,
+)
+from view.show_mode.editor.node_editor_widgets.colordirector_editor.transfer_function_cell_delegate import (
+    TransferFunctionCellDelegate,
 )
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTableWidgetItem
 
@@ -63,7 +67,6 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
         preset_buttons_layout.addStretch()
         presets_layout.addLayout(preset_buttons_layout)
-        presets_layout.addWidget(QLabel("Presets: TableWidget with rows=preset columns=colors,fadetimes"))
         self._preset_table = QTableWidget(presets_tab)
         self._preset_table.cellChanged.connect(self._preset_cell_edited)
         # TODO implement live preview mode: 1. Disable color group editing if in live preview. 2. Use Color constants
@@ -123,7 +126,8 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             row_sum += len(preset.colors)
         tw.setRowCount(row_sum)
         tw.setColumnCount(self._model.get_ambient_color_count() + 4)
-        tw.setItemDelegateForColumn(1, FadeinTimeCellDelegate(tw, self._model))
+        tw.setItemDelegateForColumn(1, FadeinTimeCellDelegate(tw))
+        tw.setItemDelegateForColumn(2, TransferFunctionCellDelegate(tw))
         offsets = 0
         for preset_index, preset in enumerate(self._model.presets):
             index_widget = AnnotatedTableWidgetItem(str(preset_index))
@@ -145,7 +149,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
                 transfer_item = AnnotatedTableWidgetItem(transfer_function.value)
                 transfer_item.annotated_data = (preset_index, step_index, 1)
-                # TODO implement editing
+                transfer_item.setData(Qt.ItemDataRole.EditRole, transfer_function)
                 tw.setItem(preset_index + offsets, 2, transfer_item)
 
                 add_accent_color_button = AnnotatedTableWidgetItem(" + ")
@@ -208,6 +212,10 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             case 0:
                 # Fade in time
                 fade_in_time = int(item.data(Qt.ItemDataRole.EditRole))
+                preset.colors[step_index] = (fade_in_time, tf, accent_colors)
+                return
+            case 1:
+                tf = item.data(Qt.ItemDataRole.EditRole)
                 preset.colors[step_index] = (fade_in_time, tf, accent_colors)
                 return
             case _:

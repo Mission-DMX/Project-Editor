@@ -10,15 +10,12 @@ if TYPE_CHECKING:
     from PySide6.QtCore import QAbstractItemModel, QLocale, QModelIndex
     from PySide6.QtWidgets import QStyleOptionViewItem, QWidget
 
-    from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
-
 class FadeinTimeCellDelegate(QStyledItemDelegate):
     """Presents formatted view to fadein time properties of presets table."""
 
-    def __init__(self, parent: QWidget, model: ColordirectorVFilter) -> None:
+    def __init__(self, parent: QWidget) -> None:
         """Initialize."""
         super().__init__(parent)
-        self._model: ColordirectorVFilter = model
         # TODO allow jogwheel to edit fade-in time
 
     @override
