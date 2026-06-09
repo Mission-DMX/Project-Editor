@@ -14,6 +14,7 @@ from model.color_hsi import ColorHSI
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter, ColorPreset
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.colordirector_editor._color_group_widget import ColorGroupWidget
 from view.show_mode.editor.node_editor_widgets.colordirector_editor.color_cell_delegate import ColorCellDelegate
 from view.show_mode.editor.node_editor_widgets.colordirector_editor.fadein_time_cell_delegate import (
     FadeinTimeCellDelegate,
@@ -45,10 +46,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._model: ColordirectorVFilter = model
         self._widget = QTabWidget(parent)
         self._widget.setMinimumWidth(800)
-        color_groups_tab = QWidget(self._widget)
-        color_groups_layout = QVBoxLayout()
-        color_groups_layout.addWidget(QLabel("Color Groups: TreeWidget"))
-        color_groups_tab.setLayout(color_groups_layout)
+        color_groups_tab = ColorGroupWidget(self._model, self._widget)
         self._widget.addTab(color_groups_tab, "Color Groups")
 
         presets_tab = QWidget(self._widget)

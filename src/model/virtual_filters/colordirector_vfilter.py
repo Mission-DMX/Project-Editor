@@ -94,6 +94,11 @@ class ColordirectorVFilter(VirtualFilter):
     def presets(self, presets: list[ColorPreset]) -> None:
         self._presets = presets
 
+    @property
+    def output_groups(self) -> dict[str, list[str]]:
+        """Get the color output group dictionary."""
+        return self._color_groups
+
     def get_ambient_color_count(self) -> int:
         """Get the maximum number of ambient colors in presets."""
         maximum = 0
