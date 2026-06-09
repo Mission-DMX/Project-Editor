@@ -27,6 +27,10 @@ class ColorGroupWidget(QWidget):
         self._add_sub_output_button.clicked.connect(self._add_sub_output)
         self._add_sub_output_button.setEnabled(False)
         button_layout.addWidget(self._add_sub_output_button)
+        self._add_sub_output_range_button = QPushButton("Add Sub Output Range")
+        self._add_sub_output_range_button.clicked.connect(self._add_sub_output_range)
+        self._add_sub_output_range_button.setEnabled(False)
+        button_layout.addWidget(self._add_sub_output_range_button)
         button_layout.addStretch()
         layout.addLayout(button_layout)
         self._group_view = QTreeWidget(self)
@@ -53,7 +57,9 @@ class ColorGroupWidget(QWidget):
         item = self._group_view.selectedItems()[0]
         if not isinstance(item, AnnotatedTreeWidgetItem):
             return
-        self._add_sub_output_button.setEnabled(item.annotated_data[0])
+        enabled = item.annotated_data[0]
+        self._add_sub_output_button.setEnabled(enabled)
+        self._add_sub_output_range_button.setEnabled(enabled)
 
     def _add_group(self) -> None:
         self._input_dialog = QInputDialog(self)
@@ -81,3 +87,6 @@ class ColorGroupWidget(QWidget):
 
     def _add_sub_output(self) -> None:
         pass  # TODO add sub output of selected group to model and view
+
+    def _add_sub_output_range(self) -> None:
+        pass  # TODO add multiple sub outputs using dialog querying interation count and jinja template

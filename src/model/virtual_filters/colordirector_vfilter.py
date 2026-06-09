@@ -44,6 +44,7 @@ class ColorPreset:
 
         Returns:
             The first accent color of each step.
+
         """
         return [t[2][0] for t in self.colors]
 

@@ -14,9 +14,10 @@ if TYPE_CHECKING:
 
 
 class TransferFunctionCellDelegate(QStyledItemDelegate):
-    """Allows editing of transfer function using reasonable widget"""
+    """Allows editing of transfer function using reasonable widget."""
 
     def __init__(self, parent: QWidget) -> None:
+        """Initialize."""
         super().__init__(parent)
 
     @override

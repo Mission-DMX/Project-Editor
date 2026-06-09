@@ -38,6 +38,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
     """
 
     def __init__(self, model: Filter, parent: QWidget | None = None) -> None:
+        """Initialize using color director model and optional parent."""
         super().__init__()
         if not isinstance(model, ColordirectorVFilter):
             raise TypeError("Color Director filter must be a ColordirectorVFilter.")
