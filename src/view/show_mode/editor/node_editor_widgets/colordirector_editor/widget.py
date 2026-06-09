@@ -14,6 +14,7 @@ from model.color_hsi import ColorHSI
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter, ColorPreset
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.colordirector_editor.color_cell_delegate import ColorCellDelegate
 from view.show_mode.editor.node_editor_widgets.colordirector_editor.fadein_time_cell_delegate import (
     FadeinTimeCellDelegate,
 )
@@ -125,14 +126,23 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         for preset in self._model.presets:
             row_sum += len(preset.colors)
         tw.setRowCount(row_sum)
-        tw.setColumnCount(self._model.get_ambient_color_count() + 4)
+        ambient_color_maximum = self._model.get_ambient_color_count()
+        tw.setColumnCount(ambient_color_maximum + 4)
+        for i in range(ambient_color_maximum + 4):
+            tw.setColumnWidth(i, 125)
+        for i in range(row_sum):
+            tw.setRowHeight(i, 45)
         tw.setItemDelegateForColumn(1, FadeinTimeCellDelegate(tw))
         tw.setItemDelegateForColumn(2, TransferFunctionCellDelegate(tw))
+        color_edit_delegate = ColorCellDelegate(tw)
+        for i in range(ambient_color_maximum):
+            tw.setItemDelegateForColumn(i + 4, color_edit_delegate)
         offsets = 0
         for preset_index, preset in enumerate(self._model.presets):
             index_widget = AnnotatedTableWidgetItem(str(preset_index))
             index_widget.annotated_data = (preset_index, 0, -1)
             index_widget.setFlags(index_widget.flags() ^ Qt.ItemFlag.ItemIsEditable)
+            last_index_item = index_widget
             tw.setItem(preset_index + offsets, 0, index_widget)
             first_iteration = True
             step_index = -1
@@ -168,7 +178,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                     )
                     accent_color_item.annotated_data = (preset_index, step_index, 3 + color_index)
                     accent_color_item.setBackground(accent_color.to_qt_color())
-                    # TODO make editable
+                    accent_color_item.setData(Qt.ItemDataRole.EditRole, accent_color)
                     tw.setItem(preset_index + offsets, 4 + color_index, accent_color_item)
             add_step_widget = QWidget()
             add_step_layout = QHBoxLayout()
@@ -184,6 +194,8 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 add_step_layout.addWidget(remove_last_step_button)
             add_step_widget.setLayout(add_step_layout)
             tw.setCellWidget(preset_index + offsets, 0, add_step_widget)
+            if len(preset.colors) < 2:
+                last_index_item.setText("")
         self._in_preset_table_rebuild = False
 
     def _preset_cell_edited(self, row: int, column: int) -> None:
@@ -219,8 +231,15 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 preset.colors[step_index] = (fade_in_time, tf, accent_colors)
                 return
             case _:
-                logger.error("Bug! cell %i:%i does not provide valid property: %i!",
-                             row, column, property_index)
+                property_index -= 3
+                if not(0 < property_index < len(accent_colors)):
+                    logger.error("Bug! cell %i:%i does not provide valid property: %i!",
+                                 row, column, property_index)
+                color = item.data(Qt.ItemDataRole.EditRole)
+                if not isinstance(color, ColorHSI):
+                    raise ValueError("Received invalid color data.")
+                accent_colors[property_index] = color
+                item.setBackground(color.to_qt_color())
                 return
 
     def _load_default_colors_clicked_short(self) -> None:
