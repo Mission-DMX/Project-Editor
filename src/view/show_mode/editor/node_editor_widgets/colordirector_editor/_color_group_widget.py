@@ -24,7 +24,7 @@ class ColorGroupWidget(QWidget):
         self._add_group_button.clicked.connect(self._add_group)
         button_layout.addWidget(self._add_group_button)
         self._add_sub_output_button = QPushButton("Add Sub Output")
-        self._add_sub_output_button.clicked.connect(self._add_sub_output)
+        self._add_sub_output_button.clicked.connect(self._add_sub_output_clicked)
         self._add_sub_output_button.setEnabled(False)
         button_layout.addWidget(self._add_sub_output_button)
         self._add_sub_output_range_button = QPushButton("Add Sub Output Range")
@@ -50,6 +50,7 @@ class ColorGroupWidget(QWidget):
                 output_item = AnnotatedTreeWidgetItem(group_item)
                 output_item.setText(0, output)
                 output_item.annotated_data = (False, output)
+                group_item.addChild(output_item)
             group_item.setExpanded(True)
             self._group_view.addTopLevelItem(group_item)
 
@@ -62,6 +63,8 @@ class ColorGroupWidget(QWidget):
         self._add_sub_output_range_button.setEnabled(enabled)
 
     def _add_group(self) -> None:
+        if self._input_dialog is not None:
+            self._input_dialog.deleteLater()
         self._input_dialog = QInputDialog(self)
         self._input_dialog.setModal(True)
         self._input_dialog.setLabelText("Please input group name:")
@@ -72,6 +75,7 @@ class ColorGroupWidget(QWidget):
     def _add_group_final(self) -> None:
         name = self._input_dialog.textValue()
         self._input_dialog.deleteLater()
+        self._input_dialog = None
         if name in self._model.output_groups:
             self._input_dialog = QMessageBox()
             self._input_dialog.setWindowTitle("Group Already Exists")
@@ -85,8 +89,32 @@ class ColorGroupWidget(QWidget):
         group_item.annotated_data = (True, name)
         self._group_view.addTopLevelItem(group_item)
 
-    def _add_sub_output(self) -> None:
-        pass  # TODO add sub output of selected group to model and view
+    def _add_sub_output_clicked(self) -> None:
+        if self._input_dialog is not None:
+            self._input_dialog.deleteLater()
+        self._input_dialog = QInputDialog(self)
+        self._input_dialog.setModal(True)
+        self._input_dialog.setLabelText("Please input sub output name:")
+        self._input_dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        self._input_dialog.accepted.connect(self._add_sub_output_final)
+        self._input_dialog.show()
+
+    def _add_sub_output_final(self) -> None:
+        name = self._input_dialog.textValue()
+        self._input_dialog.deleteLater()
+        self._input_dialog = None
+        self._add_sub_output(name)
+
+    def _add_sub_output(self, name: str) -> None:
+        group_item = self._group_view.selectedItems()[0]
+        if not isinstance(group_item, AnnotatedTreeWidgetItem):
+            return
+        group_name = group_item.annotated_data[1]
+        self._model.output_groups[group_name].append(name)
+        output_item = AnnotatedTreeWidgetItem(group_item)
+        output_item.setText(0, name)
+        output_item.annotated_data = (False, name)
+        group_item.addChild(output_item)
 
     def _add_sub_output_range(self) -> None:
         pass  # TODO add multiple sub outputs using dialog querying interation count and jinja template
