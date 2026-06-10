@@ -115,7 +115,6 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
     @override
     def parent_opened(self) -> None:
         super().parent_opened()
-        # TODO update outputs of filter
 
     def _reload_presets_table(self) -> None:
         self._load_default_colors_button.setEnabled(len(self._model.presets) == 0)

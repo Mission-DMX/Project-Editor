@@ -14,6 +14,7 @@ from view.show_mode.show_ui_widgets.autotracker.ui_widget import AutoTrackerUIWi
 from view.show_mode.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
 from view.show_mode.show_ui_widgets.clock_ui_widget import ClockUIWidget
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
+from view.show_mode.show_ui_widgets.colordirector.uiwidget import ColorDirectorShowUIWidget
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
@@ -88,6 +89,11 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
             ]
         ],
     ),
+    "color_director": (
+        "Color Director",
+        ColorDirectorShowUIWidget,
+        [[FilterTypeEnumeration.VFILTER_COLORDIRECTOR]],
+    )
 }
 
 
