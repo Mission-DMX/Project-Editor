@@ -3,12 +3,49 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QHBoxLayout, QInputDialog, QMessageBox, QPushButton, QTreeWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QInputDialog, QMessageBox, QPushButton, QTreeWidget, QVBoxLayout, QWidget, \
+    QDialog, QLabel, QFormLayout, QLineEdit, QSpinBox, QDialogButtonBox
 
+from controller.cli.connect_command import get_math_enabled_jinja_env
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 if TYPE_CHECKING:
     from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
+
+
+class _IterationAndTemplateDialog(QDialog):
+    """Dialog to query iteration count and templates."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        """Initialize using given parent."""
+        super().__init__(parent)
+        self.setModal(True)
+        self.setWindowTitle("Specify Sub Outputs")
+        self.setMinimumWidth(300)
+        layout = QFormLayout()
+        layout.addWidget(QLabel("Please enter the name template and number of iterations.\n"
+                                "Math filters are supported."))
+        self._name_tb = QLineEdit()
+        self._name_tb.setText("{{ i }}")
+        self._name_tb.setPlaceholderText("Use Jinja Tag {{ i }} to access iterator.")
+        layout.addRow("Name Template:", self._name_tb)
+        self._iterator_sb = QSpinBox()
+        self._iterator_sb.setMinimum(1)
+        self._iterator_sb.setMaximum(16384)
+        self._iterator_sb.setValue(2)
+        layout.addRow("Iterations:", self._iterator_sb)
+        self._button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self._button_box.rejected.connect(self.close)
+        self._button_box.accepted.connect(self.accept)
+        layout.addWidget(self._button_box)
+        self.setLayout(layout)
+
+    @property
+    def generated_names(self) -> list[str]:
+        """Get the names the user generated."""
+        jinja_env = get_math_enabled_jinja_env()
+        template = jinja_env.from_string(self._name_tb.text())
+        return [template.render({"i": i}) for i in range(self._iterator_sb.value())]
 
 
 class ColorGroupWidget(QWidget):
@@ -38,7 +75,7 @@ class ColorGroupWidget(QWidget):
         self._group_view.setSelectionMode(QTreeWidget.SelectionMode.SingleSelection)
         layout.addWidget(self._group_view)
         self.setLayout(layout)
-        self._input_dialog: QInputDialog | None = None
+        self._input_dialog: QInputDialog | QMessageBox | _IterationAndTemplateDialog | None = None
         self._refresh_tree_view()
 
     def _refresh_tree_view(self) -> None:
@@ -117,4 +154,14 @@ class ColorGroupWidget(QWidget):
         group_item.addChild(output_item)
 
     def _add_sub_output_range(self) -> None:
-        pass  # TODO add multiple sub outputs using dialog querying interation count and jinja template
+        if self._input_dialog is not None:
+            self._input_dialog.deleteLater()
+        self._input_dialog = _IterationAndTemplateDialog(self)
+        self._input_dialog.accepted.connect(self.__add_sub_output_range_final)
+        self._input_dialog.show()
+
+    def __add_sub_output_range_final(self) -> None:
+        for name in self._input_dialog.generated_names:
+            self._add_sub_output(name)
+        self._input_dialog.deleteLater()
+        self._input_dialog = None
