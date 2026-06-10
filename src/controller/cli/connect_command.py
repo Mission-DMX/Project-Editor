@@ -30,6 +30,7 @@ def _div(value: str, arg: str) -> str:
     return str(int(int(value) / int(arg)))
 
 def get_math_enabled_jinja_env() -> Environment:
+    """Get a Jinja environment with enabled math filters."""
     env = Environment()  # NOQA: S701 the editor is not a web page.
     env.filters["add"] = _add
     env.filters["sub"] = _sub
