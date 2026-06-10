@@ -207,7 +207,11 @@ class ColordirectorVFilter(VirtualFilter):
 
     def get_outputs(self) -> list[str]:
         """Get the outputs of this filter."""
-        return list(self._color_groups.keys())
+        output_list = []
+        for group, sub_outs in self._color_groups.items():
+            output_list.extend([f"{group}__{output}" for output in sub_outs])
+        output_list.sort()
+        return output_list
 
     @override
     def serialize(self) -> None:

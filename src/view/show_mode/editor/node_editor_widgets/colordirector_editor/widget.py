@@ -118,6 +118,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         # TODO update outputs of filter
 
     def _reload_presets_table(self) -> None:
+        self._load_default_colors_button.setEnabled(len(self._model.presets) == 0)
         self._in_preset_table_rebuild = True
         tw = self._preset_table
         tw.clear()

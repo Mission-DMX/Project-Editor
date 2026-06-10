@@ -56,10 +56,10 @@ class ColorDirectorVFilterNode(FilterNode):
         """Initialize."""
         super().__init__(model, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, name,
                          terminals={"time": {"io": "in"}, "time_scale": {"io": "in"}})
+        self.update_node_after_settings_changed()
 
     @override
     def update_node_after_settings_changed(self) -> None:
-
         f = self.filter
         if not isinstance(f, ColordirectorVFilter):
             raise ValueError("Expected ColordirectorVFilter.")
@@ -67,8 +67,10 @@ class ColorDirectorVFilterNode(FilterNode):
         new_outputs = f.get_outputs()
         for output in new_outputs:
             if output not in existing_outputs:
+                self.filter.out_data_types[output] = DataType.DT_COLOR
                 self.addOutput(output)
-        for output in existing_outputs:
-            if output not in new_outputs:
-                self.removeTerminal(output)
+        outputs_to_remove = [output for output in existing_outputs if output not in new_outputs]
+        for output in outputs_to_remove:
+            self.filter.out_data_types[output] = None
+            self.removeTerminal(output)
 
