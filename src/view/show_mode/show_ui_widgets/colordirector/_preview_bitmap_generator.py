@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtCore import QRunnable, Signal
+from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QBrush, QPainter, QPixmap, Qt
 
 if TYPE_CHECKING:
+    from PySide6.QtCore import QObject
+
     from model.virtual_filters.colordirector_vfilter import ColorPreset
 
 
-class PreviewBitmapGenerator(QRunnable):
+class PreviewBitmapGenerator(QThread):
     """Class to generate previews for presets.
 
     The runner will call the preset_preview_generated for every generated preset and will call finished once it is
@@ -20,10 +22,9 @@ class PreviewBitmapGenerator(QRunnable):
     """
 
     preset_preview_generated = Signal(int, QPixmap)
-    finished = Signal()
 
-    def __init__(self, presets: list[ColorPreset], size: int = 32) -> None:
-        super().__init__()
+    def __init__(self, presets: list[ColorPreset], size: int = 32, parent: QObject | None = None) -> None:
+        super().__init__(parent)
         self._presets = presets
         self._size = size
 
@@ -38,9 +39,10 @@ class PreviewBitmapGenerator(QRunnable):
             num_colors = len(colors)
             last_angle = 0
             arc_size = int((360 * 16) / num_colors)
+            p.setPen(Qt.PenStyle.NoPen)
             for color in colors:
-                p.setBrush(QBrush(color))
-                p.drawPie(rect, last_angle, last_angle + arc_size)
+                p.setBrush(QBrush(color.to_qt_color()))
+                p.drawPie(rect, last_angle, arc_size)
                 last_angle += arc_size
             p.end()
             self.preset_preview_generated.emit(i, pixmap)

@@ -3,6 +3,7 @@ from typing import override
 from PySide6.QtWidgets import QDialog, QWidget
 
 from model import UIPage, UIWidget
+from view.show_mode.show_ui_widgets.colordirector._controller_widget import ControllerWidget
 
 
 class ColorDirectorShowUIWidget(UIWidget):
@@ -14,15 +15,15 @@ class ColorDirectorShowUIWidget(UIWidget):
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
-        pass  # TODO
+        return []  # TODO
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        pass  # TODO
+        return ControllerWidget(self.parent.scene.get_filter_by_id(self.filter_ids[0]), parent)
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        pass  # TODO
+        return ControllerWidget(self.parent.scene.get_filter_by_id(self.filter_ids[0]), parent)
 
     @override
     def copy(self, new_parent: UIPage) -> UIWidget:

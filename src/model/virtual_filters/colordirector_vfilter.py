@@ -100,6 +100,11 @@ class ColordirectorVFilter(VirtualFilter):
         """Get the color output group dictionary."""
         return self._color_groups
 
+    @property
+    def recalls(self) -> list[list[int]]:
+        """Returns the list of setting recalls."""
+        return self._recalls
+
     def get_ambient_color_count(self) -> int:
         """Get the maximum number of ambient colors in presets."""
         maximum = 0
