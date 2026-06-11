@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QSpinBox, QWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QWidget
 
 from view.show_mode.show_ui_widgets.colordirector._preview_bitmap_generator import PreviewBitmapGenerator
+from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QPixmap
@@ -23,7 +24,8 @@ class ControllerWidget(QWidget):
         number_of_groups = len(model.output_groups.keys())
         number_of_presets = len(model.presets)
         layout = QGridLayout()
-        self._recall_sp = QSpinBox()
+        self._recall_sp = JogwheelSpinBox()
+        self._recall_sp.value_submitted.connect(self._recall_issued)
         recall_count = len(model.recalls)
         self._recall_sp.setRange(0, recall_count)
         self._recall_sp.setEnabled(recall_count > 0)
@@ -66,6 +68,9 @@ class ControllerWidget(QWidget):
         pass  # TODO
 
     def _apply_single_clicked(self, group_index: int, preset_index: int) -> None:
+        pass  # TODO
+
+    def _recall_issued(self, recall_index: int) -> None:
         pass  # TODO
 
     def _add_preview_on_buttons(self, preview_index: int, image: QPixmap) -> None:
