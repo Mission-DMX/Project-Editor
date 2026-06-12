@@ -15,6 +15,7 @@ from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter, ColorPreset
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.colordirector_editor._color_group_widget import ColorGroupWidget
+from view.show_mode.editor.node_editor_widgets.colordirector_editor._recall_editor import RecallEditWidget
 from view.show_mode.editor.node_editor_widgets.colordirector_editor.color_cell_delegate import ColorCellDelegate
 from view.show_mode.editor.node_editor_widgets.colordirector_editor.fadein_time_cell_delegate import (
     FadeinTimeCellDelegate,
@@ -69,6 +70,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         presets_layout.addLayout(preset_buttons_layout)
         self._preset_table = QTableWidget(presets_tab)
         self._preset_table.cellChanged.connect(self._preset_cell_edited)
+        # TODO if in live editing, automatically jump to second tab
         # TODO implement live preview mode: 1. Disable color group editing if in live preview. 2. Use Color constants
         #  for all outputs in group. 3. implement cellEntered signal to set output to current selected color preset
         #  4. Use a single color fader to dial in the color. On update: Calculate color distributions and apply them to
@@ -78,10 +80,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         presets_tab.setLayout(presets_layout)
         self._widget.addTab(presets_tab, "Presets")
 
-        recall_tab = QWidget(self._widget)
-        recall_layout = QVBoxLayout()
-        recall_layout.addWidget(QLabel("Recalls: TableWidget rows=recall columns=index"))
-        recall_tab.setLayout(recall_layout)
+        recall_tab = RecallEditWidget(self._model, self._widget)
         self._widget.addTab(recall_tab, "Recalls")
 
     @override
