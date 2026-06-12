@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QLabel, QStyledItemDelegate, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QStyledItemDelegate, QWidget
 
 from model.color_hsi import ColorHSI
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
+from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
 if TYPE_CHECKING:
     from PySide6.QtCore import QAbstractItemModel, QLocale, QModelIndex
@@ -25,16 +26,18 @@ class ColorEditWidget(QWidget):
         self._color_label = ColorLabel()
         self._color_label.setFixedSize(16, 16)
         layout.addWidget(self._color_label)
-        self._hue_edit = QDoubleSpinBox()
+        self._hue_edit = JogwheelDoubleSpinBox()
         self._hue_edit.setRange(0, 359.99)
         self._hue_edit.valueChanged.connect(self._update_color)
         layout.addWidget(self._hue_edit)
-        self._sat_edit = QDoubleSpinBox()
+        self._sat_edit = JogwheelDoubleSpinBox()
         self._sat_edit.valueChanged.connect(self._update_color)
+        self._sat_edit.setSingleStep(0.1)
         self._sat_edit.setRange(0, 1)
         layout.addWidget(self._sat_edit)
-        self._val_edit = QDoubleSpinBox()
+        self._val_edit = JogwheelDoubleSpinBox()
         self._val_edit.valueChanged.connect(self._update_color)
+        self._val_edit.setSingleStep(0.1)
         self._val_edit.setRange(0, 1)
         layout.addWidget(self._val_edit)
         self.setLayout(layout)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QSpinBox
+from PySide6.QtWidgets import QDoubleSpinBox, QSpinBox
 
 from model import Broadcaster
 
@@ -24,6 +24,42 @@ class JogwheelSpinBox(QSpinBox):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Initialize just like QSpinBox."""
+        super().__init__(parent)
+        self._broadcaster = Broadcaster()
+        self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
+        self._broadcaster.jogwheel_rotated_right.connect(self._jg_up)
+
+    @override
+    def keyPressEvent(self, event: QKeyEvent, /) -> None:
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and self.hasFocus():
+            self.value_submitted.emit(self.value())
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def _jg_down(self) -> None:
+        if self.hasFocus():
+            val = self.value() - self.singleStep()
+            if val >= self.minimum():
+                self.setValue(val)
+
+    def _jg_up(self) -> None:
+        if self.hasFocus():
+            val = self.value() + self.singleStep()
+            if val >= self.maximum():
+                self.setValue(val)
+
+class JogwheelDoubleSpinBox(QDoubleSpinBox):
+    """DoubleSpinBox with jogwheel support and enter key causing action.
+
+    If the user presses enter while editing, the value_submitted signal will be emitted.
+
+    """
+
+    value_submitted = Signal(int)
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        """Initialize just like QDoubleSpinBox."""
         super().__init__(parent)
         self._broadcaster = Broadcaster()
         self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
