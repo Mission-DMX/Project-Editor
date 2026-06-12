@@ -28,6 +28,7 @@ class JogwheelSpinBox(QSpinBox):
         self._broadcaster = Broadcaster()
         self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
         self._broadcaster.jogwheel_rotated_right.connect(self._jg_up)
+        # TODO also trigger value_submitted if in focus and xtouch enter pressed
 
     @override
     def keyPressEvent(self, event: QKeyEvent, /) -> None:
@@ -64,6 +65,7 @@ class JogwheelDoubleSpinBox(QDoubleSpinBox):
         self._broadcaster = Broadcaster()
         self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
         self._broadcaster.jogwheel_rotated_right.connect(self._jg_up)
+        # TODO also trigger value_submitted if in focus and xtouch enter pressed
 
     @override
     def keyPressEvent(self, event: QKeyEvent, /) -> None:

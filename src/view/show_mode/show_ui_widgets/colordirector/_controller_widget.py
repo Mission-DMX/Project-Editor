@@ -71,7 +71,10 @@ class ControllerWidget(QWidget):
         # TODO implement buttons with active color being down
 
     def _apply_whole_group_clicked(self, preset_index: int) -> None:
-        pass  # TODO
+        self._update_list.clear()
+        self._update_list.extend(self._model.get_update_msg_for_group_preset_change(group_name, preset_index)
+                                 for group_name in self._output_group_list)
+        self.update_requested.emit()
 
     def _apply_single_clicked(self, group_index: int, preset_index: int) -> None:
         self._update_list.append(
@@ -83,7 +86,11 @@ class ControllerWidget(QWidget):
         self.update_requested.emit()
 
     def _recall_issued(self, recall_index: int) -> None:
-        pass  # TODO
+        self._update_list.clear()
+        recall = self._model.recalls[recall_index]
+        self._update_list.extend(self._model.get_update_msg_for_group_preset_change(group_name, recall[i])
+                                 for i, group_name in enumerate(self._output_group_list))
+        self.update_requested.emit()
 
     def _add_preview_on_buttons(self, preview_index: int, image: QPixmap) -> None:
         icon_size = self._apply_single_buttons[0][0].size()
