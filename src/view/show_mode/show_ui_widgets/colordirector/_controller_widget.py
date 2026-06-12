@@ -16,9 +16,12 @@ if TYPE_CHECKING:
 class ControllerWidget(QWidget):
     """Widget provides button matrix, group labels and recall field."""
 
-    def __init__(self, model: ColordirectorVFilter, parent: QWidget | None = None) -> None:
+    def __init__(self, model: ColordirectorVFilter,
+                 update_list: list[tuple[str, str]] | None,
+                 parent: QWidget | None = None) -> None:
         """Initialize and generate button matrix."""
         super().__init__(parent)
+        self._update_list: list[tuple[str, str]] | None = update_list
         element_size = 64
         self._model = model
         number_of_groups = len(model.output_groups.keys())
