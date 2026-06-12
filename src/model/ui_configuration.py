@@ -256,10 +256,6 @@ class UIPage:
         """Returns a copy of the internal widget list."""
         return list(self._widgets)
 
-    def remove_widget(self, widget: UIWidget) -> None:
-        """Remove the specified widget from this page."""
-        self._widgets.remove(widget)
-
     @property
     def title(self) -> str:
         """Get or set page title."""
