@@ -291,3 +291,16 @@ class ColordirectorVFilter(VirtualFilter):
         # TODO implement call <int> <int>
         # TODO implement call-column <int>
         pass  # TODO
+
+    def get_update_msg_for_group_preset_change(self, color_group_name: str, preset_index: int) -> tuple[str, str]:
+        """Generate message to set the color group value to the given preset.
+
+        Args:
+            color_group_name: The key of the group to update.
+            preset_index: The index of the preset to use.
+
+        Returns:
+            A tuple containing the [target filter ID]:[update key] and update value.
+
+        """
+        return f"{self.filter_id}__cue__{_sanitize_channel_name(color_group_name)}:run_cue", str(preset_index)

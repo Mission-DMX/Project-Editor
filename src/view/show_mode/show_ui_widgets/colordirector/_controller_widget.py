@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QWidget
 
 from view.show_mode.show_ui_widgets.colordirector._preview_bitmap_generator import PreviewBitmapGenerator
@@ -15,6 +16,8 @@ if TYPE_CHECKING:
 
 class ControllerWidget(QWidget):
     """Widget provides button matrix, group labels and recall field."""
+
+    update_requested = Signal()
 
     def __init__(self, model: ColordirectorVFilter,
                  update_list: list[tuple[str, str]] | None,
@@ -35,8 +38,8 @@ class ControllerWidget(QWidget):
         # TODO connect recall enter event and enable jog wheel
         self._recall_sp.setMaximumSize(100, element_size)
         layout.addWidget(self._recall_sp, 0, 0)
-        output_group_list = list(model.output_groups.keys())
-        for i, group in enumerate(output_group_list):
+        self._output_group_list = list(model.output_groups.keys())
+        for i, group in enumerate(self._output_group_list):
             label = QLabel(group)
             label.setWordWrap(True)
             label.setFixedWidth(100)
@@ -53,7 +56,7 @@ class ControllerWidget(QWidget):
         self._preview_generator = PreviewBitmapGenerator(model.presets, size=element_size)
         for y in range(len(model.presets)):
             preset_buttons = []
-            for x in range(len(output_group_list)):
+            for x in range(len(self._output_group_list)):
                 button = QPushButton()
                 button.setFixedSize(element_size, element_size)
                 button.clicked.connect(lambda _,preset_i=y,group_i=x: self._apply_single_clicked(group_i, preset_i))
@@ -71,7 +74,13 @@ class ControllerWidget(QWidget):
         pass  # TODO
 
     def _apply_single_clicked(self, group_index: int, preset_index: int) -> None:
-        pass  # TODO
+        self._update_list.append(
+            self._model.get_update_msg_for_group_preset_change(
+                self._output_group_list[group_index],
+                preset_index
+            )
+        )
+        self.update_requested.emit()
 
     def _recall_issued(self, recall_index: int) -> None:
         pass  # TODO
