@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -63,6 +64,8 @@ class _IterationAndTemplateDialog(QDialog):
 
 class ColorGroupWidget(QWidget):
     """Widget to edit color groups in color director vfilter."""
+
+    group_added = Signal()
 
     def __init__(self, model: ColordirectorVFilter, parent: QWidget | None = None) -> None:
         """Initialize using given model and optional parent."""
@@ -145,6 +148,7 @@ class ColorGroupWidget(QWidget):
         group_item.setText(0, name)
         group_item.annotated_data = (True, name)
         self._group_view.addTopLevelItem(group_item)
+        self.group_added.emit()
 
     def _add_sub_output_clicked(self) -> None:
         if self._input_dialog is not None:

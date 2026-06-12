@@ -81,6 +81,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._widget.addTab(presets_tab, "Presets")
 
         recall_tab = RecallEditWidget(self._model, self._widget)
+        color_groups_tab.group_added.connect(recall_tab.update_recall_table)
         self._widget.addTab(recall_tab, "Recalls")
 
     @override
