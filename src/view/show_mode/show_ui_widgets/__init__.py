@@ -24,7 +24,7 @@ from view.show_mode.show_ui_widgets.sequencer_control import SequencerControlUIW
 from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
 
 """
-The widget library contains information about widgets, provided by their slug. The infomration that is stored consists
+The widget library contains information about widgets, provided by their slug. The information that is stored consists
 out of the human readable name, the type required to instantiate a requested widget, the supported filter types (that
 should be selected for construction) and a number indicating how many filters should be selected.
 """
