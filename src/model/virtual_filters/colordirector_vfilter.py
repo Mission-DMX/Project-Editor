@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
+from PySide6.QtCore import Signal
+
 from controller.network import NetworkManager
 from model import DataType, Filter
 from model.color_hsi import ColorHSI
@@ -14,6 +16,7 @@ from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.cue_vfilter import CueFilter
 
 if TYPE_CHECKING:
+    import proto.FilterMode_pb2
     from model.scene import Scene
 
 
@@ -78,6 +81,8 @@ class ColordirectorVFilter(VirtualFilter):
 
     """
 
+    configuration_changed = Signal()
+
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         """Initializes the virtual filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, pos=pos)
@@ -86,6 +91,9 @@ class ColordirectorVFilter(VirtualFilter):
         self._recalls: list[list[int]] = []
         self.in_data_types["time"] = DataType.DT_DOUBLE
         self._in_data_types["time_scale"] = DataType.DT_DOUBLE
+        self._registered_callbacks: list[tuple[int, str]] = []
+        self._current_active_colors: list[int] = []
+        self._cue_filter_to_group_index_mapping: dict[str, int] = {}
 
     @property
     def presets(self) -> list[ColorPreset]:
@@ -245,6 +253,11 @@ class ColordirectorVFilter(VirtualFilter):
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
+        for callback in self._registered_callbacks:
+            self.scene.board_configuration.clear_filter_update_callbacks(callback[0], callback[1])
+        self._registered_callbacks.clear()
+        self._current_active_colors.clear()
+        self._cue_filter_to_group_index_mapping.clear()
         timescale_input = self.channel_links.get("time_scale")
         if timescale_input is None:
             float_const = Filter(self.scene, f"{self.filter_id}__timescale_const",
@@ -258,7 +271,8 @@ class ColordirectorVFilter(VirtualFilter):
                                  FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, pos=self.pos)
             time_input = time_filter.filter_id + ":value"
             filter_list.append(time_filter)
-        for color_group_name, output_channels in self._color_groups.items():
+        for group_index, item in enumerate(self._color_groups.items()):
+            color_group_name, output_channels = item
             cue_filter = CueFilter(self.scene,
                                    f"{self.filter_id}__cue__{_sanitize_channel_name(color_group_name)}",
                                    pos=self.pos)
@@ -284,6 +298,13 @@ class ColordirectorVFilter(VirtualFilter):
                 cfm.default_cue = 0
             cue_filter.filter_configurations.update(cfm.get_as_configuration())
             cue_filter.instantiate_filters(filter_list)
+            self.scene.board_configuration.register_filter_update_callback(
+                self.scene.scene_id,
+                cue_filter.filter_id,
+                self._update_active_colors_from_filters
+            )
+            self._registered_callbacks.append((self.scene.scene_id, cue_filter.filter_id))
+            self._cue_filter_to_group_index_mapping[cue_filter.filter_id] = group_index
 
     @override
     def handle_filter_message(self, key: str, value: str) -> bool:
@@ -347,6 +368,11 @@ class ColordirectorVFilter(VirtualFilter):
                 return False
         return True
 
+    def _update_active_colors_from_filters(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        group_index = self._cue_filter_to_group_index_mapping[param.filter_id]
+        self._current_active_colors[group_index] = int(param.parameter_value.split(";")[1])
+        self.configuration_changed.emit()
+
     def get_current_active_colors(self) -> list[int]:
         """Get the current active color presets.
 
@@ -354,7 +380,7 @@ class ColordirectorVFilter(VirtualFilter):
             A list of indexes or an empty list if the filter was not applied and did not receive updates.
 
         """
-        return []  # TODO
+        return self._current_active_colors
 
     def get_update_msg_for_group_preset_change(self, color_group_name: str, preset_index: int) -> tuple[str, str]:
         """Generate message to set the color group value to the given preset.

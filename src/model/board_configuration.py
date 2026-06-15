@@ -264,6 +264,18 @@ class BoardConfiguration:
             return
         if c in callable_list:
             callable_list.remove(c)
+        logger.debug("Remaining callbacks for (%s, %s): %s",
+                     target_scene, target_filter_id, len(callable_list))
+
+    def clear_filter_update_callbacks(self, target_scene: int, target_filter_id: str) -> None:
+        """Clear out all callbacks for provided filter.
+
+        Args:
+            target_scene: The scene the callbacks belongs to.
+            target_filter_id: The filter id which they are listening on.
+
+        """
+        self._filter_update_msg_register.pop((target_scene, target_filter_id))
 
     def add_macro(self, macro: Macro) -> None:
         """Add a new macro to the show file.

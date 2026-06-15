@@ -21,6 +21,7 @@ class ControllerWidget(QWidget):
 
     def __init__(self, model: ColordirectorVFilter,
                  update_list: list[tuple[str, str]] | None,
+                 feedback_enabled: bool = False,
                  parent: QWidget | None = None) -> None:
         """Initialize and generate button matrix."""
         super().__init__(parent)
@@ -31,7 +32,8 @@ class ControllerWidget(QWidget):
         number_of_presets = len(model.presets)
         layout = QGridLayout()
         self._recall_sp = JogwheelSpinBox()
-        self._recall_sp.value_submitted.connect(self._recall_issued)
+        if update_list is not None:
+            self._recall_sp.value_submitted.connect(self._recall_issued)
         recall_count = len(model.recalls)
         self._recall_sp.setRange(0, recall_count)
         self._recall_sp.setEnabled(recall_count > 0)
@@ -45,11 +47,12 @@ class ControllerWidget(QWidget):
             label.setFixedWidth(100)
             label.setMaximumHeight(element_size)
             layout.addWidget(label, i + 1, 0)
-        self._apply_group_buttons = []
+        self._apply_group_buttons: list[QPushButton] = []
         for i in range(number_of_presets):
             group_button = QPushButton("🠋")
             group_button.setFixedSize(element_size, element_size)
-            group_button.clicked.connect(lambda _,ii=i: self._apply_whole_group_clicked(ii))
+            if update_list is not None:
+                group_button.clicked.connect(lambda _,ii=i: self._apply_whole_group_clicked(ii))
             self._apply_group_buttons.append(group_button)
             layout.addWidget(group_button, 0, i + 1)
         self._apply_single_buttons: list[list[QPushButton]] = []
@@ -59,7 +62,8 @@ class ControllerWidget(QWidget):
             for x in range(len(self._output_group_list)):
                 button = QPushButton()
                 button.setFixedSize(element_size, element_size)
-                button.clicked.connect(lambda _,preset_i=y,group_i=x: self._apply_single_clicked(group_i, preset_i))
+                if update_list is not None:
+                    button.clicked.connect(lambda _,preset_i=y,group_i=x: self._apply_single_clicked(group_i, preset_i))
                 preset_buttons.append(button)
                 layout.addWidget(button, x + 1, y + 1)
             self._apply_single_buttons.append(preset_buttons)
@@ -68,7 +72,8 @@ class ControllerWidget(QWidget):
         self.setMinimumSize(number_of_presets * element_size + 100, (number_of_groups + 1) * element_size)
         self.setLayout(layout)
         self._preview_generator.start()
-        # TODO implement buttons with active color being down
+        if feedback_enabled:
+            self._model.configuration_changed.connect(self._active_colors_changed)
 
     def _apply_whole_group_clicked(self, preset_index: int) -> None:
         self._update_list.clear()
@@ -104,3 +109,10 @@ class ControllerWidget(QWidget):
         if self._preview_generator is not None:
             self._preview_generator.deleteLater()
         self._preview_generator = None
+
+    def _active_colors_changed(self) -> None:
+        active_colors = self._model.get_current_active_colors()
+        for i, group_buttons in enumerate(self._apply_single_buttons):
+            active_color_in_group = active_colors[i] if len(active_colors) > i else -1
+            for j, button in enumerate(group_buttons):
+                button.setDown(j == active_color_in_group)

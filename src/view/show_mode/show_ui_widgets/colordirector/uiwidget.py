@@ -23,13 +23,18 @@ class ColorDirectorShowUIWidget(UIWidget):
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        w = ControllerWidget(self.parent.scene.get_filter_by_id(self.filter_ids[0]), self._pending_updates, parent)
+        w = ControllerWidget(
+            self.parent.scene.get_filter_by_id(self.filter_ids[0]),
+            self._pending_updates,
+            True,
+            parent
+        )
         w.update_requested.connect(self.push_update)
         return w
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        return ControllerWidget(self.parent.scene.get_filter_by_id(self.filter_ids[0]), None, parent)
+        return ControllerWidget(self.parent.scene.get_filter_by_id(self.filter_ids[0]), None, False, parent)
 
     @override
     def copy(self, new_parent: UIPage) -> UIWidget:
