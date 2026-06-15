@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
+from controller.network import NetworkManager
 from model import DataType, Filter
 from model.color_hsi import ColorHSI
 from model.filter import FilterTypeEnumeration, VirtualFilter
@@ -286,11 +287,74 @@ class ColordirectorVFilter(VirtualFilter):
 
     @override
     def handle_filter_message(self, key: str, value: str) -> bool:
-        # TODO implement save-selection-to-recall <int>
-        # TODO implement recall <int | str>
-        # TODO implement call <int> <int>
-        # TODO implement call-column <int>
-        pass  # TODO
+        match key:
+            case "save-selection-to-recall":
+                try:
+                    target_recall = int(value)
+                except ValueError:
+                    return False
+                if target_recall < 0:
+                    return False
+                if target_recall >= len(self._recalls):
+                    self._recalls.append([])
+                    selected_recall = self._recalls[-1]
+                else:
+                    selected_recall = self._recalls[target_recall]
+                current_colors = self.get_current_active_colors()
+                if len(current_colors) == 0:
+                    return False
+                selected_recall.clear()
+                selected_recall.extend(current_colors)
+                return True
+            case "recall":
+                try:
+                    target_recall = int(value)
+                except ValueError:
+                    return False
+                try:
+                    recall = self._recalls[target_recall]
+                except IndexError:
+                    return False
+                nm = NetworkManager()
+                for i, group_name in enumerate(self._color_groups.keys()):
+                    filter_id, value = self.get_update_msg_for_group_preset_change(group_name, recall[i])
+                    filter_id, msg_key = filter_id.split(":")
+                    nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, value, enque=True)
+                return True
+            case "call":
+                try:
+                    group_name, color_preset_index = value.split(",")
+                    color_preset_index = int(color_preset_index)
+                except ValueError:
+                    return False
+                nm = NetworkManager()
+                filter_id, value = self.get_update_msg_for_group_preset_change(group_name, color_preset_index)
+                filter_id, msg_key = filter_id.split(":")
+                nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, value, enque=True)
+                return True
+            case "call-column":
+                try:
+                    color_preset_index = int(value)
+                except ValueError:
+                    return False
+                nm = NetworkManager()
+                for group_name in self._color_groups:
+                    filter_id, value = self.get_update_msg_for_group_preset_change(group_name, color_preset_index)
+                    filter_id, msg_key = filter_id.split(":")
+                    nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, value, enque=True)
+                return True
+            case _:
+                return False
+        return True
+
+    def get_current_active_colors(self) -> list[int]:
+        """Get the current active color presets.
+
+        Returns:
+            A list of indexes or an empty list if the filter was not applied and did not receive updates.
+
+        """
+        return []  # TODO
 
     def get_update_msg_for_group_preset_change(self, color_group_name: str, preset_index: int) -> tuple[str, str]:
         """Generate message to set the color group value to the given preset.
