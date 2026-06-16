@@ -10,8 +10,6 @@ import abc
 from enum import IntFlag, auto
 from typing import TYPE_CHECKING, Union
 
-from PySide6.QtCore import QObject
-
 if TYPE_CHECKING:
     from . import Scene
 
@@ -177,7 +175,7 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_RESPONDING_CONSTANT_COLOR = 74
 
 
-class Filter(QObject):
+class Filter:
     """Filter for a show file."""
 
     def __init__(
@@ -200,7 +198,6 @@ class Filter(QObject):
         initial_parameters: The initial parameters of the filter.
 
         """
-        super().__init__()
         if pos is None:
             pos = [0.0, 0.0]
 

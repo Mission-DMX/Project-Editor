@@ -73,7 +73,7 @@ class ControllerWidget(QWidget):
         self.setLayout(layout)
         self._preview_generator.start()
         if feedback_enabled:
-            self._model.configuration_changed.connect(self._active_colors_changed)
+            self._model.configuration_changed.mapped_signal.connect(self._active_colors_changed)
 
     def _apply_whole_group_clicked(self, preset_index: int) -> None:
         self._update_list.clear()
@@ -113,6 +113,6 @@ class ControllerWidget(QWidget):
     def _active_colors_changed(self) -> None:
         active_colors = self._model.get_current_active_colors()
         for i, group_buttons in enumerate(self._apply_single_buttons):
-            active_color_in_group = active_colors[i] if len(active_colors) > i else -1
             for j, button in enumerate(group_buttons):
-                button.setDown(j == active_color_in_group)
+                active_color_in_group = active_colors[j] if len(active_colors) > j else -1
+                button.setDown(i == active_color_in_group)

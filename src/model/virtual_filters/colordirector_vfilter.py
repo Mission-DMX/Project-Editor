@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QObject, Signal
 
 from controller.network import NetworkManager
 from model import DataType, Filter
@@ -65,6 +65,16 @@ def _sanitize_channel_name(name: str) -> str:
             replace("__", "-").replace(" ", "_").strip())
 
 
+class SignalProvider(QObject):
+    """This class provides a QObject in order to enable filters using signals."""
+
+    mapped_signal = Signal()
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        """Initialize a SignalProvider."""
+        super().__init__(parent)
+
+
 class ColordirectorVFilter(VirtualFilter):
     """VFilter to provide selectable colors.
 
@@ -81,8 +91,6 @@ class ColordirectorVFilter(VirtualFilter):
 
     """
 
-    configuration_changed = Signal()
-
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
         """Initializes the virtual filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, pos=pos)
@@ -94,6 +102,7 @@ class ColordirectorVFilter(VirtualFilter):
         self._registered_callbacks: list[tuple[int, str]] = []
         self._current_active_colors: list[int] = []
         self._cue_filter_to_group_index_mapping: dict[str, int] = {}
+        self.configuration_changed = SignalProvider()
 
     @property
     def presets(self) -> list[ColorPreset]:
@@ -136,7 +145,7 @@ class ColordirectorVFilter(VirtualFilter):
             output_channels.pop(0)
             self._color_groups[name] = output_channels
             for chan_name in output_channels:
-                self.out_data_types[chan_name] = DataType.DT_COLOR
+                self.out_data_types[f"{name}__{chan_name}"] = DataType.DT_COLOR
 
     def _serialize_color_groups(self) -> None:
         self.filter_configurations["colorgroups"] = "#".join(f"{_sanitize_channel_name(name)}|{
@@ -370,8 +379,16 @@ class ColordirectorVFilter(VirtualFilter):
 
     def _update_active_colors_from_filters(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         group_index = self._cue_filter_to_group_index_mapping[param.filter_id]
-        self._current_active_colors[group_index] = int(param.parameter_value.split(";")[1])
-        self.configuration_changed.emit()
+        changed: bool = False
+        if len(self._current_active_colors) == 0:
+            self._current_active_colors.extend([0] * len(self._color_groups))
+            changed = True
+        value = int(param.parameter_value.split(";")[1])
+        if self._current_active_colors[group_index] != value:
+            self._current_active_colors[group_index] = value
+            changed = True
+        if changed:
+            self.configuration_changed.mapped_signal.emit()
 
     def get_current_active_colors(self) -> list[int]:
         """Get the current active color presets.
