@@ -10,7 +10,7 @@ from controller.network import NetworkManager
 from model import DataType, Filter
 from model.color_hsi import ColorHSI
 from model.filter import FilterTypeEnumeration, VirtualFilter
-from model.filter_data.cues.cue import Cue, KeyFrame, StateColor
+from model.filter_data.cues.cue import Cue, EndAction, KeyFrame, StateColor
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.cue_vfilter import CueFilter
@@ -66,7 +66,7 @@ def _sanitize_channel_name(name: str) -> str:
 
 
 class SignalProvider(QObject):
-    """This class provides a QObject in order to enable filters using signals."""
+    """Class provides a QObject in order to enable filters using signals."""
 
     mapped_signal = Signal()
 
@@ -303,6 +303,7 @@ class ColordirectorVFilter(VirtualFilter):
                         state.color = colors[i % len(colors)]
                         kf.append_state(state)
                     cue.insert_frame(kf)
+                cue.end_action = EndAction.HOLD if len(preset.colors) < 2 else EndAction.START_AGAIN
             if len(self._presets) > 0:
                 cfm.default_cue = 0
             cue_filter.filter_configurations.update(cfm.get_as_configuration())
