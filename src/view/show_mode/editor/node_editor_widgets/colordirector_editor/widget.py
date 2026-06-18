@@ -69,6 +69,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         preset_buttons_layout.addStretch()
         presets_layout.addLayout(preset_buttons_layout)
         self._preset_table = QTableWidget(presets_tab)
+        # TODO add method to set preset images
         self._preset_table.cellChanged.connect(self._preset_cell_edited)
         # TODO if in live editing, automatically jump to second tab
         # TODO implement live preview mode: 1. Disable color group editing if in live preview. 2. Use Color constants
@@ -259,7 +260,6 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
     def _add_step_to_preset(self, preset: ColorPreset) -> None:
         preset.colors.append((0, TransferFunction.LINEAR, []))
-        # FIXME funny things happen with the data of following presets
         self._reload_presets_table()
 
     def _remove_last_step_from_preset(self, preset: ColorPreset) -> None:

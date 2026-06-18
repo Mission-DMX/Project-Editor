@@ -13,6 +13,8 @@ from model.filter import FilterTypeEnumeration, VirtualFilter
 from model.filter_data.cues.cue import Cue, EndAction, KeyFrame, StateColor
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.filter_data.transfer_function import TransferFunction
+from model.media_assets.image import AbstractImageAsset
+from model.media_assets.registry import get_asset_by_uuid
 from model.virtual_filters.cue_vfilter import CueFilter
 
 if TYPE_CHECKING:
@@ -35,6 +37,10 @@ class ColorPreset:
 
         """
         self.colors: list[tuple[int, TransferFunction, list[ColorHSI]]] = []
+        self._asset: AbstractImageAsset | None | str = None
+        if "?" in filter_str:
+            asset_uuid, filter_str = filter_str.split("?")
+            self._asset = asset_uuid
         if len(filter_str) > 0:
             for step_str in filter_str.split("#"):
                 duration, transf, colors = step_str.split("|")
@@ -57,7 +63,23 @@ class ColorPreset:
         parts: list[str] = []
         for duration, transfer_function, colors in self.colors:
             parts.append(f"{duration}|{transfer_function.value}|{"@".join(c.format_for_filter() for c in colors)}")
-        return "#".join(parts)
+        list_str = "#".join(parts)
+        if self.visualization_asset is not None:
+            return f"{self.visualization_asset.id}?{list_str}"
+        return list_str
+
+    @property
+    def visualization_asset(self) -> AbstractImageAsset | None:
+        """Optional image used to represent the preset."""
+        if isinstance(self._asset, str):
+            self._asset = get_asset_by_uuid(self._asset)
+            if not isinstance(self._asset, AbstractImageAsset):
+                self._asset = None
+        return self._asset
+
+    @visualization_asset.setter
+    def visualization_asset(self, asset: AbstractImageAsset | None) -> None:
+        self._asset = asset
 
 
 def _sanitize_channel_name(name: str) -> str:

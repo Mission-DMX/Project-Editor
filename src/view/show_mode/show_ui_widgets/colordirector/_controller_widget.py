@@ -37,7 +37,6 @@ class ControllerWidget(QWidget):
         recall_count = len(model.recalls)
         self._recall_sp.setRange(0, recall_count)
         self._recall_sp.setEnabled(recall_count > 0)
-        # TODO connect recall enter event and enable jog wheel
         self._recall_sp.setMaximumSize(100, element_size)
         layout.addWidget(self._recall_sp, 0, 0)
         self._output_group_list = list(model.output_groups.keys())
