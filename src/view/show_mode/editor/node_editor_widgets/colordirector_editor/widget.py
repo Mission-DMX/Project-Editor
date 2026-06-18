@@ -5,7 +5,6 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
-from mypyc.irbuild.specialize import str_encode_fast_path
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QMenu, QPushButton, QTableWidget, QTabWidget, QVBoxLayout, QWidget
 
@@ -23,10 +22,14 @@ from view.show_mode.editor.node_editor_widgets.colordirector_editor.fadein_time_
 from view.show_mode.editor.node_editor_widgets.colordirector_editor.transfer_function_cell_delegate import (
     TransferFunctionCellDelegate,
 )
+from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTableWidgetItem
 
 if TYPE_CHECKING:
+    from PySide6.QtWidgets import QDialog
+
     from model import Filter
+    from view.show_mode.editor.nodes import FilterNode
 
 
 logger = getLogger(__name__)
@@ -48,8 +51,8 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._model: ColordirectorVFilter = model
         self._widget = QTabWidget(parent)
         self._widget.setMinimumWidth(800)
-        color_groups_tab = ColorGroupWidget(self._model, self._widget)
-        self._widget.addTab(color_groups_tab, "Color Groups")
+        self._color_groups_tab = ColorGroupWidget(self._model, self._widget)
+        self._widget.addTab(self._color_groups_tab, "Color Groups")
 
         presets_tab = QWidget(self._widget)
         presets_layout = QVBoxLayout()
@@ -71,19 +74,15 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._preset_table = QTableWidget(presets_tab)
         # TODO add method to set preset images
         self._preset_table.cellChanged.connect(self._preset_cell_edited)
-        # TODO if in live editing, automatically jump to second tab
-        # TODO implement live preview mode: 1. Disable color group editing if in live preview. 2. Use Color constants
-        #  for all outputs in group. 3. implement cellEntered signal to set output to current selected color preset
-        #  4. Use a single color fader to dial in the color. On update: Calculate color distributions and apply them to
-        #  constants. 5. Pressing record applies the current fader color to the current entered cell and updates the
-        #  background color
         presets_layout.addWidget(self._preset_table)
         presets_tab.setLayout(presets_layout)
         self._widget.addTab(presets_tab, "Presets")
 
         recall_tab = RecallEditWidget(self._model, self._widget)
-        color_groups_tab.group_added.connect(recall_tab.update_recall_table)
+        self._color_groups_tab.group_added.connect(recall_tab.update_recall_table)
         self._widget.addTab(recall_tab, "Recalls")
+        self._dialog: QDialog | None = None
+        self._model.live_preview_mode = False
 
     @override
     def _get_configuration(self) -> dict[str, str]:
@@ -116,6 +115,11 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
     @override
     def parent_opened(self) -> None:
         super().parent_opened()
+        if len(self._model.output_groups) == 0:
+            return
+        self._dialog = YesNoDialog(self._widget, "Preview Mode", "Would you like to enable live editing?",
+                                   self._enable_live_preview)
+        self._dialog.setModal(True)
 
     def _reload_presets_table(self) -> None:
         self._load_default_colors_button.setEnabled(len(self._model.presets) == 0)
@@ -267,3 +271,19 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             return
         preset.colors.pop(-1)
         self._reload_presets_table()
+
+    def _enable_live_preview(self) -> None:
+        self._widget.setCurrentIndex(1)
+        self._color_groups_tab.setEnabled(False)
+        self._widget.setTabEnabled(0, False)
+        self._model.live_preview_mode = True
+        transmit_to_fish(self._model.scene.board_configuration, False)
+        # TODO 3. implement cellEntered signal to set output to current selected color preset
+        #  4. Use a single color fader to dial in the color. On update: Calculate color distributions and apply them to
+        #  constants. 5. Pressing record applies the current fader color to the current entered cell and updates the
+        #  background color
+
+    def parent_closed(self, filter_node: FilterNode) -> None:
+        self._model.live_preview_mode = False
+        transmit_to_fish(self._model.scene.board_configuration, False)
+        super().parent_closed(filter_node)

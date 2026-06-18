@@ -111,6 +111,8 @@ class ColordirectorVFilter(VirtualFilter):
     If the apply all buttons of the UI widget are pressed, the state will be applied to all cues.
     Fade-in curves are stored with the new steps per second time reference.
 
+    Setting live_preview_mode to true causes the filter to instantiate color constants that can be used instead of cues.
+
     """
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
@@ -125,6 +127,7 @@ class ColordirectorVFilter(VirtualFilter):
         self._current_active_colors: list[int] = []
         self._cue_filter_to_group_index_mapping: dict[str, int] = {}
         self.configuration_changed = SignalProvider()
+        self.live_preview_mode: bool = False
 
     @property
     def presets(self) -> list[ColorPreset]:
@@ -280,10 +283,18 @@ class ColordirectorVFilter(VirtualFilter):
         color_group = self._color_groups[color_group_name]
         if group_output_channel not in color_group:
             return None
+        if self.live_preview_mode:
+            return f"{self.filter_id}__preview_const__{color_group_name}__{group_output_channel}:value"
         return f"{self.filter_id}__cue__{color_group_name}:{group_output_channel}"
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
+        if self.live_preview_mode:
+            self._inst_filters_preview_mode(filter_list)
+        else:
+            self._inst_filters_normal_mode(filter_list)
+
+    def _inst_filters_normal_mode(self, filter_list: list[Filter]) -> None:
         for callback in self._registered_callbacks:
             self.scene.board_configuration.clear_filter_update_callbacks(callback[0], callback[1])
         self._registered_callbacks.clear()
@@ -337,6 +348,19 @@ class ColordirectorVFilter(VirtualFilter):
             )
             self._registered_callbacks.append((self.scene.scene_id, cue_filter.filter_id))
             self._cue_filter_to_group_index_mapping[cue_filter.filter_id] = group_index
+
+    def _inst_filters_preview_mode(self, filter_list: list[Filter]) -> None:
+        for output_group, sub_outputs in self._color_groups.items():
+            for sub_output in sub_outputs:
+                color_const_filter = Filter(
+                    self.scene,
+                    f"{self.filter_id}__preview_const__{output_group}__{sub_output}",
+                    FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
+                    self.pos,
+                    {},
+                    {"value": "0.0,0.0,1.0"}
+                )
+                filter_list.append(color_const_filter)
 
     @override
     def handle_filter_message(self, key: str, value: str) -> bool:
