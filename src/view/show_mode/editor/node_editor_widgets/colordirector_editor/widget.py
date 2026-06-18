@@ -283,6 +283,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         #  constants. 5. Pressing record applies the current fader color to the current entered cell and updates the
         #  background color
 
+    @override
     def parent_closed(self, filter_node: FilterNode) -> None:
         self._model.live_preview_mode = False
         transmit_to_fish(self._model.scene.board_configuration, False)
