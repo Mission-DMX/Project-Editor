@@ -362,6 +362,27 @@ class ColordirectorVFilter(VirtualFilter):
                 )
                 filter_list.append(color_const_filter)
 
+    def apply_colors_on_preview_constants(self, accent_colors: list[ColorHSI]) -> None:
+        """Apply the provided colors to the preview constants.
+
+        This method needs to be called from a Qt Event Thread. It will fail if the filter is not in live preview mode
+        or the scene has not been applied.
+
+        """
+        nm = NetworkManager()
+        if not self.live_preview_mode:
+            return
+        for output_group, sub_outputs in self._color_groups.items():
+            for i, sub_output in enumerate(sub_outputs):
+                nm.send_gui_update_to_fish(
+                    self.scene.scene_id,
+                    f"{self.filter_id}__preview_const__{output_group}__{sub_output}",
+                    "value",
+                    accent_colors[i % len(accent_colors)].format_for_filter(),
+                    enque=True
+                )
+        nm.push_messages()
+
     @override
     def handle_filter_message(self, key: str, value: str) -> bool:
         match key:

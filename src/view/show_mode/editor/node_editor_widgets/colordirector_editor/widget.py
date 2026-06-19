@@ -72,6 +72,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         preset_buttons_layout.addStretch()
         presets_layout.addLayout(preset_buttons_layout)
         self._preset_table = QTableWidget(presets_tab)
+        self._preset_table.cellClicked.connect(self._preset_cell_clicked)
         # TODO add method to set preset images
         self._preset_table.cellChanged.connect(self._preset_cell_edited)
         presets_layout.addWidget(self._preset_table)
@@ -278,10 +279,26 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._widget.setTabEnabled(0, False)
         self._model.live_preview_mode = True
         transmit_to_fish(self._model.scene.board_configuration, False)
-        # TODO 3. implement cellEntered signal to set output to current selected color preset
-        #  4. Use a single color fader to dial in the color. On update: Calculate color distributions and apply them to
-        #  constants. 5. Pressing record applies the current fader color to the current entered cell and updates the
-        #  background color
+
+    def _preset_cell_clicked(self, row: int, column: int) -> None:
+        if self._model.live_preview_mode:
+            item = self._preset_table.item(row, column)
+            if not isinstance(item, AnnotatedTableWidgetItem):
+                logger.error("Preview Cell %i:%i does not provide position data!", row, column)
+                return
+            preset_index, step_index, property_index = item.annotated_data
+            if property_index < 0:
+                return
+            if not (0 <= preset_index < len(self._model.presets)):
+                logger.error("Preview Cell %i:%i provides invalid preset index (%i)!",
+                             row, column, preset_index)
+                return
+            preset = self._model.presets[preset_index]
+            if not (0 <= step_index < len(preset.colors)):
+                logger.error("Preview Cell %i:%i provides invalid step (%i) for %i!",
+                             row, column, step_index, preset_index)
+            _, _, accent_colors = preset.colors[step_index]
+            self._model.apply_colors_on_preview_constants(accent_colors)
 
     @override
     def parent_closed(self, filter_node: FilterNode) -> None:
