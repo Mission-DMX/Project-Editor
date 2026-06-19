@@ -49,6 +49,7 @@ class PreviewBitmapGenerator(QThread):
                 p.setBrush(QBrush(color.to_qt_color()))
                 p.drawPie(rect, last_angle, arc_size)
                 last_angle += arc_size
+            # TODO for each accent color in in the preset draw a little dot evenly spaced on the arc
             if len(preset.colors) > 1:
                 p.drawImage(int(self._size * 0.55), 0, repeat_image)
             visualization_asset = preset.visualization_asset

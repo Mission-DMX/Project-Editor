@@ -132,13 +132,16 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
 
     pn.total_step_count += len(root)
     for child in root:
+        if child.tag == "uihint":
+            _parse_ui_hint(child, board_configuration)
+    if board_configuration.ui_hints.get("media_assets"):
+        load_all_media_assets(board_configuration.ui_hints.get("media_assets"), file_name)
+    for child in root:
         match child.tag:
             case "scene":
                 scene_defs_to_be_parsed.append(child)
             case "universe":
                 _parse_universe(child, board_configuration)
-            case "uihint":
-                _parse_ui_hint(child, board_configuration)
             case "bankset":
                 _parse_and_add_bankset(child, loaded_banksets)
             case "eventsource":
@@ -163,8 +166,6 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         board_configuration.broadcaster.request_main_brightness_fader_update.emit(fader_value)
     except ValueError as e:
         logger.exception("Unable to parse main brightness setting: %s", e)
-    if board_configuration.ui_hints.get("media_assets"):
-        load_all_media_assets(board_configuration.ui_hints.get("media_assets"), file_name)
 
     board_configuration.broadcaster.board_configuration_loaded.emit(file_name)
     board_configuration.file_path = file_name

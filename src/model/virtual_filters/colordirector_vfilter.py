@@ -332,6 +332,8 @@ class ColordirectorVFilter(VirtualFilter):
                     last_time += fadein_time * 40
                     kf.timestamp = last_time / 1000.0
                     for i in range(len(output_channels)):
+                        if len(colors) == 0:
+                            break
                         state = StateColor(transfer_function.value)
                         state.color = colors[i % len(colors)]
                         kf.append_state(state)
@@ -372,6 +374,8 @@ class ColordirectorVFilter(VirtualFilter):
         nm = NetworkManager()
         if not self.live_preview_mode:
             return
+        if len(accent_colors) == 0:
+            accent_colors = [ColorHSI.from_filter_str("0.0,0.0,1.0")]
         for output_group, sub_outputs in self._color_groups.items():
             for i, sub_output in enumerate(sub_outputs):
                 nm.send_gui_update_to_fish(

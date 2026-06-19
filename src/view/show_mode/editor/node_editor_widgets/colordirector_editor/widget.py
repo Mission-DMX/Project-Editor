@@ -2,16 +2,31 @@
 
 from __future__ import annotations
 
+import os
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QMenu, QPushButton, QTableWidget, QTabWidget, QVBoxLayout, QWidget
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QMenu,
+    QPushButton,
+    QSizePolicy,
+    QTableWidget,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model.color_hsi import ColorHSI
 from model.filter_data.transfer_function import TransferFunction
+from model.media_assets.media_type import MediaType
 from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter, ColorPreset
+from utility import resource_path
+from view.dialogs.asset_selection_dialog import AssetSelectionDialog
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.colordirector_editor._color_group_widget import ColorGroupWidget
 from view.show_mode.editor.node_editor_widgets.colordirector_editor._recall_editor import RecallEditWidget
@@ -29,10 +44,17 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog
 
     from model import Filter
+    from model.media_assets.asset import MediaAsset
     from view.show_mode.editor.nodes import FilterNode
 
 
 logger = getLogger(__name__)
+_IMAGE_ICON = QIcon(resource_path(os.path.join("resources", "icons", "media_image.svg")))
+
+
+def _set_asset(asset: MediaAsset, preset: ColorPreset) -> None:
+    preset.visualization_asset = asset
+
 
 class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
     """Configuration widget for Color Director.
@@ -50,7 +72,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._serialized_since_load: bool = False
         self._model: ColordirectorVFilter = model
         self._widget = QTabWidget(parent)
-        self._widget.setMinimumWidth(800)
+        self._widget.setMinimumWidth(900)
         self._color_groups_tab = ColorGroupWidget(self._model, self._widget)
         self._widget.addTab(self._color_groups_tab, "Color Groups")
 
@@ -73,7 +95,6 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         presets_layout.addLayout(preset_buttons_layout)
         self._preset_table = QTableWidget(presets_tab)
         self._preset_table.cellClicked.connect(self._preset_cell_clicked)
-        # TODO add method to set preset images
         self._preset_table.cellChanged.connect(self._preset_cell_edited)
         presets_layout.addWidget(self._preset_table)
         presets_tab.setLayout(presets_layout)
@@ -134,7 +155,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         ambient_color_maximum = self._model.get_ambient_color_count()
         tw.setColumnCount(ambient_color_maximum + 4)
         for i in range(ambient_color_maximum + 4):
-            tw.setColumnWidth(i, 125)
+            tw.setColumnWidth(i, 125 if i > 0 else 175)
         for i in range(row_sum):
             tw.setRowHeight(i, 45)
         tw.setItemDelegateForColumn(1, FadeinTimeCellDelegate(tw))
@@ -148,6 +169,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             index_widget.annotated_data = (preset_index, 0, -1)
             index_widget.setFlags(index_widget.flags() ^ Qt.ItemFlag.ItemIsEditable)
             last_index_item = index_widget
+            initial_row = preset_index + offsets
             tw.setItem(preset_index + offsets, 0, index_widget)
             first_iteration = True
             step_index = -1
@@ -199,6 +221,21 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 add_step_layout.addWidget(remove_last_step_button)
             add_step_widget.setLayout(add_step_layout)
             tw.setCellWidget(preset_index + offsets, 0, add_step_widget)
+            asset_mgmt_button = QPushButton()
+            asset_mgmt_button.setIcon(_IMAGE_ICON)
+            asset_mgmt_button.clicked.connect(lambda _,p=preset: self._change_preset_asset_clicked(p))
+            if len(preset.colors) < 2:
+                add_step_layout.addWidget(asset_mgmt_button)
+            else:
+                first_index_item = tw.item(initial_row, 0)
+                cell_widget = QWidget()
+                asset_button_layout = QHBoxLayout()
+                asset_button_layout.addWidget(QLabel(first_index_item.text()))
+                asset_button_layout.addWidget(asset_mgmt_button)
+                asset_mgmt_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+                cell_widget.setLayout(asset_button_layout)
+                first_index_item.setText("")
+                tw.setCellWidget(first_index_item.row(), 0, cell_widget)
             if len(preset.colors) < 2:
                 last_index_item.setText("")
         self._in_preset_table_rebuild = False
@@ -305,3 +342,11 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._model.live_preview_mode = False
         transmit_to_fish(self._model.scene.board_configuration, False)
         super().parent_closed(filter_node)
+
+    def _change_preset_asset_clicked(self, preset: ColorPreset) -> None:
+        self._dialog = AssetSelectionDialog(self._widget,
+                                            preselected=preset.visualization_asset,
+                                            allowed_types=[MediaType.IMAGE])
+        self._dialog.setModal(True)
+        self._dialog.asset_selected.connect(lambda asset,p=preset: _set_asset(asset, p))
+        self._dialog.show()
