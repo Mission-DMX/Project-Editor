@@ -339,8 +339,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
     @override
     def parent_closed(self, filter_node: FilterNode) -> None:
-        self._model.live_preview_mode = False
-        transmit_to_fish(self._model.scene.board_configuration, False)
+        if self._model.live_preview_mode:
+            self._model.live_preview_mode = False
+            transmit_to_fish(self._model.scene.board_configuration, False)
         super().parent_closed(filter_node)
 
     def _change_preset_asset_clicked(self, preset: ColorPreset) -> None:
