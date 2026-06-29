@@ -47,7 +47,7 @@ class JogwheelSpinBox(QSpinBox):
     def _jg_up(self) -> None:
         if self.hasFocus():
             val = self.value() + self.singleStep()
-            if val >= self.maximum():
+            if val <= self.maximum():
                 self.setValue(val)
 
 class JogwheelDoubleSpinBox(QDoubleSpinBox):
@@ -84,5 +84,5 @@ class JogwheelDoubleSpinBox(QDoubleSpinBox):
     def _jg_up(self) -> None:
         if self.hasFocus():
             val = self.value() + self.singleStep()
-            if val >= self.maximum():
+            if val <= self.maximum():
                 self.setValue(val)
