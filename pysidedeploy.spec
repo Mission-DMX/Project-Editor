@@ -24,7 +24,7 @@ icon = src/resources/logo.png
 python_path = /home/leondietrich/Documents/Mission-DMX/Project-Editor/.venv/bin/python
 
 # python packages to install
-packages = Nuitka==2.6.8
+packages = Nuitka==4.1.3
 
 # buildozer = for deploying Android application
 android_packages = buildozer==1.5.0,cython==0.29.33
