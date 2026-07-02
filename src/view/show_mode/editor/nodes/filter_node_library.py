@@ -72,6 +72,7 @@ from view.show_mode.editor.nodes.impl.faders import (
     FaderMainBrightness,
     FaderRawNode,
 )
+from view.show_mode.editor.nodes.impl.routing import Switch8BitNode, Switch16BitNode, SwitchColorNode, SwitchFloatNode
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
     EventCounterFilterNode,
@@ -109,6 +110,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_constants_nodes()
         self._register_debug_nodes()
         self._register_adapters_nodes()
+        self._register_routing_nodes()
         self._register_arithmetic_nodes()
         self._register_trigonometric_nodes()
         self._register_wave_nodes()
@@ -218,12 +220,18 @@ class FilterNodeLibrary(NodeLibrary):
     def _register_effect_nodes(self) -> None:
         self.addNodeType(CueListNode, [("Effects",)])
         self.addNodeType(AutoTrackerNode, [("Effects",)])
-        self.addNodeType(Shift8BitNode, [("Effects",)])
-        self.addNodeType(Shift16BitNode, [("Effects",)])
-        self.addNodeType(ShiftFloatNode, [("Effects",)])
-        self.addNodeType(ShiftColorNode, [("Effects",)])
         self.addNodeType(EffectsStackNode, [("Effects",)])
         self.addNodeType(SequencerNode, [("Effects",)])
+
+    def _register_routing_nodes(self) -> None:
+        self.addNodeType(Shift8BitNode, [("Routing",)])
+        self.addNodeType(Shift16BitNode, [("Routing",)])
+        self.addNodeType(ShiftFloatNode, [("Routing",)])
+        self.addNodeType(ShiftColorNode, [("Routing",)])
+        self.addNodeType(Switch8BitNode, [("Routing",)])
+        self.addNodeType(Switch16BitNode, [("Routing",)])
+        self.addNodeType(SwitchFloatNode, [("Routing",)])
+        self.addNodeType(SwitchColorNode, [("Routing",)])
 
     def _register_scripting_nodes(self) -> None:
         self.addNodeType(LuaFilterNode, [("Script",)])
