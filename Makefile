@@ -18,6 +18,7 @@ bin/debpkg/DEBIAN/control: pyproject.toml
     sh -c 'echo "Architecture: $(HOST_ARCH)" >> bin/debpkg/DEBIAN/control' && \
     sh -c 'echo "Maintainer: Leon Dietrich <doralitze@chaotikum.org>" >> bin/debpkg/DEBIAN/control' && \
     sh -c 'echo "Homepage: https://mission-dmx.org" >> bin/debpkg/DEBIAN/control' && \
+    sh -c 'echo "Depends: libsdl2-2.0-0 (>=2.0.0), libsdl2-image-2.0-0" >> bin/debpkg/DEBIAN/control' && \
     sh -c 'echo "Description: Project Editor for MissionDMX" >> bin/debpkg/DEBIAN/control'
 
 bin/debpkg/DEBIAN/rules: debrules.mk
