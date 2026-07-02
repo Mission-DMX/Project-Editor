@@ -27,17 +27,17 @@ bin/debpkg/DEBIAN/rules: debrules.mk
 bin/debpkg/usr/share/applications/mission-dmx.desktop: pyproject.toml
 	mkdir -p bin/debpkg/usr/share/applications && \
 	sh -c 'echo "[Desktop Entry]" > bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Version = $(VERSION)" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Type = Application" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Name = MissionDMX Editor" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Light Console Show File Editor" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Comment = An open source light console" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Icon = /usr/share/icons/mdmx-editor.png" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Categories = Graphics" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "MimeType = application/x-mdmx-showfile" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Terminal = false" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "Exec = /opt/MissionDMX/editor" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
-	sh -c 'echo "StartupNotify = true" >> bin/debpkg/usr/share/applications/mission-dmx.desktop'
+	sh -c 'echo "Version=$(VERSION)" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "Type=Application" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "Name=MissionDMX Editor" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "GenericName=Light Console Show File Editor" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "Comment=An open source light console" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "Icon=/usr/share/icons/mdmx-editor.png" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "Categories=Graphics" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "MimeType=application/x-mdmx-showfile" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "Terminal=false" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "Exec=/opt/MissionDMX/editor %f" >> bin/debpkg/usr/share/applications/mission-dmx.desktop' && \
+	sh -c 'echo "StartupNotify=true" >> bin/debpkg/usr/share/applications/mission-dmx.desktop'
 
 bin/debpkg/usr/share/icons/mdmx-editor.png: submodules/resources/logo.png
 	mkdir -p bin/debpkg/usr/share/icons && \
