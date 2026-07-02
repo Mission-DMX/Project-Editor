@@ -53,10 +53,20 @@ bin/debpkg/usr/share/mime/packages/missiondmx.sharedmimeinfo:
 	sh -c 'echo "</mime-type>" >> bin/debpkg/usr/share/mime/packages/missiondmx.sharedmimeinfo' && \
 	sh -c 'echo "</mime-info>" >> bin/debpkg/usr/share/mime/packages/missiondmx.sharedmimeinfo'
 
+bin/debpkg/usr/local/share/missionDMX:
+	mkdir -p bin/debpkg/usr/local/share/missionDMX && \
+	chmod 777 bin/debpkg/usr/local/share/missionDMX
+
+bin/debpkg/var/cache/missionDMX:
+	mkdir -p bin/debpkg/var/cache/missionDMX && \
+	chmod 777 bin/debpkg/var/cache/missionDMX
+
 bin/mission-dmx-editor.deb: \
 	bin/MissionDMX-Editor.dist/editor \
 	bin/debpkg/DEBIAN/control \
 	bin/debpkg/DEBIAN/rules \
+	bin/debpkg/usr/local/share/missionDMX \
+	bin/debpkg/var/cache/missionDMX \
 	bin/debpkg/usr/share/applications/mission-dmx.desktop \
 	bin/debpkg/usr/share/icons/mdmx-editor.png \
 	bin/debpkg/usr/share/mime/packages/missiondmx.sharedmimeinfo
@@ -66,9 +76,13 @@ bin/mission-dmx-editor.deb: \
 	mv bin/debpkg.deb bin/mission-dmx-editor.deb
 	lintian bin/mission-dmx-editor.deb || sh -c 'echo Errors occurred in package.'
 
-packages: bin/mission-dmx-editor.deb
+bin/mission-dmx-editor-latest.deb: bin/mission-dmx-editor.deb
 	ln bin/mission-dmx-editor.deb bin/mission-dmx-editor-latest.deb
+
+bin/mission-dmx-editor-v$(VERSION).deb: bin/mission-dmx-editor.deb
 	ln bin/mission-dmx-editor.deb bin/mission-dmx-editor-v$(VERSION).deb
+
+packages: bin/mission-dmx-editor-latest.deb bin/mission-dmx-editor-v$(VERSION).deb
 
 clean:
 	rm -rf ./bin
