@@ -12,7 +12,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-        submodules: true
+          submodules: true
 
       - name: Build Documentation
         run: doxygen Doxyfile
