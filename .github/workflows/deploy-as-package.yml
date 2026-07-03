@@ -2,12 +2,11 @@ name: Build editor and publish as package
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 
 jobs:
-  build:
+  build_package:
     runs-on: [self-hosted]
     steps:
     - uses: actions/checkout@v4

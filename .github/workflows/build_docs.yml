@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: Documentation Build
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 
 jobs:
-  read-commit:
+  build-and-release-documentation:
     runs-on: [self-hosted]
     steps:
       - name: Checkout Code
