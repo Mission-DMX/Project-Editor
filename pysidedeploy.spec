@@ -4,7 +4,7 @@
 title = MissionDMX-Editor
 
 # project root directory. default = The parent directory of input_file
-project_dir = src
+project_dir = .
 
 # source file entry point path. default = main.py
 input_file = /home/leondietrich/Documents/Mission-DMX/Project-Editor/src/main.py
