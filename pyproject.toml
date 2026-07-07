@@ -121,6 +121,9 @@ ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/', "src/view/util
 generated-members = ['proto/']
 source-roots = ["src"]
 
+[tool.pyside6-project]
+files = ["src/main.py"]
+
 [tool.mypy]
 mypy_path = ["src"]
 generated-members = ['proto/']
