@@ -7,7 +7,7 @@ title = MissionDMX-Editor
 project_dir = .
 
 # source file entry point path. default = main.py
-input_file = /home/leondietrich/Documents/Mission-DMX/Project-Editor/src/main.py
+input_file = src/main.py
 
 # directory where the executable output is generated
 exec_directory = bin
@@ -21,7 +21,7 @@ icon = src/resources/logo.png
 [python]
 
 # python path
-python_path = /home/leondietrich/Documents/Mission-DMX/Project-Editor/.venv/bin/python
+python_path =.venv/bin/python
 
 # python packages to install
 packages = Nuitka==4.1.3
