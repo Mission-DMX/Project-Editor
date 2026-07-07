@@ -13,7 +13,7 @@ input_file = /home/leondietrich/Documents/Mission-DMX/Project-Editor/src/main.py
 exec_directory = bin
 
 # path to the project file relative to project_dir
-project_file =
+project_file = pyproject.toml
 
 # application icon
 icon = src/resources/logo.png
