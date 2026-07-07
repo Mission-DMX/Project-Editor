@@ -48,6 +48,8 @@ dev = [
     "types-requests>=2.32.4.20250611",
     "types-Markdown>=3.8.0.20250708",
 ]
+[project.urls]
+homepage = "https://mission-dmx.org"
 
 [tool.missionDMX]
 display-name = "Mission DMX"
