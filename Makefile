@@ -6,9 +6,9 @@ HOST_ARCH := $(shell dpkg-architecture -q DEB_HOST_ARCH)
 build: bin/MissionDMX-Editor.dist/editor
 
 bin/MissionDMX-Editor.dist/editor: $(wildcard src/**/*.py) pyproject.toml
-	pyside6-deploy -c pysidedeploy.spec
-	cp -rL src/resources "bin/MissionDMX-Editor.dist/"
-	cp -rL src/configs "bin/MissionDMX-Editor.dist/"
+	pyside6-deploy -c pysidedeploy.spec && \
+	cp -rL src/resources "bin/MissionDMX-Editor.dist/" && \
+	cp -rL src/configs "bin/MissionDMX-Editor.dist/" && \
 	mv "bin/MissionDMX-Editor.dist/main.bin" "bin/MissionDMX-Editor.dist/editor"
 
 bin/debpkg/DEBIAN/control: pyproject.toml
