@@ -1,7 +1,9 @@
 VERSION := $(shell awk -F' = ' '/^version[[:space:]]*=/ { gsub(/["'\'']/, "", $$2); print $$2; exit }' "pyproject.toml")
 HOST_ARCH := $(shell dpkg-architecture -q DEB_HOST_ARCH)
 
-.PHONY: clean packages
+.PHONY: clean packages build
+
+build: bin/MissionDMX-Editor.dist/editor
 
 bin/MissionDMX-Editor.dist/editor: $(wildcard src/**/*.py) pyproject.toml
 	pyside6-deploy -c pysidedeploy.spec
@@ -63,7 +65,7 @@ bin/debpkg/var/cache/missionDMX:
 	chmod 777 bin/debpkg/var/cache/missionDMX
 
 bin/mission-dmx-editor.deb: \
-	bin/MissionDMX-Editor.dist/editor \
+	build \
 	bin/debpkg/DEBIAN/control \
 	bin/debpkg/DEBIAN/rules \
 	bin/debpkg/usr/local/share/missionDMX \
