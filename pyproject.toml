@@ -48,6 +48,10 @@ dev = [
     "types-requests>=2.32.4.20250611",
     "types-Markdown>=3.8.0.20250708",
 ]
+build = [
+    "Nuitka>=4.1.3",
+    "patchelf>=0.17.2.4",
+]
 [project.urls]
 homepage = "https://mission-dmx.org"
 
