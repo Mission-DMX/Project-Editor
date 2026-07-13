@@ -20,7 +20,7 @@ def load_metadata() -> Metadata:
     project = pyproject["project"]
 
     return Metadata(
-        package_name=project["name"].replace(" ", "_").lower(),
+        package_name=project["name"].replace(" ", "-").lower(),
         version=project["version"],
         display_name=project["name"],
         description=project["description"],
