@@ -89,7 +89,8 @@ ndk_path =
 sdk_path = 
 
 # other libraries to be loaded at app startup. comma separated.
-local_libs =
+local_libs = 
 
 # architecture of deployed platform
-arch =
+arch = 
+
