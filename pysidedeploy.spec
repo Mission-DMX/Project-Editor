@@ -33,10 +33,10 @@ android_packages = buildozer==1.5.0,cython==0.29.33
 
 # paths to required qml files. comma separated
 # normally all the qml files required by the project are added automatically
-qml_files =
+qml_files = 
 
 # excluded qml plugin binaries
-excluded_qml_plugins =
+excluded_qml_plugins = 
 
 # qt modules used. comma separated
 modules = Asyncio,Core,DBus,Gui,Widgets
@@ -48,20 +48,20 @@ plugins = egldeviceintegrations,networkaccess,platformthemes,accessiblebridge,im
 [android]
 
 # path to pyside wheel
-wheel_pyside =
+wheel_pyside = 
 
 # path to shiboken wheel
-wheel_shiboken =
+wheel_shiboken = 
 
 # plugins to be copied to libs folder of the packaged application. comma separated
-plugins =
+plugins = 
 
 [nuitka]
 
 # usage description for permissions requested by the app as found in the info.plist file
 # of the app bundle. comma separated
 # eg = extra_args = --show-modules --follow-stdlib
-macos.permissions =
+macos.permissions = 
 
 # mode of using nuitka. accepts standalone or onefile. default = onefile
 mode = standalone
@@ -77,16 +77,16 @@ extra_args = --quiet --noinclude-qt-translations --include-package=controller.ut
 mode = debug
 
 # path to pyside6 and shiboken6 recipe dir
-recipe_dir =
+recipe_dir = 
 
 # path to extra qt android .jar files to be loaded by the application
-jars_dir =
+jars_dir = 
 
 # if empty, uses default ndk path downloaded by buildozer
-ndk_path =
+ndk_path = 
 
 # if empty, uses default sdk path downloaded by buildozer
-sdk_path =
+sdk_path = 
 
 # other libraries to be loaded at app startup. comma separated.
 local_libs =
