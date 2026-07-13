@@ -14,4 +14,4 @@ package: $(wildcard build_files/*) submodules/resources/logo.png bin/MissionDMX-
 	python3 build_files/build_deb.py
 
 clean:
-	# rm -rf ./bin
+	rm -rf ./bin
