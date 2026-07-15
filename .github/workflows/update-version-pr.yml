@@ -1,17 +1,33 @@
-name: Update Version PR
+name: Version Bump
 
 on:
-  workflow_call:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions:
+  contents: write
 
 jobs:
-  update-version-pr:
+  update-version:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    #    container:
-    #      image: ghcr.io/mission-dmx/builder:latest
-
     steps:
+      - name: Generate token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+          ref: main
 
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4
@@ -19,20 +35,17 @@ jobs:
           cache: false
           python-version-file: pyproject.toml
 
-      - name: Install dependencies
-        run: pdm install --dev
-
-      - name: Run update_version.py and capture output
-        id: version_update
+      - name: Configure git
         run: |
-          RELEASE_TAG=$(pdm run python update_version.py)
-          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          git config user.name "MissionDMX Version Bot"
+          git config user.email "4304726+mission-dmx-version-bot[bot]@users.noreply.github.com"
 
-      - name: Create a Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: 'versions update'
-          body: 'Dieser PR wurde automatisch mit einem Tag und Commit erstellt.'
-          branch: 'version-update'
-          base: 'main'
+      - name: Install pdm bump
+        run: pdm plugin add pdm-bump
+
+      - name: Run pdm bump
+        run: pdm bump auto
+
+      - name: Push changes
+        run: |
+          git push origin main --tags || echo "Nothing to push"
