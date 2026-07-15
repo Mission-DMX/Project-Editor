@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-release-documentation:
-    runs-on: [self-hosted]
+    runs-on: [ self-hosted ]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
