@@ -19,4 +19,7 @@ jobs:
           pdm run make package
 
       - name: publish
-        run: cd bin && rm -rf !(*.deb) && sudo /home/deploy/deploy.bash "*" downloads/packages
+        run: |
+          cd bin
+          find . -maxdepth 1 ! -name '*.deb' ! -name '.' -exec rm -rf {} +
+          sudo /home/deploy/deploy.bash "*" downloads/packages
