@@ -48,4 +48,4 @@ jobs:
 
       - name: Push changes
         run: |
-          git push origin main --follow-tags || echo "Nothing to push"
+          git push origin main --tags || echo "Nothing to push"
