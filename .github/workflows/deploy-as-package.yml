@@ -7,12 +7,14 @@ on:
 
 jobs:
   build_package:
-    runs-on: [self-hosted]
+    runs-on: [ self-hosted ]
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: make
-      run: pdm install && make packages
-    - name: publish
-      run: cd bin && rm -rf !(*.deb) && sudo /home/deploy/deploy.bash "*" downloads/packages
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: make
+        run: pdm install --dev -G build && make packages
+
+      - name: publish
+        run: cd bin && rm -rf !(*.deb) && sudo /home/deploy/deploy.bash "*" downloads/packages
