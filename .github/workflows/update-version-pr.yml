@@ -1,4 +1,4 @@
-name: Update Version Bump
+name: Version Bump
 
 on:
   pull_request:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Configure git
         run: |
-          git config user.name "MissionDMX Release Bot"
+          git config user.name "MissionDMX Version Bot"
           git config user.email "4304726+mission-dmx-version-bot[bot]@users.noreply.github.com"
 
       - name: Install pdm bump
