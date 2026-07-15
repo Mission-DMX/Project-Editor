@@ -78,7 +78,6 @@ ignore = [
     "E722",
     "F401",
     "UP007", #Pycharm problem
-    "UP038", #Deprecated,
     "SIM105", #Slower contextlib.suppress
     "TRY", "PLC0415", "ARG002", #TODO ich weiß noch nicht
     "TRY003", #TODO own error classes
