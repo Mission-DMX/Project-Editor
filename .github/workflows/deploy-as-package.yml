@@ -22,7 +22,7 @@ jobs:
         run: |
           cd bin
           find . -maxdepth 1 ! -name '*.deb' ! -name '.' -exec rm -rf {} +
-          sudo /home/deploy/deploy.bash "*" downloads/packages
+          sudo /home/deploy/deploy.bash *.deb downloads/packages
 
       - name: Release
         uses: softprops/action-gh-release@v3
