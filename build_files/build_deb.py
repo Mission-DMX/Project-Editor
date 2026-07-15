@@ -1,3 +1,10 @@
+"""Building Debian (.deb) packages for MissionDMX Editor.
+
+This module orchestrates the complete build process of a DEB package:
+It sets up the directory structure, generates control and desktop files,
+copies resources, and invokes dpkg-deb to create the final package.
+"""
+
 import shutil
 import subprocess
 from pathlib import Path
@@ -11,6 +18,16 @@ FILE = Path(__file__).parent
 
 
 def main() -> None:
+    """Builds a Debian (.deb) package from the PySide6 distribution bundle.
+
+    Performs the following steps:
+    1. Loads project metadata from pyproject.toml.
+    2. Creates the directory structure for the DEB package.
+    3. Generates the DEBIAN/control and .desktop files.
+    4. Copies icon, MIME type definition, and application binaries.
+    5. Invokes dpkg-deb to build the package.
+    6. Renames the package and creates hardlinks for latest/named versions.
+    """
     meta = load_metadata()
 
     shutil.rmtree(BIN, ignore_errors=True)
