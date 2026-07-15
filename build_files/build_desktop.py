@@ -10,11 +10,13 @@ from extract_metadata import Metadata
 
 
 def write_desktop(metadata: Metadata, target: Path, icon_path: Path) -> None:
-    """Creates a .desktop file for Linux desktop integration.
+    """Create a .desktop file for Linux desktop integration.
+
     Args:
         metadata: The project metadata.
         target: The file path where the .desktop file will be written.
         icon_path: The relative path to the application icon within the package.
+
     """
     content = f"""[Desktop Entry]
 Version={metadata.version}

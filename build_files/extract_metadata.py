@@ -21,6 +21,7 @@ class Metadata(BaseModel):
         description: A short description of the project.
         maintainer: The project maintainer with email address.
         homepage: The homepage URL of the project.
+
     """
 
     package_name: str
@@ -32,7 +33,7 @@ class Metadata(BaseModel):
 
 
 def load_metadata() -> Metadata:
-    """Loads project metadata from the pyproject.toml file.
+    """Load project metadata from the pyproject.toml file.
 
     Reads the pyproject.toml in the project root directory and extracts
     the relevant fields from the [project] section to create a Metadata object.
@@ -43,6 +44,7 @@ def load_metadata() -> Metadata:
     Raises:
         FileNotFoundError: If the pyproject.toml is not found.
         KeyError: If expected fields are missing in the pyproject.toml.
+
     """
     with Path("pyproject.toml").open("rb") as f:
         pyproject = tomllib.load(f)

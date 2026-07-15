@@ -18,7 +18,7 @@ FILE = Path(__file__).parent
 
 
 def main() -> None:
-    """Builds a Debian (.deb) package from the PySide6 distribution bundle.
+    """Build a Debian (.deb) package from the PySide6 distribution bundle.
 
     Performs the following steps:
     1. Loads project metadata from pyproject.toml.

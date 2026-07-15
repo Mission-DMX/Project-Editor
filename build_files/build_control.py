@@ -21,7 +21,7 @@ For unknown architectures, the raw value from platform.machine() is used.
 
 
 def write_control(metadata: Metadata, target: Path) -> None:
-    """Writes a DEBIAN/control file for the Debian package.
+    """Write a DEBIAN/control file for the Debian package.
 
     Generates the control block with package name, version, architecture,
     maintainer, dependencies, and description, then writes it to the target file.
@@ -29,6 +29,7 @@ def write_control(metadata: Metadata, target: Path) -> None:
     Args:
         metadata: The project metadata.
         target: The file path where the control file will be written.
+
     """
     content = f"""Package: {metadata.package_name}
 Version: {metadata.version}
