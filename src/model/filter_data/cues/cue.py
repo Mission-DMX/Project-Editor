@@ -333,6 +333,10 @@ class KeyFrame:
             kf._states.append(s.copy())
         return kf
 
+    def state_at(self, i: int) -> State:
+        """Get the state at given index."""
+        return self._states[i]
+
 
 class Cue:
     """Model of a cue from a cue filter."""
@@ -429,6 +433,19 @@ class Cue:
     def insert_frame(self, f: KeyFrame) -> None:
         """Add a frame to the cue."""
         self._frames.append(f)
+
+    def get_keyframe_before(self, timestamp: float) -> KeyFrame | None:
+        """Get the keyframe before the given timestamp (if it exists)."""
+        found_frame = None
+        if len(self._frames) == 0:
+            return None
+        for kf in self._frames:
+            if kf.timestamp < timestamp:
+                if found_frame is None:
+                    found_frame = kf
+                elif kf.timestamp > found_frame.timestamp:
+                    found_frame = kf
+        return found_frame
 
     def remove_channel(self, c: Union[ExternalChannelDefinition, tuple[str, DataType]]) -> None:
         """Remove the specified channel from the model."""

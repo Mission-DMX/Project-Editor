@@ -201,7 +201,8 @@ class AssetSelectionWidget(QWidget):
 
         self.setLayout(layout)
         self._update_filter()
-        self._asset_view.selectionModel().selectionChanged.connect(self.asset_selection_changed.emit)
+        # DO NOT CHANGE LINE BELOW! Even if ruff complaints, this needs to be a lambda, otherwise Qt will crash
+        self._asset_view.selectionModel().selectionChanged.connect(lambda: self.asset_selection_changed.emit())
 
     def _update_filter(self, force: bool = False) -> None:
         selected_types: set[MediaType] = set()

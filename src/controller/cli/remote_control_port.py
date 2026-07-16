@@ -146,7 +146,7 @@ class Connection:
         except OSError:
             pass
         except UnicodeDecodeError as e:
-            self._client.send("Unable to decode command. Exiting.")
+            self._client.send("Unable to decode command. Exiting.".encode())
             self._client.close()
             logger.exception("Failed to decode CLI command. %s", e)
         finally:

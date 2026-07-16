@@ -6,17 +6,22 @@ PreviewEditWidget -- The editor base class.
 
 from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from PySide6.QtGui import QAction, QIcon
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget
+from PySide6.QtGui import QAction, QIcon, Qt
+from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget, QDialog, QVBoxLayout, QRadioButton, \
+    QSpinBox, QMessageBox, QDialogButtonBox
 
 from controller.file.transmitting_to_fish import transmit_to_fish
-from model import Broadcaster, DataType, Filter
+from model import Broadcaster, DataType, Filter, Scene
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
+from model.media_assets.image import AbstractImageAsset
+from model.media_assets.media_type import MediaType
 from model.virtual_filters.cue_vfilter import PreviewFilter
+from view.show_mode.editor.node_editor_widgets.cue_editor.gen_keyframs_from_image import generate_keyframes_from_image
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
+from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
 
 logger = getLogger(__name__)
 
@@ -72,6 +77,11 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         self._gui_rec_action.setIcon(QIcon.fromTheme("media-record"))
         self._gui_rec_action.setEnabled(False)
         self._gui_rec_action.triggered.connect(self._rec_pressed)
+
+        self._record_from_image_action = QAction("Record from image")
+        self._record_from_image_action.setStatusTip("Insert Keyframes at the current cursor position from image.")
+        self._record_from_image_action.setEnabled(False)
+        self._record_from_image_action.triggered.connect(self._rec_from_image_pressed)
 
         self._zoom_label: QLabel | None = QLabel()
         self.zoom_panel = QWidget()
@@ -218,6 +228,7 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         """Set or reset editing capability."""
         self._timeline_container.setEnabled(new_state)
         self._gui_rec_action.setEnabled(new_state)
+        self._record_from_image_action.setEnabled(new_state)
 
     def link_column_to_channel(self, channel_name: str, channel_type: DataType, is_part_of_mass_update: bool) -> None:
         """Link a bank set column to a channel in the model.
@@ -272,3 +283,120 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
                 transmit_to_fish(self._filter_instance.scene.board_configuration, False)
                 # TODO switch to scene of filter
         super().parent_closed(filter_node)
+
+    def _rec_from_image_pressed(self) -> None:
+        self._add_from_image_dialog = _AddKFFromImageDialog(self._timeline_container,
+                                                            self.transition_type_select_widget.currentText(),
+                                                            self._filter_instance.filter_configurations)
+        self._add_from_image_dialog.show()
+
+
+class _AddKFFromImageDialog(QDialog):
+    """Dialog to set up key frames from selected image."""
+
+    def __init__(self, timeline_container: TimelineContainer,
+                 transition_method: str, filter_config: dict[str, str]) -> None:
+        """Initialize."""
+        super().__init__(timeline_container)
+        self._timeline_container = timeline_container
+        self._transition_type = transition_method
+        self._message_box: QMessageBox | None = None
+        self._filter_config = filter_config
+
+        self.setModal(True)
+        self.setWindowTitle("Add Key Frames From Image")
+        self.setMinimumSize(600, 800)
+
+        layout = QVBoxLayout()
+        self._image_selection = AssetSelectionWidget(allowed_types=[MediaType.IMAGE], multiselection_allowed=False)
+        self._image_selection.setFixedHeight(600)
+        layout.addWidget(self._image_selection)
+        layout.addStretch()
+        radio_button_layout = QHBoxLayout()
+        self._columns_first_rb = QRadioButton("Columns First")
+        self._columns_first_rb.setChecked(True)
+        radio_button_layout.addWidget(self._columns_first_rb)
+        self._rows_first_rb = QRadioButton("Rows first")
+        radio_button_layout.addWidget(self._rows_first_rb)
+        radio_button_layout.addStretch()
+        layout.addLayout(radio_button_layout)
+
+        self._break_point_sb = QSpinBox()
+        self._break_point_sb.setRange(0, 65535)
+        self._break_point_sb.setValue(0)
+        self._break_point_sb.setSingleStep(1)
+        self._break_point_sb.setToolTip("After this many pixels, the cursor should break. Leave this at 0 in order to "
+                                        "use the image width or height (depending on columns or rows first).")
+        layout.addWidget(self._break_point_sb)
+
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, Qt.Orientation.Horizontal, self
+        )
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+        self.setLayout(layout)
+
+        if "kf-from-image-settings" in filter_config:
+            columns_first, break_point = filter_config["kf-from-image-settings"].split(";")
+            columns_first = columns_first.lower() == "true"
+            self._columns_first_rb.setChecked(columns_first)
+            self._rows_first_rb.setChecked(not columns_first)
+            self._break_point_sb.setValue(int(break_point))
+
+    @override
+    def accept(self) -> None:
+        try:
+            selection = self._image_selection.selected_asset
+            if len(selection) == 0:
+                return
+            selection = selection[0]
+            if not isinstance(selection, AbstractImageAsset):
+                self._message_box = QMessageBox(
+                    QMessageBox.Icon.Information,
+                    "Select Image First",
+                    "Please select an image first.",
+                parent=self)
+                self._message_box.setModal(True)
+                self._message_box.show()
+                return
+            cursor_position = self._timeline_container._keyframes_panel.cursor_position
+            if not generate_keyframes_from_image(
+                    selection,
+                    self._columns_first_rb.isChecked(),
+                    cursor_position,
+                    self._break_point_sb.value(),
+                    [self._transition_type] * len(self._timeline_container.cue.channels),
+                    self._timeline_container.cue):
+                self._message_box = QMessageBox(
+                    QMessageBox.Icon.Critical,
+                    "Failed to inset key frame",
+                    "An error occurred during insertion of key frame.",
+                    parent=self
+                )
+                self._message_box.setModal(True)
+                self._message_box.show()
+            else:
+                self._timeline_container.update_cue_display()
+                self._timeline_container._keyframes_panel.cursor_position = cursor_position
+                super().accept()
+            self._filter_config["kf-from-image-settings"] = \
+                f"{"true" if self._columns_first_rb.isChecked() else "false"};{self._break_point_sb.value()}"
+        except ValueError as e:
+            self._message_box = QMessageBox(
+                QMessageBox.Icon.Warning,
+                "KeyFrame generation failed",
+                str(e),
+                parent=self
+            )
+            self._message_box.setModal(True)
+            self._message_box.show()
+        except NotImplementedError as e:
+            self._message_box = QMessageBox(
+                QMessageBox.Icon.Critical,
+                "KeyFrame generation failed",
+                str(e),
+                parent=self
+            )
+            self._message_box.setModal(True)
+            self._message_box.show()
