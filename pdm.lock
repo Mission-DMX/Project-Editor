@@ -5,7 +5,7 @@
 groups = ["default", "build", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:acf010e28bd36cbc04aa1f2fd00b45c2a6c6ad53737f2a65907de493f76ed40a"
+content_hash = "sha256:3625593bfd9de04ac686102e9c324f2c2fd0c0e12ba2ffb4e404be1fe682e854"
 
 [[metadata.targets]]
 requires_python = "==3.13.*"
@@ -694,6 +694,17 @@ dependencies = [
 files = [
     {file = "pyee-13.0.1-py3-none-any.whl", hash = "sha256:af2f8fede4171ef667dfded53f96e2ed0d6e6bd7ee3bb46437f77e3b57689228"},
     {file = "pyee-13.0.1.tar.gz", hash = "sha256:0b931f7c14535667ed4c7e0d531716368715e860b988770fc7eb8578d1f67fc8"},
+]
+
+[[package]]
+name = "pyelk"
+version = "0.3.0"
+requires_python = ">=3.8"
+summary = "Python port of elkjs - automatic graph layout based on ELK"
+groups = ["default"]
+files = [
+    {file = "pyelk-0.3.0-py3-none-any.whl", hash = "sha256:2f5b6a1f6392e3cd1cfbbdccdd896b3f36e503a6253a56e82bbf8f251f4a1fcf"},
+    {file = "pyelk-0.3.0.tar.gz", hash = "sha256:5df41a7867c0cbf766cc33670165615c90650c68b69e575dbe622718d00fc9da"},
 ]
 
 [[package]]

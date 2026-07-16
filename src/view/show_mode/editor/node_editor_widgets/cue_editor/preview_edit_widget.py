@@ -286,19 +286,22 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
 
     def _rec_from_image_pressed(self) -> None:
         self._add_from_image_dialog = _AddKFFromImageDialog(self._timeline_container,
-                                                            self.transition_type_select_widget.currentText())
+                                                            self.transition_type_select_widget.currentText(),
+                                                            self._filter_instance.filter_configurations)
         self._add_from_image_dialog.show()
 
 
 class _AddKFFromImageDialog(QDialog):
     """Dialog to set up key frames from selected image."""
 
-    def __init__(self, timeline_container: TimelineContainer, transition_method: str) -> None:
+    def __init__(self, timeline_container: TimelineContainer,
+                 transition_method: str, filter_config: dict[str, str]) -> None:
         """Initialize."""
         super().__init__(timeline_container)
         self._timeline_container = timeline_container
         self._transition_type = transition_method
         self._message_box: QMessageBox | None = None
+        self._filter_config = filter_config
 
         self.setModal(True)
         self.setWindowTitle("Add Key Frames From Image")
@@ -333,6 +336,13 @@ class _AddKFFromImageDialog(QDialog):
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
         self.setLayout(layout)
+
+        if "kf-from-image-settings" in filter_config:
+            columns_first, break_point = filter_config["kf-from-image-settings"].split(";")
+            columns_first = columns_first.lower() == "true"
+            self._columns_first_rb.setChecked(columns_first)
+            self._rows_first_rb.setChecked(not columns_first)
+            self._break_point_sb.setValue(int(break_point))
 
     @override
     def accept(self) -> None:
@@ -370,6 +380,8 @@ class _AddKFFromImageDialog(QDialog):
                 self._timeline_container.update_cue_display()
                 self._timeline_container._keyframes_panel.cursor_position = cursor_position
                 super().accept()
+            self._filter_config["kf-from-image-settings"] = \
+                f"{"true" if self._columns_first_rb.isChecked() else "false"};{self._break_point_sb.value()}"
         except ValueError as e:
             self._message_box = QMessageBox(
                 QMessageBox.Icon.Warning,
