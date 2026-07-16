@@ -1,18 +1,19 @@
-name: CI Pipeline
+name: Documentation Build
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - "v*"
 
 
 jobs:
-  read-commit:
-    runs-on: [self-hosted]
+  build-and-release-documentation:
+    runs-on: [ self-hosted ]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-        submodules: true
+          submodules: true
 
       - name: Build Documentation
         run: doxygen Doxyfile
