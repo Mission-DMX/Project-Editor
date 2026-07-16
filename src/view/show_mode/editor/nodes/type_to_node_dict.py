@@ -61,6 +61,7 @@ from view.show_mode.editor.nodes.impl.debug import (
 )
 from view.show_mode.editor.nodes.impl.effects import (
     AutoTrackerNode,
+    ChaserNode,
     CueListNode,
     EffectsStackNode,
     SequencerNode,
@@ -77,6 +78,7 @@ from view.show_mode.editor.nodes.impl.faders import (
     FaderMainBrightness,
     FaderRawNode,
 )
+from view.show_mode.editor.nodes.impl.routing import Switch8BitNode, Switch16BitNode, SwitchColorNode, SwitchFloatNode
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
     EventCounterFilterNode,
@@ -184,4 +186,9 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_FLOAT: DebugRemoteFloatNode.nodeName,
     FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL: DebugRemoteColorNode.nodeName,
     FilterTypeEnumeration.FILTER_EVENT_COUNTER: EventCounterFilterNode.nodeName,
+    FilterTypeEnumeration.FILTER_COLOR_CHASER: ChaserNode.nodeName,
+    FilterTypeEnumeration.FILTER_SWITCH_8BIT: Switch8BitNode.nodeName,
+    FilterTypeEnumeration.FILTER_SWITCH_16BIT: Switch16BitNode.nodeName,
+    FilterTypeEnumeration.FILTER_SWITCH_FLOAT: SwitchFloatNode.nodeName,
+    FilterTypeEnumeration.FILTER_SWITCH_COLOR: SwitchColorNode.nodeName,
 }

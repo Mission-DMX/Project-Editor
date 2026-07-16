@@ -28,6 +28,7 @@ from view.main_widget import MainWidget
 from view.misc.console_dock_widget import ConsoleDockWidget
 from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_view.patch_mode import PatchMode
+from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
 from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
@@ -136,6 +137,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._terminal_widget: ConsoleDockWidget | None = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
+        self._close_now = False
 
     @property
     def fish_connector(self) -> NetworkManager:
@@ -215,14 +217,6 @@ class MainWindow(QtWidgets.QMainWindow):
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
-
-    @override
-    def closeEvent(self, event: QCloseEvent, /) -> None:
-        # TODO use event.ignore() here is there's still stuff to do
-        super().closeEvent(event)
-        QApplication.processEvents()
-        self._broadcaster.application_closing.emit()
-        QApplication.processEvents()
 
     def _start_connection(self) -> None:  # TODO rework to signals
         self._fish_connector.start(True)
@@ -405,3 +399,25 @@ class MainWindow(QtWidgets.QMainWindow):
     def _open_asset_mgmt_dialog(self) -> None:
         self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
         self._settings_dialog.show()
+
+    @override
+    def closeEvent(self, event: QCloseEvent) -> None:
+        if self._close_now:
+            super().closeEvent(event)
+            QApplication.processEvents()
+            self._broadcaster.application_closing.emit()
+            QApplication.processEvents()
+        else:
+            event.ignore()
+            self._settings_dialog = YesNoDialog(
+                self,
+                "Close Editor",
+                "Do you really want to close this window? Any unsaved changes will be lost.",
+                self._close_callback
+            )
+            self._settings_dialog.setModal(True)
+            self._settings_dialog.show()
+
+    def _close_callback(self) -> None:
+        self._close_now = True
+        self.close()

@@ -52,8 +52,10 @@ logger = getLogger(__name__)
 _IMAGE_ICON = QIcon(resource_path(os.path.join("resources", "icons", "media_image.svg")))
 
 
-def _set_asset(asset: MediaAsset, preset: ColorPreset) -> None:
-    preset.visualization_asset = asset
+def _set_asset(asset: list[MediaAsset], preset: ColorPreset) -> None:
+    if len(asset) == 0:
+        preset.visualization_asset = None
+    preset.visualization_asset = asset[0]
 
 
 class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):

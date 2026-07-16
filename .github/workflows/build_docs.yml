@@ -1,0 +1,22 @@
+name: Documentation Build
+
+on:
+  push:
+    tags:
+      - "v*"
+
+
+jobs:
+  build-and-release-documentation:
+    runs-on: [ self-hosted ]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Build Documentation
+        run: doxygen Doxyfile
+
+      - name: Deploy class documentation
+        run: cd docs-build/html && sudo /home/deploy/deploy.bash . docs/editor-class-doc
