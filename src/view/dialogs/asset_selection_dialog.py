@@ -33,6 +33,7 @@ class AssetSelectionDialog(QDialog):
             parent: The parent widget.
             preselected: A media asset that should be selected by default.
             allowed_types: A list of media types that the user is allowed to choose an asset from.
+            multiselection_allowed: If True, the user may select multiple assets.
 
         """
         super().__init__(parent)
