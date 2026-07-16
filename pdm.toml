@@ -1,0 +1,3 @@
+[plugin.bump]
+perform_commit = true
+auto_tag = true

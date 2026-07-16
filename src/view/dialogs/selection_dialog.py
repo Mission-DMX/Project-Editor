@@ -14,7 +14,11 @@ if TYPE_CHECKING:
 
 
 class SelectionDialog(QDialog):
-    """A dialog allowing the user to select items in a list."""
+    """A dialog allowing the user to select items in a list.
+
+    Due to its nature it is well-suited for larger data collections.
+
+    """
 
     def __init__(self, title: str, message: str, items: list[str], parent: QWidget | None = None,
                  multi_selection_allowed: bool = True, selected_callback: Callable | None = None,

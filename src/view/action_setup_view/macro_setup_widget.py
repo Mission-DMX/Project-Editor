@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from model import Broadcaster
 from model.macro import Macro, Trigger
 from view.action_setup_view._cli_syntax_highlighter import CLISyntaxHighlighter
+from view.action_setup_view.chaser_preset_selection_dialog import _ChaserPresetSelectionDialog
 from view.action_setup_view.constant_update_dialog import ConstantUpdateInsertionDialog
 from view.action_setup_view.cue_switch_dialog import _InsertCueSwitchDialog
 from view.action_setup_view.new_trigger_dialog import _NewTriggerDialog
@@ -145,6 +146,10 @@ class MacroSetupWidget(QSplitter):
         self._insert_constant_update_action.setText("Insert Constant Update")
         self._insert_constant_update_action.triggered.connect(self._insert_constant_update_clicked)
         self._content_panel_actions.addAction(self._insert_constant_update_action)
+        self._insert_chaser_update_action = QAction()
+        self._insert_chaser_update_action.setText("Insert Chaser Update")
+        self._insert_chaser_update_action.triggered.connect(self._insert_chaser_update_clicked)
+        self._content_panel_actions.addAction(self._insert_chaser_update_action)
         layout.addWidget(self._content_panel_actions)
         self._editor_area = QPlainTextEdit(self._content_panel)
         self._editor_area.setEnabled(False)
@@ -310,6 +315,13 @@ class MacroSetupWidget(QSplitter):
     def _insert_sequence_trigger_clicked(self) -> None:
         if self._selected_macro is not None:
             self._dialog = SequenceTriggerInsertionDialog(
+                self, self._selected_macro, self._show, self._macro_content_changed
+            )
+            self._dialog.show()
+
+    def _insert_chaser_update_clicked(self) -> None:
+        if self._selected_macro is not None:
+            self._dialog = _ChaserPresetSelectionDialog(
                 self, self._selected_macro, self._show, self._macro_content_changed
             )
             self._dialog.show()
