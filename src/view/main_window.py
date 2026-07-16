@@ -419,7 +419,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         read_document(diag.selected_items[0], self._board_configuration)
         self._settings_dialog = None
-    
+
     @override
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._close_now:
