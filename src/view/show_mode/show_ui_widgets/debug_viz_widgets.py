@@ -163,6 +163,8 @@ class ColorLabel(QWidget):
         super().__init__(parent)
         self._last_color: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self._last_color_processed: QColor = QColor()
+        self.setMinimumWidth(16)
+        self.setMinimumHeight(16)
 
     def set_color(self, c: ColorHSI) -> None:
         """Set the color to display.
@@ -171,6 +173,8 @@ class ColorLabel(QWidget):
             c: The color to set. (ColorHSI)
 
         """
+        if not isinstance(c, ColorHSI):
+            raise ValueError(f"Failed to set color. Expected ColorHSI, got {type(c)}.")
         self.set_hsi(c.hue, c.saturation, c.intensity)
 
     def set_hsi(self, h: float, s: float, i: float) -> None:
@@ -197,6 +201,10 @@ class ColorLabel(QWidget):
         painter.drawRect(r.x(), r.y(), r.width(), r.height())
         painter.fillRect(r.x() + 1, r.y() + 1, r.width() - 2, r.height() - 2, c)
         painter.end()
+
+    def get_color(self) -> ColorHSI:
+        """Get the color currently displayed."""
+        return ColorHSI(self._last_color[0], self._last_color[1], self._last_color[2])
 
 
 class ColorDebugVizWidget(_DebugVizWidget):

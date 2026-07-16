@@ -63,6 +63,52 @@ class SequencerChannel:
         """Name of the channel."""
         return self._name
 
+    @property
+    def default_value(self) -> int | float | ColorHSI:
+        """Default value of the channel."""
+        return self._default_value
+
+    @default_value.setter
+    def default_value(self, value: float | ColorHSI) -> None:
+        match self.data_type:
+            case DataType.DT_8_BIT:
+                self._default_value = min(max(int(value), 0), 255)
+            case DataType.DT_16_BIT:
+                self._default_value = min(max(int(value), 0), 65535)
+            case DataType.DT_DOUBLE:
+                self._default_value = float(value)
+            case DataType.DT_COLOR:
+                if not isinstance(value, ColorHSI):
+                    raise ValueError("Expected a color as default value for a color channel.")
+                self._default_value = value
+
+    @property
+    def apply_default_on_empty(self) -> bool:
+        """Whether the default value should be applied on empty transition list."""
+        return self._apply_default_on_empty
+
+    @apply_default_on_empty.setter
+    def apply_default_on_empty(self, value: bool) -> None:
+        self._apply_default_on_empty = value
+
+    @property
+    def apply_default_on_scene_switch(self) -> bool:
+        """Whether the default value should be applied after scene switch."""
+        return self._apply_default_on_scene_switch
+
+    @apply_default_on_scene_switch.setter
+    def apply_default_on_scene_switch(self, value: bool) -> None:
+        self._apply_default_on_scene_switch = value
+
+    @property
+    def interleave_method(self) -> InterleaveMethod:
+        """Interleave method."""
+        return self._interleave_method
+
+    @interleave_method.setter
+    def interleave_method(self, interleave_method: InterleaveMethod) -> None:
+        self._interleave_method = interleave_method
+
     def format_for_filter(self) -> str:
         """Serialize model into filter format."""
         default_value_str = (
