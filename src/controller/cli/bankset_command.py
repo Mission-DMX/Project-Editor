@@ -18,7 +18,7 @@ class BankSetCommand(Command):
     """
 
     def __init__(self, context: CLIContext) -> None:
-        super().__init__(context, "bank_set")
+        super().__init__(context, "bankset")
         self.help_text = "This command displays the help about a certain command."
 
     def configure_parser(self, parser: ArgumentParser) -> None:
