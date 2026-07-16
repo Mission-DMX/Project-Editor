@@ -12,6 +12,7 @@ from model.filter import FilterTypeEnumeration
 from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from model.virtual_filters.color_mixer_vfilter import ColorMixerVFilter
 from model.virtual_filters.color_to_colorwheel import ColorToColorWheel
+from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
 from model.virtual_filters.cue_vfilter import CueFilter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.import_vfilter import ImportVFilter
@@ -51,6 +52,8 @@ def construct_virtual_filter_instance(
         case FilterTypeEnumeration.VFILTER_COMBINED_FILTER_PRESET:
             # TODO return virtual filter that instantiates a preset (as described in issue #48)
             return None
+        case FilterTypeEnumeration.VFILTER_COLORDIRECTOR:
+            return ColordirectorVFilter(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
             return PanTiltConstantFilter(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN:

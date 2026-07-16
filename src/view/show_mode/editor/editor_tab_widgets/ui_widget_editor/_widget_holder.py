@@ -43,7 +43,7 @@ class UIWidgetHolder(QWidget):
             self._close_button = QPushButton("X", self)
             self._close_button.resize(30, 30)
             self._close_button.move(self.width() - 40, 0)
-            self._close_button.clicked.connect(self.close)
+            self._close_button.clicked.connect(self._delete_and_close)
             self._edit_button = QPushButton("Edit", self)
             self._edit_button.resize(50, 30)
             self._edit_button.move(0, 0)
@@ -87,10 +87,6 @@ class UIWidgetHolder(QWidget):
         """
         self.closing.emit()
         self._model.close()
-        try:
-            self._model.parent.widgets.remove(self._model)
-        except ValueError:
-            pass
         super().closeEvent(event)
 
     @override
@@ -154,3 +150,10 @@ class UIWidgetHolder(QWidget):
             self._child.setEnabled(False)
         except RuntimeError as e:
             logger.exception("BUG! This widget is already deleted: %s", e)
+
+    def _delete_and_close(self) -> None:
+        try:
+            self._model.parent.remove_widget(self._model)
+        except ValueError as e:
+            logger.exception("BUG! Failed to remove widget from parent: %s", e)
+        self.close()

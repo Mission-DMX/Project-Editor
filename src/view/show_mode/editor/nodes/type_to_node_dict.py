@@ -36,6 +36,7 @@ from view.show_mode.editor.nodes.impl.arithmetics import (
     SumFloatNode,
 )
 from view.show_mode.editor.nodes.impl.color_manip_nodes import (
+    ColorDirectorVFilterNode,
     ColorMixerAdditiveRGBNode,
     ColorMixerHSVNode,
     ColorMixerNormativeRGBNode,
@@ -102,6 +103,7 @@ from view.show_mode.editor.nodes.impl.waves import SawtoothWaveNode, SquareWaveN
 from view.show_mode.editor.nodes.import_node import ImportNode
 
 type_to_node: dict[int, str] = {
+    FilterTypeEnumeration.VFILTER_COLORDIRECTOR: ColorDirectorVFilterNode.nodeName,
     FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL: ColorToColorwheelAdapterNode.nodeName,
     FilterTypeEnumeration.VFILTER_SEQUENCER: SequencerNode.nodeName,
     FilterTypeEnumeration.VFILTER_COLOR_MIXER: ColorMixerVFilterNode.nodeName,

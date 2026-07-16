@@ -16,6 +16,7 @@ from view.show_mode.show_ui_widgets.chaser_apply_preset_uiwidget import ChaserAp
 from view.show_mode.show_ui_widgets.chaser_create_config_uiwidget import ChaserCreateConfigUIWidget
 from view.show_mode.show_ui_widgets.clock_ui_widget import ClockUIWidget
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
+from view.show_mode.show_ui_widgets.colordirector.uiwidget import ColorDirectorShowUIWidget
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
@@ -25,7 +26,7 @@ from view.show_mode.show_ui_widgets.sequencer_control import SequencerControlUIW
 from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
 
 """
-The widget library contains information about widgets, provided by their slug. The infomration that is stored consists
+The widget library contains information about widgets, provided by their slug. The information that is stored consists
 out of the human readable name, the type required to instantiate a requested widget, the supported filter types (that
 should be selected for construction) and a number indicating how many filters should be selected.
 """
@@ -100,6 +101,11 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
             ]
         ],
     ),
+    "color_director": (
+        "Color Director",
+        ColorDirectorShowUIWidget,
+        [[FilterTypeEnumeration.VFILTER_COLORDIRECTOR]],
+    )
 }
 
 

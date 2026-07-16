@@ -29,6 +29,15 @@ def _mul(value: str, arg: str) -> str:
 def _div(value: str, arg: str) -> str:
     return str(int(int(value) / int(arg)))
 
+def get_math_enabled_jinja_env() -> Environment:
+    """Get a Jinja environment with enabled math filters."""
+    env = Environment()  # NOQA: S701 the editor is not a web page.
+    env.filters["add"] = _add
+    env.filters["sub"] = _sub
+    env.filters["mul"] = _mul
+    env.filters["div"] = _div
+    return env
+
 class ConnectCommand(Command):
     """Command to connect filters."""
 
@@ -36,11 +45,7 @@ class ConnectCommand(Command):
         """Initialize the command."""
         super().__init__(context, "connect")
         self._help_text = "Connect filter channels"
-        self._jinja_env = Environment()  # NOQA: S701 the editor is not a web page.
-        self._jinja_env.filters["add"] = _add
-        self._jinja_env.filters["sub"] = _sub
-        self._jinja_env.filters["mul"] = _mul
-        self._jinja_env.filters["div"] = _div
+        self._jinja_env = get_math_enabled_jinja_env()
 
     @override
     def configure_parser(self, parser: ArgumentParser) -> None:

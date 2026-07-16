@@ -6,6 +6,7 @@ This file contains the switching vFilter implementation for the cue filter.
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
+from controller.network import NetworkManager
 from model import Filter, Scene
 from model.filter import DataType, FilterTypeEnumeration, VirtualFilter
 
@@ -43,6 +44,7 @@ class PreviewFilter(VirtualFilter):
         self._channel_mapping: dict[str, str] = {}
         self._inst_filter_type: FilterTypeEnumeration = inst_filter_type
         self.linked_ui_widgets: list[CueControlUIWidget] = []
+        self._nm = NetworkManager()
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -52,6 +54,13 @@ class PreviewFilter(VirtualFilter):
 
         # just return the output ports as-is
         return f"{self.filter_id}:{virtual_port_id}"
+
+    @override
+    def handle_filter_message(self, key: str, value: str) -> bool:
+        if not self.in_preview_mode:
+            self._nm.send_gui_update_to_fish(self.scene.scene_id, self.filter_id, key, value, enque=True)
+            return True
+        return False
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:

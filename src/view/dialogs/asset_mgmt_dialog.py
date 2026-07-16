@@ -13,10 +13,10 @@ from model.media_assets.media_type import MediaType
 from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
 
 _SUPPORTED_FILE_ENDINGS: dict[MediaType, list[str]] = {
-    MediaType.TEXT: [".txt"],
-    MediaType.IMAGE: [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".pbm", ".pgm", ".ppm", ".xbm", ".xpm"],
+    MediaType.IMAGE: [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".pbm", ".pgm", ".ppm", ".xbm", ".xpm", ".svg"],
     MediaType.VIDEO: [".mp4"],
     MediaType.AUDIO: [".wav", ".mp3", ".flac"],
+    MediaType.TEXT: [".txt", ".json", ".md"],
     MediaType.MODEL_3D: [".stl", ".obj"]
 }
 

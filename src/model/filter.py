@@ -80,8 +80,10 @@ class FilterTypeEnumeration(IntFlag):
     """Filter type enumeration.
 
     Negative values indicate virtual filters.
+
     """
 
+    VFILTER_COLORDIRECTOR = -15
     VFILTER_COLOR_TO_COLORWHEEL = -14
     VFILTER_DIMMER_BRIGHTNESS_MIXIN = -13
     VFILTER_SEQUENCER = -12
@@ -201,7 +203,6 @@ class Filter:
         initial_parameters: The initial parameters of the filter.
 
         """
-        # TODO id why as string
         if pos is None:
             pos = [0.0, 0.0]
 
@@ -411,3 +412,19 @@ class VirtualFilter(Filter, abc.ABC):
         the filter element within the show file. Afterward the current state of the v-filter needs to be accessible
         purely by querying the configuration and parameters variables.
         """
+
+    def handle_filter_message(self, key: str, value: str) -> bool:
+        """Implement this method in order to handle filter messages targeting the virtual filter.
+
+        As virtual filters do not represent a single unit in a fish scene, the handling of filter messages
+        needs to be implemented with this method.
+
+        Args:
+            key: The key of the filter message.
+            value: The value of the filter message.
+
+        Returns:
+            True if execution was successful.
+
+        """
+        return False
