@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
+from model.ofl.fixture_not_found_exception import FixtureDefNotFoundError
 from model.ofl.ofl_fixture import CapabilityType, FixtureMode, MatrixChannelInsert, OflFixture
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
@@ -56,22 +57,7 @@ class ColorSupport(IntFlag):
         return "+".join(s)
 
 
-class FixtureDefNotFoundError(Exception):
-    """Exception raised when fixture definition could not be found on disk."""
-
-    def __init__(self, fixture_path: str, further_info: str) -> None:
-        """Initialize with default message and provided fixture info."""
-        super().__init__("Fixture Definition Not Found")
-        self.fixture_path = fixture_path
-        self.further_info = further_info
-
-    def __str__(self) -> str:
-        """Generate reasonable error message for observing human."""
-        return f"Failed to load fixture {self.fixture_path}.\n{"File not Found.\n" if not
-        os.path.exists(self.fixture_path) else ""}Further info: {self.further_info}"
-
-
-def load_fixture(file: str) -> OflFixture | None:
+def load_fixture(file: str) -> OflFixture:
     """Load fixture from OFL JSON."""
     if not os.path.isfile(file):
         logger.error("Fixture definition %s not found.", file)
