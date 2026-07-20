@@ -425,7 +425,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._settings_dialog.show()
 
     def _open_file_selected(self, diag: SelectionDialog) -> None:
-        if len(diag.selected_items) < 1:
+        if not diag.selected_items:
             return
         read_document(diag.selected_items[0], self._board_configuration)
         self._settings_dialog = None
