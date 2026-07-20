@@ -178,7 +178,10 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         logger.exception("Unable to update show UI window count: %s", e)
         update_window_count(0, board_configuration)
     board_configuration.broadcaster.show_file_loaded.emit()
-    register_opened_file(file_name)
+    try:
+        register_opened_file(file_name)
+    except Exception as e:
+        logger.exception("Unable to register opened file: %s (%s)", file_name, str(e))
     pn.close()
     return True
 

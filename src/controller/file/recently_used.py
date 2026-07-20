@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 _STORAGE_PATH = os.path.join(os.path.expanduser("~"), ".local", "share", "missionDMX")
 _STORAGE_FILE = os.path.join(_STORAGE_PATH, "recently_used.list")
 
-if not os.path.exists(_STORAGE_PATH):
+if not Path(_STORAGE_PATH).exists():
     os.makedirs(_STORAGE_PATH, mode=0o770, exist_ok=True)
 
-if not os.path.exists(_STORAGE_FILE):
+if not Path(_STORAGE_FILE).exists():
     with open(_STORAGE_FILE, "w") as f:
         f.write("")
     del f
@@ -26,9 +27,11 @@ def get_recently_used_files() -> list[str]:
     with open(_STORAGE_FILE, "r") as f:
         entries = f.readlines()
         for entry in entries:
-            if entry.strip() == "":
+            clean_file_path = entry.replace("\n", "").strip()
+            if clean_file_path == "":
                 continue
-            real_entries.append(entry.replace("\n", ""))
+            if Path(clean_file_path).exists():
+                real_entries.append(clean_file_path)
     return real_entries
 
 def register_opened_file(path: str) -> None:

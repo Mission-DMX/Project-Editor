@@ -34,7 +34,7 @@ from view.patch_view.patch_mode import PatchMode
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
-from view.utility_widgets.file_list_label import FileListLabel, FileListLabelDelegate
+from view.utility_widgets.file_list_label import FileListLabelDelegate
 from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
 
