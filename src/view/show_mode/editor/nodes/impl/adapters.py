@@ -47,7 +47,7 @@ class Adapter16BitToBoolNode(FilterNode):
 
 
 class Adapter16bitToFloat(FilterNode):
-    """Node for 16bit to float adapter filter."""
+    """Filter node to convert a 16 bit value to a float."""
 
     nodeName = "16bit to Float converter"  # noqa: N815
 
@@ -65,7 +65,7 @@ class Adapter16bitToFloat(FilterNode):
 
 
 class Adapter8bitToFloat(FilterNode):
-    """Node for 8bit to float adapter filter."""
+    """Filter node to convert a 8bit value to a float."""
 
     nodeName = "8bit to Float converter"  # noqa: N815
 
@@ -338,8 +338,9 @@ class Map8BitTo16Bit(FilterNode):
 
 
 class ColorBrightnessMixinNode(FilterNode):
-    """Node for color brightness mixin v-filter.
+    """Filter node to mix brightness values conveniently.
 
+    It supports the brightness mixin v-filter.
     It provides convenience features for easier mix selection.
 
     """
