@@ -7,17 +7,10 @@ from pathlib import Path
 _STORAGE_PATH = Path.home() / ".local" / "share" / "missionDMX"
 _STORAGE_FILE = _STORAGE_PATH / "recently_used.list"
 
+_STORAGE_PATH.mkdir(parents=True, mode=0o770, exist_ok=True)
 
-def init_recently_used_storage() -> None:
-    """Initialize the storage path and file for recently used files.
-
-    This must be called once during application startup before any other
-    functions in this module are used.
-    """
-    _STORAGE_PATH.mkdir(parents=True, mode=0o770, exist_ok=True)
-
-    if not _STORAGE_FILE.exists():
-        _STORAGE_FILE.touch()
+if not _STORAGE_FILE.exists():
+    _STORAGE_FILE.touch()
 
 
 def get_recently_used_files() -> list[str]:
