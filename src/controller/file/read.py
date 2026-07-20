@@ -12,6 +12,7 @@ import proto.Console_pb2
 import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
+from controller.file.recently_used import register_opened_file
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Filter, Scene, UIPage, Universe
 from model.color_hsi import ColorHSI
@@ -177,6 +178,10 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         logger.exception("Unable to update show UI window count: %s", e)
         update_window_count(0, board_configuration)
     board_configuration.broadcaster.show_file_loaded.emit()
+    try:
+        register_opened_file(file_name)
+    except Exception as e:
+        logger.exception("Unable to register opened file: %s (%s)", file_name, str(e))
     pn.close()
     return True
 
