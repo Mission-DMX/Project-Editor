@@ -20,14 +20,11 @@ def get_recently_used_files() -> list[str]:
         A list of the recently used files in descending order.
 
     """
-    real_entries = []
-    for entry in _STORAGE_FILE.read_text().splitlines():
-        clean_file_path = entry.strip()
-        if clean_file_path == "":
-            continue
-        if Path(clean_file_path).exists():
-            real_entries.append(clean_file_path)
-    return real_entries
+    return [
+        entry
+        for entry in _STORAGE_FILE.read_text(encoding="utf-8").splitlines()
+        if entry.strip() and Path(entry).exists()
+    ]
 
 
 def register_opened_file(path: str) -> None:
@@ -37,10 +34,14 @@ def register_opened_file(path: str) -> None:
         path: The path to the file which was opened.
 
     """
-    path = Path(path.strip()).expanduser().as_posix()
-    existing_entries = get_recently_used_files()
-    new_entries = [path]
-    new_entries.extend(
-        f"\n{entry}" for i, entry in enumerate(existing_entries) if entry.strip() != "" and entry != path and i < 10
+    path = str(Path(path.strip()).expanduser().resolve())
+
+    entries = [
+        path,
+        *[entry for entry in get_recently_used_files() if entry != path],
+    ]
+
+    _STORAGE_FILE.write_text(
+        "\n".join(entries[:10]),
+        encoding="utf-8",
     )
-    _STORAGE_FILE.write_text("".join(new_entries))
