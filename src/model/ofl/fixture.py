@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 import numpy as np
 from PySide6 import QtCore
 
+from model.ofl.fixture_not_found_exception import FixtureDefNotFoundError
 from model.ofl.ofl_fixture import CapabilityType, FixtureMode, MatrixChannelInsert, OflFixture
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
@@ -56,11 +57,11 @@ class ColorSupport(IntFlag):
         return "+".join(s)
 
 
-def load_fixture(file: str) -> OflFixture | None:
+def load_fixture(file: str) -> OflFixture:
     """Load fixture from OFL JSON."""
     if not os.path.isfile(file):
         logger.error("Fixture definition %s not found.", file)
-        return None
+        raise FixtureDefNotFoundError(file, "Path is no file. Does it exist?")
     with open(file, "r", encoding="UTF-8") as f:
         try:
             ob: dict = json.load(f)
@@ -198,7 +199,17 @@ class UsedFixture(QtCore.QObject):
 
     @property
     def mode(self) -> FixtureMode:
-        """Mode of theFixture."""
+        """Mode of theFixture.
+
+        Raises:
+            FixtureDefNotFoundError if the fixture mode does not exist.
+
+        """
+        if len(self._fixture.modes) <= self._mode_index:
+            raise FixtureDefNotFoundError(
+                self._fixture.fileName,
+                "Fixture does not have requested mode. Are the fixture defintions up to date?"
+            )
         return self._fixture.modes[self._mode_index]
 
     @property
@@ -325,4 +336,8 @@ def make_used_fixture(
     board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
 ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
-    return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    try:
+        return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+    except ValueError as e:
+        logger.error(e)
+        raise FixtureDefNotFoundError(fixture.fileName, str(e)) from e
