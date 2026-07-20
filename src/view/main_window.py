@@ -20,7 +20,6 @@ from controller.file.showfile_dialogs import (
     show_load_showfile_dialog,
     show_save_showfile_dialog,
 )
-
 from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
