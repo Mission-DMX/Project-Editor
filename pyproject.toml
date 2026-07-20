@@ -1,6 +1,6 @@
 [project]
 name = "MissionDMX Editor"
-version = "1.2.2"
+version = "1.2.4.dev1"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
     { name = "CorsCodini", email = "cors.codini@web.de" },
