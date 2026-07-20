@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
-_STORAGE_PATH = os.path.join(os.path.expanduser("~"), ".local", "share", "missionDMX")
-_STORAGE_FILE = os.path.join(_STORAGE_PATH, "recently_used.list")
+_STORAGE_PATH = Path.home() / ".local" / "share" / "missionDMX"
+_STORAGE_FILE = _STORAGE_PATH / "recently_used.list"
 
-if not Path(_STORAGE_PATH).exists():
-    os.makedirs(_STORAGE_PATH, mode=0o770, exist_ok=True)
+_STORAGE_PATH.mkdir(parents=True, mode=0o770, exist_ok=True)
 
-if not Path(_STORAGE_FILE).exists():
-    with open(_STORAGE_FILE, "w") as f:
-        f.write("")
-    del f
+if not _STORAGE_FILE.exists():
+    _STORAGE_FILE.touch()
+
 
 def get_recently_used_files() -> list[str]:
     """Method returns the list of recently used files.
@@ -23,16 +20,12 @@ def get_recently_used_files() -> list[str]:
         A list of the recently used files in descending order.
 
     """
-    real_entries = []
-    with open(_STORAGE_FILE, "r") as f:
-        entries = f.readlines()
-        for entry in entries:
-            clean_file_path = entry.replace("\n", "").strip()
-            if clean_file_path == "":
-                continue
-            if Path(clean_file_path).exists():
-                real_entries.append(clean_file_path)
-    return real_entries
+    return [
+        entry.split()
+        for entry in _STORAGE_FILE.read_text(encoding="utf-8").splitlines()
+        if entry.strip() and Path(entry).exists()
+    ]
+
 
 def register_opened_file(path: str) -> None:
     """Registers a file as being opened.
@@ -41,10 +34,14 @@ def register_opened_file(path: str) -> None:
         path: The path to the file which was opened.
 
     """
-    path = os.path.expanduser(path.strip())
-    existing_entries = get_recently_used_files()
-    new_entries = [path]
-    new_entries.extend(f"\n{entry}" for i, entry in enumerate(existing_entries) if
-                       entry.strip() != "" and entry != path and i < 10)
-    with open(_STORAGE_FILE, "w") as output_file:
-        output_file.writelines(new_entries)
+    path = str(Path(path.strip()).expanduser().resolve())
+
+    entries = [
+        path,
+        *[entry for entry in get_recently_used_files() if entry != path],
+    ]
+
+    _STORAGE_FILE.write_text(
+        "\n".join(entries[:10]),
+        encoding="utf-8",
+    )

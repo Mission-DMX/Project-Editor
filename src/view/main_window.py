@@ -39,16 +39,18 @@ from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizar
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from PySide6.QtWidgets import QWizard
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """Main window of the app. All widget are children of its central widget."""
+    """Main window of the app. All widgets are children of its central widget."""
 
     STATUS_ICON_DIRECT_MODE = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
     STATUS_ICON_FILTER_MODE = QIcon(resource_path(os.path.join("resources", "icons", "play.svg")))
 
-    def __init__(self, parent: QWidget = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         """Inits the MainWindow.
 
         Args:
@@ -64,9 +66,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # model objects
         self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
-
         # views
-        views: list[tuple[str, QtWidgets.QWidget, callable]] = [
+        views: list[tuple[str, QtWidgets.QWidget, Callable[[], None]]] = [
             (
                 "Console Mode",
                 MainWidget(UniverseSelector(self._board_configuration, self), self),
@@ -169,7 +170,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[tuple[str, None | callable, str | None]]] = {
+        menus: dict[str, list[tuple[str, Callable[[], None] | None, str | None]]] = {
             "Fish": [
                 ("&Connect", self._start_connection, None),
                 ("&Disconnect", self._fish_connector.disconnect, None),
@@ -226,7 +227,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def _start_connection(self) -> None:  # TODO rework to signals
         self._fish_connector.start(True)
 
-    def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
+    def _add_entries_to_menu(
+        self, menu: QtWidgets.QMenu, entries: list[tuple[str, Callable[[], None] | None, str | None]]
+    ) -> None:
         """Add entries to a menu."""
         for entry in entries:
             if entry[0] == "---":
@@ -407,15 +410,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _open_recent(self) -> None:
         recently_opened_show_files = get_recently_used_files()
-        self._settings_dialog = SelectionDialog("Open Recent", "Please select the show file to load.",
-                                                recently_opened_show_files, self, False,
-                                                self._open_file_selected, FileListLabelDelegate())
+        self._settings_dialog = SelectionDialog(
+            "Open Recent",
+            "Please select the show file to load.",
+            recently_opened_show_files,
+            self,
+            False,
+            self._open_file_selected,
+            FileListLabelDelegate(),
+        )
         self._settings_dialog.setMinimumWidth(800)
         self._settings_dialog.setMinimumHeight(600)
         self._settings_dialog.show()
 
     def _open_file_selected(self, diag: SelectionDialog) -> None:
-        if len(diag.selected_items) < 1:
+        if not diag.selected_items:
             return
         read_document(diag.selected_items[0], self._board_configuration)
         self._settings_dialog = None
@@ -433,7 +442,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self,
                 "Close Editor",
                 "Do you really want to close this window? Any unsaved changes will be lost.",
-                self._close_callback
+                self._close_callback,
             )
             self._settings_dialog.setModal(True)
             self._settings_dialog.show()
