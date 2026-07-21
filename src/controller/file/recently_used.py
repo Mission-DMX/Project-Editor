@@ -21,7 +21,7 @@ def get_recently_used_files() -> list[str]:
 
     """
     return [
-        entry.split()
+        entry.strip()
         for entry in _STORAGE_FILE.read_text(encoding="utf-8").splitlines()
         if entry.strip() and Path(entry).exists()
     ]
