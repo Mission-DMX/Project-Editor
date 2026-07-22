@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest import case
 
 from controller.cli.command import Command
 from controller.file.read import read_document

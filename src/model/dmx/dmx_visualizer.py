@@ -14,7 +14,7 @@ from typing import Dict, List
 from PySide6 import QtCore
 
 from model.broadcaster import Broadcaster
-from model.stage import StageConfig, MovingHead
+from model.stage import MovingHead, StageConfig
 
 logger = logging.getLogger(__file__)
 
@@ -34,13 +34,13 @@ DEFAULT_TILT_MAX_DEG = 270.0
 
 def _primary(raw_name: str) -> str:
     # OFL joins multi-function channels with "___" - keep only the first part.
-    return raw_name.split("___")[0].strip().lower().replace(" ", "_")
+    return raw_name.split("___", maxsplit=1)[0].strip().lower().replace(" ", "_")
 
 
-def auto_detect_mapping(channel_names: List[str],
-                        roles: List[str]) -> Dict[str, int]:
+def auto_detect_mapping(channel_names: list[str],
+                        roles: list[str]) -> dict[str, int]:
     """Return a {role: channel_offset} dict, -1 where no match was found."""
-    mapping = {r: -1 for r in roles}
+    mapping = dict.fromkeys(roles, -1)
 
     for i, raw_name in enumerate(channel_names):
         p = _primary(raw_name)

@@ -12,7 +12,14 @@ from PySide6.QtWidgets import QApplication, QProgressBar, QWidget
 
 import proto.RealTimeControl_pb2
 import style
-from controller.file.showfile_dialogs import _save_show_file, show_load_showfile_dialog, show_save_showfile_dialog
+from controller.file.read import read_document
+from controller.file.recently_used import get_recently_used_files
+from controller.file.showfile_dialogs import (
+    _save_show_file,
+    open_show_export_dialog,
+    show_load_showfile_dialog,
+    show_save_showfile_dialog,
+)
 from controller.network import NetworkManager
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
@@ -23,28 +30,33 @@ from view.action_setup_view.combined_action_setup_widget import CombinedActionSe
 from view.console_mode.console_universe_selector import UniverseSelector
 from view.dialogs.asset_mgmt_dialog import AssetManagementDialog
 from view.dialogs.colum_dialog import ColumnDialog
+from view.dialogs.selection_dialog import SelectionDialog
 from view.logging_view.logging_widget import LoggingWidget
 from view.main_widget import MainWidget
 from view.misc.console_dock_widget import ConsoleDockWidget
 from view.misc.settings.settings_dialog import SettingsDialog
 from view.patch_view.patch_mode import PatchMode
+from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
 from view.show_mode.editor.showmanager import ShowEditorWidget
 from view.show_mode.player.showplayer import ShowPlayerWidget
+from view.utility_widgets.file_list_label import FileListLabelDelegate
 from view.utility_widgets.wizzards.patch_plan_export import PatchPlanExportWizard
 from view.utility_widgets.wizzards.theater_scene_wizard import TheaterSceneWizard
 from view.visualizer.visualizer_widget import StageVisualizerWidget
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from PySide6.QtWidgets import QWizard
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """Main window of the app. All widget are children of its central widget."""
+    """Main window of the app. All widgets are children of its central widget."""
 
     STATUS_ICON_DIRECT_MODE = QIcon(resource_path(os.path.join("resources", "icons", "faders.svg")))
     STATUS_ICON_FILTER_MODE = QIcon(resource_path(os.path.join("resources", "icons", "play.svg")))
 
-    def __init__(self, parent: QWidget = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         """Inits the MainWindow.
 
         Args:
@@ -60,9 +72,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # model objects
         self._fish_connector: NetworkManager = NetworkManager()
         self._board_configuration: BoardConfiguration = BoardConfiguration()
-
         # views
-        views: list[tuple[str, QtWidgets.QWidget, callable]] = [
+        views: list[tuple[str, QtWidgets.QWidget, Callable[[], None]]] = [
             (
                 "Console Mode",
                 MainWidget(UniverseSelector(self._board_configuration, self), self),
@@ -145,6 +156,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._terminal_widget: ConsoleDockWidget | None = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
+        self._close_now = False
 
     @property
     def fish_connector(self) -> NetworkManager:
@@ -172,7 +184,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setup_menubar(self) -> None:
         """Adds a menubar with submenus."""
         self.setMenuBar(QtWidgets.QMenuBar())
-        menus: dict[str, list[tuple[str, None | callable, str | None]]] = {
+        menus: dict[str, list[tuple[str, Callable[[], None] | None, str | None]]] = {
             "Fish": [
                 ("&Connect", self._start_connection, None),
                 ("&Disconnect", self._fish_connector.disconnect, None),
@@ -200,8 +212,11 @@ class MainWindow(QtWidgets.QMainWindow):
             ],
             "File": [
                 ("&Load Showfile", lambda: show_load_showfile_dialog(self, self._board_configuration), "O"),
+                ("Open Recent", self._open_recent, "Shift+O"),
                 ("Save Showfile", self._save_show, "S"),
                 ("&Save Showfile As", lambda: show_save_showfile_dialog(self, self._board_configuration), "Shift+S"),
+                ("---", None, None),
+                ("Export to Standalone", lambda: open_show_export_dialog(self, self._board_configuration), None),
                 ("---", None, None),
                 ("Load Stagefile", self._load_stage_file, None),
                 ("Save Stagefile As", self._save_stage_file, None),
@@ -228,18 +243,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
 
-    @override
-    def closeEvent(self, event: QCloseEvent, /) -> None:
-        # TODO use event.ignore() here is there's still stuff to do
-        super().closeEvent(event)
-        QApplication.processEvents()
-        self._broadcaster.application_closing.emit()
-        QApplication.processEvents()
-
     def _start_connection(self) -> None:  # TODO rework to signals
         self._fish_connector.start(True)
 
-    def _add_entries_to_menu(self, menu: QtWidgets.QMenu, entries: list[list[str, callable]]) -> None:
+    def _add_entries_to_menu(
+        self, menu: QtWidgets.QMenu, entries: list[tuple[str, Callable[[], None] | None, str | None]]
+    ) -> None:
         """Add entries to a menu."""
         for entry in entries:
             if entry[0] == "---":
@@ -425,3 +434,46 @@ class MainWindow(QtWidgets.QMainWindow):
     def _open_asset_mgmt_dialog(self) -> None:
         self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
         self._settings_dialog.show()
+
+    def _open_recent(self) -> None:
+        recently_opened_show_files = get_recently_used_files()
+        self._settings_dialog = SelectionDialog(
+            "Open Recent",
+            "Please select the show file to load.",
+            recently_opened_show_files,
+            self,
+            False,
+            self._open_file_selected,
+            FileListLabelDelegate(),
+        )
+        self._settings_dialog.setMinimumWidth(800)
+        self._settings_dialog.setMinimumHeight(600)
+        self._settings_dialog.show()
+
+    def _open_file_selected(self, diag: SelectionDialog) -> None:
+        if not diag.selected_items:
+            return
+        read_document(diag.selected_items[0], self._board_configuration)
+        self._settings_dialog = None
+
+    @override
+    def closeEvent(self, event: QCloseEvent) -> None:
+        if self._close_now:
+            super().closeEvent(event)
+            QApplication.processEvents()
+            self._broadcaster.application_closing.emit()
+            QApplication.processEvents()
+        else:
+            event.ignore()
+            self._settings_dialog = YesNoDialog(
+                self,
+                "Close Editor",
+                "Do you really want to close this window? Any unsaved changes will be lost.",
+                self._close_callback,
+            )
+            self._settings_dialog.setModal(True)
+            self._settings_dialog.show()
+
+    def _close_callback(self) -> None:
+        self._close_now = True
+        self.close()

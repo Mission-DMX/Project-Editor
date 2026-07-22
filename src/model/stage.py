@@ -5,8 +5,8 @@ Platform). ``StageConfig`` is the aggregate root that loads and saves
 the full stage to a YAML file under ``~/.local/share/missionDMX/stage/``.
 """
 
-import os
 import logging
+import os
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
@@ -49,7 +49,7 @@ def backup_stage_file(stage_path: str) -> str:
 
 
 # Bundled GLB models. Keys must match StageObject.get_type().
-DEFAULT_MODEL_PATHS: Dict[str, str] = {
+DEFAULT_MODEL_PATHS: dict[str, str] = {
     "truss":               resource_path(os.path.join("resources", "3dmodels", "truss.glb")),
     "truss_default":       resource_path(os.path.join("resources", "3dmodels", "truss.glb")),
     "truss_2point_medium": resource_path(os.path.join("resources", "3dmodels", "truss 2point medium.glb")),
@@ -71,7 +71,7 @@ class ModelEntry:
     """
 
     model_path: str
-    local_ops: Tuple[Tuple[str, Any], ...] = ()
+    local_ops: tuple[tuple[str, Any], ...] = ()
 
 
 class StageObject:
@@ -80,10 +80,10 @@ class StageObject:
     def __init__(
         self,
         object_id: str,
-        position: Optional[Tuple[float, float, float]] = None,
-        rotation: Optional[Tuple[float, float, float]] = None,
-        scale: Optional[float] = None,
-        model_path: Optional[str] = None,
+        position: tuple[float, float, float] | None = None,
+        rotation: tuple[float, float, float] | None = None,
+        scale: float | None = None,
+        model_path: str | None = None,
     ):
         self.id = object_id
         self.name = ""
@@ -93,7 +93,7 @@ class StageObject:
         self.model_path = model_path
 
         # Optional link to a real DMX device (universe, start_channel, mapping).
-        self.device_config: Optional[Dict[str, Any]] = None
+        self.device_config: dict[str, Any] | None = None
 
         if self.model_path is None:
             key = self.get_type().lower()
@@ -106,13 +106,13 @@ class StageObject:
     def get_display_name(self) -> str:
         return self.get_type()
 
-    def get_model_entries(self) -> List[ModelEntry]:
+    def get_model_entries(self) -> list[ModelEntry]:
         """One or more render entries. Composite fixtures override this."""
         if not self.model_path:
             return []
         return [ModelEntry(self.model_path)]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         d = {
             "id": self.id,
             "name": self.name,
@@ -126,7 +126,7 @@ class StageObject:
         return d
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         object_id = data.get("id")
         pos = data.get("position", {})
         rot = data.get("rotation", {})
@@ -135,7 +135,7 @@ class StageObject:
         scale = float(data.get("scale", 1.0))
         obj = cls(object_id, position, rotation, scale)
         obj.name = data.get("name", "")
-        obj.device_config = data.get("device", None)
+        obj.device_config = data.get("device")
         return obj
 
 
@@ -191,13 +191,13 @@ class Truss(StageObject):
         }
         return mapping.get(self.variant, f"Truss {self.variant}")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         data = super().to_dict()
         data["variant"] = self.variant
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         object_id = data.get("id")
         pos = data.get("position", {})
         rot = data.get("rotation", {})
@@ -219,7 +219,7 @@ class Truss(StageObject):
         obj = cls(object_id, variant=variant, position=position,
                   rotation=rotation, scale=scale)
         obj.name = data.get("name", "")
-        obj.device_config = data.get("device", None)
+        obj.device_config = data.get("device")
         return obj
 
 
@@ -249,7 +249,7 @@ class MovingHead(StageObject):
         pan: float = 0.0,
         tilt: float = 0.0,
         beam_on: bool = True,
-        beam_color: Optional[Tuple[int, int, int]] = None,
+        beam_color: tuple[int, int, int] | None = None,
         dimmer: float = 1.0,
     ):
         # Must be set before super().__init__ since get_type() reads it.
@@ -272,17 +272,17 @@ class MovingHead(StageObject):
     def get_display_name(self) -> str:
         return "Moving Head"
 
-    def get_model_entries(self) -> List[ModelEntry]:
+    def get_model_entries(self) -> list[ModelEntry]:
         return [ModelEntry(DEFAULT_MODEL_PATHS["moving_head"])]
 
-    def get_gltf_node_overrides(self) -> Dict[str, Tuple[float, float, float, float]]:
+    def get_gltf_node_overrides(self) -> dict[str, tuple[float, float, float, float]]:
         """Axis-angle overrides for pan and tilt: ``{node: (ax, ay, az, deg)}``."""
         return {
             MovingHead.PAN_NODE_NAME:  (*MovingHead.PAN_AXIS, float(self.pan)),
             MovingHead.TILT_NODE_NAME: (*MovingHead.TILT_AXIS, float(self.tilt)),
         }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         data = super().to_dict()
         data.update({
             "pan": self.pan,
@@ -299,7 +299,7 @@ class MovingHead(StageObject):
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         object_id = data.get("id")
         pos = data.get("position", {})
         rot = data.get("rotation", {})
@@ -335,7 +335,7 @@ class MovingHead(StageObject):
             dimmer=dimmer,
         )
         obj.name = data.get("name", "")
-        obj.device_config = data.get("device", None)
+        obj.device_config = data.get("device")
 
         # Reset DMX-controlled values so they come from live data, not the file.
         if obj.device_config:
@@ -379,7 +379,7 @@ def create_object_from_key(fixture_key: str, object_id: str,
     return obj
 
 
-def make_unique_name(desired_name: str, existing_names: List[str]) -> str:
+def make_unique_name(desired_name: str, existing_names: list[str]) -> str:
     """Append ``(1)``, ``(2)``... until the name is unique."""
     if desired_name not in existing_names:
         return desired_name
@@ -400,16 +400,16 @@ class FixtureGroup:
     """
 
     def __init__(self, group_id: str, name: str = "",
-                 position: Optional[Tuple[float, float, float]] = None,
-                 rotation: Optional[Tuple[float, float, float]] = None,
-                 member_ids: Optional[List[str]] = None):
+                 position: tuple[float, float, float] | None = None,
+                 rotation: tuple[float, float, float] | None = None,
+                 member_ids: list[str] | None = None):
         self.id = group_id
         self.name = name
         self.position = position if position is not None else (0.0, 0.0, 0.0)
         self.rotation = rotation if rotation is not None else (0.0, 0.0, 0.0)
-        self.member_ids: List[str] = list(member_ids) if member_ids else []
+        self.member_ids: list[str] = list(member_ids) if member_ids else []
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -419,7 +419,7 @@ class FixtureGroup:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         pos = data.get("position", {})
         rot = data.get("rotation", {})
         return cls(
@@ -436,8 +436,8 @@ class StageConfig:
 
     def __init__(self, yaml_file_path: str):
         self.file_path = yaml_file_path
-        self.objects: List[StageObject] = []
-        self.groups: List[FixtureGroup] = []
+        self.objects: list[StageObject] = []
+        self.groups: list[FixtureGroup] = []
 
         if os.path.exists(self.file_path):
             try:
@@ -485,7 +485,7 @@ class StageConfig:
         except Exception as e:
             logger.error("Failed to save stage config to %s: %s", path, e)
 
-    def get_all_names(self) -> List[str]:
+    def get_all_names(self) -> list[str]:
         names = [obj.name for obj in self.objects if obj.name]
         names += [grp.name for grp in self.groups if grp.name]
         return names
@@ -529,19 +529,19 @@ class StageConfig:
             group.name = make_unique_name(group.name, self.get_all_names())
         self.groups.append(group)
 
-    def remove_group(self, group_id: str) -> Optional[FixtureGroup]:
+    def remove_group(self, group_id: str) -> FixtureGroup | None:
         for i, grp in enumerate(self.groups):
             if grp.id == group_id:
                 return self.groups.pop(i)
         return None
 
-    def get_group(self, group_id: str) -> Optional[FixtureGroup]:
+    def get_group(self, group_id: str) -> FixtureGroup | None:
         for grp in self.groups:
             if grp.id == group_id:
                 return grp
         return None
 
-    def get_group_for_fixture(self, object_id: str) -> Optional[FixtureGroup]:
+    def get_group_for_fixture(self, object_id: str) -> FixtureGroup | None:
         for grp in self.groups:
             if object_id in grp.member_ids:
                 return grp

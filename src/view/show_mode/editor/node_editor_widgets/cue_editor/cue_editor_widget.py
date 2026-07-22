@@ -78,9 +78,11 @@ class CueEditor(PreviewEditWidget):
         if self._bankset:
             self._bankset.update()
             BankSet.push_messages_now()
+        self._persistence_enabled_cb.setChecked(self._model.persistence_enabled)
 
     def _get_configuration(self) -> dict[str, str]:
         self._model.default_cue = self._default_cue_combo_box.currentIndex() - 1
+        self._model.persistence_enabled = self._persistence_enabled_cb.isChecked()
         return self._model.get_as_configuration()
 
     def __init__(self, parent: QWidget = None, f: Filter | None = None) -> None:
@@ -112,6 +114,8 @@ class CueEditor(PreviewEditWidget):
         self._current_cue_another_play_pressed_checkbox.clicked.connect(self._cue_play_pressed_restart_changed)
         self._current_cue_another_play_pressed_checkbox.setEnabled(False)
         cue_settings_container_layout.addRow("", self._current_cue_another_play_pressed_checkbox)
+        self._persistence_enabled_cb = QCheckBox("Enable Persistence", self._parent_widget)
+        cue_settings_container_layout.addWidget(self._persistence_enabled_cb)
 
         cue_settings_container_layout.addRow("Zoom", self.zoom_panel)
         cue_settings_container.setLayout(cue_settings_container_layout)

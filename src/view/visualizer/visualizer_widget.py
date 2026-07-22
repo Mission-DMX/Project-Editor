@@ -6,13 +6,12 @@ single QSplitter and relays signals between them.
 
 import logging
 
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtCore, QtWidgets
 
-from model.stage import (StageConfig, FixtureGroup, get_default_stage_path,
-                         backup_stage_file)
-from model.dmx.dmx_visualizer import DmxVisualizer, auto_detect_mapping, MOVEMENT_ROLES
-from view.visualizer.stage_gl_widget import Stage3DWidget
+from model.dmx.dmx_visualizer import MOVEMENT_ROLES, DmxVisualizer, auto_detect_mapping
+from model.stage import FixtureGroup, StageConfig, backup_stage_file, get_default_stage_path
 from view.visualizer.stage_editor_widget import StageEditorWidget
+from view.visualizer.stage_gl_widget import Stage3DWidget
 
 logger = logging.getLogger(__file__)
 

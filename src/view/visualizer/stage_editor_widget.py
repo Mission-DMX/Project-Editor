@@ -3,11 +3,11 @@
 import logging
 import time
 
-from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from model import stage as stage_model
+from model.dmx.dmx_visualizer import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
 from model.stage import make_unique_name
-from model.dmx.dmx_visualizer import MOVEMENT_ROLES, COLOR_ROLES, auto_detect_mapping
 
 logger = logging.getLogger(__file__)
 
@@ -132,7 +132,7 @@ class AddFixtureDialog(QtWidgets.QDialog):
     def selected_name(self):
         """Return the user-entered name (or the auto-generated placeholder)."""
         text = self._name_edit.text().strip()
-        return text if text else self._name_edit.placeholderText()
+        return text or self._name_edit.placeholderText()
 
     def selected_device(self):
         """Return the selected UsedFixture for DMX linking, or None."""
@@ -167,7 +167,7 @@ class GroupNameDialog(QtWidgets.QDialog):
 
     def selected_name(self):
         text = self._name_edit.text().strip()
-        return text if text else self._name_edit.placeholderText()
+        return text or self._name_edit.placeholderText()
 
 
 class StageEditorWidget(QtWidgets.QWidget):
@@ -267,7 +267,7 @@ class StageEditorWidget(QtWidgets.QWidget):
     def _group_display_text(self, grp):
         """Format display text for a group header list item."""
         count = len(grp.member_ids)
-        name = grp.name if grp.name else grp.id
+        name = grp.name or grp.id
         return f"[G] {name}  ({count} fixtures)"
 
     def _rebuild_list(self):
@@ -672,7 +672,7 @@ class StageEditorWidget(QtWidgets.QWidget):
     def _refresh_locks(self):
         """Re-apply lock state after a device or mapping change."""
         if self._current_obj and isinstance(self._current_obj, stage_model.MovingHead):
-            if hasattr(self, '_pan_spin'):
+            if hasattr(self, "_pan_spin"):
                 self._apply_dmx_locks(self._current_obj)
 
     def update_live_values(self):
@@ -693,22 +693,22 @@ class StageEditorWidget(QtWidgets.QWidget):
 
         self._updating_ui = True
         try:
-            if hasattr(self, '_pan_spin'):
+            if hasattr(self, "_pan_spin"):
                 self._pan_spin.setValue(obj.pan)
-            if hasattr(self, '_tilt_spin'):
+            if hasattr(self, "_tilt_spin"):
                 self._tilt_spin.setValue(obj.tilt)
-            if hasattr(self, '_dimmer_spin'):
+            if hasattr(self, "_dimmer_spin"):
                 self._dimmer_spin.setValue(obj.dimmer)
-            if hasattr(self, '_dimmer_slider'):
+            if hasattr(self, "_dimmer_slider"):
                 self._dimmer_slider.setValue(int(obj.dimmer * 100))
-            if hasattr(self, '_beam_cb'):
+            if hasattr(self, "_beam_cb"):
                 self._beam_cb.setChecked(obj.beam_on)
-            if hasattr(self, '_rgb_spins') and len(self._rgb_spins) == 3:
+            if hasattr(self, "_rgb_spins") and len(self._rgb_spins) == 3:
                 r, g, b = obj.beam_color
                 self._rgb_spins[0].setValue(r)
                 self._rgb_spins[1].setValue(g)
                 self._rgb_spins[2].setValue(b)
-            if hasattr(self, '_color_btn'):
+            if hasattr(self, "_color_btn"):
                 r, g, b = obj.beam_color
                 self._update_color_btn_style(r, g, b)
         except Exception:

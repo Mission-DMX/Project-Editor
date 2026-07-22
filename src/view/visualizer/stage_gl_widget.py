@@ -4,19 +4,18 @@ Renders the scene in three passes (shadow maps, scene objects, volumetric
 beam cones) and handles camera, picking and the name-label overlay.
 """
 
-import logging
 import ctypes
+import json
+import logging
+import math
 import os
 import struct
-import json
-import math
 import time
 
-from PySide6 import QtGui, QtCore
-from PySide6.QtOpenGLWidgets import QOpenGLWidget
-from OpenGL import GL as gl
-
 import numpy as np
+from OpenGL import GL as gl
+from PySide6 import QtCore, QtGui
+from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
 logger = logging.getLogger(__file__)
 
@@ -59,7 +58,7 @@ class GltfModel:
 class SpotLightData:
     """Spotlight data collected per frame from active MovingHeads."""
 
-    __slots__ = ("position", "direction", "color", "inner_cos", "outer_cos")
+    __slots__ = ("color", "direction", "inner_cos", "outer_cos", "position")
 
     def __init__(self, position, direction, color, inner_deg=10.0, outer_deg=18.0):
         self.position = position      # QVector3D
@@ -925,7 +924,7 @@ class Stage3DWidget(QOpenGLWidget):
         """Draw all scene objects with the depth shader (for shadow maps)."""
         for obj in self._stage_config.objects:
             base = self._build_base_model_matrix(obj)
-            for entry in getattr(obj, "get_model_entries", lambda: [])():
+            for entry in getattr(obj, "get_model_entries", list)():
                 model = QtGui.QMatrix4x4(base)
                 self._apply_local_ops(model, getattr(entry, "local_ops", ()))
 
@@ -1023,7 +1022,7 @@ class Stage3DWidget(QOpenGLWidget):
         base = self._build_base_model_matrix(obj)
         gl.glUniform3f(self._sc["baseColor"], color[0], color[1], color[2])
 
-        for entry in getattr(obj, "get_model_entries", lambda: [])():
+        for entry in getattr(obj, "get_model_entries", list)():
             model = QtGui.QMatrix4x4(base)
             self._apply_local_ops(model, getattr(entry, "local_ops", ()))
 
@@ -1174,7 +1173,7 @@ class Stage3DWidget(QOpenGLWidget):
                 continue
 
             base = self._build_base_model_matrix(obj)
-            entries = getattr(obj, "get_model_entries", lambda: [])()
+            entries = getattr(obj, "get_model_entries", list)()
             if not entries:
                 continue
             model_path = entries[0].model_path
@@ -1415,7 +1414,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     def _ensure_models_loaded(self, obj):
         """Ensure all 3D models for a stage object are uploaded to the GPU."""
-        for entry in getattr(obj, "get_model_entries", lambda: [])():
+        for entry in getattr(obj, "get_model_entries", list)():
             self._ensure_model_loaded_by_path(entry.model_path)
 
     def _ensure_model_loaded_by_path(self, path):
@@ -1437,19 +1436,19 @@ class Stage3DWidget(QOpenGLWidget):
         # OBJ fallback loader
         try:
             verts, norms, faces = [], [], []
-            with open(path, 'r', encoding='UTF-8') as f:
+            with open(path, "r", encoding="UTF-8") as f:
                 for line in f:
-                    if line.startswith('v '):
+                    if line.startswith("v "):
                         p = line.split()
                         verts.append((float(p[1]), float(p[2]), float(p[3])))
-                    elif line.startswith('vn '):
+                    elif line.startswith("vn "):
                         p = line.split()
                         norms.append((float(p[1]), float(p[2]), float(p[3])))
-                    elif line.startswith('f '):
+                    elif line.startswith("f "):
                         ps = line.split()[1:]
                         face = []
                         for pt in ps:
-                            ii = pt.split('/')
+                            ii = pt.split("/")
                             face.append((int(ii[0]), int(ii[-1]) if ii[-1] else None))
                         faces.append(face)
             # Build interleaved vertex buffer with index deduplication
@@ -1494,7 +1493,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     def remove_object(self, obj):
         """Release GPU resources for models no longer used by any stage object."""
-        for entry in getattr(obj, "get_model_entries", lambda: [])():
+        for entry in getattr(obj, "get_model_entries", list)():
             path = entry.model_path
             if not path:
                 continue
@@ -1502,7 +1501,7 @@ class Stage3DWidget(QOpenGLWidget):
             still_used = any(
                 e.model_path == path
                 for o in self._stage_config.objects
-                for e in getattr(o, "get_model_entries", lambda: [])()
+                for e in getattr(o, "get_model_entries", list)()
             )
             if still_used:
                 continue
@@ -1637,7 +1636,7 @@ class Stage3DWidget(QOpenGLWidget):
             if obj.get_type() == "platform":
                 continue
 
-            label = obj.name if obj.name else obj.get_display_name()
+            label = obj.name or obj.get_display_name()
             if not label:
                 continue
 
