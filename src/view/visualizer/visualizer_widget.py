@@ -2,26 +2,38 @@
 
 Combines the 3D viewport, the editor panel and the DMX poller behind a
 single QSplitter and relays signals between them.
+
 """
 
-import logging
+from __future__ import annotations
+
+from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtWidgets
 
+from model.broadcaster import Broadcaster
 from model.dmx.dmx_visualizer import MOVEMENT_ROLES, DmxVisualizer, auto_detect_mapping
 from model.stage import FixtureGroup, StageConfig, backup_stage_file, get_default_stage_path
 from view.visualizer.stage_editor_widget import StageEditorWidget
 from view.visualizer.stage_gl_widget import Stage3DWidget
 
-logger = logging.getLogger(__file__)
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
+
+    from model import BoardConfiguration
+    from model.ofl.fixture import UsedFixture
+
+logger = getLogger(__name__)
 
 
 class StageVisualizerWidget(QtWidgets.QSplitter):
     """Horizontal split: 3D viewport on the left, editor panel on the right."""
 
-    def __init__(self, board_configuration, broadcaster, parent=None):
+    def __init__(self, board_configuration: BoardConfiguration, parent: QWidget | None = None) -> None:
+        """Initialize using provided show file and parent object."""
         super().__init__(parent)
-        self._broadcaster = broadcaster
+        self._broadcaster = Broadcaster()
         self._board_configuration = board_configuration
 
         self.setOrientation(QtCore.Qt.Orientation.Horizontal)
@@ -74,11 +86,13 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         self._broadcaster.application_closing.connect(self._on_app_closing)
 
-    def _on_app_closing(self):
+    def _on_app_closing(self) -> None:
         self._stage_config.save()
         logger.info("Stage saved to %s", self._stage_config.file_path)
 
-    def load_stage_file(self):
+    def load_stage_file(self) -> None:
+        """Opens a file dialog to query a stage file and loads it."""
+        # FIXME this is a blocking UI call.
         from model.stage import STAGE_DIR
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Load Stagefile", STAGE_DIR,
@@ -92,7 +106,8 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         self._reload_stage(path)
 
-    def save_stage_file(self):
+    def save_stage_file(self) -> None:
+        """Displays a save file dialog and saves the current stage setup into a stage file."""
         from model.stage import STAGE_DIR
         path, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save Stagefile", STAGE_DIR,
@@ -102,7 +117,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._stage_config.save_to(path)
         logger.info("Stage saved to %s", path)
 
-    def _reload_stage(self, new_path: str):
+    def _reload_stage(self, new_path: str) -> None:
         logger.info("Loading new stage: %s", new_path)
 
         new_config = StageConfig(new_path)
@@ -123,16 +138,16 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         logger.info("Stage loaded: %d objects", len(new_config.objects))
 
-    def _get_fixtures(self):
+    def _get_fixtures(self) -> list[UsedFixture]:
         try:
             return list(self._board_configuration.fixtures)
         except Exception:
             return []
 
-    def _refresh_fixtures(self):
+    def _refresh_fixtures(self) -> None:
         self._editor_widget._used_fixtures = self._get_fixtures()
 
-    def _on_add_object(self, fixture_key: str, name: str, device):
+    def _on_add_object(self, fixture_key: str, name: str, device: UsedFixture) -> None:
         new_id = self._stage_config.get_new_id(fixture_key)
         try:
             from model.stage import create_object_from_key
@@ -166,7 +181,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._gl_widget.update()
         self._stage_config.save()
 
-    def _on_remove_object(self, object_id: str):
+    def _on_remove_object(self, object_id: str) -> None:
         obj = self._stage_config.remove_object(object_id)
         if not obj:
             return
@@ -178,15 +193,15 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._stage_config.save()
         self._editor_widget.refresh_list()
 
-    def _on_object_changed(self, object_id: str):
+    def _on_object_changed(self, object_id: str) -> None:
         self._gl_widget.update()
         self._stage_config.save()
 
-    def _on_selection_changed(self, object_ids: list, is_multi: bool):
+    def _on_selection_changed(self, object_ids: list, is_multi: bool) -> None:
         self._gl_widget.set_selected_objects(object_ids, is_multi)
         self._gl_widget.update()
 
-    def _on_group_requested(self, fixture_ids: list, group_name: str):
+    def _on_group_requested(self, fixture_ids: list, group_name: str) -> None:
         if len(fixture_ids) < 2:
             return
 
@@ -216,19 +231,19 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._stage_config.save()
         self._editor_widget.refresh_list()
 
-    def _on_remove_group(self, group_id: str):
+    def _on_remove_group(self, group_id: str) -> None:
         if self._stage_config.remove_group(group_id):
             self._stage_config.save()
             self._editor_widget.refresh_list()
 
-    def _on_fixture_clicked(self, object_id: str):
+    def _on_fixture_clicked(self, object_id: str) -> None:
         self._editor_widget.select_fixture_by_id(object_id)
 
-    def _on_deselect_all(self):
+    def _on_deselect_all(self) -> None:
         self._editor_widget.deselect_all()
 
-    def _on_dmx_toggled(self, enabled: bool):
+    def _on_dmx_toggled(self, enabled: bool) -> None:
         self._dmx_vis.enabled = enabled
 
-    def _on_dmx_updated(self):
+    def _on_dmx_updated(self) -> None:
         self._editor_widget.update_live_values()
