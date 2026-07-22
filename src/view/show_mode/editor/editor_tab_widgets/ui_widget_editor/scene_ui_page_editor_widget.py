@@ -1,4 +1,4 @@
-"""A scene can have multiple pages"""
+"""A scene can have multiple pages."""
 from typing import override
 
 from PySide6.QtCore import QPoint, Qt
@@ -13,9 +13,10 @@ from view.show_mode.show_ui_widgets import WIDGET_LIBRARY, filter_to_ui_widget
 
 
 class SceneUIPageEditorWidget(QWidget):
-    """This class represents a part of a scene"""
+    """Class represents a part of a scene."""
 
     def __init__(self, page: UIPage, parent: QWidget) -> None:
+        """Initialize editing widget."""
         super().__init__(parent)
         self._ui_page: UIPage = page
         self.setLayout(QGridLayout(self))
@@ -35,26 +36,6 @@ class SceneUIPageEditorWidget(QWidget):
 
     def _widget_selection_menu(self, pos: QPoint) -> None:
         menu = QMenu(self)
-        """
-        added_filters = 0
-        for filter_ in self.ui_page.scene.filters:
-            if len(filter_.gui_update_keys.keys()) < 1:
-                continue
-            action = QAction(filter_.filter_id, self)
-            menu.addAction(action)
-            action.triggered.connect(lambda checked=False, filter__=filter_: self._add_filter_widget(filter__, pos))
-            added_filters += 1
-        if added_filters == 0:
-            action = QAction("There are no suitable filters in the scene", menu)
-            action.setEnabled(False)
-            menu.addAction(action)
-        menu.addSeparator()
-        auto_track_action = QAction("Auto Tracker", self)
-        auto_track_action.triggered.connect(lambda checked=False, filter__=None: self._add_generic_widget(
-            AutoTrackerUIWidget("", self._ui_page), pos)
-                                            )
-        menu.addAction(auto_track_action)
-        """
         for widget_def in WIDGET_LIBRARY.values():
             action = QAction(widget_def[0], menu)
             action.triggered.connect(lambda _, widget=widget_def: self._inst_generic_widget(widget, pos))
@@ -66,8 +47,9 @@ class SceneUIPageEditorWidget(QWidget):
         """Adds the filter widget to the page at the specified position.
 
         Args:
-            ui_widget: A widget to manage a filter
+            filter_: The filter to use for widget linking
             pos: The position at which the widget should be placed
+
         """
         # TODO replace with filter.gui_update_keys to ui widget / Change function to construct one from the keys
         # FIXME we should use this method to provide a context menu to nodes, enabling them to place widgets without
@@ -95,10 +77,11 @@ class SceneUIPageEditorWidget(QWidget):
         self._ui_page.display_update_required = True
 
     def _remove_widget_holder(self, wh: UIWidgetHolder) -> None:
-        """
-        This method should be invoked once a widget should be removed and handles the destruction of the container.
+        """Method should be invoked once a widget should be removed and handles the destruction of the container.
+
         Args:
             wh: The widget that should be removed
+
         """
         self._widgets.remove(wh)
         self._ui_page.remove_widget(wh.widget)
@@ -106,5 +89,5 @@ class SceneUIPageEditorWidget(QWidget):
 
     @property
     def ui_page(self) -> UIPage:
-        """The scene the page represents"""
+        """The scene the page represents."""
         return self._ui_page

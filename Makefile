@@ -1,4 +1,4 @@
-.PHONY: build package clean
+.PHONY: build package clean check-doc
 
 DIST_DIR := bin/MissionDMX-Editor.dist
 
@@ -15,3 +15,6 @@ package: $(wildcard build_files/*) submodules/resources/logo.png bin/MissionDMX-
 
 clean:
 	rm -rf ./bin
+
+check-doc:
+	ruff check --select D --ignore D203 --ignore D213 --ignore D401 --ignore D415
