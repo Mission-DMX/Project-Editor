@@ -58,6 +58,7 @@ class SceneUIPageEditorWidget(QWidget):
         for widget_def in WIDGET_LIBRARY.values():
             action = QAction(widget_def[0], menu)
             action.triggered.connect(lambda _, widget=widget_def: self._inst_generic_widget(widget, pos))
+            # TODO utilize categories to construct sub menus
             menu.addAction(action)
         menu.popup(self.mapToGlobal(pos))
 
@@ -74,7 +75,7 @@ class SceneUIPageEditorWidget(QWidget):
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
         self._add_generic_widget(config_widget, pos)
 
-    def _inst_generic_widget(self, widget_def: tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]]],
+    def _inst_generic_widget(self, widget_def: tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]], str|None],
                              pos: QPoint) -> None:
         config_widget = widget_def[1](self._ui_page, {})
         key_filters = widget_def[2]
