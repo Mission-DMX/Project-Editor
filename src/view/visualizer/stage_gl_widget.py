@@ -2,22 +2,32 @@
 
 Renders the scene in three passes (shadow maps, scene objects, volumetric
 beam cones) and handles camera, picking and the name-label overlay.
+
 """
+
+from __future__ import annotations
 
 import ctypes
 import json
-import logging
 import math
 import os
 import struct
 import time
+from collections.abc import Sequence
+from logging import getLogger
+from typing import TYPE_CHECKING, override
 
 import numpy as np
 from OpenGL import GL as gl
 from PySide6 import QtCore, QtGui
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
-logger = logging.getLogger(__file__)
+if TYPE_CHECKING:
+    from PySide6.QtCore import QPoint
+
+    from model.stage import StageObject
+
+logger = getLogger(__name__)
 
 MAX_SPOT_LIGHTS = 16    # maximum simultaneous spotlights in the scene shader
 MAX_SHADOW_MAPS = 4     # shadow-casting lights (texture array layers)
@@ -607,8 +617,8 @@ class Stage3DWidget(QOpenGLWidget):
         self._camera_timer.start(16)
 
         # Model caches
-        self._models = {}       # path -> Model3D (OBJ meshes)
-        self._gltf_models = {}  # path -> GltfModel
+        self._models: dict[str, Model3D] = {}       # path -> Model3D (OBJ meshes)
+        self._gltf_models: dict[str, GltfModel] = {}  # path -> GltfModel
         self._beam_cone = None
         self._ground_plane = None
 
@@ -941,7 +951,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Shared rendering helpers
 
-    def _build_base_model_matrix(self, obj):
+    def _build_base_model_matrix(self, obj) -> QtGui.QMatrix4x4:
         """Build the T * Rz * Ry * Rx * S model matrix for a stage object."""
         m = QtGui.QMatrix4x4()
         m.translate(obj.position[0], obj.position[1], obj.position[2])
@@ -1038,8 +1048,12 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Pass 2: Beam rendering
 
-    def _draw_all_beams(self, beam_list, proj_data, view_data,
-                        spotlights, light_space_matrices):
+    def _draw_all_beams(self,
+                        beam_list: list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]],
+                        proj_data: Sequence[float],
+                        view_data: Sequence[float],
+                        spotlights: list[SpotLightData],
+                        light_space_matrices: list[QtGui.QMatrix4x4]) -> None:
         """Draw all volumetric beam cones with additive blending.
 
         The depth buffer from Pass 1 (ground plane) naturally prevents
@@ -1111,7 +1125,8 @@ class Stage3DWidget(QOpenGLWidget):
             gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, 0)
             gl.glActiveTexture(gl.GL_TEXTURE0)
 
-    def _build_cone_matrix(self, origin, direction, length, radius):
+    def _build_cone_matrix(self, origin: QtGui.QVector3D, direction: QtGui.QVector3D,
+                           length: float, radius: float) -> QtGui.QMatrix4x4:
         """Build a model matrix that places the unit cone (tip=origin, base along direction).
 
         Constructs a rotation matrix from a local coordinate frame
@@ -1148,7 +1163,9 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Light and beam collection
 
-    def _collect_lights_and_beams(self):
+    def _collect_lights_and_beams(self) \
+            -> tuple[list[SpotLightData],
+            list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]]]:
         """Collect spotlight data and beam parameters from all active MovingHeads.
 
         For each moving head with ``beam_on == True``, computes the world-space
@@ -1218,7 +1235,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Geometry creation
 
-    def _create_unit_cone(self, segments=48):
+    def _create_unit_cone(self, segments: int=48) -> Model3D:
         """Create a unit cone mesh (tip at origin, base ring at z=-1).
 
         Used for beam rendering. Normals point outward from the cone surface.
@@ -1231,8 +1248,8 @@ class Stage3DWidget(QOpenGLWidget):
         for i in range(seg):
             a = (i / seg) * 2.0 * math.pi
             x, y = math.cos(a), math.sin(a)
-            l = math.sqrt(x * x + y * y + 0.09)
-            verts.extend([x, y, -1.0, x / l, y / l, 0.3 / l])
+            length = math.sqrt(x * x + y * y + 0.09)
+            verts.extend([x, y, -1.0, x / length, y / length, 0.3 / length])
         # Triangle fan from tip to base ring
         for i in range(seg):
             idx.extend([0, 1 + i, 1 + (i + 1) % seg])
@@ -1240,7 +1257,7 @@ class Stage3DWidget(QOpenGLWidget):
         ii = np.array(idx, dtype=np.uint32)
         return self._upload_vao(v, ii)
 
-    def _create_ground_plane(self, size=2000.0):
+    def _create_ground_plane(self, size: float=2000.0) -> Model3D:
         """Create a flat ground plane quad at y=0 with upward normals."""
         h = size / 2.0
         v = np.array([
@@ -1250,7 +1267,7 @@ class Stage3DWidget(QOpenGLWidget):
         ii = np.array([0, 1, 2, 0, 2, 3], dtype=np.uint32)
         return self._upload_vao(v, ii)
 
-    def _upload_vao(self, verts, indices):
+    def _upload_vao(self, verts: np.ndarray, indices: np.ndarray) -> Model3D:
         """Upload interleaved position+normal vertex data to a new VAO."""
         vao = gl.glGenVertexArrays(1)
         vbo = gl.glGenBuffers(1)
@@ -1269,7 +1286,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Camera controls
 
-    def _update_camera_pos(self):
+    def _update_camera_pos(self) -> None:
         """Compute camera position from orbit parameters (yaw, pitch, distance)."""
         yaw = math.radians(self._cam_yaw)
         pitch = math.radians(self._cam_pitch)
@@ -1278,7 +1295,7 @@ class Stage3DWidget(QOpenGLWidget):
             float(math.cos(yaw) * cy), float(math.sin(pitch)), float(math.sin(yaw) * cy))
         self._camera_pos = self._camera_target - fwd * float(self._cam_distance)
 
-    def _tick_camera(self):
+    def _tick_camera(self) -> None:
         """Process WASD/arrow key camera movement at ~60 Hz."""
         if not self.isVisible():
             return
@@ -1314,13 +1331,15 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Mouse and keyboard input
 
-    def mousePressEvent(self, e):
+    @override
+    def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
         self._mouse_last_pos = e.position().toPoint()
         self._mouse_press_pos = e.position().toPoint()
         self._mouse_buttons.add(e.button())
         self.setFocus()
 
-    def mouseReleaseEvent(self, e):
+    @override
+    def mouseReleaseEvent(self, e: QtGui.QMouseEvent) -> None:
         self._mouse_buttons.discard(e.button())
         release_pos = e.position().toPoint()
 
@@ -1337,7 +1356,8 @@ class Stage3DWidget(QOpenGLWidget):
         self._mouse_last_pos = release_pos
         self._mouse_press_pos = None
 
-    def mouseMoveEvent(self, e):
+    @override
+    def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
         if self._mouse_last_pos is None:
             self._mouse_last_pos = e.position().toPoint()
             return
@@ -1364,18 +1384,22 @@ class Stage3DWidget(QOpenGLWidget):
             f = QtGui.QVector3D(float(math.cos(yaw) * cy), float(math.sin(pitch)),
                                 float(math.sin(yaw) * cy))
             f.normalize()
-            r = QtGui.QVector3D.crossProduct(f, self._camera_up); r.normalize()
-            u = QtGui.QVector3D.crossProduct(r, f); u.normalize()
+            r = QtGui.QVector3D.crossProduct(f, self._camera_up)
+            r.normalize()
+            u = QtGui.QVector3D.crossProduct(r, f)
+            u.normalize()
             self._camera_target += (-r * float(dx) + u * float(dy)) * ps
             self.update()
 
-    def wheelEvent(self, e):
+    @override
+    def wheelEvent(self, e: QtGui.QWheelEvent) -> None:
         """Zoom camera in/out via scroll wheel."""
         d = e.angleDelta().y()
         self._cam_distance = max(10.0, min(20000.0, self._cam_distance * (1.0 - d / 1200.0)))
         self.update()
 
-    def keyPressEvent(self, e):
+    @override
+    def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
         self._keys_down.add(e.key())
         if e.key() == QtCore.Qt.Key.Key_F:
             self._show_labels = True
@@ -1383,7 +1407,8 @@ class Stage3DWidget(QOpenGLWidget):
         if e.key() == QtCore.Qt.Key.Key_Z:
             self._reset_camera()
 
-    def keyReleaseEvent(self, e):
+    @override
+    def keyReleaseEvent(self, e: QtGui.QKeyEvent) -> None:
         self._keys_down.discard(e.key())
         if e.key() == QtCore.Qt.Key.Key_F:
             self._show_labels = False
@@ -1391,7 +1416,8 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Transform helpers
 
-    def _apply_local_ops(self, matrix, ops):
+    def _apply_local_ops(self, matrix: QtGui.QMatrix4x4, ops:
+    list[tuple[str, tuple[float, float, float] | tuple[float, float, float, float, float, float]]]) -> None:
         """Apply a sequence of local transform operations to a matrix.
 
         Supported operations:
@@ -1412,12 +1438,12 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Model loading / unloading
 
-    def _ensure_models_loaded(self, obj):
+    def _ensure_models_loaded(self, obj: StageObject) -> None:
         """Ensure all 3D models for a stage object are uploaded to the GPU."""
         for entry in getattr(obj, "get_model_entries", list)():
             self._ensure_model_loaded_by_path(entry.model_path)
 
-    def _ensure_model_loaded_by_path(self, path):
+    def _ensure_model_loaded_by_path(self, path: str) -> None:
         """Load and upload a 3D model file if not already cached.
 
         Supports GLB/glTF (preferred) and OBJ (legacy fallback).
@@ -1472,16 +1498,16 @@ class Stage3DWidget(QOpenGLWidget):
         except Exception as e:
             logger.error("OBJ load error %s: %s", path, e)
 
-    def load_object(self, obj):
+    def load_object(self, obj: StageObject) -> None:
         """Public API: ensure models for a newly added object are loaded."""
         self._ensure_models_loaded(obj)
 
-    def _load_all_objects(self):
+    def _load_all_objects(self) -> None:
         """Reload all objects from stage_config (used after loading a new stage file)."""
         for obj in self._stage_config.objects:
             self._ensure_models_loaded(obj)
 
-    def set_selected_objects(self, object_ids, is_multi=False):
+    def set_selected_objects(self, object_ids: list[str], is_multi: bool = False) -> None:
         """Set which objects are highlighted in the 3D view.
 
         Args:
@@ -1491,7 +1517,7 @@ class Stage3DWidget(QOpenGLWidget):
         self._selected_object_ids = set(object_ids) if object_ids else set()
         self._highlight_is_multi = is_multi
 
-    def remove_object(self, obj):
+    def remove_object(self, obj: StageObject) -> None:
         """Release GPU resources for models no longer used by any stage object."""
         for entry in getattr(obj, "get_model_entries", list)():
             path = entry.model_path
@@ -1508,18 +1534,21 @@ class Stage3DWidget(QOpenGLWidget):
             # Free GPU resources
             if path in self._models:
                 m = self._models.pop(path)
-                gl.glDeleteBuffers(1, [m.vbo]); gl.glDeleteBuffers(1, [m.ebo])
+                gl.glDeleteBuffers(1, [m.vbo])
+                gl.glDeleteBuffers(1, [m.ebo])
                 gl.glDeleteVertexArrays(1, [m.vao])
             if path in self._gltf_models:
                 gm = self._gltf_models.pop(path)
                 for pl in gm.mesh_primitives.values():
                     for p in pl:
-                        gl.glDeleteBuffers(1, [p.vbo]); gl.glDeleteBuffers(1, [p.ebo])
+                        gl.glDeleteBuffers(1, [p.vbo])
+                        gl.glDeleteBuffers(1, [p.ebo])
                         gl.glDeleteVertexArrays(1, [p.vao])
 
     # glTF node search
 
-    def _find_gltf_node_world(self, model_path, base_model, stage_obj, target_name):
+    def _find_gltf_node_world(self, model_path: str, base_model: QtGui.QMatrix4x4, stage_obj: StageObject,
+                              target_name: str) -> QtGui.QMatrix4x4 | None:
         """Find a named node in the glTF hierarchy and return its world matrix.
 
         Uses iterative depth-first search with pan/tilt overrides applied.
@@ -1539,11 +1568,11 @@ class Stage3DWidget(QOpenGLWidget):
             world *= self._node_local_matrix(node, overrides)
             if node.name == target_name:
                 return world
-            for child in reversed(node.children or []):
-                stack.append((int(child), world))
+            stack.extend((int(child), world) for child in reversed(node.children or []))
         return None
 
-    def _find_gltf_node_world_rest(self, model_path, base_model, target_name):
+    def _find_gltf_node_world_rest(self, model_path: str, base_model: QtGui.QMatrix4x4, target_name: str) \
+            -> QtGui.QMatrix4x4 | None:
         """Same as ``_find_gltf_node_world`` but without pan/tilt overrides (rest pose)."""
         gm = self._gltf_models.get(model_path)
         if not gm:
@@ -1559,13 +1588,12 @@ class Stage3DWidget(QOpenGLWidget):
             world *= self._node_local_matrix(node, no_overrides)
             if node.name == target_name:
                 return world
-            for child in reversed(node.children or []):
-                stack.append((int(child), world))
+            stack.extend((int(child), world) for child in reversed(node.children or []))
         return None
 
     # FPS counter overlay
 
-    def _update_fps(self):
+    def _update_fps(self) -> None:
         """Track frames and compute FPS once per second."""
         self._fps_frame_count += 1
         now = time.time()
@@ -1575,7 +1603,7 @@ class Stage3DWidget(QOpenGLWidget):
             self._fps_frame_count = 0
             self._fps_last_time = now
 
-    def _draw_fps_counter(self):
+    def _draw_fps_counter(self) -> None:
         """Draw FPS counter text in the bottom-left corner using QPainter."""
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
@@ -1598,7 +1626,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Fixture name label overlay (F key)
 
-    def _world_to_screen(self, world_pos, view_matrix):
+    def _world_to_screen(self, world_pos: QtGui.QVector3D, view_matrix: QtGui.QMatrix4x4) -> QtCore.QPointF:
         """Project a 3D world position to 2D screen coordinates.
 
         Returns a QPointF, or None if the point is behind the camera.
@@ -1618,7 +1646,7 @@ class Stage3DWidget(QOpenGLWidget):
         sy = (1.0 - (ndc_y * 0.5 + 0.5)) * self.height()
         return QtCore.QPointF(sx, sy)
 
-    def _draw_fixture_labels(self, view_matrix):
+    def _draw_fixture_labels(self, view_matrix: QtGui.QMatrix4x4) -> None:
         """Draw name labels above each fixture using a QPainter overlay.
 
         Platform is excluded. Selected fixtures get a highlighted tag color.
@@ -1682,7 +1710,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Camera reset (Z key)
 
-    def _reset_camera(self):
+    def _reset_camera(self) -> None:
         """Reset camera to the default stage overview position."""
         self._camera_target = QtGui.QVector3D(0.0, 10.0, 0.0)
         self._cam_yaw = -90.0
@@ -1694,7 +1722,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Click-to-select picking
 
-    def _pick_fixture(self, screen_pos):
+    def _pick_fixture(self, screen_pos: QPoint) -> None:
         """Find the closest fixture to the click position and emit fixtureClicked.
 
         Uses simple screen-space distance to each fixture's projected position.

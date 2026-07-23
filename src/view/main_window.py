@@ -100,7 +100,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 MainWidget(CombinedActionSetupWidget(self, self._broadcaster, self._board_configuration), self),
                 self._broadcaster.view_to_action_config.emit,
             ),
-            ("Visualizer", MainWidget(StageVisualizerWidget(self._board_configuration, self._broadcaster, self), self),
+            ("Visualizer", MainWidget(StageVisualizerWidget(self._board_configuration, self), self),
              self._broadcaster.view_to_visualizer.emit),
         ]
 
