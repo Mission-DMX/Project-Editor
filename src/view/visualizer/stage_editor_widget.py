@@ -1,7 +1,7 @@
 """Right-hand editor panel: fixture list, property form and DMX device mapping."""
 
-import logging
 import time
+from logging import getLogger
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
@@ -9,7 +9,7 @@ from model import stage as stage_model
 from model.dmx.dmx_visualizer import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
 from model.stage import make_unique_name
 
-logger = logging.getLogger(__file__)
+logger = getLogger(__name__)
 
 
 def _fixture_label(fix) -> str:
@@ -1156,7 +1156,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # API
 
-    def add_object_to_list(self, obj):
+    def add_object_to_list(self, obj: stage_model.StageObject) -> None:
         """Add a newly created fixture to the list widget."""
         if obj.get_type() == "platform":
             return
@@ -1168,7 +1168,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         item.setSelected(True)
         self._fixture_list.scrollToItem(item)
 
-    def remove_object_from_list(self, object_id):
+    def remove_object_from_list(self, object_id: str) -> None:
         """Remove a fixture from the list widget by ID."""
         for i in range(self._fixture_list.count()):
             item = self._fixture_list.item(i)
@@ -1176,11 +1176,11 @@ class StageEditorWidget(QtWidgets.QWidget):
                 self._fixture_list.takeItem(i)
                 break
 
-    def refresh_list(self):
+    def refresh_list(self) -> None:
         """Full rebuild of the fixture list."""
         self._rebuild_list()
 
-    def select_fixture_by_id(self, object_id: str):
+    def select_fixture_by_id(self, object_id: str) -> None:
         """Select a fixture in the list by its object ID (from left-click)."""
         for i in range(self._fixture_list.count()):
             item = self._fixture_list.item(i)
@@ -1190,6 +1190,6 @@ class StageEditorWidget(QtWidgets.QWidget):
                 self._fixture_list.scrollToItem(item)
                 return
 
-    def deselect_all(self):
+    def deselect_all(self) -> None:
         """Clear selection entirely (from right-click)."""
         self._fixture_list.clearSelection()
