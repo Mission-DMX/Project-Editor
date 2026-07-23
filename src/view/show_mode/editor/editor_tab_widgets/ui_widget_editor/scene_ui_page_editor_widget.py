@@ -36,11 +36,20 @@ class SceneUIPageEditorWidget(QWidget):
 
     def _widget_selection_menu(self, pos: QPoint) -> None:
         menu = QMenu(self)
+        categories: dict[str, QMenu] = {}
         for widget_def in WIDGET_LIBRARY.values():
-            action = QAction(widget_def[0], menu)
+            category = widget_def[3]
+            if category is None:
+                parent = menu
+            else:
+                if category not in categories:
+                    submenu = QMenu(category, menu)
+                    menu.addMenu(submenu)
+                    categories[category] = submenu
+                parent = categories[category]
+            action = QAction(widget_def[0], parent)
             action.triggered.connect(lambda _, widget=widget_def: self._inst_generic_widget(widget, pos))
-            # TODO utilize categories to construct sub menus
-            menu.addAction(action)
+            parent.addAction(action)
         menu.popup(self.mapToGlobal(pos))
 
     def _add_filter_widget(self, filter_: Filter, pos: QPoint) -> None:
