@@ -13,19 +13,22 @@ import math
 import os
 import struct
 import time
-from collections.abc import Sequence
 from logging import getLogger
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 import numpy as np
-from OpenGL import GL as gl
+from OpenGL import GL as gl  # NOQA: N811 it is common practice to import is as lower case gl. Also it's not a const.
 from PySide6 import QtCore, QtGui
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
 if TYPE_CHECKING:
-    from PySide6.QtCore import QPoint
+    from collections.abc import Sequence
 
-    from model.stage import StageObject
+    from OpenGL.constant import IntConstant
+    from PySide6.QtCore import QPoint
+    from PySide6.QtWidgets import QWidget
+
+    from model.stage import StageConfig, StageObject
 
 logger = getLogger(__name__)
 
@@ -37,32 +40,41 @@ SHADOW_MAP_SIZE = 1024  # per-layer shadow map resolution
 class Model3D:
     """GPU mesh: VAO + VBO + EBO + index count."""
 
-    def __init__(self, vao, vbo, ebo, index_count):
-        self.vao = vao
-        self.vbo = vbo
-        self.ebo = ebo
-        self.index_count = index_count
+    def __init__(self, vao: int, vbo: int, ebo: int, index_count: int) -> None:
+        """Initialize struct."""
+        self.vao: int = vao
+        self.vbo: int = vbo
+        self.ebo: int = ebo
+        self.index_count: int = index_count
 
 
 class GltfNode:
     """A single node from a glTF scene graph."""
 
-    def __init__(self, name, mesh_index, children, translation, rotation, scale):
-        self.name = name or ""
-        self.mesh_index = mesh_index
-        self.children = children or []
-        self.translation = translation or [0.0, 0.0, 0.0]
-        self.rotation = rotation or [0.0, 0.0, 0.0, 1.0]  # quaternion (x,y,z,w)
-        self.scale = scale or [1.0, 1.0, 1.0]
+    def __init__(self,
+                 name: str,
+                 mesh_index: int,
+                 children: list[int] | None,
+                 translation: list[float] | None,
+                 rotation: list[float] | None,
+                 scale: list[float] | None) -> None:
+        """Initialize the struct."""
+        self.name: str = name or ""
+        self.mesh_index: int = mesh_index
+        self.children: list[int] = children or []
+        self.translation: list[float] = translation or [0.0, 0.0, 0.0]
+        self.rotation: list[float] = rotation or [0.0, 0.0, 0.0, 1.0]  # quaternion (x,y,z,w)
+        self.scale: list[float] = scale or [1.0, 1.0, 1.0]
 
 
 class GltfModel:
     """Minimal glTF/GLB container with node hierarchy and GPU meshes."""
 
-    def __init__(self, nodes, scene_roots, mesh_primitives):
-        self.nodes = nodes                    # list of GltfNode
-        self.scene_roots = scene_roots        # list of root node indices
-        self.mesh_primitives = mesh_primitives  # dict: mesh_index -> [Model3D]
+    def __init__(self, nodes: list[GltfNode], scene_roots: list[int], mesh_primitives: dict[int, Model3D]) -> None:
+        """Initialize the struct."""
+        self.nodes: list[GltfNode] = nodes                    # list of GltfNode
+        self.scene_roots: list[int] = scene_roots        # list of root node indices
+        self.mesh_primitives: dict[int, Model3D] = mesh_primitives  # dict: mesh_index -> [Model3D]
 
 
 class SpotLightData:
@@ -70,12 +82,18 @@ class SpotLightData:
 
     __slots__ = ("color", "direction", "inner_cos", "outer_cos", "position")
 
-    def __init__(self, position, direction, color, inner_deg=10.0, outer_deg=18.0):
-        self.position = position      # QVector3D
-        self.direction = direction    # QVector3D (normalized)
-        self.color = color            # (r, g, b) floats in [0, 1]
-        self.inner_cos = math.cos(math.radians(inner_deg))
-        self.outer_cos = math.cos(math.radians(outer_deg))
+    def __init__(self,
+                 position: QtGui.QVector3D,
+                 direction: QtGui.QVector3D,
+                 color: tuple[float, float, float],
+                 inner_deg: float=10.0,
+                 outer_deg: float=18.0) -> None:
+        """Initialize struct."""
+        self.position: QtGui.QVector3D = position      # QVector3D
+        self.direction: QtGui.QVector3D = direction    # QVector3D (normalized)
+        self.color: tuple[float, float, float] = color  # (r, g, b) floats in [0, 1]
+        self.inner_cos: float = math.cos(math.radians(inner_deg))
+        self.outer_cos: float = math.cos(math.radians(outer_deg))
 
 
 # glTF binary loading
@@ -92,12 +110,13 @@ _GLTF_TYPE_NUMCOMP = {
 }
 
 
-def _read_glb(path):
+def _read_glb(path: str) -> tuple[dict[str, Any], bytes]:
     """Read a GLB file and return (json_dict, bin_chunk).
 
     GLB layout: 12-byte header + JSON chunk + BIN chunk.
     """
-    data = open(path, "rb").read()
+    with open(path, "rb") as f:
+        data = f.read()
     if len(data) < 20:
         raise ValueError("GLB too small")
     magic, version, length = struct.unpack_from("<4sII", data, 0)
@@ -121,7 +140,7 @@ def _read_glb(path):
     return json.loads(json_chunk.decode("utf-8")), bin_chunk
 
 
-def _read_accessor(gltf, bin_chunk, acc_idx):
+def _read_accessor(gltf: dict[str, Any], bin_chunk: bytes, acc_idx: int) -> np.ndarray:
     """Read a glTF accessor as a numpy array.
 
     Handles byte offsets, strides, component types, and normalization
@@ -155,7 +174,7 @@ def _read_accessor(gltf, bin_chunk, acc_idx):
     return out
 
 
-def _compute_vertex_normals(positions, indices):
+def _compute_vertex_normals(positions: np.ndarray, indices: np.ndarray) -> np.ndarray:
     """Compute smooth vertex normals by averaging face normals.
 
     Used as fallback when the glTF model does not provide NORMAL attributes.
@@ -175,7 +194,7 @@ def _compute_vertex_normals(positions, indices):
     return normals
 
 
-def _upload_mesh(vertex_data, indices):
+def _upload_mesh(vertex_data: np.ndarray, indices: np.ndarray) -> Model3D:
     """Upload interleaved position+normal vertex data to the GPU.
 
     Vertex layout: [pos_x, pos_y, pos_z, norm_x, norm_y, norm_z] (6 floats).
@@ -200,7 +219,7 @@ def _upload_mesh(vertex_data, indices):
     return Model3D(vao, vbo, ebo, int(indices.size))
 
 
-def _load_gltf_model(path):
+def _load_gltf_model(path: str) -> GltfModel:
     """Load a GLB file, build the node hierarchy, and upload all meshes.
 
     Returns a GltfModel containing the scene graph and GPU mesh handles.
@@ -242,7 +261,7 @@ def _load_gltf_model(path):
     return GltfModel(nodes, scene_roots, mesh_prims)
 
 
-def _compile_shader(src, stype):
+def _compile_shader(src: bytes, stype: IntConstant) -> int:
     """Compile a single GLSL shader and raise on error."""
     s = gl.glCreateShader(stype)
     gl.glShaderSource(s, src)
@@ -254,7 +273,7 @@ def _compile_shader(src, stype):
     return s
 
 
-def _link_program(vs_src, fs_src):
+def _link_program(vs_src: bytes, fs_src: bytes) -> int:
     """Compile vertex + fragment shaders and link into a program."""
     vs = _compile_shader(vs_src, gl.GL_VERTEX_SHADER)
     fs = _compile_shader(fs_src, gl.GL_FRAGMENT_SHADER)
@@ -567,11 +586,12 @@ class Stage3DWidget(QOpenGLWidget):
     """OpenGL 3D viewport for the stage visualizer."""
 
     # Emitted when user left-clicks a fixture in 3D
-    fixtureClicked = QtCore.Signal(str)
+    fixture_clicked = QtCore.Signal(str)
     # Emitted when user right-clicks (deselect all)
-    deselectAllRequested = QtCore.Signal()
+    deselect_all_requested = QtCore.Signal()
 
-    def __init__(self, stage_config, parent=None):
+    def __init__(self, stage_config: StageConfig, parent: QWidget | None=None) -> None:
+        """Initialize using given stage configuration and parent."""
         super().__init__(parent)
         self._stage_config = stage_config
 
@@ -636,7 +656,8 @@ class Stage3DWidget(QOpenGLWidget):
 
     # OpenGL initialization
 
-    def initializeGL(self):
+    @override
+    def initializeGL(self) -> None:
         gl.glClearColor(0.02, 0.02, 0.03, 1.0)
         gl.glEnable(gl.GL_DEPTH_TEST)
         gl.glEnable(gl.GL_CULL_FACE)
@@ -707,7 +728,7 @@ class Stage3DWidget(QOpenGLWidget):
 
         logger.info("OpenGL init done. %d objects.", len(self._stage_config.objects))
 
-    def _init_shadow_map_resources(self):
+    def _init_shadow_map_resources(self) -> None:
         """Create the FBO and 2D texture array for shadow maps.
 
         Each shadow-casting light gets one layer in the texture array.
@@ -750,14 +771,16 @@ class Stage3DWidget(QOpenGLWidget):
 
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
 
-    def resizeGL(self, w, h):
+    @override
+    def resizeGL(self, w: int, h: int) -> None:
         gl.glViewport(0, 0, w, h)
         self._projection = QtGui.QMatrix4x4()
         self._projection.perspective(45.0, w / max(h, 1), 1.0, 15000.0)
 
     # Main render loop (paintGL)
 
-    def paintGL(self):
+    @override
+    def paintGL(self) -> None:
         if self._scene_program is None:
             return
 
@@ -828,10 +851,8 @@ class Stage3DWidget(QOpenGLWidget):
             gl.glDrawElements(gl.GL_TRIANGLES, self._ground_plane.index_count, gl.GL_UNSIGNED_INT, None)
 
         # Draw stage objects with selection highlighting
-        if self._highlight_is_multi:
-            hl_color = (1.0, 0.55, 0.1)   # warm orange for multi/group
-        else:
-            hl_color = (1.0, 0.95, 0.15)  # neon yellow for single
+        hl_color = (1.0, 0.55, 0.1) if self._highlight_is_multi else (1.0, 0.95, 0.15)
+        # warm orange for multi/group else neon yellow for single
         gl.glUniform3f(self._sc["highlightColor"], *hl_color)
 
         for idx, obj in enumerate(self._stage_config.objects):
@@ -860,11 +881,12 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Pass 0: Shadow map rendering
 
-    def _render_shadow_maps(self, spotlights):
+    def _render_shadow_maps(self, spotlights: list[SpotLightData]) -> list[QtGui.QMatrix4x4]:
         """Render depth from each spotlight's POV into the shadow texture array.
 
         Returns:
             List of light-space matrices (one per shadow-casting light).
+
         """
         if not spotlights or self._shadow_fbo is None or self._depth_program is None:
             return []
@@ -901,7 +923,7 @@ class Stage3DWidget(QOpenGLWidget):
 
         return light_space_matrices
 
-    def _compute_light_space_matrix(self, spotlight):
+    def _compute_light_space_matrix(self, spotlight: SpotLightData) -> QtGui.QMatrix4x4:
         """Build a perspective projection matrix from a spotlight's POV.
 
         The FOV is derived from the spotlight's outer cone angle to ensure
@@ -930,7 +952,7 @@ class Stage3DWidget(QOpenGLWidget):
         result *= view
         return result
 
-    def _draw_scene_depth_only(self):
+    def _draw_scene_depth_only(self) -> None:
         """Draw all scene objects with the depth shader (for shadow maps)."""
         for obj in self._stage_config.objects:
             base = self._build_base_model_matrix(obj)
@@ -951,7 +973,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Shared rendering helpers
 
-    def _build_base_model_matrix(self, obj) -> QtGui.QMatrix4x4:
+    def _build_base_model_matrix(self, obj: StageObject) -> QtGui.QMatrix4x4:
         """Build the T * Rz * Ry * Rx * S model matrix for a stage object."""
         m = QtGui.QMatrix4x4()
         m.translate(obj.position[0], obj.position[1], obj.position[2])
@@ -961,16 +983,18 @@ class Stage3DWidget(QOpenGLWidget):
         m.scale(float(getattr(obj, "scale", 1.0)))
         return m
 
-    def _get_overrides(self, stage_obj):
+    def _get_overrides(self, stage_obj: StageObject) -> dict[str, tuple[float, float, float, float]]:
         """Get glTF node rotation overrides (pan/tilt) from a stage object."""
         if stage_obj and hasattr(stage_obj, "get_gltf_node_overrides"):
             try:
                 return stage_obj.get_gltf_node_overrides() or {}
-            except Exception:
-                pass
+            except Exception as e:
+                logger.exception("Unable to extract GLTF overrides from model (%s) : %s", str(stage_obj), str(e))
         return {}
 
-    def _node_local_matrix(self, node, overrides):
+    def _node_local_matrix(self,
+                           node: GltfNode,
+                           overrides: dict[str, tuple[float, float, float, float]]) -> QtGui.QMatrix4x4:
         """Compute the local transform matrix for a glTF node.
 
         Applies translation, quaternion rotation, optional pan/tilt override,
@@ -989,13 +1013,19 @@ class Stage3DWidget(QOpenGLWidget):
         m.scale(float(s[0]), float(s[1]), float(s[2]))
         return m
 
-    def _traverse_gltf(self, model_path, base_model, stage_obj, model_loc,
-                        color=None, color_loc=None):
+    def _traverse_gltf(self,
+                       model_path: str,
+                       base_model: QtGui.QMatrix4x4,
+                       stage_obj: StageObject,
+                       model_loc: int,
+                       color: tuple[float, float, float] | None = None,
+                       color_loc: tuple[float, float, float] | None = None) -> None:
         """Traverse the glTF node hierarchy and draw each mesh.
 
         Uses an iterative stack-based depth-first traversal instead of
         recursion. Works for both the scene shader (with color) and the
         depth shader (without color).
+
         """
         gm = self._gltf_models.get(model_path)
         if gm is None:
@@ -1022,12 +1052,11 @@ class Stage3DWidget(QOpenGLWidget):
                     gl.glDrawElements(gl.GL_TRIANGLES, prim.index_count, gl.GL_UNSIGNED_INT, None)
 
             # Push children (reversed so left children are processed first)
-            for child in reversed(node.children or []):
-                stack.append((int(child), world))
+            stack.extend((int(child), world) for child in reversed(node.children or []))
 
     # Pass 1: Scene object drawing
 
-    def _draw_stage_object(self, obj, color):
+    def _draw_stage_object(self, obj: StageObject, color: tuple[float, float, float]) -> None:
         """Draw a single stage object with the scene shader."""
         base = self._build_base_model_matrix(obj)
         gl.glUniform3f(self._sc["baseColor"], color[0], color[1], color[2])
@@ -1351,7 +1380,7 @@ class Stage3DWidget(QOpenGLWidget):
                 if e.button() == QtCore.Qt.MouseButton.LeftButton:
                     self._pick_fixture(release_pos)
                 elif e.button() == QtCore.Qt.MouseButton.RightButton:
-                    self.deselectAllRequested.emit()
+                    self.deselect_all_requested.emit()
 
         self._mouse_last_pos = release_pos
         self._mouse_press_pos = None
@@ -1513,6 +1542,7 @@ class Stage3DWidget(QOpenGLWidget):
         Args:
             object_ids: list of object IDs to highlight.
             is_multi: True = orange (multi/group), False = neon-yellow (single).
+
         """
         self._selected_object_ids = set(object_ids) if object_ids else set()
         self._highlight_is_multi = is_multi
@@ -1573,7 +1603,10 @@ class Stage3DWidget(QOpenGLWidget):
 
     def _find_gltf_node_world_rest(self, model_path: str, base_model: QtGui.QMatrix4x4, target_name: str) \
             -> QtGui.QMatrix4x4 | None:
-        """Same as ``_find_gltf_node_world`` but without pan/tilt overrides (rest pose)."""
+        """Find a named node in the glTF hierarchy and return its world matrix.
+
+        Same as ``_find_gltf_node_world`` but without pan/tilt overrides (rest pose).
+        """
         gm = self._gltf_models.get(model_path)
         if not gm:
             return None
@@ -1750,4 +1783,4 @@ class Stage3DWidget(QOpenGLWidget):
                 best_id = obj.id
 
         if best_id:
-            self.fixtureClicked.emit(best_id)
+            self.fixture_clicked.emit(best_id)

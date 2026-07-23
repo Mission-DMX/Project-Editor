@@ -66,8 +66,8 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._editor_widget.dmxToggled.connect(self._on_dmx_toggled)
 
         # 3D viewport -> mediator
-        self._gl_widget.fixtureClicked.connect(self._on_fixture_clicked)
-        self._gl_widget.deselectAllRequested.connect(self._on_deselect_all)
+        self._gl_widget.fixture_clicked.connect(self._on_fixture_clicked)
+        self._gl_widget.deselect_all_requested.connect(self._on_deselect_all)
 
         self._dmx_vis = DmxVisualizer(
             self._stage_config,
