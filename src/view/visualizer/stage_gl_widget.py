@@ -8,18 +8,22 @@ beam cones) and handles camera, picking and the name-label overlay.
 from __future__ import annotations
 
 import ctypes
-import json
 import math
 import os
-import struct
 import time
 from logging import getLogger
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 import numpy as np
 from OpenGL import GL as gl  # NOQA: N811 it is common practice to import is as lower case gl. Also it's not a const.
 from PySide6 import QtCore, QtGui
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
+
+from model.visualizer.stage.so_moving_head import MovingHead
+from view.gl import _apply_local_ops
+from view.gl.gltf_model import GltfModel, GltfNode
+from view.gl.model_3d import Model3D, upload_mesh
+from view.visualizer.spotlight_data import SpotLightData
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -35,230 +39,6 @@ logger = getLogger(__name__)
 MAX_SPOT_LIGHTS = 16    # maximum simultaneous spotlights in the scene shader
 MAX_SHADOW_MAPS = 4     # shadow-casting lights (texture array layers)
 SHADOW_MAP_SIZE = 1024  # per-layer shadow map resolution
-
-
-class Model3D:
-    """GPU mesh: VAO + VBO + EBO + index count."""
-
-    def __init__(self, vao: int, vbo: int, ebo: int, index_count: int) -> None:
-        """Initialize struct."""
-        self.vao: int = vao
-        self.vbo: int = vbo
-        self.ebo: int = ebo
-        self.index_count: int = index_count
-
-
-class GltfNode:
-    """A single node from a glTF scene graph."""
-
-    def __init__(self,
-                 name: str,
-                 mesh_index: int,
-                 children: list[int] | None,
-                 translation: list[float] | None,
-                 rotation: list[float] | None,
-                 scale: list[float] | None) -> None:
-        """Initialize the struct."""
-        self.name: str = name or ""
-        self.mesh_index: int = mesh_index
-        self.children: list[int] = children or []
-        self.translation: list[float] = translation or [0.0, 0.0, 0.0]
-        self.rotation: list[float] = rotation or [0.0, 0.0, 0.0, 1.0]  # quaternion (x,y,z,w)
-        self.scale: list[float] = scale or [1.0, 1.0, 1.0]
-
-
-class GltfModel:
-    """Minimal glTF/GLB container with node hierarchy and GPU meshes."""
-
-    def __init__(self, nodes: list[GltfNode], scene_roots: list[int], mesh_primitives: dict[int, Model3D]) -> None:
-        """Initialize the struct."""
-        self.nodes: list[GltfNode] = nodes                    # list of GltfNode
-        self.scene_roots: list[int] = scene_roots        # list of root node indices
-        self.mesh_primitives: dict[int, Model3D] = mesh_primitives  # dict: mesh_index -> [Model3D]
-
-
-class SpotLightData:
-    """Spotlight data collected per frame from active MovingHeads."""
-
-    __slots__ = ("color", "direction", "inner_cos", "outer_cos", "position")
-
-    def __init__(self,
-                 position: QtGui.QVector3D,
-                 direction: QtGui.QVector3D,
-                 color: tuple[float, float, float],
-                 inner_deg: float=10.0,
-                 outer_deg: float=18.0) -> None:
-        """Initialize struct."""
-        self.position: QtGui.QVector3D = position      # QVector3D
-        self.direction: QtGui.QVector3D = direction    # QVector3D (normalized)
-        self.color: tuple[float, float, float] = color  # (r, g, b) floats in [0, 1]
-        self.inner_cos: float = math.cos(math.radians(inner_deg))
-        self.outer_cos: float = math.cos(math.radians(outer_deg))
-
-
-# glTF binary loading
-
-# Mapping from glTF componentType to numpy dtype
-_GLTF_COMPONENT_DTYPE = {
-    5120: np.int8, 5121: np.uint8, 5122: np.int16,
-    5123: np.uint16, 5125: np.uint32, 5126: np.float32,
-}
-# Mapping from glTF accessor type to number of components
-_GLTF_TYPE_NUMCOMP = {
-    "SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4,
-    "MAT2": 4, "MAT3": 9, "MAT4": 16,
-}
-
-
-def _read_glb(path: str) -> tuple[dict[str, Any], bytes]:
-    """Read a GLB file and return (json_dict, bin_chunk).
-
-    GLB layout: 12-byte header + JSON chunk + BIN chunk.
-    """
-    with open(path, "rb") as f:
-        data = f.read()
-    if len(data) < 20:
-        raise ValueError("GLB too small")
-    magic, version, length = struct.unpack_from("<4sII", data, 0)
-    if magic != b"glTF" or version != 2:
-        raise ValueError("Invalid GLB")
-
-    off = 12
-    json_chunk = bin_chunk = None
-    while off < length:
-        chunk_len, chunk_type = struct.unpack_from("<I4s", data, off)
-        off += 8
-        chunk_data = data[off:off + chunk_len]
-        off += chunk_len
-        if chunk_type == b"JSON":
-            json_chunk = chunk_data
-        elif chunk_type in (b"BIN\x00", b"BIN"):
-            bin_chunk = chunk_data
-
-    if json_chunk is None or bin_chunk is None:
-        raise ValueError("Invalid GLB: missing chunks")
-    return json.loads(json_chunk.decode("utf-8")), bin_chunk
-
-
-def _read_accessor(gltf: dict[str, Any], bin_chunk: bytes, acc_idx: int) -> np.ndarray:
-    """Read a glTF accessor as a numpy array.
-
-    Handles byte offsets, strides, component types, and normalization
-    as specified by the glTF 2.0 standard.
-    """
-    acc = gltf["accessors"][acc_idx]
-    bv = gltf["bufferViews"][acc["bufferView"]]
-    dt = _GLTF_COMPONENT_DTYPE[acc["componentType"]]
-    comps = _GLTF_TYPE_NUMCOMP[acc["type"]]
-    count = int(acc["count"])
-    base = int(bv.get("byteOffset", 0)) + int(acc.get("byteOffset", 0))
-    stride = bv.get("byteStride")
-    item_size = np.dtype(dt).itemsize * comps
-
-    if stride is None or int(stride) == item_size:
-        # Read directly
-        flat = np.frombuffer(bin_chunk, dtype=dt, count=count * comps, offset=base)
-        out = flat.reshape((count, comps))
-    else:
-        # Read element by element
-        stride = int(stride)
-        out = np.empty((count, comps), dtype=dt)
-        for i in range(count):
-            out[i, :] = np.frombuffer(bin_chunk, dtype=dt, count=comps,
-                                      offset=base + i * stride)
-
-    # Apply normalization for integer types (glTF spec)
-    if acc.get("normalized") and np.issubdtype(out.dtype, np.integer):
-        out = out.astype(np.float32) / float(np.iinfo(out.dtype).max)
-
-    return out
-
-
-def _compute_vertex_normals(positions: np.ndarray, indices: np.ndarray) -> np.ndarray:
-    """Compute smooth vertex normals by averaging face normals.
-
-    Used as fallback when the glTF model does not provide NORMAL attributes.
-    """
-    normals = np.zeros_like(positions, dtype=np.float32)
-    tris = indices.reshape((-1, 3))
-    p0, p1, p2 = positions[tris[:, 0]], positions[tris[:, 1]], positions[tris[:, 2]]
-    # Face normals via cross product
-    n = np.cross(p1 - p0, p2 - p0)
-    # Accumulate face normals at each vertex
-    for k in range(3):
-        np.add.at(normals, tris[:, k], n)
-    # Normalize
-    lens = np.linalg.norm(normals, axis=1)
-    lens[lens == 0.0] = 1.0
-    normals /= lens[:, None]
-    return normals
-
-
-def _upload_mesh(vertex_data: np.ndarray, indices: np.ndarray) -> Model3D:
-    """Upload interleaved position+normal vertex data to the GPU.
-
-    Vertex layout: [pos_x, pos_y, pos_z, norm_x, norm_y, norm_z] (6 floats).
-    Returns a Model3D with the GPU handles.
-    """
-    vertex_data = np.ascontiguousarray(vertex_data, dtype=np.float32)
-    indices = np.ascontiguousarray(indices, dtype=np.uint32)
-    vao = gl.glGenVertexArrays(1)
-    vbo = gl.glGenBuffers(1)
-    ebo = gl.glGenBuffers(1)
-    gl.glBindVertexArray(vao)
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
-    gl.glBufferData(gl.GL_ARRAY_BUFFER, vertex_data.nbytes, vertex_data, gl.GL_STATIC_DRAW)
-    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ebo)
-    gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
-    stride = 6 * 4  # 6 floats * 4 bytes
-    gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, stride, ctypes.c_void_p(0))
-    gl.glEnableVertexAttribArray(0)
-    gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, stride, ctypes.c_void_p(12))
-    gl.glEnableVertexAttribArray(1)
-    gl.glBindVertexArray(0)
-    return Model3D(vao, vbo, ebo, int(indices.size))
-
-
-def _load_gltf_model(path: str) -> GltfModel:
-    """Load a GLB file, build the node hierarchy, and upload all meshes.
-
-    Returns a GltfModel containing the scene graph and GPU mesh handles.
-    """
-    gltf, bin_chunk = _read_glb(path)
-
-    # Build node list
-    nodes = [GltfNode(n.get("name", ""), n.get("mesh"), n.get("children") or [],
-                       n.get("translation"), n.get("rotation"), n.get("scale"))
-             for n in gltf.get("nodes", [])]
-
-    # Determine scene root nodes
-    si = int(gltf.get("scene", 0))
-    scenes = gltf.get("scenes", [])
-    scene_roots = (scenes[si].get("nodes", [])
-                   if scenes and 0 <= si < len(scenes)
-                   else list(range(len(nodes))))
-
-    # Upload mesh primitives to GPU
-    mesh_prims = {}
-    for mi, mesh in enumerate(gltf.get("meshes", [])):
-        plist = []
-        for prim in mesh.get("primitives", []) or []:
-            attrs = prim.get("attributes", {})
-            if "POSITION" not in attrs:
-                continue
-            pos = _read_accessor(gltf, bin_chunk, attrs["POSITION"]).astype(np.float32)
-            nrm = (_read_accessor(gltf, bin_chunk, attrs["NORMAL"]).astype(np.float32)
-                   if "NORMAL" in attrs else None)
-            idx = (_read_accessor(gltf, bin_chunk, prim["indices"]).reshape(-1).astype(np.uint32)
-                   if "indices" in prim
-                   else np.arange(pos.shape[0], dtype=np.uint32))
-            if nrm is None or nrm.shape[0] != pos.shape[0]:
-                nrm = _compute_vertex_normals(pos, idx)
-            plist.append(_upload_mesh(np.concatenate([pos[:, :3], nrm[:, :3]], axis=1), idx))
-        if plist:
-            mesh_prims[mi] = plist
-
-    return GltfModel(nodes, scene_roots, mesh_prims)
 
 
 def _compile_shader(src: bytes, stype: IntConstant) -> int:
@@ -958,7 +738,7 @@ class Stage3DWidget(QOpenGLWidget):
             base = self._build_base_model_matrix(obj)
             for entry in getattr(obj, "get_model_entries", list)():
                 model = QtGui.QMatrix4x4(base)
-                self._apply_local_ops(model, getattr(entry, "local_ops", ()))
+                _apply_local_ops(model, getattr(entry, "local_ops", ()))
 
                 if entry.model_path in self._gltf_models:
                     self._traverse_gltf(entry.model_path, model, obj,
@@ -1063,7 +843,7 @@ class Stage3DWidget(QOpenGLWidget):
 
         for entry in getattr(obj, "get_model_entries", list)():
             model = QtGui.QMatrix4x4(base)
-            self._apply_local_ops(model, getattr(entry, "local_ops", ()))
+            _apply_local_ops(model, getattr(entry, "local_ops", ()))
 
             if entry.model_path in self._gltf_models:
                 self._traverse_gltf(entry.model_path, model, obj,
@@ -1206,7 +986,6 @@ class Stage3DWidget(QOpenGLWidget):
         beam_list = []
 
         try:
-            from model.visualizer.stage import MovingHead
             beam_origin_name = MovingHead.BEAM_ORIGIN_NODE_NAME
             tilt_node_name = MovingHead.TILT_NODE_NAME
         except Exception:
@@ -1443,30 +1222,6 @@ class Stage3DWidget(QOpenGLWidget):
             self._show_labels = False
             self.update()
 
-    # Transform helpers
-
-    def _apply_local_ops(self, matrix: QtGui.QMatrix4x4, ops:
-    list[tuple[str, tuple[float, float, float] | tuple[float, float, float, float, float, float]]]) -> None:
-        """Apply a sequence of local transform operations to a matrix.
-
-        Supported operations:
-            ("translate", (x, y, z))
-            ("rotate", (degrees, ax, ay, az, pivot_x, pivot_y, pivot_z))
-        """
-        for op in ops or ():
-            if not op:
-                continue
-            name, payload = op[0], op[1]
-            if name == "translate":
-                matrix.translate(*payload)
-            elif name == "rotate":
-                deg, ax, ay, az, px, py, pz = payload
-                matrix.translate(px, py, pz)
-                matrix.rotate(deg, ax, ay, az)
-                matrix.translate(-px, -py, -pz)
-
-    # Model loading / unloading
-
     def _ensure_models_loaded(self, obj: StageObject) -> None:
         """Ensure all 3D models for a stage object are uploaded to the GPU."""
         for entry in getattr(obj, "get_model_entries", list)():
@@ -1482,7 +1237,7 @@ class Stage3DWidget(QOpenGLWidget):
         ext = os.path.splitext(path)[1].lower()
         if ext in (".glb", ".gltf"):
             try:
-                self._gltf_models[path] = _load_gltf_model(path)
+                self._gltf_models[path] = GltfModel.load_gltf_model(path)
                 logger.info("Loaded glTF: %s", path)
             except Exception as e:
                 logger.error("glTF load error %s: %s", path, e)
@@ -1521,7 +1276,7 @@ class Stage3DWidget(QOpenGLWidget):
                             im[key] = len(im)
                             vd.extend([p[0], p[1], p[2], n[0], n[1], n[2]])
                         il.append(im[key])
-            self._models[path] = _upload_mesh(
+            self._models[path] = upload_mesh(
                 np.array(vd, dtype=np.float32).reshape(-1, 6),
                 np.array(il, dtype=np.uint32))
         except Exception as e:
@@ -1659,7 +1414,7 @@ class Stage3DWidget(QOpenGLWidget):
 
     # Fixture name label overlay (F key)
 
-    def _world_to_screen(self, world_pos: QtGui.QVector3D, view_matrix: QtGui.QMatrix4x4) -> QtCore.QPointF:
+    def _world_to_screen(self, world_pos: QtGui.QVector3D, view_matrix: QtGui.QMatrix4x4) -> QtCore.QPointF | None:
         """Project a 3D world position to 2D screen coordinates.
 
         Returns a QPointF, or None if the point is behind the camera.
