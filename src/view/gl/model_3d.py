@@ -22,27 +22,45 @@ class Model3D:
         self.ebo: int = ebo
         self.index_count: int = index_count
 
+    @classmethod
+    def upload_mesh(cls, vertex_data: np.ndarray, indices: np.ndarray) -> Model3D:
+        """Upload interleaved position+normal vertex data to the GPU.
 
-def upload_mesh(vertex_data: np.ndarray, indices: np.ndarray) -> Model3D:
-    """Upload interleaved position+normal vertex data to the GPU.
+        Vertex layout: [pos_x, pos_y, pos_z, norm_x, norm_y, norm_z] (6 floats).
+        Returns a Model3D with the GPU handles.
+        """
+        vertex_data = np.ascontiguousarray(vertex_data, dtype=np.float32)
+        indices = np.ascontiguousarray(indices, dtype=np.uint32)
+        vao = gl.glGenVertexArrays(1)
+        vbo = gl.glGenBuffers(1)
+        ebo = gl.glGenBuffers(1)
+        gl.glBindVertexArray(vao)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
+        gl.glBufferData(gl.GL_ARRAY_BUFFER, vertex_data.nbytes, vertex_data, gl.GL_STATIC_DRAW)
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ebo)
+        gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
+        stride = 6 * 4  # 6 floats * 4 bytes
+        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, stride, ctypes.c_void_p(0))
+        gl.glEnableVertexAttribArray(0)
+        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, stride, ctypes.c_void_p(12))
+        gl.glEnableVertexAttribArray(1)
+        gl.glBindVertexArray(0)
+        return cls(vao, vbo, ebo, int(indices.size))
 
-    Vertex layout: [pos_x, pos_y, pos_z, norm_x, norm_y, norm_z] (6 floats).
-    Returns a Model3D with the GPU handles.
-    """
-    vertex_data = np.ascontiguousarray(vertex_data, dtype=np.float32)
-    indices = np.ascontiguousarray(indices, dtype=np.uint32)
-    vao = gl.glGenVertexArrays(1)
-    vbo = gl.glGenBuffers(1)
-    ebo = gl.glGenBuffers(1)
-    gl.glBindVertexArray(vao)
-    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
-    gl.glBufferData(gl.GL_ARRAY_BUFFER, vertex_data.nbytes, vertex_data, gl.GL_STATIC_DRAW)
-    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ebo)
-    gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
-    stride = 6 * 4  # 6 floats * 4 bytes
-    gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, stride, ctypes.c_void_p(0))
-    gl.glEnableVertexAttribArray(0)
-    gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, stride, ctypes.c_void_p(12))
-    gl.glEnableVertexAttribArray(1)
-    gl.glBindVertexArray(0)
-    return Model3D(vao, vbo, ebo, int(indices.size))
+    @classmethod
+    def upload_vao(cls, verts: np.ndarray, indices: np.ndarray) -> Model3D:
+        """Upload interleaved position+normal vertex data to a new VAO."""
+        vao = gl.glGenVertexArrays(1)
+        vbo = gl.glGenBuffers(1)
+        ebo = gl.glGenBuffers(1)
+        gl.glBindVertexArray(vao)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
+        gl.glBufferData(gl.GL_ARRAY_BUFFER, verts.nbytes, verts, gl.GL_STATIC_DRAW)
+        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ebo)
+        gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
+        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 24, ctypes.c_void_p(0))
+        gl.glEnableVertexAttribArray(0)
+        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 24, ctypes.c_void_p(12))
+        gl.glEnableVertexAttribArray(1)
+        gl.glBindVertexArray(0)
+        return cls(vao, vbo, ebo, int(indices.size))

@@ -7,7 +7,6 @@ beam cones) and handles camera, picking and the name-label overlay.
 
 from __future__ import annotations
 
-import ctypes
 import math
 import os
 import time
@@ -22,7 +21,7 @@ from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from model.visualizer.stage.so_moving_head import MovingHead
 from view.gl import _apply_local_ops
 from view.gl.gltf_model import GltfModel, GltfNode
-from view.gl.model_3d import Model3D, upload_mesh
+from view.gl.model_3d import Model3D
 from view.visualizer.spotlight_data import SpotLightData
 
 if TYPE_CHECKING:
@@ -1063,7 +1062,7 @@ class Stage3DWidget(QOpenGLWidget):
             idx.extend([0, 1 + i, 1 + (i + 1) % seg])
         v = np.array(verts, dtype=np.float32)
         ii = np.array(idx, dtype=np.uint32)
-        return self._upload_vao(v, ii)
+        return Model3D.upload_vao(v, ii)
 
     def _create_ground_plane(self, size: float=2000.0) -> Model3D:
         """Create a flat ground plane quad at y=0 with upward normals."""
@@ -1073,24 +1072,7 @@ class Stage3DWidget(QOpenGLWidget):
              h, 0,  h, 0, 1, 0, -h, 0,  h, 0, 1, 0,
         ], dtype=np.float32)
         ii = np.array([0, 1, 2, 0, 2, 3], dtype=np.uint32)
-        return self._upload_vao(v, ii)
-
-    def _upload_vao(self, verts: np.ndarray, indices: np.ndarray) -> Model3D:
-        """Upload interleaved position+normal vertex data to a new VAO."""
-        vao = gl.glGenVertexArrays(1)
-        vbo = gl.glGenBuffers(1)
-        ebo = gl.glGenBuffers(1)
-        gl.glBindVertexArray(vao)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
-        gl.glBufferData(gl.GL_ARRAY_BUFFER, verts.nbytes, verts, gl.GL_STATIC_DRAW)
-        gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ebo)
-        gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, gl.GL_STATIC_DRAW)
-        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 24, ctypes.c_void_p(0))
-        gl.glEnableVertexAttribArray(0)
-        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 24, ctypes.c_void_p(12))
-        gl.glEnableVertexAttribArray(1)
-        gl.glBindVertexArray(0)
-        return Model3D(vao, vbo, ebo, int(indices.size))
+        return Model3D.upload_vao(v, ii)
 
     # Camera controls
 
@@ -1276,7 +1258,7 @@ class Stage3DWidget(QOpenGLWidget):
                             im[key] = len(im)
                             vd.extend([p[0], p[1], p[2], n[0], n[1], n[2]])
                         il.append(im[key])
-            self._models[path] = upload_mesh(
+            self._models[path] = Model3D.upload_mesh(
                 np.array(vd, dtype=np.float32).reshape(-1, 6),
                 np.array(il, dtype=np.uint32))
         except Exception as e:

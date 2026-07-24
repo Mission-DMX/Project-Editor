@@ -8,7 +8,7 @@ from typing import Any
 
 import numpy as np
 
-from view.gl.model_3d import Model3D, upload_mesh
+from view.gl.model_3d import Model3D
 
 # Mapping from glTF componentType to numpy dtype
 _GLTF_COMPONENT_DTYPE = {
@@ -88,7 +88,7 @@ class GltfModel:
                        else np.arange(pos.shape[0], dtype=np.uint32))
                 if nrm is None or nrm.shape[0] != pos.shape[0]:
                     nrm = _compute_vertex_normals(pos, idx)
-                plist.append(upload_mesh(np.concatenate([pos[:, :3], nrm[:, :3]], axis=1), idx))
+                plist.append(Model3D.upload_mesh(np.concatenate([pos[:, :3], nrm[:, :3]], axis=1), idx))
             if plist:
                 mesh_prims[mi] = plist
 
