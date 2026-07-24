@@ -9,13 +9,14 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from model import stage as stage_model
-from model.dmx.dmx_visualizer import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
-from model.stage import make_unique_name
+from model.visualizer import stage as stage_model
+from model.visualizer.dmx.dmx_visualizer import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
+from model.visualizer.stage.stage_config import make_unique_name
 
 if TYPE_CHECKING:
+    import model.visualizer.stage.stage_object
     from model.ofl.fixture import UsedFixture
-    from model.stage import FixtureGroup, StageConfig, StageObject
+    from model.visualizer.stage import FixtureGroup, StageConfig, StageObject
 
 logger = getLogger(__name__)
 
@@ -1187,7 +1188,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # API
 
-    def add_object_to_list(self, obj: stage_model.StageObject) -> None:
+    def add_object_to_list(self, obj: model.visualizer.stage_config.stage_object.StageObject) -> None:
         """Add a newly created fixture to the list widget."""
         if obj.get_type() == "platform":
             return

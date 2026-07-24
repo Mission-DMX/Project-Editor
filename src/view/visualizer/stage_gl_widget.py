@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from PySide6.QtCore import QPoint
     from PySide6.QtWidgets import QWidget
 
-    from model.stage import StageConfig, StageObject
+    from model.visualizer.stage import StageConfig, StageObject
 
 logger = getLogger(__name__)
 
@@ -1206,7 +1206,7 @@ class Stage3DWidget(QOpenGLWidget):
         beam_list = []
 
         try:
-            from model.stage import MovingHead
+            from model.visualizer.stage import MovingHead
             beam_origin_name = MovingHead.BEAM_ORIGIN_NODE_NAME
             tilt_node_name = MovingHead.TILT_NODE_NAME
         except Exception:

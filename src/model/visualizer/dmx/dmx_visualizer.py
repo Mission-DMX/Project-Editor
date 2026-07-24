@@ -16,14 +16,15 @@ from typing import TYPE_CHECKING, Any
 from PySide6 import QtCore
 
 from model.broadcaster import Broadcaster
-from model.stage import MovingHead, StageConfig
+from model.visualizer.stage.so_moving_head import MovingHead
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget
 
     import proto.DirectMode_pb2
     from model import BoardConfiguration
-    from model.stage import StageObject
+    from model.visualizer.stage import StageObject
+    from model.visualizer.stage.stage_config import StageConfig
 
 logger = getLogger(__name__)
 

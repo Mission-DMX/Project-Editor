@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING
 from PySide6 import QtCore, QtWidgets
 
 from model.broadcaster import Broadcaster
-from model.dmx.dmx_visualizer import MOVEMENT_ROLES, DmxVisualizer, auto_detect_mapping
-from model.stage import FixtureGroup, StageConfig, backup_stage_file, get_default_stage_path
+from model.visualizer.dmx.dmx_visualizer import MOVEMENT_ROLES, DmxVisualizer, auto_detect_mapping
+from model.visualizer.stage.fixture_group import FixtureGroup
+from model.visualizer.stage.stage_config import StageConfig, backup_stage_file, get_default_stage_path
 from view.visualizer.stage_editor_widget import StageEditorWidget
 from view.visualizer.stage_gl_widget import Stage3DWidget
 
@@ -93,7 +94,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
     def load_stage_file(self) -> None:
         """Opens a file dialog to query a stage file and loads it."""
         # FIXME this is a blocking UI call.
-        from model.stage import STAGE_DIR
+        from model.visualizer.stage import STAGE_DIR
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Load Stagefile", STAGE_DIR,
             "Stage Files (*.yaml *.yml);;All Files (*)")
@@ -108,7 +109,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
     def save_stage_file(self) -> None:
         """Displays a save file dialog and saves the current stage setup into a stage file."""
-        from model.stage import STAGE_DIR
+        from model.visualizer.stage import STAGE_DIR
         path, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save Stagefile", STAGE_DIR,
             "Stage Files (*.yaml *.yml);;All Files (*)")
@@ -150,7 +151,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
     def _on_add_object(self, fixture_key: str, name: str, device: UsedFixture) -> None:
         new_id = self._stage_config.get_new_id(fixture_key)
         try:
-            from model.stage import create_object_from_key
+            from model.visualizer.stage import create_object_from_key
             new_obj = create_object_from_key(fixture_key, new_id, name)
         except Exception as e:
             logger.error("Failed to create object: %s", e)
