@@ -1,7 +1,11 @@
 """Right-hand editor panel: fixture list, property form and DMX device mapping."""
 
+from __future__ import annotations
+
+import math
 import time
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
@@ -9,10 +13,14 @@ from model import stage as stage_model
 from model.dmx.dmx_visualizer import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
 from model.stage import make_unique_name
 
+if TYPE_CHECKING:
+    from model.ofl.fixture import UsedFixture
+    from model.stage import FixtureGroup, StageConfig, StageObject
+
 logger = getLogger(__name__)
 
 
-def _fixture_label(fix) -> str:
+def _fixture_label(fix: UsedFixture) -> str:
     """Build a display label: ``[TAG] Name @ U{u}/CH{start} ({n}ch)``."""
     try:
         cats = fix._fixture.categories
@@ -28,7 +36,7 @@ def _fixture_label(fix) -> str:
     return f"{tag} {name} @ U{fix.universe_id}/CH{fix.start_index} ({fix.channel_length}ch)"
 
 
-def _fixture_combo_data(fix) -> dict:
+def _fixture_combo_data(fix: UsedFixture) -> dict[str, int | list[str]]:
     """Extract the data dict needed for device combo boxes from a UsedFixture."""
     ch_names = [ch.name for ch in fix.fixture_channels]
     return {
@@ -38,7 +46,7 @@ def _fixture_combo_data(fix) -> dict:
         "channel_names": ch_names,
     }
 
-TRUSS_VARIANTS = {
+TRUSS_VARIANTS: dict[str, str] = {
     "Default": "truss_default",
     "2-Point Medium": "truss_2point_medium",
     "Cross": "truss_cross",
@@ -52,7 +60,20 @@ ROLE_IS_GROUP = QtCore.Qt.ItemDataRole.UserRole + 1  # bool: True for group head
 class AddFixtureDialog(QtWidgets.QDialog):
     """Dialog for adding a new fixture to the stage."""
 
-    def __init__(self, existing_names, used_fixtures=None, parent=None):
+    def __init__(self,
+                 existing_names: list[str],
+                 used_fixtures: list[UsedFixture] | None = None,
+                 parent: QtWidgets.QWidget | None = None) -> None:
+        """Initialize the dialog.
+
+        It guarantees that the entered name is unique.
+
+        Args:
+            existing_names: Existing names, which should be avoided.
+            used_fixtures: Fixtures to choose from.
+            parent: Parent widget.
+
+        """
         super().__init__(parent)
         self.setWindowTitle("Add Fixture")
         self.setModal(True)
@@ -101,7 +122,7 @@ class AddFixtureDialog(QtWidgets.QDialog):
         # Initialize visibility
         self._on_category_changed()
 
-    def _on_category_changed(self):
+    def _on_category_changed(self) -> None:
         """Show/hide category-specific controls."""
         is_truss = self._category_combo.currentText() == "Truss"
         self._variant_combo.setVisible(is_truss)
@@ -111,30 +132,30 @@ class AddFixtureDialog(QtWidgets.QDialog):
         self._device_label.setVisible(is_mh)
         self._update_suggested_name()
 
-    def _update_suggested_name(self):
+    def _update_suggested_name(self) -> None:
         """Auto-generate a unique name suggestion as placeholder text."""
         base = self._get_base_name()
         candidate = make_unique_name(base, self._existing_names)
         self._name_edit.setPlaceholderText(candidate)
 
-    def _get_base_name(self):
+    def _get_base_name(self) -> str:
         if self._category_combo.currentText() == "Truss":
             return f"Truss {self._variant_combo.currentText()}"
         return "Moving Head"
 
-    def selected_fixture_key(self):
+    def selected_fixture_key(self) -> str:
         """Return the internal fixture key for the selected type."""
         if self._category_combo.currentText() == "Truss":
             v = self._variant_combo.currentText()
             return TRUSS_VARIANTS.get(v, "truss_default")
         return "moving_head"
 
-    def selected_name(self):
+    def selected_name(self) -> str:
         """Return the user-entered name (or the auto-generated placeholder)."""
         text = self._name_edit.text().strip()
         return text or self._name_edit.placeholderText()
 
-    def selected_device(self):
+    def selected_device(self) -> UsedFixture | None:
         """Return the selected UsedFixture for DMX linking, or None."""
         return self._device_combo.currentData()
 
@@ -142,7 +163,8 @@ class AddFixtureDialog(QtWidgets.QDialog):
 class GroupNameDialog(QtWidgets.QDialog):
     """Simple dialog that asks the user for a group name."""
 
-    def __init__(self, existing_names, parent=None):
+    def __init__(self, existing_names: list[str], parent: QtWidgets.QWidget | None = None) -> None:
+        """Initialize the dialog."""
         super().__init__(parent)
         self.setWindowTitle("Create Group")
         self.setModal(True)
@@ -165,7 +187,8 @@ class GroupNameDialog(QtWidgets.QDialog):
         btns.rejected.connect(self.reject)
         layout.addWidget(btns)
 
-    def selected_name(self):
+    def selected_name(self) -> str:
+        """Get the selected name of the group."""
         text = self._name_edit.text().strip()
         return text or self._name_edit.placeholderText()
 
@@ -173,20 +196,31 @@ class GroupNameDialog(QtWidgets.QDialog):
 class StageEditorWidget(QtWidgets.QWidget):
     """Right-hand panel: fixture list + property editor + DMX controls."""
 
-    addObjectRequested = QtCore.Signal(str, str, object) # (fixture_key, name, device_or_None)
-    removeObjectRequested = QtCore.Signal(str) # object_id
-    objectChanged = QtCore.Signal(str) # object_id
-    selectionChanged = QtCore.Signal(list, bool) # (highlight_ids, is_multi)
-    groupRequested = QtCore.Signal(list, str) # (fixture_ids, group_name)
-    removeGroupRequested = QtCore.Signal(str) # group_id
-    dmxToggled = QtCore.Signal(bool) # True = start, False = stop
+    add_object_requested = QtCore.Signal(str, str, object) # (fixture_key, name, device_or_None)
+    remove_object_requested = QtCore.Signal(str) # object_id
+    object_changed = QtCore.Signal(str) # object_id
+    selection_changed = QtCore.Signal(list, bool) # (highlight_ids, is_multi)
+    group_requested = QtCore.Signal(list, str) # (fixture_ids, group_name)
+    remove_group_requested = QtCore.Signal(str) # group_id
+    dmx_toggled = QtCore.Signal(bool) # True = start, False = stop
 
-    def __init__(self, stage_config, used_fixtures=None, parent=None):
+    def __init__(self,
+                 stage_config: StageConfig,
+                 used_fixtures: list[UsedFixture] | None = None,
+                 parent: QtWidgets.QWidget | None = None) -> None:
+        """Initialize Stage Editor Widget.
+
+        Args:
+            stage_config: The stage configuration to provide an editor for.
+            used_fixtures: The fixtures a user may select from when adding to the stage
+            parent: The parent widget.
+
+        """
         super().__init__(parent)
         self._stage_config = stage_config
         self._used_fixtures = used_fixtures or []
         self._current_obj = None # currently selected fixture
-        self._current_group = None # currently selected group
+        self._current_group: FixtureGroup | None = None # currently selected group
         self._updating_ui = False # guard against recursive signal loops
         self._group_base_offsets = {} # snapshot for group rotation
         self._group_base_rotation = (0, 0, 0)
@@ -257,20 +291,20 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # Fixture list building
 
-    def _display_text(self, obj):
+    def _display_text(self, obj: StageObject) -> str:
         """Format display text for a fixture list item."""
         display = obj.get_display_name()
         if obj.name:
             return f"{obj.name}  ({display})"
         return display
 
-    def _group_display_text(self, grp):
+    def _group_display_text(self, grp: FixtureGroup) -> str:
         """Format display text for a group header list item."""
         count = len(grp.member_ids)
         name = grp.name or grp.id
         return f"[G] {name}  ({count} fixtures)"
 
-    def _rebuild_list(self):
+    def _rebuild_list(self) -> None:
         """Full rebuild of the fixture list (after group creation/removal etc.)."""
         self._fixture_list.blockSignals(True)
         self._fixture_list.clear()
@@ -325,14 +359,14 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # Selection handling
 
-    def _on_selection_changed(self):
+    def _on_selection_changed(self) -> None:
         """React to list selection changes and update the property panel."""
         selected_items = self._fixture_list.selectedItems()
         if not selected_items:
             self._current_obj = None
             self._current_group = None
             self._clear_properties()
-            self.selectionChanged.emit([], False)
+            self.selection_changed.emit([], False)
             return
 
         # Collect all fixture IDs that should be highlighted in 3D
@@ -371,16 +405,16 @@ class StageEditorWidget(QtWidgets.QWidget):
         fixture_count = sum(1 for it in selected_items if not it.data(ROLE_IS_GROUP))
         self._group_btn.setEnabled(fixture_count >= 2)
 
-        self.selectionChanged.emit(highlight_ids, is_multi)
+        self.selection_changed.emit(highlight_ids, is_multi)
 
     # Property panel helpers
 
-    def _clear_properties(self):
+    def _clear_properties(self) -> None:
         """Remove all rows from the property form."""
         while self._prop_layout.rowCount() > 0:
             self._prop_layout.removeRow(0)
 
-    def _add_section_header(self, text):
+    def _add_section_header(self, text: str) -> None:
         """Add a bold section header label to the property form."""
         lbl = QtWidgets.QLabel(text)
         fnt = lbl.font()
@@ -388,7 +422,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         lbl.setFont(fnt)
         self._prop_layout.addRow(lbl)
 
-    def _add_separator(self):
+    def _add_separator(self) -> None:
         """Add a horizontal line separator to the property form."""
         line = QtWidgets.QFrame()
         line.setFrameShape(QtWidgets.QFrame.Shape.HLine)
@@ -397,7 +431,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # Group property panel
 
-    def _build_group_properties(self, grp):
+    def _build_group_properties(self, grp: FixtureGroup) -> None:
         """Build the property panel for a selected fixture group."""
         self._updating_ui = True
         self._clear_properties()
@@ -461,7 +495,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # Fixture property panel
 
-    def _build_properties(self, obj):
+    def _build_properties(self, obj: StageObject) -> None:
         """Build the property panel for a single selected fixture."""
         self._updating_ui = True
         self._clear_properties()
@@ -579,8 +613,7 @@ class StageEditorWidget(QtWidgets.QWidget):
             self._prop_layout.addRow("Pick:", self._color_btn)
 
             self._rgb_spins = []
-            for i, (axis, val) in enumerate(
-                    (("R:", r), ("G:", g), ("B:", b))):
+            for axis, val in [("R:", r), ("G:", g), ("B:", b)]:
                 sp = QtWidgets.QSpinBox()
                 sp.setRange(0, 255)
                 sp.setSingleStep(5)
@@ -596,7 +629,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # DMX lock / unlock logic
 
-    def _has_dmx_role(self, obj, section, role):
+    def _has_dmx_role(self, obj: StageObject, section: str, role: COLOR_ROLES) -> bool:
         """Check if a MovingHead has a DMX channel assigned for a given role."""
         dc = obj.device_config
         if not dc:
@@ -605,11 +638,11 @@ class StageEditorWidget(QtWidgets.QWidget):
         mapping = sub.get("mapping", {})
         return mapping.get(role, -1) >= 0
 
-    def _on_dmx_live_toggled(self, checked):
-        self.dmxToggled.emit(checked)
+    def _on_dmx_live_toggled(self, checked: bool) -> None:
+        self.dmx_toggled.emit(checked)
         self._refresh_locks()
 
-    def _apply_dmx_locks(self, obj):
+    def _apply_dmx_locks(self, obj: StageObject) -> None:
         """Disable UI controls for channels that are driven by live DMX.
 
         When DMX Live is off, all controls remain unlocked for manual editing.
@@ -669,13 +702,12 @@ class StageEditorWidget(QtWidgets.QWidget):
                 sp.setEnabled(False)
                 sp.setStyleSheet(lock_style)
 
-    def _refresh_locks(self):
+    def _refresh_locks(self) -> None:
         """Re-apply lock state after a device or mapping change."""
-        if self._current_obj and isinstance(self._current_obj, stage_model.MovingHead):
-            if hasattr(self, "_pan_spin"):
-                self._apply_dmx_locks(self._current_obj)
+        if self._current_obj and isinstance(self._current_obj, stage_model.MovingHead) and hasattr(self, "_pan_spin"):
+            self._apply_dmx_locks(self._current_obj)
 
-    def update_live_values(self):
+    def update_live_values(self) -> None:
         """Refresh the property panel with current fixture values from DMX.
 
         Throttled to 10 Hz to avoid excessive UI updates during fast polling.
@@ -711,11 +743,11 @@ class StageEditorWidget(QtWidgets.QWidget):
             if hasattr(self, "_color_btn"):
                 r, g, b = obj.beam_color
                 self._update_color_btn_style(r, g, b)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.exception("Failed to update attribute: %s", e)
         self._updating_ui = False
 
-    def _update_color_btn_style(self, r, g, b):
+    def _update_color_btn_style(self, r: float, g: float, b: float) -> None:
         """Set the color button background and auto-contrast text color."""
         lum = 0.299 * r + 0.587 * g + 0.114 * b
         tc = "#000" if lum > 128 else "#fff"
@@ -725,7 +757,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # Device (DMX) section — Movement and Color
 
-    def _build_device_section(self, obj):
+    def _build_device_section(self, obj: StageObject) -> None:
         """Build the Movement Device and Color Device property sections."""
         if not isinstance(obj, stage_model.MovingHead):
             return
@@ -775,7 +807,8 @@ class StageEditorWidget(QtWidgets.QWidget):
         if col_cfg:
             for i in range(1, self._col_device_combo.count()):
                 d = self._col_device_combo.itemData(i)
-                if d and d["universe"] == col_cfg.get("universe") and d["start_channel"] == col_cfg.get("start_channel"):
+                if (d and d["universe"] == col_cfg.get("universe") and
+                        d["start_channel"] == col_cfg.get("start_channel")):
                     self._col_device_combo.setCurrentIndex(i)
                     break
         self._col_device_combo.currentIndexChanged.connect(self._on_col_device_changed)
@@ -790,7 +823,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._col_combos = {}
         self._rebuild_col_combos(obj)
 
-    def _rebuild_mv_combos(self, obj):
+    def _rebuild_mv_combos(self, obj: StageObject) -> None:
         """Rebuild the movement channel mapping combo boxes."""
         while self._mv_ch_layout.rowCount() > 0:
             self._mv_ch_layout.removeRow(0)
@@ -824,7 +857,7 @@ class StageEditorWidget(QtWidgets.QWidget):
             self._mv_ch_layout.addRow(labels.get(role, role), combo)
             self._mv_combos[role] = combo
 
-    def _rebuild_col_combos(self, obj):
+    def _rebuild_col_combos(self, obj: StageObject) -> None:
         """Rebuild the color channel mapping combo boxes."""
         while self._col_ch_layout.rowCount() > 0:
             self._col_ch_layout.removeRow(0)
@@ -853,7 +886,7 @@ class StageEditorWidget(QtWidgets.QWidget):
             self._col_ch_layout.addRow(labels.get(role, role), combo)
             self._col_combos[role] = combo
 
-    def _on_mv_device_changed(self, index):
+    def _on_mv_device_changed(self, _: int) -> None:  # Index argument is not required
         if self._updating_ui or not self._current_obj:
             return
         dd = self._mv_device_combo.currentData()
@@ -872,7 +905,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._refresh_locks()
         self._emit_changed()
 
-    def _on_col_device_changed(self, index):
+    def _on_col_device_changed(self, _: int) -> None:  # Provided index argument is not required
         if self._updating_ui or not self._current_obj:
             return
         dd = self._col_device_combo.currentData()
@@ -891,7 +924,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._refresh_locks()
         self._emit_changed()
 
-    def _on_mv_mapping_changed(self, role):
+    def _on_mv_mapping_changed(self, role: COLOR_ROLES) -> None:
         if self._updating_ui or not self._current_obj:
             return
         dc = self._current_obj.device_config
@@ -903,7 +936,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._refresh_locks()
         self._emit_changed()
 
-    def _on_col_mapping_changed(self, role):
+    def _on_col_mapping_changed(self, role: COLOR_ROLES) -> None:
         if self._updating_ui or not self._current_obj:
             return
         dc = self._current_obj.device_config
@@ -917,13 +950,13 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # Fixture change handlers
 
-    def _emit_changed(self):
+    def _emit_changed(self) -> None:
         """Notify the mediator that the current fixture's properties changed."""
         if self._updating_ui or not self._current_obj:
             return
-        self.objectChanged.emit(self._current_obj.id)
+        self.object_changed.emit(self._current_obj.id)
 
-    def _on_name_changed(self, text):
+    def _on_name_changed(self, text: str) -> None:
         if self._updating_ui or not self._current_obj:
             return
         self._current_obj.name = text.strip()
@@ -938,38 +971,38 @@ class StageEditorWidget(QtWidgets.QWidget):
                     item.setText(self._display_text(self._current_obj))
         self._emit_changed()
 
-    def _on_position_changed(self):
+    def _on_position_changed(self) -> None:
         if self._updating_ui or not self._current_obj:
             return
         self._current_obj.position = tuple(s.value() for s in self._pos_spins)
         self._emit_changed()
 
-    def _on_rotation_changed(self):
+    def _on_rotation_changed(self) -> None:
         if self._updating_ui or not self._current_obj:
             return
         self._current_obj.rotation = tuple(s.value() for s in self._rot_spins)
         self._emit_changed()
 
-    def _on_scale_changed(self, val):
+    def _on_scale_changed(self, val: float | str) -> None:
         if self._updating_ui or not self._current_obj:
             return
         self._current_obj.scale = float(val)
         self._emit_changed()
 
-    def _on_attr(self, attr, val):
-        """Generic handler for simple float attributes (pan, tilt, dimmer)."""
+    def _on_attr(self, attr: str, val: float | str) -> None:
+        """Handle simple float attribute (pan, tilt, dimmer) changes."""
         if self._updating_ui or not self._current_obj:
             return
         setattr(self._current_obj, attr, float(val))
         self._emit_changed()
 
-    def _on_beam_toggled(self, state):
+    def _on_beam_toggled(self, state: bool) -> None:
         if self._updating_ui or not self._current_obj:
             return
         self._current_obj.beam_on = bool(state)
         self._emit_changed()
 
-    def _on_dimmer_slider(self, val):
+    def _on_dimmer_slider(self, val: float) -> None:
         """Synchronize the dimmer slider with the spin box."""
         if self._updating_ui or not self._current_obj:
             return
@@ -980,7 +1013,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._updating_ui = False
         self._emit_changed()
 
-    def _on_rgb_changed(self):
+    def _on_rgb_changed(self) -> None:
         if self._updating_ui or not self._current_obj:
             return
         r, g, b = (s.value() for s in self._rgb_spins)
@@ -988,7 +1021,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._update_color_btn_style(r, g, b)
         self._emit_changed()
 
-    def _on_color_picker(self):
+    def _on_color_picker(self) -> None:
         """Open a QColorDialog and apply the chosen color."""
         if not self._current_obj:
             return
@@ -1008,7 +1041,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # Group change handlers
 
-    def _on_group_name_changed(self, text):
+    def _on_group_name_changed(self, text: str) -> None:
         """Rename the selected group."""
         if self._updating_ui or not self._current_group:
             return
@@ -1018,7 +1051,7 @@ class StageEditorWidget(QtWidgets.QWidget):
                 item.setText(self._group_display_text(self._current_group))
         self._emit_group_changed()
 
-    def _on_group_position_changed(self):
+    def _on_group_position_changed(self) -> None:
         """Translate all group members by the same delta as the group center."""
         if self._updating_ui or not self._current_group:
             return
@@ -1041,12 +1074,10 @@ class StageEditorWidget(QtWidgets.QWidget):
 
         self._emit_group_changed()
 
-    def _on_group_rotation_changed(self):
-        """Rotate all members around the group center using total rotation.
-        """
+    def _on_group_rotation_changed(self) -> None:
+        """Rotate all members around the group center using total rotation."""
         if self._updating_ui or not self._current_group:
             return
-        import math
 
         new_rot = tuple(s.value() for s in self._rot_spins)
 
@@ -1102,26 +1133,26 @@ class StageEditorWidget(QtWidgets.QWidget):
 
         self._emit_group_changed()
 
-    def _emit_group_changed(self):
+    def _emit_group_changed(self) -> None:
         """Notify that group member objects changed (triggers 3D update + save)."""
         if self._updating_ui or not self._current_group:
             return
         for mid in self._current_group.member_ids:
-            self.objectChanged.emit(mid)
+            self.object_changed.emit(mid)
 
     # Actions (Add / Remove / Group)
 
-    def _on_add_clicked(self):
-        """Opens the fixture selection dialog and adds the selected fixtures."""
+    def _on_add_clicked(self) -> None:
+        """Open the fixture selection dialog and adds the selected fixtures."""
         existing = self._stage_config.get_all_names()
         dlg = AddFixtureDialog(existing, self._used_fixtures, self)
         if dlg.exec() != QtWidgets.QDialog.DialogCode.Accepted:
             return
-        self.addObjectRequested.emit(
+        self.add_object_requested.emit(
             dlg.selected_fixture_key(), dlg.selected_name(), dlg.selected_device())
 
-    def _on_remove_clicked(self):
-        """Removes the selected fixture from the stage."""
+    def _on_remove_clicked(self) -> None:
+        """Remove the selected fixture from the stage."""
         selected_items = self._fixture_list.selectedItems()
         if not selected_items:
             return
@@ -1131,11 +1162,11 @@ class StageEditorWidget(QtWidgets.QWidget):
             if not oid:
                 continue
             if is_group:
-                self.removeGroupRequested.emit(oid)
+                self.remove_group_requested.emit(oid)
             else:
-                self.removeObjectRequested.emit(oid)
+                self.remove_object_requested.emit(oid)
 
-    def _on_group_clicked(self):
+    def _on_group_clicked(self) -> None:
         """Group all selected non-group fixtures together."""
         selected_items = self._fixture_list.selectedItems()
         fixture_ids = []
@@ -1152,7 +1183,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         if dlg.exec() != QtWidgets.QDialog.DialogCode.Accepted:
             return
 
-        self.groupRequested.emit(fixture_ids, dlg.selected_name())
+        self.group_requested.emit(fixture_ids, dlg.selected_name())
 
     # API
 

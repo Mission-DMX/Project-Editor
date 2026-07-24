@@ -57,13 +57,13 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self.setSizes([2200, 360])
 
         # Editor -> mediator
-        self._editor_widget.addObjectRequested.connect(self._on_add_object)
-        self._editor_widget.removeObjectRequested.connect(self._on_remove_object)
-        self._editor_widget.objectChanged.connect(self._on_object_changed)
-        self._editor_widget.selectionChanged.connect(self._on_selection_changed)
-        self._editor_widget.groupRequested.connect(self._on_group_requested)
-        self._editor_widget.removeGroupRequested.connect(self._on_remove_group)
-        self._editor_widget.dmxToggled.connect(self._on_dmx_toggled)
+        self._editor_widget.add_object_requested.connect(self._on_add_object)
+        self._editor_widget.remove_object_requested.connect(self._on_remove_object)
+        self._editor_widget.object_changed.connect(self._on_object_changed)
+        self._editor_widget.selection_changed.connect(self._on_selection_changed)
+        self._editor_widget.group_requested.connect(self._on_group_requested)
+        self._editor_widget.remove_group_requested.connect(self._on_remove_group)
+        self._editor_widget.dmx_toggled.connect(self._on_dmx_toggled)
 
         # 3D viewport -> mediator
         self._gl_widget.fixture_clicked.connect(self._on_fixture_clicked)
