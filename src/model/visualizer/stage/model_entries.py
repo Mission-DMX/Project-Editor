@@ -1,3 +1,5 @@
+"""Contains ModelEntry class and fixture key definitions."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
