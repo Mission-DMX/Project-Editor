@@ -28,3 +28,11 @@ FIXTURE_KEYS = [
     "truss_medium",
     "moving_head",
 ]
+
+TRUSS_VARIANTS: dict[str, str] = {
+    "Default": "truss_default",
+    "2-Point Medium": "truss_2point_medium",
+    "Cross": "truss_cross",
+    "Long": "truss_long",
+    "Medium": "truss_medium",
+}

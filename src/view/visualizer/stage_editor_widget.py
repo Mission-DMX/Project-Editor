@@ -9,32 +9,16 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from model.visualizer import stage as stage_model
 from model.visualizer.dmx.dmx_visualizer import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
-from model.visualizer.stage.stage_config import make_unique_name
+from model.visualizer.stage.so_moving_head import MovingHead
+from view.visualizer.add_fixture_dialog import AddFixtureDialog, _fixture_label
+from view.visualizer.stage_group_name_dialog import GroupNameDialog
 
 if TYPE_CHECKING:
-    import model.visualizer.stage.stage_object
     from model.ofl.fixture import UsedFixture
     from model.visualizer.stage import FixtureGroup, StageConfig, StageObject
 
 logger = getLogger(__name__)
-
-
-def _fixture_label(fix: UsedFixture) -> str:
-    """Build a display label: ``[TAG] Name @ U{u}/CH{start} ({n}ch)``."""
-    try:
-        cats = fix._fixture.categories
-        if "Moving Head" in cats:
-            tag = "[MH]"
-        elif any(c in cats for c in ("Color Changer", "Blinder", "Pixel Bar")):
-            tag = "[RGB]"
-        else:
-            tag = "[" + cats[0] + "]" if cats else "[?]"
-    except Exception:
-        tag = ""
-    name = fix.name_on_stage or fix.name or fix.short_name or "?"
-    return f"{tag} {name} @ U{fix.universe_id}/CH{fix.start_index} ({fix.channel_length}ch)"
 
 
 def _fixture_combo_data(fix: UsedFixture) -> dict[str, int | list[str]]:
@@ -47,151 +31,8 @@ def _fixture_combo_data(fix: UsedFixture) -> dict[str, int | list[str]]:
         "channel_names": ch_names,
     }
 
-TRUSS_VARIANTS: dict[str, str] = {
-    "Default": "truss_default",
-    "2-Point Medium": "truss_2point_medium",
-    "Cross": "truss_cross",
-    "Long": "truss_long",
-    "Medium": "truss_medium",
-}
-
 ROLE_ID = QtCore.Qt.ItemDataRole.UserRole
 ROLE_IS_GROUP = QtCore.Qt.ItemDataRole.UserRole + 1  # bool: True for group headers
-
-class AddFixtureDialog(QtWidgets.QDialog):
-    """Dialog for adding a new fixture to the stage."""
-
-    def __init__(self,
-                 existing_names: list[str],
-                 used_fixtures: list[UsedFixture] | None = None,
-                 parent: QtWidgets.QWidget | None = None) -> None:
-        """Initialize the dialog.
-
-        It guarantees that the entered name is unique.
-
-        Args:
-            existing_names: Existing names, which should be avoided.
-            used_fixtures: Fixtures to choose from.
-            parent: Parent widget.
-
-        """
-        super().__init__(parent)
-        self.setWindowTitle("Add Fixture")
-        self.setModal(True)
-        self.setMinimumWidth(380)
-        self._existing_names = existing_names or []
-        self._used_fixtures = used_fixtures or []
-
-        layout = QtWidgets.QVBoxLayout(self)
-        form = QtWidgets.QFormLayout()
-        form.setLabelAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
-        layout.addLayout(form)
-
-        # Category selector
-        self._category_combo = QtWidgets.QComboBox()
-        self._category_combo.addItems(["Truss", "Moving Head"])
-        self._category_combo.currentIndexChanged.connect(self._on_category_changed)
-        form.addRow("Fixture:", self._category_combo)
-
-        # Truss variant selector
-        self._variant_label = QtWidgets.QLabel("Type:")
-        self._variant_combo = QtWidgets.QComboBox()
-        self._variant_combo.addItems(list(TRUSS_VARIANTS.keys()))
-        self._variant_combo.currentIndexChanged.connect(self._update_suggested_name)
-        form.addRow(self._variant_label, self._variant_combo)
-
-        # DMX device selector
-        self._device_label = QtWidgets.QLabel("Device:")
-        self._device_combo = QtWidgets.QComboBox()
-        self._device_combo.addItem("(None)", None)
-        for fix in self._used_fixtures:
-            self._device_combo.addItem(_fixture_label(fix), fix)
-        form.addRow(self._device_label, self._device_combo)
-
-        # Name input
-        self._name_edit = QtWidgets.QLineEdit()
-        form.addRow("Name:", self._name_edit)
-
-        # OK / Cancel buttons
-        btns = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok
-            | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
-        btns.accepted.connect(self.accept)
-        btns.rejected.connect(self.reject)
-        layout.addWidget(btns)
-
-        # Initialize visibility
-        self._on_category_changed()
-
-    def _on_category_changed(self) -> None:
-        """Show/hide category-specific controls."""
-        is_truss = self._category_combo.currentText() == "Truss"
-        self._variant_combo.setVisible(is_truss)
-        self._variant_label.setVisible(is_truss)
-        is_mh = self._category_combo.currentText() == "Moving Head"
-        self._device_combo.setVisible(is_mh)
-        self._device_label.setVisible(is_mh)
-        self._update_suggested_name()
-
-    def _update_suggested_name(self) -> None:
-        """Auto-generate a unique name suggestion as placeholder text."""
-        base = self._get_base_name()
-        candidate = make_unique_name(base, self._existing_names)
-        self._name_edit.setPlaceholderText(candidate)
-
-    def _get_base_name(self) -> str:
-        if self._category_combo.currentText() == "Truss":
-            return f"Truss {self._variant_combo.currentText()}"
-        return "Moving Head"
-
-    def selected_fixture_key(self) -> str:
-        """Return the internal fixture key for the selected type."""
-        if self._category_combo.currentText() == "Truss":
-            v = self._variant_combo.currentText()
-            return TRUSS_VARIANTS.get(v, "truss_default")
-        return "moving_head"
-
-    def selected_name(self) -> str:
-        """Return the user-entered name (or the auto-generated placeholder)."""
-        text = self._name_edit.text().strip()
-        return text or self._name_edit.placeholderText()
-
-    def selected_device(self) -> UsedFixture | None:
-        """Return the selected UsedFixture for DMX linking, or None."""
-        return self._device_combo.currentData()
-
-
-class GroupNameDialog(QtWidgets.QDialog):
-    """Simple dialog that asks the user for a group name."""
-
-    def __init__(self, existing_names: list[str], parent: QtWidgets.QWidget | None = None) -> None:
-        """Initialize the dialog."""
-        super().__init__(parent)
-        self.setWindowTitle("Create Group")
-        self.setModal(True)
-        self.setMinimumWidth(250)
-        self.setMaximumWidth(400)
-
-        layout = QtWidgets.QVBoxLayout(self)
-        form = QtWidgets.QFormLayout()
-        layout.addLayout(form)
-
-        self._name_edit = QtWidgets.QLineEdit()
-        suggested = make_unique_name("Group", existing_names)
-        self._name_edit.setPlaceholderText(suggested)
-        form.addRow("Group name:", self._name_edit)
-
-        btns = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok
-            | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
-        btns.accepted.connect(self.accept)
-        btns.rejected.connect(self.reject)
-        layout.addWidget(btns)
-
-    def selected_name(self) -> str:
-        """Get the selected name of the group."""
-        text = self._name_edit.text().strip()
-        return text or self._name_edit.placeholderText()
 
 
 class StageEditorWidget(QtWidgets.QWidget):
@@ -508,7 +349,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._prop_layout.addRow("Name:", self._name_edit)
 
         # Device Link (DMX)
-        if isinstance(obj, stage_model.MovingHead):
+        if isinstance(obj, MovingHead):
             self._add_separator()
             self._build_device_section(obj)
 
@@ -556,7 +397,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._prop_layout.addRow("Scale:", self._scale_spin)
 
         # MovingHead beam properties
-        if isinstance(obj, stage_model.MovingHead):
+        if isinstance(obj, MovingHead):
             self._add_separator()
             self._add_section_header("Beam Control")
 
@@ -648,7 +489,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
         When DMX Live is off, all controls remain unlocked for manual editing.
         """
-        if not isinstance(obj, stage_model.MovingHead):
+        if not isinstance(obj, MovingHead):
             return
 
         lock_style = "background-color: #3a3a2a; color: #aa9;"
@@ -705,7 +546,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     def _refresh_locks(self) -> None:
         """Re-apply lock state after a device or mapping change."""
-        if self._current_obj and isinstance(self._current_obj, stage_model.MovingHead) and hasattr(self, "_pan_spin"):
+        if self._current_obj and isinstance(self._current_obj, MovingHead) and hasattr(self, "_pan_spin"):
             self._apply_dmx_locks(self._current_obj)
 
     def update_live_values(self) -> None:
@@ -721,7 +562,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._last_live_update = now
 
         obj = self._current_obj
-        if not obj or not isinstance(obj, stage_model.MovingHead):
+        if not obj or not isinstance(obj, MovingHead):
             return
 
         self._updating_ui = True
@@ -760,7 +601,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     def _build_device_section(self, obj: StageObject) -> None:
         """Build the Movement Device and Color Device property sections."""
-        if not isinstance(obj, stage_model.MovingHead):
+        if not isinstance(obj, MovingHead):
             return
 
         dc = obj.device_config or {}
@@ -1188,7 +1029,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # API
 
-    def add_object_to_list(self, obj: model.visualizer.stage_config.stage_object.StageObject) -> None:
+    def add_object_to_list(self, obj: StageObject) -> None:
         """Add a newly created fixture to the list widget."""
         if obj.get_type() == "platform":
             return
