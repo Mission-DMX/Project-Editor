@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QDialog, QFormLayout, QLabel
 
 class ExceptionsDialog(QDialog):
     """Dialog to display generic exception"""
+
     _open_dialogs: ClassVar[list[QDialog]] = []
 
     def __init__(self, exception: Exception) -> None:

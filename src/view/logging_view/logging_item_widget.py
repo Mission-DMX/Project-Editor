@@ -36,7 +36,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
                 break
 
     def _level_visible_change(self, level: tuple[str, bool]) -> None:
-        """change the visibility of a logging item by level"""
+        """Change the visibility of a logging item by level"""
         if self._level == level[0]:
             self._possible_visible = level[1]
             if not self._possible_visible:
@@ -45,7 +45,7 @@ class LoggingItemWidget(QtWidgets.QTreeWidgetItem):
                 self.setHidden(False)  # TODO eigentlich search
 
     def search(self, search: list[Search]) -> None:
-        """hide all not feasible items"""
+        """Hide all not feasible items"""
         visible = self._possible_visible
         if visible:
             for entry in search:

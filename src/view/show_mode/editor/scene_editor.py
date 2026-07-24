@@ -40,6 +40,7 @@ class SceneUIManagerWidget(QTabWidget):
 
         Args:
             index: The index of the tab in the tab bar.
+
         """
         if index == self.count() - 1:
             return
@@ -58,6 +59,7 @@ class SceneUIManagerWidget(QTabWidget):
         Args:
             page: Page to be reinserted.
             index: Position in the tab bar.
+
         """
         self.insertTab(index, page, f"Page {index + 1}")
 

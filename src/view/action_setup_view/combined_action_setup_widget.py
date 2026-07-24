@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 class CombinedActionSetupWidget(QTabWidget):
-
     """A tab view for setup of events and action."""
 
     def __init__(self, parent: QWidget | None, b: Broadcaster, show: "BoardConfiguration") -> None:

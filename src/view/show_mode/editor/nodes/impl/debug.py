@@ -17,6 +17,7 @@ class Debug8BitNode(DebugNode):
     """Filter to debug an 8 bit value.
     TODO implement visualization
     """
+
     nodeName = "8 Bit Filter (Debug)"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -29,6 +30,7 @@ class Debug16BitNode(DebugNode):
     """Filter to debug a 16 bit value.
     TODO implement visualization
     """
+
     nodeName = "16 Bit Filter (Debug)"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -41,6 +43,7 @@ class DebugFloatNode(DebugNode):
     """Filter to debug a float/double value.
     TODO implement visualization
     """
+
     nodeName = "Float Filter (Debug)"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -53,6 +56,7 @@ class DebugColorNode(DebugNode):
     """Filter to debug a color value.
     TODO implement visualization
     """
+
     nodeName = "Color Filter (Debug)"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -65,6 +69,7 @@ class DebugRemote8BitNode(DebugNode):
     """Filter to debug an 8 bit value.
     TODO implement visualization
     """
+
     nodeName = "8 Bit Filter (Debug, Remote)"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -77,6 +82,7 @@ class DebugRemote16BitNode(DebugNode):
     """Filter to debug a 16 bit value.
     TODO implement visualization
     """
+
     nodeName = "16 Bit Filter (Debug, Remote)"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -89,6 +95,7 @@ class DebugRemoteFloatNode(DebugNode):
     """Filter to debug a float/double value.
     TODO implement visualization
     """
+
     nodeName = "Float Filter (Debug, Remote)"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -101,6 +108,7 @@ class DebugRemoteColorNode(DebugNode):
     """Filter to debug a color value.
     TODO implement visualization
     """
+
     nodeName = "Color Filter (Debug, Remote)"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:

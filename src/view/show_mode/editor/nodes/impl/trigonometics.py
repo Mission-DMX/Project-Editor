@@ -35,6 +35,7 @@ class TrigonometricSineNode(TrigonometricNode):
     """Filter to calculate sine value.
     value = factor_outer*sin((value_in+phase)*factor_inner) + offset
     """
+
     nodeName = "sin"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -45,6 +46,7 @@ class TrigonometricCosineNode(TrigonometricNode):
     """Filter to calculate cosine value.
     value = factor_outer*cos((value_in+phase)*factor_inner) + offset
     """
+
     nodeName = "cos"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -55,6 +57,7 @@ class TrigonometricTangentNode(TrigonometricNode):
     """Filter to calculate tangent value.
     value = factor_outer*tan((value_in+phase)*factor_inner) + offset
     """
+
     nodeName = "tan"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -65,6 +68,7 @@ class TrigonometricArcSinNode(TrigonometricNode):
     """Filter to calculate arcSine value.
     value = arcSin(value_in)
     """
+
     nodeName = "arcsin"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -76,6 +80,7 @@ class TrigonometricArcCosNode(TrigonometricNode):
     """Filter to calculate arcCosine value.
     value = arcCos(value_in)
     """
+
     nodeName: str = "arccos"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -87,6 +92,7 @@ class TrigonometricArcTanNode(TrigonometricNode):
     """Filter to calculate arcTangent value.
     value = arcTan(value_in)
     """
+
     nodeName: str = "arctan"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:

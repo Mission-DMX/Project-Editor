@@ -32,6 +32,7 @@ class FilterFlowchart(Flowchart):
             node_type: The type of the node.
             name: The name of the node.
             pos: The position of the node
+
         """
         if name is None:
             name = node_type
@@ -55,6 +56,7 @@ class FilterFlowchart(Flowchart):
         Args:
             filter_: The filter of the filter node.
             node_type: The type of the node.
+
         """
         if filter_.filter_id in self._nodes:
             index = 0
@@ -80,6 +82,7 @@ class FilterFlowchart(Flowchart):
             node: Node to be added.
             name: Name of the node.
             pos: Position of the node.
+
         """
         if isinstance(node, FilterNode) and pos is not None:
             node.filter.pos = pos

@@ -1,5 +1,6 @@
 """This file implements the list widget for effects. Register your effect inside the EFFECT_LIST widget.
-Usage: The key indicates the category of the effect and the list all containing effects."""
+Usage: The key indicates the category of the effect and the list all containing effects.
+"""
 
 from typing import override
 
@@ -126,8 +127,7 @@ class _EffectLabel(QWidget):
 
 
 class EffectsListWidget(QWidget):
-    """
-    This widget displays all effects in a searchable manner. It furthermore enables the user to select one.
+    """This widget displays all effects in a searchable manner. It furthermore enables the user to select one.
     """
 
     effect_selected = Signal(Effect)

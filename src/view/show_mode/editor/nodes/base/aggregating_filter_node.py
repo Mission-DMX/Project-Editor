@@ -3,8 +3,7 @@ from view.show_mode.editor.nodes import FilterNode
 
 
 class AggregatingFilterNode(FilterNode):
-    """
-    This filter node class provides a template for nodes with a variable number of inputs that will be aggregated to a
+    """This filter node class provides a template for nodes with a variable number of inputs that will be aggregated to a
     single output.
     """
 

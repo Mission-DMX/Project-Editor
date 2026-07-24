@@ -67,6 +67,7 @@ class SceneUIPageEditorWidget(QWidget):
         Args:
             ui_widget: A widget to manage a filter
             pos: The position at which the widget should be placed
+
         """
         # TODO replace with filter.gui_update_keys to ui widget / Change function to construct one from the keys
         # FIXME we should use this method to provide a context menu to nodes, enabling them to place widgets without
@@ -94,10 +95,11 @@ class SceneUIPageEditorWidget(QWidget):
         self._ui_page.display_update_required = True
 
     def _remove_widget_holder(self, wh: UIWidgetHolder) -> None:
-        """
-        This method should be invoked once a widget should be removed and handles the destruction of the container.
+        """This method should be invoked once a widget should be removed and handles the destruction of the container.
+
         Args:
             wh: The widget that should be removed
+
         """
         self._widgets.remove(wh)
         self._ui_page.remove_widget(wh.widget)
