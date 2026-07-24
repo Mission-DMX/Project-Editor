@@ -113,6 +113,7 @@ class DmxVisualizer(QtCore.QObject):
 
     @property
     def enabled(self) -> bool:
+        """Enable or disable the live updating with DMX values from fish."""
         return self._enabled
 
     @enabled.setter

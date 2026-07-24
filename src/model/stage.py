@@ -133,6 +133,7 @@ class StageObject:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> StageObject:
+        """Instantiate from deserialized data."""
         object_id = data.get("id")
         pos = data.get("position", {})
         rot = data.get("rotation", {})
@@ -436,6 +437,7 @@ class FixtureGroup:
         self.member_ids: list[str] = list(member_ids) if member_ids else []
 
     def to_dict(self) -> dict[str, Any]:
+        """Serialize state to nested dictionary."""
         return {
             "id": self.id,
             "name": self.name,
@@ -446,6 +448,7 @@ class FixtureGroup:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> FixtureGroup:
+        """Instantiate from deserialized data."""
         pos = data.get("position", {})
         rot = data.get("rotation", {})
         return cls(
@@ -520,6 +523,7 @@ class StageConfig:
             logger.error("Failed to save stage config to %s: %s", path, e)
 
     def get_all_names(self) -> list[str]:
+        """Get a list of all object and group names present in stage configuration."""
         names = [obj.name for obj in self.objects if obj.name]
         names += [grp.name for grp in self.groups if grp.name]
         return names
@@ -534,6 +538,7 @@ class StageConfig:
         return f"{base}{i}"
 
     def add_object(self, obj: StageObject) -> None:
+        """Add a new StageObject to the stage configuration."""
         if any(o.id == obj.id for o in self.objects):
             obj.id = self.get_new_id(obj.get_type())
         if obj.name:
@@ -541,6 +546,7 @@ class StageConfig:
         self.objects.append(obj)
 
     def remove_object(self, object_id: str) -> None:
+        """Remove a StageObject from the stage configuration specified by its ID."""
         for i, obj in enumerate(self.objects):
             if obj.id == object_id:
                 removed = self.objects.pop(i)
@@ -551,12 +557,14 @@ class StageConfig:
         return None
 
     def get_object(self, object_id: str) -> None:
+        """Get a StageObject by its ID."""
         for obj in self.objects:
             if obj.id == object_id:
                 return obj
         return None
 
     def add_group(self, group: FixtureGroup) -> None:
+        """Add a group to the stage configuration."""
         if any(g.id == group.id for g in self.groups):
             group.id = self.get_new_id("group")
         if group.name:
@@ -564,18 +572,26 @@ class StageConfig:
         self.groups.append(group)
 
     def remove_group(self, group_id: str) -> FixtureGroup | None:
+        """Remove a FixtureGroup from the stage configuration, specified by its ID."""
         for i, grp in enumerate(self.groups):
             if grp.id == group_id:
                 return self.groups.pop(i)
         return None
 
     def get_group(self, group_id: str) -> FixtureGroup | None:
+        """Get a FixtureGroup by its ID."""
         for grp in self.groups:
             if grp.id == group_id:
                 return grp
         return None
 
     def get_group_for_fixture(self, object_id: str) -> FixtureGroup | None:
+        """Get the FixtureGroup a StageObject is associated with based on the ID of the StageObject.
+
+        Returns:
+            FixtureGroup | None based on a group being found.
+
+        """
         for grp in self.groups:
             if object_id in grp.member_ids:
                 return grp
