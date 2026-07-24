@@ -1066,7 +1066,7 @@ class Stage3DWidget(QOpenGLWidget):
             self.fixture_clicked.emit(best_id)
 
     def __del__(self) -> None:
-        """Unload the models"""
+        """Unload the models."""
         self.makeCurrent()
         for model in self._models.values():
             model.unload()
