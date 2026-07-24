@@ -19,15 +19,16 @@ from PySide6 import QtCore, QtGui
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
 from model.visualizer.stage.so_moving_head import MovingHead
+from utility import resource_path
 from view.gl import _apply_local_ops
 from view.gl.gltf_model import GltfModel, GltfNode
 from view.gl.model_3d import Model3D
+from view.gl.shaders import load_and_link_shader, load_and_link_shader_from_files
 from view.visualizer.spotlight_data import SpotLightData
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from OpenGL.constant import IntConstant
     from PySide6.QtCore import QPoint
     from PySide6.QtWidgets import QWidget
 
@@ -35,330 +36,11 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
-MAX_SPOT_LIGHTS = 16    # maximum simultaneous spotlights in the scene shader
-MAX_SHADOW_MAPS = 4     # shadow-casting lights (texture array layers)
+MAX_SPOT_LIGHTS = 16    # maximum simultaneous spotlights in the scene shader,
+                        # also needs to be updated in stage_scene.frag
+MAX_SHADOW_MAPS = 4     # shadow-casting lights (texture array layers),
+                        # also needs to be updated in stage_scene.frag
 SHADOW_MAP_SIZE = 1024  # per-layer shadow map resolution
-
-
-def _compile_shader(src: bytes, stype: IntConstant) -> int:
-    """Compile a single GLSL shader and raise on error."""
-    s = gl.glCreateShader(stype)
-    gl.glShaderSource(s, src)
-    gl.glCompileShader(s)
-    if gl.glGetShaderiv(s, gl.GL_COMPILE_STATUS) != gl.GL_TRUE:
-        log = gl.glGetShaderInfoLog(s)
-        kind = "vertex" if stype == gl.GL_VERTEX_SHADER else "fragment"
-        raise RuntimeError(f"{kind} shader failed: {log}")
-    return s
-
-
-def _link_program(vs_src: bytes, fs_src: bytes) -> int:
-    """Compile vertex + fragment shaders and link into a program."""
-    vs = _compile_shader(vs_src, gl.GL_VERTEX_SHADER)
-    fs = _compile_shader(fs_src, gl.GL_FRAGMENT_SHADER)
-    prog = gl.glCreateProgram()
-    gl.glAttachShader(prog, vs)
-    gl.glAttachShader(prog, fs)
-    gl.glLinkProgram(prog)
-    if gl.glGetProgramiv(prog, gl.GL_LINK_STATUS) != gl.GL_TRUE:
-        raise RuntimeError(f"link failed: {gl.glGetProgramInfoLog(prog)}")
-    gl.glDeleteShader(vs)
-    gl.glDeleteShader(fs)
-    return prog
-
-
-# Depth-only shader (Pass 0: shadow map generation)
-
-DEPTH_VS = b"""
-#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;  // unused but matches VAO layout
-uniform mat4 lightSpaceMatrix;
-uniform mat4 model;
-void main() {
-    gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);
-}
-"""
-
-DEPTH_FS = b"""
-#version 410 core
-void main() {
-    // depth is written automatically
-}
-"""
-
-# Scene shader (Pass 1: Phong + spotlights + PCF shadows)
-
-SCENE_VS = b"""
-#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-
-out vec3 FragPos;
-out vec3 Normal;
-
-void main() {
-    vec4 wp = model * vec4(aPos, 1.0);
-    FragPos = wp.xyz;
-    Normal = mat3(transpose(inverse(model))) * aNormal;
-    gl_Position = projection * view * wp;
-}
-"""
-
-SCENE_FS = ("""
-#version 410 core
-
-#define MAX_LIGHTS """ + str(MAX_SPOT_LIGHTS) + """
-#define MAX_SHADOWS """ + str(MAX_SHADOW_MAPS) + """
-
-struct SpotLight {
-    vec3 position;
-    vec3 direction;
-    vec3 color;
-    float innerCos;
-    float outerCos;
-};
-
-uniform int numLights;
-uniform SpotLight lights[MAX_LIGHTS];
-
-uniform vec3 viewPos;
-uniform vec3 baseColor;
-uniform float ambientLevel;
-
-// Selection highlight: 0.0 = normal, >0.0 = glow overlay
-uniform float highlightMix;
-uniform vec3 highlightColor;
-
-// Shadow mapping
-uniform int numShadowLights;
-uniform mat4 lightSpaceMatrices[MAX_SHADOWS];
-uniform sampler2DArray shadowMap;
-
-in vec3 FragPos;
-in vec3 Normal;
-out vec4 FragColor;
-
-float calcShadow(int idx) {
-    vec4 lsPos = lightSpaceMatrices[idx] * vec4(FragPos, 1.0);
-    vec3 proj = lsPos.xyz / lsPos.w;
-    proj = proj * 0.5 + 0.5;
-
-    // Outside shadow map = fully lit
-    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0 || proj.z > 1.0)
-        return 1.0;
-
-    // Slope-based bias to reduce shadow acne on angled surfaces
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lights[idx].position - FragPos);
-    float slopeFactor = 1.0 - max(dot(norm, lightDir), 0.0);
-    float bias = 0.0008 + 0.002 * slopeFactor;
-
-    float curDepth = proj.z;
-
-    // 3x3 PCF kernel for soft shadow edges
-    float lit = 0.0;
-    vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0).xy);
-    for (int x = -1; x <= 1; x++) {
-        for (int y = -1; y <= 1; y++) {
-            float closest = texture(shadowMap, vec3(proj.xy + vec2(x, y) * texelSize, float(idx))).r;
-            lit += (curDepth - bias > closest) ? 0.0 : 1.0;
-        }
-    }
-    return lit / 9.0;
-}
-
-void main() {
-    vec3 norm = normalize(Normal);
-    vec3 result = baseColor * ambientLevel;
-
-    // Subtle fill light from above so geometry is never fully black
-    vec3 fillDir = normalize(vec3(0.2, 1.0, 0.1));
-    float fillDiff = max(dot(norm, fillDir), 0.0);
-    result += baseColor * fillDiff * 0.08;
-
-    for (int i = 0; i < numLights && i < MAX_LIGHTS; i++) {
-        vec3 toLight = lights[i].position - FragPos;
-        float dist = length(toLight);
-        vec3 lightDir = toLight / max(dist, 0.001);
-
-        // Spotlight cone attenuation
-        float theta = dot(lightDir, -lights[i].direction);
-        float eps = lights[i].innerCos - lights[i].outerCos;
-        float spot = clamp((theta - lights[i].outerCos) / max(eps, 0.001), 0.0, 1.0);
-
-        if (spot > 0.0) {
-            float diff = max(dot(norm, lightDir), 0.0);
-            vec3 viewDir = normalize(viewPos - FragPos);
-            vec3 halfDir = normalize(lightDir + viewDir);
-            float spec = pow(max(dot(norm, halfDir), 0.0), 64.0);
-
-            // Distance attenuation (quadratic falloff)
-            float atten = 1.0 / (1.0 + 0.002 * dist + 0.00003 * dist * dist);
-
-            // Shadow factor
-            float shadow = 1.0;
-            if (i < numShadowLights) {
-                shadow = calcShadow(i);
-            }
-
-            vec3 contrib = (diff * baseColor + spec * vec3(0.35)) * lights[i].color;
-            result += contrib * spot * atten * shadow * 2.2;
-        }
-    }
-
-    // Reinhard tone mapping
-    result = result / (result + vec3(1.0));
-
-    // Selection highlight overlay (neon-yellow for single, orange for multi)
-    if (highlightMix > 0.0) {
-        result = mix(result, highlightColor, highlightMix * 0.45);
-        result += highlightColor * highlightMix * 0.18;
-    }
-
-    FragColor = vec4(result, 1.0);
-}
-""").encode("utf-8")
-
-
-# Beam shader (Pass 2: volumetric cone with ray-marched shadows)
-
-BEAM_VS = b"""
-#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-
-out vec3 LocalPos;
-out vec3 WorldPos;
-
-void main() {
-    LocalPos = aPos;
-    vec4 wp = model * vec4(aPos, 1.0);
-    WorldPos = wp.xyz;
-    gl_Position = projection * view * wp;
-}
-"""
-
-BEAM_FS = b"""
-#version 410 core
-
-in vec3 LocalPos;
-in vec3 WorldPos;
-
-uniform vec3 beamColor;
-
-// Shadow mapping for volumetric light shafts
-uniform mat4 beamLightSpaceMatrix;
-uniform sampler2DArray shadowMap;
-uniform int beamShadowLayer;
-uniform int hasShadow;
-
-// Light source position for ray-marching from light to fragment
-uniform vec3 beamLightPos;
-
-out vec4 FragColor;
-
-// Hash function for procedural noise
-float hash(vec3 p) {
-    p = fract(p * vec3(443.897, 441.423, 437.195));
-    p += dot(p, p.yzx + 19.19);
-    return fract((p.x + p.y) * p.z);
-}
-
-// Smooth 3D value noise
-float noise3D(vec3 p) {
-    vec3 i = floor(p);
-    vec3 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);  // smoothstep interpolation
-
-    float n = mix(
-        mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
-            mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
-        mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
-            mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
-        f.z);
-    return n;
-}
-
-// Multi-octave noise for beam streaks (simulates individual light rays)
-float beamNoise(vec3 worldP) {
-    float n1 = noise3D(worldP * 0.015);           // large-scale streaks
-    float n2 = noise3D(worldP * 0.04) * 0.5;      // medium detail
-    float n3 = noise3D(worldP * 0.12) * 0.25;     // fine grain (dust particles)
-    float combined = n1 + n2 + n3;
-    return 0.4 + 0.6 * combined;  // remap to [0.5, 1.0]
-}
-
-// Check shadow map visibility at a world position (single sample)
-float sampleShadowAt(vec3 worldP) {
-    if (hasShadow == 0) return 1.0;
-
-    vec4 lsPos = beamLightSpaceMatrix * vec4(worldP, 1.0);
-    vec3 proj = lsPos.xyz / lsPos.w;
-    proj = proj * 0.5 + 0.5;
-
-    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0 || proj.z > 1.0)
-        return 1.0;
-
-    float bias = 0.003;
-    float curDepth = proj.z;
-    float closest = texture(shadowMap, vec3(proj.xy, float(beamShadowLayer))).r;
-    return (curDepth - bias > closest) ? 0.0 : 1.0;
-}
-
-void main() {
-    // Discard fragments below ground plane
-    if (WorldPos.y < 0.0) discard;
-
-    float axial = clamp(-LocalPos.z, 0.0, 1.0);
-    float coneR = max(axial, 0.001);
-    float radial = length(LocalPos.xy) / coneR;
-
-    // Soft gaussian radial falloff
-    float edge = exp(-radial * radial * 1.5);
-    // Density increases along beam (atmospheric scattering accumulation)
-    float density = pow(axial, 0.25);
-    // Bright core along center axis (Mie-like forward scattering)
-    float core = exp(-radial * radial * 3.5);
-
-    // Ray-march 8 samples from light to fragment for volumetric shadows
-    float visibility = 1.0;
-    if (hasShadow == 1) {
-        vec3 rayDir = WorldPos - beamLightPos;
-        float rayLen = length(rayDir);
-        if (rayLen > 0.01) {
-            float shadow_acc = 0.0;
-            const int STEPS = 8;
-            for (int s = 0; s < STEPS; s++) {
-                float t = (float(s) + 0.5) / float(STEPS);
-                vec3 sampleP = beamLightPos + rayDir * t;
-                shadow_acc += sampleShadowAt(sampleP);
-            }
-            visibility = shadow_acc / float(STEPS);
-        }
-    }
-
-    // Apply streaky noise for atmospheric look
-    float streaks = beamNoise(WorldPos);
-
-    // Combine edge, density, core, noise, and shadow visibility
-    float alpha = (edge * density * 1.4) + (core * density * 1.8);
-    alpha *= streaks;
-    alpha *= visibility;
-    alpha = clamp(alpha, 0.0, 1.0);
-
-    // Additive blending output
-    FragColor = vec4(beamColor * alpha * 6.0, alpha);
-}
-"""
 
 
 class Stage3DWidget(QOpenGLWidget):
@@ -443,16 +125,24 @@ class Stage3DWidget(QOpenGLWidget):
 
         # Compile and link shader programs
         try:
-            self._scene_program = _link_program(SCENE_VS, SCENE_FS)
+            self._scene_program = load_and_link_shader_from_files(
+                resource_path(os.path.join("resources", "shaders", "stage_scene.vert")),
+                resource_path(os.path.join("resources", "shaders", "stage_scene.frag"))
+            )
         except RuntimeError as e:
             logger.error("Scene shader: %s", e)
             return
         try:
-            self._beam_program = _link_program(BEAM_VS, BEAM_FS)
+            self._beam_program = load_and_link_shader_from_files(
+                resource_path(os.path.join("resources", "shaders", "stage_beam.vert")),
+                resource_path(os.path.join("resources", "shaders", "stage_beam.frag"))
+            )
         except RuntimeError as e:
             logger.error("Beam shader: %s", e)
         try:
-            self._depth_program = _link_program(DEPTH_VS, DEPTH_FS)
+            self._depth_program = load_and_link_shader_from_files(
+                resource_path(os.path.join("resources", "shaders", "stage_depth.vert")),
+                resource_path(os.path.join("resources", "shaders", "stage_depth.frag")))
         except RuntimeError as e:
             logger.error("Depth shader: %s", e)
 
