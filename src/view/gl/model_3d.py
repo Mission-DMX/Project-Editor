@@ -21,6 +21,29 @@ class Model3D:
         self.vbo: int = vbo
         self.ebo: int = ebo
         self.index_count: int = index_count
+        self._still_bound: bool = True
+
+    def unload(self) -> None:
+        """Release the VAO, VBO and EBO that belong to this model.
+
+        After this call the instance is considered “unbound”; any further
+        attempts to use it will raise because the GPU resources are gone.
+        """
+        gl.glDeleteBuffers(1, np.array([self.vbo], dtype=np.uint32))
+        gl.glDeleteBuffers(1, np.array([self.ebo], dtype=np.uint32))
+        gl.glDeleteVertexArrays(1, np.array([self.vao], dtype=np.uint32))
+
+        self._still_bound = False
+        self.vao = self.vbo = self.ebo = 0
+
+    def __del__(self) -> None:
+        """Checks if the object was successfully deleted or throws an error.
+
+        This cannot happen automatically as it must occur within the thread that created the model.
+
+        """
+        if self._still_bound:
+            raise RuntimeError("Model3D object is still bound. This would cause a memory leak.")
 
     @classmethod
     def upload_mesh(cls, vertex_data: np.ndarray, indices: np.ndarray) -> Model3D:

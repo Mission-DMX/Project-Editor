@@ -51,6 +51,12 @@ class GltfModel:
         self.scene_roots: list[int] = scene_roots        # list of root node indices
         self.mesh_primitives: dict[int, list[Model3D]] = mesh_primitives  # dict: mesh_index -> [Model3D]
 
+    def unload(self) -> None:
+        """Unload all nodes and meshes."""
+        for pl in self.mesh_primitives.values():
+            for p in pl:
+                p.unload()
+
 
     @classmethod
     def load_gltf_model(cls, path: str) -> GltfModel:

@@ -21,9 +21,21 @@ from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from model.visualizer.stage.so_moving_head import MovingHead
 from utility import resource_path
 from view.gl import _apply_local_ops
-from view.gl.gltf_model import GltfModel, GltfNode
+from view.gl.gltf_model import GltfModel
 from view.gl.model_3d import Model3D
-from view.gl.shaders import load_and_link_shader, load_and_link_shader_from_files
+from view.gl.shaders import load_and_link_shader_from_files
+from view.visualizer.geometry_helpers import (
+    MAX_SHADOW_MAPS,
+    MAX_SPOT_LIGHTS,
+    SHADOW_MAP_SIZE,
+    build_base_model_matrix,
+    build_cone_matrix,
+    compute_light_space_matrix,
+    create_ground_plane,
+    create_unit_cone,
+    get_overrides,
+    node_local_matrix,
+)
 from view.visualizer.spotlight_data import SpotLightData
 
 if TYPE_CHECKING:
@@ -35,12 +47,6 @@ if TYPE_CHECKING:
     from model.visualizer.stage import StageConfig, StageObject
 
 logger = getLogger(__name__)
-
-MAX_SPOT_LIGHTS = 16    # maximum simultaneous spotlights in the scene shader,
-                        # also needs to be updated in stage_scene.frag
-MAX_SHADOW_MAPS = 4     # shadow-casting lights (texture array layers),
-                        # also needs to be updated in stage_scene.frag
-SHADOW_MAP_SIZE = 1024  # per-layer shadow map resolution
 
 
 class Stage3DWidget(QOpenGLWidget):
@@ -57,9 +63,9 @@ class Stage3DWidget(QOpenGLWidget):
         self._stage_config = stage_config
 
         # Shader programs (initialized in initializeGL)
-        self._scene_program = None
-        self._beam_program = None
-        self._depth_program = None
+        self._scene_program: int = 0
+        self._beam_program: int = 0
+        self._depth_program: int = 0
 
         # Uniform location caches
         self._sc = {}             # scene shader uniforms
@@ -188,8 +194,8 @@ class Stage3DWidget(QOpenGLWidget):
         self._init_shadow_map_resources()
 
         # Create geometry
-        self._beam_cone = self._create_unit_cone(64)
-        self._ground_plane = self._create_ground_plane(2000.0)
+        self._beam_cone = create_unit_cone(64)
+        self._ground_plane = create_ground_plane(2000.0)
 
         # Load 3D models for all existing stage objects
         for obj in self._stage_config.objects:
@@ -349,7 +355,6 @@ class Stage3DWidget(QOpenGLWidget):
         self._draw_fps_counter()
 
     # Pass 0: Shadow map rendering
-
     def _render_shadow_maps(self, spotlights: list[SpotLightData]) -> list[QtGui.QMatrix4x4]:
         """Render depth from each spotlight's POV into the shadow texture array.
 
@@ -373,7 +378,7 @@ class Stage3DWidget(QOpenGLWidget):
 
         for i in range(num):
             sl = spotlights[i]
-            lsm = self._compute_light_space_matrix(sl)
+            lsm = compute_light_space_matrix(sl)
             light_space_matrices.append(lsm)
 
             # Attach this layer of the texture array to the FBO
@@ -392,39 +397,10 @@ class Stage3DWidget(QOpenGLWidget):
 
         return light_space_matrices
 
-    def _compute_light_space_matrix(self, spotlight: SpotLightData) -> QtGui.QMatrix4x4:
-        """Build a perspective projection matrix from a spotlight's POV.
-
-        The FOV is derived from the spotlight's outer cone angle to ensure
-        the shadow map fully covers the illuminated area.
-        """
-        pos = spotlight.position
-        d = spotlight.direction
-        target = pos + d * 500.0
-
-        # Pick an up vector that isn't parallel to the light direction
-        up = QtGui.QVector3D(0.0, 1.0, 0.0)
-        if abs(QtGui.QVector3D.dotProduct(up, d)) > 0.95:
-            up = QtGui.QVector3D(1.0, 0.0, 0.0)
-
-        view = QtGui.QMatrix4x4()
-        view.lookAt(pos, target, up)
-
-        # FOV from outer cone angle, clamped to reasonable range
-        half_angle = math.degrees(math.acos(max(spotlight.outer_cos, 0.01)))
-        fov = min(130.0, max(40.0, half_angle * 3.0))
-
-        proj = QtGui.QMatrix4x4()
-        proj.perspective(fov, 1.0, 0.5, 800.0)
-
-        result = QtGui.QMatrix4x4(proj)
-        result *= view
-        return result
-
     def _draw_scene_depth_only(self) -> None:
         """Draw all scene objects with the depth shader (for shadow maps)."""
         for obj in self._stage_config.objects:
-            base = self._build_base_model_matrix(obj)
+            base = build_base_model_matrix(obj)
             for entry in getattr(obj, "get_model_entries", list)():
                 model = QtGui.QMatrix4x4(base)
                 _apply_local_ops(model, getattr(entry, "local_ops", ()))
@@ -439,48 +415,6 @@ class Stage3DWidget(QOpenGLWidget):
                     gl.glDrawElements(gl.GL_TRIANGLES, m.index_count, gl.GL_UNSIGNED_INT, None)
 
         gl.glBindVertexArray(0)
-
-    # Shared rendering helpers
-
-    def _build_base_model_matrix(self, obj: StageObject) -> QtGui.QMatrix4x4:
-        """Build the T * Rz * Ry * Rx * S model matrix for a stage object."""
-        m = QtGui.QMatrix4x4()
-        m.translate(obj.position[0], obj.position[1], obj.position[2])
-        m.rotate(obj.rotation[2], 0.0, 0.0, 1.0)
-        m.rotate(obj.rotation[1], 0.0, 1.0, 0.0)
-        m.rotate(obj.rotation[0], 1.0, 0.0, 0.0)
-        m.scale(float(getattr(obj, "scale", 1.0)))
-        return m
-
-    def _get_overrides(self, stage_obj: StageObject) -> dict[str, tuple[float, float, float, float]]:
-        """Get glTF node rotation overrides (pan/tilt) from a stage object."""
-        if stage_obj and hasattr(stage_obj, "get_gltf_node_overrides"):
-            try:
-                return stage_obj.get_gltf_node_overrides() or {}
-            except Exception as e:
-                logger.exception("Unable to extract GLTF overrides from model (%s) : %s", str(stage_obj), str(e))
-        return {}
-
-    def _node_local_matrix(self,
-                           node: GltfNode,
-                           overrides: dict[str, tuple[float, float, float, float]]) -> QtGui.QMatrix4x4:
-        """Compute the local transform matrix for a glTF node.
-
-        Applies translation, quaternion rotation, optional pan/tilt override,
-        and scale — matching the glTF 2.0 transform specification.
-        """
-        m = QtGui.QMatrix4x4()
-        t, r, s = node.translation, node.rotation, node.scale
-        m.translate(float(t[0]), float(t[1]), float(t[2]))
-        # glTF quaternion: (x, y, z, w)
-        q = QtGui.QQuaternion(float(r[3]), float(r[0]), float(r[1]), float(r[2]))
-        m.rotate(q)
-        # Apply axis-angle override if this node has one (for pan/tilt)
-        if node.name in overrides:
-            ax, ay, az, deg = overrides[node.name]
-            m.rotate(float(deg), float(ax), float(ay), float(az))
-        m.scale(float(s[0]), float(s[1]), float(s[2]))
-        return m
 
     def _traverse_gltf(self,
                        model_path: str,
@@ -499,7 +433,7 @@ class Stage3DWidget(QOpenGLWidget):
         gm = self._gltf_models.get(model_path)
         if gm is None:
             return
-        overrides = self._get_overrides(stage_obj)
+        overrides = get_overrides(stage_obj)
 
         # Stack of (node_index, parent_world_matrix)
         stack = [(int(r), QtGui.QMatrix4x4(base_model)) for r in gm.scene_roots]
@@ -509,7 +443,7 @@ class Stage3DWidget(QOpenGLWidget):
                 continue
             node = gm.nodes[ni]
             world = QtGui.QMatrix4x4(parent)
-            world *= self._node_local_matrix(node, overrides)
+            world *= node_local_matrix(node, overrides)
 
             # Draw mesh primitives at this node
             if node.mesh_index is not None and int(node.mesh_index) in gm.mesh_primitives:
@@ -524,10 +458,9 @@ class Stage3DWidget(QOpenGLWidget):
             stack.extend((int(child), world) for child in reversed(node.children or []))
 
     # Pass 1: Scene object drawing
-
     def _draw_stage_object(self, obj: StageObject, color: tuple[float, float, float]) -> None:
         """Draw a single stage object with the scene shader."""
-        base = self._build_base_model_matrix(obj)
+        base = build_base_model_matrix(obj)
         gl.glUniform3f(self._sc["baseColor"], color[0], color[1], color[2])
 
         for entry in getattr(obj, "get_model_entries", list)():
@@ -545,7 +478,6 @@ class Stage3DWidget(QOpenGLWidget):
                 gl.glDrawElements(gl.GL_TRIANGLES, m.index_count, gl.GL_UNSIGNED_INT, None)
 
     # Pass 2: Beam rendering
-
     def _draw_all_beams(self,
                         beam_list: list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]],
                         proj_data: Sequence[float],
@@ -591,7 +523,7 @@ class Stage3DWidget(QOpenGLWidget):
                 half_angle_rad = math.radians(18.0)
             actual_radius = float(math.tan(half_angle_rad) * actual_length)
 
-            mat = self._build_cone_matrix(origin, direction, actual_length, actual_radius)
+            mat = build_cone_matrix(origin, direction, actual_length, actual_radius)
             gl.glUniformMatrix4fv(self._bm["model"], 1, gl.GL_TRUE, mat.copyDataTo())
             gl.glUniform3f(self._bm["beamColor"], color[0], color[1], color[2])
 
@@ -623,44 +555,7 @@ class Stage3DWidget(QOpenGLWidget):
             gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, 0)
             gl.glActiveTexture(gl.GL_TEXTURE0)
 
-    def _build_cone_matrix(self, origin: QtGui.QVector3D, direction: QtGui.QVector3D,
-                           length: float, radius: float) -> QtGui.QMatrix4x4:
-        """Build a model matrix that places the unit cone (tip=origin, base along direction).
-
-        Constructs a rotation matrix from a local coordinate frame
-        (right, up, forward) and applies translation + non-uniform scaling.
-        """
-        fwd = QtGui.QVector3D(direction)
-        if fwd.length() < 1e-6:
-            fwd = QtGui.QVector3D(0.0, -1.0, 0.0)
-        else:
-            fwd.normalize()
-
-        # Build orthonormal basis
-        up = QtGui.QVector3D(0.0, 1.0, 0.0)
-        if abs(QtGui.QVector3D.dotProduct(up, fwd)) > 0.95:
-            up = QtGui.QVector3D(1.0, 0.0, 0.0)
-
-        right = QtGui.QVector3D.crossProduct(up, fwd)
-        right.normalize()
-        up2 = QtGui.QVector3D.crossProduct(fwd, right)
-        up2.normalize()
-
-        # Build rotation matrix from basis vectors
-        rot = QtGui.QMatrix4x4()
-        rot.setColumn(0, QtGui.QVector4D(right, 0.0))
-        rot.setColumn(1, QtGui.QVector4D(up2, 0.0))
-        rot.setColumn(2, QtGui.QVector4D(-fwd, 0.0))
-        rot.setColumn(3, QtGui.QVector4D(0.0, 0.0, 0.0, 1.0))
-
-        m = QtGui.QMatrix4x4()
-        m.translate(origin)
-        m *= rot
-        m.scale(float(radius), float(radius), float(length))
-        return m
-
     # Light and beam collection
-
     def _collect_lights_and_beams(self) \
             -> tuple[list[SpotLightData],
             list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]]]:
@@ -686,7 +581,7 @@ class Stage3DWidget(QOpenGLWidget):
             if not is_mh or not bool(getattr(obj, "beam_on", False)):
                 continue
 
-            base = self._build_base_model_matrix(obj)
+            base = build_base_model_matrix(obj)
             entries = getattr(obj, "get_model_entries", list)()
             if not entries:
                 continue
@@ -729,42 +624,6 @@ class Stage3DWidget(QOpenGLWidget):
             beam_list.append((origin_pos, dir_vec, color_f, dimmer))
 
         return spotlights, beam_list
-
-    # Geometry creation
-
-    def _create_unit_cone(self, segments: int=48) -> Model3D:
-        """Create a unit cone mesh (tip at origin, base ring at z=-1).
-
-        Used for beam rendering. Normals point outward from the cone surface.
-        """
-        seg = max(3, segments)
-        verts, idx = [], []
-        # Tip vertex at origin (index 0)
-        verts.extend([0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
-        # Base ring vertices
-        for i in range(seg):
-            a = (i / seg) * 2.0 * math.pi
-            x, y = math.cos(a), math.sin(a)
-            length = math.sqrt(x * x + y * y + 0.09)
-            verts.extend([x, y, -1.0, x / length, y / length, 0.3 / length])
-        # Triangle fan from tip to base ring
-        for i in range(seg):
-            idx.extend([0, 1 + i, 1 + (i + 1) % seg])
-        v = np.array(verts, dtype=np.float32)
-        ii = np.array(idx, dtype=np.uint32)
-        return Model3D.upload_vao(v, ii)
-
-    def _create_ground_plane(self, size: float=2000.0) -> Model3D:
-        """Create a flat ground plane quad at y=0 with upward normals."""
-        h = size / 2.0
-        v = np.array([
-            -h, 0, -h, 0, 1, 0,  h, 0, -h, 0, 1, 0,
-             h, 0,  h, 0, 1, 0, -h, 0,  h, 0, 1, 0,
-        ], dtype=np.float32)
-        ii = np.array([0, 1, 2, 0, 2, 3], dtype=np.uint32)
-        return Model3D.upload_vao(v, ii)
-
-    # Camera controls
 
     def _update_camera_pos(self) -> None:
         """Compute camera position from orbit parameters (yaw, pitch, distance)."""
@@ -991,16 +850,10 @@ class Stage3DWidget(QOpenGLWidget):
             # Free GPU resources
             if path in self._models:
                 m = self._models.pop(path)
-                gl.glDeleteBuffers(1, [m.vbo])
-                gl.glDeleteBuffers(1, [m.ebo])
-                gl.glDeleteVertexArrays(1, [m.vao])
+                m.unload()
             if path in self._gltf_models:
                 gm = self._gltf_models.pop(path)
-                for pl in gm.mesh_primitives.values():
-                    for p in pl:
-                        gl.glDeleteBuffers(1, [p.vbo])
-                        gl.glDeleteBuffers(1, [p.ebo])
-                        gl.glDeleteVertexArrays(1, [p.vao])
+                gm.unload()
 
     # glTF node search
 
@@ -1014,7 +867,7 @@ class Stage3DWidget(QOpenGLWidget):
         gm = self._gltf_models.get(model_path)
         if not gm:
             return None
-        overrides = self._get_overrides(stage_obj)
+        overrides = get_overrides(stage_obj)
         stack = [(int(r), QtGui.QMatrix4x4(base_model)) for r in gm.scene_roots]
         while stack:
             ni, parent = stack.pop()
@@ -1022,7 +875,7 @@ class Stage3DWidget(QOpenGLWidget):
                 continue
             node = gm.nodes[ni]
             world = QtGui.QMatrix4x4(parent)
-            world *= self._node_local_matrix(node, overrides)
+            world *= node_local_matrix(node, overrides)
             if node.name == target_name:
                 return world
             stack.extend((int(child), world) for child in reversed(node.children or []))
@@ -1045,7 +898,7 @@ class Stage3DWidget(QOpenGLWidget):
                 continue
             node = gm.nodes[ni]
             world = QtGui.QMatrix4x4(parent)
-            world *= self._node_local_matrix(node, no_overrides)
+            world *= node_local_matrix(node, no_overrides)
             if node.name == target_name:
                 return world
             stack.extend((int(child), world) for child in reversed(node.children or []))
@@ -1211,3 +1064,13 @@ class Stage3DWidget(QOpenGLWidget):
 
         if best_id:
             self.fixture_clicked.emit(best_id)
+
+    def __del__(self) -> None:
+        """Unload the models"""
+        self.makeCurrent()
+        for model in self._models.values():
+            model.unload()
+        for model in self._gltf_models.values():
+            model.unload()
+        self.doneCurrent()
+        logger.debug("Successfully cleaned up models.")
