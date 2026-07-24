@@ -8,15 +8,24 @@ Channel offsets are auto-detected from the Open Fixture Library naming
 convention of the connected fixture profile.
 """
 
-import logging
-from typing import Dict, List
+from __future__ import annotations
+
+from logging import getLogger
+from typing import TYPE_CHECKING, Any
 
 from PySide6 import QtCore
 
 from model.broadcaster import Broadcaster
 from model.stage import MovingHead, StageConfig
 
-logger = logging.getLogger(__file__)
+if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
+
+    import proto.DirectMode_pb2
+    from model import BoardConfiguration
+    from model.stage import StageObject
+
+logger = getLogger(__name__)
 
 # OFL role names we try to detect on each channel.
 MOVEMENT_ROLES = [
@@ -46,27 +55,23 @@ def auto_detect_mapping(channel_names: list[str],
         p = _primary(raw_name)
 
         # Pan
-        if p == "pan_fine" or ("pan" in p and "fine" in p):
-            if "pan_fine" in roles:
-                mapping["pan_fine"] = i
-        elif "pan" in p and "speed" not in p and "tilt" not in p:
-            if "pan_coarse" in roles:
-                mapping["pan_coarse"] = i
+        if (p == "pan_fine" or ("pan" in p and "fine" in p)) and "pan_fine" in roles:
+            mapping["pan_fine"] = i
+        elif ("pan" in p and "speed" not in p and "tilt" not in p) and "pan_coarse" in roles:
+            mapping["pan_coarse"] = i
 
         # Tilt
         if p == "tilt_fine" or ("tilt" in p and "fine" in p):
             if "tilt_fine" in roles:
                 mapping["tilt_fine"] = i
-        elif "tilt" in p and "speed" not in p and "pan" not in p:
-            if "tilt_coarse" in roles:
-                mapping["tilt_coarse"] = i
+        elif ("tilt" in p and "speed" not in p and "pan" not in p) and "tilt_coarse" in roles:
+            mapping["tilt_coarse"] = i
 
         # Dimmer / speed
         if p in ("dimmer", "intensity") and "dimmer" in roles:
             mapping["dimmer"] = i
-        if "speed" in p and ("pan" in p or "tilt" in p):
-            if "pan_tilt_speed" in roles:
-                mapping["pan_tilt_speed"] = i
+        if "speed" in p and ("pan" in p or "tilt" in p) and "pan_tilt_speed" in roles:
+            mapping["pan_tilt_speed"] = i
 
         # Colors
         if "red" in p and "red" in roles:
@@ -87,7 +92,8 @@ class DmxVisualizer(QtCore.QObject):
     fixtures_updated = QtCore.Signal()
 
     def __init__(self, stage_config: StageConfig,
-                 board_configuration=None, parent=None):
+                 board_configuration: BoardConfiguration | None = None, parent: QWidget | None = None) -> None:
+        """Initialize DMX to stage visualizer adapter."""
         super().__init__(parent)
         self._stage_config = stage_config
         self._board_config = board_configuration
@@ -110,24 +116,24 @@ class DmxVisualizer(QtCore.QObject):
         return self._enabled
 
     @enabled.setter
-    def enabled(self, value: bool):
+    def enabled(self, value: bool) -> None:
         self._enabled = value
         if value:
             self._poll_timer.start()
         else:
             self._poll_timer.stop()
 
-    def _request_dmx(self):
+    def _request_dmx(self) -> None:
         if not self._enabled or self._board_config is None:
             return
         try:
             for universe in self._board_config.universes:
                 self._broadcaster.send_request_dmx_data.emit(universe)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.exception("Could not send DMX request: %s", e)
 
     @QtCore.Slot()
-    def _on_dmx(self, msg) -> None:
+    def _on_dmx(self, msg: proto.DirectMode_pb2.dmx_output) -> None:
         if not self._enabled:
             return
 
@@ -160,12 +166,12 @@ class DmxVisualizer(QtCore.QObject):
         if any_updated:
             self.fixtures_updated.emit()
 
-    def _apply_movement(self, obj, raw, cfg):
+    def _apply_movement(self, obj: StageObject, raw: list[int], cfg: dict[str, Any]) -> None:
         """Map pan/tilt/dimmer channels to the fixture's 2-DOF properties."""
         start = cfg.get("start_channel", 0)
         m = cfg.get("mapping", {})
 
-        def rd(role):
+        def rd(role: str) -> int:
             off = m.get(role, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
@@ -188,12 +194,12 @@ class DmxVisualizer(QtCore.QObject):
             obj.dimmer = dim / 255.0
             obj.beam_on = dim > 0
 
-    def _apply_color(self, obj, raw, cfg):
+    def _apply_color(self, obj: StageObject, raw: list[int], cfg: dict[str, Any]) -> None:
         """Map R/G/B/W channels to beam_color."""
         start = cfg.get("start_channel", 0)
         m = cfg.get("mapping", {})
 
-        def rd(role):
+        def rd(role: str) -> int:
             off = m.get(role, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
@@ -220,7 +226,7 @@ class DmxVisualizer(QtCore.QObject):
         elif not self._has_movement_dimmer(obj) and any_color:
             obj.dimmer = 1.0
 
-    def _has_movement_dimmer(self, obj) -> bool:
+    def _has_movement_dimmer(self, obj: StageObject) -> bool:
         dc = obj.device_config
         if not dc:
             return False

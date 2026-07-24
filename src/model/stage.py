@@ -5,18 +5,20 @@ Platform). ``StageConfig`` is the aggregate root that loads and saves
 the full stage to a YAML file under ``~/.local/share/missionDMX/stage/``.
 """
 
-import logging
+from __future__ import annotations
+
 import os
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from logging import getLogger
+from typing import Any, override
 
 from ruamel import yaml
 
 from utility import resource_path
 
-logger = logging.getLogger(__file__)
+logger = getLogger(__name__)
 
 # User-local stage directory (XDG).
 STAGE_DIR = os.path.join(
@@ -41,7 +43,7 @@ def backup_stage_file(stage_path: str) -> str:
     if not os.path.exists(stage_path):
         return ""
     directory = os.path.dirname(stage_path)
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # NOQA: DTZ005 We'd like to get local time zone.
     backup_path = os.path.join(directory, f"stage_backup_{timestamp}.yaml")
     shutil.copy2(stage_path, backup_path)
     logger.info("Stage backup created: %s", backup_path)
@@ -84,7 +86,8 @@ class StageObject:
         rotation: tuple[float, float, float] | None = None,
         scale: float | None = None,
         model_path: str | None = None,
-    ):
+    ) -> None:
+        """Initialize base stage object data structures."""
         self.id = object_id
         self.name = ""
         self.position = position if position is not None else (0.0, 0.0, 0.0)
@@ -101,9 +104,11 @@ class StageObject:
                 self.model_path = DEFAULT_MODEL_PATHS[key]
 
     def get_type(self) -> str:
+        """Get the type of this stage object."""
         return "default"
 
     def get_display_name(self) -> str:
+        """Get the human readable name of this stage object."""
         return self.get_type()
 
     def get_model_entries(self) -> list[ModelEntry]:
@@ -113,6 +118,7 @@ class StageObject:
         return [ModelEntry(self.model_path)]
 
     def to_dict(self) -> dict[str, Any]:
+        """Get a dictionary representation of this object, suitable for serialization."""
         d = {
             "id": self.id,
             "name": self.name,
@@ -126,7 +132,7 @@ class StageObject:
         return d
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]) -> StageObject:
         object_id = data.get("id")
         pos = data.get("position", {})
         rot = data.get("rotation", {})
@@ -144,8 +150,9 @@ class Platform(StageObject):
 
     DEFAULT_POSITION = (-23.0, 0.0, 0.0)
 
-    def __init__(self, object_id: str = "platform", position=None,
-                 rotation=None, scale: float = 1.0):
+    def __init__(self, object_id: str = "platform", position: tuple[float, float, float] | None = None,
+                 rotation: tuple[float, float, float] | None = None, scale: float = 1.0) -> None:
+        """Initialize a new Platform StageObject."""
         super().__init__(
             object_id,
             position if position is not None else Platform.DEFAULT_POSITION,
@@ -154,9 +161,11 @@ class Platform(StageObject):
             model_path=DEFAULT_MODEL_PATHS["platform"],
         )
 
+    @override
     def get_type(self) -> str:
         return "platform"
 
+    @override
     def get_display_name(self) -> str:
         return "Platform"
 
@@ -165,7 +174,9 @@ class Truss(StageObject):
     """Truss fixture (default, cross, long, medium, 2-point)."""
 
     def __init__(self, object_id: str, variant: str = "default",
-                 position=None, rotation=None, scale: float = 1.0):
+                 position: tuple[float, float, float] | None = None,
+                 rotation: tuple[float, float, float] | None = None, scale: float = 1.0) -> None:
+        """Initialize Truss StageObject."""
         self.variant = variant
 
         key = f"truss_{variant}" if variant != "" else "truss"
@@ -178,9 +189,11 @@ class Truss(StageObject):
             model_path=DEFAULT_MODEL_PATHS[key],
         )
 
+    @override
     def get_type(self) -> str:
         return f"truss_{self.variant}" if self.variant != "" else "truss"
 
+    @override
     def get_display_name(self) -> str:
         mapping = {
             "default": "Truss Default",
@@ -191,13 +204,15 @@ class Truss(StageObject):
         }
         return mapping.get(self.variant, f"Truss {self.variant}")
 
+    @override
     def to_dict(self) -> dict[str, Any]:
         data = super().to_dict()
         data["variant"] = self.variant
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]) -> Truss:
+        """Construct instance from parsed data."""
         object_id = data.get("id")
         pos = data.get("position", {})
         rot = data.get("rotation", {})
@@ -243,15 +258,16 @@ class MovingHead(StageObject):
         self,
         object_id: str,
         channels: int = 16,
-        position=None,
-        rotation=None,
+        position: tuple[float, float, float] | None = None,
+        rotation: tuple[float, float, float] | None = None,
         scale: float = 20.0,   # .glb is small; scale up for visibility
         pan: float = 0.0,
         tilt: float = 0.0,
         beam_on: bool = True,
         beam_color: tuple[int, int, int] | None = None,
         dimmer: float = 1.0,
-    ):
+    ) -> None:
+        """Initialize MovingHead stage object."""
         # Must be set before super().__init__ since get_type() reads it.
         self.channels = 8 if int(channels) == 8 else 16
         super().__init__(object_id, position, rotation, float(scale), model_path=None)
@@ -266,12 +282,15 @@ class MovingHead(StageObject):
         self.beam_color = (int(r), int(g), int(b))
         self.dimmer = max(0.0, min(1.0, float(dimmer)))
 
+    @override
     def get_type(self) -> str:
         return "moving_head"
 
+    @override
     def get_display_name(self) -> str:
         return "Moving Head"
 
+    @override
     def get_model_entries(self) -> list[ModelEntry]:
         return [ModelEntry(DEFAULT_MODEL_PATHS["moving_head"])]
 
@@ -282,6 +301,7 @@ class MovingHead(StageObject):
             MovingHead.TILT_NODE_NAME: (*MovingHead.TILT_AXIS, float(self.tilt)),
         }
 
+    @override
     def to_dict(self) -> dict[str, Any]:
         data = super().to_dict()
         data.update({
@@ -299,7 +319,8 @@ class MovingHead(StageObject):
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]) -> MovingHead:
+        """Construct an instance from parsed data."""
         object_id = data.get("id")
         pos = data.get("position", {})
         rot = data.get("rotation", {})
@@ -394,15 +415,20 @@ def make_unique_name(desired_name: str, existing_names: list[str]) -> str:
 class FixtureGroup:
     """Named bundle of fixtures that can be moved or rotated together.
 
+    Note:
+        This only groups fixtures within stages but has nothing to do with FixtureGroup's from show files.
+
     The group's own position is the centroid of its members at creation
     time; the editor widget applies deltas to all members when the group
     is transformed.
+
     """
 
     def __init__(self, group_id: str, name: str = "",
                  position: tuple[float, float, float] | None = None,
                  rotation: tuple[float, float, float] | None = None,
-                 member_ids: list[str] | None = None):
+                 member_ids: list[str] | None = None) -> None:
+        """Initialize the group."""
         self.id = group_id
         self.name = name
         self.position = position if position is not None else (0.0, 0.0, 0.0)
@@ -419,7 +445,7 @@ class FixtureGroup:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]) -> FixtureGroup:
         pos = data.get("position", {})
         rot = data.get("rotation", {})
         return cls(
@@ -434,7 +460,8 @@ class FixtureGroup:
 class StageConfig:
     """Aggregate root: list of objects + list of groups, persisted as YAML."""
 
-    def __init__(self, yaml_file_path: str):
+    def __init__(self, yaml_file_path: str) -> None:
+        """Initialize stage configuration."""
         self.file_path = yaml_file_path
         self.objects: list[StageObject] = []
         self.groups: list[FixtureGroup] = []
@@ -469,10 +496,17 @@ class StageConfig:
         if not any(o.get_type() == "platform" for o in self.objects):
             self.objects.insert(0, Platform())
 
-    def save(self):
+    def save(self) -> None:
+        """Save the configuration to the last known file path."""
         self.save_to(self.file_path)
 
-    def save_to(self, path: str):
+    def save_to(self, path: str) -> None:
+        """Save the configuration to the given path.
+
+        Args:
+            path: Path to save to.
+
+        """
         data = {"objects": [obj.to_dict() for obj in self.objects]}
         if self.groups:
             data["groups"] = [grp.to_dict() for grp in self.groups]
@@ -499,14 +533,14 @@ class StageConfig:
             i += 1
         return f"{base}{i}"
 
-    def add_object(self, obj: StageObject):
+    def add_object(self, obj: StageObject) -> None:
         if any(o.id == obj.id for o in self.objects):
             obj.id = self.get_new_id(obj.get_type())
         if obj.name:
             obj.name = make_unique_name(obj.name, self.get_all_names())
         self.objects.append(obj)
 
-    def remove_object(self, object_id: str):
+    def remove_object(self, object_id: str) -> None:
         for i, obj in enumerate(self.objects):
             if obj.id == object_id:
                 removed = self.objects.pop(i)
@@ -516,13 +550,13 @@ class StageConfig:
                 return removed
         return None
 
-    def get_object(self, object_id: str):
+    def get_object(self, object_id: str) -> None:
         for obj in self.objects:
             if obj.id == object_id:
                 return obj
         return None
 
-    def add_group(self, group: FixtureGroup):
+    def add_group(self, group: FixtureGroup) -> None:
         if any(g.id == group.id for g in self.groups):
             group.id = self.get_new_id("group")
         if group.name:
