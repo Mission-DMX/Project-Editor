@@ -74,6 +74,7 @@ exclude = [
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
+    "CPY001",  # Ignore missing copyright notices for now
     "E722",
     "F401",
     "UP007", #Pycharm problem
