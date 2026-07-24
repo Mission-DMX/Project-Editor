@@ -68,8 +68,7 @@ class _EffectDummySocket(Effect):
 
 
 class EffectsSocket:
-    """
-    This class contains the anchor for an effect stack on a given group or fixture.
+    """This class contains the anchor for an effect stack on a given group or fixture.
     It furthermore proved the entry-point for show file (de)serialization as well as adding of further effects.
     """
 
@@ -82,8 +81,7 @@ class EffectsSocket:
                                                target.color_support & ColorSupport.HAS_WHITE_SEGMENT > 0)
 
     def get_socket_by_type(self, slot_type: EffectType) -> Effect | None:
-        """
-        get socket by Effect Type
+        """Get socket by Effect Type
         Args:
             slot_type:
 

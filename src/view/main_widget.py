@@ -1,4 +1,4 @@
-"""baseline for all Views """
+"""baseline for all Views"""
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QWidget

@@ -15,8 +15,7 @@ logger = getLogger(__name__)
 
 
 class SourcesTab(GuiTab):
-    """
-    The `SourcesTab` class represents a tab for managing video sources.
+    """The `SourcesTab` class represents a tab for managing video sources.
 
     Attributes:
         name (str): The name of the tab.
@@ -28,21 +27,21 @@ class SourcesTab(GuiTab):
         - `video_update()`: Update the video content within the tab.
         - `show_file_dialog()`: Show a file dialog to select a video file.
         - `tab_deactivated()`: Called when the tab is deactivated.
+
     """
 
     def tab_activated(self) -> None:
-        """
-        Called when the tab is activated.
+        """Called when the tab is activated.
         """
         super().tab_activated()
 
     def __init__(self, name: str, instance: InstanceManager) -> None:
-        """
-        Initialize a SourcesTab object.
+        """Initialize a SourcesTab object.
 
         Args:
             name (str): The name of the tab.
             instance (InstanceManager): An instance manager for managing application instances and settings.
+
         """
         super().__init__(name, instance)
         self.video_running = False
@@ -91,8 +90,7 @@ class SourcesTab(GuiTab):
             self.image_label.setPixmap(cv2qim(frame))
 
     def video_update_old(self) -> None:
-        """
-        Update the video content within the tab.
+        """Update the video content within the tab.
         """
         loader = self.instance.get_loader()
         if loader is not None and self.video_running and self.active:
@@ -107,8 +105,7 @@ class SourcesTab(GuiTab):
             self.image_label.setPixmap(cv2qim(frame))
 
     def show_file_dialog(self) -> None:
-        """
-        Show a file dialog to select a video file.
+        """Show a file dialog to select a video file.
         """
         options = QFileDialog.Options()
 
@@ -128,8 +125,7 @@ class SourcesTab(GuiTab):
             self.video_update()
 
     def tab_deactivated(self) -> None:
-        """
-        Called when the tab is deactivated.
+        """Called when the tab is deactivated.
         """
         super().tab_deactivated()
 

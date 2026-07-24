@@ -49,7 +49,8 @@ class FilterNode(Node):
     @override
     def graphicsItem(self) -> FilterNodeGraphicsItem:
         """Return the GraphicsItem for this node. Subclasses may re-implement
-        this method to customize their appearance in the flowchart."""
+        this method to customize their appearance in the flowchart.
+        """
         if self._graphicsItem is None:
             self._graphicsItem = FilterNodeGraphicsItem(self)
         return self._graphicsItem
@@ -61,6 +62,7 @@ class FilterNode(Node):
         Args:
             local_term: The terminal on the node itself.
             remote_term: The terminal of the other node.
+
         """
         remote_node = remote_term.node()
 
@@ -92,6 +94,7 @@ class FilterNode(Node):
         Args:
             local_term: The terminal on the node itself.
             remote_term: The terminal of the other node.
+
         """
         if local_term.isInput() and remote_term.isOutput():
             self.filter.channel_links[local_term.name()] = ""
@@ -105,6 +108,7 @@ class FilterNode(Node):
 
         Returns:
             The return value of pyqtgraph.flowchart.Node.rename()
+
         """
         name = name.replace(":", "_")
         # check for name collision

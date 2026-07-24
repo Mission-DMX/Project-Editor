@@ -5,8 +5,7 @@ from view.show_mode.show_ui_widgets.autotracker.gui_tab import GuiTab
 
 
 class SettingsTab(GuiTab):
-    """
-    The `SettingsTab` class represents a tab for configuring application settings.
+    """The `SettingsTab` class represents a tab for configuring application settings.
 
     Attributes:
         name (str): The name of the tab.
@@ -17,15 +16,16 @@ class SettingsTab(GuiTab):
         - `save_settings()`: Save the settings entered in the QLineEdit widgets.
         - `tab_activated()`: Called when the tab is activated.
         - `video_update()`: Abstract method for updating video content within the tab.
+
     """
 
     def __init__(self, name: str, instance: InstanceManager) -> None:
-        """
-        Initialize a SettingsTab object.
+        """Initialize a SettingsTab object.
 
         Args:
             name : The name of the tab.
             instance : An instance manager for managing application instances and settings.
+
         """
         if isinstance(instance, InstanceManager):
             super().__init__(name, instance)
@@ -58,8 +58,7 @@ class SettingsTab(GuiTab):
             save_button.clicked.connect(self.save_settings)
 
     def save_settings(self) -> None:
-        """
-        Save the settings entered in the QLineEdit widgets.
+        """Save the settings entered in the QLineEdit widgets.
         """
         filter_config = self.instance.filter.filter_configurations
         for setting, edit in self.instance.settings.settings.items():
@@ -67,13 +66,11 @@ class SettingsTab(GuiTab):
             filter_config[setting] = value
 
     def tab_activated(self) -> None:
-        """
-        Called when the tab is activated.
+        """Called when the tab is activated.
         """
         if self.instance:
             self.crop_line_edit.setText(", ".join(map(str, self.instance.settings.crop)))
 
     def video_update(self) -> None:
-        """
-        Abstract method for updating video content within the tab.
+        """Abstract method for updating video content within the tab.
         """

@@ -4,6 +4,7 @@ from enum import Enum
 
 class JoystickList(Enum):
     """Joysticks available"""
+
     NO_JOYSTICK = 1
     EVERY_JOYSTICK = 2
     GAMEPAD_LEFT = 3

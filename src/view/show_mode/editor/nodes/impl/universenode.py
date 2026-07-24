@@ -14,6 +14,7 @@ logger = getLogger(__name__)
 
 class UniverseNode(FilterNode):
     """Filter to represent a dmx universe. By default, it has 8 outputs, put more can be added."""
+
     nodeName = "Universe"  # noqa: N815
 
     universe_ids: ClassVar[list[int]] = []

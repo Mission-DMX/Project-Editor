@@ -13,8 +13,7 @@ if TYPE_CHECKING:
 
 
 class BankSetCommand(Command):
-    """
-    commands for the Bank Sets
+    """commands for the Bank Sets
     """
 
     def __init__(self, context: CLIContext) -> None:
@@ -39,13 +38,13 @@ class BankSetCommand(Command):
         subparsers.add_parser("activate", exit_on_error=False, help="Activate the selected bank set")
 
     def execute(self, args: Namespace) -> bool:
-        """
-        execute a Command with Arguments
+        """Execute a Command with Arguments
         Args:
             args: the arguments
 
         Returns:
             True if executed without errors
+
         """
         match args.what:
             case "commit":

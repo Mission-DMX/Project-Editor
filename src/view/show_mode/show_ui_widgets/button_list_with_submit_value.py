@@ -1,5 +1,6 @@
 """This file contains a widget with a textfield and a button, extended by a list of buttons to update constants nodes
-with a new value or predefined one in fish"""
+with a new value or predefined one in fish
+"""
 from __future__ import annotations
 
 import sys
@@ -13,7 +14,7 @@ from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberBu
 
 
 class ButtonsWithValueSubmit(UIWidget):
-    """ UI widget for the show mode (extended with ConstantNumberButtonList also for the editor mode).
+    """UI widget for the show mode (extended with ConstantNumberButtonList also for the editor mode).
     Provides a textfield with a submit-button to update a value (of a constant node).
     Provides also (from ConstantNumberButtonList) a button list to send pre-defined values
     """

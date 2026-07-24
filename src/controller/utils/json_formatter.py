@@ -11,7 +11,7 @@ LOG_RECORD_BUILTIN_ATTRS = {"args", "asctime", "created", "exc_info", "exc_text"
 
 
 class JSONFormatter(Formatter):
-    """formatter for logging in json """
+    """formatter for logging in json"""
 
     def __init__(self, *, fmt_keys: dict[str, str] | None = None) -> None:
         super().__init__()

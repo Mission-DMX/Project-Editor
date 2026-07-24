@@ -197,22 +197,19 @@ class LightSetupTab(GuiTab):
         await self.instance.settings.lights.set_position(pos)
 
     def tab_activated(self) -> None:
-        """
-        Called when the tab is activated.
+        """Called when the tab is activated.
         """
         super().tab_activated()
 
         self.show_sliders(255, 255)
 
     def tab_deactivated(self) -> None:
-        """
-        Called when the tab is deactivated.
+        """Called when the tab is deactivated.
         """
         super().tab_deactivated()
 
     def hide_sliders(self) -> None:
-        """
-        Hide the crop sliders.
+        """Hide the crop sliders.
         """
         self.sliderx1.hide()
         self.slidery1.hide()
@@ -220,12 +217,12 @@ class LightSetupTab(GuiTab):
         self.sliderx2.hide()
 
     def show_sliders(self, height: int, width: int) -> None:
-        """
-        Show and configure the crop sliders.
+        """Show and configure the crop sliders.
 
         Args:
             height : The height of the image frame.
             width : The width of the image frame.
+
         """
         self.sliderx1.show()
         self.sliderx1.setMinimum(0)
@@ -246,8 +243,7 @@ class LightSetupTab(GuiTab):
         self.slider_changed()
 
     def video_update(self) -> None:
-        """
-        Update the video content within the tab.
+        """Update the video content within the tab.
         """
         frame = self.instance.settings.next_frame
         if frame is not None and self.active:

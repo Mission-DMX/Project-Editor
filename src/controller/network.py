@@ -188,7 +188,7 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
 
         """
         if self._socket.state() == QtNetwork.QLocalSocket.LocalSocketState.ConnectedState:
-            msg = proto.DirectMode_pb2.request_dmx_data(universe_id=universe.universe_proto.id)
+            msg = proto.DirectMode_pb2.request_dmx_data(universe_id=universe.id)
             self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_REQUEST_DMX_DATA)
 
     def _generate_universe(self, universe: Universe) -> None:

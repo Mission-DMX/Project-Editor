@@ -21,7 +21,8 @@ class ColorEffect(Effect, ABC):
 
 class ColorWheelEffect(ColorEffect):
     """This effect provides a color wheel. Besides implementing the base methods, it provides further methods to set
-    the default hue range and number of segments."""
+    the default hue range and number of segments.
+    """
 
     EFFECT_ID = "effect.colors.colorwheel"
 

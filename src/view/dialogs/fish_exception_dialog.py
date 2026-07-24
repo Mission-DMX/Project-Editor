@@ -66,7 +66,7 @@ class HoverTextBrowser(QtWidgets.QTextBrowser):
 
     @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        """mouse Event for Hover tooltip"""
+        """Mouse Event for Hover tooltip"""
         cursor = self.cursorForPosition(event.pos())
         cursor.select(QtGui.QTextCursor.SelectionType.WordUnderCursor)
         hovered_text = cursor.selectedText()
