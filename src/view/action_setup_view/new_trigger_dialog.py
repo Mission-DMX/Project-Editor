@@ -10,7 +10,8 @@ if TYPE_CHECKING:
 
 
 class _NewTriggerDialog(QDialog):
-    """Dialog to add new macro triggers.
+    """
+    Dialog to add new macro triggers.
     Upon Accept this dialog adds the new trigger to the provided macro on its own.
     """
 

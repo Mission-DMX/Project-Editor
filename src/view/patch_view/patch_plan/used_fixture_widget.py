@@ -7,7 +7,8 @@ from view.patch_view.patch_plan.channel_item_generator import create_item
 
 
 class UsedFixtureWidget(QWidget):
-    """UI Widget of a Used Fixture
+    """
+        UI Widget of a Used Fixture
     """
 
     def __init__(self, fixture: UsedFixture) -> None:
@@ -21,12 +22,12 @@ class UsedFixtureWidget(QWidget):
 
     @property
     def pixmap(self) -> list[QPixmap]:
-        """Pixmap of the widget"""
+        """pixmap of the widget"""
         return self._channels_static
 
     @property
     def start_index(self) -> int:
-        """Start index of the fixture"""
+        """start index of the fixture"""
         return self._fixture.start_index
 
     def _build_static_pixmap(self, channel_id: int) -> QPixmap:

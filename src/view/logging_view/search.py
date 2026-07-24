@@ -4,7 +4,6 @@ import enum
 
 class Operation(enum.Enum):
     """possible Operations"""
-
     IS = 0
     AND = 1
     OR = 2
@@ -19,10 +18,10 @@ class Search:
 
     @property
     def items(self) -> tuple[str, str]:
-        """Items in Search"""
+        """items in Search"""
         return self._items
 
     @property
     def operation(self) -> Operation:
-        """Operation"""
+        """operation"""
         return self._operation

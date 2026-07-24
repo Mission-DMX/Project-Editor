@@ -109,18 +109,19 @@ class PatchingSelect(QtWidgets.QScrollArea):
         self.container.setCurrentIndex(index)
 
     def reset(self) -> None:
-        """Reset to start"""
+        """reset to start"""
         self.container.setCurrentIndex(self.container.count() - 1)
 
     def _run_patch(self, fixture: OflFixture, index: int) -> None:
-        """Run the patching dialog"""
+        """run the patching dialog"""
         dialog = PatchingDialog(self._board_configuration, (fixture, index))
         dialog.finished.connect(lambda: self._patch(dialog))
 
         dialog.open()
 
     def _patch(self, form: PatchingDialog) -> None:
-        """Patch fixtures from PatchingDialog
+        """
+        patch fixtures from PatchingDialog
         """
         if form.result():
             form.generate_fixtures()

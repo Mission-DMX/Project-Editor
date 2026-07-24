@@ -72,7 +72,6 @@ class FaderRawNode(_FaderNode):
 
 class FaderHSINode(_FaderNode):
     """Filter to represent a hsi filter fader"""
-
     nodeName = "HSI"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -91,7 +90,6 @@ class FaderHSINode(_FaderNode):
 
 class FaderHSIANode(_FaderNode):
     """Filter to represent a hsia filter fader"""
-
     nodeName = "HSI-A"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -112,7 +110,6 @@ class FaderHSIANode(_FaderNode):
 
 class FaderHSIUNode(_FaderNode):
     """Filter to represent a hsiu filter fader"""
-
     nodeName = "HSI_U"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -133,7 +130,6 @@ class FaderHSIUNode(_FaderNode):
 
 class FaderHSIAUNode(_FaderNode):
     """Filter to represent a hasiau filter fader"""
-
     nodeName = "HSI-AU"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
@@ -155,7 +151,6 @@ class FaderHSIAUNode(_FaderNode):
 
 class FaderMainBrightness(FilterNode):
     """Filter to the main brightness fader"""
-
     nodeName = "global-ilumination"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:

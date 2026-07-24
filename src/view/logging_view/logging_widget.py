@@ -17,7 +17,6 @@ logger = getLogger(__name__)
 
 class LoggingWidget(QtWidgets.QTabWidget):
     """widget for logging_view"""
-
     _loging_level_changed: QtCore.Signal = QtCore.Signal(tuple)
 
     def __init__(self, parent: QWidget = None) -> None:
@@ -79,12 +78,12 @@ class LoggingWidget(QtWidgets.QTabWidget):
         logger.info("start DMXGui")
 
     def all_log_levels(self, value: bool) -> None:
-        """Set all log levels"""
+        """set all log levels"""
         for level in self._levels.values():
             level.setChecked(value)
 
     def new_log_message(self, message: str) -> None:
-        """Handle incoming log messages"""
+        """handle incoming log messages"""
         message_dict = json.loads(message)
         level = message_dict["level"]
         new_log_item: LoggingItemWidget = LoggingItemWidget(self._tree, message_dict, level,
@@ -93,7 +92,7 @@ class LoggingWidget(QtWidgets.QTabWidget):
         self._tree.addTopLevelItem(new_log_item)
 
     def update_display(self, text: str) -> None:
-        """Update display for searching items"""
+        """update display for searching items"""
         search: list[Search] = []
         ands: list[str] = text.split("&")
         for item in ands:

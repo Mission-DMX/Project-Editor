@@ -24,7 +24,7 @@ class PatchingInformation:
 
     @property
     def fixture(self) -> OflFixture:
-        """Property of the Fixture"""
+        """property of the Fixture"""
         return self._fixture
 
 
@@ -93,18 +93,19 @@ class PatchingDialog(QtWidgets.QDialog):
 
     @property
     def patching_information(self) -> PatchingInformation:
-        """Property of used Fixture"""
+        """property of used Fixture"""
         return self._patching_information
 
     def set_error(self, text: str) -> None:
-        """Update Error Label"""
+        """update Error Label"""
         self._error_label.setText(text)
 
     def _update_used_fixture(self) -> None:
         self._validate_input()
 
     def generate_fixtures(self) -> None:
-        """Generate a used Fixture list from Patching information"""
+        """generate a used Fixture list from Patching information"""
+
         start_index = self.patching_information.channel
         for _ in range(self.patching_information.count):
             used_fixture = make_used_fixture(
@@ -121,15 +122,15 @@ class PatchingDialog(QtWidgets.QDialog):
                 start_index += self._patching_information.offset
 
     def _accept(self) -> None:
-        """Accept the Fixture"""
+        """accept the Fixture"""
         self.accept()
 
     def _reject(self) -> None:
-        """Cancel Patching"""
+        """cancel Patching"""
         self.reject()
 
     def _validate_input(self) -> None:
-        """Validate the patching String and update count, universe, channel and offset"""
+        """validate the patching String and update count, universe, channel and offset"""
         patching = self._patching.text()
         if patching == "":
             patching = "1"

@@ -1,4 +1,5 @@
-"""implementation of flow Layout for Python 3.12
+"""
+implementation of flow Layout for Python 3.12
 from https://doc.qt.io/qtforpython-6/examples/example_widgets_layouts_flowlayout.html
 """
 from typing import override
@@ -8,7 +9,8 @@ from PySide6.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
 
 class FlowLayout(QLayout):
-    """Layout for floating Widges to width
+    """
+    Layout for floating Widges to width
     """
 
     def __init__(self, parent: QWidget = None) -> None:
