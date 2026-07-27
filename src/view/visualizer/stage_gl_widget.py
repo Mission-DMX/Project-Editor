@@ -576,10 +576,12 @@ class Stage3DWidget(QOpenGLWidget):
             beam_origin_name = "BeamOrigin"
             tilt_node_name = "Cylinder.018"
 
-        for obj in getattr(self._stage_config, "objects", []):
-            is_mh = hasattr(obj, "pan") and hasattr(obj, "tilt") and hasattr(obj, "beam_on")
-            if not is_mh or not bool(getattr(obj, "beam_on", False)):
+        stage_objects: list[StageObject] = getattr(self._stage_config, "objects", [])
+        for obj in stage_objects:
+            has_beam = hasattr(obj, "beam_on")
+            if not has_beam or not bool(getattr(obj, "beam_on", False)):
                 continue
+            has_pan_and_tilt = hasattr(obj, "pan") and hasattr(obj, "tilt")
 
             base = build_base_model_matrix(obj)
             entries = getattr(obj, "get_model_entries", list)()
@@ -587,14 +589,19 @@ class Stage3DWidget(QOpenGLWidget):
                 continue
             model_path = entries[0].model_path
 
-            # Find world-space position of the BeamOrigin node
-            origin_mat = self._find_gltf_node_world(model_path, base, obj, beam_origin_name)
-            if origin_mat is None:
-                origin_mat = QtGui.QMatrix4x4(base)
-            origin_pos = origin_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
+            if has_pan_and_tilt:
+                # Find world-space position of the BeamOrigin node
+                origin_mat = self._find_gltf_node_world(model_path, base, obj, beam_origin_name)
+                if origin_mat is None:
+                    origin_mat = QtGui.QMatrix4x4(base)
+                origin_pos = origin_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
 
-            # Find world-space position of the tilt pivot node
-            tilt_mat = self._find_gltf_node_world(model_path, base, obj, tilt_node_name)
+                # Find world-space position of the tilt pivot node
+                tilt_mat = self._find_gltf_node_world(model_path, base, obj, tilt_node_name)
+            else:
+                origin_pos = QtGui.QVector3D(*obj.position)
+                degrees = np.degrees(np.array(obj.rotation, dtype=np.float64))
+                tilt_mat = QtGui.QMatrix4x4().rotate(QtGui.QQuaternion.fromEulerAngles(*degrees))
 
             # Beam direction: from tilt pivot toward BeamOrigin (lens).
             # Pan/tilt naturally rotates this since BeamOrigin moves with the head.
@@ -606,7 +613,7 @@ class Stage3DWidget(QOpenGLWidget):
                 else:
                     dir_vec.normalize()
             else:
-                dir_vec = QtGui.QVector3D(0.0, -1.0, 0.0)
+                dir_vec = QtGui.QVector3D(0.0, 1.0, 0.0)
 
             # Convert beam color from 0-255 int to 0-1 float, apply dimmer
             rgb = getattr(obj, "beam_color", (255, 255, 255))
