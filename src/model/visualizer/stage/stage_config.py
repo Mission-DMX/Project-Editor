@@ -29,7 +29,7 @@ def get_default_stage_path() -> str:
     """Return the persistent stage file path, creating it on first run."""
     os.makedirs(STAGE_DIR, exist_ok=True)
     if not os.path.exists(DEFAULT_STAGE_PATH):
-        bundled = resource_path(os.path.join("resources", "data", "stage.yaml"))
+        bundled = resource_path(os.path.join("resources", "data", "default_stage.yaml"))
         if os.path.exists(bundled):
             shutil.copy2(bundled, DEFAULT_STAGE_PATH)
             logger.info("Copied bundled stage.yaml to %s", DEFAULT_STAGE_PATH)
