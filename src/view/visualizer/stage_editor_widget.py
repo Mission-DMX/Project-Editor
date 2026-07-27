@@ -398,76 +398,79 @@ class StageEditorWidget(QtWidgets.QWidget):
 
         # MovingHead beam properties
         if isinstance(obj, MovingHead):
-            self._add_separator()
-            self._add_section_header("Beam Control")
-
-            self._pan_spin = QtWidgets.QDoubleSpinBox()
-            self._pan_spin.setRange(-270, 270)
-            self._pan_spin.setDecimals(1)
-            self._pan_spin.setSingleStep(1.0)
-            self._pan_spin.setSuffix("  deg")
-            self._pan_spin.setValue(obj.pan)
-            self._pan_spin.valueChanged.connect(
-                lambda v: self._on_attr("pan", v))
-            self._prop_layout.addRow("Pan:", self._pan_spin)
-
-            self._tilt_spin = QtWidgets.QDoubleSpinBox()
-            self._tilt_spin.setRange(-135, 135)
-            self._tilt_spin.setDecimals(1)
-            self._tilt_spin.setSingleStep(1.0)
-            self._tilt_spin.setSuffix("  deg")
-            self._tilt_spin.setValue(obj.tilt)
-            self._tilt_spin.valueChanged.connect(
-                lambda v: self._on_attr("tilt", v))
-            self._prop_layout.addRow("Tilt:", self._tilt_spin)
-
-            self._add_separator()
-
-            self._beam_cb = QtWidgets.QCheckBox("Enabled")
-            self._beam_cb.setChecked(obj.beam_on)
-            self._beam_cb.stateChanged.connect(self._on_beam_toggled)
-            self._prop_layout.addRow("Beam:", self._beam_cb)
-
-            self._dimmer_spin = QtWidgets.QDoubleSpinBox()
-            self._dimmer_spin.setRange(0, 1)
-            self._dimmer_spin.setDecimals(2)
-            self._dimmer_spin.setSingleStep(0.05)
-            self._dimmer_spin.setValue(obj.dimmer)
-            self._dimmer_spin.valueChanged.connect(
-                lambda v: self._on_attr("dimmer", v))
-            self._prop_layout.addRow("Dimmer:", self._dimmer_spin)
-
-            self._dimmer_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-            self._dimmer_slider.setRange(0, 100)
-            self._dimmer_slider.setValue(int(obj.dimmer * 100))
-            self._dimmer_slider.valueChanged.connect(self._on_dimmer_slider)
-            self._prop_layout.addRow("", self._dimmer_slider)
-
-            # Beam color
-            self._add_separator()
-            self._add_section_header("Beam Color")
-
-            r, g, b = obj.beam_color
-            self._color_btn = QtWidgets.QPushButton()
-            self._color_btn.setFixedHeight(28)
-            self._update_color_btn_style(r, g, b)
-            self._color_btn.clicked.connect(self._on_color_picker)
-            self._prop_layout.addRow("Pick:", self._color_btn)
-
-            self._rgb_spins = []
-            for axis, val in [("R:", r), ("G:", g), ("B:", b)]:
-                sp = QtWidgets.QSpinBox()
-                sp.setRange(0, 255)
-                sp.setSingleStep(5)
-                sp.setValue(val)
-                sp.valueChanged.connect(self._on_rgb_changed)
-                self._prop_layout.addRow(axis, sp)
-                self._rgb_spins.append(sp)
-
-            # Lock controls that are driven by DMX
-            self._apply_dmx_locks(obj)
+            self._setup_movinghead_settings(obj)
 
         self._updating_ui = False
+
+    def _setup_movinghead_settings(self, obj: MovingHead) -> None:
+        self._add_separator()
+        self._add_section_header("Beam Control")
+
+        self._pan_spin = QtWidgets.QDoubleSpinBox()
+        self._pan_spin.setRange(-270, 270)
+        self._pan_spin.setDecimals(1)
+        self._pan_spin.setSingleStep(1.0)
+        self._pan_spin.setSuffix("  deg")
+        self._pan_spin.setValue(obj.pan)
+        self._pan_spin.valueChanged.connect(
+            lambda v: self._on_attr("pan", v))
+        self._prop_layout.addRow("Pan:", self._pan_spin)
+
+        self._tilt_spin = QtWidgets.QDoubleSpinBox()
+        self._tilt_spin.setRange(-135, 135)
+        self._tilt_spin.setDecimals(1)
+        self._tilt_spin.setSingleStep(1.0)
+        self._tilt_spin.setSuffix("  deg")
+        self._tilt_spin.setValue(obj.tilt)
+        self._tilt_spin.valueChanged.connect(
+            lambda v: self._on_attr("tilt", v))
+        self._prop_layout.addRow("Tilt:", self._tilt_spin)
+
+        self._add_separator()
+
+        self._beam_cb = QtWidgets.QCheckBox("Enabled")
+        self._beam_cb.setChecked(obj.beam_on)
+        self._beam_cb.stateChanged.connect(self._on_beam_toggled)
+        self._prop_layout.addRow("Beam:", self._beam_cb)
+
+        self._dimmer_spin = QtWidgets.QDoubleSpinBox()
+        self._dimmer_spin.setRange(0, 1)
+        self._dimmer_spin.setDecimals(2)
+        self._dimmer_spin.setSingleStep(0.05)
+        self._dimmer_spin.setValue(obj.dimmer)
+        self._dimmer_spin.valueChanged.connect(
+            lambda v: self._on_attr("dimmer", v))
+        self._prop_layout.addRow("Dimmer:", self._dimmer_spin)
+
+        self._dimmer_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self._dimmer_slider.setRange(0, 100)
+        self._dimmer_slider.setValue(int(obj.dimmer * 100))
+        self._dimmer_slider.valueChanged.connect(self._on_dimmer_slider)
+        self._prop_layout.addRow("", self._dimmer_slider)
+
+        # Beam color
+        self._add_separator()
+        self._add_section_header("Beam Color")
+
+        r, g, b = obj.beam_color
+        self._color_btn = QtWidgets.QPushButton()
+        self._color_btn.setFixedHeight(28)
+        self._update_color_btn_style(r, g, b)
+        self._color_btn.clicked.connect(self._on_color_picker)
+        self._prop_layout.addRow("Pick:", self._color_btn)
+
+        self._rgb_spins = []
+        for axis, val in [("R:", r), ("G:", g), ("B:", b)]:
+            sp = QtWidgets.QSpinBox()
+            sp.setRange(0, 255)
+            sp.setSingleStep(5)
+            sp.setValue(val)
+            sp.valueChanged.connect(self._on_rgb_changed)
+            self._prop_layout.addRow(axis, sp)
+            self._rgb_spins.append(sp)
+
+        # Lock controls that are driven by DMX
+        self._apply_dmx_locks(obj)
 
     # DMX lock / unlock logic
 
