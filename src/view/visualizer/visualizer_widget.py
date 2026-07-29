@@ -15,7 +15,7 @@ from PySide6 import QtCore, QtWidgets
 from model.broadcaster import Broadcaster
 from model.visualizer.dmx.dmx_visualizer import MOVEMENT_ROLES, DmxVisualizer, auto_detect_mapping
 from model.visualizer.stage.fixture_group import FixtureGroup
-from model.visualizer.stage.stage_config import StageConfig, backup_stage_file, get_default_stage_path
+from model.visualizer.stage.stage_config import STAGE_DIR, StageConfig, backup_stage_file, get_default_stage_path
 from view.visualizer.stage_editor_widget import StageEditorWidget
 from view.visualizer.stage_gl_widget import Stage3DWidget
 
@@ -94,7 +94,6 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
     def load_stage_file(self) -> None:
         """Opens a file dialog to query a stage file and loads it."""
         # FIXME this is a blocking UI call.
-        from model.visualizer.stage import STAGE_DIR
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, "Load Stagefile", STAGE_DIR,
             "Stage Files (*.yaml *.yml);;All Files (*)")
@@ -109,7 +108,6 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
     def save_stage_file(self) -> None:
         """Displays a save file dialog and saves the current stage setup into a stage file."""
-        from model.visualizer.stage import STAGE_DIR
         path, _ = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save Stagefile", STAGE_DIR,
             "Stage Files (*.yaml *.yml);;All Files (*)")
@@ -119,11 +117,10 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         logger.info("Stage saved to %s", path)
 
     def _reload_stage(self, new_path: str) -> None:
-        logger.info("Loading new stage: %s", new_path)
+        logger.info("Switching to new stage: %s", new_path)
 
+        self._stage_config.save()
         new_config = StageConfig(new_path)
-        new_config.save_to(get_default_stage_path())
-        new_config.file_path = get_default_stage_path()
 
         self._stage_config = new_config
         self._dmx_vis._stage_config = new_config
