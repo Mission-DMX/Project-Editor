@@ -60,6 +60,7 @@ class Stage3DWidget(QOpenGLWidget):
     def __init__(self, stage_config: StageConfig, parent: QWidget | None=None) -> None:
         """Initialize using given stage configuration and parent."""
         super().__init__(parent)
+        self._gl_initialized = False
         self._stage_config = stage_config
 
         # Shader programs (initialized in initializeGL)
@@ -194,14 +195,20 @@ class Stage3DWidget(QOpenGLWidget):
         self._init_shadow_map_resources()
 
         # Create geometry
-        self._beam_cone = create_unit_cone(64)
-        self._ground_plane = create_ground_plane(2000.0)
+        self._beam_cone = create_unit_cone(64, context=self.context())
+        self._ground_plane = create_ground_plane(2000.0, context=self.context())
 
         # Load 3D models for all existing stage objects
         for obj in self._stage_config.objects:
             self._ensure_models_loaded(obj)
         self.context().aboutToBeDestroyed.connect(self._clean_up_opengl_context)
         logger.info("OpenGL init done. %d objects.", len(self._stage_config.objects))
+        self._gl_initialized = True
+
+    @property
+    def gl_initialized(self) -> bool:
+        """Check if the OpenGL context was already initialized."""
+        return self._gl_initialized
 
     def _init_shadow_map_resources(self) -> None:
         """Create the FBO and 2D texture array for shadow maps.
@@ -770,12 +777,13 @@ class Stage3DWidget(QOpenGLWidget):
 
         Supports GLB/glTF (preferred) and OBJ (legacy fallback).
         """
+        self.makeCurrent()
         if not path or path in self._models or path in self._gltf_models:
             return
         ext = os.path.splitext(path)[1].lower()
         if ext in (".glb", ".gltf"):
             try:
-                self._gltf_models[path] = GltfModel.load_gltf_model(path)
+                self._gltf_models[path] = GltfModel.load_gltf_model(path, self.context())
                 logger.debug("Loaded glTF: %s", path)
             except Exception as e:
                 logger.error("glTF load error %s: %s", path, e)
@@ -816,7 +824,9 @@ class Stage3DWidget(QOpenGLWidget):
                         il.append(im[key])
             self._models[path] = Model3D.upload_mesh(
                 np.array(vd, dtype=np.float32).reshape(-1, 6),
-                np.array(il, dtype=np.uint32))
+                np.array(il, dtype=np.uint32),
+                context=self.context()
+            )
         except Exception as e:
             logger.error("OBJ load error %s: %s", path, e)
 

@@ -12,6 +12,8 @@ from PySide6 import QtGui
 from view.gl.model_3d import Model3D
 
 if TYPE_CHECKING:
+    from PySide6.QtGui import QOpenGLContext
+
     from model.visualizer.stage.stage_object import StageObject
     from view.gl.gltf_model import GltfNode
     from view.visualizer.spotlight_data import SpotLightData
@@ -135,7 +137,7 @@ def compute_light_space_matrix(spotlight: SpotLightData) -> QtGui.QMatrix4x4:
     return result
 
 
-def create_unit_cone(segments: int=48) -> Model3D:
+def create_unit_cone(segments: int=48, context: QOpenGLContext | None = None) -> Model3D:
     """Create a unit cone mesh (tip at origin, base ring at z=-1).
 
     Used for beam rendering. Normals point outward from the cone surface.
@@ -155,10 +157,10 @@ def create_unit_cone(segments: int=48) -> Model3D:
         idx.extend([0, 1 + i, 1 + (i + 1) % seg])
     v = np.array(verts, dtype=np.float32)
     ii = np.array(idx, dtype=np.uint32)
-    return Model3D.upload_vao(v, ii)
+    return Model3D.upload_vao(v, ii, context)
 
 
-def create_ground_plane(size: float=2000.0) -> Model3D:
+def create_ground_plane(size: float=2000.0, context: QOpenGLContext | None = None) -> Model3D:
     """Create a flat ground plane quad at y=0 with upward normals."""
     h = size / 2.0
     v = np.array([
@@ -166,4 +168,4 @@ def create_ground_plane(size: float=2000.0) -> Model3D:
          h, 0,  h, 0, 1, 0, -h, 0,  h, 0, 1, 0,
     ], dtype=np.float32)
     ii = np.array([0, 1, 2, 0, 2, 3], dtype=np.uint32)
-    return Model3D.upload_vao(v, ii)
+    return Model3D.upload_vao(v, ii, context)

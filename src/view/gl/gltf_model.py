@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import json
 import struct
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from view.gl.model_3d import Model3D
+
+if TYPE_CHECKING:
+    from PySide6.QtGui import QOpenGLContext
 
 # Mapping from glTF componentType to numpy dtype
 _GLTF_COMPONENT_DTYPE = {
@@ -59,7 +62,7 @@ class GltfModel:
 
 
     @classmethod
-    def load_gltf_model(cls, path: str) -> GltfModel:
+    def load_gltf_model(cls, path: str, context: QOpenGLContext) -> GltfModel:
         """Load a GLB file, build the node hierarchy, and upload all meshes.
 
         Returns a GltfModel containing the scene graph and GPU mesh handles.
@@ -94,7 +97,8 @@ class GltfModel:
                        else np.arange(pos.shape[0], dtype=np.uint32))
                 if nrm is None or nrm.shape[0] != pos.shape[0]:
                     nrm = _compute_vertex_normals(pos, idx)
-                plist.append(Model3D.upload_mesh(np.concatenate([pos[:, :3], nrm[:, :3]], axis=1), idx))
+                plist.append(Model3D.upload_mesh(np.concatenate([pos[:, :3], nrm[:, :3]], axis=1), idx,
+                                                 context=context))
             if plist:
                 mesh_prims[mi] = plist
 

@@ -134,8 +134,10 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._stage_config = new_config
         self._dmx_vis._stage_config = new_config
 
-        self._gl_widget.makeCurrent()
         self._gl_widget._stage_config = new_config
+        if not self._gl_widget.gl_initialized:
+            return
+        self._gl_widget.makeCurrent()
         self._gl_widget._load_all_objects()
         self._gl_widget.doneCurrent()
         self._gl_widget.update()
