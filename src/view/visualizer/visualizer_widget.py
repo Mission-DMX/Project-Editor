@@ -15,7 +15,13 @@ from PySide6 import QtCore, QtWidgets
 from model.broadcaster import Broadcaster
 from model.visualizer.dmx.dmx_visualizer import MOVEMENT_ROLES, DmxVisualizer, auto_detect_mapping
 from model.visualizer.stage.fixture_group import FixtureGroup
-from model.visualizer.stage.stage_config import STAGE_DIR, StageConfig, backup_stage_file, get_default_stage_path
+from model.visualizer.stage.stage_config import (
+    STAGE_DIR,
+    StageConfig,
+    backup_stage_file,
+    create_object_from_key,
+    get_default_stage_path,
+)
 from view.visualizer.stage_editor_widget import StageEditorWidget
 from view.visualizer.stage_gl_widget import Stage3DWidget
 
@@ -39,7 +45,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         self.setOrientation(QtCore.Qt.Orientation.Horizontal)
 
-        stage_path = get_default_stage_path()
+        stage_path = board_configuration.ui_hints.get("associated_stage_file", get_default_stage_path())
         logger.info("Loading stage from %s", stage_path)
         self._stage_config = StageConfig(stage_path)
 
@@ -79,6 +85,9 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         # Refresh fixture list when the show file changes.
         self._broadcaster.show_file_loaded.connect(self._refresh_fixtures)
+        self._broadcaster.show_file_loaded.connect(
+            lambda: self._reload_stage(self._board_configuration.ui_hints.get("associated_stage_file", ""))
+        )
         self._broadcaster.show_file_path_changed.connect(lambda _: self._refresh_fixtures())
         self._broadcaster.connection_state_updated.connect(
             lambda connected: QtCore.QTimer.singleShot(500, self._refresh_fixtures)
@@ -120,7 +129,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         logger.info("Switching to new stage: %s", new_path)
 
         self._stage_config.save()
-        new_config = StageConfig(new_path)
+        new_config = StageConfig(new_path, show_file_path=self._board_configuration.file_path)
 
         self._stage_config = new_config
         self._dmx_vis._stage_config = new_config
@@ -148,7 +157,6 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
     def _on_add_object(self, fixture_key: str, name: str, device: UsedFixture) -> None:
         new_id = self._stage_config.get_new_id(fixture_key)
         try:
-            from model.visualizer.stage import create_object_from_key
             new_obj = create_object_from_key(fixture_key, new_id, name)
         except Exception as e:
             logger.error("Failed to create object: %s", e)

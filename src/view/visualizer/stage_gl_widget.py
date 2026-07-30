@@ -23,7 +23,7 @@ from utility import resource_path
 from view.gl import _apply_local_ops
 from view.gl.gltf_model import GltfModel
 from view.gl.model_3d import Model3D
-from view.gl.shaders import load_and_link_shader_from_files
+from view.gl.shaders import delete_shader, load_and_link_shader_from_files
 from view.visualizer.geometry_helpers import (
     MAX_SHADOW_MAPS,
     MAX_SPOT_LIGHTS,
@@ -42,9 +42,9 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from PySide6.QtCore import QPoint
-    from PySide6.QtWidgets import QWidget
+    from PySide6.QtWidgets import QApplication, QWidget
 
-    from model.visualizer.stage import StageConfig, StageObject
+    from model.visualizer.stage.stage_config import StageConfig, StageObject
 
 logger = getLogger(__name__)
 
@@ -200,7 +200,7 @@ class Stage3DWidget(QOpenGLWidget):
         # Load 3D models for all existing stage objects
         for obj in self._stage_config.objects:
             self._ensure_models_loaded(obj)
-
+        self.context().aboutToBeDestroyed.connect(self._clean_up_opengl_context)
         logger.info("OpenGL init done. %d objects.", len(self._stage_config.objects))
 
     def _init_shadow_map_resources(self) -> None:
@@ -776,7 +776,7 @@ class Stage3DWidget(QOpenGLWidget):
         if ext in (".glb", ".gltf"):
             try:
                 self._gltf_models[path] = GltfModel.load_gltf_model(path)
-                logger.info("Loaded glTF: %s", path)
+                logger.debug("Loaded glTF: %s", path)
             except Exception as e:
                 logger.error("glTF load error %s: %s", path, e)
             return
@@ -1072,12 +1072,16 @@ class Stage3DWidget(QOpenGLWidget):
         if best_id:
             self.fixture_clicked.emit(best_id)
 
-    def __del__(self) -> None:
+    def _clean_up_opengl_context(self) -> None:
         """Unload the models."""
-        self.makeCurrent()
         for model in self._models.values():
             model.unload()
         for model in self._gltf_models.values():
             model.unload()
-        self.doneCurrent()
+        delete_shader(self._beam_program)
+        self._beam_program = 0
+        delete_shader(self._depth_program)
+        self._depth_program = 0
+        delete_shader(self._scene_program)
+        self._scene_program = 0
         logger.debug("Successfully cleaned up models.")

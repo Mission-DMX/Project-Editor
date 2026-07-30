@@ -29,6 +29,8 @@ class Model3D:
         After this call the instance is considered “unbound”; any further
         attempts to use it will raise because the GPU resources are gone.
         """
+        if not self._still_bound:
+            return
         gl.glDeleteBuffers(1, np.array([self.vbo], dtype=np.uint32))
         gl.glDeleteBuffers(1, np.array([self.ebo], dtype=np.uint32))
         gl.glDeleteVertexArrays(1, np.array([self.vao], dtype=np.uint32))
@@ -39,11 +41,14 @@ class Model3D:
     def __del__(self) -> None:
         """Checks if the object was successfully deleted or throws an error.
 
-        This cannot happen automatically as it must occur within the thread that created the model.
+        This cannot happen automatically as it must occur within the thread and OpenGL context that created the model.
 
         """
         if self._still_bound:
-            raise RuntimeError("Model3D object is still bound. This would cause a memory leak.")
+            try:
+                self.unload()
+            except gl.GLError as e:
+                raise RuntimeError("Model3D object is still bound. This would cause a memory leak.") from e
 
     @classmethod
     def upload_mesh(cls, vertex_data: np.ndarray, indices: np.ndarray) -> Model3D:

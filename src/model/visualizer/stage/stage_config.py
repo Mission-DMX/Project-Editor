@@ -78,19 +78,35 @@ def make_unique_name(desired_name: str, existing_names: list[str]) -> str:
 class StageConfig:
     """Aggregate root: list of objects + list of groups, persisted as YAML."""
 
-    def __init__(self, yaml_file_path: str) -> None:
+    def __init__(self, yaml_file_path: str, show_file_path: str | None = None) -> None:
         """Initialize stage configuration."""
-        self.file_path = yaml_file_path
+        if yaml_file_path == "":
+            yaml_file_path = get_default_stage_path()
         self.objects: list[StageObject] = []
         self.groups: list[FixtureGroup] = []
 
-        if os.path.exists(self.file_path):
+        resolved_file_path = yaml_file_path
+        resolved = False
+        local_file_candidate: str | None = None
+        if show_file_path is not None and len(show_file_path) > 0:
+            show_file_next_to_stage = os.path.join(os.path.dirname(show_file_path), resolved_file_path)
+            local_file_candidate = show_file_next_to_stage
+            if os.path.isfile(show_file_next_to_stage):
+                resolved_file_path = show_file_next_to_stage
+                resolved = True
+        if not resolved:
+            show_file_next_to_stage = os.path.join(os.path.dirname(
+                get_default_stage_path()), resolved_file_path)
+            if os.path.isfile(show_file_next_to_stage):
+                resolved_file_path = show_file_next_to_stage
+
+        if os.path.exists(resolved_file_path):
             try:
                 yaml_loader = yaml.YAML(typ="safe")
-                with open(self.file_path, "r", encoding="UTF-8") as f:
+                with open(resolved_file_path, "r", encoding="UTF-8") as f:
                     data = yaml_loader.load(f) or {}
             except yaml.YAMLError as e:
-                logger.error("Failed to parse YAML file %s: %s", self.file_path, e)
+                logger.error("Failed to parse YAML file %s: %s", resolved_file_path, e)
                 data = {}
 
             for obj_data in data.get("objects", []):
@@ -108,7 +124,12 @@ class StageConfig:
             for grp_data in data.get("groups", []):
                 self.groups.append(FixtureGroup.from_dict(grp_data))
         else:
-            logger.info("Stage YAML file %s not found, starting empty.", self.file_path)
+            if local_file_candidate is None:
+                logger.info("Stage YAML file %s not found, starting empty.", resolved_file_path)
+            else:
+                resolved_file_path = local_file_candidate
+
+        self.file_path = resolved_file_path
 
         # Stage invariant: always have exactly one platform.
         if not any(o.get_type() == "platform" for o in self.objects):
