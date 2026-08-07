@@ -10,6 +10,7 @@ from __future__ import annotations
 import math
 import os
 import time
+from curses import has_key
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
@@ -21,7 +22,7 @@ from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from model.visualizer.stage.so_moving_head import MovingHead
 from utility import resource_path
 from view.gl import _apply_local_ops
-from view.gl.gltf_model import GltfModel
+from view.gl.gltf_model import GltfModel, GltfNode
 from view.gl.model_3d import Model3D
 from view.gl.shaders import delete_shader, load_and_link_shader_from_files
 from view.visualizer.geometry_helpers import (
@@ -282,6 +283,7 @@ class Stage3DWidget(QOpenGLWidget):
         view_data = view.copyDataTo()
 
         spotlights, beam_list = self._collect_lights_and_beams()
+        # lense_lights = self._collect_lense_lights()  # TODO
 
         # PASS 0: Shadow maps
         light_space_matrices = self._render_shadow_maps(spotlights)
@@ -299,6 +301,7 @@ class Stage3DWidget(QOpenGLWidget):
         cam = self._camera_pos
         gl.glUniform3f(self._sc["viewPos"], cam.x(), cam.y(), cam.z())
         gl.glUniform1f(self._sc["ambientLevel"], 0.09)
+        # TODO render lense_lights here
 
         # Upload spotlight data to shader
         num_lights = min(len(spotlights), MAX_SPOT_LIGHTS)
@@ -563,6 +566,48 @@ class Stage3DWidget(QOpenGLWidget):
             gl.glActiveTexture(gl.GL_TEXTURE0)
 
     # Light and beam collection
+
+    def _collect_lense_lights(self) -> list[np.ndarray]:
+        """Compute the positions of lense lights.
+
+        Returns:
+            List of lense lights. Each tuple contains the effective position (3), effective rotation (3), size (1) and
+            RGB color in range 0 to 1 (3).
+
+        """
+        lense_lights = []
+        stage_objects: list[StageObject] = getattr(self._stage_config, "objects", [])
+        for obj in stage_objects:
+            ll_definition: tuple[QtGui.QVector3D, QtGui.QVector3D, float,
+            tuple[int, int, int], str, str, str] | None = getattr(obj, "lense_colors", None)
+            if ll_definition is None:
+                continue
+            arr = np.zeros(10, dtype=np.float32)
+            position_offset_from_base_node: QtGui.QVector3D = ll_definition[0]
+            rotation_offset_from_base_node: QtGui.QVector3D = ll_definition[1]
+            size: float = ll_definition[2]
+            color: tuple[int, int, int] = ll_definition[3]
+            position, direction = self._calculate_extension_translation_matrices(
+                obj,
+                ll_definition[4],  # model path
+                ll_definition[5],  # origin node name
+                ll_definition[6]   # name of movable node
+            )
+            position += position_offset_from_base_node
+            direction += rotation_offset_from_base_node
+            arr[0] = position.x()
+            arr[1] = position.y()
+            arr[2] = position.z()
+            arr[3] = direction.x()
+            arr[4] = direction.y()
+            arr[5] = direction.z()
+            arr[6] = size
+            arr[7] = color[0] / 255.0
+            arr[8] = color[1] / 255.0
+            arr[9] = color[2] / 255.0
+            lense_lights.append(arr)
+        return lense_lights
+
     def _collect_lights_and_beams(self) \
             -> tuple[list[SpotLightData],
             list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]]]:
@@ -577,11 +622,11 @@ class Stage3DWidget(QOpenGLWidget):
         beam_list = []
 
         try:
-            beam_origin_name = MovingHead.BEAM_ORIGIN_NODE_NAME
+            beam_origin_node_name = MovingHead.BEAM_ORIGIN_NODE_NAME
             tilt_node_name = MovingHead.TILT_NODE_NAME
         except Exception:
             logger.error("Bug: Object did not provide beam origin node and tilt node.")
-            beam_origin_name = "BeamOrigin"
+            beam_origin_node_name = "BeamOrigin"
             tilt_node_name = "Cylinder.018"
 
         stage_objects: list[StageObject] = getattr(self._stage_config, "objects", [])
@@ -589,39 +634,15 @@ class Stage3DWidget(QOpenGLWidget):
             has_beam = hasattr(obj, "beam_on")
             if not has_beam or not bool(getattr(obj, "beam_on", False)):
                 continue
-            has_pan_and_tilt = hasattr(obj, "pan") and hasattr(obj, "tilt")
 
-            base = build_base_model_matrix(obj)
             entries = getattr(obj, "get_model_entries", list)()
             if not entries:
                 continue
             model_path = entries[0].model_path
 
-            if has_pan_and_tilt:
-                # Find world-space position of the BeamOrigin node
-                origin_mat = self._find_gltf_node_world(model_path, base, obj, beam_origin_name)
-                if origin_mat is None:
-                    origin_mat = QtGui.QMatrix4x4(base)
-                origin_pos = origin_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
-
-                # Find world-space position of the tilt pivot node
-                tilt_mat = self._find_gltf_node_world(model_path, base, obj, tilt_node_name)
-            else:
-                origin_pos = QtGui.QVector3D(*obj.position)
-                degrees = np.degrees(np.array(obj.rotation, dtype=np.float64))
-                tilt_mat = QtGui.QMatrix4x4().rotate(QtGui.QQuaternion.fromEulerAngles(*degrees))
-
-            # Beam direction: from tilt pivot toward BeamOrigin (lens).
-            # Pan/tilt naturally rotates this since BeamOrigin moves with the head.
-            if tilt_mat is not None:
-                tilt_pos = tilt_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
-                dir_vec = origin_pos - tilt_pos
-                if dir_vec.length() < 1e-6:
-                    dir_vec = QtGui.QVector3D(0.0, -1.0, 0.0)
-                else:
-                    dir_vec.normalize()
-            else:
-                dir_vec = QtGui.QVector3D(0.0, 1.0, 0.0)
+            origin_pos, dir_vec = self._calculate_extension_translation_matrices(
+                obj, model_path, beam_origin_node_name, tilt_node_name
+            )
 
             # Convert beam color from 0-255 int to 0-1 float, apply dimmer
             rgb = getattr(obj, "beam_color", (255, 255, 255))
@@ -639,6 +660,41 @@ class Stage3DWidget(QOpenGLWidget):
             beam_list.append((origin_pos, dir_vec, color_f, dimmer))
 
         return spotlights, beam_list
+
+    def _calculate_extension_translation_matrices(self, obj: StageObject, model_path: str | None,
+                                                  origin_node_name: str | None,
+                                                  tilt_node_name: str | None) -> (
+            tuple)[QtGui.QVector3D, QtGui.QVector3D]:
+        """Calculate end-effector position and direction from stage object and optional transition nodes."""
+        base = build_base_model_matrix(obj)
+        has_pan_and_tilt = hasattr(obj, "pan") and hasattr(obj, "tilt")
+        has_trans_node_data = tilt_node_name is not None and model_path is not None and origin_node_name is not None
+        if has_pan_and_tilt and has_trans_node_data:
+            # Find world-space position of the BeamOrigin node
+            origin_mat = self._find_gltf_node_world(model_path, base, obj, origin_node_name)
+            if origin_mat is None:
+                origin_mat = QtGui.QMatrix4x4(base)
+            origin_pos = origin_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
+
+            # Find world-space position of the tilt pivot node
+            tilt_mat = self._find_gltf_node_world(model_path, base, obj, tilt_node_name)
+        else:
+            origin_pos = QtGui.QVector3D(*obj.position)
+            degrees = np.degrees(np.array(obj.rotation, dtype=np.float64))
+            tilt_mat = QtGui.QMatrix4x4().rotate(QtGui.QQuaternion.fromEulerAngles(*degrees))
+
+            # Beam direction: from tilt pivot toward BeamOrigin (lens).
+            # Pan/tilt naturally rotates this since BeamOrigin moves with the head.
+        if tilt_mat is not None:
+            tilt_pos = tilt_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
+            dir_vec = origin_pos - tilt_pos
+            if dir_vec.length() < 1e-6:
+                dir_vec = QtGui.QVector3D(0.0, -1.0, 0.0)
+            else:
+                dir_vec.normalize()
+        else:
+            dir_vec = QtGui.QVector3D(0.0, 1.0, 0.0)
+        return origin_pos, dir_vec
 
     def _update_camera_pos(self) -> None:
         """Compute camera position from orbit parameters (yaw, pitch, distance)."""
@@ -888,10 +944,10 @@ class Stage3DWidget(QOpenGLWidget):
         overrides = get_overrides(stage_obj)
         stack = [(int(r), QtGui.QMatrix4x4(base_model)) for r in gm.scene_roots]
         while stack:
-            ni, parent = stack.pop()
-            if ni < 0 or ni >= len(gm.nodes):
+            node_index, parent = stack.pop()
+            if node_index < 0 or node_index >= len(gm.nodes):
                 continue
-            node = gm.nodes[ni]
+            node = gm.nodes[node_index]
             world = QtGui.QMatrix4x4(parent)
             world *= node_local_matrix(node, overrides)
             if node.name == target_name:
