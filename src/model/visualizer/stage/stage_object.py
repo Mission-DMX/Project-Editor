@@ -9,7 +9,20 @@ from model.visualizer.stage.paths import DEFAULT_MODEL_PATHS
 
 
 class StageObject:
-    """Base class for anything placed on the stage."""
+    """Base class for anything placed on the stage.
+
+    An implementing class may provide additional attributes which are checked while rendering.
+    For performance reasons, they are not provided as mixin classes. Here's a full list:
+     * `beam_on` (bool) if provided the StageObject (SO) has a light beam to be rendered. True/False indicates
+        visibility. Having disabled beams still consumes resources.
+     * `pan` and `tilt` (float) pan and tilt coordinates for movable part and beam
+     * `beam_color` (tuple[int, int, int]) RGB color of beam (if present). Range 0 to 255
+     * `dimmer` (float) brightness multiplier
+     * `lense_colors` (list[tuple[vec3[float], vec3[float], float, vec3[int]]]) a list containing lense illumination
+       descriptions (position, rotation, size, color(rgb 0-255)). For each entry a lense illumination will be drawn.
+       Positions are relative to model base position.
+
+    """
 
     def __init__(
         self,

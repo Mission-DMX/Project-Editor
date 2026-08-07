@@ -580,6 +580,7 @@ class Stage3DWidget(QOpenGLWidget):
             beam_origin_name = MovingHead.BEAM_ORIGIN_NODE_NAME
             tilt_node_name = MovingHead.TILT_NODE_NAME
         except Exception:
+            logger.error("Bug: Object did not provide beam origin node and tilt node.")
             beam_origin_name = "BeamOrigin"
             tilt_node_name = "Cylinder.018"
 
