@@ -223,9 +223,9 @@ class DmxVisualizer(QtCore.QObject):
         obj.beam_on = any_color
 
         # Use the white channel as dimmer if no dedicated movement dimmer exists.
-        if w is not None:
-            obj.dimmer = w / 255.0 if w > 0 else (1.0 if any_color else 0.0)
-        elif not self._has_movement_dimmer(obj) and any_color:
+        #if w is not None:
+        #    obj.dimmer = w / 255.0 if w > 0 else (1.0 if any_color else 0.0)
+        if not self._has_movement_dimmer(obj) and any_color:
             obj.dimmer = 1.0
 
     def _has_movement_dimmer(self, obj: StageObject) -> bool:
