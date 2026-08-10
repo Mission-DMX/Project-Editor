@@ -68,12 +68,13 @@ class Stage3DWidget(QOpenGLWidget):
         self._scene_program: int = 0
         self._beam_program: int = 0
         self._depth_program: int = 0
+        self._lense_light_program: int = 0
 
         # Uniform location caches
-        self._sc = {}             # scene shader uniforms
+        self._scene_uniforms = {}             # scene shader uniforms
         self._sc_light_locs = []  # per-light uniform locations
-        self._bm = {}             # beam shader uniforms
-        self._dp = {}             # depth shader uniforms
+        self._beam_uniforms = {}             # beam shader uniforms
+        self._depth_uniforms = {}             # depth shader uniforms
 
         # Shadow map GPU resources
         self._shadow_fbo = None
@@ -123,6 +124,16 @@ class Stage3DWidget(QOpenGLWidget):
         self._fps_last_time = time.time()
         self._fps_display = 0.0
 
+        # x y U V
+        # TODO create VBO
+        self._quad_verticies = np.array([
+            -1.0, -1.0, 0.0, 0.0,
+            1.0, -1.0, 1.0, 0.0,
+            1.0, 1.0, 1.0, 1.0,
+            -1.0, 1.0, 0.0, 1.0
+        ], dtype=np.float32)
+        self._quad_vertex_indicies = np.array([0, 1, 2, 2, 3, 0], dtype=np.int32)
+
     # OpenGL initialization
 
     @override
@@ -154,6 +165,14 @@ class Stage3DWidget(QOpenGLWidget):
         except RuntimeError as e:
             logger.error("Depth shader: %s", e)
 
+        try:
+            self._lense_light_program = load_and_link_shader_from_files(
+                resource_path(os.path.join("resources", "shaders", "stage_lense.vert")),
+                resource_path(os.path.join("resources", "shaders", "stage_lense.frag"))
+            )
+        except RuntimeError as e:
+            logger.error("Lense shader: %s", e)
+
         # Cache uniform locations for each program
 
         # Scene shader
@@ -161,7 +180,7 @@ class Stage3DWidget(QOpenGLWidget):
         for name in ("projection", "view", "model", "viewPos", "baseColor",
                       "ambientLevel", "numLights", "numShadowLights", "shadowMap",
                       "highlightMix", "highlightColor"):
-            self._sc[name] = gl.glGetUniformLocation(sp, name)
+            self._scene_uniforms[name] = gl.glGetUniformLocation(sp, name)
 
         # Per-light uniforms (spotlight array)
         self._sc_light_locs = []
@@ -184,13 +203,13 @@ class Stage3DWidget(QOpenGLWidget):
             for name in ("projection", "view", "model", "beamColor",
                          "beamLightSpaceMatrix", "shadowMap", "beamShadowLayer",
                          "hasShadow", "beamLightPos"):
-                self._bm[name] = gl.glGetUniformLocation(bp, name)
+                self._beam_uniforms[name] = gl.glGetUniformLocation(bp, name)
 
         # Depth shader
         dp = self._depth_program
         if dp:
-            self._dp["lightSpaceMatrix"] = gl.glGetUniformLocation(dp, "lightSpaceMatrix")
-            self._dp["model"] = gl.glGetUniformLocation(dp, "model")
+            self._depth_uniforms["lightSpaceMatrix"] = gl.glGetUniformLocation(dp, "lightSpaceMatrix")
+            self._depth_uniforms["model"] = gl.glGetUniformLocation(dp, "model")
 
         # Create shadow map resources
         self._init_shadow_map_resources()
@@ -283,7 +302,7 @@ class Stage3DWidget(QOpenGLWidget):
         view_data = view.copyDataTo()
 
         spotlights, beam_list = self._collect_lights_and_beams()
-        # lense_lights = self._collect_lense_lights()  # TODO
+        lense_lights = self._collect_lense_lights()
 
         # PASS 0: Shadow maps
         light_space_matrices = self._render_shadow_maps(spotlights)
@@ -294,18 +313,20 @@ class Stage3DWidget(QOpenGLWidget):
         gl.glViewport(0, 0, self.width(), self.height())
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 
+        # PASS 1.1: lense_lights
+        self._render_lense_lights(lense_lights)
+
         # PASS 1: Scene objects (Phong + spotlights + shadows)
         gl.glUseProgram(self._scene_program)
-        gl.glUniformMatrix4fv(self._sc["projection"], 1, gl.GL_TRUE, proj_data)
-        gl.glUniformMatrix4fv(self._sc["view"], 1, gl.GL_TRUE, view_data)
+        gl.glUniformMatrix4fv(self._scene_uniforms["projection"], 1, gl.GL_TRUE, proj_data)
+        gl.glUniformMatrix4fv(self._scene_uniforms["view"], 1, gl.GL_TRUE, view_data)
         cam = self._camera_pos
-        gl.glUniform3f(self._sc["viewPos"], cam.x(), cam.y(), cam.z())
-        gl.glUniform1f(self._sc["ambientLevel"], 0.09)
-        # TODO render lense_lights here
+        gl.glUniform3f(self._scene_uniforms["viewPos"], cam.x(), cam.y(), cam.z())
+        gl.glUniform1f(self._scene_uniforms["ambientLevel"], 0.09)
 
         # Upload spotlight data to shader
         num_lights = min(len(spotlights), MAX_SPOT_LIGHTS)
-        gl.glUniform1i(self._sc["numLights"], num_lights)
+        gl.glUniform1i(self._scene_uniforms["numLights"], num_lights)
         for i in range(num_lights):
             sl = spotlights[i]
             locs = self._sc_light_locs[i]
@@ -317,7 +338,7 @@ class Stage3DWidget(QOpenGLWidget):
 
         # Upload shadow data
         num_shadow = min(len(light_space_matrices), MAX_SHADOW_MAPS)
-        gl.glUniform1i(self._sc["numShadowLights"], num_shadow)
+        gl.glUniform1i(self._scene_uniforms["numShadowLights"], num_shadow)
         for i, lsm in enumerate(light_space_matrices):
             gl.glUniformMatrix4fv(self._sc_lsm_locs[i], 1, gl.GL_TRUE, lsm.copyDataTo())
 
@@ -325,26 +346,26 @@ class Stage3DWidget(QOpenGLWidget):
         gl.glActiveTexture(gl.GL_TEXTURE0)
         if self._shadow_tex is not None:
             gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, self._shadow_tex)
-        gl.glUniform1i(self._sc["shadowMap"], 0)
+        gl.glUniform1i(self._scene_uniforms["shadowMap"], 0)
 
         # Draw ground plane
         if self._ground_plane:
-            gl.glUniformMatrix4fv(self._sc["model"], 1, gl.GL_TRUE, QtGui.QMatrix4x4().copyDataTo())
-            gl.glUniform3f(self._sc["baseColor"], 0.15, 0.15, 0.15)
-            gl.glUniform1f(self._sc["highlightMix"], 0.0)
+            gl.glUniformMatrix4fv(self._scene_uniforms["model"], 1, gl.GL_TRUE, QtGui.QMatrix4x4().copyDataTo())
+            gl.glUniform3f(self._scene_uniforms["baseColor"], 0.15, 0.15, 0.15)
+            gl.glUniform1f(self._scene_uniforms["highlightMix"], 0.0)
             gl.glBindVertexArray(self._ground_plane.vao)
             gl.glDrawElements(gl.GL_TRIANGLES, self._ground_plane.index_count, gl.GL_UNSIGNED_INT, None)
 
         # Draw stage objects with selection highlighting
         hl_color = (1.0, 0.55, 0.1) if self._highlight_is_multi else (1.0, 0.95, 0.15)
         # warm orange for multi/group else neon yellow for single
-        gl.glUniform3f(self._sc["highlightColor"], *hl_color)
+        gl.glUniform3f(self._scene_uniforms["highlightColor"], *hl_color)
 
         for idx, obj in enumerate(self._stage_config.objects):
             is_selected = (obj.id in self._selected_object_ids)
             # Alternate object colors for visual distinction
             color = (0.50, 0.50, 0.55) if idx % 2 == 0 else (0.45, 0.45, 0.50)
-            gl.glUniform1f(self._sc["highlightMix"], 1.0 if is_selected else 0.0)
+            gl.glUniform1f(self._scene_uniforms["highlightMix"], 1.0 if is_selected else 0.0)
             self._draw_stage_object(obj, color)
 
         gl.glBindVertexArray(0)
@@ -398,7 +419,7 @@ class Stage3DWidget(QOpenGLWidget):
             )
             gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
-            gl.glUniformMatrix4fv(self._dp["lightSpaceMatrix"], 1, gl.GL_TRUE, lsm.copyDataTo())
+            gl.glUniformMatrix4fv(self._depth_uniforms["lightSpaceMatrix"], 1, gl.GL_TRUE, lsm.copyDataTo())
             self._draw_scene_depth_only()
 
         gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
@@ -417,9 +438,9 @@ class Stage3DWidget(QOpenGLWidget):
 
                 if entry.model_path in self._gltf_models:
                     self._traverse_gltf(entry.model_path, model, obj,
-                                        model_loc=self._dp["model"])
+                                        model_loc=self._depth_uniforms["model"])
                 elif entry.model_path in self._models:
-                    gl.glUniformMatrix4fv(self._dp["model"], 1, gl.GL_TRUE, model.copyDataTo())
+                    gl.glUniformMatrix4fv(self._depth_uniforms["model"], 1, gl.GL_TRUE, model.copyDataTo())
                     m = self._models[entry.model_path]
                     gl.glBindVertexArray(m.vao)
                     gl.glDrawElements(gl.GL_TRIANGLES, m.index_count, gl.GL_UNSIGNED_INT, None)
@@ -471,7 +492,7 @@ class Stage3DWidget(QOpenGLWidget):
     def _draw_stage_object(self, obj: StageObject, color: tuple[float, float, float]) -> None:
         """Draw a single stage object with the scene shader."""
         base = build_base_model_matrix(obj)
-        gl.glUniform3f(self._sc["baseColor"], color[0], color[1], color[2])
+        gl.glUniform3f(self._scene_uniforms["baseColor"], color[0], color[1], color[2])
 
         for entry in getattr(obj, "get_model_entries", list)():
             model = QtGui.QMatrix4x4(base)
@@ -479,10 +500,10 @@ class Stage3DWidget(QOpenGLWidget):
 
             if entry.model_path in self._gltf_models:
                 self._traverse_gltf(entry.model_path, model, obj,
-                                    model_loc=self._sc["model"],
-                                    color=color, color_loc=self._sc["baseColor"])
+                                    model_loc=self._scene_uniforms["model"],
+                                    color=color, color_loc=self._scene_uniforms["baseColor"])
             elif entry.model_path in self._models:
-                gl.glUniformMatrix4fv(self._sc["model"], 1, gl.GL_TRUE, model.copyDataTo())
+                gl.glUniformMatrix4fv(self._scene_uniforms["model"], 1, gl.GL_TRUE, model.copyDataTo())
                 m = self._models[entry.model_path]
                 gl.glBindVertexArray(m.vao)
                 gl.glDrawElements(gl.GL_TRIANGLES, m.index_count, gl.GL_UNSIGNED_INT, None)
@@ -501,15 +522,15 @@ class Stage3DWidget(QOpenGLWidget):
         proper elliptical intersection where the cone meets the ground.
         """
         gl.glUseProgram(self._beam_program)
-        gl.glUniformMatrix4fv(self._bm["projection"], 1, gl.GL_TRUE, proj_data)
-        gl.glUniformMatrix4fv(self._bm["view"], 1, gl.GL_TRUE, view_data)
+        gl.glUniformMatrix4fv(self._beam_uniforms["projection"], 1, gl.GL_TRUE, proj_data)
+        gl.glUniformMatrix4fv(self._beam_uniforms["view"], 1, gl.GL_TRUE, view_data)
 
         # Bind shadow map to texture unit 1 (unit 0 is used by the scene pass)
         has_shadow = (self._shadow_tex is not None and len(light_space_matrices) > 0)
         if has_shadow:
             gl.glActiveTexture(gl.GL_TEXTURE1)
             gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, self._shadow_tex)
-            gl.glUniform1i(self._bm["shadowMap"], 1)
+            gl.glUniform1i(self._beam_uniforms["shadowMap"], 1)
 
         # Enable additive blending and disable backface culling for cones
         gl.glEnable(gl.GL_BLEND)
@@ -534,22 +555,22 @@ class Stage3DWidget(QOpenGLWidget):
             actual_radius = float(math.tan(half_angle_rad) * actual_length)
 
             mat = build_cone_matrix(origin, direction, actual_length, actual_radius)
-            gl.glUniformMatrix4fv(self._bm["model"], 1, gl.GL_TRUE, mat.copyDataTo())
-            gl.glUniform3f(self._bm["beamColor"], color[0], color[1], color[2])
+            gl.glUniformMatrix4fv(self._beam_uniforms["model"], 1, gl.GL_TRUE, mat.copyDataTo())
+            gl.glUniform3f(self._beam_uniforms["beamColor"], color[0], color[1], color[2])
 
             # Upload per-beam shadow data
             shadow_layer = beam_idx
             if has_shadow and shadow_layer < len(light_space_matrices):
-                gl.glUniform1i(self._bm["hasShadow"], 1)
-                gl.glUniform1i(self._bm["beamShadowLayer"], shadow_layer)
+                gl.glUniform1i(self._beam_uniforms["hasShadow"], 1)
+                gl.glUniform1i(self._beam_uniforms["beamShadowLayer"], shadow_layer)
                 gl.glUniformMatrix4fv(
-                    self._bm["beamLightSpaceMatrix"], 1, gl.GL_TRUE,
+                    self._beam_uniforms["beamLightSpaceMatrix"], 1, gl.GL_TRUE,
                     light_space_matrices[shadow_layer].copyDataTo())
             else:
-                gl.glUniform1i(self._bm["hasShadow"], 0)
+                gl.glUniform1i(self._beam_uniforms["hasShadow"], 0)
 
             # Light origin for the volumetric shadow ray-march.
-            gl.glUniform3f(self._bm["beamLightPos"],
+            gl.glUniform3f(self._beam_uniforms["beamLightPos"],
                            origin.x(), origin.y(), origin.z())
 
             gl.glDrawElements(gl.GL_TRIANGLES, self._beam_cone.index_count, gl.GL_UNSIGNED_INT, None)
@@ -564,6 +585,17 @@ class Stage3DWidget(QOpenGLWidget):
             gl.glActiveTexture(gl.GL_TEXTURE1)
             gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, 0)
             gl.glActiveTexture(gl.GL_TEXTURE0)
+        gl.glUseProgram(0)
+
+    def _render_lense_lights(self, light_data: list[np.ndarray]) -> None:
+        gl.glUseProgram(self._lense_light_program)
+        gl.glEnable(gl.GL_BLEND)
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+        # TODO upload quad
+
+        # TODO for each light in array: upload light data to GPU and render it
+        gl.glDisable(gl.GL_BLEND)
+        gl.glUseProgram(0)
 
     # Light and beam collection
 
@@ -1145,6 +1177,8 @@ class Stage3DWidget(QOpenGLWidget):
             model.unload()
         for model in self._gltf_models.values():
             model.unload()
+        delete_shader(self._lense_light_program)
+        self._lense_light_program = 0
         delete_shader(self._beam_program)
         self._beam_program = 0
         delete_shader(self._depth_program)
