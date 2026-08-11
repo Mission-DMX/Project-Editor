@@ -124,15 +124,8 @@ class Stage3DWidget(QOpenGLWidget):
         self._fps_last_time = time.time()
         self._fps_display = 0.0
 
-        # x y U V
-        # TODO create VBO
-        self._quad_verticies = np.array([
-            -1.0, -1.0, 0.0, 0.0,
-            1.0, -1.0, 1.0, 0.0,
-            1.0, 1.0, 1.0, 1.0,
-            -1.0, 1.0, 0.0, 1.0
-        ], dtype=np.float32)
-        self._quad_vertex_indicies = np.array([0, 1, 2, 2, 3, 0], dtype=np.int32)
+        # base quad
+        self._lense_light_quad_model: Model3D | None = None
 
     # OpenGL initialization
 
@@ -221,6 +214,18 @@ class Stage3DWidget(QOpenGLWidget):
         # Load 3D models for all existing stage objects
         for obj in self._stage_config.objects:
             self._ensure_models_loaded(obj)
+
+        # x y U V
+        self._lense_light_quad_model = Model3D.upload_vao(np.array([
+                -1.0, -1.0, 0.0, 0.0,
+                1.0, -1.0, 1.0, 0.0,
+                1.0, 1.0, 1.0, 1.0,
+                -1.0, 1.0, 0.0, 1.0
+            ], dtype=np.float32), np.array([0, 1, 2, 2, 3, 0], dtype=np.int32), self.context(),
+            stride=4, vertex_size=2, vertex_location_index=4, uv_location_index=5
+        )
+        # TODO create static lense lights buffer and bind it, as shown in the second part of tutorial step 6
+
         self.context().aboutToBeDestroyed.connect(self._clean_up_opengl_context)
         logger.info("OpenGL init done. %d objects.", len(self._stage_config.objects))
         self._gl_initialized = True
@@ -1177,6 +1182,8 @@ class Stage3DWidget(QOpenGLWidget):
             model.unload()
         for model in self._gltf_models.values():
             model.unload()
+        if self._lense_light_quad_model is not None:
+            self._lense_light_quad_model.unload()
         delete_shader(self._lense_light_program)
         self._lense_light_program = 0
         delete_shader(self._beam_program)
