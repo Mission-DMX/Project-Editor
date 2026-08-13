@@ -7,6 +7,7 @@ beam cones) and handles camera, picking and the name-label overlay.
 
 from __future__ import annotations
 
+import ctypes
 import math
 import os
 import time
@@ -126,11 +127,27 @@ class Stage3DWidget(QOpenGLWidget):
 
         # base quad
         self._lense_light_quad_model: Model3D | None = None
+        self._lense_light_data: np.ndarray = np.zeros(16, dtype=np.float32)
+        self._lense_shader_view_uniform_location: gl.GL_INT = 0
+        self._lense_shader_proj_uniform_location: gl.GL_INT = 0
 
     # OpenGL initialization
 
     @override
     def initializeGL(self) -> None:
+        fmt = self.context().format()
+        logger.error(
+            "Initializing Visualizer OpenGL context with version %d.%d, profile=%s, options=%s\nGL_VENDOR: %s\n"
+            "GL_RENDERER: %s\nGL_VERSION: %s",
+            fmt.majorVersion(),
+            fmt.minorVersion(),
+            fmt.profile(),
+            fmt.options(),
+            gl.glGetString(gl.GL_VENDOR).decode(),
+            gl.glGetString(gl.GL_RENDERER).decode(),
+            gl.glGetString(gl.GL_VERSION).decode()
+        )
+
         gl.glClearColor(0.02, 0.02, 0.03, 1.0)
         gl.glEnable(gl.GL_DEPTH_TEST)
         gl.glEnable(gl.GL_CULL_FACE)
@@ -224,7 +241,31 @@ class Stage3DWidget(QOpenGLWidget):
             ], dtype=np.float32), np.array([0, 1, 2, 2, 3, 0], dtype=np.int32), self.context(),
             stride=4, vertex_size=2, vertex_location_index=4, uv_location_index=5
         )
-        # TODO create static lense lights buffer and bind it, as shown in the second part of tutorial step 6
+        gl.glBindVertexArray(self._lense_light_quad_model.vao)
+
+        # Position
+        gl.glEnableVertexAttribArray(0)
+        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(0))
+        gl.glVertexAttribDivisor(0, 1)
+
+        # Direction
+        gl.glEnableVertexAttribArray(1)
+        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(4*4))
+        gl.glVertexAttribDivisor(1, 1)
+
+        # Size
+        gl.glEnableVertexAttribArray(2)
+        gl.glVertexAttribPointer(2, 1, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(8*4))
+        gl.glVertexAttribDivisor(2, 1)
+
+        # Color
+        gl.glEnableVertexAttribArray(3)
+        gl.glVertexAttribPointer(3, 4, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(12*4))
+        gl.glVertexAttribDivisor(3, 1)
+        self._lense_shader_view_uniform_location = gl.glGetUniformLocation(self._lense_light_program, "uView")
+        self._lense_shader_proj_uniform_location = gl.glGetUniformLocation(self._lense_light_program, "uProj")
+
+        gl.glBindVertexArray(0)
 
         self.context().aboutToBeDestroyed.connect(self._clean_up_opengl_context)
         logger.info("OpenGL init done. %d objects.", len(self._stage_config.objects))
@@ -303,11 +344,11 @@ class Stage3DWidget(QOpenGLWidget):
         view = QtGui.QMatrix4x4()
         view.lookAt(self._camera_pos, self._camera_target, self._camera_up)
 
-        proj_data = self._projection.copyDataTo()
-        view_data = view.copyDataTo()
+        proj_data = np.array(self._projection.copyDataTo(), dtype=np.float32)
+        view_data = np.array(view.copyDataTo(), dtype=np.float32)
 
         spotlights, beam_list = self._collect_lights_and_beams()
-        lense_lights = self._collect_lense_lights()
+        lense_light_count = self._collect_lense_lights()
 
         # PASS 0: Shadow maps
         light_space_matrices = self._render_shadow_maps(spotlights)
@@ -319,7 +360,7 @@ class Stage3DWidget(QOpenGLWidget):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 
         # PASS 1.1: lense_lights
-        self._render_lense_lights(lense_lights)
+        self._render_lense_lights(lense_light_count, proj_data, view_data)
 
         # PASS 1: Scene objects (Phong + spotlights + shadows)
         gl.glUseProgram(self._scene_program)
@@ -592,34 +633,46 @@ class Stage3DWidget(QOpenGLWidget):
             gl.glActiveTexture(gl.GL_TEXTURE0)
         gl.glUseProgram(0)
 
-    def _render_lense_lights(self, light_data: list[np.ndarray]) -> None:
+    def _render_lense_lights(self, light_data_count: int, proj_data: Sequence[float],
+                             view_data: Sequence[float]) -> None:
         gl.glUseProgram(self._lense_light_program)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-        # TODO upload quad
-
-        # TODO for each light in array: upload light data to GPU and render it
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._lense_light_quad_model.vbo)
+        gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, self._lense_light_data.nbytes, self._lense_light_data)
+        gl.glUniformMatrix4fv(self._lense_shader_proj_uniform_location, 1, gl.GL_FALSE, proj_data)
+        gl.glUniformMatrix4fv(self._lense_shader_view_uniform_location, 1, gl.GL_FALSE, view_data)
+        gl.glBindVertexArray(self._lense_light_quad_model.vao)
+        gl.glDrawElementsInstanced(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT, ctypes.c_void_p(0), light_data_count)
+        gl.glBindVertexArray(0)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
         gl.glDisable(gl.GL_BLEND)
         gl.glUseProgram(0)
 
     # Light and beam collection
 
-    def _collect_lense_lights(self) -> list[np.ndarray]:
+    def _collect_lense_lights(self) -> int:
         """Compute the positions of lense lights.
 
-        Returns:
+        Updates:
             List of lense lights. Each tuple contains the effective position (3), effective rotation (3), size (1) and
             RGB color in range 0 to 1 (3).
 
+        Returns:
+            Number of lense lights.
+
         """
-        lense_lights = []
+        lense_lights = 0
         stage_objects: list[StageObject] = getattr(self._stage_config, "objects", [])
         for obj in stage_objects:
             ll_definition: tuple[QtGui.QVector3D, QtGui.QVector3D, float,
             tuple[int, int, int], str, str, str] | None = getattr(obj, "lense_colors", None)
             if ll_definition is None:
                 continue
-            arr = np.zeros(10, dtype=np.float32)
+            arr = self._lense_light_data
+            if arr.shape[0] < (lense_lights + 1) * 16:
+                self._lense_light_data = np.resize(arr, (lense_lights + 1) * 16)
+                arr = self._lense_light_data
             position_offset_from_base_node: QtGui.QVector3D = ll_definition[0]
             rotation_offset_from_base_node: QtGui.QVector3D = ll_definition[1]
             size: float = ll_definition[2]
@@ -632,17 +685,18 @@ class Stage3DWidget(QOpenGLWidget):
             )
             position += position_offset_from_base_node
             direction += rotation_offset_from_base_node
-            arr[0] = position.x()
-            arr[1] = position.y()
-            arr[2] = position.z()
-            arr[3] = direction.x()
-            arr[4] = direction.y()
-            arr[5] = direction.z()
-            arr[6] = size
-            arr[7] = color[0] / 255.0
-            arr[8] = color[1] / 255.0
-            arr[9] = color[2] / 255.0
-            lense_lights.append(arr)
+            arr[16*lense_lights + 0] = position.x()
+            arr[16*lense_lights + 1] = position.y()
+            arr[16*lense_lights + 2] = position.z()
+            arr[16*lense_lights + 4] = direction.x()
+            arr[16*lense_lights + 5] = direction.y()
+            arr[16*lense_lights + 6] = direction.z()
+            arr[16*lense_lights + 8] = size
+            arr[16*lense_lights + 12] = color[0] / 255.0  # r
+            arr[16*lense_lights + 13] = color[1] / 255.0  # g
+            arr[16*lense_lights + 14] = color[2] / 255.0  # b
+            arr[16*lense_lights + 15] = 1.0  # a
+            lense_lights += 1
         return lense_lights
 
     def _collect_lights_and_beams(self) \

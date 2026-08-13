@@ -16,8 +16,9 @@ out vec3 vColor;       // colour passed through
 out float vRadius;     // radius (world units)
 out vec3 vWorldPos;    // world position of the fragment (for depth, lighting, etc.)
 
-// ---------- uniform ----------
-uniform mat4 uViewProj;   // view * projection matrix (camera)
+// ---------- camera uniforms ----------
+uniform mat4 uView;
+uniform mat4 uProj;
 
 void main()
 {
@@ -44,5 +45,5 @@ void main()
     vWorldPos = worldPos;
 
     // ---- Final clip‑space position ----
-    gl_Position = uViewProj * vec4(worldPos, 1.0);
+    gl_Position = uProj * uView * vec4(worldPos, 1.0);
 }
