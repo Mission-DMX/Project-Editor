@@ -234,17 +234,20 @@ class Stage3DWidget(QOpenGLWidget):
         for obj in self._stage_config.objects:
             self._ensure_models_loaded(obj)
 
-        # x y U V
+        # x y U V (stride is 4 floats = 16 bytes per vertex)
         self._lense_light_quad_model = Model3D.upload_vao(np.array([
                 -1.0, -1.0, 0.0, 0.0,
                 1.0, -1.0, 1.0, 0.0,
                 1.0, 1.0, 1.0, 1.0,
                 -1.0, 1.0, 0.0, 1.0
             ], dtype=np.float32), np.array([0, 1, 2, 2, 3, 0], dtype=np.int32), self.context(),
-            stride=4, vertex_size=2, vertex_location_index=4, uv_location_index=5
+            stride=16, vertex_size=2, vertex_location_index=4, uv_location_index=5
         )
+        # Separate VBO for per-instance data; upload_vao already bound quad
+        # attributes 4/5 to the quad's own VBO.
+        self._lense_light_instance_vbo = gl.glGenBuffers(1)
         gl.glBindVertexArray(self._lense_light_quad_model.vao)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._lense_light_quad_model.vbo)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._lense_light_instance_vbo)
 
         # 0 Position
         gl.glEnableVertexAttribArray(0)
@@ -364,9 +367,6 @@ class Stage3DWidget(QOpenGLWidget):
         gl.glViewport(0, 0, self.width(), self.height())
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
 
-        # PASS 1.1: lense_lights
-        self._render_lense_lights(lense_light_count, proj_data, view_data)
-
         # PASS 1: Scene objects (Phong + spotlights + shadows)
         gl.glUseProgram(self._scene_program)
         gl.glUniformMatrix4fv(self._scene_uniforms["projection"], 1, gl.GL_TRUE, proj_data)
@@ -421,6 +421,10 @@ class Stage3DWidget(QOpenGLWidget):
 
         gl.glBindVertexArray(0)
         gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, 0)
+
+        # PASS 1.5: Lense lights (drawn after scene so depth-test lets them sit
+        # in front of the head geometry rather than being clobbered by it).
+        self._render_lense_lights(lense_light_count, proj_data, view_data)
 
         # PASS 2: Volumetric beam cones
         if beam_list and self._beam_program and self._beam_cone:
@@ -640,22 +644,32 @@ class Stage3DWidget(QOpenGLWidget):
 
     def _render_lense_lights(self, light_data_count: int, proj_data: Sequence[float],
                              view_data: Sequence[float]) -> None:
+        if light_data_count <= 0 or not self._lense_light_program or self._lense_light_quad_model is None:
+            return
         gl.glUseProgram(self._lense_light_program)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._lense_light_quad_model.vbo)
+        # Discs are 2D quads oriented arbitrarily in world space; they must be
+        # visible from both sides and must not occlude the scene behind them.
+        gl.glDisable(gl.GL_CULL_FACE)
+        gl.glDepthMask(gl.GL_FALSE)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._lense_light_instance_vbo)
         buffer_size = self._lense_light_data.nbytes
         if buffer_size != self._lense_light_data_last_buffer_size:
             gl.glBufferData(gl.GL_ARRAY_BUFFER, buffer_size, self._lense_light_data, gl.GL_DYNAMIC_DRAW)
             self._lense_light_data_last_buffer_size = buffer_size
         else:
             gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, buffer_size, self._lense_light_data)
-        gl.glUniformMatrix4fv(self._lense_shader_proj_uniform_location, 1, gl.GL_FALSE, proj_data)
-        gl.glUniformMatrix4fv(self._lense_shader_view_uniform_location, 1, gl.GL_FALSE, view_data)
+        # QMatrix4x4.copyDataTo() returns row-major; GLSL is column-major, so
+        # transpose on upload (same convention used by the other shader passes).
+        gl.glUniformMatrix4fv(self._lense_shader_proj_uniform_location, 1, gl.GL_TRUE, proj_data)
+        gl.glUniformMatrix4fv(self._lense_shader_view_uniform_location, 1, gl.GL_TRUE, view_data)
         gl.glBindVertexArray(self._lense_light_quad_model.vao)
         gl.glDrawElementsInstanced(gl.GL_TRIANGLES, 6, gl.GL_UNSIGNED_INT, ctypes.c_void_p(0), light_data_count)
         gl.glBindVertexArray(0)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
+        gl.glDepthMask(gl.GL_TRUE)
+        gl.glEnable(gl.GL_CULL_FACE)
         gl.glDisable(gl.GL_BLEND)
         gl.glUseProgram(0)
 
@@ -694,8 +708,29 @@ class Stage3DWidget(QOpenGLWidget):
                     ll_definition[4],  # origin node name
                     ll_definition[5]   # name of movable node
                 )
-                position += position_offset_from_base_node
-                direction += rotation_offset_from_base_node
+                # Rotation offset: Euler angles (deg, pitch/yaw/roll) rotating the unit beam direction.
+                rotation_quat = QtGui.QQuaternion.fromEulerAngles(
+                    rotation_offset_from_base_node.x(),
+                    rotation_offset_from_base_node.y(),
+                    rotation_offset_from_base_node.z(),
+                )
+                direction = rotation_quat.rotatedVector(direction)
+                # Position offset: components are (tangent, bitangent, along-beam) in
+                # the same beam-local basis the vertex shader builds. z therefore means
+                # "distance past the lens surface along the beam."
+                fwd = QtGui.QVector3D(direction)
+                if fwd.length() > 1e-6:
+                    fwd.normalize()
+                world_up = (QtGui.QVector3D(0.0, 0.0, 1.0)
+                            if abs(fwd.z()) < 0.999
+                            else QtGui.QVector3D(0.0, 1.0, 0.0))
+                tangent = QtGui.QVector3D.crossProduct(world_up, fwd)
+                if tangent.length() > 1e-6:
+                    tangent.normalize()
+                bitangent = QtGui.QVector3D.crossProduct(fwd, tangent)
+                position += (tangent * position_offset_from_base_node.x()
+                             + bitangent * position_offset_from_base_node.y()
+                             + fwd * position_offset_from_base_node.z())
                 arr[16*lense_lights_count + 0] = position.x()
                 arr[16*lense_lights_count + 1] = position.y()
                 arr[16*lense_lights_count + 2] = position.z()
@@ -1249,6 +1284,9 @@ class Stage3DWidget(QOpenGLWidget):
             model.unload()
         if self._lense_light_quad_model is not None:
             self._lense_light_quad_model.unload()
+        if self._lense_light_instance_vbo:
+            gl.glDeleteBuffers(1, np.array([self._lense_light_instance_vbo], dtype=np.uint32))
+            self._lense_light_instance_vbo = 0
         delete_shader(self._lense_light_program)
         self._lense_light_program = 0
         delete_shader(self._beam_program)

@@ -53,9 +53,11 @@ class MovingHead(StageObject):
         self.beam_color = (int(r), int(g), int(b))
         self.dimmer = max(0.0, min(1.0, float(dimmer)))
         self.lense_colors = [(
-            QVector3D(1,1,1),  # position
-            QVector3D(1,1,1),  # rotation
-            10.0,  # size
+            # position offset in beam-local basis (tangent, bitangent, along-beam);
+            # z pushes the disc forward past the lens surface.
+            QVector3D(0.0, 0.0, 0.25),
+            QVector3D(0.0, 0.0, 0.0),  # rotation offset (Euler degrees) applied to beam direction
+            2.0,  # size
             (255, 255, 255),  # current color
             "BeamOrigin",  # origin node name
             "Cylinder.018")  # name of movable node

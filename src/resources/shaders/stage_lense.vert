@@ -23,10 +23,13 @@ uniform mat4 uProj;
 void main()
 {
     // ---- Build a tangent‑bitangent basis from the normal ----
+    // Normalize defensively; a non-unit normal would stretch the disc into an
+    // ellipse via the bitangent below.
+    vec3 n = normalize(aNormal);
     // Choose an arbitrary vector that is not parallel to the normal.
-    vec3 up = abs(aNormal.z) < 0.999 ? vec3(0,0,1) : vec3(0,1,0);
-    vec3 tangent   = normalize(cross(up, aNormal));
-    vec3 bitangent = cross(aNormal, tangent); // already normalized
+    vec3 up = abs(n.z) < 0.999 ? vec3(0,0,1) : vec3(0,1,0);
+    vec3 tangent   = normalize(cross(up, n));
+    vec3 bitangent = cross(n, tangent); // unit because n and tangent are orthonormal
 
     // ---- Scale the quad to the disc radius ----
     // aQuadOffset is in [-1,1] range, so we multiply by 0.5 to get [-0.5,0.5]

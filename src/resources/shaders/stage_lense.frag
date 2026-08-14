@@ -44,5 +44,4 @@ void main()
     // Combine – we keep the alpha of the base disc, but we also output a bright
     // additive component that will be blended later.
     fragColor = vec4(base + glow, alpha);
-    fragColor = vec4(1.0); // TODO FIXME
 }
