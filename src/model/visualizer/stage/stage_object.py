@@ -19,7 +19,7 @@ class LenseLight:
                  size: float = 1.0,
                  color: tuple[int, int, int] = (255, 255, 255),
                  origin_node: str = "", tilt_node: str = "") -> None:
-        """Initialize new light,"""
+        """Initialize new light."""
         self.position: QVector3D = QVector3D(0.0, 0.0, 0.0) if position is None else position
         self.rotation: QVector3D = QVector3D(0.0, 0.0, 0.0) if rotation is None else rotation
         self.size: float = size
