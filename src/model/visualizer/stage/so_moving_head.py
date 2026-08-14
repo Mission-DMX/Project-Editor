@@ -7,6 +7,7 @@ from model.visualizer.stage.model_entries import ModelEntry
 from model.visualizer.stage.paths import DEFAULT_MODEL_PATHS
 from model.visualizer.stage.stage_object import StageObject
 
+from PySide6.QtGui import QVector3D
 
 class MovingHead(StageObject):
     """Moving head with pan/tilt control and colored beam.
@@ -51,6 +52,14 @@ class MovingHead(StageObject):
         r, g, b = beam_color
         self.beam_color = (int(r), int(g), int(b))
         self.dimmer = max(0.0, min(1.0, float(dimmer)))
+        self.lense_colors = [(
+            QVector3D(1,1,1),  # position
+            QVector3D(1,1,1),  # rotation
+            10.0,  # size
+            (255, 255, 255),  # current color
+            "BeamOrigin",  # origin node name
+            "Cylinder.018")  # name of movable node
+        ]
 
     @override
     def get_type(self) -> str:

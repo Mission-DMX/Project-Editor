@@ -127,7 +127,9 @@ class Stage3DWidget(QOpenGLWidget):
 
         # base quad
         self._lense_light_quad_model: Model3D | None = None
+        self._lense_light_instance_vbo: int = 0
         self._lense_light_data: np.ndarray = np.zeros(16, dtype=np.float32)
+        self._lense_light_data_last_buffer_size: int = 0
         self._lense_shader_view_uniform_location: gl.GL_INT = 0
         self._lense_shader_proj_uniform_location: gl.GL_INT = 0
 
@@ -242,30 +244,33 @@ class Stage3DWidget(QOpenGLWidget):
             stride=4, vertex_size=2, vertex_location_index=4, uv_location_index=5
         )
         gl.glBindVertexArray(self._lense_light_quad_model.vao)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._lense_light_quad_model.vbo)
 
-        # Position
+        # 0 Position
         gl.glEnableVertexAttribArray(0)
         gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(0))
         gl.glVertexAttribDivisor(0, 1)
 
-        # Direction
+        # 1 Direction
         gl.glEnableVertexAttribArray(1)
         gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(4*4))
         gl.glVertexAttribDivisor(1, 1)
 
-        # Size
+        # 2 Size
         gl.glEnableVertexAttribArray(2)
         gl.glVertexAttribPointer(2, 1, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(8*4))
         gl.glVertexAttribDivisor(2, 1)
 
-        # Color
+        # 3 Color
         gl.glEnableVertexAttribArray(3)
         gl.glVertexAttribPointer(3, 4, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(12*4))
         gl.glVertexAttribDivisor(3, 1)
+
         self._lense_shader_view_uniform_location = gl.glGetUniformLocation(self._lense_light_program, "uView")
         self._lense_shader_proj_uniform_location = gl.glGetUniformLocation(self._lense_light_program, "uProj")
 
         gl.glBindVertexArray(0)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
         self.context().aboutToBeDestroyed.connect(self._clean_up_opengl_context)
         logger.info("OpenGL init done. %d objects.", len(self._stage_config.objects))
@@ -639,7 +644,12 @@ class Stage3DWidget(QOpenGLWidget):
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self._lense_light_quad_model.vbo)
-        gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, self._lense_light_data.nbytes, self._lense_light_data)
+        buffer_size = self._lense_light_data.nbytes
+        if buffer_size != self._lense_light_data_last_buffer_size:
+            gl.glBufferData(gl.GL_ARRAY_BUFFER, buffer_size, self._lense_light_data, gl.GL_DYNAMIC_DRAW)
+            self._lense_light_data_last_buffer_size = buffer_size
+        else:
+            gl.glBufferSubData(gl.GL_ARRAY_BUFFER, 0, buffer_size, self._lense_light_data)
         gl.glUniformMatrix4fv(self._lense_shader_proj_uniform_location, 1, gl.GL_FALSE, proj_data)
         gl.glUniformMatrix4fv(self._lense_shader_view_uniform_location, 1, gl.GL_FALSE, view_data)
         gl.glBindVertexArray(self._lense_light_quad_model.vao)
@@ -662,42 +672,43 @@ class Stage3DWidget(QOpenGLWidget):
             Number of lense lights.
 
         """
-        lense_lights = 0
+        lense_lights_count = 0
         stage_objects: list[StageObject] = getattr(self._stage_config, "objects", [])
+        arr = self._lense_light_data
         for obj in stage_objects:
-            ll_definition: tuple[QtGui.QVector3D, QtGui.QVector3D, float,
-            tuple[int, int, int], str, str, str] | None = getattr(obj, "lense_colors", None)
-            if ll_definition is None:
+            lense_lights: list[tuple[QtGui.QVector3D, QtGui.QVector3D, float,
+            tuple[int, int, int], str, str]] | None = getattr(obj, "lense_colors", None)
+            if lense_lights is None:
                 continue
-            arr = self._lense_light_data
-            if arr.shape[0] < (lense_lights + 1) * 16:
-                self._lense_light_data = np.resize(arr, (lense_lights + 1) * 16)
-                arr = self._lense_light_data
-            position_offset_from_base_node: QtGui.QVector3D = ll_definition[0]
-            rotation_offset_from_base_node: QtGui.QVector3D = ll_definition[1]
-            size: float = ll_definition[2]
-            color: tuple[int, int, int] = ll_definition[3]
-            position, direction = self._calculate_extension_translation_matrices(
-                obj,
-                ll_definition[4],  # model path
-                ll_definition[5],  # origin node name
-                ll_definition[6]   # name of movable node
-            )
-            position += position_offset_from_base_node
-            direction += rotation_offset_from_base_node
-            arr[16*lense_lights + 0] = position.x()
-            arr[16*lense_lights + 1] = position.y()
-            arr[16*lense_lights + 2] = position.z()
-            arr[16*lense_lights + 4] = direction.x()
-            arr[16*lense_lights + 5] = direction.y()
-            arr[16*lense_lights + 6] = direction.z()
-            arr[16*lense_lights + 8] = size
-            arr[16*lense_lights + 12] = color[0] / 255.0  # r
-            arr[16*lense_lights + 13] = color[1] / 255.0  # g
-            arr[16*lense_lights + 14] = color[2] / 255.0  # b
-            arr[16*lense_lights + 15] = 1.0  # a
-            lense_lights += 1
-        return lense_lights
+            for ll_definition in lense_lights:
+                if arr.shape[0] < (lense_lights_count + 1) * 16:
+                    self._lense_light_data = np.resize(arr, (lense_lights_count + 1) * 16)
+                    arr = self._lense_light_data
+                position_offset_from_base_node: QtGui.QVector3D = ll_definition[0]
+                rotation_offset_from_base_node: QtGui.QVector3D = ll_definition[1]
+                size: float = ll_definition[2]
+                color: tuple[int, int, int] = ll_definition[3]
+                position, direction = self._calculate_extension_translation_matrices(
+                    obj,
+                    obj.model_path,  # model path
+                    ll_definition[4],  # origin node name
+                    ll_definition[5]   # name of movable node
+                )
+                position += position_offset_from_base_node
+                direction += rotation_offset_from_base_node
+                arr[16*lense_lights_count + 0] = position.x()
+                arr[16*lense_lights_count + 1] = position.y()
+                arr[16*lense_lights_count + 2] = position.z()
+                arr[16*lense_lights_count + 4] = direction.x()
+                arr[16*lense_lights_count + 5] = direction.y()
+                arr[16*lense_lights_count + 6] = direction.z()
+                arr[16*lense_lights_count + 8] = size
+                arr[16*lense_lights_count + 12] = color[0] / 255.0  # r
+                arr[16*lense_lights_count + 13] = color[1] / 255.0  # g
+                arr[16*lense_lights_count + 14] = color[2] / 255.0  # b
+                arr[16*lense_lights_count + 15] = 1.0  # a
+                lense_lights_count += 1
+        return lense_lights_count
 
     def _collect_lights_and_beams(self) \
             -> tuple[list[SpotLightData],

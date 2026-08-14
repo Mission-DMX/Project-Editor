@@ -18,7 +18,7 @@ class StageObject:
      * `pan` and `tilt` (float) pan and tilt coordinates for movable part and beam
      * `beam_color` (tuple[int, int, int]) RGB color of beam (if present). Range 0 to 255
      * `dimmer` (float) brightness multiplier
-     * `lense_colors` (list[tuple[vec3[float], vec3[float], float, vec3[int], str, str, str]]) a list containing lense
+     * `lense_colors` (list[tuple[vec3[float], vec3[float], float, vec3[int], str, str]]) a list containing lense
        illumination descriptions (position, rotation, size, color(rgb 0-255)). For each entry a lense illumination
        will be drawn. Positions are relative to model base position as defined by the provided node (name,
        base_node_name and tilt_node_name). If the fixture does not have pan/tilt capabilities, the strings can be empty.
