@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from typing import Any, override
 
+from PySide6.QtGui import QVector3D
+
 from model.visualizer.stage.model_entries import ModelEntry
 from model.visualizer.stage.paths import DEFAULT_MODEL_PATHS
-from model.visualizer.stage.stage_object import StageObject
+from model.visualizer.stage.stage_object import LenseLight, StageObject
 
-from PySide6.QtGui import QVector3D
 
 class MovingHead(StageObject):
     """Moving head with pan/tilt control and colored beam.
@@ -52,7 +53,8 @@ class MovingHead(StageObject):
         r, g, b = beam_color
         self.beam_color = (int(r), int(g), int(b))
         self.dimmer = max(0.0, min(1.0, float(dimmer)))
-        self.lense_colors = [(
+        # TODO add from template based on segment count
+        self.lense_colors = [LenseLight(
             # position offset in beam-local basis (tangent, bitangent, along-beam);
             # z pushes the disc forward past the lens surface.
             QVector3D(0.0, 0.0, 0.25),

@@ -4,8 +4,28 @@ from __future__ import annotations
 
 from typing import Any
 
+from PySide6.QtGui import QVector3D
+
 from model.visualizer.stage.model_entries import ModelEntry
 from model.visualizer.stage.paths import DEFAULT_MODEL_PATHS
+
+
+class LenseLight:
+    """PoD class for lense light data."""
+
+    __slots__ = ["color", "origin_node_name", "position", "rotation", "size", "tilt_node_name"]
+    def __init__(self, position: QVector3D | None = None,
+                 rotation: QVector3D | None = None,
+                 size: float = 1.0,
+                 color: tuple[int, int, int] = (255, 255, 255),
+                 origin_node: str = "", tilt_node: str = "") -> None:
+        """Initialize new light,"""
+        self.position: QVector3D = QVector3D(0.0, 0.0, 0.0) if position is None else position
+        self.rotation: QVector3D = QVector3D(0.0, 0.0, 0.0) if rotation is None else rotation
+        self.size: float = size
+        self.color: tuple[int, int, int] = color
+        self.origin_node_name: str = origin_node
+        self.tilt_node_name: str = tilt_node
 
 
 class StageObject:

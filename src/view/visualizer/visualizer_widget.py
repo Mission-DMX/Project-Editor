@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from PySide6 import QtCore, QtWidgets
 
 from model.broadcaster import Broadcaster
-from model.visualizer.dmx.dmx_visualizer import MOVEMENT_ROLES, DmxVisualizer, auto_detect_mapping
+from model.visualizer.dmx.dmx_parser import MOVEMENT_ROLES, DmxParser, auto_detect_mapping
 from model.visualizer.stage.fixture_group import FixtureGroup
 from model.visualizer.stage.stage_config import (
     STAGE_DIR,
@@ -76,7 +76,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._gl_widget.fixture_clicked.connect(self._on_fixture_clicked)
         self._gl_widget.deselect_all_requested.connect(self._on_deselect_all)
 
-        self._dmx_vis = DmxVisualizer(
+        self._dmx_vis = DmxParser(
             self._stage_config,
             board_configuration=board_configuration,
             parent=self,

@@ -87,7 +87,7 @@ def auto_detect_mapping(channel_names: list[str],
     return mapping
 
 
-class DmxVisualizer(QtCore.QObject):
+class DmxParser(QtCore.QObject):
     """Drives the stage fixtures from incoming DMX frames."""
 
     fixtures_updated = QtCore.Signal()
@@ -227,7 +227,10 @@ class DmxVisualizer(QtCore.QObject):
         #    obj.dimmer = w / 255.0 if w > 0 else (1.0 if any_color else 0.0)
         if not self._has_movement_dimmer(obj) and any_color:
             obj.dimmer = 1.0
-        # TODO update lense colors
+        # TODO if multiple segments are present: apply them in order
+        if hasattr(obj, "lense_colors"):
+            for lense_light in obj.lense_colors:
+                lense_light.color = (r, g, b)
 
     def _has_movement_dimmer(self, obj: StageObject) -> bool:
         dc = obj.device_config

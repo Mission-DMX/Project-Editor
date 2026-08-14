@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from model.visualizer.dmx.dmx_visualizer import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
+from model.visualizer.dmx.dmx_parser import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
 from model.visualizer.stage.so_moving_head import MovingHead
 from view.visualizer.add_fixture_dialog import AddFixtureDialog, _fixture_label
 from view.visualizer.stage_group_name_dialog import GroupNameDialog

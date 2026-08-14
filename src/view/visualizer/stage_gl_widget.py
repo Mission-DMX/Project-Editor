@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QApplication, QWidget
 
     from model.visualizer.stage.stage_config import StageConfig, StageObject
+    from model.visualizer.stage.stage_object import LenseLight
 
 logger = getLogger(__name__)
 
@@ -690,23 +691,22 @@ class Stage3DWidget(QOpenGLWidget):
         stage_objects: list[StageObject] = getattr(self._stage_config, "objects", [])
         arr = self._lense_light_data
         for obj in stage_objects:
-            lense_lights: list[tuple[QtGui.QVector3D, QtGui.QVector3D, float,
-            tuple[int, int, int], str, str]] | None = getattr(obj, "lense_colors", None)
+            lense_lights: list[LenseLight] | None = getattr(obj, "lense_colors", None)
             if lense_lights is None:
                 continue
             for ll_definition in lense_lights:
                 if arr.shape[0] < (lense_lights_count + 1) * 16:
                     self._lense_light_data = np.resize(arr, (lense_lights_count + 1) * 16)
                     arr = self._lense_light_data
-                position_offset_from_base_node: QtGui.QVector3D = ll_definition[0]
-                rotation_offset_from_base_node: QtGui.QVector3D = ll_definition[1]
-                size: float = ll_definition[2]
-                color: tuple[int, int, int] = ll_definition[3]
+                position_offset_from_base_node: QtGui.QVector3D = ll_definition.position
+                rotation_offset_from_base_node: QtGui.QVector3D = ll_definition.rotation
+                size: float = ll_definition.size
+                color: tuple[int, int, int] = ll_definition.color
                 position, direction = self._calculate_extension_translation_matrices(
                     obj,
                     obj.model_path,  # model path
-                    ll_definition[4],  # origin node name
-                    ll_definition[5]   # name of movable node
+                    ll_definition.origin_node_name,  # origin node name
+                    ll_definition.tilt_node_name   # name of movable node
                 )
                 # Rotation offset: Euler angles (deg, pitch/yaw/roll) rotating the unit beam direction.
                 rotation_quat = QtGui.QQuaternion.fromEulerAngles(
