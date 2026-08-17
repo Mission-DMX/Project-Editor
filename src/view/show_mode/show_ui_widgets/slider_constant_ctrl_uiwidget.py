@@ -123,7 +123,7 @@ class SliderConstantUIWidget(UIWidget):
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         """Get the player widget with the slider."""
         w = QWidget(parent)
-        self._construct_player_widget(w)
+        self._player_widget = self._construct_player_widget(w)
 
         if self._orientation == Qt.Orientation.Vertical:
             layout = QVBoxLayout()
@@ -135,16 +135,18 @@ class SliderConstantUIWidget(UIWidget):
             layout.addWidget(self._value_label)
 
         w.setLayout(layout)
+        w.resize(layout.totalMinimumSize())
         return w
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         """Get the configuration widget for the editor."""
         w = QWidget(parent)
-        self._construct_configuration_widget(w)
+        self._configuration_widget = self._construct_player_widget(w)
         layout = QVBoxLayout()
         layout.addWidget(self._configuration_widget)
         w.setLayout(layout)
+        w.resize(layout.totalMinimumSize())
         return w
 
     @override
@@ -154,12 +156,12 @@ class SliderConstantUIWidget(UIWidget):
         super().copy_base(w)
         return w
 
-    def _construct_player_widget(self, parent: QWidget | None) -> None:
-        """Construct the player widget with slider."""
-        self._player_widget = QWidget(parent)
+    def _construct_player_widget(self, parent: QWidget | None) -> QWidget:
+        """Construct the player widget with slider and return it."""
+        player_widget = QWidget(parent)
 
         # Create slider
-        self._player_slider = QSlider(self._orientation, self._player_widget)
+        self._player_slider = QSlider(self._orientation, player_widget)
         self._player_slider.setMinimum(self._minimum)
         self._player_slider.setMaximum(self._maximum)
         self._player_slider.setValue(int(self._value))
@@ -170,31 +172,33 @@ class SliderConstantUIWidget(UIWidget):
         self._player_slider.valueChanged.connect(self._set_value)
 
         # Create value label
-        self._value_label = QLabel(str(self._value), self._player_widget)
+        self._value_label = QLabel(str(self._value), player_widget)
         self._value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Set layout
+        size = int(self._configuration.get("size", "200"))
         if self._orientation == Qt.Orientation.Vertical:
             layout = QVBoxLayout()
-            self._player_widget.setMinimumHeight(200)
-            self._player_widget.setMinimumWidth(80)
+            player_widget.setMinimumHeight(size)
+            player_widget.setMinimumWidth(80)
         else:
             layout = QHBoxLayout()
-            self._player_widget.setMinimumHeight(80)
-            self._player_widget.setMinimumWidth(200)
+            player_widget.setMinimumHeight(80)
+            player_widget.setMinimumWidth(size)
 
         layout.addWidget(self._player_slider)
-        self._player_widget.setLayout(layout)
+        player_widget.setLayout(layout)
+        return player_widget
 
-    def _construct_configuration_widget(self, parent: QWidget | None) -> None:
-        """Construct the configuration widget for the editor."""
+    def _construct_configuration_widget(self, parent: QWidget | None) -> QWidget:
+        """Construct the configuration controls widget and return it."""
         if self._player_widget is None:
-            self._construct_player_widget(None)
-        self._configuration_widget = QWidget(parent)
+            self._player_widget = self._construct_player_widget(None)
+        controls = QWidget(parent)
         layout = QVBoxLayout()
 
         # Orientation selection
-        orientation_group = QWidget(self._configuration_widget)
+        orientation_group = QWidget(controls)
         orientation_layout = QVBoxLayout()
         orientation_layout.addWidget(QLabel("Orientation:", orientation_group))
 
@@ -213,17 +217,14 @@ class SliderConstantUIWidget(UIWidget):
         layout.addWidget(orientation_group)
 
         # Slider size configuration
-        size_group = QWidget(self._configuration_widget)
+        size_group = QWidget(controls)
         size_layout = QHBoxLayout()
         size_layout.addWidget(QLabel("Slider Size:", size_group))
 
         size_spinbox = QSpinBox(size_group)
         size_spinbox.setMinimum(50)
         size_spinbox.setMaximum(500)
-        size_spinbox.setValue(
-            self._player_widget.minimumHeight() if self._orientation == Qt.Orientation.Vertical
-            else self._player_widget.minimumWidth()
-        )
+        size_spinbox.setValue(int(self._configuration.get("size", "200")))
         size_layout.addWidget(size_spinbox)
         size_group.setLayout(size_layout)
         layout.addWidget(size_group)
@@ -241,14 +242,26 @@ class SliderConstantUIWidget(UIWidget):
         vertical_radio.toggled.connect(update_orientation)
 
         def update_size(new_size: int) -> None:
-            if self._orientation == Qt.Orientation.Vertical:
-                self._player_widget.setMinimumHeight(new_size)
-            else:
-                self._player_widget.setMinimumWidth(new_size)
+            self._configuration["size"] = str(new_size)
+            for widget in filter(None, [self._player_widget, self._configuration_widget]):
+                if self._orientation == Qt.Orientation.Vertical:
+                    widget.setMinimumHeight(new_size)
+                else:
+                    widget.setMinimumWidth(new_size)
+                outer = widget.parent()
+                ancestor = outer
+                while ancestor is not None:
+                    if hasattr(ancestor, "update_size") and callable(ancestor.update_size):
+                        ancestor.update_size()
+                        if outer is not None and outer is not ancestor:
+                            outer.resize(ancestor.size())
+                        break
+                    ancestor = ancestor.parent()
 
         size_spinbox.valueChanged.connect(update_size)
 
-        self._configuration_widget.setLayout(layout)
+        controls.setLayout(layout)
+        return controls
 
     def __str__(self) -> str:
         """Get the filter id string or an error message."""
@@ -277,5 +290,9 @@ class SliderConstantUIWidget(UIWidget):
     @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         """Get the configuration dialog widget."""
-        # Reuse the configuration widget for the dialog
-        return self.get_configuration_widget(parent)
+        w = QWidget(parent)
+        controls = self._construct_configuration_widget(w)
+        layout = QVBoxLayout()
+        layout.addWidget(controls)
+        w.setLayout(layout)
+        return w
