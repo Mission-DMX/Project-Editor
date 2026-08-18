@@ -319,7 +319,7 @@ class SliderConstantUIWidget(UIWidget):
 
         size_spinbox.valueChanged.connect(update_size)
 
-        def update_min(new_min: float | int) -> None:
+        def update_min(new_min: float) -> None:
             new_min_f = float(new_min)
             if new_min_f >= self._range_max:
                 return
@@ -334,7 +334,7 @@ class SliderConstantUIWidget(UIWidget):
                 self._player_slider.setValue(self._value_to_slider_pos())
                 self._player_slider.blockSignals(False)
 
-        def update_max(new_max: float | int) -> None:
+        def update_max(new_max: float) -> None:
             new_max_f = float(new_max)
             if new_max_f <= self._range_min:
                 return
