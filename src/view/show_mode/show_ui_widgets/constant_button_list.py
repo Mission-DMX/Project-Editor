@@ -6,6 +6,7 @@ import sys
 from typing import override
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QDialog,
     QDoubleSpinBox,
     QHBoxLayout,
@@ -50,6 +51,14 @@ class ConstantNumberButtonList(UIWidget):
         layout.addLayout(row_layout2)
         add_button = QPushButton("Add Button", widget)
         layout.addWidget(add_button)
+        flash_checkbox = QCheckBox("Flash button behavior", widget)
+        flash_checkbox.setChecked(self.configuration.get("flash_behaviour", "false") == "true")
+
+        def flash_toggled(checked: bool) -> None:
+            self.configuration["flash_behaviour"] = "true" if checked else "false"
+
+        flash_checkbox.toggled.connect(flash_toggled)
+        layout.addWidget(flash_checkbox)
         list_widget = QListWidget(widget)
         bc = self.configuration.get("buttons")
         if bc:
@@ -101,6 +110,7 @@ class ConstantNumberButtonList(UIWidget):
             self._value = int(value_str)
         self._filter_type = None
         self._value = 0
+        self._default_value = 0
 
     def set_filter(self, f: Filter, i: int) -> None:
         """Set the filter associated with this UI widget for a specific button.
@@ -116,11 +126,12 @@ class ConstantNumberButtonList(UIWidget):
         self._model = f
         self.associated_filters["constant"] = f.filter_id
         self._filter_type = f.filter_type
-        self._value = (
+        self._default_value = (
             float(f.initial_parameters["value"])
             if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT
             else int(f.initial_parameters["value"])
         )
+        self._value = self._default_value
         self._maximum = (
             255
             if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_8BIT
@@ -163,12 +174,17 @@ class ConstantNumberButtonList(UIWidget):
         self._player_widget.setMinimumWidth(50)
         self._player_widget.setMinimumHeight(30)
         layout = QHBoxLayout()
+        flash_behaviour = self.configuration.get("flash_behaviour", "false") == "true"
         if "buttons" in self.configuration:
             for value_name_tuple in self.configuration["buttons"].split(";"):
                 name, value = value_name_tuple.split(":")
                 value = float(value) if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(value)
                 button = QPushButton(name, self._player_widget)
-                button.clicked.connect(lambda _value=value: self._set_value(_value))
+                if flash_behaviour:
+                    button.pressed.connect(lambda _value=value: self._set_value(_value))
+                    button.released.connect(lambda: self._set_value(self._default_value))
+                else:
+                    button.clicked.connect(lambda _value=value: self._set_value(_value))
                 button.setMinimumWidth(max(30, len(name) * 10))
                 button.setMinimumHeight(30)
                 layout.addWidget(button)

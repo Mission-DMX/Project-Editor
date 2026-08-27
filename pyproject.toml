@@ -46,6 +46,7 @@ dev = [
     "types-protobuf>=6.30.2.20250703",
     "types-requests>=2.32.4.20250611",
     "types-Markdown>=3.8.0.20250708",
+    "beautifulsoup4>=4.15.0",
 ]
 build = [
     "Nuitka>=4.1.3",
