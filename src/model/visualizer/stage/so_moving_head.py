@@ -53,7 +53,8 @@ class MovingHead(StageObject):
         r, g, b = beam_color
         self.beam_color = (int(r), int(g), int(b))
         self.dimmer = max(0.0, min(1.0, float(dimmer)))
-        # TODO add from template based on segment count
+        # TODO add from template based on segment count. Use pixel matrix if available;
+        #  if more than one, align positions on circle
         self.lense_colors = [LenseLight(
             # position offset in beam-local basis (tangent, bitangent, along-beam);
             # z pushes the disc forward past the lens surface.

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from PySide6 import QtCore, QtWidgets
 
 from model.broadcaster import Broadcaster
-from model.visualizer.dmx.dmx_parser import MOVEMENT_ROLES, DmxParser, auto_detect_mapping
+from model.visualizer.dmx.dmx_parser import MOVEMENT_ROLES, DmxParser, auto_detect_mapping, get_movement_range
 from model.visualizer.stage.fixture_group import FixtureGroup
 from model.visualizer.stage.stage_config import (
     STAGE_DIR,
@@ -175,6 +175,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
                         "start_channel": device.start_index,
                         "channel_count": device.channel_length,
                         "mapping": mapping,
+                        "pan_tilt_range": get_movement_range(device),
                     }
                 }
             except Exception as e:

@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
     import proto.DirectMode_pb2
     from model import BoardConfiguration
+    from model.ofl.fixture import UsedFixture
     from model.visualizer.stage import StageObject
     from model.visualizer.stage.stage_config import StageConfig
 
@@ -85,6 +86,10 @@ def auto_detect_mapping(channel_names: list[str],
             mapping["white"] = i
 
     return mapping
+
+def get_movement_range(fixture: UsedFixture) -> tuple[float, float]:
+    """Get the range in which the fixture can move the pan / tilt axis."""
+    return fixture.maximum_axis_movement or (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
 
 
 class DmxParser(QtCore.QObject):
@@ -171,25 +176,27 @@ class DmxParser(QtCore.QObject):
     def _apply_movement(self, obj: StageObject, raw: list[int], cfg: dict[str, Any]) -> None:
         """Map pan/tilt/dimmer channels to the fixture's 2-DOF properties."""
         start = cfg.get("start_channel", 0)
-        m = cfg.get("mapping", {})
+        channel_mapping = cfg.get("mapping", {})
 
         def rd(role: str) -> int:
-            off = m.get(role, -1)
+            off = channel_mapping.get(role, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
             return int(raw[start + off])
+
+        pan_max_deg, tilt_max_deg = cfg.get("pan_tilt_range", (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG))
 
         # 16-bit pan, centered at zero.
         pc, pf = rd("pan_coarse"), rd("pan_fine")
         if pc is not None:
             v = (pc << 8) | (pf or 0)
-            obj.pan = (v / 65535.0) * DEFAULT_PAN_MAX_DEG - DEFAULT_PAN_MAX_DEG / 2.0
+            obj.pan = (v / 65535.0) * pan_max_deg - pan_max_deg / 2.0
 
         # 16-bit tilt, centered at zero.
         tc, tf = rd("tilt_coarse"), rd("tilt_fine")
         if tc is not None:
             v = (tc << 8) | (tf or 0)
-            obj.tilt = (v / 65535.0) * DEFAULT_TILT_MAX_DEG - DEFAULT_TILT_MAX_DEG / 2.0
+            obj.tilt = (v / 65535.0) * tilt_max_deg - tilt_max_deg / 2.0
 
         dim = rd("dimmer")
         if dim is not None:
