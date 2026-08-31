@@ -140,7 +140,15 @@ class MovingHead(StageObject):
             dimmer=dimmer,
         )
         obj.name = data.get("name", "")
-        obj.device_config = data.get("device")
+
+        loaded_device_config = data.get("device")
+        obj.device_config = loaded_device_config
+
+        if loaded_device_config and "movement" in loaded_device_config:
+            dc = loaded_device_config
+            if "pan_tilt_range" not in dc["movement"]:
+                from model.visualizer.dmx.dmx_parser import DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG
+                dc["movement"]["pan_tilt_range"] = (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
 
         # Reset DMX-controlled values so they come from live data, not the file.
         if obj.device_config:

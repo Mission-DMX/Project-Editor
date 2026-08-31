@@ -8,7 +8,7 @@ single QSplitter and relays signals between them.
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from PySide6 import QtCore, QtWidgets
 
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
     from model import BoardConfiguration
     from model.ofl.fixture import UsedFixture
+    from model.visualizer.stage.stage_object import StageObject
 
 logger = getLogger(__name__)
 
@@ -131,6 +132,12 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._stage_config.save()
         new_config = StageConfig(new_path, show_file_path=self._board_configuration.file_path)
 
+        for obj in new_config.objects:
+            if hasattr(obj, "device_config") and obj.device_config:
+                dc = obj.device_config
+                if "movement" in dc and "pan_tilt_range" not in dc["movement"]:
+                    self._populate_pan_tilt_range_for_object(obj, dc["movement"])
+
         self._stage_config = new_config
         self._dmx_vis._stage_config = new_config
 
@@ -146,6 +153,20 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._editor_widget.refresh_list()
 
         logger.info("Stage loaded: %d objects", len(new_config.objects))
+
+    def _populate_pan_tilt_range_for_object(self, obj: StageObject, movement_cfg: dict[str, Any]) -> None:
+        if "universe" not in movement_cfg or "start_channel" not in movement_cfg:
+            return
+
+        try:
+            for fixture in self._board_configuration.fixtures:
+                if (fixture.universe_id == movement_cfg.get("universe") and
+                    fixture.start_index == movement_cfg.get("start_channel")):
+                    from model.visualizer.dmx.dmx_parser import get_movement_range
+                    movement_cfg["pan_tilt_range"] = get_movement_range(fixture)
+                    break
+        except Exception as e:
+            logger.debug("Could not populate pan_tilt_range: %s", e)
 
     def _get_fixtures(self) -> list[UsedFixture]:
         try:

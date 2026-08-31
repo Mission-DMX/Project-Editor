@@ -406,8 +406,10 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._add_separator()
         self._add_section_header("Beam Control")
 
+        pan_max, tilt_max = self._get_fixture_movement_range(obj)
+
         self._pan_spin = QtWidgets.QDoubleSpinBox()
-        self._pan_spin.setRange(-270, 270)
+        self._pan_spin.setRange(-pan_max / 2.0, pan_max / 2.0)
         self._pan_spin.setDecimals(1)
         self._pan_spin.setSingleStep(1.0)
         self._pan_spin.setSuffix("  deg")
@@ -417,7 +419,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._prop_layout.addRow("Pan:", self._pan_spin)
 
         self._tilt_spin = QtWidgets.QDoubleSpinBox()
-        self._tilt_spin.setRange(-135, 135)
+        self._tilt_spin.setRange(-tilt_max / 2.0, tilt_max / 2.0)
         self._tilt_spin.setDecimals(1)
         self._tilt_spin.setSingleStep(1.0)
         self._tilt_spin.setSuffix("  deg")
@@ -482,6 +484,16 @@ class StageEditorWidget(QtWidgets.QWidget):
         sub = dc.get(section, {})
         mapping = sub.get("mapping", {})
         return mapping.get(role, -1) >= 0
+
+    def _get_fixture_movement_range(self, obj: MovingHead) -> tuple[float, float]:
+        if obj.device_config:
+            mv_cfg = obj.device_config.get("movement", {})
+            pan_tilt_range = mv_cfg.get("pan_tilt_range")
+            if pan_tilt_range:
+                return pan_tilt_range
+
+        from model.visualizer.dmx.dmx_parser import DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG
+        return (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
 
     def _on_dmx_live_toggled(self, checked: bool) -> None:
         self.dmx_toggled.emit(checked)
