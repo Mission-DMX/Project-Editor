@@ -62,6 +62,7 @@ class NumberConstantSettingsWidget(NodeEditorFilterConfigWidget):
 
     @override
     def _get_parameters(self) -> dict[str, str]:
+        """Return the value parameter to use and update the filter type according to the feedback check box."""
         if self._response_cb.isChecked():
             if self._data_type == DataType.DT_8_BIT:
                 self._filter.filter_type = FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT
@@ -82,17 +83,18 @@ class NumberConstantSettingsWidget(NodeEditorFilterConfigWidget):
 
     @override
     def _load_parameters(self, conf: dict[str, str]) -> None:
+        value_str = conf.get("value", "0")
         if self._data_type == DataType.DT_DOUBLE:
-            self._value_widget.setValue(float(conf.get("value", "0")))
+            self._value_widget.setValue(float(value_str))
         else:
-            self._value_widget.setValue(int(conf.get("value", "0")))
+            self._value_widget.setValue(int(float(value_str)))
 
     @override
     def get_widget(self) -> QWidget:
         return self._widget
 
     @override
-    def _load_configuration(self, parameters: dict[str, str]) -> dict:
+    def _load_configuration(self, conf: dict[str, str]) -> None:
         pass  # Nothing to do here
 
     @override
