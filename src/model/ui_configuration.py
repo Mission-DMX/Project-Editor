@@ -201,6 +201,7 @@ class UIWidget(ABC):
 
     def push_update(self) -> None:
         """Use this method to trigger a filter update process."""
+        # TODO ensure that this honors ready wait
         for entry in self.generate_update_content():
             k = entry[0]
             v = entry[1]

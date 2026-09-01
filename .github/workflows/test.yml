@@ -7,7 +7,7 @@ jobs:
     if: github.base_ref != 'main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Test with ruff
         uses: astral-sh/ruff-action@v3
 
@@ -15,11 +15,11 @@ jobs:
     if: github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Test with ruff
         uses: astral-sh/ruff-action@v3
-#        with:
-#          args: 'check --extend-select ERA'
+      #        with:
+      #          args: 'check --extend-select ERA'
       - name: Get changed Python files
         id: changes
         run: |

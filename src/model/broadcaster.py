@@ -57,6 +57,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     scene_open_in_editor_requested: QtCore.Signal = QtCore.Signal(object)  # FilterPage
     bankset_open_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
     uipage_opened_in_editor_requested: QtCore.Signal = QtCore.Signal(dict)
+    default_dmx_value_editor_opening_requested: QtCore.Signal = QtCore.Signal(object)
     delete_scene: QtCore.Signal = QtCore.Signal(object)
     delete_universe: QtCore.Signal = QtCore.Signal(object)
     device_created: QtCore.Signal = QtCore.Signal(object)  # device
