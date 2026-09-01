@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QCheckBox, QDoubleSpinBox, QFormLayout, QSpinBox, 
 
 from model import DataType
 from model.filter import FilterTypeEnumeration
-from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 if TYPE_CHECKING:
     from model import Filter
