@@ -1,4 +1,4 @@
-"""Contains chaser model."""
+"""Contains the chaser model."""
 
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -88,214 +88,191 @@ def construct_chaser_layer(identifier: str, parameter_data: list[str]) -> Chaser
 
     """
     if identifier == "plain_color":
-        layer = (ChaserLayer(identifier, [], [("Color", ParameterType.COLOR, "")], parameter_data))
+        layer = ChaserLayer(identifier, [], [("Color", ParameterType.COLOR, "")], parameter_data)
     elif identifier == "rainbow":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    ("Start Color", ParameterType.COLOR, ""),
-                    ("End Color", ParameterType.COLOR, ""),
-                    ("Number of Segments", ParameterType.NUMBER_ABSOLUTE,
-                     "Divides the pixel map into the specified number of segments and applies the effect on each "
-                     "layer individually."),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                ("Start Color", ParameterType.COLOR, ""),
+                ("End Color", ParameterType.COLOR, ""),
+                (
+                    "Number of Segments",
+                    ParameterType.NUMBER_ABSOLUTE,
+                    (
+                        "Divides the pixel map into the specified number of segments and "
+                        "applies the effect on each layer individually."
+                    ),
+                ),
+            ],
+            parameter_data,
         )
     elif identifier == "sprinkles" or identifier == "dots":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    ("Number of Sprinkles", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Sprinkle Size", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Update rate [ms]", ParameterType.NUMBER_ABSOLUTE, "0 = No Updates"),
-                    (
-                        "No dot value",
-                        ParameterType.NUMBER_ABSOLUTE,
-                        "The value the mask should obtain if there is no something at the given index",
-                    ),
-                    (
-                        "dot value",
-                        ParameterType.NUMBER_ABSOLUTE,
-                        "The value the mask should obtain if there is a something at the given index",
-                    ),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                ("Number of Sprinkles", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Sprinkle Size", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Update rate [ms]", ParameterType.NUMBER_ABSOLUTE, "0 = No Updates"),
+                (
+                    "No dot value",
+                    ParameterType.NUMBER_ABSOLUTE,
+                    "The value the mask should obtain if there is no something at the given index",
+                ),
+                (
+                    "dot value",
+                    ParameterType.NUMBER_ABSOLUTE,
+                    "The value the mask should obtain if there is a something at the given index",
+                ),
+            ],
+            parameter_data,
         )
     elif identifier == "scale" or identifier == "scale_inv":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    (
-                        "cutoff-start",
-                        ParameterType.NUMBER_ABSOLUTE,
-                        "Where in the mask should the cutoff start?",
-                    ),
-                    ("cutoff-end", ParameterType.NUMBER_ABSOLUTE, "Where in the mask should the cutoff end?"),
-                    ("mask-start-value", ParameterType.NUMBER_ABSOLUTE, "The beginning value of the mask."),
-                    ("mask-end-value", ParameterType.NUMBER_ABSOLUTE, "The end value of the mask."),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                (
+                    "cutoff-start",
+                    ParameterType.NUMBER_ABSOLUTE,
+                    "Where in the mask should the cutoff start?",
+                ),
+                ("cutoff-end", ParameterType.NUMBER_ABSOLUTE, "Where in the mask should the cutoff end?"),
+                ("mask-start-value", ParameterType.NUMBER_ABSOLUTE, "The beginning value of the mask."),
+                ("mask-end-value", ParameterType.NUMBER_ABSOLUTE, "The end value of the mask."),
+            ],
+            parameter_data,
         )
     elif identifier == "flat_mask":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [("Mask value", ParameterType.NUMBER_ABSOLUTE, "The value to set on all mask entries.")],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [("Mask value", ParameterType.NUMBER_ABSOLUTE, "The value to set on all mask entries.")],
+            parameter_data,
         )
     elif identifier == "mask_shift" or identifier == "color_shift":
-        layer = (
-            ChaserLayer(identifier, [], [("Shift period [ms]", ParameterType.NUMBER_ABSOLUTE, "")], parameter_data)
-        )
+        layer = ChaserLayer(identifier, [], [("Shift period [ms]", ParameterType.NUMBER_ABSOLUTE, "")], parameter_data)
     elif identifier.startswith("trig"):
-        layer = (
-            ChaserLayer(
-                identifier,
-                [["sin", "cos", "tan"]],
-                [
-                    ("Lowest value", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Highest value", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Phase", ParameterType.NUMBER_PERCENTAGE, ""),
-                    (
-                        "Frequency",
-                        ParameterType.NUMBER_PERCENTAGE,
-                        "1 period over whole mask → up to 1 period per entry",
-                    ),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [["sin", "cos", "tan"]],
+            [
+                ("Lowest value", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Highest value", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Phase", ParameterType.NUMBER_PERCENTAGE, ""),
+                (
+                    "Frequency",
+                    ParameterType.NUMBER_PERCENTAGE,
+                    "1 period over whole mask → up to 1 period per entry",
+                ),
+            ],
+            parameter_data,
         )
     elif identifier == "strobe":
-        layer = (
-            ChaserLayer(
-                identifier, [], [("BPM", ParameterType.NUMBER_ABSOLUTE, "How Fast should it strobe?")], parameter_data
-            )
+        layer = ChaserLayer(
+            identifier, [], [("BPM", ParameterType.NUMBER_ABSOLUTE, "How Fast should it strobe?")], parameter_data
         )
     elif identifier.startswith("maskmod"):
-        layer = (
-            ChaserLayer(
-                identifier,
-                [["add", "sub", "mul", "div"]],
-                [
-                    ("Modifier value", ParameterType.NUMBER_ABSOLUTE, "The value to modify the mask with"),
-                    ("Start Position", ParameterType.NUMBER_PERCENTAGE,
-                     "The position in the mask, where the modification should start."),
-                    ("End Position", ParameterType.NUMBER_PERCENTAGE,
-                     "The position in the mask, where the modification should end."),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [["add", "sub", "mul", "div"]],
+            [
+                ("Modifier value", ParameterType.NUMBER_ABSOLUTE, "The value to modify the mask with"),
+                (
+                    "Start Position",
+                    ParameterType.NUMBER_PERCENTAGE,
+                    "The position in the mask, where the modification should start.",
+                ),
+                (
+                    "End Position",
+                    ParameterType.NUMBER_PERCENTAGE,
+                    "The position in the mask, where the modification should end.",
+                ),
+            ],
+            parameter_data,
         )
     elif identifier.startswith("johnson"):
-        layer = (
-            ChaserLayer(
-                identifier,
-                [["rev", "fwd"]],
-                [
-                    ("Update speed [ms]", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Target mask value", ParameterType.NUMBER_ABSOLUTE, ""),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [["rev", "fwd"]],
+            [
+                ("Update speed [ms]", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Target mask value", ParameterType.NUMBER_ABSOLUTE, ""),
+            ],
+            parameter_data,
         )
     elif identifier == "colormix":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    ("Color A", ParameterType.COLOR, ""),
-                    ("Color B", ParameterType.COLOR, ""),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                ("Color A", ParameterType.COLOR, ""),
+                ("Color B", ParameterType.COLOR, ""),
+            ],
+            parameter_data,
         )
     elif identifier.startswith("color_chanmod"):
-        layer = (
-            ChaserLayer(
-                identifier,
-                [["r", "g", "b", "h", "s", "i"]],
-                [("Target Value", ParameterType.NUMBER_PERCENTAGE, "")],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [["r", "g", "b", "h", "s", "i"]],
+            [("Target Value", ParameterType.NUMBER_PERCENTAGE, "")],
+            parameter_data,
         )
     elif identifier.startswith("color_chancalc"):
-        layer = (
-            ChaserLayer(
-                identifier,
-                [["r", "g", "b", "h", "s", "i"], ["add", "sub", "mul", "div"]],
-                [("Operand", ParameterType.NUMBER_PERCENTAGE, "")],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [["r", "g", "b", "h", "s", "i"], ["add", "sub", "mul", "div"]],
+            [("Operand", ParameterType.NUMBER_PERCENTAGE, "")],
+            parameter_data,
         )
     elif identifier == "random_color":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    ("Number of colors", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Update interval [ms]", ParameterType.NUMBER_ABSOLUTE, ""),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                ("Number of colors", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Update interval [ms]", ParameterType.NUMBER_ABSOLUTE, ""),
+            ],
+            parameter_data,
         )
     elif identifier == "gaussian_blur":
-        layer = (
-            ChaserLayer(identifier, [], [("Filter size", ParameterType.NUMBER_PERCENTAGE, "")], parameter_data)
-        )
+        layer = ChaserLayer(identifier, [], [("Filter size", ParameterType.NUMBER_PERCENTAGE, "")], parameter_data)
     elif identifier == "gaussian_curve_on_mask":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    ("Center position", ParameterType.NUMBER_PERCENTAGE, ""),
-                    ("Width", ParameterType.NUMBER_PERCENTAGE, ""),
-                    ("Height", ParameterType.NUMBER_PERCENTAGE, ""),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                ("Center position", ParameterType.NUMBER_PERCENTAGE, ""),
+                ("Width", ParameterType.NUMBER_PERCENTAGE, ""),
+                ("Height", ParameterType.NUMBER_PERCENTAGE, ""),
+            ],
+            parameter_data,
         )
     elif identifier == "invert_color" or identifier == "invert_mask":
-        layer = (ChaserLayer(identifier, [], [], parameter_data))
+        layer = ChaserLayer(identifier, [], [], parameter_data)
     elif identifier == "close_to_center" or identifier == "open_from_center":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    ("Update speed [ms]", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Decay rate", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Intensity", ParameterType.NUMBER_PERCENTAGE, ""),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                ("Update speed [ms]", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Decay rate", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Intensity", ParameterType.NUMBER_PERCENTAGE, ""),
+            ],
+            parameter_data,
         )
     elif identifier.startswith(("segwave", "wave")):
-        layer = (
-            ChaserLayer(
-                identifier,
-                [["fwd", "rev"]],
-                [
-                    ("Update speed [ms]", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Decay rate", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Number of waves", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Intensity on Mask", ParameterType.NUMBER_PERCENTAGE, ""),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [["fwd", "rev"]],
+            [
+                ("Update speed [ms]", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Decay rate", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Number of waves", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Intensity on Mask", ParameterType.NUMBER_PERCENTAGE, ""),
+            ],
+            parameter_data,
         )
     else:
         raise ValueError(f"Unsupported layer identifier: {identifier}")
@@ -355,12 +332,17 @@ class ChaserModel:
 
         """
         self.number_of_pixels: int = int(config_parameter["number_of_pixels"])
-        self.color_parameters: list[str] = config_parameter["color_parameters"].split(":") if (
-                len(config_parameter["color_parameters"]) > 0) else []
-        self.number_parameters: list[str] = config_parameter["number_parameters"].split(":") if (
-                len(config_parameter["number_parameters"]) > 0) else []
-        self.presets: list[ChaserConfig] = [ChaserConfig(s) for s in config_parameter["presets"].split("#")] if (
-                len(config_parameter["presets"]) > 0) else []
+        self.color_parameters: list[str] = (
+            config_parameter["color_parameters"].split(":") if (len(config_parameter["color_parameters"]) > 0) else []
+        )
+        self.number_parameters: list[str] = (
+            config_parameter["number_parameters"].split(":") if (len(config_parameter["number_parameters"]) > 0) else []
+        )
+        self.presets: list[ChaserConfig] = (
+            [ChaserConfig(s) for s in config_parameter["presets"].split("#")]
+            if (len(config_parameter["presets"]) > 0)
+            else []
+        )
         for i, name in enumerate(config_parameter.get("preset_names", "").split(";")):
             if i < len(self.presets):
                 self.presets[i].name = name if name != "" else "NO NAME"
