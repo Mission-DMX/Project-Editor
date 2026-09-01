@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, NamedTuple, override
+
+from PySide6.QtCore import QObject, Signal
+
+from .universe import Universe
 
 if TYPE_CHECKING:
     from .board_configuration import BoardConfiguration
@@ -62,11 +66,22 @@ class FilterPage:
         return new_fp
 
 
-class Scene:
+class DmxDefaultValue(NamedTuple):
+    """Contains a single default entry to be applied on scene activation by fish."""
+
+    universe_id: int
+    channel: int
+    value: int
+
+
+class Scene(QObject):
     """Scene for a show file."""
+
+    default_values_changed = Signal()
 
     def __init__(self, scene_id: int, human_readable_name: str, board_configuration: BoardConfiguration) -> None:
         """Scene for a show file."""
+        super().__init__()
         self._scene_id: int = scene_id
         self._human_readable_name: str = human_readable_name
         self._board_configuration: BoardConfiguration = board_configuration
@@ -75,6 +90,7 @@ class Scene:
         self._filter_pages: list[FilterPage] = []
         self._associated_bankset: BankSet | None = None
         self._ui_pages: list[UIPage] = []
+        self._dmx_default_values: list[DmxDefaultValue] = []
 
     @property
     def scene_id(self) -> int:
@@ -115,6 +131,58 @@ class Scene:
                 default_page.filters.append(f)
             self._filter_pages.append(default_page)
         return self._filter_pages
+
+    @property
+    def dmx_default_values(self) -> list[DmxDefaultValue]:
+        """Get the list of default values to be applied on scene switch."""
+        return self._dmx_default_values.copy()
+
+    def insert_dmx_default_value(self, universe: Universe | int, channel: int, value: int,
+                                 supress_emission: bool = False) -> bool:
+        """Add a new default value to the scene.
+
+        Existing values will be updated.
+
+        Args:
+            universe: target universe or its ID.
+            channel: target channel.
+            value: value to set on scene entry.
+            supress_emission: If this is enabled to change signal will be enabled. Only use this if you're certain
+                            you're taking care of all updates yourself.
+
+        Returns:
+            True if a value was updated and false if it was added.
+
+        """
+        universe_id = universe.id if isinstance(universe, Universe) else universe
+        value_to_remove = None
+        for existing_value in self._dmx_default_values:
+            if existing_value.universe_id == universe_id and existing_value.channel == channel:
+                value_to_remove = existing_value
+        if value_to_remove is not None:
+            self._dmx_default_values.remove(value_to_remove)
+        self._dmx_default_values.append(DmxDefaultValue(universe_id, channel, value))
+        if not supress_emission:
+            self.default_values_changed.emit()
+        return value_to_remove is not None
+
+    def remove_dmx_default_value(self, universe: Universe | int, channel: int, supress_emission: bool = False) -> None:
+        """Remove a default DMX value from the scene.
+
+        Args:
+            universe: target universe or its ID.
+            channel: target channel.
+            supress_emission: If this is enabled to change signal will be enabled. Only use this if you're certain
+                            you're taking care of all updates yourself.
+
+        """
+        universe_id = universe.id if isinstance(universe, Universe) else universe
+        values_to_remove = [val for val in self._dmx_default_values if
+                            val.universe_id == universe_id and val.channel == channel]
+        for item in values_to_remove:
+            self._dmx_default_values.remove(item)
+        if len(values_to_remove) > 0 and not supress_emission:
+            self.default_values_changed.emit()
 
     def insert_filterpage(self, fp: FilterPage) -> None:
         """Add a filterpage to the scene."""
@@ -184,6 +252,8 @@ class Scene:
         scene.linked_bankset = self._associated_bankset.copy()
         for page in self._ui_pages:
             scene._ui_pages.append(page.copy(scene))
+        for ddv in self._dmx_default_values:
+            scene._dmx_default_values.append(ddv)
         return scene
 
     def get_filter_by_id(self, fid: str) -> Filter | None:
@@ -266,3 +336,12 @@ class Scene:
         for page in self._ui_pages:
             for widget in page.widgets:
                 widget.notify_id_rename(old_id, sender.filter_id)
+
+    def sort_dmx_default_values(self) -> None:
+        """Sorts the dmx defaults by their universe and channel.
+
+        This improves human interaction and performance of fish.
+
+        """
+        self._dmx_default_values.sort(key=lambda x: (x.universe_id * 512) + x.channel)
+        self.default_values_changed.emit()

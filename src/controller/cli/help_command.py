@@ -32,6 +32,13 @@ class HelpCommand(Command):
                 self.context.print("\tscene -- Select the scene to perform actions on")
                 self.context.print("\tcolumn -- Select the control desk column to perform actions on")
                 self.context.print("\tbank_set -- Select the control desk bank set to perform actions on")
+            case "extract":
+                self.context.print("Use this command to extract data from concatenated lists and store it in the "
+                                   "specified destination variable.")
+                self.context.print("Usage: extract <destination> <element> <target> <...>")
+                self.context.print("The following targets exist:")
+                self.context.print("\tfilter-param [--scene <scene>] <filter-id> <parameter> <delimiter>")
+                self.context.print("\tfilter-config [--scene <scene>] <filter-id> <parameter> <delimiter>")
             case "list":
                 self.context.print("This command displays the content of system collections.")
                 self.context.print("The following containers can be queried:")
@@ -99,6 +106,6 @@ class HelpCommand(Command):
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
                 self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
-                self.context.print("\tprint\tasset\tset\tif\tconnect\tfish\tuipage")
+                self.context.print("\tprint\tasset\tset\tif\tconnect\tfish\tuipage\textract")
                 return False
         return True

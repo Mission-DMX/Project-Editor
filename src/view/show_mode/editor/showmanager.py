@@ -3,6 +3,7 @@
 Usage (where self is a QWidget and board_configuration is a BoardConfiguration):
     node_editor = NodeEditor(self, board_configuration)
     self.addWidget(node_editor)
+
 """
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QInputDialog, QSplitter, QTabBar, QTabWidget, QWidget
@@ -17,6 +18,7 @@ from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.scene_ui_page_edi
 
 from .editing_utils import add_scene_to_show
 from .editor_tab_widgets.bankset_tab import BankSetTabWidget
+from .editor_tab_widgets.dmx_default_value_editor import DMXDefaultValueEditorWidget
 from .show_browser.show_browser import ShowBrowser
 
 
@@ -24,12 +26,14 @@ class ShowEditorWidget(QSplitter):
     """Node Editor to create and manage filters."""
 
     def __init__(self, board_configuration: BoardConfiguration, bcaster: Broadcaster, parent: QWidget) -> None:
+        """Initialize the widget."""
         super().__init__(parent)
         self._broadcaster = bcaster
         self._board_configuration = board_configuration
         self._opened_pages = set()
         self._opened_banksets = set()
         self._opened_uieditors = set()
+        self._open_dmx_value_editors = set()
 
         # Buttons to add or remove scenes from show
         self._open_page_tab_widget = QTabWidget(self)
@@ -67,6 +71,9 @@ class ShowEditorWidget(QSplitter):
         board_configuration.broadcaster.bankset_open_in_editor_requested.connect(self._add_bankset_tab)
         board_configuration.broadcaster.uipage_opened_in_editor_requested.connect(self._add_uipage_tab)
         board_configuration.broadcaster.delete_scene.connect(self._remove_tab)
+        board_configuration.broadcaster.default_dmx_value_editor_opening_requested.connect(
+            self._open_dmx_default_value_editor
+        )
 
     def _select_scene_to_be_removed(self) -> None:
         scene_index, ok_button_pressed = QInputDialog.getInt(self, "Remove a scene", "Scene index (0-index)")
@@ -75,13 +82,15 @@ class ShowEditorWidget(QSplitter):
 
     @property
     def toolbar(self) -> list[QAction]:
-        """toolbar for node_mode"""
+        """Toolbar for node_mode."""
         return self._toolbar
 
     def _tab_bar_clicked(self, index: int) -> None:
         """Handles adding/deleting button action.
+
         Args:
             index: Index of the clicked tab
+
         """
         # Left to right, first "+" button, second "-" button
         if index == self._open_page_tab_widget.tabBar().count() - 1:
@@ -91,9 +100,11 @@ class ShowEditorWidget(QSplitter):
         add_scene_to_show(self, self._board_configuration)
 
     def _add_scene_tab(self, page: Scene | FilterPage) -> SceneTabWidget | None:
-        """Creates a tab for a scene
+        """Creates a tab for a scene.
+
         Args:
             page: The scene to be added
+
         """
         if isinstance(page, Scene):
             page = page.pages[0]
@@ -163,6 +174,7 @@ class ShowEditorWidget(QSplitter):
 
         Args:
             scene_or_index: The that is being removed.
+
         """
         if isinstance(scene_or_index, Scene):
             for index in range(self._open_page_tab_widget.count() - 1):
@@ -184,8 +196,26 @@ class ShowEditorWidget(QSplitter):
                 self._opened_banksets.remove(widget.bankset)
             elif isinstance(widget, SceneUIPageEditorWidget):
                 self._opened_uieditors.remove(widget.ui_page)
+            elif isinstance(widget, DMXDefaultValueEditorWidget):
+                self._open_dmx_value_editors.remove(widget.scene)
             self._open_page_tab_widget.removeTab(scene_or_index)
 
     def _send_show_file(self) -> None:
-        """Send the current board configuration as a xml file to fish"""
+        """Send the current board configuration as a xml file to fish."""
         transmit_to_fish(self._board_configuration)
+
+    def _open_dmx_default_value_editor(self, s: Scene) -> None:
+        if s in self._open_dmx_value_editors:
+            for tab_index in range(self._open_page_tab_widget.count()):
+                tab = self._open_page_tab_widget.widget(tab_index)
+                if isinstance(tab, DMXDefaultValueEditorWidget) and tab.scene == s:
+                    self._open_page_tab_widget.setCurrentIndex(tab_index)
+                    return
+        self._open_dmx_value_editors.add(s)
+        tab = DMXDefaultValueEditorWidget(s, self._open_page_tab_widget)
+        self._open_page_tab_widget.insertTab(
+            self._open_page_tab_widget.tabBar().count() - 1,
+            tab,
+            s.human_readable_name + "/Defaults",
+        )
+        self._open_page_tab_widget.setCurrentWidget(tab)

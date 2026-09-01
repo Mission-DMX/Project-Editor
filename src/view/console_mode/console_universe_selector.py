@@ -1,13 +1,20 @@
 """Contains select Universe widget."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from PySide6 import QtWidgets
 from PySide6.QtGui import QAction, Qt
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QMessageBox, QPushButton, QSizePolicy, QWidget
 
-from model import BoardConfiguration
-from model.universe import Universe
 from view.console_mode.console_universe_widget import DirectUniverseWidget
+from view.dialogs.selection_dialog import SelectionDialog
 from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
+
+if TYPE_CHECKING:
+    from model import BoardConfiguration
+    from model.channel import Channel
+    from model.universe import Universe
 
 
 class UniverseSelector(QtWidgets.QTabWidget):
@@ -32,6 +39,7 @@ class UniverseSelector(QtWidgets.QTabWidget):
         initial_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.addTab(initial_label, "")
         self._initial_tab_present: bool = True
+        self._dialog: SelectionDialog | None = None
 
     def add_universe(self, universe: Universe) -> None:
         """Add a new Universe to universe Selector.
@@ -54,6 +62,12 @@ class UniverseSelector(QtWidgets.QTabWidget):
         automap_button.setToolTip("Would you like to automatically map all channels to bank sets?")
         automap_button.clicked.connect(self._automap)
         row_layout.addWidget(automap_button)
+        row_layout.addSpacing(25)
+        save_as_scene_default_button = QPushButton("Save as Scene default")
+        save_as_scene_default_button.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        save_as_scene_default_button.setToolTip("Save the current setup as a default for a scene.")
+        save_as_scene_default_button.clicked.connect(self.save_to_scene_default_clicked)
+        row_layout.addWidget(save_as_scene_default_button)
         row_layout.addStretch()
         layout.addLayout(row_layout)
 
@@ -79,3 +93,32 @@ class UniverseSelector(QtWidgets.QTabWidget):
     def _automap(self) -> None:
         for uw in self._universe_widgets:
             uw.automap()
+
+    def save_to_scene_default_clicked(self, channel: Channel | None = None) -> None:
+        """Save a single channel or all values to scenes."""
+        if len(self._board_configuration.scenes) == 0:
+            self._dialog = QMessageBox(QMessageBox.Icon.Information, "No Scenes Created",
+                                       "You need to create at least one scene.")
+            self._dialog.show()
+            return
+        scene_list = [f"{scene.scene_id}: {scene.human_readable_name}" for scene in self._board_configuration.scenes]
+        self._dialog = SelectionDialog("Select Scene",
+                                       f"Please select the scene to apply the value{'s' if channel is None else ''} to",
+                                       scene_list, self, True,
+                                       lambda d,c=channel: self._scene_selected_for_default_value_add(d, c))
+        self._dialog.show()
+
+    def _scene_selected_for_default_value_add(self, dialog: SelectionDialog, channel: Channel | None) -> None:
+        for selected_item in dialog.selected_items:
+            scene = self._board_configuration.get_scene_by_id(int(selected_item.split(": ", 1)[0]))
+            if scene is None:
+                return
+            if channel is None:
+                for univ_widget in self._universe_widgets:
+                    univ_widget.add_settings_to_scenes_default_values(scene)
+            else:
+                scene.insert_dmx_default_value(channel.parent_universe, channel.address, channel.value,
+                                               supress_emission=True)
+            scene.sort_dmx_default_values()
+        self._dialog.deleteLater()
+        self._dialog = None

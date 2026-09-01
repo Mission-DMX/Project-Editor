@@ -1,6 +1,7 @@
 """Widget to edit a channel."""
+from logging import getLogger
 
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QWidget
 
 import style
@@ -8,6 +9,8 @@ from model.channel import Channel
 from model.control_desk import BankSet
 from model.patching.fixture_channel import FixtureChannel
 from view.console_mode.console_fader_bank_selector import ConsoleFaderBankSelectorWidget
+
+logger = getLogger(__name__)
 
 
 class ChannelWidget(QtWidgets.QWidget):
@@ -67,10 +70,11 @@ class ChannelWidget(QtWidgets.QWidget):
         self._value_editor.textChanged.connect(self.update_value)
         self._value_editor.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
-        self._fixture_channel = QtWidgets.QLabel(fixture_channel.name)
-        self._fixture_channel.setWordWrap(True)
-        self._fixture_channel.setFixedSize(element_size, element_size * 2)
-        self._fixture_channel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self._fixture_channel = fixture_channel
+        self._fixture_channel_label = QtWidgets.QLabel(fixture_channel.name)
+        self._fixture_channel_label.setWordWrap(True)
+        self._fixture_channel_label.setFixedSize(element_size, element_size * 2)
+        self._fixture_channel_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self._channel.updated.connect(self.update_value)
 
@@ -108,7 +112,7 @@ class ChannelWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         layout.addWidget(address_label)
-        layout.addWidget(self._fixture_channel)
+        layout.addWidget(self._fixture_channel_label)
         layout.addWidget(self._bank_selector)
         layout.addWidget(self._value_editor)
         layout.addWidget(self._max_button)
@@ -117,6 +121,28 @@ class ChannelWidget(QtWidgets.QWidget):
 
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
+
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._open_context_menu)
+        self._menu: QtWidgets.QMenu | None = None
+
+    def _open_context_menu(self, point: QtCore.QPoint) -> None:
+        self._menu = QtWidgets.QMenu(self)
+        self._menu.move(self.mapToGlobal(point))
+        save_default_value_action = QtGui.QAction("Save Channel Value as default", self._menu)
+        save_default_value_action.triggered.connect(self._save_default_triggered)
+        self._menu.addAction(save_default_value_action)
+        self._menu.show()
+
+    def _save_default_triggered(self) -> None:
+        p = self.parent()
+        from view.console_mode.console_universe_selector import UniverseSelector
+        while not isinstance(p, UniverseSelector):
+            if p is None:
+                logger.critical("Expected to have a UniverseSelector parent.")
+                return
+            p = p.parent()
+        p.save_to_scene_default_clicked(self._channel)
 
     def _update(self, value: int) -> None:
         """Update the slider and value label."""
