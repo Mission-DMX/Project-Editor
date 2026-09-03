@@ -90,40 +90,38 @@ def construct_chaser_layer(identifier: str, parameter_data: list[str]) -> Chaser
     if identifier == "plain_color":
         layer = ChaserLayer(identifier, [], [("Color", ParameterType.COLOR, "")], parameter_data)
     elif identifier == "rainbow":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    ("Start Color", ParameterType.COLOR, ""),
-                    ("End Color", ParameterType.COLOR, ""),
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                ("Start Color", ParameterType.COLOR, ""),
+                ("End Color", ParameterType.COLOR, ""),
+                (
+                    "Number of Segments",
+                    ParameterType.NUMBER_ABSOLUTE,
                     (
-                        "Number of Segments",
-                        ParameterType.NUMBER_ABSOLUTE,
                         "Divides the pixel map into the specified number of segments and applies the effect on each "
                         "layer individually."
                     ),
-                ],
-                parameter_data,
-            )
+                ),
+            ],
+            parameter_data,
         )
     elif identifier == "sprinkles" or identifier == "dots":
-        layer = (
-            ChaserLayer(
-                identifier,
-                [],
-                [
-                    ("Number of Sprinkles", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Sprinkle Size", ParameterType.NUMBER_ABSOLUTE, ""),
-                    ("Update rate [ms]", ParameterType.NUMBER_ABSOLUTE, "0 = No Updates"),
-                    (
-                        "No dot value",
-                        ParameterType.NUMBER_ABSOLUTE,
-                        "The value the mask should obtain if there is no something at the given index."
-                    ),
-                ],
-                parameter_data,
-            )
+        layer = ChaserLayer(
+            identifier,
+            [],
+            [
+                ("Number of Sprinkles", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Sprinkle Size", ParameterType.NUMBER_ABSOLUTE, ""),
+                ("Update rate [ms]", ParameterType.NUMBER_ABSOLUTE, "0 = No Updates"),
+                (
+                    "No dot value",
+                    ParameterType.NUMBER_ABSOLUTE,
+                    "The value the mask should obtain if there is no something at the given index.",
+                ),
+            ],
+            parameter_data,
         )
     elif identifier == "sprinkles" or identifier == "dots":
         layer = ChaserLayer(
