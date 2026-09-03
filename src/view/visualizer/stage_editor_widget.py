@@ -16,7 +16,9 @@ from view.visualizer.stage_group_name_dialog import GroupNameDialog
 
 if TYPE_CHECKING:
     from model.ofl.fixture import UsedFixture
-    from model.visualizer.stage import FixtureGroup, StageConfig, StageObject
+    from model.visualizer.stage.fixture_group import FixtureGroup
+    from model.visualizer.stage.stage_config import StageConfig
+    from model.visualizer.stage.stage_object import StageObject
 
 logger = getLogger(__name__)
 
