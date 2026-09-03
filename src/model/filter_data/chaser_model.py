@@ -97,9 +97,12 @@ def construct_chaser_layer(identifier: str, parameter_data: list[str]) -> Chaser
                 [
                     ("Start Color", ParameterType.COLOR, ""),
                     ("End Color", ParameterType.COLOR, ""),
-                    ("Number of Segments", ParameterType.NUMBER_ABSOLUTE,
-                     ("Divides the pixel map into the specified number of segments and applies the effect on each "
-                     "layer individually.")),
+                    (
+                        "Number of Segments",
+                        ParameterType.NUMBER_ABSOLUTE,
+                        "Divides the pixel map into the specified number of segments and applies the effect on each "
+                        "layer individually."
+                    ),
                 ],
                 parameter_data,
             )
@@ -116,15 +119,11 @@ def construct_chaser_layer(identifier: str, parameter_data: list[str]) -> Chaser
                     (
                         "No dot value",
                         ParameterType.NUMBER_ABSOLUTE,
-                        "The value the mask should obtain if there is no something at the given index",
+                        "The value the mask should obtain if there is no something at the given index."
                     ),
-                    (
-                        "Divides the pixel map into the specified number of segments and "
-                        "applies the effect on each layer individually."
-                    ),
-                ),
-            ],
-            parameter_data,
+                ],
+                parameter_data,
+            )
         )
     elif identifier == "sprinkles" or identifier == "dots":
         layer = ChaserLayer(
