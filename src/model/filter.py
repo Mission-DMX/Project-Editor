@@ -264,7 +264,11 @@ class Filter:
 
     @property
     def channel_links(self) -> dict[str, str]:
-        """Dict mapping the filter inputs to the connected outputs."""
+        """Dict mapping the filter inputs to the connected outputs.
+
+        Keys represent the input and the values the foreign output channels.
+
+        """
         return self._channel_links
 
     @property
