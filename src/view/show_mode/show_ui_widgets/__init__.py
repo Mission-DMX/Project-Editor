@@ -35,25 +35,31 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
         AutoTrackerUIWidget,
         [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]],
     ),
-    "buttonarray": (
-        "Button Array",
+    "buttonarray_submit": (
+        "Button Array w/ Submit",
         ButtonsWithValueSubmit,
         [
             [
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT,
             ]
         ],
     ),
-    "buttonarray_submit": (
-        "Button Array w/ Submit",
+    "buttonarray": (
+        "Button Array",
         ConstantNumberButtonList,
         [
             [
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT,
             ]
         ],
     ),
@@ -114,7 +120,7 @@ def get_widget_key(w: UIWidget) -> str | None:
 
     """
     for k, v in WIDGET_LIBRARY.items():
-        if isinstance(w, v[1]):
+        if type(w) is v[1]:
             return k
     return None
 
