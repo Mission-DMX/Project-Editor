@@ -331,10 +331,10 @@ class UsedFixture(QtCore.QObject):
         )
 
     def _find_maximum_movement(self) -> tuple[float, float] | None:
-        min_pan = -1
-        max_pan = -1
-        min_tilt = -1
-        max_tilt = -1
+        min_pan: float = -1.0
+        max_pan: float = -1.0
+        min_tilt: float = -1.0
+        max_tilt: float = -1.0
 
         for channel in self._fixture_channels:
             template = channel.channel_template
@@ -342,14 +342,14 @@ class UsedFixture(QtCore.QObject):
                 logger.error("Channel %s has empty template.", channel.name)
                 continue
             capability = template.capability if template.capability is not None else template.capabilities[0]
-            capability = capability.capabilityProperties
+            cap_props = capability.capabilityProperties
             try:
                 if channel.type == FixtureChannelType.PAN:
-                    min_pan = min(min_pan, float(capability["angleStart"].replace("deg", "")))
-                    max_pan = max(max_pan, float(capability["angleEnd"].replace("deg", "")))
+                    min_pan = min(min_pan, float(cap_props["angleStart"].replace("deg", "")))
+                    max_pan = max(max_pan, float(cap_props["angleEnd"].replace("deg", "")))
                 elif channel.type == FixtureChannelType.TILT:
-                    min_tilt = min(min_tilt, float(capability["angleStart"].replace("deg", "")))
-                    max_tilt = max(max_tilt, float(capability["angleEnd"].replace("deg", "")))
+                    min_tilt = min(min_tilt, float(cap_props["angleStart"].replace("deg", "")))
+                    max_tilt = max(max_tilt, float(cap_props["angleEnd"].replace("deg", "")))
             except KeyError:
                 logger.error("Pan/Tilt channel does not have angle description")
         return (max_pan - min_pan, max_tilt - min_tilt) if \

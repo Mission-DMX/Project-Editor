@@ -100,7 +100,7 @@ class StageObject:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> StageObject:
         """Instantiate from deserialized data."""
-        object_id = data.get("id")
+        object_id = data.get("id", "")
         pos = data.get("position", {})
         rot = data.get("rotation", {})
         position = (pos.get("x", 0.0), pos.get("y", 0.0), pos.get("z", 0.0))

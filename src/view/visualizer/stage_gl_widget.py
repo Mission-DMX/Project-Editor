@@ -11,7 +11,6 @@ import ctypes
 import math
 import os
 import time
-from curses import has_key
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
@@ -41,11 +40,10 @@ from view.visualizer.geometry_helpers import (
 from view.visualizer.spotlight_data import SpotLightData
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from PySide6.QtCore import QPoint
-    from PySide6.QtWidgets import QApplication, QWidget
+    from PySide6.QtWidgets import QWidget
 
+    from model.visualizer.stage.model_entries import ModelEntry
     from model.visualizer.stage.stage_config import StageConfig, StageObject
     from model.visualizer.stage.stage_object import LenseLight
 
@@ -60,7 +58,7 @@ class Stage3DWidget(QOpenGLWidget):
     # Emitted when user right-clicks (deselect all)
     deselect_all_requested = QtCore.Signal()
 
-    def __init__(self, stage_config: StageConfig, parent: QWidget | None=None) -> None:
+    def __init__(self, stage_config: StageConfig, parent: QWidget | None = None) -> None:
         """Initialize using given stage configuration and parent."""
         super().__init__(parent)
         self._gl_initialized = False
@@ -73,10 +71,10 @@ class Stage3DWidget(QOpenGLWidget):
         self._lense_light_program: int = 0
 
         # Uniform location caches
-        self._scene_uniforms = {}             # scene shader uniforms
-        self._sc_light_locs = []  # per-light uniform locations
-        self._beam_uniforms = {}             # beam shader uniforms
-        self._depth_uniforms = {}             # depth shader uniforms
+        self._scene_uniforms: dict[str, int] = {}  # scene shader uniforms
+        self._sc_light_locs: list[dict[str, int]] = []  # per-light uniform locations
+        self._beam_uniforms: dict[str, int] = {}  # beam shader uniforms
+        self._depth_uniforms: dict[str, int] = {}  # depth shader uniforms
 
         # Shadow map GPU resources
         self._shadow_fbo = None
@@ -96,10 +94,10 @@ class Stage3DWidget(QOpenGLWidget):
         # Input state
         self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.setMouseTracking(True)
-        self._mouse_last_pos = None
-        self._mouse_press_pos = None
-        self._mouse_buttons = set()
-        self._keys_down = set()
+        self._mouse_last_pos: QPoint | None = None
+        self._mouse_press_pos: QPoint | None = None
+        self._mouse_buttons: set[QtCore.Qt.MouseButton] = set()
+        self._keys_down: set[int] = set()
         self._move_speed = 400.0
         self._boost_speed = 1200.0
 
@@ -109,13 +107,13 @@ class Stage3DWidget(QOpenGLWidget):
         self._camera_timer.start(16)
 
         # Model caches
-        self._models: dict[str, Model3D] = {}       # path -> Model3D (OBJ meshes)
+        self._models: dict[str, Model3D] = {}  # path -> Model3D (OBJ meshes)
         self._gltf_models: dict[str, GltfModel] = {}  # path -> GltfModel
-        self._beam_cone = None
-        self._ground_plane = None
+        self._beam_cone: Model3D | None = None
+        self._ground_plane: Model3D | None = None
 
         # Selection highlight state
-        self._selected_object_ids = set()
+        self._selected_object_ids: set[str] = set()
         self._highlight_is_multi = False  # True = orange, False = neon-yellow
 
         # F-key overlay toggle
@@ -131,8 +129,8 @@ class Stage3DWidget(QOpenGLWidget):
         self._lense_light_instance_vbo: int = 0
         self._lense_light_data: np.ndarray = np.zeros(16, dtype=np.float32)
         self._lense_light_data_last_buffer_size: int = 0
-        self._lense_shader_view_uniform_location: gl.GL_INT = 0
-        self._lense_shader_proj_uniform_location: gl.GL_INT = 0
+        self._lense_shader_view_uniform_location: int = 0
+        self._lense_shader_proj_uniform_location: int = 0
 
     # OpenGL initialization
 
@@ -148,7 +146,7 @@ class Stage3DWidget(QOpenGLWidget):
             fmt.options(),
             gl.glGetString(gl.GL_VENDOR).decode(),
             gl.glGetString(gl.GL_RENDERER).decode(),
-            gl.glGetString(gl.GL_VERSION).decode()
+            gl.glGetString(gl.GL_VERSION).decode(),
         )
 
         gl.glClearColor(0.02, 0.02, 0.03, 1.0)
@@ -159,7 +157,7 @@ class Stage3DWidget(QOpenGLWidget):
         try:
             self._scene_program = load_and_link_shader_from_files(
                 resource_path(os.path.join("resources", "shaders", "stage_scene.vert")),
-                resource_path(os.path.join("resources", "shaders", "stage_scene.frag"))
+                resource_path(os.path.join("resources", "shaders", "stage_scene.frag")),
             )
         except RuntimeError as e:
             logger.error("Scene shader: %s", e)
@@ -167,21 +165,22 @@ class Stage3DWidget(QOpenGLWidget):
         try:
             self._beam_program = load_and_link_shader_from_files(
                 resource_path(os.path.join("resources", "shaders", "stage_beam.vert")),
-                resource_path(os.path.join("resources", "shaders", "stage_beam.frag"))
+                resource_path(os.path.join("resources", "shaders", "stage_beam.frag")),
             )
         except RuntimeError as e:
             logger.error("Beam shader: %s", e)
         try:
             self._depth_program = load_and_link_shader_from_files(
                 resource_path(os.path.join("resources", "shaders", "stage_depth.vert")),
-                resource_path(os.path.join("resources", "shaders", "stage_depth.frag")))
+                resource_path(os.path.join("resources", "shaders", "stage_depth.frag")),
+            )
         except RuntimeError as e:
             logger.error("Depth shader: %s", e)
 
         try:
             self._lense_light_program = load_and_link_shader_from_files(
                 resource_path(os.path.join("resources", "shaders", "stage_lense.vert")),
-                resource_path(os.path.join("resources", "shaders", "stage_lense.frag"))
+                resource_path(os.path.join("resources", "shaders", "stage_lense.frag")),
             )
         except RuntimeError as e:
             logger.error("Lense shader: %s", e)
@@ -190,32 +189,49 @@ class Stage3DWidget(QOpenGLWidget):
 
         # Scene shader
         sp = self._scene_program
-        for name in ("projection", "view", "model", "viewPos", "baseColor",
-                      "ambientLevel", "numLights", "numShadowLights", "shadowMap",
-                      "highlightMix", "highlightColor"):
+        for name in (
+            "projection",
+            "view",
+            "model",
+            "viewPos",
+            "baseColor",
+            "ambientLevel",
+            "numLights",
+            "numShadowLights",
+            "shadowMap",
+            "highlightMix",
+            "highlightColor",
+        ):
             self._scene_uniforms[name] = gl.glGetUniformLocation(sp, name)
 
         # Per-light uniforms (spotlight array)
         self._sc_light_locs = []
         for i in range(MAX_SPOT_LIGHTS):
             p = f"lights[{i}]."
-            self._sc_light_locs.append({
-                k: gl.glGetUniformLocation(sp, p + k)
-                for k in ("position", "direction", "color", "innerCos", "outerCos")
-            })
+            self._sc_light_locs.append(
+                {
+                    k: gl.glGetUniformLocation(sp, p + k)
+                    for k in ("position", "direction", "color", "innerCos", "outerCos")
+                }
+            )
 
         # Light-space matrix array for shadow mapping
-        self._sc_lsm_locs = [
-            gl.glGetUniformLocation(sp, f"lightSpaceMatrices[{i}]")
-            for i in range(MAX_SHADOW_MAPS)
-        ]
+        self._sc_lsm_locs = [gl.glGetUniformLocation(sp, f"lightSpaceMatrices[{i}]") for i in range(MAX_SHADOW_MAPS)]
 
         # Beam shader
         bp = self._beam_program
         if bp:
-            for name in ("projection", "view", "model", "beamColor",
-                         "beamLightSpaceMatrix", "shadowMap", "beamShadowLayer",
-                         "hasShadow", "beamLightPos"):
+            for name in (
+                "projection",
+                "view",
+                "model",
+                "beamColor",
+                "beamLightSpaceMatrix",
+                "shadowMap",
+                "beamShadowLayer",
+                "hasShadow",
+                "beamLightPos",
+            ):
                 self._beam_uniforms[name] = gl.glGetUniformLocation(bp, name)
 
         # Depth shader
@@ -236,13 +252,16 @@ class Stage3DWidget(QOpenGLWidget):
             self._ensure_models_loaded(obj)
 
         # x y U V (stride is 4 floats = 16 bytes per vertex)
-        self._lense_light_quad_model = Model3D.upload_vao(np.array([
-                -1.0, -1.0, 0.0, 0.0,
-                1.0, -1.0, 1.0, 0.0,
-                1.0, 1.0, 1.0, 1.0,
-                -1.0, 1.0, 0.0, 1.0
-            ], dtype=np.float32), np.array([0, 1, 2, 2, 3, 0], dtype=np.int32), self.context(),
-            stride=16, vertex_size=2, vertex_location_index=4, uv_location_index=5
+        self._lense_light_quad_model = Model3D.upload_vao(
+            np.array(
+                [-1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 0.0, 1.0], dtype=np.float32
+            ),
+            np.array([0, 1, 2, 2, 3, 0], dtype=np.int32),
+            self.context(),
+            stride=16,
+            vertex_size=2,
+            vertex_location_index=4,
+            uv_location_index=5,
         )
         # Separate VBO for per-instance data; upload_vao already bound quad
         # attributes 4/5 to the quad's own VBO.
@@ -252,22 +271,22 @@ class Stage3DWidget(QOpenGLWidget):
 
         # 0 Position
         gl.glEnableVertexAttribArray(0)
-        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(0))
+        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 16 * 4, ctypes.c_void_p(0))
         gl.glVertexAttribDivisor(0, 1)
 
         # 1 Direction
         gl.glEnableVertexAttribArray(1)
-        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(4*4))
+        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 16 * 4, ctypes.c_void_p(4 * 4))
         gl.glVertexAttribDivisor(1, 1)
 
         # 2 Size
         gl.glEnableVertexAttribArray(2)
-        gl.glVertexAttribPointer(2, 1, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(8*4))
+        gl.glVertexAttribPointer(2, 1, gl.GL_FLOAT, gl.GL_FALSE, 16 * 4, ctypes.c_void_p(8 * 4))
         gl.glVertexAttribDivisor(2, 1)
 
         # 3 Color
         gl.glEnableVertexAttribArray(3)
-        gl.glVertexAttribPointer(3, 4, gl.GL_FLOAT, gl.GL_FALSE, 16*4, ctypes.c_void_p(12*4))
+        gl.glVertexAttribPointer(3, 4, gl.GL_FLOAT, gl.GL_FALSE, 16 * 4, ctypes.c_void_p(12 * 4))
         gl.glVertexAttribDivisor(3, 1)
 
         self._lense_shader_view_uniform_location = gl.glGetUniformLocation(self._lense_light_program, "uView")
@@ -298,26 +317,29 @@ class Stage3DWidget(QOpenGLWidget):
         self._shadow_tex = gl.glGenTextures(1)
         gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, self._shadow_tex)
         gl.glTexImage3D(
-            gl.GL_TEXTURE_2D_ARRAY, 0, gl.GL_DEPTH_COMPONENT24,
-            SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, MAX_SHADOW_MAPS,
-            0, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, None
+            gl.GL_TEXTURE_2D_ARRAY,
+            0,
+            gl.GL_DEPTH_COMPONENT24,
+            SHADOW_MAP_SIZE,
+            SHADOW_MAP_SIZE,
+            MAX_SHADOW_MAPS,
+            0,
+            gl.GL_DEPTH_COMPONENT,
+            gl.GL_FLOAT,
+            None,
         )
         gl.glTexParameteri(gl.GL_TEXTURE_2D_ARRAY, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
         gl.glTexParameteri(gl.GL_TEXTURE_2D_ARRAY, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
         gl.glTexParameteri(gl.GL_TEXTURE_2D_ARRAY, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_BORDER)
         gl.glTexParameteri(gl.GL_TEXTURE_2D_ARRAY, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_BORDER)
         # Border color = max depth so areas outside shadow map are fully lit
-        gl.glTexParameterfv(gl.GL_TEXTURE_2D_ARRAY, gl.GL_TEXTURE_BORDER_COLOR,
-                            (gl.GLfloat * 4)(1.0, 1.0, 1.0, 1.0))
+        gl.glTexParameterfv(gl.GL_TEXTURE_2D_ARRAY, gl.GL_TEXTURE_BORDER_COLOR, (gl.GLfloat * 4)(1.0, 1.0, 1.0, 1.0))
         gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, 0)
 
         # Create FBO and attach layer 0 initially
         self._shadow_fbo = gl.glGenFramebuffers(1)
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self._shadow_fbo)
-        gl.glFramebufferTextureLayer(
-            gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT,
-            self._shadow_tex, 0, 0
-        )
+        gl.glFramebufferTextureLayer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, self._shadow_tex, 0, 0)
         gl.glDrawBuffer(gl.GL_NONE)
         gl.glReadBuffer(gl.GL_NONE)
 
@@ -414,7 +436,7 @@ class Stage3DWidget(QOpenGLWidget):
         gl.glUniform3f(self._scene_uniforms["highlightColor"], *hl_color)
 
         for idx, obj in enumerate(self._stage_config.objects):
-            is_selected = (obj.id in self._selected_object_ids)
+            is_selected = obj.id in self._selected_object_ids
             # Alternate object colors for visual distinction
             color = (0.50, 0.50, 0.55) if idx % 2 == 0 else (0.45, 0.45, 0.50)
             gl.glUniform1f(self._scene_uniforms["highlightMix"], 1.0 if is_selected else 0.0)
@@ -429,8 +451,7 @@ class Stage3DWidget(QOpenGLWidget):
 
         # PASS 2: Volumetric beam cones
         if beam_list and self._beam_program and self._beam_cone:
-            self._draw_all_beams(beam_list, proj_data, view_data,
-                                spotlights, light_space_matrices)
+            self._draw_all_beams(beam_list, proj_data, view_data, spotlights, light_space_matrices)
 
         gl.glUseProgram(0)
 
@@ -469,10 +490,7 @@ class Stage3DWidget(QOpenGLWidget):
             light_space_matrices.append(lsm)
 
             # Attach this layer of the texture array to the FBO
-            gl.glFramebufferTextureLayer(
-                gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT,
-                self._shadow_tex, 0, i
-            )
+            gl.glFramebufferTextureLayer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, self._shadow_tex, 0, i)
             gl.glClear(gl.GL_DEPTH_BUFFER_BIT)
 
             gl.glUniformMatrix4fv(self._depth_uniforms["lightSpaceMatrix"], 1, gl.GL_TRUE, lsm.copyDataTo())
@@ -493,8 +511,7 @@ class Stage3DWidget(QOpenGLWidget):
                 _apply_local_ops(model, getattr(entry, "local_ops", ()))
 
                 if entry.model_path in self._gltf_models:
-                    self._traverse_gltf(entry.model_path, model, obj,
-                                        model_loc=self._depth_uniforms["model"])
+                    self._traverse_gltf(entry.model_path, model, obj, model_loc=self._depth_uniforms["model"])
                 elif entry.model_path in self._models:
                     gl.glUniformMatrix4fv(self._depth_uniforms["model"], 1, gl.GL_TRUE, model.copyDataTo())
                     m = self._models[entry.model_path]
@@ -503,13 +520,15 @@ class Stage3DWidget(QOpenGLWidget):
 
         gl.glBindVertexArray(0)
 
-    def _traverse_gltf(self,
-                       model_path: str,
-                       base_model: QtGui.QMatrix4x4,
-                       stage_obj: StageObject,
-                       model_loc: int,
-                       color: tuple[float, float, float] | None = None,
-                       color_loc: tuple[float, float, float] | None = None) -> None:
+    def _traverse_gltf(
+        self,
+        model_path: str,
+        base_model: QtGui.QMatrix4x4,
+        stage_obj: StageObject,
+        model_loc: int,
+        color: tuple[float, float, float] | None = None,
+        color_loc: int | None = None,
+    ) -> None:
         """Traverse the glTF node hierarchy and draw each mesh.
 
         Uses an iterative stack-based depth-first traversal instead of
@@ -555,9 +574,14 @@ class Stage3DWidget(QOpenGLWidget):
             _apply_local_ops(model, getattr(entry, "local_ops", ()))
 
             if entry.model_path in self._gltf_models:
-                self._traverse_gltf(entry.model_path, model, obj,
-                                    model_loc=self._scene_uniforms["model"],
-                                    color=color, color_loc=self._scene_uniforms["baseColor"])
+                self._traverse_gltf(
+                    entry.model_path,
+                    model,
+                    obj,
+                    model_loc=self._scene_uniforms["model"],
+                    color=color,
+                    color_loc=self._scene_uniforms["baseColor"],
+                )
             elif entry.model_path in self._models:
                 gl.glUniformMatrix4fv(self._scene_uniforms["model"], 1, gl.GL_TRUE, model.copyDataTo())
                 m = self._models[entry.model_path]
@@ -565,24 +589,28 @@ class Stage3DWidget(QOpenGLWidget):
                 gl.glDrawElements(gl.GL_TRIANGLES, m.index_count, gl.GL_UNSIGNED_INT, None)
 
     # Pass 2: Beam rendering
-    def _draw_all_beams(self,
-                        beam_list: list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]],
-                        proj_data: Sequence[float],
-                        view_data: Sequence[float],
-                        spotlights: list[SpotLightData],
-                        light_space_matrices: list[QtGui.QMatrix4x4]) -> None:
+    def _draw_all_beams(
+        self,
+        beam_list: list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]],
+        proj_data: np.ndarray,
+        view_data: np.ndarray,
+        spotlights: list[SpotLightData],
+        light_space_matrices: list[QtGui.QMatrix4x4],
+    ) -> None:
         """Draw all volumetric beam cones with additive blending.
 
         The depth buffer from Pass 1 (ground plane) naturally prevents
         beam fragments below the floor from being visible, giving a
         proper elliptical intersection where the cone meets the ground.
         """
+        if self._beam_cone is None:
+            return
         gl.glUseProgram(self._beam_program)
         gl.glUniformMatrix4fv(self._beam_uniforms["projection"], 1, gl.GL_TRUE, proj_data)
         gl.glUniformMatrix4fv(self._beam_uniforms["view"], 1, gl.GL_TRUE, view_data)
 
         # Bind shadow map to texture unit 1 (unit 0 is used by the scene pass)
-        has_shadow = (self._shadow_tex is not None and len(light_space_matrices) > 0)
+        has_shadow = self._shadow_tex is not None and len(light_space_matrices) > 0
         if has_shadow:
             gl.glActiveTexture(gl.GL_TEXTURE1)
             gl.glBindTexture(gl.GL_TEXTURE_2D_ARRAY, self._shadow_tex)
@@ -620,14 +648,16 @@ class Stage3DWidget(QOpenGLWidget):
                 gl.glUniform1i(self._beam_uniforms["hasShadow"], 1)
                 gl.glUniform1i(self._beam_uniforms["beamShadowLayer"], shadow_layer)
                 gl.glUniformMatrix4fv(
-                    self._beam_uniforms["beamLightSpaceMatrix"], 1, gl.GL_TRUE,
-                    light_space_matrices[shadow_layer].copyDataTo())
+                    self._beam_uniforms["beamLightSpaceMatrix"],
+                    1,
+                    gl.GL_TRUE,
+                    light_space_matrices[shadow_layer].copyDataTo(),
+                )
             else:
                 gl.glUniform1i(self._beam_uniforms["hasShadow"], 0)
 
             # Light origin for the volumetric shadow ray-march.
-            gl.glUniform3f(self._beam_uniforms["beamLightPos"],
-                           origin.x(), origin.y(), origin.z())
+            gl.glUniform3f(self._beam_uniforms["beamLightPos"], origin.x(), origin.y(), origin.z())
 
             gl.glDrawElements(gl.GL_TRIANGLES, self._beam_cone.index_count, gl.GL_UNSIGNED_INT, None)
 
@@ -643,8 +673,7 @@ class Stage3DWidget(QOpenGLWidget):
             gl.glActiveTexture(gl.GL_TEXTURE0)
         gl.glUseProgram(0)
 
-    def _render_lense_lights(self, light_data_count: int, proj_data: Sequence[float],
-                             view_data: Sequence[float]) -> None:
+    def _render_lense_lights(self, light_data_count: int, proj_data: np.ndarray, view_data: np.ndarray) -> None:
         if light_data_count <= 0 or not self._lense_light_program or self._lense_light_quad_model is None:
             return
         gl.glUseProgram(self._lense_light_program)
@@ -706,7 +735,7 @@ class Stage3DWidget(QOpenGLWidget):
                     obj,
                     obj.model_path,  # model path
                     ll_definition.origin_node_name,  # origin node name
-                    ll_definition.tilt_node_name   # name of movable node
+                    ll_definition.tilt_node_name,  # name of movable node
                 )
                 # Rotation offset: Euler angles (deg, pitch/yaw/roll) rotating the unit beam direction.
                 rotation_quat = QtGui.QQuaternion.fromEulerAngles(
@@ -721,33 +750,33 @@ class Stage3DWidget(QOpenGLWidget):
                 fwd = QtGui.QVector3D(direction)
                 if fwd.length() > 1e-6:
                     fwd.normalize()
-                world_up = (QtGui.QVector3D(0.0, 0.0, 1.0)
-                            if abs(fwd.z()) < 0.999
-                            else QtGui.QVector3D(0.0, 1.0, 0.0))
+                world_up = QtGui.QVector3D(0.0, 0.0, 1.0) if abs(fwd.z()) < 0.999 else QtGui.QVector3D(0.0, 1.0, 0.0)
                 tangent = QtGui.QVector3D.crossProduct(world_up, fwd)
                 if tangent.length() > 1e-6:
                     tangent.normalize()
                 bitangent = QtGui.QVector3D.crossProduct(fwd, tangent)
-                position += (tangent * position_offset_from_base_node.x()
-                             + bitangent * position_offset_from_base_node.y()
-                             + fwd * position_offset_from_base_node.z())
-                arr[16*lense_lights_count + 0] = position.x()
-                arr[16*lense_lights_count + 1] = position.y()
-                arr[16*lense_lights_count + 2] = position.z()
-                arr[16*lense_lights_count + 4] = direction.x()
-                arr[16*lense_lights_count + 5] = direction.y()
-                arr[16*lense_lights_count + 6] = direction.z()
-                arr[16*lense_lights_count + 8] = size
-                arr[16*lense_lights_count + 12] = color[0] / 255.0  # r
-                arr[16*lense_lights_count + 13] = color[1] / 255.0  # g
-                arr[16*lense_lights_count + 14] = color[2] / 255.0  # b
-                arr[16*lense_lights_count + 15] = 1.0  # a
+                position += (
+                    tangent * position_offset_from_base_node.x()
+                    + bitangent * position_offset_from_base_node.y()
+                    + fwd * position_offset_from_base_node.z()
+                )
+                arr[16 * lense_lights_count + 0] = position.x()
+                arr[16 * lense_lights_count + 1] = position.y()
+                arr[16 * lense_lights_count + 2] = position.z()
+                arr[16 * lense_lights_count + 4] = direction.x()
+                arr[16 * lense_lights_count + 5] = direction.y()
+                arr[16 * lense_lights_count + 6] = direction.z()
+                arr[16 * lense_lights_count + 8] = size
+                arr[16 * lense_lights_count + 12] = color[0] / 255.0  # r
+                arr[16 * lense_lights_count + 13] = color[1] / 255.0  # g
+                arr[16 * lense_lights_count + 14] = color[2] / 255.0  # b
+                arr[16 * lense_lights_count + 15] = 1.0  # a
                 lense_lights_count += 1
         return lense_lights_count
 
-    def _collect_lights_and_beams(self) \
-            -> tuple[list[SpotLightData],
-            list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]]]:
+    def _collect_lights_and_beams(
+        self,
+    ) -> tuple[list[SpotLightData], list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]]]:
         """Collect spotlight data and beam parameters from all active MovingHeads.
 
         For each moving head with ``beam_on == True``, computes the world-space
@@ -772,7 +801,7 @@ class Stage3DWidget(QOpenGLWidget):
             if not has_beam or not bool(getattr(obj, "beam_on", False)):
                 continue
 
-            entries = getattr(obj, "get_model_entries", list)()
+            entries: list[ModelEntry] = getattr(obj, "get_model_entries", list)()
             if not entries:
                 continue
             model_path = entries[0].model_path
@@ -790,23 +819,26 @@ class Stage3DWidget(QOpenGLWidget):
                 float(rgb[2]) / 255.0 * dimmer,
             )
 
-            spotlights.append(SpotLightData(
-                position=origin_pos, direction=dir_vec, color=color_f,
-                inner_deg=8.0, outer_deg=16.0,
-            ))
+            spotlights.append(
+                SpotLightData(
+                    position=origin_pos,
+                    direction=dir_vec,
+                    color=color_f,
+                    inner_deg=8.0,
+                    outer_deg=16.0,
+                )
+            )
             beam_list.append((origin_pos, dir_vec, color_f, dimmer))
 
         return spotlights, beam_list
 
-    def _calculate_extension_translation_matrices(self, obj: StageObject, model_path: str | None,
-                                                  origin_node_name: str | None,
-                                                  tilt_node_name: str | None) -> (
-            tuple)[QtGui.QVector3D, QtGui.QVector3D]:
+    def _calculate_extension_translation_matrices(
+        self, obj: StageObject, model_path: str | None, origin_node_name: str | None, tilt_node_name: str | None
+    ) -> tuple[QtGui.QVector3D, QtGui.QVector3D]:
         """Calculate end-effector position and direction from stage object and optional transition nodes."""
         base = build_base_model_matrix(obj)
         has_pan_and_tilt = hasattr(obj, "pan") and hasattr(obj, "tilt")
-        has_trans_node_data = tilt_node_name is not None and model_path is not None and origin_node_name is not None
-        if has_pan_and_tilt and has_trans_node_data:
+        if has_pan_and_tilt and model_path is not None and origin_node_name is not None and tilt_node_name is not None:
             # Find world-space position of the BeamOrigin node
             origin_mat = self._find_gltf_node_world(model_path, base, obj, origin_node_name)
             if origin_mat is None:
@@ -838,8 +870,7 @@ class Stage3DWidget(QOpenGLWidget):
         yaw = math.radians(self._cam_yaw)
         pitch = math.radians(self._cam_pitch)
         cy = math.cos(pitch)
-        fwd = QtGui.QVector3D(
-            float(math.cos(yaw) * cy), float(math.sin(pitch)), float(math.sin(yaw) * cy))
+        fwd = QtGui.QVector3D(float(math.cos(yaw) * cy), float(math.sin(pitch)), float(math.sin(yaw) * cy))
         self._camera_pos = self._camera_target - fwd * float(self._cam_distance)
 
     def _tick_camera(self) -> None:
@@ -848,8 +879,7 @@ class Stage3DWidget(QOpenGLWidget):
             return
         if self._keys_down:
             dt = 0.016
-            speed = (self._boost_speed if QtCore.Qt.Key.Key_Shift in self._keys_down
-                     else self._move_speed)
+            speed = self._boost_speed if QtCore.Qt.Key.Key_Shift in self._keys_down else self._move_speed
             yaw = math.radians(self._cam_yaw)
             fwd = QtGui.QVector3D(float(math.cos(yaw)), 0.0, float(math.sin(yaw)))
             if fwd.length() == 0:
@@ -922,14 +952,15 @@ class Stage3DWidget(QOpenGLWidget):
             self.update()
 
         # Middle/right-drag: pan camera target
-        if (QtCore.Qt.MouseButton.MiddleButton in self._mouse_buttons or
-                QtCore.Qt.MouseButton.RightButton in self._mouse_buttons):
+        if (
+            QtCore.Qt.MouseButton.MiddleButton in self._mouse_buttons
+            or QtCore.Qt.MouseButton.RightButton in self._mouse_buttons
+        ):
             ps = float(self._cam_distance) / 800.0
             yaw = math.radians(self._cam_yaw)
             pitch = math.radians(self._cam_pitch)
             cy = math.cos(pitch)
-            f = QtGui.QVector3D(float(math.cos(yaw) * cy), float(math.sin(pitch)),
-                                float(math.sin(yaw) * cy))
+            f = QtGui.QVector3D(float(math.cos(yaw) * cy), float(math.sin(pitch)), float(math.sin(yaw) * cy))
             f.normalize()
             r = QtGui.QVector3D.crossProduct(f, self._camera_up)
             r.normalize()
@@ -1002,24 +1033,24 @@ class Stage3DWidget(QOpenGLWidget):
                             face.append((int(ii[0]), int(ii[-1]) if ii[-1] else None))
                         faces.append(face)
             # Build interleaved vertex buffer with index deduplication
-            vd, il, im = [], [], {}
+            vd: list[float] = []
+            il: list[int] = []
+            im: dict[tuple[int, int | None], int] = {}
             for face in faces:
                 if len(face) < 3:
                     continue
                 # Fan triangulation for polygons with more than 3 vertices
                 for k in range(1, len(face) - 1):
-                    for vi, ni in [face[0], face[k], face[k+1]]:
+                    for vi, ni in [face[0], face[k], face[k + 1]]:
                         key = (vi, ni)
                         if key not in im:
-                            p = verts[vi - 1]
+                            pos = verts[vi - 1]
                             n = norms[ni - 1] if ni and ni <= len(norms) else (0, 1, 0)
                             im[key] = len(im)
-                            vd.extend([p[0], p[1], p[2], n[0], n[1], n[2]])
+                            vd.extend([pos[0], pos[1], pos[2], n[0], n[1], n[2]])
                         il.append(im[key])
             self._models[path] = Model3D.upload_mesh(
-                np.array(vd, dtype=np.float32).reshape(-1, 6),
-                np.array(il, dtype=np.uint32),
-                context=self.context()
+                np.array(vd, dtype=np.float32).reshape(-1, 6), np.array(il, dtype=np.uint32), context=self.context()
             )
         except Exception as e:
             logger.error("OBJ load error %s: %s", path, e)
@@ -1068,8 +1099,9 @@ class Stage3DWidget(QOpenGLWidget):
 
     # glTF node search
 
-    def _find_gltf_node_world(self, model_path: str, base_model: QtGui.QMatrix4x4, stage_obj: StageObject,
-                              target_name: str) -> QtGui.QMatrix4x4 | None:
+    def _find_gltf_node_world(
+        self, model_path: str, base_model: QtGui.QMatrix4x4, stage_obj: StageObject, target_name: str
+    ) -> QtGui.QMatrix4x4 | None:
         """Find a named node in the glTF hierarchy and return its world matrix.
 
         Uses iterative depth-first search with pan/tilt overrides applied.
@@ -1092,8 +1124,9 @@ class Stage3DWidget(QOpenGLWidget):
             stack.extend((int(child), world) for child in reversed(node.children or []))
         return None
 
-    def _find_gltf_node_world_rest(self, model_path: str, base_model: QtGui.QMatrix4x4, target_name: str) \
-            -> QtGui.QMatrix4x4 | None:
+    def _find_gltf_node_world_rest(
+        self, model_path: str, base_model: QtGui.QMatrix4x4, target_name: str
+    ) -> QtGui.QMatrix4x4 | None:
         """Find a named node in the glTF hierarchy and return its world matrix.
 
         Same as ``_find_gltf_node_world`` but without pan/tilt overrides (rest pose).
@@ -1101,7 +1134,7 @@ class Stage3DWidget(QOpenGLWidget):
         gm = self._gltf_models.get(model_path)
         if not gm:
             return None
-        no_overrides = {}
+        no_overrides: dict[str, tuple[float, float, float, float]] = {}
         stack = [(int(r), QtGui.QMatrix4x4(base_model)) for r in gm.scene_roots]
         while stack:
             ni, parent = stack.pop()
@@ -1157,8 +1190,7 @@ class Stage3DWidget(QOpenGLWidget):
         """
         mvp = QtGui.QMatrix4x4(self._projection)
         mvp *= view_matrix
-        clip = mvp.map(QtGui.QVector4D(
-            world_pos.x(), world_pos.y(), world_pos.z(), 1.0))
+        clip = mvp.map(QtGui.QVector4D(world_pos.x(), world_pos.y(), world_pos.z(), 1.0))
         if abs(clip.w()) < 1e-6:
             return None
         ndc_x = clip.x() / clip.w()
@@ -1209,7 +1241,7 @@ class Stage3DWidget(QOpenGLWidget):
             bg_rect = QtCore.QRectF(bg_x, bg_y, bg_w, bg_h)
 
             # Style based on selection state
-            is_sel = (obj.id in self._selected_object_ids)
+            is_sel = obj.id in self._selected_object_ids
             if is_sel:
                 if self._highlight_is_multi:
                     painter.setBrush(QtGui.QColor(255, 140, 30, 210))
@@ -1239,9 +1271,7 @@ class Stage3DWidget(QOpenGLWidget):
         self._camera_target = QtGui.QVector3D(0.0, 10.0, 0.0)
         self._cam_yaw = -90.0
         self._cam_pitch = -20.0
-        self._cam_distance = (
-            QtGui.QVector3D(0.0, 200.0, 400.0) - self._camera_target
-        ).length()
+        self._cam_distance = (QtGui.QVector3D(0.0, 200.0, 400.0) - self._camera_target).length()
         self.update()
 
     # Click-to-select picking
@@ -1280,8 +1310,8 @@ class Stage3DWidget(QOpenGLWidget):
         """Unload the models."""
         for model in self._models.values():
             model.unload()
-        for model in self._gltf_models.values():
-            model.unload()
+        for gltf_model in self._gltf_models.values():
+            gltf_model.unload()
         if self._lense_light_quad_model is not None:
             self._lense_light_quad_model.unload()
         if self._lense_light_instance_vbo:

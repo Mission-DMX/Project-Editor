@@ -52,6 +52,7 @@ def create_object_from_key(fixture_key: str, object_id: str,
                            name: str = "") -> StageObject:
     """Factory: build a StageObject from one of the ``FIXTURE_KEYS``."""
     key = fixture_key.lower()
+    obj: StageObject
     if key.startswith("truss"):
         variant = "default" if key in ("truss", "truss_default") else key[len("truss_"):]
         obj = Truss(object_id, variant=variant)
@@ -111,6 +112,7 @@ class StageConfig:
 
             for obj_data in data.get("objects", []):
                 type_name = (obj_data.get("type") or "truss").lower()
+                obj: StageObject
                 if type_name.startswith("truss"):
                     obj = Truss.from_dict(obj_data)
                 elif type_name.startswith("moving_head"):
@@ -181,8 +183,12 @@ class StageConfig:
             obj.name = make_unique_name(obj.name, self.get_all_names())
         self.objects.append(obj)
 
-    def remove_object(self, object_id: str) -> None:
-        """Remove a StageObject from the stage configuration specified by its ID."""
+    def remove_object(self, object_id: str) -> StageObject | None:
+        """Remove a StageObject from the stage configuration specified by its ID.
+
+        Returns:
+            The removed StageObject or None if no object with the given ID was found.
+        """
         for i, obj in enumerate(self.objects):
             if obj.id == object_id:
                 removed = self.objects.pop(i)
@@ -192,7 +198,7 @@ class StageConfig:
                 return removed
         return None
 
-    def get_object(self, object_id: str) -> None:
+    def get_object(self, object_id: str) -> StageObject | None:
         """Get a StageObject by its ID."""
         for obj in self.objects:
             if obj.id == object_id:

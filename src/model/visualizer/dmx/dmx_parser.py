@@ -31,9 +31,12 @@ logger = getLogger(__name__)
 
 # OFL role names we try to detect on each channel.
 MOVEMENT_ROLES = [
-    "pan_coarse", "pan_fine",
-    "tilt_coarse", "tilt_fine",
-    "dimmer", "pan_tilt_speed",
+    "pan_coarse",
+    "pan_fine",
+    "tilt_coarse",
+    "tilt_fine",
+    "dimmer",
+    "pan_tilt_speed",
 ]
 COLOR_ROLES = ["red", "green", "blue", "white"]
 ALL_ROLES = MOVEMENT_ROLES + COLOR_ROLES
@@ -48,8 +51,7 @@ def _primary(raw_name: str) -> str:
     return raw_name.split("___", maxsplit=1)[0].strip().lower().replace(" ", "_")
 
 
-def auto_detect_mapping(channel_names: list[str],
-                        roles: list[str]) -> dict[str, int]:
+def auto_detect_mapping(channel_names: list[str], roles: list[str]) -> dict[str, int]:
     """Return a {role: channel_offset} dict, -1 where no match was found."""
     mapping = dict.fromkeys(roles, -1)
 
@@ -87,6 +89,7 @@ def auto_detect_mapping(channel_names: list[str],
 
     return mapping
 
+
 def get_movement_range(fixture: UsedFixture) -> tuple[float, float]:
     """Get the range in which the fixture can move the pan / tilt axis."""
     return fixture.maximum_axis_movement or (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
@@ -97,8 +100,12 @@ class DmxParser(QtCore.QObject):
 
     fixtures_updated = QtCore.Signal()
 
-    def __init__(self, stage_config: StageConfig,
-                 board_configuration: BoardConfiguration | None = None, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        stage_config: StageConfig,
+        board_configuration: BoardConfiguration | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
         """Initialize DMX to stage visualizer adapter."""
         super().__init__(parent)
         self._stage_config = stage_config
@@ -178,7 +185,7 @@ class DmxParser(QtCore.QObject):
         start = cfg.get("start_channel", 0)
         channel_mapping = cfg.get("mapping", {})
 
-        def rd(role: str) -> int:
+        def rd(role: str) -> int | None:
             off = channel_mapping.get(role, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
@@ -208,7 +215,7 @@ class DmxParser(QtCore.QObject):
         start = cfg.get("start_channel", 0)
         m = cfg.get("mapping", {})
 
-        def rd(role: str) -> int:
+        def rd(role: str) -> int | None:
             off = m.get(role, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
@@ -226,11 +233,11 @@ class DmxParser(QtCore.QObject):
             b = min(255, b + w)
 
         obj.beam_color = (r, g, b)
-        any_color = (r > 0 or g > 0 or b > 0)
+        any_color = r > 0 or g > 0 or b > 0
         obj.beam_on = any_color
 
         # Use the white channel as dimmer if no dedicated movement dimmer exists.
-        #if w is not None:
+        # if w is not None:
         #    obj.dimmer = w / 255.0 if w > 0 else (1.0 if any_color else 0.0)
         if not self._has_movement_dimmer(obj) and any_color:
             obj.dimmer = 1.0

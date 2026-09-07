@@ -33,6 +33,7 @@ def _fixture_combo_data(fix: UsedFixture) -> dict[str, int | list[str]]:
         "channel_names": ch_names,
     }
 
+
 ROLE_ID = QtCore.Qt.ItemDataRole.UserRole
 ROLE_IS_GROUP = QtCore.Qt.ItemDataRole.UserRole + 1  # bool: True for group headers
 
@@ -40,18 +41,20 @@ ROLE_IS_GROUP = QtCore.Qt.ItemDataRole.UserRole + 1  # bool: True for group head
 class StageEditorWidget(QtWidgets.QWidget):
     """Right-hand panel: fixture list + property editor + DMX controls."""
 
-    add_object_requested = QtCore.Signal(str, str, object) # (fixture_key, name, device_or_None)
-    remove_object_requested = QtCore.Signal(str) # object_id
-    object_changed = QtCore.Signal(str) # object_id
-    selection_changed = QtCore.Signal(list, bool) # (highlight_ids, is_multi)
-    group_requested = QtCore.Signal(list, str) # (fixture_ids, group_name)
-    remove_group_requested = QtCore.Signal(str) # group_id
-    dmx_toggled = QtCore.Signal(bool) # True = start, False = stop
+    add_object_requested = QtCore.Signal(str, str, object)  # (fixture_key, name, device_or_None)
+    remove_object_requested = QtCore.Signal(str)  # object_id
+    object_changed = QtCore.Signal(str)  # object_id
+    selection_changed = QtCore.Signal(list, bool)  # (highlight_ids, is_multi)
+    group_requested = QtCore.Signal(list, str)  # (fixture_ids, group_name)
+    remove_group_requested = QtCore.Signal(str)  # group_id
+    dmx_toggled = QtCore.Signal(bool)  # True = start, False = stop
 
-    def __init__(self,
-                 stage_config: StageConfig,
-                 used_fixtures: list[UsedFixture] | None = None,
-                 parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(
+        self,
+        stage_config: StageConfig,
+        used_fixtures: list[UsedFixture] | None = None,
+        parent: QtWidgets.QWidget | None = None,
+    ) -> None:
         """Initialize Stage Editor Widget.
 
         Args:
@@ -63,12 +66,12 @@ class StageEditorWidget(QtWidgets.QWidget):
         super().__init__(parent)
         self._stage_config = stage_config
         self._used_fixtures = used_fixtures or []
-        self._current_obj = None # currently selected fixture
-        self._current_group: FixtureGroup | None = None # currently selected group
-        self._updating_ui = False # guard against recursive signal loops
-        self._group_base_offsets = {} # snapshot for group rotation
-        self._group_base_rotation = (0, 0, 0)
-        self._last_live_update = 0.0 # throttle for DMX live refresh
+        self._current_obj: StageObject | None = None  # currently selected fixture
+        self._current_group: FixtureGroup | None = None  # currently selected group
+        self._updating_ui = False  # guard against recursive signal loops
+        self._group_base_offsets: dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]] = {}
+        self._group_base_rotation: tuple[float, float, float] = (0.0, 0.0, 0.0)
+        self._last_live_update = 0.0  # throttle for DMX live refresh
 
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(4, 4, 4, 4)
@@ -108,8 +111,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._fixture_list = QtWidgets.QListWidget()
         self._fixture_list.setMaximumHeight(200)
         self._fixture_list.setAlternatingRowColors(True)
-        self._fixture_list.setSelectionMode(
-            QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self._fixture_list.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         root.addWidget(self._fixture_list)
 
         # Scrollable property panel
@@ -416,8 +418,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._pan_spin.setSingleStep(1.0)
         self._pan_spin.setSuffix("  deg")
         self._pan_spin.setValue(obj.pan)
-        self._pan_spin.valueChanged.connect(
-            lambda v: self._on_attr("pan", v))
+        self._pan_spin.valueChanged.connect(lambda v: self._on_attr("pan", v))
         self._prop_layout.addRow("Pan:", self._pan_spin)
 
         self._tilt_spin = QtWidgets.QDoubleSpinBox()
@@ -426,8 +427,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._tilt_spin.setSingleStep(1.0)
         self._tilt_spin.setSuffix("  deg")
         self._tilt_spin.setValue(obj.tilt)
-        self._tilt_spin.valueChanged.connect(
-            lambda v: self._on_attr("tilt", v))
+        self._tilt_spin.valueChanged.connect(lambda v: self._on_attr("tilt", v))
         self._prop_layout.addRow("Tilt:", self._tilt_spin)
 
         self._add_separator()
@@ -442,8 +442,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._dimmer_spin.setDecimals(2)
         self._dimmer_spin.setSingleStep(0.05)
         self._dimmer_spin.setValue(obj.dimmer)
-        self._dimmer_spin.valueChanged.connect(
-            lambda v: self._on_attr("dimmer", v))
+        self._dimmer_spin.valueChanged.connect(lambda v: self._on_attr("dimmer", v))
         self._prop_layout.addRow("Dimmer:", self._dimmer_spin)
 
         self._dimmer_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
@@ -495,6 +494,7 @@ class StageEditorWidget(QtWidgets.QWidget):
                 return pan_tilt_range
 
         from model.visualizer.dmx.dmx_parser import DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG
+
         return (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
 
     def _on_dmx_live_toggled(self, checked: bool) -> None:
@@ -532,8 +532,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         # Lock DMX-controlled movement channels
         has_pan = self._has_dmx_role(obj, "movement", "pan_coarse")
         has_tilt = self._has_dmx_role(obj, "movement", "tilt_coarse")
-        has_dim = (self._has_dmx_role(obj, "movement", "dimmer") or
-                   self._has_dmx_role(obj, "color", "white"))
+        has_dim = self._has_dmx_role(obj, "movement", "dimmer") or self._has_dmx_role(obj, "color", "white")
 
         if has_pan:
             self._pan_spin.setEnabled(False)
@@ -610,8 +609,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         """Set the color button background and auto-contrast text color."""
         lum = 0.299 * r + 0.587 * g + 0.114 * b
         tc = "#000" if lum > 128 else "#fff"
-        self._color_btn.setStyleSheet(
-            f"background-color: rgb({r},{g},{b}); color: {tc}; border: 1px solid #555;")
+        self._color_btn.setStyleSheet(f"background-color: rgb({r},{g},{b}); color: {tc}; border: 1px solid #555;")
         self._color_btn.setText(f"({r}, {g}, {b})")
 
     # Device (DMX) section — Movement and Color
@@ -648,7 +646,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._mv_ch_layout.setContentsMargins(0, 0, 0, 0)
         self._mv_ch_layout.setVerticalSpacing(3)
         self._prop_layout.addRow(self._mv_ch_container)
-        self._mv_combos = {}
+        self._mv_combos: dict[str, QtWidgets.QComboBox] = {}
         self._rebuild_mv_combos(obj)
 
         self._add_separator()
@@ -666,8 +664,11 @@ class StageEditorWidget(QtWidgets.QWidget):
         if col_cfg:
             for i in range(1, self._col_device_combo.count()):
                 d = self._col_device_combo.itemData(i)
-                if (d and d["universe"] == col_cfg.get("universe") and
-                        d["start_channel"] == col_cfg.get("start_channel")):
+                if (
+                    d
+                    and d["universe"] == col_cfg.get("universe")
+                    and d["start_channel"] == col_cfg.get("start_channel")
+                ):
                     self._col_device_combo.setCurrentIndex(i)
                     break
         self._col_device_combo.currentIndexChanged.connect(self._on_col_device_changed)
@@ -679,7 +680,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._col_ch_layout.setContentsMargins(0, 0, 0, 0)
         self._col_ch_layout.setVerticalSpacing(3)
         self._prop_layout.addRow(self._col_ch_container)
-        self._col_combos = {}
+        self._col_combos: dict[str, QtWidgets.QComboBox] = {}
         self._rebuild_col_combos(obj)
 
     def _rebuild_mv_combos(self, obj: StageObject) -> None:
@@ -695,9 +696,12 @@ class StageEditorWidget(QtWidgets.QWidget):
         mapping = dc.get("mapping") or auto_detect_mapping(ch_names, MOVEMENT_ROLES)
 
         labels = {
-            "pan_coarse": "Pan:", "pan_fine": "Pan fine:",
-            "tilt_coarse": "Tilt:", "tilt_fine": "Tilt fine:",
-            "dimmer": "Dimmer:", "pan_tilt_speed": "P/T Speed:",
+            "pan_coarse": "Pan:",
+            "pan_fine": "Pan fine:",
+            "tilt_coarse": "Tilt:",
+            "tilt_fine": "Tilt fine:",
+            "dimmer": "Dimmer:",
+            "pan_tilt_speed": "P/T Speed:",
         }
         for role in MOVEMENT_ROLES:
             combo = QtWidgets.QComboBox(self._mv_ch_container)
@@ -711,8 +715,7 @@ class StageEditorWidget(QtWidgets.QWidget):
                     if combo.itemData(ci) == cur:
                         combo.setCurrentIndex(ci)
                         break
-            combo.currentIndexChanged.connect(
-                lambda _idx, r=role: self._on_mv_mapping_changed(r))
+            combo.currentIndexChanged.connect(lambda _idx, r=role: self._on_mv_mapping_changed(r))
             self._mv_ch_layout.addRow(labels.get(role, role), combo)
             self._mv_combos[role] = combo
 
@@ -740,8 +743,7 @@ class StageEditorWidget(QtWidgets.QWidget):
                     if combo.itemData(ci) == cur:
                         combo.setCurrentIndex(ci)
                         break
-            combo.currentIndexChanged.connect(
-                lambda _idx, r=role: self._on_col_mapping_changed(r))
+            combo.currentIndexChanged.connect(lambda _idx, r=role: self._on_col_mapping_changed(r))
             self._col_ch_layout.addRow(labels.get(role, role), combo)
             self._col_combos[role] = combo
 
@@ -756,8 +758,11 @@ class StageEditorWidget(QtWidgets.QWidget):
         else:
             mapping = auto_detect_mapping(dd["channel_names"], MOVEMENT_ROLES)
             self._current_obj.device_config["movement"] = {
-                "universe": dd["universe"], "start_channel": dd["start_channel"],
-                "channel_count": dd["channel_count"], "mapping": mapping}
+                "universe": dd["universe"],
+                "start_channel": dd["start_channel"],
+                "channel_count": dd["channel_count"],
+                "mapping": mapping,
+            }
         self._updating_ui = True
         self._rebuild_mv_combos(self._current_obj)
         self._updating_ui = False
@@ -775,8 +780,11 @@ class StageEditorWidget(QtWidgets.QWidget):
         else:
             mapping = auto_detect_mapping(dd["channel_names"], COLOR_ROLES)
             self._current_obj.device_config["color"] = {
-                "universe": dd["universe"], "start_channel": dd["start_channel"],
-                "channel_count": dd["channel_count"], "mapping": mapping}
+                "universe": dd["universe"],
+                "start_channel": dd["start_channel"],
+                "channel_count": dd["channel_count"],
+                "mapping": mapping,
+            }
         self._updating_ui = True
         self._rebuild_col_combos(self._current_obj)
         self._updating_ui = False
@@ -856,14 +864,14 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._emit_changed()
 
     def _on_beam_toggled(self, state: bool) -> None:
-        if self._updating_ui or not self._current_obj:
+        if self._updating_ui or not isinstance(self._current_obj, MovingHead):
             return
         self._current_obj.beam_on = bool(state)
         self._emit_changed()
 
     def _on_dimmer_slider(self, val: float) -> None:
         """Synchronize the dimmer slider with the spin box."""
-        if self._updating_ui or not self._current_obj:
+        if self._updating_ui or not isinstance(self._current_obj, MovingHead):
             return
         v = val / 100.0
         self._current_obj.dimmer = v
@@ -873,7 +881,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._emit_changed()
 
     def _on_rgb_changed(self) -> None:
-        if self._updating_ui or not self._current_obj:
+        if self._updating_ui or not isinstance(self._current_obj, MovingHead):
             return
         r, g, b = (s.value() for s in self._rgb_spins)
         self._current_obj.beam_color = (r, g, b)
@@ -882,11 +890,10 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     def _on_color_picker(self) -> None:
         """Open a QColorDialog and apply the chosen color."""
-        if not self._current_obj:
+        if not isinstance(self._current_obj, MovingHead):
             return
         r, g, b = self._current_obj.beam_color
-        color = QtWidgets.QColorDialog.getColor(
-            QtGui.QColor(r, g, b), self, "Beam Color")
+        color = QtWidgets.QColorDialog.getColor(QtGui.QColor(r, g, b), self, "Beam Color")
         if color.isValid():
             nr, ng, nb = color.red(), color.green(), color.blue()
             self._updating_ui = True
@@ -1007,8 +1014,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         dlg = AddFixtureDialog(existing, self._used_fixtures, self)
         if dlg.exec() != QtWidgets.QDialog.DialogCode.Accepted:
             return
-        self.add_object_requested.emit(
-            dlg.selected_fixture_key(), dlg.selected_name(), dlg.selected_device())
+        self.add_object_requested.emit(dlg.selected_fixture_key(), dlg.selected_name(), dlg.selected_device())
 
     def _on_remove_clicked(self) -> None:
         """Remove the selected fixture from the stage."""
