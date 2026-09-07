@@ -24,8 +24,8 @@ if TYPE_CHECKING:
     import proto.DirectMode_pb2
     from model import BoardConfiguration
     from model.ofl.fixture import UsedFixture
-    from model.visualizer.stage import StageObject
     from model.visualizer.stage.stage_config import StageConfig
+    from model.visualizer.stage.stage_object import StageObject
 
 logger = getLogger(__name__)
 
