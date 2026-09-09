@@ -48,13 +48,12 @@ def backup_stage_file(stage_path: str) -> str:
     return backup_path
 
 
-def create_object_from_key(fixture_key: str, object_id: str,
-                           name: str = "") -> StageObject:
+def create_object_from_key(fixture_key: str, object_id: str, name: str = "") -> StageObject:
     """Factory: build a StageObject from one of the ``FIXTURE_KEYS``."""
     key = fixture_key.lower()
     obj: StageObject
     if key.startswith("truss"):
-        variant = "default" if key in ("truss", "truss_default") else key[len("truss_"):]
+        variant = "default" if key in ("truss", "truss_default") else key[len("truss_") :]
         obj = Truss(object_id, variant=variant)
     elif key.startswith("moving_head"):
         obj = MovingHead(object_id)
@@ -96,8 +95,7 @@ class StageConfig:
                 resolved_file_path = show_file_next_to_stage
                 resolved = True
         if not resolved:
-            show_file_next_to_stage = os.path.join(os.path.dirname(
-                get_default_stage_path()), resolved_file_path)
+            show_file_next_to_stage = os.path.join(os.path.dirname(get_default_stage_path()), resolved_file_path)
             if os.path.isfile(show_file_next_to_stage):
                 resolved_file_path = show_file_next_to_stage
 
@@ -188,6 +186,7 @@ class StageConfig:
 
         Returns:
             The removed StageObject or None if no object with the given ID was found.
+
         """
         for i, obj in enumerate(self.objects):
             if obj.id == object_id:
