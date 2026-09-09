@@ -847,22 +847,22 @@ class Stage3DWidget(QOpenGLWidget):
 
             # Find world-space position of the tilt pivot node
             tilt_mat = self._find_gltf_node_world(model_path, base, obj, tilt_node_name)
+            if tilt_mat is not None:
+                tilt_pos = tilt_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
+                dir_vec = origin_pos - tilt_pos
+                if dir_vec.length() < 1e-6:
+                    dir_vec = QtGui.QVector3D(0.0, -1.0, 0.0)
+                else:
+                    dir_vec.normalize()
+            else:
+                dir_vec = QtGui.QVector3D(0.0, 1.0, 0.0)
         else:
             origin_pos = QtGui.QVector3D(*obj.position)
-            degrees = np.degrees(np.array(obj.rotation, dtype=np.float64))
-            tilt_mat = QtGui.QMatrix4x4().rotate(QtGui.QQuaternion.fromEulerAngles(*degrees))
-
-            # Beam direction: from tilt pivot toward BeamOrigin (lens).
-            # Pan/tilt naturally rotates this since BeamOrigin moves with the head.
-        if tilt_mat is not None:
-            tilt_pos = tilt_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
-            dir_vec = origin_pos - tilt_pos
-            if dir_vec.length() < 1e-6:
-                dir_vec = QtGui.QVector3D(0.0, -1.0, 0.0)
-            else:
-                dir_vec.normalize()
-        else:
-            dir_vec = QtGui.QVector3D(0.0, 1.0, 0.0)
+            rotation_mat = QtGui.QMatrix4x4()
+            rotation_mat.rotate(obj.rotation[2], 0.0, 0.0, 1.0)
+            rotation_mat.rotate(obj.rotation[1], 0.0, 1.0, 0.0)
+            rotation_mat.rotate(obj.rotation[0], 1.0, 0.0, 0.0)
+            dir_vec = rotation_mat.map(QtGui.QVector3D(0.0, 1.0, 0.0))
         return origin_pos, dir_vec
 
     def _update_camera_pos(self) -> None:
