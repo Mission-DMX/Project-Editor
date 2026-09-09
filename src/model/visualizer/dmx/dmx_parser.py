@@ -10,6 +10,7 @@ convention of the connected fixture profile.
 
 from __future__ import annotations
 
+from enum import StrEnum
 from logging import getLogger
 from typing import TYPE_CHECKING, Any
 
@@ -29,17 +30,26 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
-# OFL role names we try to detect on each channel.
-MOVEMENT_ROLES = [
-    "pan_coarse",
-    "pan_fine",
-    "tilt_coarse",
-    "tilt_fine",
-    "dimmer",
-    "pan_tilt_speed",
-]
-COLOR_ROLES = ["red", "green", "blue", "white"]
-ALL_ROLES = MOVEMENT_ROLES + COLOR_ROLES
+
+class MovementRole(StrEnum):
+    """OFL channel roles we try to detect for fixture movement."""
+
+    PAN_COARSE = "pan_coarse"
+    PAN_FINE = "pan_fine"
+    TILT_COARSE = "tilt_coarse"
+    TILT_FINE = "tilt_fine"
+    DIMMER = "dimmer"
+    PAN_TILT_SPEED = "pan_tilt_speed"
+
+
+class ColorRole(StrEnum):
+    """OFL channel roles we try to detect for fixture color mixing."""
+
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+    WHITE = "white"
+
 
 # Physical rotation range of typical moving heads.
 DEFAULT_PAN_MAX_DEG = 540.0
@@ -51,7 +61,7 @@ def _primary(raw_name: str) -> str:
     return raw_name.split("___", maxsplit=1)[0].strip().lower().replace(" ", "_")
 
 
-def auto_detect_mapping(channel_names: list[str], roles: list[str]) -> dict[str, int]:
+def auto_detect_mapping(channel_names: list[str], roles: type[MovementRole | ColorRole]) -> dict[str, int]:
     """Return a {role: channel_offset} dict, -1 where no match was found."""
     mapping = dict.fromkeys(roles, -1)
 
@@ -59,35 +69,36 @@ def auto_detect_mapping(channel_names: list[str], roles: list[str]) -> dict[str,
         p = _primary(raw_name)
 
         # Pan
-        if (p == "pan_fine" or ("pan" in p and "fine" in p)) and "pan_fine" in roles:
-            mapping["pan_fine"] = i
-        elif ("pan" in p and "speed" not in p and "tilt" not in p) and "pan_coarse" in roles:
-            mapping["pan_coarse"] = i
+        if (p == MovementRole.PAN_FINE or ("pan" in p and "fine" in p)) and MovementRole.PAN_FINE in roles:
+            mapping[MovementRole.PAN_FINE] = i
+        elif ("pan" in p and "speed" not in p and "tilt" not in p) and MovementRole.PAN_COARSE in roles:
+            mapping[MovementRole.PAN_COARSE] = i
 
         # Tilt
-        if p == "tilt_fine" or ("tilt" in p and "fine" in p):
-            if "tilt_fine" in roles:
-                mapping["tilt_fine"] = i
-        elif ("tilt" in p and "speed" not in p and "pan" not in p) and "tilt_coarse" in roles:
-            mapping["tilt_coarse"] = i
+        if p == MovementRole.TILT_FINE or ("tilt" in p and "fine" in p):
+            if MovementRole.TILT_FINE in roles:
+                mapping[MovementRole.TILT_FINE] = i
+        elif ("tilt" in p and "speed" not in p and "pan" not in p) and MovementRole.TILT_COARSE in roles:
+            mapping[MovementRole.TILT_COARSE] = i
 
         # Dimmer / speed
-        if p in ("dimmer", "intensity") and "dimmer" in roles:
-            mapping["dimmer"] = i
-        if "speed" in p and ("pan" in p or "tilt" in p) and "pan_tilt_speed" in roles:
-            mapping["pan_tilt_speed"] = i
+        if p in (MovementRole.DIMMER, "intensity") and MovementRole.DIMMER in roles:
+            mapping[MovementRole.DIMMER] = i
+        if "speed" in p and ("pan" in p or "tilt" in p) and MovementRole.PAN_TILT_SPEED in roles:
+            mapping[MovementRole.PAN_TILT_SPEED] = i
 
         # Colors
-        if "red" in p and "red" in roles:
-            mapping["red"] = i
-        if "green" in p and "green" in roles:
-            mapping["green"] = i
-        if "blue" in p and "blue" in roles:
-            mapping["blue"] = i
-        if p == "white" and "white" in roles:
-            mapping["white"] = i
+        if "red" in p and ColorRole.RED in roles:
+            mapping[ColorRole.RED] = i
+        if "green" in p and ColorRole.GREEN in roles:
+            mapping[ColorRole.GREEN] = i
+        if "blue" in p and ColorRole.BLUE in roles:
+            mapping[ColorRole.BLUE] = i
+        if p == ColorRole.WHITE and ColorRole.WHITE in roles:
+            mapping[ColorRole.WHITE] = i
 
-    return mapping
+    # ruamel.yaml cannot represent StrEnum members, so normalize keys to plain strings.
+    return {str(role): offset for role, offset in mapping.items()}
 
 
 def get_movement_range(fixture: UsedFixture) -> tuple[float, float]:
@@ -185,7 +196,7 @@ class DmxParser(QtCore.QObject):
         start = cfg.get("start_channel", 0)
         channel_mapping = cfg.get("mapping", {})
 
-        def rd(role: str) -> int | None:
+        def rd(role: MovementRole) -> int | None:
             off = channel_mapping.get(role, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
@@ -194,18 +205,18 @@ class DmxParser(QtCore.QObject):
         pan_max_deg, tilt_max_deg = cfg.get("pan_tilt_range", (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG))
 
         # 16-bit pan, centered at zero.
-        pc, pf = rd("pan_coarse"), rd("pan_fine")
+        pc, pf = rd(MovementRole.PAN_COARSE), rd(MovementRole.PAN_FINE)
         if pc is not None:
             v = (pc << 8) | (pf or 0)
             obj.pan = (v / 65535.0) * pan_max_deg - pan_max_deg / 2.0
 
         # 16-bit tilt, centered at zero.
-        tc, tf = rd("tilt_coarse"), rd("tilt_fine")
+        tc, tf = rd(MovementRole.TILT_COARSE), rd(MovementRole.TILT_FINE)
         if tc is not None:
             v = (tc << 8) | (tf or 0)
             obj.tilt = (v / 65535.0) * tilt_max_deg - tilt_max_deg / 2.0
 
-        dim = rd("dimmer")
+        dim = rd(MovementRole.DIMMER)
         if dim is not None:
             obj.dimmer = dim / 255.0
             obj.beam_on = dim > 0
@@ -215,18 +226,18 @@ class DmxParser(QtCore.QObject):
         start = cfg.get("start_channel", 0)
         m = cfg.get("mapping", {})
 
-        def rd(role: str) -> int | None:
+        def rd(role: ColorRole) -> int | None:
             off = m.get(role, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
             return int(raw[start + off])
 
-        r, g, b = rd("red"), rd("green"), rd("blue")
+        r, g, b = rd(ColorRole.RED), rd(ColorRole.GREEN), rd(ColorRole.BLUE)
         if r is None or g is None or b is None:
             return
 
         # White LED adds on top of RGB (matches RGBW fixtures).
-        w = rd("white")
+        w = rd(ColorRole.WHITE)
         if w is not None and w > 0:
             r = min(255, r + w)
             g = min(255, g + w)
@@ -250,4 +261,4 @@ class DmxParser(QtCore.QObject):
         dc = obj.device_config
         if not dc:
             return False
-        return dc.get("movement", {}).get("mapping", {}).get("dimmer", -1) >= 0
+        return dc.get("movement", {}).get("mapping", {}).get(MovementRole.DIMMER, -1) >= 0

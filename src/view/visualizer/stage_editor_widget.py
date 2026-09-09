@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from model.visualizer.dmx.dmx_parser import COLOR_ROLES, MOVEMENT_ROLES, auto_detect_mapping
+from model.visualizer.dmx.dmx_parser import ColorRole, MovementRole, auto_detect_mapping
 from model.visualizer.stage.so_moving_head import MovingHead
 from view.visualizer.add_fixture_dialog import AddFixtureDialog, _fixture_label
 from view.visualizer.stage_group_name_dialog import GroupNameDialog
@@ -477,7 +477,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     # DMX lock / unlock logic
 
-    def _has_dmx_role(self, obj: StageObject, section: str, role: COLOR_ROLES) -> bool:
+    def _has_dmx_role(self, obj: StageObject, section: str, role: MovementRole | ColorRole) -> bool:
         """Check if a MovingHead has a DMX channel assigned for a given role."""
         dc = obj.device_config
         if not dc:
@@ -530,9 +530,11 @@ class StageEditorWidget(QtWidgets.QWidget):
             return
 
         # Lock DMX-controlled movement channels
-        has_pan = self._has_dmx_role(obj, "movement", "pan_coarse")
-        has_tilt = self._has_dmx_role(obj, "movement", "tilt_coarse")
-        has_dim = self._has_dmx_role(obj, "movement", "dimmer") or self._has_dmx_role(obj, "color", "white")
+        has_pan = self._has_dmx_role(obj, "movement", MovementRole.PAN_COARSE)
+        has_tilt = self._has_dmx_role(obj, "movement", MovementRole.TILT_COARSE)
+        has_dim = self._has_dmx_role(obj, "movement", MovementRole.DIMMER) or self._has_dmx_role(
+            obj, "color", ColorRole.WHITE
+        )
 
         if has_pan:
             self._pan_spin.setEnabled(False)
@@ -550,9 +552,9 @@ class StageEditorWidget(QtWidgets.QWidget):
             self._dimmer_spin.setStyleSheet(lock_style)
 
         # Lock DMX-controlled color channels
-        has_r = self._has_dmx_role(obj, "color", "red")
-        has_g = self._has_dmx_role(obj, "color", "green")
-        has_b = self._has_dmx_role(obj, "color", "blue")
+        has_r = self._has_dmx_role(obj, "color", ColorRole.RED)
+        has_g = self._has_dmx_role(obj, "color", ColorRole.GREEN)
+        has_b = self._has_dmx_role(obj, "color", ColorRole.BLUE)
         if has_r and has_g and has_b:
             self._color_btn.setEnabled(False)
             self._color_btn.setToolTip("Controlled by DMX")
@@ -646,7 +648,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._mv_ch_layout.setContentsMargins(0, 0, 0, 0)
         self._mv_ch_layout.setVerticalSpacing(3)
         self._prop_layout.addRow(self._mv_ch_container)
-        self._mv_combos: dict[str, QtWidgets.QComboBox] = {}
+        self._mv_combos: dict[MovementRole, QtWidgets.QComboBox] = {}
         self._rebuild_mv_combos(obj)
 
         self._add_separator()
@@ -680,30 +682,30 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._col_ch_layout.setContentsMargins(0, 0, 0, 0)
         self._col_ch_layout.setVerticalSpacing(3)
         self._prop_layout.addRow(self._col_ch_container)
-        self._col_combos: dict[str, QtWidgets.QComboBox] = {}
+        self._col_combos: dict[ColorRole, QtWidgets.QComboBox] = {}
         self._rebuild_col_combos(obj)
 
     def _rebuild_mv_combos(self, obj: StageObject) -> None:
         """Rebuild the movement channel mapping combo boxes."""
         while self._mv_ch_layout.rowCount() > 0:
             self._mv_ch_layout.removeRow(0)
-        self._mv_combos = {}
+        self._mv_combos.clear()
         device_data = self._mv_device_combo.currentData()
         if not device_data:
             return
         ch_names = device_data.get("channel_names", [])
         dc = (obj.device_config or {}).get("movement", {})
-        mapping = dc.get("mapping") or auto_detect_mapping(ch_names, MOVEMENT_ROLES)
+        mapping = dc.get("mapping") or auto_detect_mapping(ch_names, MovementRole)
 
         labels = {
-            "pan_coarse": "Pan:",
-            "pan_fine": "Pan fine:",
-            "tilt_coarse": "Tilt:",
-            "tilt_fine": "Tilt fine:",
-            "dimmer": "Dimmer:",
-            "pan_tilt_speed": "P/T Speed:",
+            MovementRole.PAN_COARSE: "Pan:",
+            MovementRole.PAN_FINE: "Pan fine:",
+            MovementRole.TILT_COARSE: "Tilt:",
+            MovementRole.TILT_FINE: "Tilt fine:",
+            MovementRole.DIMMER: "Dimmer:",
+            MovementRole.PAN_TILT_SPEED: "P/T Speed:",
         }
-        for role in MOVEMENT_ROLES:
+        for role in MovementRole:
             combo = QtWidgets.QComboBox(self._mv_ch_container)
             combo.addItem("(None)", -1)
             for idx, cn in enumerate(ch_names):
@@ -723,16 +725,21 @@ class StageEditorWidget(QtWidgets.QWidget):
         """Rebuild the color channel mapping combo boxes."""
         while self._col_ch_layout.rowCount() > 0:
             self._col_ch_layout.removeRow(0)
-        self._col_combos = {}
+        self._col_combos.clear()
         device_data = self._col_device_combo.currentData()
         if not device_data:
             return
         ch_names = device_data.get("channel_names", [])
         dc = (obj.device_config or {}).get("color", {})
-        mapping = dc.get("mapping") or auto_detect_mapping(ch_names, COLOR_ROLES)
+        mapping = dc.get("mapping") or auto_detect_mapping(ch_names, ColorRole)
 
-        labels = {"red": "Red:", "green": "Green:", "blue": "Blue:", "white": "White:"}
-        for role in COLOR_ROLES:
+        labels = {
+            ColorRole.RED: "Red:",
+            ColorRole.GREEN: "Green:",
+            ColorRole.BLUE: "Blue:",
+            ColorRole.WHITE: "White:",
+        }
+        for role in ColorRole:
             combo = QtWidgets.QComboBox(self._col_ch_container)
             combo.addItem("(None)", -1)
             for idx, cn in enumerate(ch_names):
@@ -756,7 +763,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         if dd is None:
             self._current_obj.device_config.pop("movement", None)
         else:
-            mapping = auto_detect_mapping(dd["channel_names"], MOVEMENT_ROLES)
+            mapping = auto_detect_mapping(dd["channel_names"], MovementRole)
             self._current_obj.device_config["movement"] = {
                 "universe": dd["universe"],
                 "start_channel": dd["start_channel"],
@@ -778,7 +785,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         if dd is None:
             self._current_obj.device_config.pop("color", None)
         else:
-            mapping = auto_detect_mapping(dd["channel_names"], COLOR_ROLES)
+            mapping = auto_detect_mapping(dd["channel_names"], ColorRole)
             self._current_obj.device_config["color"] = {
                 "universe": dd["universe"],
                 "start_channel": dd["start_channel"],
@@ -791,7 +798,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._refresh_locks()
         self._emit_changed()
 
-    def _on_mv_mapping_changed(self, role: COLOR_ROLES) -> None:
+    def _on_mv_mapping_changed(self, role: MovementRole) -> None:
         if self._updating_ui or not self._current_obj:
             return
         dc = self._current_obj.device_config
@@ -799,11 +806,11 @@ class StageEditorWidget(QtWidgets.QWidget):
             return
         combo = self._mv_combos.get(role)
         if combo:
-            dc["movement"]["mapping"][role] = combo.currentData()
+            dc["movement"]["mapping"][role.value] = combo.currentData()
         self._refresh_locks()
         self._emit_changed()
 
-    def _on_col_mapping_changed(self, role: COLOR_ROLES) -> None:
+    def _on_col_mapping_changed(self, role: ColorRole) -> None:
         if self._updating_ui or not self._current_obj:
             return
         dc = self._current_obj.device_config
@@ -811,7 +818,7 @@ class StageEditorWidget(QtWidgets.QWidget):
             return
         combo = self._col_combos.get(role)
         if combo:
-            dc["color"]["mapping"][role] = combo.currentData()
+            dc["color"]["mapping"][role.value] = combo.currentData()
         self._refresh_locks()
         self._emit_changed()
 

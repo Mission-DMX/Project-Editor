@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from PySide6 import QtCore, QtWidgets
 
 from model.broadcaster import Broadcaster
-from model.visualizer.dmx.dmx_parser import MOVEMENT_ROLES, DmxParser, auto_detect_mapping, get_movement_range
+from model.visualizer.dmx.dmx_parser import DmxParser, MovementRole, auto_detect_mapping, get_movement_range
 from model.visualizer.stage.fixture_group import FixtureGroup
 from model.visualizer.stage.stage_config import (
     STAGE_DIR,
@@ -189,7 +189,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         if device is not None:
             try:
                 ch_names = [ch.name for ch in device.fixture_channels]
-                mapping = auto_detect_mapping(ch_names, MOVEMENT_ROLES)
+                mapping = auto_detect_mapping(ch_names, MovementRole)
                 new_obj.device_config = {
                     "movement": {
                         "universe": device.universe_id,
