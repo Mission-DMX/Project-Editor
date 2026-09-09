@@ -41,6 +41,9 @@ class SettingsDialog(QDialog):
         general_layout = QFormLayout()
         self.show_file_tb = QLineEdit(self._general_settings_tab)
         general_layout.addRow("Show File Name: ", self.show_file_tb)
+        self._stage_filename_tb = QLineEdit(self._general_settings_tab)
+        self._stage_filename_tb.setToolTip("The specified stage file will be loaded when the show file is loaded.")
+        general_layout.addRow("Stage Filename: ", self._stage_filename_tb)
         self.show_notes_tb = QTextEdit(self._general_settings_tab)
         general_layout.addRow("Notes: ", self.show_notes_tb)
         self._general_settings_tab.setLayout(general_layout)
@@ -95,6 +98,7 @@ class SettingsDialog(QDialog):
         self._show = new_show
         self.show_file_tb.setText(new_show.show_name)
         self.show_notes_tb.setText(new_show.notes)
+        self._stage_filename_tb.setText(new_show.ui_hints.get("associated_stage_file", ""))
         self._brightness_mixin_enbled_cb.setChecked(
             str(new_show.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true")
         try:
@@ -114,6 +118,10 @@ class SettingsDialog(QDialog):
         self._show.ui_hints[
             "color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
         self._show.ui_hints["show_ui_window_count"] = str(self._show_ui_window_count_tb.value())
+        stage_filename = str(self._stage_filename_tb.text())
+        if not stage_filename.endswith(".yaml") and not stage_filename.endswith(".yml"):
+            stage_filename += ".yaml"
+        self._show.ui_hints["associated_stage_file"] = stage_filename
         update_window_count(self._show_ui_window_count_tb.value(), self._show)
 
     def _ok_button_pressed(self) -> None:

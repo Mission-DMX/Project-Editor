@@ -147,6 +147,8 @@ class UsedFixture(QtCore.QObject):
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
+        self._max_movement_range: Final[tuple[float, float] | None] = self._find_maximum_movement()
+
         self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = \
             _load_colorwheel_mappings(fixture, self._fixture_channels)
 
@@ -186,6 +188,11 @@ class UsedFixture(QtCore.QObject):
     def name(self) -> str:
         """Name of theFixture."""
         return self._fixture.name
+
+    @property
+    def maximum_axis_movement(self) -> tuple[float, float] | None:
+        """Get the maximum movement of the fixture (pan/tilt)."""
+        return self._max_movement_range
 
     @property
     def short_name(self) -> str:
@@ -322,6 +329,31 @@ class UsedFixture(QtCore.QObject):
             {key: np.array(segment_map[key], dtype=np.int_) for key in FixtureChannelType},
             found_color,
         )
+
+    def _find_maximum_movement(self) -> tuple[float, float] | None:
+        min_pan: float = -1.0
+        max_pan: float = -1.0
+        min_tilt: float = -1.0
+        max_tilt: float = -1.0
+
+        for channel in self._fixture_channels:
+            template = channel.channel_template
+            if template is None:
+                logger.error("Channel %s has empty template.", channel.name)
+                continue
+            capability = template.capability if template.capability is not None else template.capabilities[0]
+            cap_props = capability.capabilityProperties
+            try:
+                if channel.type == FixtureChannelType.PAN:
+                    min_pan = min(min_pan, float(cap_props["angleStart"].replace("deg", "")))
+                    max_pan = max(max_pan, float(cap_props["angleEnd"].replace("deg", "")))
+                elif channel.type == FixtureChannelType.TILT:
+                    min_tilt = min(min_tilt, float(cap_props["angleStart"].replace("deg", "")))
+                    max_tilt = max(max_tilt, float(cap_props["angleEnd"].replace("deg", "")))
+            except KeyError:
+                logger.error("Pan/Tilt channel does not have angle description")
+        return (max_pan - min_pan, max_tilt - min_tilt) if \
+            (min_pan != -1 and max_pan != -1 and min_tilt != -1 and max_tilt != -1) else None
 
     def get_fixture_channel(self, index: int) -> FixtureChannel:
         """Get a fixture channel by index."""

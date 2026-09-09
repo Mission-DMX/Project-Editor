@@ -8,7 +8,6 @@ import proto.DirectMode_pb2
 from model import Broadcaster, Universe
 from model.final_globals import FinalGlobals
 
-
 # TODO komplett
 class DmxDataLogWidget(QtWidgets.QWidget):
     """Widget to Log DMX Data"""

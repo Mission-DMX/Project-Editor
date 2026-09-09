@@ -1,3 +1,4 @@
+"""Contains OpenGL context initialization."""
 
 from logging import getLogger
 
@@ -7,11 +8,12 @@ logger = getLogger(__name__)
 
 
 def opengl_context_init() -> None:
+    """Initialize OpenGL context to 4.1 core profile."""
     fmt = QSurfaceFormat()
     fmt.setDepthBufferSize(24)
     fmt.setStencilBufferSize(8)
     fmt.setVersion(4, 1)  # Request OpenGL 4.1 compatible context
-    fmt.setProfile(QSurfaceFormat.CoreProfile)
+    fmt.setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
 
     QSurfaceFormat.setDefaultFormat(fmt)
     logger.debug("Initialized OpenGL context to 4.1")

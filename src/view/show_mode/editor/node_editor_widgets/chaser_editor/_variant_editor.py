@@ -33,4 +33,3 @@ class VariantEditor(QWidget):
             layout.addWidget(cb)
         layout.addStretch()
         self.setLayout(layout)
-
