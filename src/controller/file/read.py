@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QMessageBox
 import proto.Console_pb2
 import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
-from controller.file.deserialization.post_load_operations import link_patched_fixtures
+from controller.file.deserialization.post_load_operations import apply_show_configurations, link_patched_fixtures
 from controller.file.recently_used import register_opened_file
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Filter, Scene, UIPage, Universe
@@ -183,6 +183,7 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     except Exception as e:
         logger.exception("Unable to register opened file: %s (%s)", file_name, str(e))
     pn.close()
+    apply_show_configurations(board_configuration)
     return True
 
 

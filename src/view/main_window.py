@@ -21,6 +21,7 @@ from controller.file.showfile_dialogs import (
     show_save_showfile_dialog,
 )
 from controller.network import NetworkManager
+from controller.utils.network_setting_application import apply_network_settings_and_notify
 from controller.utils.process_notifications import get_global_process_state, get_progress_changed_signal
 from model.board_configuration import BoardConfiguration
 from model.broadcaster import Broadcaster
@@ -442,6 +443,7 @@ class MainWindow(QtWidgets.QMainWindow):
             super().closeEvent(event)
             QApplication.processEvents()
             self._broadcaster.application_closing.emit()
+            apply_network_settings_and_notify("{}")
             QApplication.processEvents()
         else:
             event.ignore()
