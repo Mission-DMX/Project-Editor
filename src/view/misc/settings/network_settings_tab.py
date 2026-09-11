@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from controller.utils.network_setting_application import apply_network_settings_and_notify
+
 if TYPE_CHECKING:
     from model import BoardConfiguration
 
@@ -36,6 +38,7 @@ class _StringListWidget(QWidget):
                  unique_value: str | None = None) -> None:
         super().__init__(parent)
         self._unique_value = unique_value
+        self._msgbox: QMessageBox | None = None
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         self._list = QListWidget(self)
@@ -72,13 +75,15 @@ class _StringListWidget(QWidget):
         text = self._input.text().strip()
         if not text:
             return
-        if self._unique_value is not None and text == self._unique_value:
-            if any(v == self._unique_value for v in self.values()):
-                QMessageBox.warning(
-                    self, "Duplicate entry",
-                    f"Only one entry may contain '{self._unique_value}'.",
-                )
-                return
+        if self._unique_value is not None and text == self._unique_value and \
+                any(v == self._unique_value for v in self.values()):
+            self._msgbox = QMessageBox(
+                QMessageBox.Icon.Warning, "Duplicate entry",
+                f"Only one entry may contain '{self._unique_value}'.",
+                QMessageBox.StandardButton.Ok, self,
+            )
+            self._msgbox.open()
+            return
         self._list.addItem(text)
         self._input.clear()
 
@@ -93,6 +98,7 @@ class _RouteListWidget(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self._msgbox: QMessageBox | None = None
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         self._list = QListWidget(self)
@@ -145,10 +151,12 @@ class _RouteListWidget(QWidget):
         destination = self._destination_input.text().strip()
         gateway = self._gateway_input.text().strip()
         if not destination or not gateway:
-            QMessageBox.warning(
-                self, "Incomplete route",
+            self._msgbox = QMessageBox(
+                QMessageBox.Icon.Warning, "Incomplete route",
                 "A route needs both a destination and a gateway.",
+                QMessageBox.StandardButton.Ok, self,
             )
+            self._msgbox.open()
             return
         self._append(destination, gateway)
         self._destination_input.clear()
@@ -292,7 +300,7 @@ class NetworkSettingsTab(QWidget):
             widget = _InterfaceWidget(self._interfaces_inner, name=key)
             widget.load_dict(entry)
             self._append_interface(widget)
-        # TODO if interface defintion is empty, create one for every ethernet interface present on the computer
+        # TODO if interface definition is completely empty, create one for every ethernet interface present on the computer
 
     def apply(self) -> None:
         """Apply the current dialed in settings."""
@@ -307,5 +315,6 @@ class NetworkSettingsTab(QWidget):
             if not name:
                 continue
             config[name] = widget.to_dict()
-        self._show.ui_hints["network-config"] = json.dumps(config)
-        # TODO apply new network settings
+        config_str = json.dumps(config)
+        self._show.ui_hints["network-config"] = config_str
+        apply_network_settings_and_notify(config_str)
