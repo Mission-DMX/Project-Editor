@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from view.misc.settings.network_settings_tab import NetworkSettingsTab
 from view.show_mode.player.external_ui_windows import update_window_count
 
 if TYPE_CHECKING:
@@ -72,6 +73,9 @@ class SettingsDialog(QDialog):
         self._editor_tab.setLayout(editor_layout)
         self._category_tab_bar.addTab(self._editor_tab, "Editor")
 
+        self._network_tab = NetworkSettingsTab(self)
+        self._category_tab_bar.addTab(self._network_tab, "Network")
+
         self.button_box = QDialogButtonBox(exit_buttons)
         self.button_box.accepted.connect(self._ok_button_pressed)
         self.button_box.rejected.connect(self._cancle_button_pressed)
@@ -97,6 +101,7 @@ class SettingsDialog(QDialog):
         self.show_notes_tb.setText(new_show.notes)
         self._brightness_mixin_enbled_cb.setChecked(
             str(new_show.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true")
+        self._network_tab.load_show_file(new_show)
         try:
             self._default_main_brightness_tb.setValue(int(new_show.ui_hints.get("default_main_brightness") or "255"))
         except ValueError:
@@ -115,6 +120,7 @@ class SettingsDialog(QDialog):
             "color-mixin-auto-add-disabled"] = "false" if self._brightness_mixin_enbled_cb.isChecked() else "true"
         self._show.ui_hints["show_ui_window_count"] = str(self._show_ui_window_count_tb.value())
         update_window_count(self._show_ui_window_count_tb.value(), self._show)
+        self._network_tab.apply()
 
     def _ok_button_pressed(self) -> None:
         self.apply()
