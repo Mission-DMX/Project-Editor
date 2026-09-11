@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
@@ -26,6 +27,30 @@ if TYPE_CHECKING:
 
 
 _AUTOMATIC_IP = "AUTOMATIC"
+
+
+def _detect_ethernet_interfaces() -> list[str]:
+    """Return the physical ethernet interface names present on the system.
+
+    Filters out loopback, wireless, and virtual devices. Returns an empty list
+    on non-Linux systems or when ``/sys/class/net`` is not readable.
+    """
+    net_dir = Path("/sys/class/net")
+    if not net_dir.is_dir():
+        return []
+    interfaces: list[str] = []
+    for entry in sorted(net_dir.iterdir()):
+        try:
+            if (entry / "type").read_text().strip() != "1":  # ARPHRD_ETHER
+                continue
+        except OSError:
+            continue
+        if not (entry / "device").exists():
+            continue  # virtual bridge, veth, tun, ...
+        if (entry / "wireless").is_dir() or (entry / "phy80211").exists():
+            continue
+        interfaces.append(entry.name)
+    return interfaces
 
 
 class _StringListWidget(QWidget):
@@ -300,7 +325,11 @@ class NetworkSettingsTab(QWidget):
             widget = _InterfaceWidget(self._interfaces_inner, name=key)
             widget.load_dict(entry)
             self._append_interface(widget)
-        # TODO if interface definition is completely empty, create one for every ethernet interface present on the computer
+        if not self._interface_widgets:
+            for name in _detect_ethernet_interfaces():
+                widget = _InterfaceWidget(self._interfaces_inner, name=name)
+                widget.load_dict({"addresses": [_AUTOMATIC_IP]})
+                self._append_interface(widget)
 
     def apply(self) -> None:
         """Apply the current dialed in settings."""
