@@ -1,3 +1,5 @@
+"""Provides method to apply a show file network configuration."""
+
 from PySide6.QtDBus import QDBus, QDBusConnection, QDBusInterface, QDBusMessage
 
 _SERVICE = "org.mission_dmx.networking_ctrl"

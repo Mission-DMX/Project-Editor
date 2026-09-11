@@ -1,3 +1,5 @@
+"""Contains settings tab to use network settings specific to show files."""
+
 from __future__ import annotations
 
 import json
@@ -6,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QCheckBox,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -251,10 +254,17 @@ class NetworkSettingsTab(QWidget):
     """A widget to control the network settings of a show file."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Initialize the network settings tab."""
         super().__init__(parent)
         self._show: BoardConfiguration | None = None
         self._interface_widgets: list[_InterfaceWidget] = []
 
+        outer_layout = QVBoxLayout()
+        self._enabled_checkbox = QCheckBox("Use show file specific network settings", self)
+        self._enabled_checkbox.toggled.connect(self._settings_container_enabled)
+        outer_layout.addWidget(self._enabled_checkbox)
+
+        self._settings_container = QWidget(self)
         layout = QFormLayout()
         self._default_gateway_textbox: QLineEdit = QLineEdit(self)
         layout.addRow("Default Gateway", self._default_gateway_textbox)
@@ -286,7 +296,13 @@ class NetworkSettingsTab(QWidget):
         interfaces_container.setLayout(interfaces_outer)
         layout.addRow("Interfaces", interfaces_container)
 
-        self.setLayout(layout)
+        self._settings_container.setLayout(layout)
+        outer_layout.addWidget(self._settings_container)
+        self.setLayout(outer_layout)
+        self._settings_container_enabled(False)
+
+    def _settings_container_enabled(self, enabled: bool) -> None:
+        self._settings_container.setEnabled(enabled)
 
     def _add_interface_pressed(self) -> None:
         self._append_interface(_InterfaceWidget(self._interfaces_inner))
@@ -315,7 +331,11 @@ class NetworkSettingsTab(QWidget):
         self._name_servers_list.clear()
         self._clear_interfaces()
         if new_show is None:
+            self._enabled_checkbox.setChecked(False)
             return
+        self._enabled_checkbox.setChecked(
+            new_show.ui_hints.get("network-config-enabled", "false").lower() == "true",
+        )
         config = json.loads(new_show.ui_hints.get("network-config", "{}"))
         self._default_gateway_textbox.setText(config.get("dw", ""))
         self._name_servers_list.set_values([str(v) for v in config.get("dns", [])])
@@ -346,4 +366,7 @@ class NetworkSettingsTab(QWidget):
             config[name] = widget.to_dict()
         config_str = json.dumps(config)
         self._show.ui_hints["network-config"] = config_str
+        self._show.ui_hints["network-config-enabled"] = (
+            "true" if self._enabled_checkbox.isChecked() else "false"
+        )
         apply_network_settings_and_notify(config_str)
