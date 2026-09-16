@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QPainter, QColor, QMouseEvent, QPaintEvent
-from PySide6.QtCore import Qt, Signal, QRect
+from typing import override
+
 import numpy as np
+from PySide6.QtCore import QRect, QSize, Qt, Signal
+from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent
+from PySide6.QtWidgets import QWidget
+
 
 class TriggerMatrixEditor(QWidget):
     """Class providing user with option to select when which events should be triggered.
@@ -24,10 +27,12 @@ class TriggerMatrixEditor(QWidget):
     Properties:
     - highlight_current_step: bool -- should the current step the filter is in be highlighted?
     - current_step: int -- get or set the current step (0 to highlight_current_step)
-    - event_data: str -- get or set all event cells. See https://mission-dmx.org/docs/Filters/Filter_Types/misc.html for the format.
+    - event_data: str -- get or set all event cells. See https://mission-dmx.org/docs/Filters/Filter_Types/misc.html
+      for the format.
 
     """
 
+    event_updated = Signal(int, int, bool)
 
     def __init__(self, parent: QWidget) -> None:
         """Initialize the widget"""
@@ -129,10 +134,7 @@ class TriggerMatrixEditor(QWidget):
 
         steps_data = []
         for step in range(self._number_of_steps):
-            for event in range(len(self._events)):
-                if self._states[event, step]:
-                    steps_data.append(f"{step},{event},TRUE")
-
+            list.extend(f"{step},{event},TRUE" for event in range(len(self._events)) if self._states[event, step])
         return ";".join(steps_data)
 
     @event_data.setter
@@ -152,8 +154,8 @@ class TriggerMatrixEditor(QWidget):
         if self._states.size > 0:
             self._states.fill(False)
 
-        for entry in value.split(';'):
-            step, event, state = entry.split(',')
+        for entry in value.split(";"):
+            step, event, state = entry.split(",")
             self._states[int(event), int(step)] = state.lower() == "true"
 
         self.update()
@@ -176,6 +178,7 @@ class TriggerMatrixEditor(QWidget):
         y = self._header_height + event_idx * self._cell_height
         return QRect(x, y, self._event_name_width, self._cell_height)
 
+    @override
     def paintEvent(self, event: QPaintEvent) -> None:
         """Custom paint event for efficient rendering"""
         painter = QPainter(self)
@@ -224,6 +227,7 @@ class TriggerMatrixEditor(QWidget):
                     painter.setPen(self._color_grid)
                     painter.drawRect(cell_rect)
 
+    @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Handle mouse click to toggle cell state"""
         if event.button() != Qt.LeftButton:
@@ -255,13 +259,15 @@ class TriggerMatrixEditor(QWidget):
             cell_rect = self._get_cell_rect(event_idx, step)
             self.update(cell_rect)
 
-    def sizeHint(self):
+    @override
+    def sizeHint(self) -> QSize:
         """Suggest a reasonable size for the widget"""
         width = self._event_name_width + self._number_of_steps * self._cell_width
         height = self._header_height + len(self._events) * self._cell_height
-        return (width, height)
+        return QSize(width, height)
 
-    def minimumSizeHint(self):
+    @override
+    def minimumSizeHint(self) -> QSize:
         """Minimum size hint"""
-        return (self._event_name_width + 5 * self._cell_width,
+        return QSize(self._event_name_width + 5 * self._cell_width,
                 self._header_height + 3 * self._cell_height)

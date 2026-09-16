@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from model.filter import FilterTypeEnumeration
-
 from view.show_mode.editor.nodes import FilterNode
 
 if TYPE_CHECKING:
-    from model.filter import Filter
     from model import Scene
+    from model.filter import Filter
 
 class EventSchedulerNode(FilterNode):
     """Filter to schedule events."""
@@ -25,9 +24,10 @@ class EventSchedulerNode(FilterNode):
             name=name
         )
         # TODO setup GUI for recommended trigger event types, default trigger event type and event data list
-        if "event_data" not in self.filter.filter_configurations.keys():
+        if "event_data" not in self.filter.filter_configurations:
             self.filter.filter_configurations["event_data"] = ""
         parameter_keys = self.filter.initial_parameters.keys()
-        for entry, default_val in [("length", "0"), ("update_triggers", ""), ("step", "0"), ("synchronization_target", "0,0")]:
+        for entry, default_val in [("length", "0"), ("update_triggers", ""), ("step", "0"),
+                                   ("synchronization_target", "0,0")]:
             if entry in parameter_keys:
                 self.filter.initial_parameters[entry] = default_val
