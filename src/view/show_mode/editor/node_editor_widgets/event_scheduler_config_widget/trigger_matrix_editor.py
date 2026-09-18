@@ -1,4 +1,4 @@
-"""Contains Trigger Matrix Editor"""
+"""Contains Trigger Matrix Editor."""
 
 from __future__ import annotations
 
@@ -29,18 +29,20 @@ class TriggerMatrixEditor(QWidget):
     - current_step: int -- get or set the current step (0 to highlight_current_step)
     - event_data: str -- get or set all event cells. See https://mission-dmx.org/docs/Filters/Filter_Types/misc.html
       for the format.
+    - event_names: list[str] -- Associated names of the events
 
     """
 
     event_updated = Signal(int, int, bool)
 
     def __init__(self, parent: QWidget) -> None:
-        """Initialize the widget"""
+        """Initialize the widget."""
         super().__init__(parent)
         self._highlight_current_step: bool = False
         self._number_of_steps: int = 0
         self._current_step: int = 0
         self._events: list[str] = []
+        self._event_names: list[str] = []
         self._states: np.ndarray = np.zeros((0, 0), dtype=bool)
 
         # Layout constants
@@ -62,21 +64,23 @@ class TriggerMatrixEditor(QWidget):
         self.setFocusPolicy(Qt.StrongFocus)
 
     def clear(self) -> None:
-        """Clear all events and reset the matrix"""
-        self._events = []
+        """Clear all events and reset the matrix."""
+        self._events.clear()
+        self._event_names.clear()
         self._number_of_steps = 0
         self._current_step = 0
         self._states = np.zeros((0, 0), dtype=bool)
         self.update()
 
-    def add_event(self, event_name: str) -> None:
-        """Add a new event to the matrix"""
-        self._events.append(event_name)
+    def add_event(self, event_description: str, event_name: str) -> None:
+        """Add a new event to the matrix."""
+        self._events.append(event_description)
+        self._event_names.append(event_name)
         self._resize_states()
         self.update()
 
     def _resize_states(self) -> None:
-        """Resize the states array to match current events and steps"""
+        """Resize the states array to match current events and steps."""
         num_events = len(self._events)
         new_states = np.zeros((num_events, self._number_of_steps), dtype=bool)
 
@@ -89,24 +93,34 @@ class TriggerMatrixEditor(QWidget):
 
     @property
     def highlight_current_step(self) -> bool:
-        """Get whether current step should be highlighted"""
+        """Get whether current step should be highlighted."""
         return self._highlight_current_step
 
     @highlight_current_step.setter
     def highlight_current_step(self, value: bool) -> None:
-        """Set whether current step should be highlighted"""
+        """Set whether current step should be highlighted."""
         if self._highlight_current_step != value:
             self._highlight_current_step = value
             self.update()
 
     @property
+    def event_names(self) -> list[str]:
+        """Get list of event names."""
+        return self._event_names
+
+    @event_names.setter
+    def event_names(self, value: list[str]) -> None:
+        self._event_names = value
+        self.update()
+
+    @property
     def current_step(self) -> int:
-        """Get the current step"""
+        """Get the current step."""
         return self._current_step
 
     @current_step.setter
     def current_step(self, value: int) -> None:
-        """Set the current step"""
+        """Set the current step."""
         if self._current_step != value:
             self._current_step = max(0, min(value, self._number_of_steps - 1)) if self._number_of_steps > 0 else 0
             if self._highlight_current_step:
@@ -115,12 +129,12 @@ class TriggerMatrixEditor(QWidget):
 
     @property
     def number_of_steps(self) -> int:
-        """Get the number of steps"""
+        """Get the number of steps."""
         return self._number_of_steps
 
     @number_of_steps.setter
     def number_of_steps(self, value: int) -> None:
-        """Set the number of steps"""
+        """Set the number of steps."""
         if self._number_of_steps != value:
             self._number_of_steps = max(0, value)
             self._resize_states()
@@ -161,26 +175,26 @@ class TriggerMatrixEditor(QWidget):
         self.update()
 
     def _get_cell_rect(self, event_idx: int, step: int) -> QRect:
-        """Get the rectangle for a specific cell"""
+        """Get the rectangle for a specific cell."""
         x = self._event_name_width + step * self._cell_width
         y = self._header_height + event_idx * self._cell_height
         return QRect(x, y, self._cell_width, self._cell_height)
 
     def _get_step_rect(self, step: int) -> QRect:
-        """Get the rectangle for a step header"""
+        """Get the rectangle for a step header."""
         x = self._event_name_width + step * self._cell_width
         y = 0
         return QRect(x, y, self._cell_width, self._header_height)
 
     def _get_event_rect(self, event_idx: int) -> QRect:
-        """Get the rectangle for an event name"""
+        """Get the rectangle for an event name."""
         x = 0
         y = self._header_height + event_idx * self._cell_height
         return QRect(x, y, self._event_name_width, self._cell_height)
 
     @override
     def paintEvent(self, event: QPaintEvent) -> None:
-        """Custom paint event for efficient rendering"""
+        """Custom paint event for efficient rendering."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
@@ -203,7 +217,7 @@ class TriggerMatrixEditor(QWidget):
                 painter.drawText(header_rect, Qt.AlignCenter, str(step))
 
         # Draw event names
-        for event_idx, event_name in enumerate(self._events):
+        for event_idx, event_name in enumerate(self._event_names):
             event_rect = self._get_event_rect(event_idx)
 
             if update_rect.intersects(event_rect):
@@ -214,7 +228,7 @@ class TriggerMatrixEditor(QWidget):
                 painter.drawText(event_rect, Qt.AlignCenter, event_name)
 
         # Draw cells
-        for event_idx in range(len(self._events)):
+        for event_idx in range(len(self._event_names)):
             for step in range(self._number_of_steps):
                 cell_rect = self._get_cell_rect(event_idx, step)
 
@@ -229,7 +243,7 @@ class TriggerMatrixEditor(QWidget):
 
     @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        """Handle mouse click to toggle cell state"""
+        """Handle mouse click to toggle cell state."""
         if event.button() != Qt.LeftButton:
             super().mousePressEvent(event)
             return
@@ -261,13 +275,13 @@ class TriggerMatrixEditor(QWidget):
 
     @override
     def sizeHint(self) -> QSize:
-        """Suggest a reasonable size for the widget"""
+        """Suggest a reasonable size for the widget."""
         width = self._event_name_width + self._number_of_steps * self._cell_width
         height = self._header_height + len(self._events) * self._cell_height
         return QSize(width, height)
 
     @override
     def minimumSizeHint(self) -> QSize:
-        """Minimum size hint"""
+        """Minimum size hint."""
         return QSize(self._event_name_width + 5 * self._cell_width,
                 self._header_height + 3 * self._cell_height)

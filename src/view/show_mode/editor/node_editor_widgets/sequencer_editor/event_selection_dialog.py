@@ -17,7 +17,11 @@ from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidge
 
 
 class EventSelectionDialog(QDialog):
-    """Prompt the user to select an event to link."""
+    """Prompt the user to select an event to link.
+
+    Use the selected_event property to query the selection after the user accepted it.
+
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Prompt the user to select an event to link."""
