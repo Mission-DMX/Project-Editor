@@ -73,6 +73,7 @@ from view.show_mode.editor.nodes.impl.faders import (
     FaderMainBrightness,
     FaderRawNode,
 )
+from view.show_mode.editor.nodes.impl.misc import EventSchedulerNode
 from view.show_mode.editor.nodes.impl.routing import Switch8BitNode, Switch16BitNode, SwitchColorNode, SwitchFloatNode
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
@@ -120,6 +121,7 @@ class FilterNodeLibrary(NodeLibrary):
         self._register_fader_nodes()
         self._register_effect_nodes()
         self._register_scripting_nodes()
+        self._register_misc_nodes()
         self.addNodeType(ImportNode, [("")])
 
     def _register_constants_nodes(self) -> None:
@@ -240,3 +242,6 @@ class FilterNodeLibrary(NodeLibrary):
 
     def _register_color_manip_nodes(self) -> None:
         self.addNodeType(ColorMixerVFilterNode, [("Color Manip",)])
+
+    def _register_misc_nodes(self) -> None:
+        self.addNodeType(EventSchedulerNode, [("Misc",)])
