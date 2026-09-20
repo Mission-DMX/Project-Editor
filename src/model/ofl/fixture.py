@@ -242,6 +242,11 @@ class UsedFixture(QtCore.QObject):
         return self._fixture.shortName
 
     @property
+    def categories(self) -> list[str]:
+        """Categories this fixture belongs to (e.g. ``Moving Head``, ``Color Changer``)."""
+        return self._fixture.categories
+
+    @property
     def comment(self) -> str:
         """Comment of theFixture."""
         return self._fixture.comment
