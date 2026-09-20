@@ -777,23 +777,19 @@ class Stage3DWidget(QOpenGLWidget):
     def _collect_lights_and_beams(
         self,
     ) -> tuple[list[SpotLightData], list[tuple[QtGui.QVector3D, QtGui.QVector3D, tuple[float, float, float], float]]]:
-        """Collect spotlight data and beam parameters from all active MovingHeads.
+        """Collect spotlight data and beam parameters from all objects with an enabled beam.
 
-        For each moving head with ``beam_on == True``, computes the world-space
-        beam origin (from the BeamOrigin node) and direction (from BeamOrigin
-        toward the tilt pivot), then creates both a SpotLightData (for scene
-        lighting) and a beam tuple (for volumetric rendering).
+        For each stage object with ``beam_on == True``, computes the world-space beam origin (the
+        BeamOrigin node) and the beam direction (from the tilt pivot toward the BeamOrigin lens),
+        then creates both a SpotLightData (for scene lighting) and a beam tuple (for volumetric
+        rendering). See ``_calculate_extension_translation_matrices`` for the exact calculation
+        and fallback behavior (e.g. for objects without pan/tilt).
         """
         spotlights = []
         beam_list = []
 
-        try:
-            beam_origin_node_name = MovingHead.BEAM_ORIGIN_NODE_NAME
-            tilt_node_name = MovingHead.TILT_NODE_NAME
-        except Exception:
-            logger.error("Bug: Object did not provide beam origin node and tilt node.")
-            beam_origin_node_name = "BeamOrigin"
-            tilt_node_name = "Cylinder.018"
+        beam_origin_node_name = MovingHead.BEAM_ORIGIN_NODE_NAME
+        tilt_node_name = MovingHead.TILT_NODE_NAME
 
         stage_objects: list[StageObject] = getattr(self._stage_config, "objects", [])
         for obj in stage_objects:
@@ -835,11 +831,26 @@ class Stage3DWidget(QOpenGLWidget):
     def _calculate_extension_translation_matrices(
         self, obj: StageObject, model_path: str | None, origin_node_name: str | None, tilt_node_name: str | None
     ) -> tuple[QtGui.QVector3D, QtGui.QVector3D]:
-        """Calculate end-effector position and direction from stage object and optional transition nodes."""
+        """Calculate the world-space position and beam direction of an object's extension node.
+
+        Two calculation paths exist:
+
+        * Objects providing the optional ``pan``/``tilt`` attributes (duck-typed, see the
+          ``StageObject`` class docstring) with a loaded model and node names: the beam origin is
+          the world-space position of ``origin_node_name`` (the lens). The beam direction points
+          from the ``tilt_node_name`` pivot toward that origin, so the per-frame pan/tilt node
+          overrides naturally rotate the beam with the head.
+        * All other objects (e.g. static spots without pan/tilt): the object position serves as
+          the beam origin and the upright default direction (0, 1, 0) is rotated by the object's
+          Euler rotation (applied X, then Y, then Z).
+
+        All degenerate fallbacks (model nodes not found, or pivot and lens collapsed into the
+        same position) use the same upright default direction (0, 1, 0).
+        """
         base = build_base_model_matrix(obj)
         has_pan_and_tilt = hasattr(obj, "pan") and hasattr(obj, "tilt")
         if has_pan_and_tilt and model_path is not None and origin_node_name is not None and tilt_node_name is not None:
-            # Find world-space position of the BeamOrigin node
+            # Find world-space position of the BeamOrigin node; fall back to the model base matrix.
             origin_mat = self._find_gltf_node_world(model_path, base, obj, origin_node_name)
             if origin_mat is None:
                 origin_mat = QtGui.QMatrix4x4(base)
@@ -851,12 +862,15 @@ class Stage3DWidget(QOpenGLWidget):
                 tilt_pos = tilt_mat.map(QtGui.QVector3D(0.0, 0.0, 0.0))
                 dir_vec = origin_pos - tilt_pos
                 if dir_vec.length() < 1e-6:
-                    dir_vec = QtGui.QVector3D(0.0, -1.0, 0.0)
+                    # Pivot and lens collapsed into the same position: no usable direction, stay upright.
+                    dir_vec = QtGui.QVector3D(0.0, 1.0, 0.0)
                 else:
                     dir_vec.normalize()
             else:
+                # Tilt pivot node not found in the model: no usable direction, stay upright.
                 dir_vec = QtGui.QVector3D(0.0, 1.0, 0.0)
         else:
+            # No pan/tilt attributes (static fixture): the beam origin is the object position itself.
             origin_pos = QtGui.QVector3D(*obj.position)
             rotation_mat = QtGui.QMatrix4x4()
             rotation_mat.rotate(obj.rotation[2], 0.0, 0.0, 1.0)
