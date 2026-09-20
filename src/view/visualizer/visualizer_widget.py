@@ -8,7 +8,7 @@ single QSplitter and relays signals between them.
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from PySide6 import QtCore, QtWidgets
 
@@ -26,6 +26,7 @@ from view.visualizer.stage_editor_widget import StageEditorWidget
 from view.visualizer.stage_gl_widget import Stage3DWidget
 
 if TYPE_CHECKING:
+    from PySide6 import QtGui
     from PySide6.QtWidgets import QWidget
 
     from model import BoardConfiguration
@@ -48,7 +49,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         stage_path = board_configuration.ui_hints.get("associated_stage_file", get_default_stage_path())
         logger.info("Loading stage from %s", stage_path)
-        self._stage_config = StageConfig(stage_path)
+        self._stage_config = StageConfig(stage_path, show_file_path=board_configuration.file_path)
 
         self._gl_widget = Stage3DWidget(self._stage_config, parent=self)
         self._editor_widget = StageEditorWidget(
@@ -83,6 +84,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
             parent=self,
         )
         self._dmx_vis.fixtures_updated.connect(self._on_dmx_updated)
+        self._update_dmx_polling()
 
         # Refresh fixture list when the show file changes.
         self._broadcaster.show_file_loaded.connect(self._refresh_fixtures)
@@ -95,9 +97,27 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         self._broadcaster.application_closing.connect(self._on_app_closing)
 
+        self._save_timer = QtCore.QTimer(self)
+        self._save_timer.setSingleShot(True)
+        self._save_timer.setInterval(500)
+        self._save_timer.timeout.connect(self._save_stage)
+        self._save_failed = False
+
+    @override
+    def showEvent(self, event: QtGui.QShowEvent) -> None:
+        """Start DMX polling once the visualizer becomes visible."""
+        super().showEvent(event)
+        self._update_dmx_polling()
+
+    @override
+    def hideEvent(self, event: QtGui.QHideEvent) -> None:
+        """Stop DMX polling while the visualizer tab is hidden."""
+        super().hideEvent(event)
+        self._update_dmx_polling()
+
     def _on_app_closing(self) -> None:
-        self._stage_config.save()
-        logger.info("Stage saved to %s", self._stage_config.file_path)
+        """Flush pending debounced saves when the application shuts down."""
+        self._save_stage()
 
     def load_stage_file(self) -> None:
         """Opens a file dialog to query a stage file and loads it."""
@@ -129,7 +149,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
     def _reload_stage(self, new_path: str) -> None:
         logger.info("Switching to new stage: %s", new_path)
 
-        self._stage_config.save()
+        self._save_stage()
         new_config = StageConfig(new_path, show_file_path=self._board_configuration.file_path)
 
         for obj in new_config.objects:
@@ -154,8 +174,6 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
                 if fixture.universe_id == movement_cfg.get("universe") and fixture.start_index == movement_cfg.get(
                     "start_channel"
                 ):
-                    from model.visualizer.dmx.dmx_parser import get_movement_range
-
                     movement_cfg["pan_tilt_range"] = get_movement_range(fixture)
                     break
         except Exception as e:
@@ -168,7 +186,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
             return []
 
     def _refresh_fixtures(self) -> None:
-        self._editor_widget._used_fixtures = self._get_fixtures()
+        self._editor_widget.set_used_fixtures(self._get_fixtures())
 
     def _on_connection_state_updated(self, connected: bool) -> None:
         """Refresh the fixture list shortly after a connection to Fish was established.
@@ -211,7 +229,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._gl_widget.load_object(new_obj)
         self._gl_widget.doneCurrent()
         self._gl_widget.update()
-        self._stage_config.save()
+        self._save_stage()
 
     def _on_remove_object(self, object_id: str) -> None:
         obj = self._stage_config.remove_object(object_id)
@@ -222,12 +240,12 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._gl_widget.remove_object(obj)
         self._gl_widget.doneCurrent()
         self._gl_widget.update()
-        self._stage_config.save()
+        self._save_stage()
         self._editor_widget.refresh_list()
 
     def _on_object_changed(self, object_id: str) -> None:
         self._gl_widget.update()
-        self._stage_config.save()
+        self._schedule_save()
 
     def _on_selection_changed(self, object_ids: list, is_multi: bool) -> None:
         self._gl_widget.set_selected_objects(object_ids, is_multi)
@@ -257,12 +275,12 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
             group_id=group_id, name=group_name, position=(cx, cy, cz), rotation=(0.0, 0.0, 0.0), member_ids=fixture_ids
         )
         self._stage_config.add_group(new_group)
-        self._stage_config.save()
+        self._save_stage()
         self._editor_widget.refresh_list()
 
     def _on_remove_group(self, group_id: str) -> None:
         if self._stage_config.remove_group(group_id):
-            self._stage_config.save()
+            self._save_stage()
             self._editor_widget.refresh_list()
 
     def _on_fixture_clicked(self, object_id: str) -> None:
@@ -271,8 +289,39 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
     def _on_deselect_all(self) -> None:
         self._editor_widget.deselect_all()
 
-    def _on_dmx_toggled(self, enabled: bool) -> None:
-        self._dmx_vis.enabled = enabled
+    def _on_dmx_toggled(self, _enabled: bool) -> None:
+        """React to the DMX Live checkbox; visibility decides whether we actually poll."""
+        self._update_dmx_polling()
+
+    def _update_dmx_polling(self) -> None:
+        """Poll Fish for DMX frames only while live mode is on AND the visualizer is visible."""
+        self._dmx_vis.enabled = self._editor_widget.dmx_live_enabled() and self.isVisible()
 
     def _on_dmx_updated(self) -> None:
         self._editor_widget.update_live_values()
+        self._gl_widget.update()
+
+    # Stage file persistence
+
+    def _schedule_save(self) -> None:
+        """Queue a debounced save of the stage file."""
+        self._save_timer.start()
+
+    def _save_stage(self) -> None:
+        """Persist the stage file immediately and surface failures to the user.
+
+        A message box is only shown when a previously working save starts
+        failing, so a persistently broken target does not spam popups.
+        """
+        if self._stage_config.save():
+            self._save_failed = False
+            return
+        if not self._save_failed:
+            self._save_failed = True
+            logger.error("Could not save stage file %s", self._stage_config.file_path)
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Stage",
+                f"The stage file could not be saved:\n{self._stage_config.file_path}\n\n"
+                "Your setup stays in memory. Check the log for details.",
+            )
