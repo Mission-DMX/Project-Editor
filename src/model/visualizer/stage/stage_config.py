@@ -135,28 +135,36 @@ class StageConfig:
         if not any(o.get_type() == "platform" for o in self.objects):
             self.objects.insert(0, Platform())
 
-    def save(self) -> None:
-        """Save the configuration to the last known file path."""
-        self.save_to(self.file_path)
+    def save(self) -> bool:
+        """Save the configuration to the last known file path.
 
-    def save_to(self, path: str) -> None:
+        Returns:
+            Whether the file was written successfully.
+        """
+        return self.save_to(self.file_path)
+
+    def save_to(self, path: str) -> bool:
         """Save the configuration to the given path.
 
         Args:
             path: Path to save to.
 
+        Returns:
+            Whether the file was written successfully; failures are logged, not raised.
         """
         data = {"objects": [obj.to_dict() for obj in self.objects]}
         if self.groups:
             data["groups"] = [grp.to_dict() for grp in self.groups]
         try:
-            os.makedirs(os.path.dirname(path), exist_ok=True)
+            os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
             yaml_dumper = yaml.YAML()
             yaml_dumper.default_flow_style = False
             with open(path, "w", encoding="UTF-8") as f:
                 yaml_dumper.dump(data, f)
         except Exception as e:
             logger.error("Failed to save stage config to %s: %s", path, e)
+            return False
+        return True
 
     def get_all_names(self) -> list[str]:
         """Get a list of all object and group names present in stage configuration."""

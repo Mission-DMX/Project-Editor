@@ -121,7 +121,9 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         )
         if not path:
             return
-        self._stage_config.save_to(path)
+        if not self._stage_config.save_to(path):
+            QtWidgets.QMessageBox.warning(self, "Stage", f"The stage file could not be saved:\n{path}")
+            return
         logger.info("Stage saved to %s", path)
 
     def _reload_stage(self, new_path: str) -> None:
