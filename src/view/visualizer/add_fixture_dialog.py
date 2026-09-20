@@ -15,16 +15,13 @@ if TYPE_CHECKING:
 
 def fixture_label(fix: UsedFixture) -> str:
     """Build a display label: ``[TAG] Name @ U{u}/CH{start} ({n}ch)``."""
-    try:
-        cats = fix._fixture.categories
-        if "Moving Head" in cats:
-            tag = "[MH]"
-        elif any(c in cats for c in ("Color Changer", "Blinder", "Pixel Bar")):
-            tag = "[RGB]"
-        else:
-            tag = "[" + cats[0] + "]" if cats else "[?]"
-    except Exception:
-        tag = ""
+    cats = fix.categories
+    if "Moving Head" in cats:
+        tag = "[MH]"
+    elif any(c in cats for c in ("Color Changer", "Blinder", "Pixel Bar")):
+        tag = "[RGB]"
+    else:
+        tag = "[" + cats[0] + "]" if cats else "[?]"
     name = fix.name_on_stage or fix.name or fix.short_name or "?"
     return f"{tag} {name} @ U{fix.universe_id}/CH{fix.start_index} ({fix.channel_length}ch)"
 
