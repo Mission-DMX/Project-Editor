@@ -6,8 +6,8 @@ authors = [
     { name = "CorsCodini", email = "cors.codini@web.de" },
     { name = "Niklas Naumann", email = "niklas.naumann@student.uni-luebeck.de" },
     { name = "Doralitze", email = "doralitze@chaotikum.org" },
-    { name = "Ludwig Rahlff"},
-    { name = "Joell Keanu"},
+    { name = "Ludwig Rahlff" },
+    { name = "Joell Keanu" },
 ]
 
 requires-python = "==3.13.*"
@@ -77,7 +77,7 @@ exclude = [
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "CPY001",  # Ignore missing copyright notices for now
+    "CPY001", # Ignore missing copyright notices for now
     "E722",
     "F401",
     "UP007", #Pycharm problem
@@ -132,4 +132,10 @@ files = ["src/main.py"]
 
 [tool.mypy]
 mypy_path = ["src"]
+
+# PyOpenGL does not provide type information; treat its imports as Any instead of
+# reporting "missing library stubs" for every module using it.
+[[tool.mypy.overrides]]
+module = ["OpenGL", "OpenGL.*"]
+ignore_missing_imports = true
 

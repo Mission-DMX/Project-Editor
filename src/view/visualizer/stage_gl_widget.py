@@ -508,7 +508,7 @@ class Stage3DWidget(QOpenGLWidget):
             base = build_base_model_matrix(obj)
             for entry in getattr(obj, "get_model_entries", list)():
                 model = QtGui.QMatrix4x4(base)
-                _apply_local_ops(model, getattr(entry, "local_ops", ()))
+                _apply_local_ops(model, getattr(entry, "local_ops", []))
 
                 if entry.model_path in self._gltf_models:
                     self._traverse_gltf(entry.model_path, model, obj, model_loc=self._depth_uniforms["model"])
@@ -571,7 +571,7 @@ class Stage3DWidget(QOpenGLWidget):
 
         for entry in getattr(obj, "get_model_entries", list)():
             model = QtGui.QMatrix4x4(base)
-            _apply_local_ops(model, getattr(entry, "local_ops", ()))
+            _apply_local_ops(model, getattr(entry, "local_ops", []))
 
             if entry.model_path in self._gltf_models:
                 self._traverse_gltf(
