@@ -118,22 +118,6 @@ def construct_chaser_layer(identifier: str, parameter_data: list[str]) -> Chaser
                 (
                     "No dot value",
                     ParameterType.NUMBER_ABSOLUTE,
-                    "The value the mask should obtain if there is no something at the given index.",
-                ),
-            ],
-            parameter_data,
-        )
-    elif identifier == "sprinkles" or identifier == "dots":
-        layer = ChaserLayer(
-            identifier,
-            [],
-            [
-                ("Number of Sprinkles", ParameterType.NUMBER_ABSOLUTE, ""),
-                ("Sprinkle Size", ParameterType.NUMBER_ABSOLUTE, ""),
-                ("Update rate [ms]", ParameterType.NUMBER_ABSOLUTE, "0 = No Updates"),
-                (
-                    "No dot value",
-                    ParameterType.NUMBER_ABSOLUTE,
                     "The value the mask should obtain if there is no something at the given index",
                 ),
                 (
