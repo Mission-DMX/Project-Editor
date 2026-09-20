@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
+
 class Model3D:
     """GPU mesh: VAO + VBO + EBO + index count.
 
@@ -57,8 +58,9 @@ class Model3D:
                 raise RuntimeError("Model3D object is still bound. This would cause a memory leak.") from e
 
     @classmethod
-    def upload_mesh(cls, vertex_data: np.ndarray, indices: np.ndarray,
-                    context: QOpenGLContext | None = None) -> Model3D:
+    def upload_mesh(
+        cls, vertex_data: np.ndarray, indices: np.ndarray, context: QOpenGLContext | None = None
+    ) -> Model3D:
         """Upload interleaved position+normal vertex data to the GPU.
 
         Vertex layout: [pos_x, pos_y, pos_z, norm_x, norm_y, norm_z] (6 floats).
@@ -78,18 +80,33 @@ class Model3D:
         return cls(vao, vbo, ebo, int(indices.size))
 
     @classmethod
-    def upload_vao(cls, verts: np.ndarray, indices: np.ndarray, context: QOpenGLContext | None = None, stride: int = 24,
-                   vertex_size: int = 3, vertex_location_index: int = 0, uv_location_index: int = 1) -> Model3D:
+    def upload_vao(
+        cls,
+        verts: np.ndarray,
+        indices: np.ndarray,
+        context: QOpenGLContext | None = None,
+        stride: int = 24,
+        vertex_size: int = 3,
+        vertex_location_index: int = 0,
+        uv_location_index: int = 1,
+    ) -> Model3D:
         """Upload interleaved position+normal vertex data to a new VAO."""
         if context is None:
             logger.warning("Context was None. Make sure the VAO is uploaded from the correct context.")
         ebo, vao, vbo = cls._allocate_vao(indices, verts)
-        gl.glVertexAttribPointer(vertex_location_index, vertex_size, gl.GL_FLOAT, gl.GL_FALSE, stride,
-                                 ctypes.c_void_p(0))
+        gl.glVertexAttribPointer(
+            vertex_location_index, vertex_size, gl.GL_FLOAT, gl.GL_FALSE, stride, ctypes.c_void_p(0)
+        )
         gl.glEnableVertexAttribArray(vertex_location_index)
         sizeof_float = 4
-        gl.glVertexAttribPointer(uv_location_index, vertex_size, gl.GL_FLOAT, gl.GL_FALSE, stride,
-                                 ctypes.c_void_p(vertex_size * sizeof_float))
+        gl.glVertexAttribPointer(
+            uv_location_index,
+            vertex_size,
+            gl.GL_FLOAT,
+            gl.GL_FALSE,
+            stride,
+            ctypes.c_void_p(vertex_size * sizeof_float),
+        )
         gl.glEnableVertexAttribArray(uv_location_index)
         gl.glBindVertexArray(0)
         return cls(vao, vbo, ebo, int(indices.size))

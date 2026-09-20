@@ -1,4 +1,5 @@
 """Contains Platform StageObject."""
+
 from __future__ import annotations
 
 from typing import override
@@ -12,8 +13,13 @@ class Platform(StageObject):
 
     DEFAULT_POSITION = (-23.0, 0.0, 0.0)
 
-    def __init__(self, object_id: str = "platform", position: tuple[float, float, float] | None = None,
-                 rotation: tuple[float, float, float] | None = None, scale: float = 1.0) -> None:
+    def __init__(
+        self,
+        object_id: str = "platform",
+        position: tuple[float, float, float] | None = None,
+        rotation: tuple[float, float, float] | None = None,
+        scale: float = 1.0,
+    ) -> None:
         """Initialize a new Platform StageObject."""
         super().__init__(
             object_id,

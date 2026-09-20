@@ -14,11 +14,16 @@ class LenseLight:
     """PoD class for lense light data."""
 
     __slots__ = ["color", "origin_node_name", "position", "rotation", "size", "tilt_node_name"]
-    def __init__(self, position: QVector3D | None = None,
-                 rotation: QVector3D | None = None,
-                 size: float = 1.0,
-                 color: tuple[int, int, int] = (255, 255, 255),
-                 origin_node: str = "", tilt_node: str = "") -> None:
+
+    def __init__(
+        self,
+        position: QVector3D | None = None,
+        rotation: QVector3D | None = None,
+        size: float = 1.0,
+        color: tuple[int, int, int] = (255, 255, 255),
+        origin_node: str = "",
+        tilt_node: str = "",
+    ) -> None:
         """Initialize new light."""
         self.position: QVector3D = QVector3D(0.0, 0.0, 0.0) if position is None else position
         self.rotation: QVector3D = QVector3D(0.0, 0.0, 0.0) if rotation is None else rotation

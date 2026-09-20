@@ -1,4 +1,5 @@
 """Contains Truss."""
+
 from __future__ import annotations
 
 from typing import Any, override
@@ -10,9 +11,14 @@ from model.visualizer.stage.stage_object import StageObject
 class Truss(StageObject):
     """Truss fixture (default, cross, long, medium, 2-point)."""
 
-    def __init__(self, object_id: str, variant: str = "default",
-                 position: tuple[float, float, float] | None = None,
-                 rotation: tuple[float, float, float] | None = None, scale: float = 1.0) -> None:
+    def __init__(
+        self,
+        object_id: str,
+        variant: str = "default",
+        position: tuple[float, float, float] | None = None,
+        rotation: tuple[float, float, float] | None = None,
+        scale: float = 1.0,
+    ) -> None:
         """Initialize Truss StageObject."""
         self.variant = variant
 
@@ -22,7 +28,10 @@ class Truss(StageObject):
             self.variant = "default"
 
         super().__init__(
-            object_id, position, rotation, float(scale),
+            object_id,
+            position,
+            rotation,
+            float(scale),
             model_path=DEFAULT_MODEL_PATHS[key],
         )
 
@@ -63,13 +72,12 @@ class Truss(StageObject):
             if t == "truss":
                 variant = "default"
             elif t.startswith("truss_"):
-                variant = t[len("truss_"):]
+                variant = t[len("truss_") :]
             else:
                 variant = "default"
 
         scale = float(data.get("scale", 1.0))
-        obj = cls(object_id, variant=variant, position=position,
-                  rotation=rotation, scale=scale)
+        obj = cls(object_id, variant=variant, position=position, rotation=rotation, scale=scale)
         obj.name = data.get("name", "")
         obj.device_config = data.get("device")
         return obj

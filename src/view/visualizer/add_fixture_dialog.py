@@ -32,10 +32,12 @@ def _fixture_label(fix: UsedFixture) -> str:
 class AddFixtureDialog(QtWidgets.QDialog):
     """Dialog for adding a new fixture to the stage."""
 
-    def __init__(self,
-                 existing_names: list[str],
-                 used_fixtures: list[UsedFixture] | None = None,
-                 parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(
+        self,
+        existing_names: list[str],
+        used_fixtures: list[UsedFixture] | None = None,
+        parent: QtWidgets.QWidget | None = None,
+    ) -> None:
         """Initialize the dialog.
 
         It guarantees that the entered name is unique.
@@ -85,8 +87,8 @@ class AddFixtureDialog(QtWidgets.QDialog):
 
         # OK / Cancel buttons
         btns = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok
-            | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        )
         btns.accepted.connect(self.accept)
         btns.rejected.connect(self.reject)
         layout.addWidget(btns)

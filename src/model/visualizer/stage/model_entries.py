@@ -12,7 +12,7 @@ class ModelEntry:
 
     ``local_ops`` entries are applied before the object's world transform
     and take the form ``("translate", (x, y, z))`` or
-    ``("rotate", (degrees, ax, ay, az), pivot=(px, py, pz))``.
+    ``("rotate", (degrees, axis_x, axis_y, axis_z, pivot_x, pivot_y, pivot_z))``.
     """
 
     model_path: str

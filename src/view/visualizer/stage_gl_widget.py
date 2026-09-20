@@ -137,7 +137,7 @@ class Stage3DWidget(QOpenGLWidget):
     @override
     def initializeGL(self) -> None:
         fmt = self.context().format()
-        logger.error(
+        logger.info(
             "Initializing Visualizer OpenGL context with version %d.%d, profile=%s, options=%s\nGL_VENDOR: %s\n"
             "GL_RENDERER: %s\nGL_VERSION: %s",
             fmt.majorVersion(),

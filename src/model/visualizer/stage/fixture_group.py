@@ -1,4 +1,5 @@
 """Contains StageObject FixtureGroup implementation."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,10 +17,14 @@ class FixtureGroup:
 
     """
 
-    def __init__(self, group_id: str, name: str = "",
-                 position: tuple[float, float, float] | None = None,
-                 rotation: tuple[float, float, float] | None = None,
-                 member_ids: list[str] | None = None) -> None:
+    def __init__(
+        self,
+        group_id: str,
+        name: str = "",
+        position: tuple[float, float, float] | None = None,
+        rotation: tuple[float, float, float] | None = None,
+        member_ids: list[str] | None = None,
+    ) -> None:
         """Initialize the group."""
         self.id = group_id
         self.name = name

@@ -36,6 +36,7 @@ def load_and_link_shader(vs_src: bytes, fs_src: bytes) -> int:
     gl.glDeleteShader(fs)
     return prog
 
+
 def load_and_link_shader_from_files(vertex_shader_path: str, fragment_shader_path: str) -> int:
     """Compile vertex + fragment shaders from file and link into a program."""
     with open(vertex_shader_path, "rb") as f:
@@ -43,6 +44,7 @@ def load_and_link_shader_from_files(vertex_shader_path: str, fragment_shader_pat
     with open(fragment_shader_path, "rb") as f:
         fragment_bytes: bytes = f.read()
     return load_and_link_shader(vertex_bytes, fragment_bytes)
+
 
 def delete_shader(program_ptr: int) -> None:
     """Delete a shader."""

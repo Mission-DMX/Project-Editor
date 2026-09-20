@@ -1,4 +1,5 @@
 """Contains MovingHead."""
+
 from __future__ import annotations
 
 from typing import Any, override
@@ -32,7 +33,7 @@ class MovingHead(StageObject):
         channels: int = 16,
         position: tuple[float, float, float] | None = None,
         rotation: tuple[float, float, float] | None = None,
-        scale: float = 20.0,   # .glb is small; scale up for visibility
+        scale: float = 20.0,  # .glb is small; scale up for visibility
         pan: float = 0.0,
         tilt: float = 0.0,
         beam_on: bool = True,
@@ -55,15 +56,17 @@ class MovingHead(StageObject):
         self.dimmer = max(0.0, min(1.0, float(dimmer)))
         # TODO add from template based on segment count. Use pixel matrix if available;
         #  if more than one, align positions on circle
-        self.lense_colors = [LenseLight(
-            # position offset in beam-local basis (tangent, bitangent, along-beam);
-            # z pushes the disc forward past the lens surface.
-            QVector3D(0.0, 0.0, 0.25),
-            QVector3D(0.0, 0.0, 0.0),  # rotation offset (Euler degrees) applied to beam direction
-            2.0,  # size
-            (255, 255, 255),  # current color
-            "BeamOrigin",  # origin node name
-            "Cylinder.018")  # name of movable node
+        self.lense_colors = [
+            LenseLight(
+                # position offset in beam-local basis (tangent, bitangent, along-beam);
+                # z pushes the disc forward past the lens surface.
+                QVector3D(0.0, 0.0, 0.25),
+                QVector3D(0.0, 0.0, 0.0),  # rotation offset (Euler degrees) applied to beam direction
+                2.0,  # size
+                (255, 255, 255),  # current color
+                "BeamOrigin",  # origin node name
+                "Cylinder.018",
+            )  # name of movable node
         ]
 
     @override
@@ -81,25 +84,27 @@ class MovingHead(StageObject):
     def get_gltf_node_overrides(self) -> dict[str, tuple[float, float, float, float]]:
         """Axis-angle overrides for pan and tilt: ``{node: (ax, ay, az, deg)}``."""
         return {
-            MovingHead.PAN_NODE_NAME:  (*MovingHead.PAN_AXIS, float(self.pan)),
+            MovingHead.PAN_NODE_NAME: (*MovingHead.PAN_AXIS, float(self.pan)),
             MovingHead.TILT_NODE_NAME: (*MovingHead.TILT_AXIS, float(self.tilt)),
         }
 
     @override
     def to_dict(self) -> dict[str, Any]:
         data = super().to_dict()
-        data.update({
-            "pan": self.pan,
-            "tilt": self.tilt,
-            "channels": self.channels,
-            "beam_on": bool(self.beam_on),
-            "beam_color": {
-                "r": int(self.beam_color[0]),
-                "g": int(self.beam_color[1]),
-                "b": int(self.beam_color[2]),
-            },
-            "dimmer": float(self.dimmer),
-        })
+        data.update(
+            {
+                "pan": self.pan,
+                "tilt": self.tilt,
+                "channels": self.channels,
+                "beam_on": bool(self.beam_on),
+                "beam_color": {
+                    "r": int(self.beam_color[0]),
+                    "g": int(self.beam_color[1]),
+                    "b": int(self.beam_color[2]),
+                },
+                "dimmer": float(self.dimmer),
+            }
+        )
         return data
 
     @classmethod
@@ -148,6 +153,7 @@ class MovingHead(StageObject):
             dc = loaded_device_config
             if "pan_tilt_range" not in dc["movement"]:
                 from model.visualizer.dmx.dmx_parser import DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG
+
                 dc["movement"]["pan_tilt_range"] = (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
 
         # Reset DMX-controlled values so they come from live data, not the file.

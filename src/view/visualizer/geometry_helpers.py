@@ -21,15 +21,16 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 # also needs to be updated in stage_scene.frag
-MAX_SPOT_LIGHTS = 16    # maximum simultaneous spotlights in the scene shader,
+MAX_SPOT_LIGHTS = 16  # maximum simultaneous spotlights in the scene shader,
 
 # also needs to be updated in stage_scene.frag
-MAX_SHADOW_MAPS = 4     # shadow-casting lights (texture array layers),
+MAX_SHADOW_MAPS = 4  # shadow-casting lights (texture array layers),
 SHADOW_MAP_SIZE = 1024  # per-layer shadow map resolution
 
 
-def build_cone_matrix(origin: QtGui.QVector3D, direction: QtGui.QVector3D,
-                      length: float, radius: float) -> QtGui.QMatrix4x4:
+def build_cone_matrix(
+    origin: QtGui.QVector3D, direction: QtGui.QVector3D, length: float, radius: float
+) -> QtGui.QMatrix4x4:
     """Build a model matrix that places the unit cone (tip=origin, base along direction).
 
     Constructs a rotation matrix from a local coordinate frame
@@ -65,8 +66,7 @@ def build_cone_matrix(origin: QtGui.QVector3D, direction: QtGui.QVector3D,
     return m
 
 
-def node_local_matrix(node: GltfNode,
-                      overrides: dict[str, tuple[float, float, float, float]]) -> QtGui.QMatrix4x4:
+def node_local_matrix(node: GltfNode, overrides: dict[str, tuple[float, float, float, float]]) -> QtGui.QMatrix4x4:
     """Compute the local transform matrix for a glTF node.
 
     Applies translation, quaternion rotation, optional pan/tilt override,
@@ -137,7 +137,7 @@ def compute_light_space_matrix(spotlight: SpotLightData) -> QtGui.QMatrix4x4:
     return result
 
 
-def create_unit_cone(segments: int=48, context: QOpenGLContext | None = None) -> Model3D:
+def create_unit_cone(segments: int = 48, context: QOpenGLContext | None = None) -> Model3D:
     """Create a unit cone mesh (tip at origin, base ring at z=-1).
 
     Used for beam rendering. Normals point outward from the cone surface.
@@ -160,7 +160,7 @@ def create_unit_cone(segments: int=48, context: QOpenGLContext | None = None) ->
     return Model3D.upload_vao(v, ii, context)
 
 
-def create_ground_plane(size: float=2000.0, context: QOpenGLContext | None = None) -> Model3D:
+def create_ground_plane(size: float = 2000.0, context: QOpenGLContext | None = None) -> Model3D:
     """Create a flat ground plane quad at y=0 with upward normals."""
     h = size / 2.0
     v = np.array([

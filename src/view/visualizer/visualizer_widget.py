@@ -91,8 +91,8 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         )
         self._broadcaster.show_file_path_changed.connect(lambda _: self._refresh_fixtures())
         self._broadcaster.connection_state_updated.connect(
-            lambda connected: QtCore.QTimer.singleShot(500, self._refresh_fixtures)
-            if connected else None)
+            lambda connected: QtCore.QTimer.singleShot(500, self._refresh_fixtures) if connected else None
+        )
         self._broadcaster.add_fixture.connect(lambda _fix: self._refresh_fixtures())
 
         self._broadcaster.application_closing.connect(self._on_app_closing)
@@ -105,8 +105,8 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         """Opens a file dialog to query a stage file and loads it."""
         # FIXME this is a blocking UI call.
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Load Stagefile", STAGE_DIR,
-            "Stage Files (*.yaml *.yml);;All Files (*)")
+            self, "Load Stagefile", STAGE_DIR, "Stage Files (*.yaml *.yml);;All Files (*)"
+        )
         if not path:
             return
 
@@ -119,8 +119,8 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
     def save_stage_file(self) -> None:
         """Displays a save file dialog and saves the current stage setup into a stage file."""
         path, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save Stagefile", STAGE_DIR,
-            "Stage Files (*.yaml *.yml);;All Files (*)")
+            self, "Save Stagefile", STAGE_DIR, "Stage Files (*.yaml *.yml);;All Files (*)"
+        )
         if not path:
             return
         self._stage_config.save_to(path)
@@ -160,9 +160,11 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         try:
             for fixture in self._board_configuration.fixtures:
-                if (fixture.universe_id == movement_cfg.get("universe") and
-                    fixture.start_index == movement_cfg.get("start_channel")):
+                if fixture.universe_id == movement_cfg.get("universe") and fixture.start_index == movement_cfg.get(
+                    "start_channel"
+                ):
                     from model.visualizer.dmx.dmx_parser import get_movement_range
+
                     movement_cfg["pan_tilt_range"] = get_movement_range(fixture)
                     break
         except Exception as e:
@@ -244,9 +246,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
                     self._stage_config.remove_group(old_grp.id)
 
         # Use the centroid of the members as the group origin.
-        positions = [self._stage_config.get_object(fid).position
-                     for fid in fixture_ids
-                     if self._stage_config.get_object(fid)]
+        positions = [obj.position for fid in fixture_ids if (obj := self._stage_config.get_object(fid)) is not None]
         n = max(len(positions), 1)
         cx = sum(p[0] for p in positions) / n
         cy = sum(p[1] for p in positions) / n
@@ -254,9 +254,8 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
         group_id = self._stage_config.get_new_id("group")
         new_group = FixtureGroup(
-            group_id=group_id, name=group_name,
-            position=(cx, cy, cz), rotation=(0.0, 0.0, 0.0),
-            member_ids=fixture_ids)
+            group_id=group_id, name=group_name, position=(cx, cy, cz), rotation=(0.0, 0.0, 0.0), member_ids=fixture_ids
+        )
         self._stage_config.add_group(new_group)
         self._stage_config.save()
         self._editor_widget.refresh_list()

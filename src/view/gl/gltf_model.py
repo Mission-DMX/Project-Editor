@@ -15,26 +15,37 @@ if TYPE_CHECKING:
 
 # Mapping from glTF componentType to numpy dtype
 _GLTF_COMPONENT_DTYPE = {
-    5120: np.int8, 5121: np.uint8, 5122: np.int16,
-    5123: np.uint16, 5125: np.uint32, 5126: np.float32,
+    5120: np.int8,
+    5121: np.uint8,
+    5122: np.int16,
+    5123: np.uint16,
+    5125: np.uint32,
+    5126: np.float32,
 }
 # Mapping from glTF accessor type to number of components
 _GLTF_TYPE_NUMCOMP = {
-    "SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4,
-    "MAT2": 4, "MAT3": 9, "MAT4": 16,
+    "SCALAR": 1,
+    "VEC2": 2,
+    "VEC3": 3,
+    "VEC4": 4,
+    "MAT2": 4,
+    "MAT3": 9,
+    "MAT4": 16,
 }
 
 
 class GltfNode:
     """A single node from a glTF scene graph."""
 
-    def __init__(self,
-                 name: str,
-                 mesh_index: int,
-                 children: list[int] | None,
-                 translation: list[float] | None,
-                 rotation: list[float] | None,
-                 scale: list[float] | None) -> None:
+    def __init__(
+        self,
+        name: str,
+        mesh_index: int,
+        children: list[int] | None,
+        translation: list[float] | None,
+        rotation: list[float] | None,
+        scale: list[float] | None,
+    ) -> None:
         """Initialize the struct."""
         self.name: str = name or ""
         self.mesh_index: int = mesh_index
@@ -47,11 +58,12 @@ class GltfNode:
 class GltfModel:
     """Minimal glTF/GLB container with node hierarchy and GPU meshes."""
 
-    def __init__(self, nodes: list[GltfNode], scene_roots: list[int],
-                 mesh_primitives: dict[int, list[Model3D]]) -> None:
+    def __init__(
+        self, nodes: list[GltfNode], scene_roots: list[int], mesh_primitives: dict[int, list[Model3D]]
+    ) -> None:
         """Initialize the struct."""
-        self.nodes: list[GltfNode] = nodes                    # list of GltfNode
-        self.scene_roots: list[int] = scene_roots        # list of root node indices
+        self.nodes: list[GltfNode] = nodes  # list of GltfNode
+        self.scene_roots: list[int] = scene_roots  # list of root node indices
         self.mesh_primitives: dict[int, list[Model3D]] = mesh_primitives  # dict: mesh_index -> [Model3D]
 
     def unload(self) -> None:
@@ -59,7 +71,6 @@ class GltfModel:
         for pl in self.mesh_primitives.values():
             for p in pl:
                 p.unload()
-
 
     @classmethod
     def load_gltf_model(cls, path: str, context: QOpenGLContext) -> GltfModel:
@@ -70,16 +81,22 @@ class GltfModel:
         gltf, bin_chunk = _read_glb(path)
 
         # Build node list
-        nodes = [GltfNode(n.get("name", ""), n.get("mesh"), n.get("children") or [],
-                          n.get("translation"), n.get("rotation"), n.get("scale"))
-                 for n in gltf.get("nodes", [])]
+        nodes = [
+            GltfNode(
+                n.get("name", ""),
+                n.get("mesh"),
+                n.get("children") or [],
+                n.get("translation"),
+                n.get("rotation"),
+                n.get("scale"),
+            )
+            for n in gltf.get("nodes", [])
+        ]
 
         # Determine scene root nodes
         si = int(gltf.get("scene", 0))
         scenes = gltf.get("scenes", [])
-        scene_roots = (scenes[si].get("nodes", [])
-                       if scenes and 0 <= si < len(scenes)
-                       else list(range(len(nodes))))
+        scene_roots = scenes[si].get("nodes", []) if scenes and 0 <= si < len(scenes) else list(range(len(nodes)))
 
         # Upload mesh primitives to GPU
         mesh_prims = {}
@@ -90,15 +107,17 @@ class GltfModel:
                 if "POSITION" not in attrs:
                     continue
                 pos = _read_accessor(gltf, bin_chunk, attrs["POSITION"]).astype(np.float32)
-                nrm = (_read_accessor(gltf, bin_chunk, attrs["NORMAL"]).astype(np.float32)
-                       if "NORMAL" in attrs else None)
-                idx = (_read_accessor(gltf, bin_chunk, prim["indices"]).reshape(-1).astype(np.uint32)
-                       if "indices" in prim
-                       else np.arange(pos.shape[0], dtype=np.uint32))
+                nrm = _read_accessor(gltf, bin_chunk, attrs["NORMAL"]).astype(np.float32) if "NORMAL" in attrs else None
+                idx = (
+                    _read_accessor(gltf, bin_chunk, prim["indices"]).reshape(-1).astype(np.uint32)
+                    if "indices" in prim
+                    else np.arange(pos.shape[0], dtype=np.uint32)
+                )
                 if nrm is None or nrm.shape[0] != pos.shape[0]:
                     nrm = _compute_vertex_normals(pos, idx)
-                plist.append(Model3D.upload_mesh(np.concatenate([pos[:, :3], nrm[:, :3]], axis=1), idx,
-                                                 context=context))
+                plist.append(
+                    Model3D.upload_mesh(np.concatenate([pos[:, :3], nrm[:, :3]], axis=1), idx, context=context)
+                )
             if plist:
                 mesh_prims[mi] = plist
 
@@ -124,7 +143,7 @@ def _read_glb(path: str) -> tuple[dict[str, Any], bytes]:
     while off < length:
         chunk_len, chunk_type = struct.unpack_from("<I4s", data, off)
         off += 8
-        chunk_data = data[off:off + chunk_len]
+        chunk_data = data[off : off + chunk_len]
         off += chunk_len
         if chunk_type == b"JSON":
             json_chunk = chunk_data
@@ -160,8 +179,7 @@ def _read_accessor(gltf: dict[str, Any], bin_chunk: bytes, acc_idx: int) -> np.n
         stride = int(stride)
         out = np.empty((count, comps), dtype=dt)
         for i in range(count):
-            out[i, :] = np.frombuffer(bin_chunk, dtype=dt, count=comps,
-                                      offset=base + i * stride)
+            out[i, :] = np.frombuffer(bin_chunk, dtype=dt, count=comps, offset=base + i * stride)
 
     # Apply normalization for integer types (glTF spec)
     if acc.get("normalized") and np.issubdtype(out.dtype, np.integer):
