@@ -845,16 +845,21 @@ class StageEditorWidget(QtWidgets.QWidget):
                     item.setText(self._display_text(self._current_obj))
         self._emit_changed()
 
+    @staticmethod
+    def _spin_triplet(spins: list[QtWidgets.QDoubleSpinBox]) -> tuple[float, float, float]:
+        """Read exactly three spin boxes into a fixed-size 3-tuple."""
+        return spins[0].value(), spins[1].value(), spins[2].value()
+
     def _on_position_changed(self) -> None:
         if self._updating_ui or not self._current_obj:
             return
-        self._current_obj.position = tuple(s.value() for s in self._pos_spins)
+        self._current_obj.position = self._spin_triplet(self._pos_spins)
         self._emit_changed()
 
     def _on_rotation_changed(self) -> None:
         if self._updating_ui or not self._current_obj:
             return
-        self._current_obj.rotation = tuple(s.value() for s in self._rot_spins)
+        self._current_obj.rotation = self._spin_triplet(self._rot_spins)
         self._emit_changed()
 
     def _on_scale_changed(self, val: float | str) -> None:
@@ -929,7 +934,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         if self._updating_ui or not self._current_group:
             return
         old_pos = self._current_group.position
-        new_pos = tuple(s.value() for s in self._pos_spins)
+        new_pos = self._spin_triplet(self._pos_spins)
         dx = new_pos[0] - old_pos[0]
         dy = new_pos[1] - old_pos[1]
         dz = new_pos[2] - old_pos[2]
@@ -952,7 +957,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         if self._updating_ui or not self._current_group:
             return
 
-        new_rot = tuple(s.value() for s in self._rot_spins)
+        new_rot = self._spin_triplet(self._rot_spins)
 
         # Total rotation relative to the snapshot baseline
         base = self._group_base_rotation

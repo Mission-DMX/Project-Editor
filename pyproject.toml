@@ -132,5 +132,4 @@ files = ["src/main.py"]
 
 [tool.mypy]
 mypy_path = ["src"]
-generated-members = ['proto/']
 

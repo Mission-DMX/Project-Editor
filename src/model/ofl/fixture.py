@@ -16,7 +16,7 @@ import numpy as np
 from PySide6 import QtCore
 
 from model.ofl.fixture_not_found_exception import FixtureDefNotFoundError
-from model.ofl.ofl_fixture import CapabilityType, FixtureMode, MatrixChannelInsert, OflFixture
+from model.ofl.ofl_fixture import CapabilityType, FixtureMode, MatrixChannelInsert, OflFixture, WheelSlot
 from model.patching.fixture_channel import FixtureChannel, FixtureChannelType
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from model import BoardConfiguration, ColorHSI
+    from model import BoardConfiguration
 
 logger = getLogger(__name__)
 
@@ -73,11 +73,11 @@ def load_fixture(file: str) -> OflFixture:
 
 def _load_colorwheel_mappings(
     f: OflFixture, channels: list[FixtureChannel]
-) -> list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
+) -> list[tuple[FixtureChannel, list[tuple[int, WheelSlot, WheelSlot | None]]]]:
     """Load color wheel mappings from OFL model."""
     outer_mapping_list = []
     for channel in channels:
-        fcl: list[tuple[int, ColorHSI, ColorHSI | None]] = []
+        fcl: list[tuple[int, WheelSlot, WheelSlot | None]] = []
         if channel.type != FixtureChannelType.COLORWHEEL:
             continue
         if channel.channel_template is None:
@@ -97,10 +97,12 @@ def _load_colorwheel_mappings(
                 if isinstance(slot_number, int):
                     wheel_slot = color_wheel.slots[slot_number % len(color_wheel.slots)]
                     fcl.append((capability_dmx_value, wheel_slot, None))
-                else:
+                elif isinstance(slot_number, float):
                     wheel_slot_a = color_wheel.slots[math.floor(slot_number) % len(color_wheel.slots)]
                     wheel_slot_b = color_wheel.slots[math.ceil(slot_number) % len(color_wheel.slots)]
                     fcl.append((capability_dmx_value, wheel_slot_a, wheel_slot_b))
+                else:
+                    logger.warning("The channel %s: cannot interpret slotNumber %r.", channel.name, slot_number)
         if len(fcl) > 0:
             outer_mapping_list.append((channel, fcl))
     return outer_mapping_list
@@ -173,7 +175,7 @@ class UsedFixture(QtCore.QObject):
 
         self._max_movement_range: Final[tuple[float, float] | None] = self._find_maximum_movement()
 
-        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = (
+        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, WheelSlot, WheelSlot | None]]]] = (
             _load_colorwheel_mappings(fixture, self._fixture_channels)
         )
 
@@ -191,7 +193,7 @@ class UsedFixture(QtCore.QObject):
         return self._uuid
 
     @property
-    def colorwheel_mappings(self) -> list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
+    def colorwheel_mappings(self) -> list[tuple[FixtureChannel, list[tuple[int, WheelSlot, WheelSlot | None]]]]:
         """Get the color wheels of this fixture.
 
         This list contains tuples of the channels that contain color wheels as well as their colors.

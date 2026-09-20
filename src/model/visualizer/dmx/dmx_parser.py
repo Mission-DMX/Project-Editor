@@ -62,7 +62,13 @@ def _primary(raw_name: str) -> str:
 
 
 def auto_detect_mapping(channel_names: list[str], roles: type[MovementRole | ColorRole]) -> dict[str, int]:
-    """Return a {role: channel_offset} dict, -1 where no match was found."""
+    """Return a {role: channel_offset} dict, -1 where no match was found.
+
+    ``roles`` is one of the role enum classes; only channels matching that class are detected.
+    The returned mapping (like every mapping dict stored in a ``device_config``) uses plain
+    ``str`` keys (``role.value``) so it survives ruamel.yaml serialization. Read persisted
+    mappings with ``role.value`` to keep that boundary explicit.
+    """
     mapping = dict.fromkeys(roles, -1)
 
     for i, raw_name in enumerate(channel_names):
@@ -191,7 +197,7 @@ class DmxParser(QtCore.QObject):
         if any_updated:
             self.fixtures_updated.emit()
 
-    def _apply_movement(self, obj: StageObject, raw: list[int], cfg: dict[str, Any]) -> None:
+    def _apply_movement(self, obj: MovingHead, raw: list[int], cfg: dict[str, Any]) -> None:
         """Map pan/tilt/dimmer channels to the fixture's 2-DOF properties."""
         start = cfg.get("start_channel", 0)
         channel_mapping = cfg.get("mapping", {})
@@ -221,7 +227,7 @@ class DmxParser(QtCore.QObject):
             obj.dimmer = dim / 255.0
             obj.beam_on = dim > 0
 
-    def _apply_color(self, obj: StageObject, raw: list[int], cfg: dict[str, Any]) -> None:
+    def _apply_color(self, obj: MovingHead, raw: list[int], cfg: dict[str, Any]) -> None:
         """Map R/G/B/W channels to beam_color."""
         start = cfg.get("start_channel", 0)
         m = cfg.get("mapping", {})
@@ -253,9 +259,8 @@ class DmxParser(QtCore.QObject):
         if not self._has_movement_dimmer(obj) and any_color:
             obj.dimmer = 1.0
         # TODO if multiple segments are present: apply them in order
-        if hasattr(obj, "lense_colors"):
-            for lense_light in obj.lense_colors:
-                lense_light.color = (r, g, b)
+        for lense_light in obj.lense_colors:
+            lense_light.color = (r, g, b)
 
     def _has_movement_dimmer(self, obj: StageObject) -> bool:
         dc = obj.device_config
