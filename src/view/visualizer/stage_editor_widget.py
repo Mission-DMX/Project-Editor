@@ -846,6 +846,8 @@ class StageEditorWidget(QtWidgets.QWidget):
     @staticmethod
     def _spin_triplet(spins: list[QtWidgets.QDoubleSpinBox]) -> tuple[float, float, float]:
         """Read exactly three spin boxes into a fixed-size 3-tuple."""
+        if len(spins) != 3:
+            raise ValueError(f"_spin_triplet expects exactly three spin boxes, got {len(spins)}.")
         return spins[0].value(), spins[1].value(), spins[2].value()
 
     def _on_position_changed(self) -> None:

@@ -110,6 +110,7 @@ class Stage3DWidget(QOpenGLWidget):
         # Model caches
         self._models: dict[str, Model3D] = {}  # path -> Model3D (OBJ meshes)
         self._gltf_models: dict[str, GltfModel] = {}  # path -> GltfModel
+        self._reported_missing_override_nodes: set[tuple[str, str, tuple[str, ...]]] = set()
         self._beam_cone: Model3D | None = None
         self._ground_plane: Model3D | None = None
 
@@ -1034,7 +1035,11 @@ class Stage3DWidget(QOpenGLWidget):
         self._validate_gltf_override_nodes(obj)
 
     def _validate_gltf_override_nodes(self, obj: StageObject) -> None:
-        """Log a error when pan/tilt joint nodes are missing from the model."""
+        """Log an error when pan/tilt joint nodes are missing from the model.
+
+        Each (object, model, missing nodes) combination is only reported once per session,
+        so repeated stage reloads do not spam the log.
+        """
         overrides = get_overrides(obj)
         if not overrides:
             return
@@ -1043,16 +1048,21 @@ class Stage3DWidget(QOpenGLWidget):
             if gm is None:
                 continue
             known_names = {node.name for node in gm.nodes}
-            missing = sorted(name for name in overrides if name not in known_names)
-            if missing:
-                logger.error(
-                    "Stage object %s (%s): model %s is missing pan/tilt joint nodes %s; "
-                    "movement rendering will not work for this fixture.",
-                    obj.name or obj.id,
-                    obj.get_type(),
-                    entry.model_path,
-                    ", ".join(missing),
-                )
+            missing = tuple(sorted(name for name in overrides if name not in known_names))
+            if not missing:
+                continue
+            key = (obj.id, entry.model_path, missing)
+            if key in self._reported_missing_override_nodes:
+                continue
+            self._reported_missing_override_nodes.add(key)
+            logger.error(
+                "Stage object %s (%s): model %s is missing pan/tilt joint nodes %s; "
+                "movement rendering will not work for this fixture.",
+                obj.name or obj.id,
+                obj.get_type(),
+                entry.model_path,
+                ", ".join(missing),
+            )
 
     def _ensure_model_loaded_by_path(self, path: str) -> None:
         """Load and upload a 3D model file if not already cached.

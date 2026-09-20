@@ -67,8 +67,20 @@ def load_fixture(file: str) -> OflFixture:
             ob: dict = json.load(f)
         except json.decoder.JSONDecodeError as e:
             logger.error("Fixture definition (%s) JSON error: %s", file, e)
-    ob.update({"fileName": file.split("/fixtures/")[1]})
+            raise FixtureDefNotFoundError(file, f"The file is not valid JSON: {e}") from e
+    ob.update({"fileName": _fixture_display_name(file)})
     return OflFixture.model_validate(ob)
+
+
+def _fixture_display_name(file: str) -> str:
+    """Extract the fixtures-directory-relative name from a fixture definition path.
+
+    Keeps the full path as fallback for files outside a ``fixtures/`` directory so that
+    absolute paths still round-trip through stage file serialization.
+    """
+    if "/fixtures/" in file:
+        return file.split("/fixtures/", 1)[1]
+    return file
 
 
 def _load_colorwheel_mappings(

@@ -90,9 +90,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
             lambda: self._reload_stage(self._board_configuration.ui_hints.get("associated_stage_file", ""))
         )
         self._broadcaster.show_file_path_changed.connect(lambda _: self._refresh_fixtures())
-        self._broadcaster.connection_state_updated.connect(
-            lambda connected: QtCore.QTimer.singleShot(500, self._refresh_fixtures) if connected else None
-        )
+        self._broadcaster.connection_state_updated.connect(self._on_connection_state_updated)
         self._broadcaster.add_fixture.connect(lambda _fix: self._refresh_fixtures())
 
         self._broadcaster.application_closing.connect(self._on_app_closing)
@@ -178,6 +176,15 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
     def _refresh_fixtures(self) -> None:
         self._editor_widget._used_fixtures = self._get_fixtures()
+
+    def _on_connection_state_updated(self, connected: bool) -> None:
+        """Refresh the fixture list shortly after a connection to Fish was established.
+
+        The delay gives Fish time to publish its show file and fixture list
+        before the visualizer reads them.
+        """
+        if connected:
+            QtCore.QTimer.singleShot(500, self._refresh_fixtures)
 
     def _on_add_object(self, fixture_key: str, name: str, device: UsedFixture) -> None:
         new_id = self._stage_config.get_new_id(fixture_key)
