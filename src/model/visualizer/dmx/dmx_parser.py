@@ -201,6 +201,10 @@ class DmxParser(QtCore.QObject):
         else:
             self._poll_timer.stop()
 
+    def set_stage_config(self, stage_config: StageConfig) -> None:
+        """Swap the stage configuration whose objects are driven by DMX frames."""
+        self._stage_config = stage_config
+
     def _request_dmx(self) -> None:
         if not self._enabled or self._board_config is None:
             return

@@ -137,18 +137,9 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
                     self._populate_pan_tilt_range_for_object(obj, dc["movement"])
 
         self._stage_config = new_config
-        self._dmx_vis._stage_config = new_config
-
-        self._gl_widget._stage_config = new_config
-        if not self._gl_widget.gl_initialized:
-            return
-        self._gl_widget.makeCurrent()
-        self._gl_widget._load_all_objects()
-        self._gl_widget.doneCurrent()
-        self._gl_widget.update()
-
-        self._editor_widget._stage_config = new_config
-        self._editor_widget.refresh_list()
+        self._dmx_vis.set_stage_config(new_config)
+        self._gl_widget.set_stage_config(new_config)
+        self._editor_widget.set_stage_config(new_config)
 
         logger.info("Stage loaded: %d objects", len(new_config.objects))
 
