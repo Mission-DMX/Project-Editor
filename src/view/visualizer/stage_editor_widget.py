@@ -11,7 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from model.visualizer.dmx.dmx_parser import ColorRole, MovementRole, auto_detect_mapping, parse_pan_tilt_range
 from model.visualizer.stage.so_moving_head import MovingHead
-from view.visualizer.add_fixture_dialog import AddFixtureDialog, _fixture_label
+from view.visualizer.add_fixture_dialog import AddFixtureDialog, fixture_label
 from view.visualizer.stage_group_name_dialog import GroupNameDialog
 
 if TYPE_CHECKING:
@@ -626,7 +626,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._mv_device_combo = QtWidgets.QComboBox(self._prop_container)
         self._mv_device_combo.addItem("(None)", None)
         for fix in self._used_fixtures:
-            self._mv_device_combo.addItem(_fixture_label(fix), _fixture_combo_data(fix))
+            self._mv_device_combo.addItem(fixture_label(fix), _fixture_combo_data(fix))
 
         # Pre-select the matching device if already configured
         self._mv_device_combo.setCurrentIndex(0)
@@ -656,7 +656,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._col_device_combo = QtWidgets.QComboBox(self._prop_container)
         self._col_device_combo.addItem("(None)", None)
         for fix in self._used_fixtures:
-            self._col_device_combo.addItem(_fixture_label(fix), _fixture_combo_data(fix))
+            self._col_device_combo.addItem(fixture_label(fix), _fixture_combo_data(fix))
 
         # Pre-select the matching device if already configured
         self._col_device_combo.setCurrentIndex(0)

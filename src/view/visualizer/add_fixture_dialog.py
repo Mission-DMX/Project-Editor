@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from model.ofl.fixture import UsedFixture
 
 
-def _fixture_label(fix: UsedFixture) -> str:
+def fixture_label(fix: UsedFixture) -> str:
     """Build a display label: ``[TAG] Name @ U{u}/CH{start} ({n}ch)``."""
     try:
         cats = fix._fixture.categories
@@ -78,7 +78,7 @@ class AddFixtureDialog(QtWidgets.QDialog):
         self._device_combo = QtWidgets.QComboBox()
         self._device_combo.addItem("(None)", None)
         for fix in self._used_fixtures:
-            self._device_combo.addItem(_fixture_label(fix), fix)
+            self._device_combo.addItem(fixture_label(fix), fix)
         form.addRow(self._device_label, self._device_combo)
 
         # Name input
