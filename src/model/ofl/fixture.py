@@ -71,8 +71,9 @@ def load_fixture(file: str) -> OflFixture:
     return OflFixture.model_validate(ob)
 
 
-def _load_colorwheel_mappings(f: OflFixture, channels: list[FixtureChannel]) -> \
-    list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
+def _load_colorwheel_mappings(
+    f: OflFixture, channels: list[FixtureChannel]
+) -> list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]]:
     """Load color wheel mappings from OFL model."""
     outer_mapping_list = []
     for channel in channels:
@@ -84,8 +85,7 @@ def _load_colorwheel_mappings(f: OflFixture, channels: list[FixtureChannel]) -> 
             continue
         color_wheel = f.wheels.get(channel.name)
         if color_wheel is None:
-            logger.warning("The channel %s is has a color wheel but the wheel definition was not found.",
-                           channel.name)
+            logger.warning("The channel %s is has a color wheel but the wheel definition was not found.", channel.name)
             continue
         for capability in channel.channel_template.get_capabilities():
             if capability.type == CapabilityType.WHEEL_SLOT:
@@ -104,6 +104,30 @@ def _load_colorwheel_mappings(f: OflFixture, channels: list[FixtureChannel]) -> 
         if len(fcl) > 0:
             outer_mapping_list.append((channel, fcl))
     return outer_mapping_list
+
+
+def _parse_rotation_angle(value: object, channel_name: str, angle_key: str) -> float | None:
+    """Parse an OFL rotation angle property into degrees.
+    Returns:
+        The angle in degrees, or ``None`` if no finite angle can be derived.
+
+    """
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    if isinstance(value, str):
+        text = value.strip().lower()
+        if text == "infinite":
+            logger.warning("Channel %s: %s is infinite; no finite rotation angle available.", channel_name, angle_key)
+            return None
+        if text.endswith("deg"):
+            text = text.removesuffix("deg")
+        try:
+            return float(text)
+        except ValueError:
+            pass
+    logger.warning("Channel %s: cannot interpret %s value %r as rotation angle.", channel_name, angle_key, value)
+    return None
+
 
 class UsedFixture(QtCore.QObject):
     """Fixture in use with a specific mode."""
@@ -149,8 +173,9 @@ class UsedFixture(QtCore.QObject):
 
         self._max_movement_range: Final[tuple[float, float] | None] = self._find_maximum_movement()
 
-        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = \
+        self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, ColorHSI, ColorHSI | None]]]] = (
             _load_colorwheel_mappings(fixture, self._fixture_channels)
+        )
 
         self._color_on_stage: str = (
             color or "#" + "".join([random.choice("0123456789ABCDEF") for _ in range(6)])  # noqa: S311 not a secret
@@ -214,8 +239,7 @@ class UsedFixture(QtCore.QObject):
         """
         if len(self._fixture.modes) <= self._mode_index:
             raise FixtureDefNotFoundError(
-                self._fixture.fileName,
-                "Fixture does not have requested mode. Are the fixture defintions up to date?"
+                self._fixture.fileName, "Fixture does not have requested mode. Are the fixture defintions up to date?"
             )
         return self._fixture.modes[self._mode_index]
 
@@ -331,29 +355,56 @@ class UsedFixture(QtCore.QObject):
         )
 
     def _find_maximum_movement(self) -> tuple[float, float] | None:
-        min_pan: float = -1.0
-        max_pan: float = -1.0
-        min_tilt: float = -1.0
-        max_tilt: float = -1.0
+        """Find the maximum pan and tilt movement range of the fixture in degrees.
+
+        Pan/tilt channels whose angle properties cannot be interpreted as finite angles
+        (``infinite``, percent values, missing properties) are skipped.
+
+        Returns:
+            ``(pan_range, tilt_range)`` in degrees, or ``None`` if no complete range was found.
+
+        """
+        min_pan: float | None = None
+        max_pan: float | None = None
+        min_tilt: float | None = None
+        max_tilt: float | None = None
 
         for channel in self._fixture_channels:
             template = channel.channel_template
             if template is None:
                 logger.error("Channel %s has empty template.", channel.name)
                 continue
-            capability = template.capability if template.capability is not None else template.capabilities[0]
+            if channel.type == FixtureChannelType.PAN:
+                is_pan = True
+            elif channel.type == FixtureChannelType.TILT:
+                is_pan = False
+            else:
+                continue
+            if template.capability is not None:
+                capability = template.capability
+            elif template.capabilities:
+                capability = template.capabilities[0]
+            else:
+                logger.error("Pan/Tilt channel %s has no capability description.", channel.name)
+                continue
             cap_props = capability.capabilityProperties
-            try:
-                if channel.type == FixtureChannelType.PAN:
-                    min_pan = min(min_pan, float(cap_props["angleStart"].replace("deg", "")))
-                    max_pan = max(max_pan, float(cap_props["angleEnd"].replace("deg", "")))
-                elif channel.type == FixtureChannelType.TILT:
-                    min_tilt = min(min_tilt, float(cap_props["angleStart"].replace("deg", "")))
-                    max_tilt = max(max_tilt, float(cap_props["angleEnd"].replace("deg", "")))
-            except KeyError:
-                logger.error("Pan/Tilt channel does not have angle description")
-        return (max_pan - min_pan, max_tilt - min_tilt) if \
-            (min_pan != -1 and max_pan != -1 and min_tilt != -1 and max_tilt != -1) else None
+            if "angleStart" not in cap_props or "angleEnd" not in cap_props:
+                logger.error("Pan/Tilt channel %s does not have angle description.", channel.name)
+                continue
+            start = _parse_rotation_angle(cap_props["angleStart"], channel.name, "angleStart")
+            end = _parse_rotation_angle(cap_props["angleEnd"], channel.name, "angleEnd")
+            if start is None or end is None:
+                continue
+            if is_pan:
+                min_pan = start if min_pan is None else min(min_pan, start)
+                max_pan = end if max_pan is None else max(max_pan, end)
+            else:
+                min_tilt = start if min_tilt is None else min(min_tilt, start)
+                max_tilt = end if max_tilt is None else max(max_tilt, end)
+
+        if min_pan is None or max_pan is None or min_tilt is None or max_tilt is None:
+            return None
+        return max_pan - min_pan, max_tilt - min_tilt
 
     def get_fixture_channel(self, index: int) -> FixtureChannel:
         """Get a fixture channel by index."""
