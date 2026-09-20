@@ -62,6 +62,7 @@ class Stage3DWidget(QOpenGLWidget):
         """Initialize using given stage configuration and parent."""
         super().__init__(parent)
         self._gl_initialized = False
+        self._init_error: str | None = None  # set when shader initialization fails
         self._stage_config = stage_config
 
         # Shader programs (initialized in initializeGL)
@@ -160,7 +161,8 @@ class Stage3DWidget(QOpenGLWidget):
                 resource_path(os.path.join("resources", "shaders", "stage_scene.frag")),
             )
         except RuntimeError as e:
-            logger.error("Scene shader: %s", e)
+            self._init_error = f"Scene shader failed: {e}"
+            logger.error("%s", self._init_error)
             return
         try:
             self._beam_program = load_and_link_shader_from_files(
@@ -310,7 +312,7 @@ class Stage3DWidget(QOpenGLWidget):
         Each shadow-casting light gets one layer in the texture array.
         The FBO is reused for all layers by rebinding the depth attachment.
         """
-        if self._depth_program is None:
+        if self._depth_program == 0:
             return
 
         # Create depth texture array
@@ -360,7 +362,8 @@ class Stage3DWidget(QOpenGLWidget):
 
     @override
     def paintGL(self) -> None:
-        if self._scene_program is None:
+        if self._scene_program == 0:
+            self._draw_init_error()
             return
 
         # Reset GL state
@@ -462,6 +465,24 @@ class Stage3DWidget(QOpenGLWidget):
         self._update_fps()
         self._draw_fps_counter()
 
+    def _draw_init_error(self) -> None:
+        """Draw a visible error overlay when shader initialization failed."""
+        message = self._init_error or "Shader initialization failed. See the log for details."
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        painter.fillRect(self.rect(), QtGui.QColor(24, 12, 12))
+        font = painter.font()
+        font.setPointSize(11)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(QtGui.QColor(235, 120, 120))
+        painter.drawText(
+            self.rect(),
+            QtCore.Qt.AlignmentFlag.AlignCenter | QtCore.Qt.TextFlag.TextWordWrap,
+            message,
+        )
+        painter.end()
+
     # Pass 0: Shadow map rendering
     def _render_shadow_maps(self, spotlights: list[SpotLightData]) -> list[QtGui.QMatrix4x4]:
         """Render depth from each spotlight's POV into the shadow texture array.
@@ -470,7 +491,7 @@ class Stage3DWidget(QOpenGLWidget):
             List of light-space matrices (one per shadow-casting light).
 
         """
-        if not spotlights or self._shadow_fbo is None or self._depth_program is None:
+        if not spotlights or self._shadow_fbo is None or self._depth_program == 0:
             return []
 
         light_space_matrices = []
@@ -1010,6 +1031,28 @@ class Stage3DWidget(QOpenGLWidget):
         """Ensure all 3D models for a stage object are uploaded to the GPU."""
         for entry in getattr(obj, "get_model_entries", list)():
             self._ensure_model_loaded_by_path(entry.model_path)
+        self._validate_gltf_override_nodes(obj)
+
+    def _validate_gltf_override_nodes(self, obj: StageObject) -> None:
+        """Log a error when pan/tilt joint nodes are missing from the model."""
+        overrides = get_overrides(obj)
+        if not overrides:
+            return
+        for entry in getattr(obj, "get_model_entries", list)():
+            gm = self._gltf_models.get(entry.model_path)
+            if gm is None:
+                continue
+            known_names = {node.name for node in gm.nodes}
+            missing = sorted(name for name in overrides if name not in known_names)
+            if missing:
+                logger.error(
+                    "Stage object %s (%s): model %s is missing pan/tilt joint nodes %s; "
+                    "movement rendering will not work for this fixture.",
+                    obj.name or obj.id,
+                    obj.get_type(),
+                    entry.model_path,
+                    ", ".join(missing),
+                )
 
     def _ensure_model_loaded_by_path(self, path: str) -> None:
         """Load and upload a 3D model file if not already cached.

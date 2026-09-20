@@ -46,16 +46,20 @@ class Model3D:
         self.vao = self.vbo = self.ebo = 0
 
     def __del__(self) -> None:
-        """Checks if the object was successfully deleted or throws an error.
+        """Warn when the model is garbage-collected while still bound.
 
-        This cannot happen automatically as it must occur within the thread and OpenGL context that created the model.
+        The GPU resources cannot be released here because deletion must occur within
+        the thread and OpenGL context that created the model. Raising would not help
+        either: exceptions in ``__del__`` are only swallowed by the interpreter.
+        Call ``unload()`` from the owning OpenGL context instead.
 
         """
         if self._still_bound:
-            try:
-                self.unload()
-            except gl.GLError as e:
-                raise RuntimeError("Model3D object is still bound. This would cause a memory leak.") from e
+            logger.warning(
+                "Model3D (vao=%d) was garbage-collected while still bound; its GPU resources may leak. "
+                "Call unload() from the owning OpenGL context instead.",
+                self.vao,
+            )
 
     @classmethod
     def upload_mesh(

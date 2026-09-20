@@ -163,7 +163,7 @@ class DmxParser(QtCore.QObject):
         except Exception as e:
             logger.exception("Could not send DMX request: %s", e)
 
-    @QtCore.Slot()
+    @QtCore.Slot(object)
     def _on_dmx(self, msg: proto.DirectMode_pb2.dmx_output) -> None:
         if not self._enabled:
             return
@@ -251,13 +251,15 @@ class DmxParser(QtCore.QObject):
 
         obj.beam_color = (r, g, b)
         any_color = r > 0 or g > 0 or b > 0
-        obj.beam_on = any_color
 
-        # Use the white channel as dimmer if no dedicated movement dimmer exists.
-        # if w is not None:
-        #    obj.dimmer = w / 255.0 if w > 0 else (1.0 if any_color else 0.0)
-        if not self._has_movement_dimmer(obj) and any_color:
-            obj.dimmer = 1.0
+        if self._has_movement_dimmer(obj):
+            obj.beam_on = obj.dimmer > 0 and any_color
+        else:
+            # Without a dedicated dimmer channel the color channels act as the
+            # intensity source: any color turns the beam on at full brightness.
+            obj.beam_on = any_color
+            if any_color:
+                obj.dimmer = 1.0
         # TODO if multiple segments are present: apply them in order
         for lense_light in obj.lense_colors:
             lense_light.color = (r, g, b)
