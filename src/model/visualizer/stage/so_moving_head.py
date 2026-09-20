@@ -88,6 +88,28 @@ class MovingHead(StageObject):
             MovingHead.TILT_NODE_NAME: (*MovingHead.TILT_AXIS, float(self.tilt)),
         }
 
+    def _has_movement_dimmer(self) -> bool:
+        """Whether a dedicated dimmer channel is mapped in the movement config.
+
+        The key literal matches ``MovementRole.DIMMER``; it is spelled out here to avoid
+        a circular import with the DMX parser module.
+        """
+        dc = self.device_config
+        if not dc:
+            return False
+        return dc.get("movement", {}).get("mapping", {}).get("dimmer", -1) >= 0
+
+    def update_beam_state(self) -> None:
+        """Recompute ``beam_on`` and the fallback ``dimmer`` from the current DMX state."""
+        color = self.beam_color
+        any_color = color[0] > 0 or color[1] > 0 or color[2] > 0
+        if self._has_movement_dimmer():
+            self.beam_on = self.dimmer > 0 and any_color
+        else:
+            self.beam_on = any_color
+            if any_color:
+                self.dimmer = 1.0
+
     @override
     def to_dict(self) -> dict[str, Any]:
         data = super().to_dict()
@@ -152,11 +174,13 @@ class MovingHead(StageObject):
         if loaded_device_config and "movement" in loaded_device_config:
             dc = loaded_device_config
             if "pan_tilt_range" not in dc["movement"]:
-                from model.visualizer.dmx.dmx_parser import DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG
+                from model.visualizer.dmx.dmx_parser import default_pan_tilt_range
 
-                dc["movement"]["pan_tilt_range"] = (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
+                dc["movement"]["pan_tilt_range"] = default_pan_tilt_range()
 
         # Reset DMX-controlled values so they come from live data, not the file.
+        # Key literals match MovementRole/ColorRole values; they are spelled out to
+        # avoid a circular import with the DMX parser module.
         if obj.device_config:
             dc = obj.device_config
             mv_map = dc.get("movement", {}).get("mapping", {})
@@ -165,8 +189,15 @@ class MovingHead(StageObject):
                 obj.pan = 0.0
             if mv_map.get("tilt_coarse", -1) >= 0:
                 obj.tilt = 0.0
-            if mv_map.get("dimmer", -1) >= 0 or col_map.get("white", -1) >= 0:
+            has_dimmer = mv_map.get("dimmer", -1) >= 0
+            has_color = any(col_map.get(role, -1) >= 0 for role in ("red", "green", "blue", "white"))
+            if has_dimmer:
+                # Dimmer channel mapped: open until the first movement frame arrives.
                 obj.dimmer = 1.0
-                obj.beam_on = True
+            if has_color:
+                # Color channels mapped: black until the first color frame arrives.
+                obj.beam_color = (0, 0, 0)
+            if has_dimmer or has_color:
+                obj.update_beam_state()
 
         return obj

@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from model import BoardConfiguration
     from model.ofl.fixture import UsedFixture
     from model.visualizer.stage.stage_config import StageConfig
-    from model.visualizer.stage.stage_object import StageObject
 
 logger = getLogger(__name__)
 
@@ -54,6 +53,16 @@ class ColorRole(StrEnum):
 # Physical rotation range of typical moving heads.
 DEFAULT_PAN_MAX_DEG = 540.0
 DEFAULT_TILT_MAX_DEG = 270.0
+
+
+def default_pan_tilt_range() -> tuple[float, float, float, float]:
+    """Default pan/tilt axis limits in degrees, used when no fixture definition is available."""
+    return (
+        -DEFAULT_PAN_MAX_DEG / 2.0,
+        DEFAULT_PAN_MAX_DEG / 2.0,
+        -DEFAULT_TILT_MAX_DEG / 2.0,
+        DEFAULT_TILT_MAX_DEG / 2.0,
+    )
 
 
 def _primary(raw_name: str) -> str:
@@ -107,9 +116,47 @@ def auto_detect_mapping(channel_names: list[str], roles: type[MovementRole | Col
     return {str(role): offset for role, offset in mapping.items()}
 
 
-def get_movement_range(fixture: UsedFixture) -> tuple[float, float]:
-    """Get the range in which the fixture can move the pan / tilt axis."""
-    return fixture.maximum_axis_movement or (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
+def parse_pan_tilt_range(value: object) -> tuple[float, float, float, float]:
+    """Normalize a persisted ``pan_tilt_range`` entry into axis limits.
+
+    Accepts the current 4-tuple ``(pan_min, pan_max, tilt_min, tilt_max)`` form as well
+    as the legacy 2-tuple ``(pan_span, tilt_span)`` form written by older editor
+    versions, which assumed axis ranges centered on zero.
+
+    Returns:
+        The axis limits in degrees; the default limits for anything else.
+
+    """
+    if isinstance(value, (list, tuple)):
+        try:
+            if len(value) == 4:
+                pan_min, pan_max, tilt_min, tilt_max = (float(v) for v in value)
+                if pan_max < pan_min:
+                    pan_min, pan_max = pan_max, pan_min
+                if tilt_max < tilt_min:
+                    tilt_min, tilt_max = tilt_max, tilt_min
+                return pan_min, pan_max, tilt_min, tilt_max
+            if len(value) == 2:
+                pan_span, tilt_span = (abs(float(v)) for v in value)
+                return (-pan_span / 2.0, pan_span / 2.0, -tilt_span / 2.0, tilt_span / 2.0)
+        except (TypeError, ValueError):
+            logger.warning("Cannot interpret pan_tilt_range %r; using defaults.", value)
+    return default_pan_tilt_range()
+
+
+def get_movement_range(fixture: UsedFixture) -> tuple[float, float, float, float]:
+    """Get the movement limits of the fixture's pan/tilt axes in degrees.
+
+    Returns:
+        ``(pan_min, pan_max, tilt_min, tilt_max)``; the default limits if the fixture
+        definition provides no usable angle information.
+
+    """
+    limits = fixture.axis_movement_limits
+    if limits is None:
+        return default_pan_tilt_range()
+    (pan_min, pan_max), (tilt_min, tilt_max) = limits
+    return pan_min, pan_max, tilt_min, tilt_max
 
 
 class DmxParser(QtCore.QObject):
@@ -208,24 +255,24 @@ class DmxParser(QtCore.QObject):
                 return None
             return int(raw[start + off])
 
-        pan_max_deg, tilt_max_deg = cfg.get("pan_tilt_range", (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG))
+        pan_min, pan_max, tilt_min, tilt_max = parse_pan_tilt_range(cfg.get("pan_tilt_range"))
 
-        # 16-bit pan, centered at zero.
+        # 16-bit pan: DMX 0..65535 maps linearly onto [pan_min, pan_max].
         pc, pf = rd(MovementRole.PAN_COARSE), rd(MovementRole.PAN_FINE)
         if pc is not None:
             v = (pc << 8) | (pf or 0)
-            obj.pan = (v / 65535.0) * pan_max_deg - pan_max_deg / 2.0
+            obj.pan = pan_min + (pan_max - pan_min) * (v / 65535.0)
 
-        # 16-bit tilt, centered at zero.
+        # 16-bit tilt: DMX 0..65535 maps linearly onto [tilt_min, tilt_max].
         tc, tf = rd(MovementRole.TILT_COARSE), rd(MovementRole.TILT_FINE)
         if tc is not None:
             v = (tc << 8) | (tf or 0)
-            obj.tilt = (v / 65535.0) * tilt_max_deg - tilt_max_deg / 2.0
+            obj.tilt = tilt_min + (tilt_max - tilt_min) * (v / 65535.0)
 
         dim = rd(MovementRole.DIMMER)
         if dim is not None:
             obj.dimmer = dim / 255.0
-            obj.beam_on = dim > 0
+            obj.update_beam_state()
 
     def _apply_color(self, obj: MovingHead, raw: list[int], cfg: dict[str, Any]) -> None:
         """Map R/G/B/W channels to beam_color."""
@@ -239,33 +286,24 @@ class DmxParser(QtCore.QObject):
             return int(raw[start + off])
 
         r, g, b = rd(ColorRole.RED), rd(ColorRole.GREEN), rd(ColorRole.BLUE)
-        if r is None or g is None or b is None:
+        w = rd(ColorRole.WHITE)
+        if r is None and g is None and b is None and w is None:
+            # No color channel mapped (or all out of range); nothing to apply.
             return
 
-        # White LED adds on top of RGB (matches RGBW fixtures).
-        w = rd(ColorRole.WHITE)
+        # Unmapped channels contribute nothing. The white LED adds on top of RGB
+        # (RGBW fixtures); on white-only fixtures it becomes the beam color.
+        r = 0 if r is None else r
+        g = 0 if g is None else g
+        b = 0 if b is None else b
         if w is not None and w > 0:
             r = min(255, r + w)
             g = min(255, g + w)
             b = min(255, b + w)
 
         obj.beam_color = (r, g, b)
-        any_color = r > 0 or g > 0 or b > 0
+        obj.update_beam_state()
 
-        if self._has_movement_dimmer(obj):
-            obj.beam_on = obj.dimmer > 0 and any_color
-        else:
-            # Without a dedicated dimmer channel the color channels act as the
-            # intensity source: any color turns the beam on at full brightness.
-            obj.beam_on = any_color
-            if any_color:
-                obj.dimmer = 1.0
         # TODO if multiple segments are present: apply them in order
         for lense_light in obj.lense_colors:
             lense_light.color = (r, g, b)
-
-    def _has_movement_dimmer(self, obj: StageObject) -> bool:
-        dc = obj.device_config
-        if not dc:
-            return False
-        return dc.get("movement", {}).get("mapping", {}).get(MovementRole.DIMMER.value, -1) >= 0

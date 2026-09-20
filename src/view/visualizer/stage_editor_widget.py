@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from model.visualizer.dmx.dmx_parser import ColorRole, MovementRole, auto_detect_mapping
+from model.visualizer.dmx.dmx_parser import ColorRole, MovementRole, auto_detect_mapping, parse_pan_tilt_range
 from model.visualizer.stage.so_moving_head import MovingHead
 from view.visualizer.add_fixture_dialog import AddFixtureDialog, _fixture_label
 from view.visualizer.stage_group_name_dialog import GroupNameDialog
@@ -410,10 +410,10 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._add_separator()
         self._add_section_header("Beam Control")
 
-        pan_max, tilt_max = self._get_fixture_movement_range(obj)
+        pan_min, pan_max, tilt_min, tilt_max = self._get_fixture_movement_range(obj)
 
         self._pan_spin = QtWidgets.QDoubleSpinBox()
-        self._pan_spin.setRange(-pan_max / 2.0, pan_max / 2.0)
+        self._pan_spin.setRange(pan_min, pan_max)
         self._pan_spin.setDecimals(1)
         self._pan_spin.setSingleStep(1.0)
         self._pan_spin.setSuffix("  deg")
@@ -422,7 +422,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._prop_layout.addRow("Pan:", self._pan_spin)
 
         self._tilt_spin = QtWidgets.QDoubleSpinBox()
-        self._tilt_spin.setRange(-tilt_max / 2.0, tilt_max / 2.0)
+        self._tilt_spin.setRange(tilt_min, tilt_max)
         self._tilt_spin.setDecimals(1)
         self._tilt_spin.setSingleStep(1.0)
         self._tilt_spin.setSuffix("  deg")
@@ -486,16 +486,14 @@ class StageEditorWidget(QtWidgets.QWidget):
         mapping = sub.get("mapping", {})
         return mapping.get(role.value, -1) >= 0
 
-    def _get_fixture_movement_range(self, obj: MovingHead) -> tuple[float, float]:
-        if obj.device_config:
-            mv_cfg = obj.device_config.get("movement", {})
-            pan_tilt_range = mv_cfg.get("pan_tilt_range")
-            if pan_tilt_range:
-                return pan_tilt_range
+    def _get_fixture_movement_range(self, obj: MovingHead) -> tuple[float, float, float, float]:
+        """Pan/tilt spin limits as ``(pan_min, pan_max, tilt_min, tilt_max)`` in degrees.
 
-        from model.visualizer.dmx.dmx_parser import DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG
-
-        return (DEFAULT_PAN_MAX_DEG, DEFAULT_TILT_MAX_DEG)
+        Accepts both the current 4-tuple limits format and the legacy 2-tuple span format
+        possibly still stored in older stage files.
+        """
+        mv_cfg = (obj.device_config or {}).get("movement", {})
+        return parse_pan_tilt_range(mv_cfg.get("pan_tilt_range"))
 
     def _on_dmx_live_toggled(self, checked: bool) -> None:
         self.dmx_toggled.emit(checked)

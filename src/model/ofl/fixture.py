@@ -110,6 +110,7 @@ def _load_colorwheel_mappings(
 
 def _parse_rotation_angle(value: object, channel_name: str, angle_key: str) -> float | None:
     """Parse an OFL rotation angle property into degrees.
+
     Returns:
         The angle in degrees, or ``None`` if no finite angle can be derived.
 
@@ -173,7 +174,9 @@ class UsedFixture(QtCore.QObject):
         self._segment_map: dict[FixtureChannelType, NDArray[np.int_]] = segment_map
         self._color_support: Final[ColorSupport] = color_support
 
-        self._max_movement_range: Final[tuple[float, float] | None] = self._find_maximum_movement()
+        self._axis_movement_limits: Final[tuple[tuple[float, float], tuple[float, float]] | None] = (
+            self._find_axis_movement_limits()
+        )
 
         self._colorwheel_mappings: list[tuple[FixtureChannel, list[tuple[int, WheelSlot, WheelSlot | None]]]] = (
             _load_colorwheel_mappings(fixture, self._fixture_channels)
@@ -217,9 +220,9 @@ class UsedFixture(QtCore.QObject):
         return self._fixture.name
 
     @property
-    def maximum_axis_movement(self) -> tuple[float, float] | None:
-        """Get the maximum movement of the fixture (pan/tilt)."""
-        return self._max_movement_range
+    def axis_movement_limits(self) -> tuple[tuple[float, float], tuple[float, float]] | None:
+        """Get the pan/tilt axis limits as ``((pan_min, pan_max), (tilt_min, tilt_max))`` in degrees."""
+        return self._axis_movement_limits
 
     @property
     def short_name(self) -> str:
@@ -356,14 +359,15 @@ class UsedFixture(QtCore.QObject):
             found_color,
         )
 
-    def _find_maximum_movement(self) -> tuple[float, float] | None:
-        """Find the maximum pan and tilt movement range of the fixture in degrees.
+    def _find_axis_movement_limits(self) -> tuple[tuple[float, float], tuple[float, float]] | None:
+        """Find the pan and tilt axis limits of the fixture in degrees.
 
         Pan/tilt channels whose angle properties cannot be interpreted as finite angles
         (``infinite``, percent values, missing properties) are skipped.
 
         Returns:
-            ``(pan_range, tilt_range)`` in degrees, or ``None`` if no complete range was found.
+            ``((pan_min, pan_max), (tilt_min, tilt_max))`` in degrees, or ``None`` if no
+            complete limits were found for both axes.
 
         """
         min_pan: float | None = None
@@ -406,7 +410,7 @@ class UsedFixture(QtCore.QObject):
 
         if min_pan is None or max_pan is None or min_tilt is None or max_tilt is None:
             return None
-        return max_pan - min_pan, max_tilt - min_tilt
+        return (min_pan, max_pan), (min_tilt, max_tilt)
 
     def get_fixture_channel(self, index: int) -> FixtureChannel:
         """Get a fixture channel by index."""
