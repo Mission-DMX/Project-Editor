@@ -1101,3 +1101,29 @@ class StageEditorWidget(QtWidgets.QWidget):
     def deselect_all(self) -> None:
         """Clear selection entirely (from right-click)."""
         self._fixture_list.clearSelection()
+
+    def set_stage_config(self, stage_config: StageConfig) -> None:
+        """Swap the stage configuration and rebuild the fixture list.
+
+        Resets the selection and group bookkeeping, which still referred to
+        objects of the previous stage.
+        """
+        self._stage_config = stage_config
+        self._current_obj = None
+        self._current_group = None
+        self._group_base_offsets = {}
+        self.refresh_list()
+
+    def set_used_fixtures(self, used_fixtures: list[UsedFixture] | None) -> None:
+        """Update the selectable DMX devices.
+
+        Rebuilds the property panel when a moving head is selected, so its
+        device combos no longer show the fixtures of the previous show file.
+        """
+        self._used_fixtures = used_fixtures or []
+        if isinstance(self._current_obj, MovingHead):
+            self._build_properties(self._current_obj)
+
+    def dmx_live_enabled(self) -> bool:
+        """Whether the user enabled live DMX reception (the "DMX Live" checkbox)."""
+        return self._dmx_cb.isChecked()

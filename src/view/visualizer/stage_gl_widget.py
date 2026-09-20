@@ -126,6 +126,8 @@ class Stage3DWidget(QOpenGLWidget):
         self._fps_last_time = time.time()
         self._fps_display = 0.0
 
+        self._last_tick_time = time.monotonic()
+
         # base quad
         self._lense_light_quad_model: Model3D | None = None
         self._lense_light_instance_vbo: int = 0
@@ -910,37 +912,44 @@ class Stage3DWidget(QOpenGLWidget):
         self._camera_pos = self._camera_target - fwd * float(self._cam_distance)
 
     def _tick_camera(self) -> None:
-        """Process WASD/arrow key camera movement at ~60 Hz."""
-        if not self.isVisible():
+        """Process WASD/arrow key camera movement at ~60 Hz.
+
+        The scene is repainted on demand only: camera input, DMX frames and
+        editor changes each trigger ``update()`` themselves, so an idle scene
+        does not burn GPU cycles on constant re-rendering.
+        """
+        now = time.monotonic()
+        dt = min(now - self._last_tick_time, 0.1)
+        self._last_tick_time = now
+
+        if not self.isVisible() or not self._keys_down:
             return
-        if self._keys_down:
-            dt = 0.016
-            speed = self._boost_speed if QtCore.Qt.Key.Key_Shift in self._keys_down else self._move_speed
-            yaw = math.radians(self._cam_yaw)
-            fwd = QtGui.QVector3D(float(math.cos(yaw)), 0.0, float(math.sin(yaw)))
-            if fwd.length() == 0:
-                fwd = QtGui.QVector3D(0, 0, -1)
-            fwd.normalize()
-            right = QtGui.QVector3D.crossProduct(fwd, self._camera_up)
-            right.normalize()
-            move = QtGui.QVector3D(0, 0, 0)
-            if QtCore.Qt.Key.Key_W in self._keys_down or QtCore.Qt.Key.Key_Up in self._keys_down:
-                move += fwd
-            if QtCore.Qt.Key.Key_S in self._keys_down or QtCore.Qt.Key.Key_Down in self._keys_down:
-                move -= fwd
-            if QtCore.Qt.Key.Key_D in self._keys_down or QtCore.Qt.Key.Key_Right in self._keys_down:
-                move += right
-            if QtCore.Qt.Key.Key_A in self._keys_down or QtCore.Qt.Key.Key_Left in self._keys_down:
-                move -= right
-            if QtCore.Qt.Key.Key_E in self._keys_down:
-                move += self._camera_up
-            if QtCore.Qt.Key.Key_Q in self._keys_down:
-                move -= self._camera_up
-            if move.length() > 0:
-                move.normalize()
-                self._camera_target += move * float(speed * dt)
-        # main 60 Hz render loop
-        self.update()
+
+        speed = self._boost_speed if QtCore.Qt.Key.Key_Shift in self._keys_down else self._move_speed
+        yaw = math.radians(self._cam_yaw)
+        fwd = QtGui.QVector3D(float(math.cos(yaw)), 0.0, float(math.sin(yaw)))
+        if fwd.length() == 0:
+            fwd = QtGui.QVector3D(0, 0, -1)
+        fwd.normalize()
+        right = QtGui.QVector3D.crossProduct(fwd, self._camera_up)
+        right.normalize()
+        move = QtGui.QVector3D(0, 0, 0)
+        if QtCore.Qt.Key.Key_W in self._keys_down or QtCore.Qt.Key.Key_Up in self._keys_down:
+            move += fwd
+        if QtCore.Qt.Key.Key_S in self._keys_down or QtCore.Qt.Key.Key_Down in self._keys_down:
+            move -= fwd
+        if QtCore.Qt.Key.Key_D in self._keys_down or QtCore.Qt.Key.Key_Right in self._keys_down:
+            move += right
+        if QtCore.Qt.Key.Key_A in self._keys_down or QtCore.Qt.Key.Key_Left in self._keys_down:
+            move -= right
+        if QtCore.Qt.Key.Key_E in self._keys_down:
+            move += self._camera_up
+        if QtCore.Qt.Key.Key_Q in self._keys_down:
+            move -= self._camera_up
+        if move.length() > 0:
+            move.normalize()
+            self._camera_target += move * float(speed * dt)
+            self.update()
 
     # Mouse and keyboard input
 
@@ -1127,9 +1136,33 @@ class Stage3DWidget(QOpenGLWidget):
         self._ensure_models_loaded(obj)
 
     def _load_all_objects(self) -> None:
-        """Reload all objects from stage_config (used after loading a new stage file)."""
+        """Reload all objects from stage_config (used after loading a new stage file).
+
+        Models that only the previous configuration referenced are released,
+        so repeatedly switching stages does not leak GPU memory.
+        """
         for obj in self._stage_config.objects:
             self._ensure_models_loaded(obj)
+        self._unload_unused_models()
+
+    def set_stage_config(self, stage_config: StageConfig) -> None:
+        """Swap the stage configuration and load all models of the new stage.
+
+        Safe to call before ``initializeGL`` ran: in that case the models are
+        loaded during OpenGL initialization instead.
+
+        Args:
+            stage_config: The new stage configuration to render.
+        """
+        self._stage_config = stage_config
+        # Missing-node reports refer to the old stage; re-validate the new one.
+        self._reported_missing_override_nodes.clear()
+        if not self._gl_initialized:
+            return
+        self.makeCurrent()
+        self._load_all_objects()
+        self.doneCurrent()
+        self.update()
 
     def set_selected_objects(self, object_ids: list[str], is_multi: bool = False) -> None:
         """Set which objects are highlighted in the 3D view.
@@ -1143,26 +1176,36 @@ class Stage3DWidget(QOpenGLWidget):
         self._highlight_is_multi = is_multi
 
     def remove_object(self, obj: StageObject) -> None:
-        """Release GPU resources for models no longer used by any stage object."""
+        """Release GPU resources for the removed object's models if no other object uses them.
+
+        Call after the object was removed from the stage configuration.
+        """
+        used = self._used_model_paths()
         for entry in getattr(obj, "get_model_entries", list)():
             path = entry.model_path
-            if not path:
-                continue
-            # Check if any remaining object still uses this model
-            still_used = any(
-                e.model_path == path
-                for o in self._stage_config.objects
-                for e in getattr(o, "get_model_entries", list)()
-            )
-            if still_used:
+            if not path or path in used:
                 continue
             # Free GPU resources
             if path in self._models:
-                m = self._models.pop(path)
-                m.unload()
+                self._models.pop(path).unload()
             if path in self._gltf_models:
-                gm = self._gltf_models.pop(path)
-                gm.unload()
+                self._gltf_models.pop(path).unload()
+
+    def _used_model_paths(self) -> set[str]:
+        """Model paths referenced by any current stage object."""
+        return {
+            entry.model_path
+            for obj in self._stage_config.objects
+            for entry in getattr(obj, "get_model_entries", list)()
+        }
+
+    def _unload_unused_models(self) -> None:
+        """Release GPU resources of cached models that no stage object references anymore."""
+        used = self._used_model_paths()
+        for cache in (self._models, self._gltf_models):
+            for path in list(cache):
+                if path not in used:
+                    cache.pop(path).unload()
 
     # glTF node search
 
