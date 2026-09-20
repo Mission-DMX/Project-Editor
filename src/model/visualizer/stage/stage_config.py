@@ -140,6 +140,7 @@ class StageConfig:
 
         Returns:
             Whether the file was written successfully.
+
         """
         return self.save_to(self.file_path)
 
@@ -151,6 +152,7 @@ class StageConfig:
 
         Returns:
             Whether the file was written successfully; failures are logged, not raised.
+
         """
         data = {"objects": [obj.to_dict() for obj in self.objects]}
         if self.groups:

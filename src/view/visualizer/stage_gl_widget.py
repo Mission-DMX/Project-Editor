@@ -1153,6 +1153,7 @@ class Stage3DWidget(QOpenGLWidget):
 
         Args:
             stage_config: The new stage configuration to render.
+
         """
         self._stage_config = stage_config
         # Missing-node reports refer to the old stage; re-validate the new one.
