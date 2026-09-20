@@ -484,7 +484,7 @@ class StageEditorWidget(QtWidgets.QWidget):
             return False
         sub = dc.get(section, {})
         mapping = sub.get("mapping", {})
-        return mapping.get(role, -1) >= 0
+        return mapping.get(role.value, -1) >= 0
 
     def _get_fixture_movement_range(self, obj: MovingHead) -> tuple[float, float]:
         if obj.device_config:
@@ -711,7 +711,7 @@ class StageEditorWidget(QtWidgets.QWidget):
             for idx, cn in enumerate(ch_names):
                 combo.addItem(f"CH{idx}: {cn}", idx)
             # Pre-select the mapped channel
-            cur = mapping.get(role, -1)
+            cur = mapping.get(role.value, -1)
             if cur >= 0:
                 for ci in range(1, combo.count()):
                     if combo.itemData(ci) == cur:
@@ -744,7 +744,7 @@ class StageEditorWidget(QtWidgets.QWidget):
             combo.addItem("(None)", -1)
             for idx, cn in enumerate(ch_names):
                 combo.addItem(f"CH{idx}: {cn}", idx)
-            cur = mapping.get(role, -1)
+            cur = mapping.get(role.value, -1)
             if cur >= 0:
                 for ci in range(1, combo.count()):
                     if combo.itemData(ci) == cur:

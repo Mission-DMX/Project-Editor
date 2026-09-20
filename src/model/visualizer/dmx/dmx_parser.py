@@ -197,7 +197,7 @@ class DmxParser(QtCore.QObject):
         channel_mapping = cfg.get("mapping", {})
 
         def rd(role: MovementRole) -> int | None:
-            off = channel_mapping.get(role, -1)
+            off = channel_mapping.get(role.value, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
             return int(raw[start + off])
@@ -227,7 +227,7 @@ class DmxParser(QtCore.QObject):
         m = cfg.get("mapping", {})
 
         def rd(role: ColorRole) -> int | None:
-            off = m.get(role, -1)
+            off = m.get(role.value, -1)
             if off < 0 or not (0 <= start + off < 512):
                 return None
             return int(raw[start + off])
@@ -261,4 +261,4 @@ class DmxParser(QtCore.QObject):
         dc = obj.device_config
         if not dc:
             return False
-        return dc.get("movement", {}).get("mapping", {}).get(MovementRole.DIMMER, -1) >= 0
+        return dc.get("movement", {}).get("mapping", {}).get(MovementRole.DIMMER.value, -1) >= 0
