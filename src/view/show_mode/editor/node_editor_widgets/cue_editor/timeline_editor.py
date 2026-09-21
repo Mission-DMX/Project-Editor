@@ -126,7 +126,7 @@ class TimelineContainer(QWidget):
         self._cue = c
         self.update_cue_display()
 
-    def update_cue_display(self):
+    def update_cue_display(self) -> None:
         """Updates the display of the set cue."""
         # TODO clear keyframes_panel
         self._keyframes_panel.clear_cue()

@@ -188,7 +188,7 @@ class MacroSetupWidget(QSplitter):
             for trigger in self._selected_macro.all_triggers:
                 self._trigger_added(trigger)
             self._editor_area.document().setPlainText(self._selected_macro.content)
-            self._context_label.setText(f"Context: {"Private" if self._selected_macro.shared_context_id is None else 
+            self._context_label.setText(f"Context: {"Private" if self._selected_macro.shared_context_id is None else
             f"[shared] {self._selected_macro.shared_context_id}"}")
         else:
             self._trigger_actions.setEnabled(False)

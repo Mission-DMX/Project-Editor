@@ -40,7 +40,7 @@ if not os.path.exists(_HISTORY_STORAGE_FILE):
         f.write("")
 with open(_HISTORY_STORAGE_FILE, "r") as f:
     _history = []
-    for line in f.readlines():
+    for line in f:
         line = line.replace("\n", "").strip()
         if len(line) > 0:
             _history.append(line)

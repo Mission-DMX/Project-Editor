@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 from model import DataType
 from model.color_hsi import ColorHSI
+from model.filter_data.cues.cue import Cue, KeyFrame, StateColor, StateDouble, StateEightBit, StateSixteenBit
 from model.media_assets.image import AbstractImageAsset
-from model.filter_data.cues.cue import KeyFrame, Cue, StateEightBit, StateColor, StateSixteenBit, StateDouble
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QColor
@@ -58,7 +58,7 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
     kf.timestamp = timestamp
     last_frame: KeyFrame | None = c.get_keyframe_before(timestamp)
     for i, channel in enumerate(c.channels):
-        channel_name, data_type = channel
+        _channel_name, data_type = channel
         if data_type == DataType.DT_COLOR:
             pixel: QColor = image.pixelColor(x, y)
             state = StateColor(transition_types[i])

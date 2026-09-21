@@ -9,8 +9,19 @@ from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtGui import QAction, QIcon, Qt
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QPushButton, QWidget, QDialog, QVBoxLayout, QRadioButton, \
-    QSpinBox, QMessageBox, QDialogButtonBox
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QRadioButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model import Broadcaster, DataType, Filter, Scene

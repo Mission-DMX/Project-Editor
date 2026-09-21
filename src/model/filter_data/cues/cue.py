@@ -440,11 +440,8 @@ class Cue:
         if len(self._frames) == 0:
             return None
         for kf in self._frames:
-            if kf.timestamp < timestamp:
-                if found_frame is None:
-                    found_frame = kf
-                elif kf.timestamp > found_frame.timestamp:
-                    found_frame = kf
+            if kf.timestamp < timestamp and (found_frame is None or kf.timestamp > found_frame.timestamp):
+                found_frame = kf
         return found_frame
 
     def remove_channel(self, c: Union[ExternalChannelDefinition, tuple[str, DataType]]) -> None:
