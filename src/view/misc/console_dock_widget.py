@@ -41,20 +41,22 @@ if not os.path.exists(_HISTORY_STORAGE_FILE):
 with open(_HISTORY_STORAGE_FILE, "r") as f:
     _history = []
     for line in f:
-        line = line.replace("\n", "").strip()
+        history_line = line.replace("\n", "").strip()
         if len(line) > 0:
-            _history.append(line)
+            _history.append(history_line)
 del f
 
 
 def _write_history() -> None:
-    global _history
     if len(_history) > 10000:
-        _history = _history[:10000]
+        del _history[10000:]
+
     with open(_HISTORY_STORAGE_FILE, "w") as f:
         for h_entry in _history:
             if h_entry.strip() != "":
                 f.write(h_entry + "\n")
+
+
 atexit.register(_write_history)
 
 
@@ -166,7 +168,7 @@ class CLITerminalIO(TerminalIO):
         if not supress_echo:
             self._stdout_callback(buffer)
             if self._cursor_in_buffer > 0:
-                b = bytes(self._buffer[len(self._buffer) - self._cursor_in_buffer:])
+                b = bytes(self._buffer[len(self._buffer) - self._cursor_in_buffer :])
                 self._stdout_callback(b)
                 self._stdout_callback(
                     bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_LEFT_CHAR] * self._cursor_in_buffer)
