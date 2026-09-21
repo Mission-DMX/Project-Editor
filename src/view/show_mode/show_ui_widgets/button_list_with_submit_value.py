@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import QDoubleSpinBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
-from model.filter import FilterTypeEnumeration
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 
 if TYPE_CHECKING:
@@ -32,19 +31,19 @@ class ButtonsWithValueSubmit(ConstantNumberButtonList):
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         w = super().get_player_widget(parent)
-        return self._append_direct_widget(w, player=True)
+        return self._append_direct_widget(w, parent, player=True)
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         w = super().get_configuration_widget(parent)
-        return self._append_direct_widget(w)
+        return self._append_direct_widget(w, parent)
 
-    def _append_direct_widget(self, existing_widget: QWidget, player: bool = False) -> QWidget:
-        top_widget = QWidget()
+    def _append_direct_widget(self, existing_widget: QWidget, parent: QWidget | None, player: bool = False) -> QWidget:
+        top_widget = QWidget(parent)
         top_layout = QHBoxLayout()
         layout_submit_own_value = QVBoxLayout()
         valuefield = QDoubleSpinBox(top_widget)
-        if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT:
+        if self._is_float_filter:
             valuefield.setMaximum(sys.float_info.max)
             valuefield.setMinimum(-sys.float_info.max)
             valuefield.setDecimals(20)
@@ -57,8 +56,7 @@ class ButtonsWithValueSubmit(ConstantNumberButtonList):
         submit_button = QPushButton("Send Value", top_widget)
 
         def pressed_button() -> None:
-            value = valuefield.value() if self._filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT else int(
-                valuefield.value())
+            value = valuefield.value() if self._is_float_filter else int(valuefield.value())
             self._set_value(value)
 
         submit_button.clicked.connect(pressed_button)
@@ -74,4 +72,10 @@ class ButtonsWithValueSubmit(ConstantNumberButtonList):
     def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         super()._update_from_fish(param)
         if self._spinbox is not None and param.parameter_key == "value":
-            self._spinbox.setValue(float(param.parameter_value))
+            try:
+                self._spinbox.setValue(float(param.parameter_value))
+            except ValueError:
+                return
+            except RuntimeError:
+                # The player widget was already destroyed (e.g. its page was closed).
+                self._spinbox = None

@@ -8,8 +8,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFontMetrics
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QStyle, QStyledItemDelegate, QVBoxLayout, QWidget
 
+from style import SELECTION_ACTIVE_COLOR, SELECTION_BACKGROUND_COLOR
+
 if TYPE_CHECKING:
-    from PySide6.QtCore import QModelIndex
+    from PySide6.QtCore import QModelIndex, QSize
     from PySide6.QtGui import QPainter
     from PySide6.QtWidgets import QStyleOptionViewItem
 
@@ -39,11 +41,9 @@ class FileListLabelDelegate(QStyledItemDelegate):
     def __init__(self, parent: QWidget | None = None) -> None:
         """Initializes the delegate."""
         super().__init__(parent)
-        self._color_background = QColor(64, 64, 64)
-        self._color_selected = QColor(64, 64, 100)
 
     @override
-    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex, /) -> None:
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex, /) -> QSize:
         sh = super().sizeHint(option, index)
         sh.setHeight(sh.height() * 3)
         return sh
@@ -56,7 +56,8 @@ class FileListLabelDelegate(QStyledItemDelegate):
         primary_file_name, extension = os.path.splitext(os.path.basename(path))
         painter.save()
         painter.fillRect(x, y, w, h,
-                         self._color_selected if option.state & QStyle.State_Selected else self._color_background)
+                         SELECTION_ACTIVE_COLOR if option.state & QStyle.StateFlag.State_Selected else
+                         SELECTION_BACKGROUND_COLOR)
 
         font = painter.font()
         font.setPixelSize(20)

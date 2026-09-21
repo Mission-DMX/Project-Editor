@@ -120,7 +120,7 @@ def get_widget_key(w: UIWidget) -> str | None:
 
     """
     for k, v in WIDGET_LIBRARY.items():
-        if isinstance(w, v[1]):
+        if type(w) is v[1]:
             return k
     return None
 

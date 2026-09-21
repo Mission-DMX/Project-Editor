@@ -8,7 +8,7 @@ from PySide6.QtGui import QCloseEvent, QMouseEvent
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from model import UIWidget
-from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 logger = getLogger(__name__)
 

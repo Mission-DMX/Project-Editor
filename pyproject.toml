@@ -1,13 +1,13 @@
 [project]
-name = "MissionDMX Editor"
-version = "1.2.1.post4"
+name = "Mission-DMX Editor"
+version = "1.4.0"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
     { name = "CorsCodini", email = "cors.codini@web.de" },
     { name = "Niklas Naumann", email = "niklas.naumann@student.uni-luebeck.de" },
     { name = "Doralitze", email = "doralitze@chaotikum.org" },
-    { name = "Ludwig Rahlff"},
-    { name = "Joell Keanu"},
+    { name = "Ludwig Rahlff" },
+    { name = "Joell Keanu" },
 ]
 
 requires-python = "==3.13.*"
@@ -78,6 +78,7 @@ exclude = [
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
+    "CPY001", # Ignore missing copyright notices for now
     "E722",
     "F401",
     "UP007", #Pycharm problem
@@ -132,5 +133,10 @@ files = ["src/main.py"]
 
 [tool.mypy]
 mypy_path = ["src"]
-generated-members = ['proto/']
+
+# PyOpenGL does not provide type information; treat its imports as Any instead of
+# reporting "missing library stubs" for every module using it.
+[[tool.mypy.overrides]]
+module = ["OpenGL", "OpenGL.*"]
+ignore_missing_imports = true
 

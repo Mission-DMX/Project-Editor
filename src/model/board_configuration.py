@@ -252,7 +252,7 @@ class BoardConfiguration:
         if c not in callable_list:
             callable_list.add(c)
 
-    def remove_filter_update_callback(self, target_scene: int, target_filter_id: str, c: Callable) -> None:
+    def remove_filter_update_callback(self, target_scene: int | Scene, target_filter_id: str, c: Callable) -> None:
         """Remove a previously registered callback.
 
         Args:
@@ -261,6 +261,8 @@ class BoardConfiguration:
             c: The callable to be removed.
 
         """
+        if isinstance(target_scene, Scene):
+            target_scene = target_scene.scene_id
         callable_list = self._filter_update_msg_register.get((target_scene, target_filter_id))
         if callable_list is None:
             return
