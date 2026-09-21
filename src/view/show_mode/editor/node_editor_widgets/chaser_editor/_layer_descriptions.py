@@ -96,12 +96,12 @@ LAYER_DESCRIPTION: dict[str, tuple[str, str, QImage | QMovie | None]] = {
     "color_chanmod": (
         "Channel Set",
         "Sets a single channel (r, g, b, h, s, i) to the supplied numeric value.",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "color_chanmod.png"))),
+        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "chanmod.png"))),
     ),
     "color_chancalc": (
         "Channel Calculation",
         "Modifies a channel (r, g, b, h, s, i) with an operation (add, sub, mult, div).",
-        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "color_chancalc.png"))),
+        _load_label_resource(resource_path(os.path.join("resources", "chaser_layer_help", "chancalc.png"))),
     ),
     "random_color": (
         "Random Color",
