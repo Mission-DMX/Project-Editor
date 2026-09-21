@@ -477,18 +477,3 @@ class MainWindow(QtWidgets.QMainWindow):
     def _close_callback(self) -> None:
         self._close_now = True
         self.close()
-
-    def _open_recent(self) -> None:
-        recently_opened_show_files = get_recently_used_files()
-        self._settings_dialog = SelectionDialog("Open Recent", "Please select the show file to load.",
-                                                recently_opened_show_files, self, False,
-                                                self._open_file_selected, FileListLabelDelegate())
-        self._settings_dialog.setMinimumWidth(800)
-        self._settings_dialog.setMinimumHeight(600)
-        self._settings_dialog.show()
-
-    def _open_file_selected(self, diag: SelectionDialog) -> None:
-        if len(diag.selected_items) < 1:
-            return
-        read_document(diag.selected_items[0], self._board_configuration)
-        self._settings_dialog = None
