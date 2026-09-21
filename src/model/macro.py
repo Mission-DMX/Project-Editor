@@ -107,6 +107,7 @@ class _ShowfileAppliedTrigger(Trigger):
     def __init__(self) -> None:
         super().__init__("showfile_applied")
         from model import Broadcaster
+
         Broadcaster().show_file_applied.connect(self.exec)
 
 
@@ -195,6 +196,7 @@ class Macro:
 
     @property
     def shared_context_id(self) -> str | None:
+        """The shared context ID of the macro."""
         return self._shared_context_id
 
     def add_trigger(self, t: Trigger, active: bool = True) -> None:
