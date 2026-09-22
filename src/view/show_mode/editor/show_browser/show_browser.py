@@ -394,6 +394,8 @@ class ShowBrowser:
                 self._input_dialog.open()
 
     def _sort_selected_filter_pages(self, selected_items: list[QTreeWidgetItem]) -> None:
+        """Sorts the selected filter pages and refreshes editor tabs displaying them."""
+        sorted_pages: list[FilterPage] = []
         for item in selected_items:
             if not isinstance(item, AnnotatedTreeWidgetItem):
                 continue
@@ -401,6 +403,13 @@ class ShowBrowser:
             if not isinstance(data, FilterPage):
                 continue
             data.sort()
+            sorted_pages.append(data)
+        if not sorted_pages:
+            return
+        for tab_index in range(self._editor_tab_widget.count()):
+            tab = self._editor_tab_widget.widget(tab_index)
+            if isinstance(tab, SceneTabWidget) and tab.filter_page in sorted_pages:
+                tab.refresh()
 
     def _add_ui_page(self, selected_items: list[QTreeWidgetItem]) -> None:
         update_occurred = False
