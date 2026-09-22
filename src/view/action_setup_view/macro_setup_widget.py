@@ -229,7 +229,7 @@ class MacroSetupWidget(QSplitter):
     def _add_macro_pressed(self) -> None:
         self._dialog = QInputDialog(self)
         self._dialog.setComboBoxEditable(True)
-        self._dialog.setComboBoxItems(get_available_shared_context_identifiers())
+        self._dialog.setComboBoxItems(get_available_shared_context_identifiers(self._show))
         self._dialog.setModal(True)
         self._dialog.setWindowTitle("Specify Context")
         self._dialog.setLabelText("Specify Macro Context (leave empty to create a private one):")
