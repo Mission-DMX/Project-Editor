@@ -13,8 +13,14 @@ if TYPE_CHECKING:
     from PySide6.QtGui import QColor
 
 
-def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool, timestamp: float, break_point: int,
-                                  transition_types: list[str], c: Cue) -> bool:
+def generate_keyframes_from_image(
+    asset: AbstractImageAsset,
+    columns_first: bool,
+    timestamp: float,
+    break_point: int,
+    transition_types: list[str],
+    c: Cue,
+) -> bool:
     """Extract color values from image asset pixels.
 
     This will fill in the provided channels for the key frame.
@@ -47,10 +53,10 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
         raise ValueError("Number of color channels must not be greater than asset pixel count.")
     if columns_first:
         if break_point < 1 or break_point >= image_height:
-            break_point = image_height - 1
+            break_point = image_height
     else:
         if break_point < 1 or break_point >= image_width:
-            break_point = image_width - 1
+            break_point = image_width
     x: int = 0
     y: int = 0
     break_point_offset: int = 0
@@ -65,21 +71,25 @@ def generate_keyframes_from_image(asset: AbstractImageAsset, columns_first: bool
             state.color = ColorHSI.from_qt_color(pixel)
             if columns_first:
                 y += 1
-                if (y - break_point_offset) >= break_point:
+                if (y - break_point_offset) >= break_point or y >= image_height:
                     y = break_point_offset
                     x += 1
                 if x >= image_width:
                     x = 0
                     break_point_offset += break_point
+                    if break_point_offset >= image_height:
+                        break_point_offset = 0
                     y = break_point_offset
             else:
                 x += 1
-                if (x - break_point_offset) >= break_point:
+                if (x - break_point_offset) >= break_point or x >= image_width:
                     x = break_point_offset
                     y += 1
                 if y >= image_height:
                     y = 0
                     break_point_offset += break_point
+                    if break_point_offset >= image_width:
+                        break_point_offset = 0
                     x = break_point_offset
             kf.append_state(state)
         else:
