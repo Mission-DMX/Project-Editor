@@ -134,9 +134,9 @@ files = ["src/main.py"]
 [tool.mypy]
 mypy_path = ["src"]
 
-# PyOpenGL does not provide type information; treat its imports as Any instead of
+# PyOpenGL and pyelk does not provide type information; treat its imports as Any instead of
 # reporting "missing library stubs" for every module using it.
 [[tool.mypy.overrides]]
-module = ["OpenGL", "OpenGL.*"]
+module = ["OpenGL", "OpenGL.*", "pyelk", "pyelk.*"]
 ignore_missing_imports = true
 
