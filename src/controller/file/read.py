@@ -6,11 +6,13 @@ from logging import getLogger
 
 import xmlschema
 from defusedxml.ElementTree import parse
+from PySide6.QtWidgets import QMessageBox
 
 import proto.Console_pb2
 import proto.UniverseControl_pb2
 from controller.file.deserialization.migrations import replace_old_filter_configurations
 from controller.file.deserialization.post_load_operations import link_patched_fixtures
+from controller.file.recently_used import register_opened_file
 from controller.utils.process_notifications import get_process_notifier
 from model import BoardConfiguration, Filter, Scene, UIPage, Universe
 from model.color_hsi import ColorHSI
@@ -22,6 +24,7 @@ from model.media_assets.asset_loading_factory import load_asset
 from model.media_assets.factory_hint import AssetFactoryObjectHint
 from model.media_assets.registry import clear as clear_media_registry
 from model.ofl.fixture import load_fixture, make_used_fixture
+from model.ofl.fixture_not_found_exception import FixtureDefNotFoundError
 from model.scene import FilterPage
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
@@ -175,6 +178,10 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
         logger.exception("Unable to update show UI window count: %s", e)
         update_window_count(0, board_configuration)
     board_configuration.broadcaster.show_file_loaded.emit()
+    try:
+        register_opened_file(file_name)
+    except Exception as e:
+        logger.exception("Unable to register opened file: %s (%s)", file_name, str(e))
     pn.close()
     return True
 
@@ -265,6 +272,14 @@ def _parse_filter_page(element: ET.Element, parent_scene: Scene, instantiated_pa
     return True
 
 
+def _parse_dmx_default_value(scene: Scene, child: ET.Element) -> None:
+    scene.insert_dmx_default_value(
+        int(child.attrib["universe"]),
+        int(child.attrib["channel"]),
+        int(child.attrib["value"])
+    )
+
+
 def _parse_scene(
     scene_element: ET.Element, board_configuration: BoardConfiguration, loaded_banksets: dict[str, BankSet]
 ) -> None:
@@ -301,6 +316,8 @@ def _parse_scene(
                 filter_pages.append(child)
             case "uipage":
                 ui_page_elements.append(child)
+            case "dmxdefaultvalue":
+                _parse_dmx_default_value(scene, child)
             case _:
                 logger.warning("Scene %s contains unknown element: %s", human_readable_name, child.tag)
 
@@ -652,13 +669,21 @@ def _parse_patching(board_configuration: BoardConfiguration, location_element: E
     fixtures_path = "/var/cache/missionDMX/fixtures"  # TODO config file
 
     for child in location_element:
-        make_used_fixture(
-            board_configuration,
-            load_fixture(os.path.join(fixtures_path, child.attrib["fixture_file"])),
-            int(child.attrib["mode"]),
-            universe_id,
-            int(child.attrib["start"]),
-        )
+        try:
+            make_used_fixture(
+                board_configuration,
+                load_fixture(os.path.join(fixtures_path, child.attrib["fixture_file"])),
+                int(child.attrib["mode"]),
+                universe_id,
+                int(child.attrib["start"]),
+            )
+        except FixtureDefNotFoundError as e:
+            # Calling Dialog exec is not an issue here as we're in the process of loading the show file anyway
+            mb = QMessageBox(QMessageBox.Icon.Critical, "Failed to load fixture", str(e) +
+                             "\n\nDo not continue until this error is fixed as the show is now corrupted.\nMaybe try "
+                             "updating the fixture database.")
+            mb.exec_()
+            continue
 
     # TODO load fixture name from file
 

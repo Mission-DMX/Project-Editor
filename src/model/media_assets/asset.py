@@ -8,7 +8,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from model.media_assets.registry import register
+from model.media_assets.registry import register, unregister
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QPixmap
@@ -102,3 +102,7 @@ class MediaAsset(ABC):
         Non-local resources need to be provided and copied together with the show file.
         """
         return False
+
+    def unregister(self) -> None:
+        """Unregister this asset."""
+        unregister(self)

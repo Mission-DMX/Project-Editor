@@ -36,10 +36,16 @@ class AssetManagementDialog(QDialog):
         self._load_asset_file.setText("Load asset from file")
         self._load_asset_file.triggered.connect(self._open_file)
         self._action_button_group.addAction(self._load_asset_file)
+        self._delete_selected_asset_action = QAction()
+        self._delete_selected_asset_action.setIcon(QIcon.fromTheme("edit-delete"))
+        self._delete_selected_asset_action.setText("Delete selected asset")
+        self._delete_selected_asset_action.triggered.connect(self._delete_selected_asset)
+        self._delete_selected_asset_action.setEnabled(False)
+        self._action_button_group.addAction(self._delete_selected_asset_action)
 
         layout.addWidget(self._action_button_group)
 
-        self._asset_display = AssetSelectionWidget(self)
+        self._asset_display = AssetSelectionWidget(self, multiselection_allowed=True)
         layout.addWidget(self._asset_display)
 
         self._close_button_group = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
@@ -51,6 +57,7 @@ class AssetManagementDialog(QDialog):
         self._dialog: QFileDialog | None = None
         self._show_file_path = show_file_path if show_file_path is not None else ""
         self.setMinimumWidth(800)
+        self._asset_display.asset_selection_changed.connect(self._selected_asset_changed)
 
     def _open_file(self) -> None:
         self._dialog = QFileDialog(self, "Open file")
@@ -90,3 +97,11 @@ class AssetManagementDialog(QDialog):
                                   detailedText=accumulated_errors)
             msg_box.show()
             self._dialog = msg_box
+
+    def _selected_asset_changed(self) -> None:
+        self._delete_selected_asset_action.setEnabled(len(self._asset_display.selected_asset) > 0)
+
+    def _delete_selected_asset(self) -> None:
+        for asset in self._asset_display.selected_asset:
+            asset.unregister()
+        self._asset_display.reload_model()

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="https://specifications.freedesktop.org/shared-mime-info">
+    <mime-type type="application/x-mdmx-showfile">
+        <comment>MissionDMX show file</comment>
+        <glob pattern="*.show"/>
+    </mime-type>
+</mime-info>

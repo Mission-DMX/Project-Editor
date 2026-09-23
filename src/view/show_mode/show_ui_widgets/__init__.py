@@ -12,6 +12,8 @@ from model import Filter, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.show_ui_widgets.autotracker.ui_widget import AutoTrackerUIWidget
 from view.show_mode.show_ui_widgets.button_list_with_submit_value import ButtonsWithValueSubmit
+from view.show_mode.show_ui_widgets.chaser_apply_preset_uiwidget import ChaserApplyPresetUIWidget
+from view.show_mode.show_ui_widgets.chaser_create_config_uiwidget import ChaserCreateConfigUIWidget
 from view.show_mode.show_ui_widgets.clock_ui_widget import ClockUIWidget
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
@@ -33,25 +35,31 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
         AutoTrackerUIWidget,
         [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]],
     ),
-    "buttonarray": (
-        "Button Array",
+    "buttonarray_submit": (
+        "Button Array w/ Submit",
         ButtonsWithValueSubmit,
         [
             [
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT,
             ]
         ],
     ),
-    "buttonarray_submit": (
-        "Button Array w/ Submit",
+    "buttonarray": (
+        "Button Array",
         ConstantNumberButtonList,
         [
             [
                 FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
                 FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT,
             ]
         ],
     ),
@@ -70,6 +78,16 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
         "Sequence Listing",
         SequencerControlUIWidget,
         [[FilterTypeEnumeration.VFILTER_SEQUENCER, FilterTypeEnumeration.FILTER_SEQUENCER]],
+    ),
+    "chaser-preset-selector": (
+        "Chaser Preset Selector",
+        ChaserApplyPresetUIWidget,
+        [[FilterTypeEnumeration.FILTER_COLOR_CHASER]]
+    ),
+    "chaser-live-config": (
+        "Chaser Live Config Tool",
+        ChaserCreateConfigUIWidget,
+        [[FilterTypeEnumeration.FILTER_COLOR_CHASER]]
     ),
     "label": ("Text Label", ShowLabelUIWidget, []),
     "clock": ("BF Clock", ClockUIWidget, []),
@@ -102,7 +120,7 @@ def get_widget_key(w: UIWidget) -> str | None:
 
     """
     for k, v in WIDGET_LIBRARY.items():
-        if isinstance(w, v[1]):
+        if type(w) is v[1]:
             return k
     return None
 

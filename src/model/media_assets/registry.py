@@ -30,6 +30,25 @@ def register(asset: MediaAsset, uuid: str) -> bool:
     d[uuid] = asset
     return True
 
+def unregister(asset: MediaAsset) -> bool:
+    """Method unregisters a media asset.
+
+    Args:
+        asset: the media asset to unregister
+
+    Returns:
+        True if the asset was successfully unregistered, False otherwise.
+
+    """
+    reg = _asset_library.get(asset.get_type())
+    if reg is None:
+        return False
+    try:
+        reg.pop(asset.id)
+        return True
+    except KeyError:
+        return False
+
 def get_asset_by_uuid(uuid: str) -> MediaAsset | None:
     """Get a media asset by its UUID.
 

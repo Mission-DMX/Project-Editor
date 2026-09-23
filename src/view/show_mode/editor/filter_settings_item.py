@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from model.filter import Filter, FilterTypeEnumeration
 from utility import resource_path
+from view.show_mode.editor.node_editor_widgets.chaser_editor.color_chaser_widget import ColorChaserFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
@@ -33,6 +34,7 @@ from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.dimmer_brightness_mixin_config_widget import DimmerBrightnessMixinConfigWidget
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
+from .node_editor_widgets.number_constant_settings_widget import NumberConstantSettingsWidget
 from .node_editor_widgets.sequencer_editor.widget import SequencerEditor
 
 if TYPE_CHECKING:
@@ -145,6 +147,15 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return SequencerEditor(f=filter_)
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN:
         return DimmerBrightnessMixinConfigWidget()
+    if filter_.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
+                               FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+                               FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                               FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+                               FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+                               FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT]:
+        return NumberConstantSettingsWidget(filter_)
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
+        return ColorChaserFilterConfigWidget(filter_)
     return None
 
 

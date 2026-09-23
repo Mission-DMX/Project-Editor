@@ -1,11 +1,13 @@
 [project]
-name = "Project-Editor"
-version = "1.1.8"
+name = "Mission-DMX Editor"
+version = "1.4.0"
 description = "Editor for realtime dmx control software FISH https://github.com/Mission-DMX/realtime-fish"
 authors = [
     { name = "CorsCodini", email = "cors.codini@web.de" },
     { name = "Niklas Naumann", email = "niklas.naumann@student.uni-luebeck.de" },
     { name = "Doralitze", email = "doralitze@chaotikum.org" },
+    { name = "Ludwig Rahlff" },
+    { name = "Joell Keanu" },
 ]
 
 requires-python = "==3.13.*"
@@ -13,12 +15,12 @@ readme = "README.md"
 license = { text = "GPL-3" }
 
 dependencies = [
-    "PySide6>=6.9.0",
+    "PySide6>=6.11.0",
     "pyqtgraph>=0.13.7",
     "xmlschema>=3.4.5",
     "requests>=2.32.3",
     "numpy>=2.2.4",
-    "ruamel-yaml>=0.18.10",
+    "ruamel-yaml>=0.18.14",
     "html2text>=2024.2.26",
     "markdown>=3.7",
     "typing-extensions>=4.13.1",
@@ -26,11 +28,12 @@ dependencies = [
     # Dependencies for automatic tracking
     "opencv-python>=4.11.0.86",
     "qimage2ndarray>=1.10.0",
-    "aiortc>=1.11.0",
+    "aiortc>=1.14.0",
     "qasync>=0.27.1",
     "pyjoystick>=1.2.4",
     "pyopengl>=3.1.9",
     "onnxruntime-openvino>=1.21.0",
+    "PySDL2>=0.9.17",
     "pydantic>=2.11.7",
     "defusedxml>=0.7.1",
     "tzlocal>=5.3.1",
@@ -42,13 +45,18 @@ dependencies = [
 dev = [
     "pylint>=3.3.6",
     "pylint-protobuf>=0.22.0",
-    "pyinstaller>=6.12.0",
     "ruff>=0.12.0",
     "mypy>=1.16.1",
     "types-protobuf>=6.30.2.20250703",
     "types-requests>=2.32.4.20250611",
     "types-Markdown>=3.8.0.20250708",
 ]
+build = [
+    "Nuitka>=4.1.3",
+    "patchelf>=0.17.2.4",
+]
+[project.urls]
+homepage = "https://mission-dmx.org"
 
 [tool.missionDMX]
 display-name = "Mission DMX"
@@ -70,10 +78,10 @@ exclude = [
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
+    "CPY001", # Ignore missing copyright notices for now
     "E722",
     "F401",
     "UP007", #Pycharm problem
-    "UP038", #Deprecated,
     "SIM105", #Slower contextlib.suppress
     "TRY", "PLC0415", "ARG002", #TODO ich weiß noch nicht
     "TRY003", #TODO own error classes
@@ -120,7 +128,15 @@ ignore-paths = ['test', 'src/controller/autotrack', 'src/proto/', "src/view/util
 generated-members = ['proto/']
 source-roots = ["src"]
 
+[tool.pyside6-project]
+files = ["src/main.py"]
+
 [tool.mypy]
 mypy_path = ["src"]
-generated-members = ['proto/']
+
+# PyOpenGL does not provide type information; treat its imports as Any instead of
+# reporting "missing library stubs" for every module using it.
+[[tool.mypy.overrides]]
+module = ["OpenGL", "OpenGL.*"]
+ignore_missing_imports = true
 

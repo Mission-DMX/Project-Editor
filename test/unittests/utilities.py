@@ -34,19 +34,19 @@ _GOOD_MESSAGES = ["No Error occured", "Showfile Applied."]
 
 def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, recorded_gui_updates: list[tuple[int, str, str, str]] | None = None, main_brightness: int = 65565) -> bool:
     """Execute a board configuration.
-    
+
     This method starts a fish instance, connects to it, uploads a board configuration and enables filter execution.
     If after the specified amount of iterations, no error occurred, the method stops, returning true. Otherwise, false.
-    
+
     Args:
         bc: The board configuration to apply
         cycles: The amount of cycles to wait
         recorded_gui_updates: If A list is provided, any GUI updates received during execution are stored in there.
         main_brightness: The Main brightness value used for the test.
-    
+
     Returns:
         True if no error occurred during execution. Otherwise, false.
-    
+
     """
     global _last_error_message
     _last_error_message = _GOOD_MESSAGES[0]
