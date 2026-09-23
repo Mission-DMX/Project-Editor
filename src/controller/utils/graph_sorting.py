@@ -39,8 +39,8 @@ def layered_layout(filter_list: list[Filter]) -> None:
             "width": max(min(250, len(_filter.filter_id) * 10), 80),
             "height": 30 * max(len(_filter.in_data_types.keys()), len(_filter.out_data_types.keys())) + 30,
             "layoutOptions": {"elk.portConstraints": "FIXED_SIDE"},
-            "x": _filter.pos[0],
-            "y": _filter.pos[1],
+            "x": _filter.pos[0] if _filter.pos is not None else 0,
+            "y": _filter.pos[1] if _filter.pos is not None else 0,
             "ports": port_array,
         }
         child_array.append(node)
@@ -63,12 +63,9 @@ def layered_layout(filter_list: list[Filter]) -> None:
         "edges": edge_array,
     }
     result = elk.layout(graph)["children"]
+    new_positions = {result_node["id"]: (result_node["x"], result_node["y"]) for result_node in result}
+    missing_ids = [_filter.filter_id for _filter in filter_list if _filter.filter_id not in new_positions]
+    if missing_ids:
+        raise ValueError(f"Expected results with the ids {missing_ids} to exist.")
     for _filter in filter_list:
-        result_node = None
-        for r in result:
-            if r["id"] == _filter.filter_id:
-                result_node = r
-                break
-        if result_node is None:
-            raise ValueError(f"Expected a result with id {_filter.filter_id} to exist.")
-        _filter.pos = (result_node["x"], result_node["y"])
+        _filter.pos = new_positions[_filter.filter_id]

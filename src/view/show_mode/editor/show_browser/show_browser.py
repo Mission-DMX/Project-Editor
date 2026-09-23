@@ -2,7 +2,9 @@
 
 import os.path
 from functools import partial
+from logging import getLogger
 
+from pyelk import ElkError
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
@@ -30,6 +32,8 @@ from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowse
 
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
+
+logger = getLogger(__name__)
 
 
 class ShowBrowser:
@@ -406,14 +410,31 @@ class ShowBrowser:
     def _sort_selected_filter_pages(self, selected_items: list[QTreeWidgetItem]) -> None:
         """Sorts the selected filter pages and refreshes editor tabs displaying them."""
         sorted_pages: list[FilterPage] = []
+        failed_pages: list[tuple[FilterPage, Exception]] = []
         for item in selected_items:
             if not isinstance(item, AnnotatedTreeWidgetItem):
                 continue
             data = item.annotated_data
             if not isinstance(data, FilterPage):
                 continue
-            data.sort()
+            try:
+                data.sort()
+            except (ElkError, ValueError) as e:
+                logger.error("Sorting filter page '%s' failed: %s", data.name, e)
+                failed_pages.append((data, e))
+                continue
             sorted_pages.append(data)
+        if failed_pages:
+            self._input_dialog = QMessageBox(
+                QMessageBox.Icon.Critical,
+                "Sorting Filter Pages Failed",
+                "An error occurred while sorting the following filter pages: "
+                + ", ".join(f"'{page.name}'" for page, _ in failed_pages),
+                parent=self.widget,
+                detailedText="\n".join(f"'{page.name}': {error}" for page, error in failed_pages),
+            )
+            self._input_dialog.setModal(True)
+            self._input_dialog.show()
         if not sorted_pages:
             return
         for tab_index in range(self._editor_tab_widget.count()):
