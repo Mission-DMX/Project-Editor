@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, NamedTuple, override
 
 from PySide6.QtCore import QObject, Signal
 
-from controller.utils.graph_sorting import layered_layout, spring_layout
+from model.utils.graph_sorting import layered_layout
 
 from .universe import Universe
 
@@ -68,7 +68,7 @@ class FilterPage:
         return new_fp
 
     def sort(self) -> None:
-        """Applies the spring layout to the contained filters."""
+        """Applies the ELK layered layout to the contained filters."""
         layered_layout(self._filters)
 
 
@@ -143,8 +143,9 @@ class Scene(QObject):
         """Get the list of default values to be applied on scene switch."""
         return self._dmx_default_values.copy()
 
-    def insert_dmx_default_value(self, universe: Universe | int, channel: int, value: int,
-                                 supress_emission: bool = False) -> bool:
+    def insert_dmx_default_value(
+        self, universe: Universe | int, channel: int, value: int, supress_emission: bool = False
+    ) -> bool:
         """Add a new default value to the scene.
 
         Existing values will be updated.
@@ -183,8 +184,9 @@ class Scene(QObject):
 
         """
         universe_id = universe.id if isinstance(universe, Universe) else universe
-        values_to_remove = [val for val in self._dmx_default_values if
-                            val.universe_id == universe_id and val.channel == channel]
+        values_to_remove = [
+            val for val in self._dmx_default_values if val.universe_id == universe_id and val.channel == channel
+        ]
         for item in values_to_remove:
             self._dmx_default_values.remove(item)
         if len(values_to_remove) > 0 and not supress_emission:
