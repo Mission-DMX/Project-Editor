@@ -29,5 +29,5 @@ class EventSchedulerNode(FilterNode):
         parameter_keys = self.filter.initial_parameters.keys()
         for entry, default_val in [("length", "0"), ("update_triggers", ""), ("step", "0"),
                                    ("synchronization_target", "0,0")]:
-            if entry in parameter_keys:
+            if entry not in parameter_keys:
                 self.filter.initial_parameters[entry] = default_val

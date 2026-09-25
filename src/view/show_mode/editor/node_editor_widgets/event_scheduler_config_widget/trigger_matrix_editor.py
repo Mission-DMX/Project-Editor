@@ -148,7 +148,7 @@ class TriggerMatrixEditor(QWidget):
 
         steps_data = []
         for step in range(self._number_of_steps):
-            list.extend(f"{step},{event},TRUE" for event in range(len(self._events)) if self._states[event, step])
+            steps_data.extend(f"{step},{event},TRUE" for event in range(len(self._events)) if self._states[event, step])
         return ";".join(steps_data)
 
     @active_event_data.setter
