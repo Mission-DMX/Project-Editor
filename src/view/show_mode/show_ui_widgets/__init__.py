@@ -37,8 +37,8 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
         [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]],
         None,
     ),
-    "buttonarray": (
-        "Button Array",
+    "buttonarray_submit": (
+        "Button Array w/ Submit",
         ButtonsWithValueSubmit,
         [
             [
@@ -52,8 +52,8 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
         ],
         "Constants",
     ),
-    "buttonarray_submit": (
-        "Button Array w/ Submit",
+    "buttonarray": (
+        "Button Array",
         ConstantNumberButtonList,
         [
             [
@@ -155,7 +155,7 @@ def get_widget_key(w: UIWidget) -> str | None:
 
     """
     for k, v in WIDGET_LIBRARY.items():
-        if isinstance(w, v[1]):
+        if type(w) is v[1]:
             return k
     return None
 
