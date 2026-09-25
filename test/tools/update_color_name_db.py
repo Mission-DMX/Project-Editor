@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-add_missing_ofl_colours_local_fixed_v2.py
+
+"""Script to find missing color names in color name db.
 
 Usage
 -----
@@ -18,6 +18,7 @@ The script:
 Dependencies
 ------------
     pip install requests beautifulsoup4
+
 """
 
 import csv
@@ -88,8 +89,12 @@ def fetch_fixture_json(file_path: Path) -> dict:
 
 
 def _collect_colour_names(obj, out: Set[str]) -> None:
-    """Recursively walk *obj* and add every string value whose key is
-    ``color`` or ``colour`` (case‑insensitive) to *out*."""
+    """Find all used color names.
+    
+    Recursively walk *obj* and add every string value whose key is
+    ``color`` or ``colour`` (case‑insensitive) to *out*.
+    
+    """
     if isinstance(obj, dict):
         for k, v in obj.items():
             if k.lower() in ("color", "colour"):
@@ -119,7 +124,8 @@ def _scrape_page(url: str) -> BeautifulSoup:
 
 
 def lookup_colour(name: str) -> Tuple[float, float, float]:
-    """
+    """Try to fetch color name values online.
+    
     Scrape https://www.colornames.org/color/<name> and extract:
         Hue (°), Saturation (%), Value (%)
 
@@ -132,6 +138,7 @@ def lookup_colour(name: str) -> Tuple[float, float, float]:
            (e.g. ``cold white`` → ``cold-white``)
 
     If both attempts fail a ``ValueError`` is raised.
+    
     """
     # Normalise the name for the URL
     raw = name.strip().lower()
@@ -171,6 +178,7 @@ def lookup_colour(name: str) -> Tuple[float, float, float]:
 # Main workflow
 # ----------------------------------------------------------------------
 def main(csv_file: str, fixtures_dir: str) -> None:
+    """Check for updates and perform them if possible."""
     csv_path = Path(csv_file)
     fixtures_root = Path(fixtures_dir)
 
