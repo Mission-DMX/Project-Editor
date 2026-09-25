@@ -91,6 +91,7 @@ class CLITerminalIO(TerminalIO):
         executed_command = False
         execution_successful = True
         supress_echo = False
+        self._in_escape = False
         # TODO implement tab completion here
         for b in buffer:
             if b == _NEWLINE_CHAR:
@@ -103,20 +104,18 @@ class CLITerminalIO(TerminalIO):
                 self._stdout_callback(self._context.fetch_print_buffer().encode())
                 executed_command = True
                 self._history_cursor = 0
+                self._history_cmd_stash = ""
+                self._cursor_in_buffer = 0
             elif b == _BACKSPACE_CHAR:
-                self._stdout_callback(bytes([8, ord(" ")] if self._cursor_in_buffer == 0 else [8]))
-                if len(buffer) > 0:
-                    try:
-                        self._buffer.pop(-1)
-                    except IndexError:
-                        pass  # Simply catching this exception is cheaper than sync
+                supress_echo = True
+                self._remove_char_before_cursor()
             elif b == _ESCAPE_CHAR:
                 self._in_escape = True
                 supress_echo = True
             elif self._in_escape and b == _ESC_SEQUENCE_CHAR:
                 pass
             elif self._in_escape and b == _ESC_UP_CHAR:
-                if len(_history) <= (self._history_cursor + 1):
+                if len(_history) < (self._history_cursor + 1):
                     self._in_escape = False
                     continue
                 if self._history_cursor == 0:
@@ -163,6 +162,8 @@ class CLITerminalIO(TerminalIO):
                 self._cursor_in_buffer -= 1
                 self._stdout_callback(bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_RIGHT_CHAR]))
                 self._in_escape = False
+            elif self._in_escape:
+                self._in_escape = False
             else:
                 self._buffer.insert(len(self._buffer) - self._cursor_in_buffer, b)
         if not supress_echo:
@@ -178,6 +179,36 @@ class CLITerminalIO(TerminalIO):
                 self._stdout_callback(b"\r\n> ")
             else:
                 self._stdout_callback(b"\r\n[ERR] > ")
+
+    def _remove_char_before_cursor(self) -> None:
+        """Remove the character in front of the cursor and redraw the input line.
+
+        If the cursor is placed at the very start of the line, nothing is removed (matching the behaviour of common
+        shells). The character is always removed from the input buffer first, the terminal display is synchronized
+        afterwards.
+        """
+        if len(self._buffer) <= self._cursor_in_buffer:
+            return
+        previous_length = len(self._buffer)
+        del self._buffer[len(self._buffer) - self._cursor_in_buffer - 1]
+        self._redraw_input_line(previous_length)
+
+    def _redraw_input_line(self, previous_length: int) -> None:
+        """Redraw the complete input line and reposition the terminal cursor on top of it.
+
+        Args:
+            previous_length: the length of the input buffer prior to its latest modification. All characters located
+                behind the new end of the buffer are blanked out.
+
+        """
+        self._stdout_callback(b"\r> ")
+        self._stdout_callback(bytes(self._buffer))
+        overflow = previous_length - len(self._buffer)
+        if overflow > 0:
+            self._stdout_callback(bytes([ord(" ")] * overflow))
+        cursor_moves = self._cursor_in_buffer + max(overflow, 0)
+        if cursor_moves > 0:
+            self._stdout_callback(bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_LEFT_CHAR]) * cursor_moves)
 
     @override
     def terminate(self) -> None:
