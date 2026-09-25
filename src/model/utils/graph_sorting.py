@@ -25,14 +25,16 @@ def layered_layout(filter_list: list[Filter]) -> None:
     edge_array = []
     edge_counter = 0
     for _filter in filter_list:
-        port_array = [{
-            "id": f"{_filter.filter_id}:{in_port}",
-            "layoutOptions": {"elk.port.side": "EAST"}
-        } for in_port in _filter.in_data_types]
-        port_array.extend([{
-            "id": f"{_filter.filter_id}:{out_port}",
-            "layoutOptions": {"elk.port.side": "WEST"}
-        } for out_port in _filter.out_data_types])
+        port_array = [
+            {"id": f"{_filter.filter_id}:{in_port}", "layoutOptions": {"elk.port.side": "EAST"}}
+            for in_port in _filter.in_data_types
+        ]
+        port_array.extend(
+            [
+                {"id": f"{_filter.filter_id}:{out_port}", "layoutOptions": {"elk.port.side": "WEST"}}
+                for out_port in _filter.out_data_types
+            ]
+        )
         node = {
             "id": _filter.filter_id,
             "width": max(min(250, len(_filter.filter_id) * 10), 80),
@@ -44,11 +46,13 @@ def layered_layout(filter_list: list[Filter]) -> None:
         }
         child_array.append(node)
         for input_port, connected_output in _filter.channel_links.items():
-            edge_array.append({
-                "id": f"e{edge_counter}",
-                "sources": [connected_output],
-                "targets": [f"{_filter.filter_id}:{input_port}"],
-            })
+            edge_array.append(
+                {
+                    "id": f"e{edge_counter}",
+                    "sources": [connected_output],
+                    "targets": [f"{_filter.filter_id}:{input_port}"],
+                }
+            )
             edge_counter += 1
     graph = {
         "id": "root",
@@ -57,7 +61,7 @@ def layered_layout(filter_list: list[Filter]) -> None:
             "elk.direction": "RIGHT",
         },
         "children": child_array,
-        "edges": edge_array
+        "edges": edge_array,
     }
     result = elk.layout(graph)["children"]
     for _filter in filter_list:
@@ -72,10 +76,7 @@ def layered_layout(filter_list: list[Filter]) -> None:
 
 
 def spring_layout(
-    filter_list: list[Filter],
-    k: float | None = None,
-    iterations: int = 50,
-    threshold: int =1e-4
+    filter_list: list[Filter], k: float | None = None, iterations: int = 50, threshold: int = 1e-4
 ) -> np.ndarray:
     """Position nodes using Fruchterman-Reingold force-directed algorithm.
 
@@ -127,12 +128,10 @@ def spring_layout(
         pos_arr[i] = np.asarray(node.pos)
 
     # Sparse matrix
-    matrix_a = _generate_graph_matrix_from_filters(filter_list) # convert graph to matrix
+    matrix_a = _generate_graph_matrix_from_filters(filter_list)  # convert graph to matrix
 
     # calculate positions
-    pos = _fruchterman_reingold(
-        matrix_a, k, pos_arr, None, iterations, threshold, dim, None
-    )
+    pos = _fruchterman_reingold(matrix_a, k, pos_arr, None, iterations, threshold, dim, None)
 
     pos = _rescale_layout(pos, scale=scale) + center
     # FIXME we need to move all following connected nodes as input port != output port
@@ -142,6 +141,7 @@ def spring_layout(
         node.pos = new_pos
 
     return pos
+
 
 def _generate_graph_matrix_from_filters(filters: list[Filter]) -> np.ndarray:
     arr = np.zeros((len(filters), len(filters)))
@@ -164,7 +164,8 @@ def _fruchterman_reingold(
     fixed: np.ndarray | None = None,
     iterations: int = 50,
     threshold: int = 1e-4,
-    dim: int = 2, seed: np.random.seed | None = None
+    dim: int = 2,
+    seed: np.random.seed | None = None,
 ) -> None:
     # Position nodes in adjacency matrix A using Fruchterman-Reingold
     # Entry point for NetworkX graph is fruchterman_reingold_layout()
@@ -199,9 +200,7 @@ def _fruchterman_reingold(
         # enforce minimum distance of 0.01
         np.clip(distance, 0.01, None, out=distance)
         # displacement "force"
-        displacement = np.einsum(
-            "ijk,ij->ik", delta, (k * k / distance ** 2 - martix_a * distance / k)
-        )
+        displacement = np.einsum("ijk,ij->ik", delta, (k * k / distance**2 - martix_a * distance / k))
         # update positions
         length = np.linalg.norm(displacement, axis=-1)
         # Threshold the minimum length prior to position scaling
@@ -217,6 +216,7 @@ def _fruchterman_reingold(
         if (np.linalg.norm(delta_pos) / nnodes) < threshold:
             break
     return pos
+
 
 def _rescale_layout(pos: np.ndarray, scale: float = 100) -> np.ndarray:
     """Returns scaled position array to (-scale, scale) in all axes."""
