@@ -24,7 +24,7 @@ class BankSetCommand(Command):
 
         """
         super().__init__(context, "bankset")
-        self.help_text = "This command displays the help about a certain command."
+        self.help_text = "This command manages the bank sets of the console desk."
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         """Configure the parser for the bank set command.

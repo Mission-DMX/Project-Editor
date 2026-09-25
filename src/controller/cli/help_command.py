@@ -69,16 +69,18 @@ class HelpCommand(Command):
                 self.context.print("\tuniverse -- The index (not the name) of the destination universe")
                 self.context.print("\tstart channel -- The start channel of the first fixture")
                 self.context.print(
-                    "\toffset -- The number of gap channels between fixtures (excluding theown length of the fixture)"
+                    "\toffset -- The number of gap channels between fixtures (excluding the own length of the fixture)"
                 )
             case "bankset":
-                self.context.print(
-                    "Modify the selected bank set. Usage: bankset commit/create <description>"
-                    "\n\tadd --bank <bank> --col-type <type>\n\tinfo\n\tactivate\n\tcommit\n\tcreate"
-                )
+                self.context.print("Modify the selected bank set. Usage: bankset <subcommand>")
+                self.context.print("\tcreate <description> -- Create a new bank set and make it the selected one")
+                self.context.print("\tcommit -- Commit the changes made to the selected bank set")
+                self.context.print("\tadd --bank <bank> --col-type <raw|color> -- Add a column to the specified bank")
+                self.context.print("\tinfo -- Display the content of the selected bank set")
+                self.context.print("\tactivate -- Activate the selected bank set")
             case "event":
                 self.context.print("Manage the fish event system")
-                self.context.print("\tadd-sender -- Add a bew event sender to fish")
+                self.context.print("\tadd-sender -- Add a new event sender to fish")
                 self.context.print("\tsend -- Insert a new event into fish")
             case "showctl":
                 self.context.print("Manage the general show file and execution on fish")
