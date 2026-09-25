@@ -100,4 +100,3 @@ class ChaserApplyPresetUIWidget(UIWidget):
     def _config_height_value_changed(self, new_value: int) -> None:
         # TODO implement live update (like macro buttons
         self.configuration["height"] = str(new_value)
-
