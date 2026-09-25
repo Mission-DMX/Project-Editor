@@ -180,7 +180,7 @@ def get_available_shared_context_identifiers(show: BoardConfiguration) -> list[s
 
     Returns:
         the ids of all shared contexts of the given show
-    
+
     """
     _ensure_registry_cleanup_connected()
     return list(_SHARED_CONTEXT_REGISTRY.get(show, {}).keys())
@@ -195,7 +195,7 @@ def _get_or_create_shared_context(show: BoardConfiguration, context_id: str) -> 
 
     Returns:
         the shared context of the given show with the given identifier
-    
+
     """
     _ensure_registry_cleanup_connected()
     contexts = _SHARED_CONTEXT_REGISTRY.setdefault(show, {})
