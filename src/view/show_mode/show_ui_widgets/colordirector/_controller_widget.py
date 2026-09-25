@@ -4,13 +4,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Signal
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QWidget
 
 from view.show_mode.show_ui_widgets.colordirector._preview_bitmap_generator import PreviewBitmapGenerator
 from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
 
 if TYPE_CHECKING:
-    from PySide6.QtGui import QPixmap
+    from PySide6.QtGui import QImage
 
     from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
 
@@ -96,12 +97,13 @@ class ControllerWidget(QWidget):
                                  for i, group_name in enumerate(self._output_group_list))
         self.update_requested.emit()
 
-    def _add_preview_on_buttons(self, preview_index: int, image: QPixmap) -> None:
+    def _add_preview_on_buttons(self, preview_index: int, image: QImage) -> None:
         icon_size = self._apply_single_buttons[0][0].size()
         icon_size.setWidth(int(icon_size.width() * 0.75))
         icon_size.setHeight(int(icon_size.height() * 0.75))
+        icon = QIcon(QPixmap.fromImage(image))
         for button in self._apply_single_buttons[preview_index]:
-            button.setIcon(image)
+            button.setIcon(icon)
             button.setIconSize(icon_size)
 
     def _delete_preview_generator(self) -> None:

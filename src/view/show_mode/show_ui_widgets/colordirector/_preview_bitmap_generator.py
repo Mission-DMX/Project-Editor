@@ -6,7 +6,7 @@ import os
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QThread, Signal
-from PySide6.QtGui import QBrush, QImage, QPainter, QPixmap, Qt
+from PySide6.QtGui import QBrush, QImage, QPainter, Qt
 
 from utility import resource_path
 
@@ -24,7 +24,7 @@ class PreviewBitmapGenerator(QThread):
 
     """
 
-    preset_preview_generated = Signal(int, QPixmap)
+    preset_preview_generated = Signal(int, QImage)
 
     def __init__(self, presets: list[ColorPreset], size: int = 32, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -36,10 +36,10 @@ class PreviewBitmapGenerator(QThread):
         repeat_image = QImage(resource_path(os.path.join("resources", "icons", "repeat.svg")))
         repeat_image = repeat_image.scaled(int(self._size * 0.5), int(self._size * 0.5))
         for i, preset in enumerate(self._presets):
-            pixmap = QPixmap(self._size, self._size)
-            pixmap.fill(Qt.GlobalColor.transparent)
-            p = QPainter(pixmap)
-            rect = pixmap.rect()
+            image = QImage(self._size, self._size, QImage.Format.Format_ARGB32_Premultiplied)
+            image.fill(Qt.GlobalColor.transparent)
+            p = QPainter(image)
+            rect = image.rect()
             colors = preset.get_button_visualization()
             num_colors = len(colors)
             last_angle = 0
@@ -54,8 +54,8 @@ class PreviewBitmapGenerator(QThread):
                 p.drawImage(int(self._size * 0.55), 0, repeat_image)
             visualization_asset = preset.visualization_asset
             if visualization_asset is not None:
-                image = visualization_asset.get_image_for_ui().scaled(self._size, self._size)
-                p.drawImage(0, 0, image)
+                asset_image = visualization_asset.get_image_for_ui().scaled(self._size, self._size)
+                p.drawImage(0, 0, asset_image)
             p.end()
-            self.preset_preview_generated.emit(i, pixmap)
+            self.preset_preview_generated.emit(i, image)
         self.finished.emit()
