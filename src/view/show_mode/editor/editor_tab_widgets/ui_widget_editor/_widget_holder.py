@@ -8,7 +8,7 @@ from PySide6.QtGui import QCloseEvent, QMouseEvent
 from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from model import UIWidget
-from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 
 logger = getLogger(__name__)
 
@@ -58,8 +58,8 @@ class UIWidgetHolder(QWidget):
 
     def update_size(self) -> None:
         """Update dimensions of show UI widget."""
-        self.setMinimumWidth(100)
-        self.setMinimumHeight(30)
+        self.setMinimumWidth(max(100, self._child.minimumSizeHint().width()))
+        self.setMinimumHeight(max(30, self._child.minimumSizeHint().height()))
         self.setMaximumHeight(65565)
         self.setMaximumWidth(65565)
 

@@ -1,4 +1,5 @@
 """Style for UI."""
+from PySide6.QtGui import QColor
 
 APP = ""
 
@@ -77,3 +78,6 @@ READY_MODE_INDICATOR_STYLE = """
   color: #000000;
   text-align: center;
 """
+
+SELECTION_BACKGROUND_COLOR = QColor(64, 64, 64)
+SELECTION_ACTIVE_COLOR = QColor(64, 64, 100)

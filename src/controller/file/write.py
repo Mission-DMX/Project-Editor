@@ -15,13 +15,16 @@ from model import BoardConfiguration
 
 def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     """Writes the xml element to the specified file.
+
     See https://github.com/Mission-DMX/Docs/blob/main/FormatSchemes/ProjectFile/ShowFile_v0.xsd for more information.
 
     Args:
         file_name: The (path and) file to which the xml element should be written.
-        show_data: The show to save
+        show_data: The show to save.
 
-    Returns: True, if successfully, otherwise false with error message.
+    Returns:
+        True, if successfully, otherwise false with error message.
+
     """
     pn = get_process_notifier("Saving Showfile", 2)
     xml = create_xml(show_data, pn)
@@ -42,3 +45,28 @@ def write_document(file_name: str, show_data: BoardConfiguration) -> bool:
     # except IOError:
     #    print(f"Could not save {file_name}")
     #    return False
+
+
+def export_document(file_name: str, show_data: BoardConfiguration) -> bool:
+    """Exports the show data into a fish stand-alone show file.
+
+    Warning: This method will override existing files without warning.
+
+    Args:
+        file_name: The (path and) file to which the xml element should be written.
+        show_data: The show to save
+
+    Returns:
+        True, if successfully, otherwise false with error message.
+
+    """
+    pn = get_process_notifier("Exporting Showfile", 2)
+    xml = create_xml(show_data, pn, assemble_for_fish_loading=True)
+    pn.current_step_description = "Writing to disk."
+    pn.current_step_number += 1
+    with open(file_name, "w+", encoding="UTF-8") as file:
+        ET.indent(xml)
+        file.write(ET.tostring(xml, encoding="unicode", method="xml"))
+    pn.current_step_number += 1
+    pn.close()
+    return True
