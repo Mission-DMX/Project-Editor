@@ -8,7 +8,8 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtGui import QAction, QIcon, Qt
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -24,12 +25,12 @@ from PySide6.QtWidgets import (
 )
 
 from controller.file.transmitting_to_fish import transmit_to_fish
-from model import Broadcaster, DataType, Filter, Scene
+from model import Broadcaster, DataType, Filter
 from model.control_desk import BankSet, ColorDeskColumn, DeskColumn, RawDeskColumn
 from model.media_assets.image import AbstractImageAsset
 from model.media_assets.media_type import MediaType
 from model.virtual_filters.cue_vfilter import PreviewFilter
-from view.show_mode.editor.node_editor_widgets.cue_editor.gen_keyframs_from_image import generate_keyframes_from_image
+from view.show_mode.editor.node_editor_widgets.cue_editor.gen_keyframes_from_image import generate_keyframes_from_image
 from view.show_mode.editor.node_editor_widgets.cue_editor.timeline_editor import TimelineContainer
 from view.show_mode.editor.node_editor_widgets.node_editor_widget import NodeEditorFilterConfigWidget
 from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
@@ -182,7 +183,10 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
 
     def _get_model_channels(self) -> list[tuple[str, DataType]]:
         """Provide the channels from the timeline widget model."""
-        return self._timeline_container.cue.channels
+        cue = self._timeline_container.cue
+        if cue is None:
+            return []
+        return cue.channels
 
     def jg_right(self) -> None:
         """Handle jog wheel right event.
@@ -296,23 +300,31 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         super().parent_closed(filter_node)
 
     def _rec_from_image_pressed(self) -> None:
-        self._add_from_image_dialog = _AddKFFromImageDialog(self._timeline_container,
-                                                            self.transition_type_select_widget.currentText(),
-                                                            self._filter_instance.filter_configurations)
+        if self._filter_instance is None:
+            logger.warning("Cannot record keyframes from an image without a filter instance.")
+            return
+        if self._timeline_container.cue is None:
+            logger.warning("Cannot record keyframes from an image without a loaded cue.")
+            return
+        self._add_from_image_dialog = _AddKFFromImageDialog(
+            self._timeline_container, self.transition_type_select_widget.currentText(), self._filter_instance
+        )
         self._add_from_image_dialog.show()
 
 
 class _AddKFFromImageDialog(QDialog):
     """Dialog to set up key frames from selected image."""
 
-    def __init__(self, timeline_container: TimelineContainer,
-                 transition_method: str, filter_config: dict[str, str]) -> None:
-        """Initialize."""
+    def __init__(
+        self, timeline_container: TimelineContainer, transition_method: str, filter_instance: PreviewFilter
+    ) -> None:
+        """Initialize the dialog used to add key frames from an image asset."""
         super().__init__(timeline_container)
         self._timeline_container = timeline_container
         self._transition_type = transition_method
         self._message_box: QMessageBox | None = None
-        self._filter_config = filter_config
+        self._filter_instance = filter_instance
+        self._ui_hint_key = f"kf-from-image-settings:{filter_instance.filter_id}"
 
         self.setModal(True)
         self.setWindowTitle("Add Key Frames From Image")
@@ -336,8 +348,10 @@ class _AddKFFromImageDialog(QDialog):
         self._break_point_sb.setRange(0, 65535)
         self._break_point_sb.setValue(0)
         self._break_point_sb.setSingleStep(1)
-        self._break_point_sb.setToolTip("After this many pixels, the cursor should break. Leave this at 0 in order to "
-                                        "use the image width or height (depending on columns or rows first).")
+        self._break_point_sb.setToolTip(
+            "After this many pixels, the cursor should break. Leave this at 0 in order to "
+            "use the image width or height (depending on columns or rows first)."
+        )
         layout.addWidget(self._break_point_sb)
 
         button_box = QDialogButtonBox(
@@ -348,66 +362,67 @@ class _AddKFFromImageDialog(QDialog):
         layout.addWidget(button_box)
         self.setLayout(layout)
 
-        if "kf-from-image-settings" in filter_config:
-            columns_first, break_point = filter_config["kf-from-image-settings"].split(";")
-            columns_first = columns_first.lower() == "true"
-            self._columns_first_rb.setChecked(columns_first)
-            self._rows_first_rb.setChecked(not columns_first)
-            self._break_point_sb.setValue(int(break_point))
+        stored_settings = filter_instance.scene.board_configuration.ui_hints.get(self._ui_hint_key)
+        if stored_settings:
+            try:
+                columns_first, break_point = stored_settings.split(";")
+                columns_first = columns_first.lower() == "true"
+                self._columns_first_rb.setChecked(columns_first)
+                self._rows_first_rb.setChecked(not columns_first)
+                self._break_point_sb.setValue(int(break_point))
+            except ValueError:
+                logger.warning("Ignoring malformed key frame from image settings: %r", stored_settings)
 
     @override
     def accept(self) -> None:
         try:
             selection = self._image_selection.selected_asset
             if len(selection) == 0:
-                return
-            selection = selection[0]
-            if not isinstance(selection, AbstractImageAsset):
                 self._message_box = QMessageBox(
                     QMessageBox.Icon.Information,
                     "Select Image First",
                     "Please select an image first.",
-                parent=self)
-                self._message_box.setModal(True)
-                self._message_box.show()
-                return
-            cursor_position = self._timeline_container._keyframes_panel.cursor_position
-            if not generate_keyframes_from_image(
-                    selection,
-                    self._columns_first_rb.isChecked(),
-                    cursor_position,
-                    self._break_point_sb.value(),
-                    [self._transition_type] * len(self._timeline_container.cue.channels),
-                    self._timeline_container.cue):
-                self._message_box = QMessageBox(
-                    QMessageBox.Icon.Critical,
-                    "Failed to inset key frame",
-                    "An error occurred during insertion of key frame.",
-                    parent=self
+                    parent=self,
                 )
                 self._message_box.setModal(True)
                 self._message_box.show()
-            else:
-                self._timeline_container.update_cue_display()
-                self._timeline_container._keyframes_panel.cursor_position = cursor_position
-                super().accept()
-            self._filter_config["kf-from-image-settings"] = \
-                f"{"true" if self._columns_first_rb.isChecked() else "false"};{self._break_point_sb.value()}"
-        except ValueError as e:
-            self._message_box = QMessageBox(
-                QMessageBox.Icon.Warning,
-                "KeyFrame generation failed",
-                str(e),
-                parent=self
+                return
+            asset = selection[0]
+            if not isinstance(asset, AbstractImageAsset):
+                logger.warning("Cannot generate keyframes from a non image asset: %s", type(asset).__name__)
+                return
+            cue = self._timeline_container.cue
+            if cue is None:
+                self._message_box = QMessageBox(
+                    QMessageBox.Icon.Warning,
+                    "No Cue Loaded",
+                    "There is no cue loaded to insert the key frames into.",
+                    parent=self,
+                )
+                self._message_box.setModal(True)
+                self._message_box.show()
+                return
+            cursor_position = self._timeline_container.cursor_position
+            generate_keyframes_from_image(
+                asset,
+                self._columns_first_rb.isChecked(),
+                cursor_position,
+                self._break_point_sb.value(),
+                [self._transition_type] * len(cue.channels),
+                cue,
             )
+            self._timeline_container.update_cue_display()
+            self._timeline_container.cursor_position = cursor_position
+            settings = f"{str(self._columns_first_rb.isChecked()).lower()};{self._break_point_sb.value()}"
+            self._filter_instance.scene.board_configuration.ui_hints[self._ui_hint_key] = settings
+            super().accept()
+        except ValueError as e:
+            self._message_box = QMessageBox(QMessageBox.Icon.Warning, "KeyFrame generation failed", str(e), parent=self)
             self._message_box.setModal(True)
             self._message_box.show()
         except NotImplementedError as e:
             self._message_box = QMessageBox(
-                QMessageBox.Icon.Critical,
-                "KeyFrame generation failed",
-                str(e),
-                parent=self
+                QMessageBox.Icon.Critical, "KeyFrame generation failed", str(e), parent=self
             )
             self._message_box.setModal(True)
             self._message_box.show()

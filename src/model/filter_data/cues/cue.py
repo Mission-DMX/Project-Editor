@@ -333,8 +333,18 @@ class KeyFrame:
             kf._states.append(s.copy())
         return kf
 
+    @property
+    def state_count(self) -> int:
+        """The number of states of this frame (one per channel at the time of its creation)."""
+        return len(self._states)
+
     def state_at(self, i: int) -> State:
-        """Get the state at given index."""
+        """Get the state at given index.
+
+        Raises:
+            IndexError: if the given index is out of bounds; use ``state_count`` to check for valid indexes.
+
+        """
         return self._states[i]
 
 
@@ -435,10 +445,8 @@ class Cue:
         self._frames.append(f)
 
     def get_keyframe_before(self, timestamp: float) -> KeyFrame | None:
-        """Get the keyframe before the given timestamp (if it exists)."""
+        """Get the keyframe with the largest timestamp below the given one (if it exists)."""
         found_frame = None
-        if len(self._frames) == 0:
-            return None
         for kf in self._frames:
             if kf.timestamp < timestamp and (found_frame is None or kf.timestamp > found_frame.timestamp):
                 found_frame = kf

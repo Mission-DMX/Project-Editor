@@ -316,8 +316,9 @@ class CueEditor(PreviewEditWidget):
         """
         if cue_index < 0 or cue_index >= len(self._model.cues):
             return
-        if 0 <= self._last_selected_cue < len(self._model.cues):
-            self._model.cues[self._last_selected_cue] = self._timeline_container.cue
+        previous_cue = self._timeline_container.cue
+        if previous_cue is not None and 0 <= self._last_selected_cue < len(self._model.cues):
+            self._model.cues[self._last_selected_cue] = previous_cue
         c = self._model.cues[cue_index]
         self._timeline_container.cue = c
         self._current_cue_end_action_select_widget.setCurrentIndex(c.end_action.value)
@@ -409,20 +410,27 @@ class CueEditor(PreviewEditWidget):
         self._toolbar_remove_channel_action.setEnabled(len(self._model.cues) > 0 and len(self._model.channels) > 0)
 
     def _cue_end_action_changed(self) -> None:
+        cue = self._timeline_container.cue
+        if cue is None:
+            return
         action = EndAction(self._current_cue_end_action_select_widget.currentIndex())
-        self._timeline_container.cue.end_action = action
-        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 2).setText(str(action))
+        cue.end_action = action
+        self._cue_list_widget.item(cue.index_in_editor - 1, 2).setText(str(action))
 
     def _cue_play_pressed_restart_changed(self) -> None:
-        self._timeline_container.cue.restart_on_another_play_press = (
+        cue = self._timeline_container.cue
+        if cue is None:
+            return
+        cue.restart_on_another_play_press = (
             self._current_cue_another_play_pressed_checkbox.checkState().Checked
         )
 
     def _rec_pressed(self) -> None:
         super()._rec_pressed()
-        self._cue_list_widget.item(self._timeline_container.cue.index_in_editor - 1, 1).setText(
-            self._timeline_container.cue.duration_formatted
-        )
+        cue = self._timeline_container.cue
+        if cue is None:
+            return
+        self._cue_list_widget.item(cue.index_in_editor - 1, 1).setText(cue.duration_formatted)
 
     @override
     def parent_closed(self, filter_node: FilterNode) -> None:

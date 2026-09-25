@@ -148,7 +148,7 @@ class SequencerEditor(PreviewEditWidget):
 
     def _get_configuration(self) -> dict[str, str]:
         """Get the configuration of the sequencer filter."""
-        if self._selected_transition is not None:
+        if self._selected_transition is not None and self._timeline_container.cue is not None:
             self._selected_transition.update_frames_from_cue(self._timeline_container.cue, self._model.channels)
         return self._model.get_configuration()
 

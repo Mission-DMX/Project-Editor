@@ -12,6 +12,23 @@ from model.media_assets.image import AbstractImageAsset
 if TYPE_CHECKING:
     from PySide6.QtGui import QColor
 
+    from model.filter_data.cues.cue import State
+
+
+def _state_matches_channel(state: State, data_type: DataType) -> bool:
+    """Check whether a state is compatible with a channel of the given data type."""
+    match data_type:
+        case DataType.DT_COLOR:
+            return isinstance(state, StateColor)
+        case DataType.DT_8_BIT:
+            return isinstance(state, StateEightBit)
+        case DataType.DT_16_BIT:
+            return isinstance(state, StateSixteenBit)
+        case DataType.DT_DOUBLE:
+            return isinstance(state, StateDouble)
+        case _:
+            return False
+
 
 def generate_keyframes_from_image(
     asset: AbstractImageAsset,
@@ -20,7 +37,7 @@ def generate_keyframes_from_image(
     break_point: int,
     transition_types: list[str],
     c: Cue,
-) -> bool:
+) -> None:
     """Extract color values from image asset pixels.
 
     This will fill in the provided channels for the key frame.
@@ -33,7 +50,7 @@ def generate_keyframes_from_image(
         break_point: After this many pixels, the pixel cursor advances to the next column or row (depending on
                      columns_first). If an invalid number is supplied (for example 0), it will break after the asset
                      height (row).
-        transition_types: For each channel, specified the transition type from the last key frame.
+        transition_types: For each channel, specifies the transition type from the last key frame.
         c: The cue to extract previous values from and to insert the key frames into.
 
     """
@@ -93,7 +110,11 @@ def generate_keyframes_from_image(
                     x = break_point_offset
             kf.append_state(state)
         else:
-            if last_frame is not None:
+            if (
+                last_frame is not None
+                and i < last_frame.state_count
+                and _state_matches_channel(last_frame.state_at(i), data_type)
+            ):
                 state = last_frame.state_at(i).copy()
                 state.transition = transition_types[i]
                 kf.append_state(state)
@@ -110,4 +131,3 @@ def generate_keyframes_from_image(
                 kf.append_state(state)
 
     c.insert_frame(kf)
-    return True
