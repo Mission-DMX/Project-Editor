@@ -210,7 +210,9 @@ class SequencerEditor(PreviewEditWidget):
         """Deselect any previous transition."""
         if self._selected_transition is None:
             return
-        self._selected_transition.update_frames_from_cue(self._timeline_container.cue, self._model.channels)
+        cue = self._timeline_container.cue
+        if cue is not None:
+            self._selected_transition.update_frames_from_cue(cue, self._model.channels)
         self._timeline_container.cue = None
         self._selected_transition = None
         self._remove_transition_action.setEnabled(False)
