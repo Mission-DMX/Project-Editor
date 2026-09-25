@@ -88,12 +88,13 @@ class BankSetCommand(Command):
                     self.context.print("ERROR: No bank set selected. Create or select one first.")
                     return False
                 col = RawDeskColumn() if args.col_type == "raw" else ColorDeskColumn()
-                if args.bank == len(self.context.selected_bank.banks):
-                    self.context.selected_bank.banks.append(FaderBank())
-                if args.bank > len(self.context.selected_bank.banks) or args.bank < -1:
+                banks = self.context.selected_bank.banks
+                if args.bank == len(banks) or (args.bank == -1 and not banks):
+                    banks.append(FaderBank())
+                if args.bank > len(banks) or args.bank < -1:
                     self.context.print("ERROR: The selected bank is out of range.")
                     return False
-                selected_bank = self.context.selected_bank.banks[int(args.bank)]
+                selected_bank = banks[args.bank]
                 if args.name == "":
                     col.display_name = str(len(selected_bank.columns))
                 else:

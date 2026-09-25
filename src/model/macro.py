@@ -267,11 +267,11 @@ class Macro:
 
     def copy(self) -> Macro:
         """Deep copy of this macro."""
-        m = Macro(self._show)
+        m = Macro(self._show, shared_context=self._shared_context_id)
         m.name = str(self.name)
         m.content = str(self.content)
-        for k, v in self._triggers:
-            m._triggers[k.copy()] = bool(v)
+        for t, active in self._triggers.items():
+            m.add_trigger(t, active)
         return m
 
     def exec(self) -> bool:
