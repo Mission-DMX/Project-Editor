@@ -52,6 +52,7 @@ if __name__ == "__main__":
     from controller.cli.remote_control_port import RemoteCLIServer
     from controller.joystick.joystick_handling import JoystickHandler
     from gl_init import opengl_context_init
+    opengl_context_init()
     from model.final_globals import FinalGlobals
     from view.main_window import MainWindow
 
@@ -110,7 +111,6 @@ if __name__ == "__main__":
         """Startup entry."""
         setup_logging()
         logging.basicConfig(level="INFO")
-        opengl_context_init()
         setup_asyncio()
 
         width, height = application.primaryScreen().size().toTuple()

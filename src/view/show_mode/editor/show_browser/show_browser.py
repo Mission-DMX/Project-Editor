@@ -2,7 +2,9 @@
 
 import os.path
 from functools import partial
+from logging import getLogger
 
+from pyelk import ElkError
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import (
@@ -30,6 +32,8 @@ from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowse
 
 from .annotated_item import AnnotatedTreeWidgetItem
 from .fixture_to_filter import place_fixture_filters_in_scene
+
+logger = getLogger(__name__)
 
 
 class ShowBrowser:
@@ -249,6 +253,10 @@ class ShowBrowser:
         add_filter_page_action.triggered.connect(lambda: self._add_filter_page(selected_items))
         add_filter_page_action.setEnabled(has_scenes or has_filter_pages)
         menu.addAction(add_filter_page_action)
+        sort_filter_page_action = QAction("Sort Filter Page", menu)
+        sort_filter_page_action.triggered.connect(lambda: self._sort_selected_filter_pages(selected_items))
+        sort_filter_page_action.setEnabled(has_filter_pages)
+        menu.addAction(sort_filter_page_action)
         add_ui_page_action = QAction("Add UI page", menu)
         add_ui_page_action.triggered.connect(lambda: self._add_ui_page(selected_items))
         add_ui_page_action.setEnabled(has_scenes)
@@ -398,6 +406,41 @@ class ShowBrowser:
                 self._input_dialog.setLabelText("Please enter the name of the new page.")
                 self._input_dialog.setWindowTitle("Enter Name")
                 self._input_dialog.open()
+
+    def _sort_selected_filter_pages(self, selected_items: list[QTreeWidgetItem]) -> None:
+        """Sorts the selected filter pages and refreshes editor tabs displaying them."""
+        sorted_pages: list[FilterPage] = []
+        failed_pages: list[tuple[FilterPage, Exception]] = []
+        for item in selected_items:
+            if not isinstance(item, AnnotatedTreeWidgetItem):
+                continue
+            data = item.annotated_data
+            if not isinstance(data, FilterPage):
+                continue
+            try:
+                data.sort()
+            except (ElkError, ValueError) as e:
+                logger.error("Sorting filter page '%s' failed: %s", data.name, e)
+                failed_pages.append((data, e))
+                continue
+            sorted_pages.append(data)
+        if failed_pages:
+            self._input_dialog = QMessageBox(
+                QMessageBox.Icon.Critical,
+                "Sorting Filter Pages Failed",
+                "An error occurred while sorting the following filter pages: "
+                + ", ".join(f"'{page.name}'" for page, _ in failed_pages),
+                parent=self.widget,
+                detailedText="\n".join(f"'{page.name}': {error}" for page, error in failed_pages),
+            )
+            self._input_dialog.setModal(True)
+            self._input_dialog.show()
+        if not sorted_pages:
+            return
+        for tab_index in range(self._editor_tab_widget.count()):
+            tab = self._editor_tab_widget.widget(tab_index)
+            if isinstance(tab, SceneTabWidget) and tab.filter_page in sorted_pages:
+                tab.refresh()
 
     def _add_ui_page(self, selected_items: list[QTreeWidgetItem]) -> None:
         update_occurred = False

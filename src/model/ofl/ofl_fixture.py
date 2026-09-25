@@ -62,7 +62,7 @@ class FixturePhysicalBulb(BaseModel):
 class FixturePhysical(BaseModel):
     """Physical properties of the fixture housing and electronics."""
 
-    dimensions: tuple[float, float, float] = [0.0, 0.0, 0.0]
+    dimensions: tuple[float, float, float] = (0.0, 0.0, 0.0)
     """Dimensions in millimeters (e.g. [width, height, depth])."""
 
     weight: float = 0
@@ -83,7 +83,7 @@ class FixturePhysical(BaseModel):
 class FixtureMatrix(BaseModel):
     """Channel Repetition Matrix."""
 
-    pixelCount: tuple[int, int, int] = [0, 0, 0]
+    pixelCount: tuple[int, int, int] = (0, 0, 0)
     """Matrix Dimensions"""
 
     pixelKeys: list[str | None] | list[list[str | None] | None] | list[list[list[str | None] | None] | None] = []

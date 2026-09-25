@@ -1,4 +1,5 @@
 """Widget containing a nodeeditor for one scene."""
+
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QToolBar, QVBoxLayout, QWidget
 
@@ -8,9 +9,10 @@ from view.show_mode.editor.nodeeditor import NodeEditorWidget
 
 
 class SceneTabWidget(QWidget):
-    """Widget representing a scene as a tab page"""
+    """Widget representing a scene as a tab page."""
 
     def __init__(self, scene: Scene | FilterPage) -> None:
+        """Create a tab widget displaying the given scene or filter page."""
         super().__init__()
         self._scene = scene
         self._layout = QVBoxLayout()
@@ -28,15 +30,20 @@ class SceneTabWidget(QWidget):
 
     @property
     def scene(self) -> Scene:
-        """The scene the tab represents"""
+        """The scene the tab represents."""
         if isinstance(self._scene, Scene):
             return self._scene
 
         return self._scene.parent_scene
 
     @property
-    def filter_page(self) -> Scene:
+    def filter_page(self) -> Scene | FilterPage:
+        """The filter page displayed by this tab.
+
+        If the tab was created for a scene, its first filter page is displayed.
+        """
         return self._scene
 
     def refresh(self) -> None:
+        """Reload the filter page shown by this tab from the model."""
         self._node_editor_widget.refresh()
