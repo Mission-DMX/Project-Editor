@@ -38,7 +38,7 @@ class ColorPreset:
 
         """
         self.colors: list[tuple[int, TransferFunction, list[ColorHSI]]] = []
-        self._asset: AbstractImageAsset | None | str = None
+        self._asset: AbstractImageAsset | str | None = None
         if "?" in filter_str:
             asset_uuid, filter_str = filter_str.split("?", 1)
             self._asset = asset_uuid
