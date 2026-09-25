@@ -125,7 +125,7 @@ class BankSetCommand(Command):
                 self.context.selected_bank.activate()
             case _:
                 self.context.print(
-                    f"ERROR: The subcommand '{args.what}' is not known. Type 'help bank_set' to obtain a list."
+                    f"ERROR: The subcommand '{args.what}' is not known. Type 'help bankset' to obtain a list."
                 )
                 return False
         return True
