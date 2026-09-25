@@ -27,7 +27,6 @@ class AssetSelectionDialog(QDialog):
         """Initialize the dialog.
 
         Raises the asset_selected signal on user change.
-        This dialog only allows selection of a single asset.
 
         Args:
             parent: The parent widget.
@@ -39,7 +38,7 @@ class AssetSelectionDialog(QDialog):
         super().__init__(parent)
         self._selection_widget = AssetSelectionWidget(self,
                                                       allowed_types=allowed_types if allowed_types is not None else [],
-                                                      multiselection_allowed=False)
+                                                      multiselection_allowed=multiselection_allowed)
         self._selection_widget.selected_asset = [preselected] if preselected is not None else []
         self._clear_selection_button = QPushButton("Clear Selection")
         self._clear_selection_button.clicked.connect(self._clear)
@@ -47,19 +46,14 @@ class AssetSelectionDialog(QDialog):
         layout.addWidget(self._clear_selection_button)
         layout.addWidget(self._selection_widget)
 
-        self._asset_view = AssetSelectionWidget(self, allowed_types, multiselection_allowed)
-        layout.addWidget(self._asset_view)
-
         button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel, Qt.Orientation.Horizontal, self
         )
         layout.addWidget(button_box)
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
-        self.setMinimumWidth(800)
-        self.setMinimumHeight(600)
+        self.setMinimumSize(800, 600)
         self.setLayout(layout)
-        self.setMinimumSize(600, 800)
 
     @override
     def accept(self) -> None:
