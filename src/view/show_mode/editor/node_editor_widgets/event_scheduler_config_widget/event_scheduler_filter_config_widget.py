@@ -5,14 +5,14 @@ from __future__ import annotations
 from logging import getLogger
 from typing import override
 
-from PySide6.QtWidgets import QWidget, QFormLayout, QListWidget, QSpinBox, QGroupBox, QPushButton, QButtonGroup
+from PySide6.QtWidgets import QButtonGroup, QFormLayout, QGroupBox, QListWidget, QPushButton, QSpinBox, QWidget
 
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
-from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.trigger_matrix_editor import \
-    TriggerMatrixEditor
+from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.trigger_matrix_editor import (
+    TriggerMatrixEditor,
+)
 from view.show_mode.editor.node_editor_widgets.sequencer_editor.event_selection_dialog import EventSelectionDialog
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
-
 
 logger = getLogger(__name__)
 
@@ -97,7 +97,7 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         pass  # TODO
 
     def _encode_event_data(self) -> list[str]:
-        l = []
+        event_str_list = []
         for i in range(self._event_list.count()):
             item = self._event_list.item(i)
             if not isinstance(item, AnnotatedListWidgetItem):
@@ -105,10 +105,10 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
                 continue
             sender_id, sender_function, event_type, arguments = item.annotated_data
             # FIXME implement event type encoding if required
-            l.append(f"{sender_id},{sender_function},{event_type},{",".join(arguments)}")
-        return l
+            event_str_list.append(f"{sender_id},{sender_function},{event_type},{",".join(arguments)}")
+        return event_str_list
 
-    def _select_trigger_clicked(self, _) -> None:
+    def _select_trigger_clicked(self, _: bool) -> None:
         self._dialog = EventSelectionDialog()
         self._dialog.accepted.connect(self._event_selected_callback)
         self._dialog.show()
@@ -118,9 +118,9 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._sync_trigger_sender_tb.setValue(sender)
         self._sync_trigger_function_tb.setValue(function)
 
-    def _add_step(self, _) -> None:
+    def _add_step(self, _: bool) -> None:
         self._matrix_editor.number_of_steps += 1
 
-    def _remove_step(self, _) -> None:
+    def _remove_step(self, _: bool) -> None:
         self._matrix_editor.number_of_steps -= 1
         self._remove_step_btn.setEnabled(self._matrix_editor.number_of_steps > 0)
