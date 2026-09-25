@@ -143,7 +143,7 @@ class _AssetTableModel(QAbstractTableModel):
         """Get the asset at the provided index."""
         return self._filtered_asset_list[index]
 
-    def get_row_indicies(self, assets: list[MediaAsset]) -> list[int]:
+    def get_row_indices(self, assets: list[MediaAsset]) -> list[int]:
         """Get the indices of the rows whose assets are in the provided list."""
         return [index for index, asset in enumerate(self._filtered_asset_list) if asset in assets]
 
@@ -237,5 +237,5 @@ class AssetSelectionWidget(QWidget):
 
     @selected_asset.setter
     def selected_asset(self, selection: list[MediaAsset]) -> None:
-        for index in self._model.get_row_indicies(selection):
+        for index in self._model.get_row_indices(selection):
             self._asset_view.selectRow(index)

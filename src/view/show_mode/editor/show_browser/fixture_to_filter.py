@@ -16,12 +16,21 @@ _additional_filter_depth = 100.0
 _filter_channel_height = 35.0
 
 
-def _sanitize_name(input_: str | dict) -> str:
+def _sanitize_name(input_: str | dict | None) -> str:
+    """Convert the given channel name into a key that is safe to use in filter names and links.
+
+    Args:
+        input_: the channel name to sanitize; channel macros in their dict form are unpacked
+
+    Returns:
+        the sanitized channel name or a placeholder if no channel name could be extracted
+
+    """
     if isinstance(input_, dict):
         input_ = input_.get("insert")
-        if input_ is None:
-            logger.error("Did not extract channel macro while creating fixture filters.")
-            return "_unknown_channel"
+    if input_ is None:
+        logger.error("Did not extract a channel name while creating fixture filters.")
+        return "_unknown_channel"
     if input_ == "universe":
         return "_universe_channel"
     return input_.replace(" ", "_").replace("/", "_").replace("\\", "_")
@@ -163,7 +172,7 @@ def _check_and_add_auxiliary_filters(
                 added_depth = max(added_depth, _additional_filter_depth)
                 fp.parent_scene.append_filter(split_filter)
                 adapter_name = split_filter.filter_id
-                universe_filter.channel_links[_sanitize_name(_get_channel_name_at(fixture, index - 1) or "")] = (
+                universe_filter.channel_links[_sanitize_name(_get_channel_name_at(fixture, index - 1))] = (
                     adapter_name + ":value_upper"
                 )
                 universe_filter.channel_links[_sanitize_name(channel.name)] = adapter_name + ":value_lower"

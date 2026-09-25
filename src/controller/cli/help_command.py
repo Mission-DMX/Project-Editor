@@ -75,7 +75,9 @@ class HelpCommand(Command):
                 self.context.print("Modify the selected bank set. Usage: bankset <subcommand>")
                 self.context.print("\tcreate <description> -- Create a new bank set and make it the selected one")
                 self.context.print("\tcommit -- Commit the changes made to the selected bank set")
-                self.context.print("\tadd --bank <bank> --col-type <raw|color> -- Add a column to the specified bank")
+                self.context.print(
+                    "\tadd --bank <bank> --col-type <raw|color> [--name <name>] -- Add a column to the specified bank"
+                )
                 self.context.print("\tinfo -- Display the content of the selected bank set")
                 self.context.print("\tactivate -- Activate the selected bank set")
             case "event":

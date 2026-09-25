@@ -188,8 +188,13 @@ class MacroSetupWidget(QSplitter):
             for trigger in self._selected_macro.all_triggers:
                 self._trigger_added(trigger)
             self._editor_area.document().setPlainText(self._selected_macro.content)
-            self._context_label.setText(f"Context: {"Private" if self._selected_macro.shared_context_id is None else
-            f"[shared] {self._selected_macro.shared_context_id}"}")
+            self._context_label.setText(
+                f"Context: {
+                    'Private'
+                    if self._selected_macro.shared_context_id is None
+                    else f'[shared] {self._selected_macro.shared_context_id}'
+                }"
+            )
         else:
             self._trigger_actions.setEnabled(False)
             self._content_panel_actions.setEnabled(False)
@@ -228,7 +233,6 @@ class MacroSetupWidget(QSplitter):
 
     def _add_macro_pressed(self) -> None:
         dialog = QInputDialog(self)
-        self._dialog = dialog
         dialog.setComboBoxEditable(True)
         dialog.setComboBoxItems(get_available_shared_context_identifiers(self._show))
         dialog.setModal(True)
@@ -237,12 +241,22 @@ class MacroSetupWidget(QSplitter):
         dialog.setOption(QInputDialog.InputDialogOption.UseListViewForComboBoxItems)
         dialog.setInputMode(QInputDialog.InputMode.TextInput)
         dialog.accepted.connect(self._add_macro_final)
+        self._show_dialog(dialog)
+
+    def _show_dialog(self, dialog: QDialog) -> None:
+        """Show the given dialog and clean up after it has been closed.
+
+        Args:
+            dialog: the dialog to show
+
+        """
+        self._dialog = dialog
         dialog.finished.connect(dialog.deleteLater)
-        dialog.finished.connect(self._forget_macro_context_dialog)
+        dialog.finished.connect(self._forget_dialog)
         dialog.show()
 
-    def _forget_macro_context_dialog(self) -> None:
-        """Drop the reference to the macro context dialog once it has been closed."""
+    def _forget_dialog(self) -> None:
+        """Drop the reference to the currently shown dialog once it has been closed."""
         self._dialog = None
 
     def _add_macro_final(self) -> None:
@@ -260,10 +274,9 @@ class MacroSetupWidget(QSplitter):
     def _add_new_trigger_pressed(self) -> None:
         if self._selected_macro is None:
             return
-        self._dialog = _NewTriggerDialog(self, self._selected_macro)
-        self._dialog.added_callable = self._trigger_added
-        self._dialog.finished.connect(self._dialog.deleteLater)
-        self._dialog.show()
+        dialog = _NewTriggerDialog(self, self._selected_macro)
+        dialog.added_callable = self._trigger_added
+        self._show_dialog(dialog)
 
     def _editor_area_text_changed(self) -> None:
         if self._selected_macro is not None:
@@ -276,37 +289,40 @@ class MacroSetupWidget(QSplitter):
         self._selected_macro.c.return_text = ""
         success = self._selected_macro.exec()
         text = self._selected_macro.c.return_text
-        self._dialog = QMessageBox(self)
-        self._dialog.setWindowTitle("Macro Output")
-        self._dialog.setText(text.replace("\n", "<br />" if len(text) > 0 else "<i>No output was generated</i>"))
-        self._dialog.setIcon(QMessageBox.Icon.Information if success else QMessageBox.Icon.Critical)
-        self._dialog.show()
+        output_dialog = QMessageBox(self)
+        output_dialog.setWindowTitle("Macro Output")
+        output_dialog.setText(text.replace("\n", "<br />" if len(text) > 0 else "<i>No output was generated</i>"))
+        output_dialog.setIcon(QMessageBox.Icon.Information if success else QMessageBox.Icon.Critical)
+        self._show_dialog(output_dialog)
 
     def _import_macro_clicked(self) -> None:
-        self._create_file_dialog(True)
-        self._dialog.accepted.connect(self._load_macro)
-        self._dialog.show()
+        dialog = self._create_file_dialog(True)
+        dialog.accepted.connect(self._load_macro)
+        self._show_dialog(dialog)
 
-    def _create_file_dialog(self, open_: bool) -> None:
-        self._dialog = QFileDialog(self)
-        self._dialog.setModal(True)
-        self._dialog.setNameFilter("Macro (*.macro)")
-        self._dialog.setViewMode(QFileDialog.ViewMode.Detail)
+    def _create_file_dialog(self, open_: bool) -> QFileDialog:
+        dialog = QFileDialog(self)
+        dialog.setModal(True)
+        dialog.setNameFilter("Macro (*.macro)")
+        dialog.setViewMode(QFileDialog.ViewMode.Detail)
         if open_:
-            self._dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-            self._dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+            dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+            dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
         else:
-            self._dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
-            self._dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+            dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+            dialog.setFileMode(QFileDialog.FileMode.AnyFile)
         if self._show.file_path:
-            self._dialog.setDirectory(os.path.dirname(os.path.realpath(self._show.file_path)))
+            dialog.setDirectory(os.path.dirname(os.path.realpath(self._show.file_path)))
         else:
-            self._dialog.setDirectory(os.path.expanduser("~"))
+            dialog.setDirectory(os.path.expanduser("~"))
+        return dialog
 
     def _load_macro(self) -> None:
-        if not isinstance(self._dialog, QFileDialog):
-            logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
-        for f_path in self._dialog.selectedFiles():
+        dialog = self._dialog
+        if not isinstance(dialog, QFileDialog):
+            logger.error("Expected the dialog to be of type QFileDialog. Got: %s", type(dialog).__name__)
+            return
+        for f_path in dialog.selectedFiles():
             with open(f_path, "r", encoding="UTF-8") as f:
                 m = Macro(self._show)
                 m.name = os.path.splitext(os.path.basename(f_path))[0]
@@ -314,14 +330,19 @@ class MacroSetupWidget(QSplitter):
                 self._show.add_macro(m)
 
     def _export_macro_clicked(self) -> None:
-        self._create_file_dialog(False)
-        self._dialog.accepted.connect(self._export_macro)
-        self._dialog.show()
+        dialog = self._create_file_dialog(False)
+        dialog.accepted.connect(self._export_macro)
+        self._show_dialog(dialog)
 
     def _export_macro(self) -> None:
-        if not isinstance(self._dialog, QFileDialog):
-            logger.error("Expected the dialog to be of type QFileDialog. Got %s instead.", type(self._dialog))
-        file_name = self._dialog.selectedFiles()[0]
+        dialog = self._dialog
+        if not isinstance(dialog, QFileDialog):
+            logger.error("Expected the dialog to be of type QFileDialog. Got: %s", type(dialog).__name__)
+            return
+        if self._selected_macro is None:
+            logger.error("Aborting Macro Export. Please investigate bug.")
+            return
+        file_name = dialog.selectedFiles()[0]
         if os.path.splitext(file_name)[1] != ".macro":
             file_name += ".macro"
         with open(file_name, "w", encoding="UTF-8") as f:
@@ -330,8 +351,7 @@ class MacroSetupWidget(QSplitter):
     def _insert_cue_switch_clicked(self) -> None:
         if self._selected_macro is None:
             return
-        self._dialog = _InsertCueSwitchDialog(self, self._selected_macro, self._show, self._macro_content_changed)
-        self._dialog.show()
+        self._show_dialog(_InsertCueSwitchDialog(self, self._selected_macro, self._show, self._macro_content_changed))
 
     def _macro_content_changed(self) -> None:
         if self._selected_macro is not None:
@@ -339,42 +359,38 @@ class MacroSetupWidget(QSplitter):
 
     def _insert_constant_update_clicked(self) -> None:
         if self._selected_macro is not None:
-            self._dialog = ConstantUpdateInsertionDialog(
-                self, self._selected_macro, self._show, self._macro_content_changed
+            self._show_dialog(
+                ConstantUpdateInsertionDialog(self, self._selected_macro, self._show, self._macro_content_changed)
             )
-            self._dialog.show()
 
     def _insert_sequence_trigger_clicked(self) -> None:
         if self._selected_macro is not None:
-            self._dialog = SequenceTriggerInsertionDialog(
-                self, self._selected_macro, self._show, self._macro_content_changed
+            self._show_dialog(
+                SequenceTriggerInsertionDialog(self, self._selected_macro, self._show, self._macro_content_changed)
             )
-            self._dialog.show()
 
     def _insert_chaser_update_clicked(self) -> None:
         if self._selected_macro is not None:
-            self._dialog = _ChaserPresetSelectionDialog(
-                self, self._selected_macro, self._show, self._macro_content_changed
+            self._show_dialog(
+                _ChaserPresetSelectionDialog(self, self._selected_macro, self._show, self._macro_content_changed)
             )
-            self._dialog.show()
 
     def _insert_scene_switch_trigger_clicked(self) -> None:
         if self._selected_macro is not None:
-            self._dialog = SceneSwitchInsertionDialog(
-                self, self._selected_macro, self._show, self._macro_content_changed
+            self._show_dialog(
+                SceneSwitchInsertionDialog(self, self._selected_macro, self._show, self._macro_content_changed)
             )
-            self._dialog.show()
 
     def _rename_macro_triggered(self) -> None:
         if self._selected_macro is None:
             return
-        self._dialog = QInputDialog(self)
-        self._dialog.setModal(True)
-        self._dialog.setWindowTitle("Rename Macro")
-        self._dialog.setTextValue(self._selected_macro.name)
-        self._dialog.setInputMode(QInputDialog.InputMode.TextInput)
-        self._dialog.accepted.connect(self._rename_macro_final)
-        self._dialog.show()
+        dialog = QInputDialog(self)
+        dialog.setModal(True)
+        dialog.setWindowTitle("Rename Macro")
+        dialog.setTextValue(self._selected_macro.name)
+        dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        dialog.accepted.connect(self._rename_macro_final)
+        self._show_dialog(dialog)
 
     def _rename_macro_final(self) -> None:
         if self._selected_macro is None or not isinstance(self._dialog, QInputDialog):
