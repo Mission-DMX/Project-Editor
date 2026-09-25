@@ -55,6 +55,7 @@ _IMAGE_ICON = QIcon(resource_path(os.path.join("resources", "icons", "media_imag
 def _set_asset(asset: list[MediaAsset], preset: ColorPreset) -> None:
     if len(asset) == 0:
         preset.visualization_asset = None
+        return
     preset.visualization_asset = asset[0]
 
 
@@ -141,8 +142,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         super().parent_opened()
         if len(self._model.output_groups) == 0:
             return
-        self._dialog = YesNoDialog(self._widget, "Preview Mode", "Would you like to enable live editing?",
-                                   self._enable_live_preview)
+        self._dialog = YesNoDialog(
+            self._widget, "Preview Mode", "Would you like to enable live editing?", self._enable_live_preview
+        )
         self._dialog.setModal(True)
 
     def _reload_presets_table(self) -> None:
@@ -202,8 +204,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 for color_index, accent_color in enumerate(ambient_colors):
                     accent_color_item = AnnotatedTableWidgetItem("   ")
                     accent_color_item.setToolTip(
-                        f"H: {accent_color.hue} S: {accent_color.saturation} I: {accent_color.intensity
-                        }\n{accent_color}"
+                        f"H: {accent_color.hue} S: {accent_color.saturation} I: {accent_color.intensity}\n{
+                            accent_color
+                        }"
                     )
                     accent_color_item.annotated_data = (preset_index, step_index, 3 + color_index)
                     accent_color_item.setBackground(accent_color.to_qt_color())
@@ -225,7 +228,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             tw.setCellWidget(preset_index + offsets, 0, add_step_widget)
             asset_mgmt_button = QPushButton()
             asset_mgmt_button.setIcon(_IMAGE_ICON)
-            asset_mgmt_button.clicked.connect(lambda _,p=preset: self._change_preset_asset_clicked(p))
+            asset_mgmt_button.clicked.connect(lambda _, p=preset: self._change_preset_asset_clicked(p))
             if len(preset.colors) < 2:
                 add_step_layout.addWidget(asset_mgmt_button)
             else:
@@ -253,13 +256,14 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         if property_index < 0:
             return
         if not (0 <= preset_index < len(self._model.presets)):
-            logger.error("Bug! Preset Cell %i:%i provides invalid preset index (%i)!",
-                         row, column, preset_index)
+            logger.error("Bug! Preset Cell %i:%i provides invalid preset index (%i)!", row, column, preset_index)
             return
         preset = self._model.presets[preset_index]
         if not (0 <= step_index < len(preset.colors)):
-            logger.error("Bug! Preset Cell %i:%i provides invalid step (%i) for %i!",
-                         row, column, step_index, preset_index)
+            logger.error(
+                "Bug! Preset Cell %i:%i provides invalid step (%i) for %i!", row, column, step_index, preset_index
+            )
+            return
         fade_in_time, tf, accent_colors = preset.colors[step_index]
         match property_index:
             case -1:
@@ -276,9 +280,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 return
             case _:
                 property_index -= 3
-                if not(0 < property_index < len(accent_colors)):
-                    logger.error("Bug! cell %i:%i does not provide valid property: %i!",
-                                 row, column, property_index)
+                if not (0 <= property_index < len(accent_colors)):
+                    logger.error("Bug! cell %i:%i does not provide valid property: %i!", row, column, property_index)
+                    return
                 color = item.data(Qt.ItemDataRole.EditRole)
                 if not isinstance(color, ColorHSI):
                     raise ValueError("Received invalid color data.")
@@ -329,13 +333,14 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             if property_index < 0:
                 return
             if not (0 <= preset_index < len(self._model.presets)):
-                logger.error("Preview Cell %i:%i provides invalid preset index (%i)!",
-                             row, column, preset_index)
+                logger.error("Preview Cell %i:%i provides invalid preset index (%i)!", row, column, preset_index)
                 return
             preset = self._model.presets[preset_index]
             if not (0 <= step_index < len(preset.colors)):
-                logger.error("Preview Cell %i:%i provides invalid step (%i) for %i!",
-                             row, column, step_index, preset_index)
+                logger.error(
+                    "Preview Cell %i:%i provides invalid step (%i) for %i!", row, column, step_index, preset_index
+                )
+                return
             _, _, accent_colors = preset.colors[step_index]
             self._model.apply_colors_on_preview_constants(accent_colors)
 
@@ -347,9 +352,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         super().parent_closed(filter_node)
 
     def _change_preset_asset_clicked(self, preset: ColorPreset) -> None:
-        self._dialog = AssetSelectionDialog(self._widget,
-                                            preselected=preset.visualization_asset,
-                                            allowed_types=[MediaType.IMAGE])
+        self._dialog = AssetSelectionDialog(
+            self._widget, preselected=preset.visualization_asset, allowed_types=[MediaType.IMAGE]
+        )
         self._dialog.setModal(True)
-        self._dialog.asset_selected.connect(lambda asset,p=preset: _set_asset(asset, p))
+        self._dialog.asset_selected.connect(lambda asset, p=preset: _set_asset(asset, p))
         self._dialog.show()
