@@ -28,7 +28,7 @@ class RecallCellDelegate(QStyledItemDelegate):
         editor = JogwheelSpinBox(parent)
         editor.setMinimum(0)
         editor.setSingleStep(1)
-        editor.setMaximum(len(self._model.presets))
+        editor.setMaximum(max(len(self._model.presets) - 1, 0))
         return editor
 
     @override

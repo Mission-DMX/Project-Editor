@@ -35,7 +35,7 @@ class ControllerWidget(QWidget):
         if update_list is not None:
             self._recall_sp.value_submitted.connect(self._recall_issued)
         recall_count = len(model.recalls)
-        self._recall_sp.setRange(0, recall_count)
+        self._recall_sp.setRange(0, recall_count - 1)
         self._recall_sp.setEnabled(recall_count > 0)
         self._recall_sp.setMaximumSize(100, element_size)
         layout.addWidget(self._recall_sp, 0, 0)
