@@ -98,11 +98,14 @@ class ControllerWidget(QWidget):
         self.update_requested.emit()
 
     def _add_preview_on_buttons(self, preview_index: int, image: QImage) -> None:
-        icon_size = self._apply_single_buttons[0][0].size()
+        buttons = self._apply_single_buttons[preview_index]
+        if not buttons:
+            return
+        icon_size = buttons[0].size()
         icon_size.setWidth(int(icon_size.width() * 0.75))
         icon_size.setHeight(int(icon_size.height() * 0.75))
         icon = QIcon(QPixmap.fromImage(image))
-        for button in self._apply_single_buttons[preview_index]:
+        for button in buttons:
             button.setIcon(icon)
             button.setIconSize(icon_size)
 

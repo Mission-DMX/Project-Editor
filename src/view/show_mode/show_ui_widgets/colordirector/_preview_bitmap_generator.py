@@ -43,7 +43,7 @@ class PreviewBitmapGenerator(QThread):
             colors = preset.get_button_visualization()
             num_colors = len(colors)
             last_angle = 0
-            arc_size = int((360 * 16) / num_colors)
+            arc_size = int((360 * 16) / num_colors) if num_colors > 0 else 0
             p.setPen(Qt.PenStyle.NoPen)
             for color in colors:
                 p.setBrush(QBrush(color.to_qt_color()))

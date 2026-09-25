@@ -53,10 +53,11 @@ class ColorPreset:
         """Get the representation sequence for highlighting purposes in buttons.
 
         Returns:
-            The first accent color of each step.
+            The first accent color of each step. Steps without colors are represented by the default color.
 
         """
-        return [t[2][0] for t in self.colors]
+        default = ColorHSI(128.0, 0.5, 1.0)
+        return [t[2][0] if t[2] else default for t in self.colors]
 
     def serialize(self) -> str:
         """Serialize the preset to a string."""
