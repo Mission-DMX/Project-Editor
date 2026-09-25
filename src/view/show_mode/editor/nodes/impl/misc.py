@@ -17,7 +17,7 @@ class EventSchedulerNode(FilterNode):
     nodeName = "Event Scheduler"  # noqa: N815
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
-        """Initialize the filter"""
+        """Initialize the filter."""
         super().__init__(
             model=model,
             filter_type=FilterTypeEnumeration.FILTER_EVENT_SCHEDULER,

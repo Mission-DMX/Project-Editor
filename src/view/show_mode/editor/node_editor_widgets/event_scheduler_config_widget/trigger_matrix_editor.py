@@ -141,7 +141,7 @@ class TriggerMatrixEditor(QWidget):
             self.update()
 
     @property
-    def event_data(self) -> str:
+    def active_event_data(self) -> str:
         """Get the event data as a string."""
         if self._number_of_steps == 0 or len(self._events) == 0:
             return ""
@@ -151,8 +151,8 @@ class TriggerMatrixEditor(QWidget):
             list.extend(f"{step},{event},TRUE" for event in range(len(self._events)) if self._states[event, step])
         return ";".join(steps_data)
 
-    @event_data.setter
-    def event_data(self, value: str) -> None:
+    @active_event_data.setter
+    def active_event_data(self, value: str) -> None:
         """Set the event data from a string.
 
         Format: For each step, comma-separated event indices that are enabled.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from logging import getLogger
 from typing import NamedTuple
 
@@ -311,3 +312,10 @@ def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] 
         sender.renamed_events.update(renaming)
     else:
         _persistence_notes[name] = renaming.copy()
+
+class TriggerType(Enum):
+    SINGLE_TRIGGER = 0
+    START = 1
+    RELEASE = 2
+    ONGOING_EVENT = 3
+
