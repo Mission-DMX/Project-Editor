@@ -34,7 +34,7 @@ def _div(value: str, arg: str) -> str:
     divisor = int(arg)
     if divisor == 0:
         raise ValueError("The 'div' filter requires a divisor other than zero.")
-    return str(int(int(value) / divisor))
+    return str(int(value) // divisor)
 
 
 def _mod(value: str, arg: str) -> str:
