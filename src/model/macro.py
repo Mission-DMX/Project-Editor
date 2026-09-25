@@ -215,10 +215,10 @@ class Macro:
     def __init__(self, parent: BoardConfiguration, shared_context: str | None = None) -> None:
         """Empty macro.
 
-        Params:
+        Args:
             parent: The parent board configuration
-            shared_context: If the macro should use a shared context, the id of it. If None (default) is provided, a
-                private context will be created.
+            shared_context: If the macro should use a shared context, the id of it. If None (default) or a blank
+                string is provided, a private context will be created.
 
         """
         self.content: str = ""
@@ -228,6 +228,8 @@ class Macro:
         from controller.cli.cli_context import CLIContext
         from controller.network import NetworkManager
 
+        if shared_context is not None:
+            shared_context = shared_context.strip() or None
         if shared_context is None:
             self.c = CLIContext(self._show, NetworkManager(), exit_available=False)
         else:
@@ -238,7 +240,7 @@ class Macro:
     def trigger_conditions(self) -> list[Trigger]:
         """Copy list of all active triggers."""
         trigger_conditions = []
-        for k, v in self._triggers:
+        for k, v in self._triggers.items():
             if v:
                 trigger_conditions.append(k)
         return trigger_conditions
@@ -266,7 +268,11 @@ class Macro:
         t._macro = self
 
     def copy(self) -> Macro:
-        """Deep copy of this macro."""
+        """Deep copy of this macro.
+
+        The copy intentionally joins the same shared context as the original (if any): macros bound to a shared
+        context operate on the same CLI state, so the copy must not fork it.
+        """
         m = Macro(self._show, shared_context=self._shared_context_id)
         m.name = str(self.name)
         m.content = str(self.content)

@@ -227,22 +227,32 @@ class MacroSetupWidget(QSplitter):
             self._macro_list.setCurrentIndex(self._macro_list.model().index(0, 0))
 
     def _add_macro_pressed(self) -> None:
-        self._dialog = QInputDialog(self)
-        self._dialog.setComboBoxEditable(True)
-        self._dialog.setComboBoxItems(get_available_shared_context_identifiers(self._show))
-        self._dialog.setModal(True)
-        self._dialog.setWindowTitle("Specify Context")
-        self._dialog.setLabelText("Specify Macro Context (leave empty to create a private one):")
-        self._dialog.setOption(QInputDialog.InputDialogOption.UseListViewForComboBoxItems)
-        self._dialog.setInputMode(QInputDialog.InputMode.TextInput)
-        self._dialog.accepted.connect(self._add_macro_final)
-        self._dialog.show()
+        dialog = QInputDialog(self)
+        self._dialog = dialog
+        dialog.setComboBoxEditable(True)
+        dialog.setComboBoxItems(get_available_shared_context_identifiers(self._show))
+        dialog.setModal(True)
+        dialog.setWindowTitle("Specify Context")
+        dialog.setLabelText("Specify Macro Context (leave empty to create a private one):")
+        dialog.setOption(QInputDialog.InputDialogOption.UseListViewForComboBoxItems)
+        dialog.setInputMode(QInputDialog.InputMode.TextInput)
+        dialog.accepted.connect(self._add_macro_final)
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.finished.connect(self._forget_macro_context_dialog)
+        dialog.show()
+
+    def _forget_macro_context_dialog(self) -> None:
+        """Drop the reference to the macro context dialog once it has been closed."""
+        self._dialog = None
 
     def _add_macro_final(self) -> None:
-        context_id = self._dialog.textValue().strip()
+        dialog = self._dialog
+        if not isinstance(dialog, QInputDialog):
+            logger.error("Expected the macro context selection dialog to be open. Got: %s", type(dialog).__name__)
+            return
+        context_id: str | None = dialog.textValue().strip()
         if context_id == "":
             context_id = None
-        self._dialog.deleteLater()
         m = Macro(self._show, shared_context=context_id)
         m.name = "New Macro"
         self._show.add_macro(m)
@@ -252,6 +262,7 @@ class MacroSetupWidget(QSplitter):
             return
         self._dialog = _NewTriggerDialog(self, self._selected_macro)
         self._dialog.added_callable = self._trigger_added
+        self._dialog.finished.connect(self._dialog.deleteLater)
         self._dialog.show()
 
     def _editor_area_text_changed(self) -> None:
