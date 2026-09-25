@@ -19,7 +19,9 @@ _filter_channel_height = 35.0
 def _sanitize_name(input_: str | dict) -> str:
     if isinstance(input_, dict):
         input_ = input_.get("insert")
-        logger.error("Did not extract channel macro while creating fixture filters.")
+        if input_ is None:
+            logger.error("Did not extract channel macro while creating fixture filters.")
+            return "_unknown_channel"
     if input_ == "universe":
         return "_universe_channel"
     return input_.replace(" ", "_").replace("/", "_").replace("\\", "_")
@@ -84,7 +86,7 @@ def place_fixture_filters_in_scene(
 
     filter_ = Filter(
         filter_id=f"universe-output_{_sanitize_name(name)}",
-        filter_type=11,
+        filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
         pos=(avg_x, max_y + (_filter_channel_height * fixture.channel_length) / 2),
         scene=scene,
     )
@@ -155,14 +157,16 @@ def _check_and_add_auxiliary_filters(
                 split_filter = Filter(
                     scene=fp.parent_scene,
                     filter_id=adapter_name,
-                    filter_type=8,
+                    filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
                     pos=(int(x - _additional_filter_depth), compute_filter_height(channel_count, i)),
                 )
                 added_depth = max(added_depth, _additional_filter_depth)
                 fp.parent_scene.append_filter(split_filter)
                 adapter_name = split_filter.filter_id
+                universe_filter.channel_links[_sanitize_name(_get_channel_name_at(fixture, index - 1) or "")] = (
+                    adapter_name + ":value_upper"
+                )
                 universe_filter.channel_links[_sanitize_name(channel.name)] = adapter_name + ":value_lower"
-                universe_filter.channel_links[_sanitize_name(channel.name)] = adapter_name + ":value_upper"
                 fp.filters.append(split_filter)
                 # if output_map is not None:
                 #    output_map[c[c_i]] = split_filter.filter_id + ":value" #FIXME
@@ -177,7 +181,7 @@ def _check_and_add_auxiliary_filters(
                         rgbw_filter = Filter(
                             scene=fp.parent_scene,
                             filter_id=adapter_name,
-                            filter_type=16,
+                            filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBW,
                             pos=(x - _additional_filter_depth, compute_filter_height(channel_count, i)),
                         )
                         added_depth = max(added_depth, _additional_filter_depth)
@@ -201,7 +205,7 @@ def _check_and_add_auxiliary_filters(
                         rgb_filter = Filter(
                             scene=fp.parent_scene,
                             filter_id=adapter_name,
-                            filter_type=15,
+                            filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGB,
                             pos=(x - _additional_filter_depth, compute_filter_height(channel_count, i)),
                         )
                         added_depth = max(added_depth, _additional_filter_depth)
