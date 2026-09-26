@@ -39,7 +39,7 @@ class SelectCommand(Command):
     def __init__(self, context: CLIContext) -> None:
         """Select Command."""
         super().__init__(context, "select")
-        self.help_text = "This command displays the help about a certain command."
+        self.help_text = "This command selects items like scenes and bank sets for subsequent commands."
 
     @override
     def configure_parser(self, parser: ArgumentParser) -> None:
