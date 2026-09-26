@@ -1,4 +1,5 @@
 """Contains QWidget instantiated by UI Widget adapter."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -15,15 +16,19 @@ if TYPE_CHECKING:
 
     from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
 
+
 class ControllerWidget(QWidget):
     """Widget provides button matrix, group labels and recall field."""
 
     update_requested = Signal()
 
-    def __init__(self, model: ColordirectorVFilter,
-                 update_list: list[tuple[str, str]] | None,
-                 feedback_enabled: bool = False,
-                 parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        model: ColordirectorVFilter,
+        update_list: list[tuple[str, str]] | None,
+        feedback_enabled: bool = False,
+        parent: QWidget | None = None,
+    ) -> None:
         """Initialize and generate button matrix."""
         super().__init__(parent)
         self._update_list: list[tuple[str, str]] | None = update_list
@@ -52,7 +57,7 @@ class ControllerWidget(QWidget):
             group_button = QPushButton("🠋")
             group_button.setFixedSize(element_size, element_size)
             if update_list is not None:
-                group_button.clicked.connect(lambda _,ii=i: self._apply_whole_group_clicked(ii))
+                group_button.clicked.connect(lambda _, ii=i: self._apply_whole_group_clicked(ii))
             self._apply_group_buttons.append(group_button)
             layout.addWidget(group_button, 0, i + 1)
         self._apply_single_buttons: list[list[QPushButton]] = []
@@ -63,7 +68,9 @@ class ControllerWidget(QWidget):
                 button = QPushButton()
                 button.setFixedSize(element_size, element_size)
                 if update_list is not None:
-                    button.clicked.connect(lambda _,preset_i=y,group_i=x: self._apply_single_clicked(group_i, preset_i))
+                    button.clicked.connect(
+                        lambda _, preset_i=y, group_i=x: self._apply_single_clicked(group_i, preset_i)
+                    )
                 preset_buttons.append(button)
                 layout.addWidget(button, x + 1, y + 1)
             self._apply_single_buttons.append(preset_buttons)
@@ -77,24 +84,25 @@ class ControllerWidget(QWidget):
 
     def _apply_whole_group_clicked(self, preset_index: int) -> None:
         self._update_list.clear()
-        self._update_list.extend(self._model.get_update_msg_for_group_preset_change(group_name, preset_index)
-                                 for group_name in self._output_group_list)
+        self._update_list.extend(
+            self._model.get_update_msg_for_group_preset_change(group_name, preset_index)
+            for group_name in self._output_group_list
+        )
         self.update_requested.emit()
 
     def _apply_single_clicked(self, group_index: int, preset_index: int) -> None:
         self._update_list.append(
-            self._model.get_update_msg_for_group_preset_change(
-                self._output_group_list[group_index],
-                preset_index
-            )
+            self._model.get_update_msg_for_group_preset_change(self._output_group_list[group_index], preset_index)
         )
         self.update_requested.emit()
 
     def _recall_issued(self, recall_index: int) -> None:
         self._update_list.clear()
         recall = self._model.recalls[recall_index]
-        self._update_list.extend(self._model.get_update_msg_for_group_preset_change(group_name, recall[i])
-                                 for i, group_name in enumerate(self._output_group_list))
+        self._update_list.extend(
+            self._model.get_update_msg_for_group_preset_change(group_name, recall[i] if i < len(recall) else 0)
+            for i, group_name in enumerate(self._output_group_list)
+        )
         self.update_requested.emit()
 
     def _add_preview_on_buttons(self, preview_index: int, image: QImage) -> None:

@@ -34,7 +34,7 @@ class ColorPreset:
 
         Args:
             filter_str: Filter string representation to deserialize. An empty string will initialize an empty preset.
-                Malformed steps are ignored.
+                Malformed steps are ignored. Steps without accent colors keep an empty color list.
 
         """
         self.colors: list[tuple[int, TransferFunction, list[ColorHSI]]] = []
@@ -48,7 +48,7 @@ class ColorPreset:
                     duration, transf, colors = step_str.split("|")
                     duration = int(duration)
                     transf = TransferFunction(transf)
-                    colors = [ColorHSI.from_filter_str(part) for part in colors.split("@")]
+                    colors = [ColorHSI.from_filter_str(part) for part in colors.split("@") if len(part) > 0]
                 except ValueError:
                     continue
                 self.colors.append((duration, transf, colors))
@@ -87,8 +87,24 @@ class ColorPreset:
         self._asset = asset
 
 
+_MAX_RECALL_COUNT = 1024
+
+
 def _sanitize_channel_name(name: str) -> str:
     return name.replace(":", "").replace("#", "").replace("|", "").replace("__", "-").replace(" ", "_").strip()
+
+
+def is_valid_channel_name(name: str) -> bool:
+    """Check whether the provided color group or sub output name may be used.
+
+    Args:
+        name: The name to check.
+
+    Returns:
+        True if the name is valid and can be used as color group or sub output name.
+
+    """
+    return len(name) > 0 and _sanitize_channel_name(name) == name
 
 
 class SignalProvider(QObject):
@@ -237,7 +253,7 @@ class ColordirectorVFilter(VirtualFilter):
             pink.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(296.0, 0.89, 1)]))
             self._presets.append(pink)
             red = ColorPreset()
-            red.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(360.0, 1, 1)]))
+            red.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(0.0, 1, 1)]))
             self._presets.append(red)
             orange = ColorPreset()
             orange.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(25, 1, 1)]))
@@ -408,16 +424,14 @@ class ColordirectorVFilter(VirtualFilter):
                     target_recall = int(value)
                 except ValueError:
                     return False
-                if target_recall < 0:
+                if not 0 <= target_recall < _MAX_RECALL_COUNT:
                     return False
-                if target_recall >= len(self._recalls):
-                    self._recalls.append([])
-                    selected_recall = self._recalls[-1]
-                else:
-                    selected_recall = self._recalls[target_recall]
                 current_colors = self.get_current_active_colors()
                 if len(current_colors) == 0:
                     return False
+                while len(self._recalls) <= target_recall:
+                    self._recalls.append([0] * len(self._color_groups))
+                selected_recall = self._recalls[target_recall]
                 selected_recall.clear()
                 selected_recall.extend(current_colors)
                 return True

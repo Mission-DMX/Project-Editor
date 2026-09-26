@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from controller.cli.connect_command import get_math_enabled_jinja_env
+from model.virtual_filters.colordirector_vfilter import is_valid_channel_name
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 if TYPE_CHECKING:
@@ -113,7 +114,13 @@ class ColorGroupWidget(QWidget):
             self._group_view.addTopLevelItem(group_item)
 
     def _selected_group_changed(self) -> None:
-        item = self._group_view.selectedItems()[0]
+        selected_items = self._group_view.selectedItems()
+        if len(selected_items) == 0:
+            self._delete_button.setEnabled(False)
+            self._add_sub_output_button.setEnabled(False)
+            self._add_sub_output_range_button.setEnabled(False)
+            return
+        item = selected_items[0]
         if not isinstance(item, AnnotatedTreeWidgetItem):
             self._delete_button.setEnabled(False)
             return
@@ -136,12 +143,14 @@ class ColorGroupWidget(QWidget):
         name = self._input_dialog.textValue()
         self._input_dialog.deleteLater()
         self._input_dialog = None
+        if not is_valid_channel_name(name):
+            self._show_name_error(
+                "Invalid Group Name",
+                "Group names must not be empty and must not contain ':', '#', '|', double underscores or spaces."
+            )
+            return
         if name in self._model.output_groups:
-            self._input_dialog = QMessageBox()
-            self._input_dialog.setWindowTitle("Group Already Exists")
-            self._input_dialog.setText("Group names need to be unique.")
-            self._input_dialog.setIcon(QMessageBox.Icon.Critical)
-            self._input_dialog.show()
+            self._show_name_error("Group Already Exists", "Group names need to be unique.")
             return
         self._model.output_groups[name] = []
         group_item = AnnotatedTreeWidgetItem(self._group_view)
@@ -149,6 +158,22 @@ class ColorGroupWidget(QWidget):
         group_item.annotated_data = (True, name)
         self._group_view.addTopLevelItem(group_item)
         self.group_added.emit()
+
+    def _show_name_error(self, title: str, message: str) -> None:
+        """Show an error message box informing about a rejected name.
+
+        Args:
+            title: The window title of the message box.
+            message: The message explaining why the name was rejected.
+
+        """
+        if self._input_dialog is not None:
+            self._input_dialog.deleteLater()
+        self._input_dialog = QMessageBox(self)
+        self._input_dialog.setWindowTitle(title)
+        self._input_dialog.setText(message)
+        self._input_dialog.setIcon(QMessageBox.Icon.Critical)
+        self._input_dialog.show()
 
     def _add_sub_output_clicked(self) -> None:
         if self._input_dialog is not None:
@@ -164,19 +189,40 @@ class ColorGroupWidget(QWidget):
         name = self._input_dialog.textValue()
         self._input_dialog.deleteLater()
         self._input_dialog = None
-        self._add_sub_output(name)
+        if not self._add_sub_output(name):
+            self._show_name_error(
+                "Invalid Sub Output Name",
+                "Sub output names must not be empty, must be unique within their group and must not contain "
+                "':', '#', '|', double underscores or spaces."
+            )
 
-    def _add_sub_output(self, name: str) -> None:
-        group_item = self._group_view.selectedItems()[0]
+    def _add_sub_output(self, name: str) -> bool:
+        """Add a sub output with the provided name to the currently selected group.
+
+        Args:
+            name: The name of the sub output to add.
+
+        Returns:
+            True if the sub output was added. False if no group is selected or the name is invalid or already
+            present within the group.
+
+        """
+        selected_items = self._group_view.selectedItems()
+        if len(selected_items) == 0:
+            return False
+        group_item = selected_items[0]
         if not isinstance(group_item, AnnotatedTreeWidgetItem):
-            return
+            return False
         group_name = group_item.annotated_data[1]
+        if not is_valid_channel_name(name) or name in self._model.output_groups[group_name]:
+            return False
         self._model.output_groups[group_name].append(name)
         output_item = AnnotatedTreeWidgetItem(group_item)
         output_item.setText(0, name)
         output_item.annotated_data = (False, name)
         group_item.addChild(output_item)
         group_item.setExpanded(True)
+        return True
 
     def _add_sub_output_range(self) -> None:
         if self._input_dialog is not None:
@@ -186,10 +232,18 @@ class ColorGroupWidget(QWidget):
         self._input_dialog.show()
 
     def _add_sub_output_range_final(self) -> None:
+        skipped_count = 0
         for name in self._input_dialog.generated_names:
-            self._add_sub_output(name)
+            if not self._add_sub_output(name):
+                skipped_count += 1
         self._input_dialog.deleteLater()
         self._input_dialog = None
+        if skipped_count > 0:
+            self._show_name_error(
+                "Skipped Sub Outputs",
+                f"{skipped_count} generated sub output(s) were skipped because their names are invalid or already "
+                "present within the group."
+            )
 
     def _delete_selected_group_or_output(self) -> None:
         selected_item = self._group_view.selectedItems()

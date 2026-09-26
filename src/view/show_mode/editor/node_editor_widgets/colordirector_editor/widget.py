@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMenu,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QTableWidget,
@@ -127,8 +128,14 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
     @override
     def _load_parameters(self, parameters: dict[str, str]) -> dict:
-        self._model.deserialize()
+        """Adopt the current model state without re-reading the stored configuration.
+
+        Args:
+            parameters: Ignored as all state is managed by the model directly.
+
+        """
         self._serialized_since_load = False
+        return {}
 
     @override
     def _get_parameters(self) -> dict[str, str]:
@@ -321,7 +328,15 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._color_groups_tab.setEnabled(False)
         self._widget.setTabEnabled(0, False)
         self._model.live_preview_mode = True
-        transmit_to_fish(self._model.scene.board_configuration, False)
+        if not transmit_to_fish(self._model.scene.board_configuration, False):
+            self._model.live_preview_mode = False
+            self._color_groups_tab.setEnabled(True)
+            self._widget.setTabEnabled(0, True)
+            error_box = QMessageBox(self._widget)
+            error_box.setWindowTitle("Live Preview Unavailable")
+            error_box.setText("Live preview could not be enabled because the show could not be transmitted to fish.")
+            error_box.setIcon(QMessageBox.Icon.Critical)
+            error_box.show()
 
     def _preset_cell_clicked(self, row: int, column: int) -> None:
         if self._model.live_preview_mode:
@@ -349,6 +364,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         if self._model.live_preview_mode:
             self._model.live_preview_mode = False
             transmit_to_fish(self._model.scene.board_configuration, False)
+        if not self._serialized_since_load:
+            self._model.serialize()
+            self._serialized_since_load = True
         super().parent_closed(filter_node)
 
     def _change_preset_asset_clicked(self, preset: ColorPreset) -> None:
