@@ -57,7 +57,7 @@ class JogwheelDoubleSpinBox(QDoubleSpinBox):
 
     """
 
-    value_submitted = Signal(int)
+    value_submitted = Signal(float)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Initialize just like QDoubleSpinBox."""

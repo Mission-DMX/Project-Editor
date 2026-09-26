@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import atexit
 import os
+import weakref
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QCoreApplication, QThread, Signal
 from PySide6.QtGui import QBrush, QImage, QPainter, Qt
 
 from utility import resource_path
@@ -19,6 +21,20 @@ if TYPE_CHECKING:
 _DELETION_GRACE_MS = 5000
 """Maximum time in milliseconds __del__ waits for a still running worker before the thread is destroyed."""
 
+_RUNNING_GENERATORS: weakref.WeakSet[PreviewBitmapGenerator] = weakref.WeakSet()
+"""Weak references to all generators, so still running workers can be stopped before the interpreter shuts down."""
+
+
+def _interrupt_running_generators() -> None:
+    """Interrupt and wait for all still running workers before the interpreter shuts down."""
+    for generator in list(_RUNNING_GENERATORS):
+        if generator.isRunning():
+            generator.requestInterruption()
+            generator.wait(_DELETION_GRACE_MS)
+
+
+atexit.register(_interrupt_running_generators)
+
 
 class PreviewBitmapGenerator(QThread):
     """Class to generate previews for presets.
@@ -29,14 +45,17 @@ class PreviewBitmapGenerator(QThread):
     preset_preview_generated = Signal(int, QImage)
 
     def __init__(self, presets: list[ColorPreset], size: int = 32, parent: QObject | None = None) -> None:
+        if parent is None:
+            parent = QCoreApplication.instance()
         super().__init__(parent)
         self._presets = presets
         self._size = size
+        _RUNNING_GENERATORS.add(self)
 
     def __del__(self) -> None:
         """Ensure the worker has stopped before the underlying QThread is destroyed."""
         try:
-            if self.isRunning():
+            if self.isRunning() and QThread.currentThread() is not self:
                 self.requestInterruption()
                 self.wait(_DELETION_GRACE_MS)
         except RuntimeError:
