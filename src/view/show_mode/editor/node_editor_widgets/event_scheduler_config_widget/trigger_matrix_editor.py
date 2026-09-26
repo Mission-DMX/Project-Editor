@@ -35,7 +35,7 @@ class TriggerMatrixEditor(QWidget):
 
     event_updated = Signal(int, int, bool)
 
-    def __init__(self, parent: QWidget) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         """Initialize the widget."""
         super().__init__(parent)
         self._highlight_current_step: bool = False
