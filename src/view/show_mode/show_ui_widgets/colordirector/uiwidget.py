@@ -1,9 +1,11 @@
 """Contains UIWidget adapter for color director."""
+
 from typing import override
 
 from PySide6.QtWidgets import QDialog, QLabel, QWidget
 
 from model import UIPage, UIWidget
+from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
 from view.show_mode.show_ui_widgets.colordirector._controller_widget import ControllerWidget
 
 
@@ -21,20 +23,51 @@ class ColorDirectorShowUIWidget(UIWidget):
         self._pending_updates.clear()
         return copied_list
 
+    def _get_linked_filter(self) -> ColordirectorVFilter | None:
+        """Get the color director filter linked to this widget.
+
+        Returns:
+            The linked color director filter. None if no filter is linked or the linked filter is missing or of an
+            unexpected type.
+
+        """
+        if len(self.filter_ids) == 0:
+            return None
+        linked_filter = self.parent.scene.get_filter_by_id(self.filter_ids[0])
+        if not isinstance(linked_filter, ColordirectorVFilter):
+            return None
+        return linked_filter
+
+    @staticmethod
+    def _generate_missing_filter_widget(parent: QWidget | None) -> QWidget:
+        """Generate a placeholder widget informing about a missing linked filter.
+
+        Args:
+            parent: The parent of the generated placeholder widget.
+
+        Returns:
+            A label informing the user that the linked color director filter is missing.
+
+        """
+        label = QLabel("The linked color director filter is missing.", parent)
+        label.setWordWrap(True)
+        return label
+
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        w = ControllerWidget(
-            self.parent.scene.get_filter_by_id(self.filter_ids[0]),
-            self._pending_updates,
-            True,
-            parent
-        )
+        linked_filter = self._get_linked_filter()
+        if linked_filter is None:
+            return self._generate_missing_filter_widget(parent)
+        w = ControllerWidget(linked_filter, self._pending_updates, True, parent)
         w.update_requested.connect(self.push_update)
         return w
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        return ControllerWidget(self.parent.scene.get_filter_by_id(self.filter_ids[0]), None, False, parent)
+        linked_filter = self._get_linked_filter()
+        if linked_filter is None:
+            return self._generate_missing_filter_widget(parent)
+        return ControllerWidget(linked_filter, None, False, parent)
 
     @override
     def copy(self, new_parent: UIPage) -> UIWidget:

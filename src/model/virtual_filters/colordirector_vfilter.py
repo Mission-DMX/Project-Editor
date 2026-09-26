@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QObject, Signal
@@ -20,6 +21,9 @@ from model.virtual_filters.cue_vfilter import CueFilter
 if TYPE_CHECKING:
     import proto.FilterMode_pb2
     from model.scene import Scene
+
+
+logger = getLogger(__name__)
 
 
 class ColorPreset:
@@ -105,6 +109,22 @@ def is_valid_channel_name(name: str) -> bool:
 
     """
     return len(name) > 0 and _sanitize_channel_name(name) == name
+
+
+def bound_preset_index(preset_index: int, preset_count: int) -> int:
+    """Bound the provided color preset index to the available color presets.
+
+    Args:
+        preset_index: The color preset index to bound.
+        preset_count: The number of available color presets.
+
+    Returns:
+        The provided index if it addresses one of the available color presets. Zero if the provided index is invalid.
+
+    """
+    if 0 <= preset_index < preset_count:
+        return preset_index
+    return 0
 
 
 class SignalProvider(QObject):
@@ -444,10 +464,21 @@ class ColordirectorVFilter(VirtualFilter):
                     return False
                 if not 0 <= target_recall < len(self._recalls):
                     return False
+                if len(self._presets) == 0:
+                    return False
                 recall = self._recalls[target_recall]
                 nm = NetworkManager()
                 for i, group_name in enumerate(self._color_groups.keys()):
-                    preset_index = recall[i] if i < len(recall) else 0
+                    stored_index = recall[i] if i < len(recall) else 0
+                    preset_index = bound_preset_index(stored_index, len(self._presets))
+                    if preset_index != stored_index:
+                        logger.warning(
+                            "Recall %i stores the invalid color preset index %i for group '%s'. Falling back to the "
+                            "first color preset.",
+                            target_recall,
+                            stored_index,
+                            group_name,
+                        )
                     filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, preset_index)
                     filter_id, msg_key = filter_id.split(":")
                     nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)
@@ -489,7 +520,8 @@ class ColordirectorVFilter(VirtualFilter):
     def _update_active_colors_from_filters(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Update the currently active color presets from a cue filter update message.
 
-        Messages of unknown cue filters and malformed messages are ignored, since they are received from the network.
+        Messages of unknown cue filters, malformed messages and invalid color preset indices are ignored, since they
+        are received from the network.
 
         """
         group_index = self._cue_filter_to_group_index_mapping.get(param.filter_id)
@@ -501,6 +533,8 @@ class ColordirectorVFilter(VirtualFilter):
         try:
             value = int(parts[1])
         except ValueError:
+            return
+        if not 0 <= value < len(self._presets):
             return
         changed: bool = False
         if len(self._current_active_colors) == 0:
