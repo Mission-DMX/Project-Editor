@@ -58,9 +58,7 @@ class ColorPresetSerializationTest(unittest.TestCase):
         """Multiple fade in steps keep their order and values."""
         preset = ColorPreset.from_filter_str("3|e_i|10.0,0.25,0.5#7|sig|200.0,0.8,0.9")
         self.assertEqual([step[0] for step in preset.colors], [3, 7])
-        self.assertEqual(
-            [step[1] for step in preset.colors], [TransferFunction.EASE_IN, TransferFunction.SIGMOIDAL]
-        )
+        self.assertEqual([step[1] for step in preset.colors], [TransferFunction.EASE_IN, TransferFunction.SIGMOIDAL])
         self.assertEqual(preset.serialize(), "3|e_i|10.0,0.25,0.5#7|sig|200.0,0.8,0.9")
 
     def test_all_transfer_functions_round_trip(self):
@@ -101,11 +99,9 @@ class ColorPresetSerializationTest(unittest.TestCase):
         """Steps with an unparsable accent color are ignored completely."""
         self.assertEqual(ColorPreset.from_filter_str("12|lin|x,y,z").colors, [])
 
-    def test_accent_color_without_commas_falls_back_to_default(self):
-        """Accent colors without the expected comma separation fall back to the default color."""
-        preset = ColorPreset.from_filter_str("12|lin|abc")
-        self.assertEqual(len(preset.colors), 1)
-        self.assertEqual(preset.colors[0][2][0].format_for_filter(), "128.0,0.5,1.0")
+    def test_accent_color_without_commas_is_ignored(self):
+        """Steps with accent colors without the expected comma separation are ignored completely."""
+        self.assertEqual(ColorPreset.from_filter_str("12|lin|abc").colors, [])
 
     def test_asset_uuid_prefix_round_trip(self):
         """An unresolvable asset uuid prefix is preserved on serialization."""
@@ -126,6 +122,23 @@ class ColorPresetSerializationTest(unittest.TestCase):
             [color.format_for_filter() for color in preset.get_button_visualization()],
             ["120.0,0.5,0.75", "128.0,0.5,1.0"],
         )
+
+
+class ColorHSIParsingTest(unittest.TestCase):
+    """Tests for the strict and lenient color parsing modes used by the color presets."""
+
+    def test_lenient_parsing_falls_back_to_default(self):
+        """Malformed color strings fall back to the default color if strict mode is not requested."""
+        for filter_format in ("", "1.0,2.0"):
+            with self.subTest(filter_format=filter_format):
+                self.assertEqual(ColorHSI.from_filter_str(filter_format).format_for_filter(), "128.0,0.5,1.0")
+
+    def test_strict_parsing_raises_value_error(self):
+        """Malformed color strings raise a ValueError in strict mode."""
+        for filter_format in ("", "1.0,2.0", "x,y,z"):
+            with self.subTest(filter_format=filter_format):
+                with self.assertRaises(ValueError):
+                    ColorHSI.from_filter_str(filter_format, strict=True)
 
 
 class ChannelNameTest(unittest.TestCase):
@@ -344,9 +357,7 @@ class ColorDirectorMessageTest(_ColorDirectorTestBase):
 
     def test_save_selection_stores_current_colors(self):
         """Save selection messages store the active colors and grow the recall list."""
-        director = self._make_director(
-            color_groups="g|a#h|b", presets="12|lin|120.0,0.5,0.75$4|edg|10.0,0.2,0.3"
-        )
+        director = self._make_director(color_groups="g|a#h|b", presets="12|lin|120.0,0.5,0.75$4|edg|10.0,0.2,0.3")
         director._cue_filter_to_group_index_mapping["colordirector__cue__g"] = 0
         director._update_active_colors_from_filters(_FakeFilterUpdateMessage("colordirector__cue__g", "run;1"))
         self.assertEqual(director.get_current_active_colors(), [1, 0])
@@ -395,6 +406,40 @@ class ColorDirectorMessageTest(_ColorDirectorTestBase):
         """Call column messages with non integer preset indices are rejected."""
         director = self._make_director(color_groups="grp|a", presets="12|lin|120.0,0.5,0.75")
         self.assertFalse(director.handle_filter_message("call-column", "x"))
+
+
+class RecallSelectionTest(_ColorDirectorTestBase):
+    """Tests for resolving the color preset selection stored by recalls."""
+
+    def test_selection_contains_an_entry_per_group(self):
+        """The selection resolves the stored preset index of every color group."""
+        director = self._make_director(
+            color_groups="g|a#h|b", presets="12|lin|120.0,0.5,0.75$4|edg|10.0,0.2,0.3", recalls="1,0"
+        )
+        self.assertEqual(director.get_recall_preset_selection(0), [("g", 1), ("h", 0)])
+
+    def test_selection_bounds_invalid_stored_indices(self):
+        """Stored indices that do not address a preset are bounded to the first preset and logged."""
+        director = self._make_director(color_groups="g|a", presets="12|lin|120.0,0.5,0.75", recalls="7")
+        with self.assertLogs("model.virtual_filters.colordirector_vfilter", level="WARNING"):
+            self.assertEqual(director.get_recall_preset_selection(0), [("g", 0)])
+
+    def test_selection_pads_short_recalls(self):
+        """Missing entries of short recalls default to the first color preset."""
+        director = self._make_director(
+            color_groups="g|a#h|b", presets="12|lin|120.0,0.5,0.75$4|edg|10.0,0.2,0.3", recalls="1"
+        )
+        self.assertEqual(director.get_recall_preset_selection(0), [("g", 1), ("h", 0)])
+
+    def test_selection_rejects_unknown_recall_indices(self):
+        """Unknown recall indices resolve to None."""
+        director = self._make_director(color_groups="g|a", presets="12|lin|120.0,0.5,0.75", recalls="0")
+        self.assertIsNone(director.get_recall_preset_selection(1))
+
+    def test_selection_rejects_missing_presets(self):
+        """The selection resolves to None if the filter does not provide presets."""
+        director = self._make_director(color_groups="g|a", recalls="0")
+        self.assertIsNone(director.get_recall_preset_selection(0))
 
 
 class PopulatePresetsTest(_ColorDirectorTestBase):
@@ -463,9 +508,7 @@ class ModelMutationTest(_ColorDirectorTestBase):
 
     def test_set_recall_preset_normalizes_and_bounds(self):
         """set_recall_preset normalizes the recall and bounds the stored preset index."""
-        director = self._make_director(
-            color_groups="g|a#b|c", presets="12|lin|120.0,0.5,0.75$12|lin|10.0,0.5,0.5"
-        )
+        director = self._make_director(color_groups="g|a#b|c", presets="12|lin|120.0,0.5,0.75$12|lin|10.0,0.5,0.5")
         recall = director.add_recall()
         self.assertTrue(director.set_recall_preset(0, 1, 1))
         self.assertEqual(recall, [0, 1])

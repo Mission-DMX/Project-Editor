@@ -75,7 +75,8 @@ class ColorPreset:
 
         Args:
             filter_str: Filter string representation to deserialize. An empty string will initialize an empty
-                preset. Malformed steps are ignored. Steps without accent colors keep an empty color list.
+                preset. Malformed steps and steps containing malformed accent colors are ignored. Steps without
+                accent colors keep an empty color list.
 
         Returns:
             The deserialized color preset.
@@ -92,7 +93,7 @@ class ColorPreset:
                     duration = int(duration_str)
                     transfer_function = TransferFunction(transfer_function_str)
                     colors = [
-                        ColorHSI.from_filter_str(part)
+                        ColorHSI.from_filter_str(part, strict=True)
                         for part in colors_str.split(_ACCENT_COLOR_DELIMITER)
                         if len(part) > 0
                     ]
@@ -236,14 +237,11 @@ class ColordirectorVFilter(VirtualFilter):
         Returns:
             A shallow copy of the color preset list. The preset objects themselves are owned by the filter:
             Changes applied to them are reflected within the filter. Structural changes of the list need to be
-            performed using add_preset and remove_preset.
+            performed using add_preset, remove_preset and populate_presets_with_initial_data since they emit the
+            configuration_changed signal.
 
         """
         return list(self._presets)
-
-    @presets.setter
-    def presets(self, presets: list[ColorPreset]) -> None:
-        self._presets = presets
 
     def add_preset(self, preset: ColorPreset) -> None:
         """Add the provided color preset to the end of the color preset list.
@@ -434,6 +432,41 @@ class ColordirectorVFilter(VirtualFilter):
         while len(recall) < group_count:
             recall.append(0)
         del recall[group_count:]
+
+    def get_recall_preset_selection(self, recall_index: int) -> list[tuple[str, int]] | None:
+        """Get the color preset selection stored by a recall.
+
+        This is the only place resolving the content of a recall: Both the filter message handling and the show
+        UI widgets use it to apply recalls.
+
+        Args:
+            recall_index: The index of the recall to resolve.
+
+        Returns:
+            A list containing the name of every color group and the color preset index to apply to it. Stored
+            indices that do not address one of the available color presets are bounded to the first color
+            preset. None if the recall index is unknown or no color presets are available.
+
+        """
+        if not 0 <= recall_index < len(self._recalls):
+            return None
+        if len(self._presets) == 0:
+            return None
+        recall = self._recalls[recall_index]
+        selection: list[tuple[str, int]] = []
+        for group_index, group_name in enumerate(self._color_groups.keys()):
+            stored_index = recall[group_index] if group_index < len(recall) else 0
+            preset_index = bound_preset_index(stored_index, len(self._presets))
+            if preset_index != stored_index:
+                logger.warning(
+                    "Recall %i stores the invalid color preset index %i for group '%s'. Falling back to the "
+                    "first color preset.",
+                    recall_index,
+                    stored_index,
+                    group_name,
+                )
+            selection.append((group_name, preset_index))
+        return selection
 
     def get_accent_color_count(self) -> int:
         """Get the maximum number of accent colors in presets."""
@@ -753,22 +786,10 @@ class ColordirectorVFilter(VirtualFilter):
                     target_recall = int(value)
                 except ValueError:
                     return False
-                if not 0 <= target_recall < len(self._recalls):
+                selection = self.get_recall_preset_selection(target_recall)
+                if selection is None:
                     return False
-                if len(self._presets) == 0:
-                    return False
-                recall = self._recalls[target_recall]
-                for i, group_name in enumerate(self._color_groups.keys()):
-                    stored_index = recall[i] if i < len(recall) else 0
-                    preset_index = bound_preset_index(stored_index, len(self._presets))
-                    if preset_index != stored_index:
-                        logger.warning(
-                            "Recall %i stores the invalid color preset index %i for group '%s'. Falling back to the "
-                            "first color preset.",
-                            target_recall,
-                            stored_index,
-                            group_name,
-                        )
+                for group_name, preset_index in selection:
                     self._send_preset_change_update(group_name, preset_index)
                 return True
             case "call":

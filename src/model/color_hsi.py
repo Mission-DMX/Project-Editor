@@ -27,14 +27,26 @@ class ColorHSI:
         self._intensity: float = max(0.0, min(intensity, 1.0))
 
     @classmethod
-    def from_filter_str(cls, filter_format: str) -> ColorHSI:
+    def from_filter_str(cls, filter_format: str, *, strict: bool = False) -> ColorHSI:
         """Initialize an HSI color from the given filter configuration string.
 
         Args:
             filter_format: The color provided as a filter configuration string.
+            strict: If set to true, malformed configuration strings raise a ValueError instead of falling back to
+                a default color. Unparsable component values raise a ValueError in both modes.
+
+        Returns:
+            The color defined by the provided configuration string. A default color if the configuration string
+            is malformed and strict is not set.
+
+        Raises:
+            ValueError: If the configuration string is malformed and strict is set or if it contains unparsable
+                component values.
 
         """
         if not filter_format or filter_format.count(",") < 2:
+            if strict:
+                raise ValueError(f"Malformed color configuration string: {filter_format!r}")
             return ColorHSI(128.0, 0.5, 1.0)
         parts = filter_format.split(",")
         return ColorHSI(float(parts[0]), float(parts[1]), float(parts[2]))

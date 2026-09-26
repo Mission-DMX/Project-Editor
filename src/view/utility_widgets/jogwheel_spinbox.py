@@ -22,23 +22,24 @@ class _JogwheelInputMixin(_JogwheelSpinBoxBase):
     """Mixin adding jog wheel input and enter key value submission to spin boxes."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """Initialize the spin box and connect the jog wheel rotation signals of the broadcaster.
+        """Initialize the spin box and connect the jog wheel and enter signals of the broadcaster.
 
-        Jog wheel rotation events are only processed while the spin box has the keyboard focus.
+        Jog wheel rotation and enter events are only processed while the spin box has the keyboard focus.
 
         """
         super().__init__(parent)
         self._broadcaster = Broadcaster()
         self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
         self._broadcaster.jogwheel_rotated_right.connect(self._jg_up)
+        self._broadcaster.desk_enter_pressed.connect(self._xtouch_enter_pressed)
         self.destroyed.connect(self._disconnect_from_broadcaster)
-        # TODO also trigger value_submitted if in focus and xtouch enter pressed
 
     def _disconnect_from_broadcaster(self) -> None:
-        """Disconnect the jog wheel rotation signals when the spin box is destroyed."""
+        """Disconnect the broadcaster signals when the spin box is destroyed."""
         try:
             self._broadcaster.jogwheel_rotated_left.disconnect(self._jg_down)
             self._broadcaster.jogwheel_rotated_right.disconnect(self._jg_up)
+            self._broadcaster.desk_enter_pressed.disconnect(self._xtouch_enter_pressed)
         except RuntimeError:
             # the connections have already been removed, e.g. by Qt while destroying the spin box
             pass
@@ -64,11 +65,18 @@ class _JogwheelInputMixin(_JogwheelSpinBoxBase):
         if self.hasFocus():
             self.stepBy(1)
 
+    def _xtouch_enter_pressed(self) -> None:
+        """Submit the current value if the enter button of the desk is pressed while having the keyboard focus."""
+        if self.hasFocus():
+            self.interpretText()
+            self._submit_value()
+
 
 class JogwheelSpinBox(_JogwheelInputMixin, QSpinBox):
     """Spin box supporting jog wheel input.
 
-    If the user presses enter while editing, the value_submitted signal will be emitted.
+    If the user presses enter while editing or the enter button of the connected desk while the spin box has the
+    keyboard focus, the value_submitted signal will be emitted.
 
     """
 
@@ -82,7 +90,8 @@ class JogwheelSpinBox(_JogwheelInputMixin, QSpinBox):
 class JogwheelDoubleSpinBox(_JogwheelInputMixin, QDoubleSpinBox):
     """Double spin box supporting jog wheel input.
 
-    If the user presses enter while editing, the value_submitted signal will be emitted.
+    If the user presses enter while editing or the enter button of the connected desk while the spin box has the
+    keyboard focus, the value_submitted signal will be emitted.
 
     """
 

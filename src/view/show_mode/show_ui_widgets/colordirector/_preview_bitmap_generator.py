@@ -58,13 +58,17 @@ class PreviewBitmapGenerator(QThread):
     def __init__(self, presets: list[ColorPreset], size: int = 32, parent: QObject | None = None) -> None:
         """Initialize using the presets to generate previews for and the preview size in pixels.
 
-
         Args:
             presets: The color presets to generate preview images for.
-            size: The edge length of the generated preview images in pixels.
+            size: The edge length of the generated preview images in pixels. It must be at least two pixels.
             parent: The parent object.
 
+        Raises:
+            ValueError: If the provided size is smaller than two pixels.
+
         """
+        if size < 2:
+            raise ValueError("The preview size must be at least two pixels.")
         if parent is None:
             parent = QCoreApplication.instance()
         super().__init__(parent)
@@ -132,6 +136,7 @@ class PreviewBitmapGenerator(QThread):
                 already.
             accent_colors: The accent colors of every preset step.
             segment_bounds: The start and end angle of every pie segment in Qt degrees.
+
         """
         painter.setPen(Qt.PenStyle.NoPen)
         dot_radius = max(2, self._size // 12)

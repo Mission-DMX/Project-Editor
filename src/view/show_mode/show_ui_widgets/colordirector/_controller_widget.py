@@ -8,7 +8,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
-from model.virtual_filters.colordirector_vfilter import bound_preset_index
 from view.show_mode.show_ui_widgets.colordirector._preview_bitmap_generator import PreviewBitmapGenerator
 from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
 
@@ -123,18 +122,13 @@ class ControllerWidget(QWidget):
     def _recall_issued(self, recall_index: int) -> None:
         if self._update_list is None:
             return
-        if not 0 <= recall_index < len(self._model.recalls):
+        selection = self._model.get_recall_preset_selection(recall_index)
+        if selection is None:
             return
-        preset_count = len(self._model.presets)
-        if preset_count == 0:
-            return
-        recall = self._model.recalls[recall_index]
         self._update_list.clear()
         self._update_list.extend(
-            self._model.get_update_msg_for_group_preset_change(
-                group_name, bound_preset_index(recall[i] if i < len(recall) else 0, preset_count)
-            )
-            for i, group_name in enumerate(self._output_group_list)
+            self._model.get_update_msg_for_group_preset_change(group_name, preset_index)
+            for group_name, preset_index in selection
         )
         self.update_requested.emit()
 

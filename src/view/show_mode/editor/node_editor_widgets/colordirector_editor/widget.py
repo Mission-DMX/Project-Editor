@@ -51,6 +51,37 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 _IMAGE_ICON = QIcon(resource_path(os.path.join("resources", "icons", "media_image.svg")))
 
+_PRESET_INDEX_COLUMN = 0
+"""Table column displaying the preset index, the preset management buttons and the visualization asset."""
+
+_FADE_IN_TIME_COLUMN = 1
+"""Table column displaying the fade in time of a preset step."""
+
+_TRANSFER_FUNCTION_COLUMN = 2
+"""Table column displaying the transfer function of a preset step."""
+
+_ADD_ACCENT_COLOR_COLUMN = 3
+"""Table column providing the button adding another accent color to a preset step."""
+
+_ACCENT_COLOR_COLUMN_OFFSET = 4
+"""Table column index of the first accent color column: Further accent colors follow consecutively."""
+
+_PRESET_LEVEL_PROPERTY = -1
+"""Annotated property index of the preset index item: It belongs to the preset instead of one of its steps."""
+
+_FADE_IN_TIME_PROPERTY = 0
+"""Annotated property index identifying the fade in time of a preset step."""
+
+_TRANSFER_FUNCTION_PROPERTY = 1
+"""Annotated property index identifying the transfer function of a preset step."""
+
+_ADD_ACCENT_COLOR_PROPERTY = 2
+"""Annotated property index of the button adding another accent color to a preset step."""
+
+_ACCENT_COLOR_PROPERTY_OFFSET = 3
+"""Annotated property index of the first accent color of a preset step: Further accent colors follow using
+consecutive indices."""
+
 
 def _set_asset(asset: list[MediaAsset], preset: ColorPreset) -> None:
     if len(asset) == 0:
@@ -186,22 +217,24 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             row_sum += max(len(preset.colors), 1)
         tw.setRowCount(row_sum)
         accent_color_maximum = self._model.get_accent_color_count()
-        tw.setColumnCount(accent_color_maximum + 4)
-        for i in range(accent_color_maximum + 4):
-            tw.setColumnWidth(i, 125 if i > 0 else 175)
+        column_count = accent_color_maximum + _ACCENT_COLOR_COLUMN_OFFSET
+        tw.setColumnCount(column_count)
+        for i in range(column_count):
+            tw.setColumnWidth(i, 125 if i > _PRESET_INDEX_COLUMN else 175)
         for i in range(row_sum):
             tw.setRowHeight(i, 45)
-        tw.setItemDelegateForColumn(1, FadeinTimeCellDelegate(tw))
-        tw.setItemDelegateForColumn(2, TransferFunctionCellDelegate(tw))
+        tw.setItemDelegateForColumn(_FADE_IN_TIME_COLUMN, FadeinTimeCellDelegate(tw))
+        tw.setItemDelegateForColumn(_TRANSFER_FUNCTION_COLUMN, TransferFunctionCellDelegate(tw))
         color_edit_delegate = ColorCellDelegate(tw)
         for i in range(accent_color_maximum):
-            tw.setItemDelegateForColumn(i + 4, color_edit_delegate)
+            tw.setItemDelegateForColumn(i + _ACCENT_COLOR_COLUMN_OFFSET, color_edit_delegate)
 
     def _add_preset_to_table(self, preset_index: int, preset: ColorPreset, start_row: int) -> int:
         """Populate the table rows used by a single color preset.
 
         Every step of the preset occupies one row. Presets without steps occupy a single row without step
-        content. The buttons managing the preset are placed within the last row of the preset.
+        content. The preset index and the buttons managing the preset are placed within the first and the last
+        row used by the preset.
 
         Args:
             preset_index: The index of the preset within the model.
@@ -210,12 +243,13 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
         Returns:
             The number of table rows used by the preset.
+
         """
         tw = self._preset_table
         index_item = AnnotatedTableWidgetItem(str(preset_index))
-        index_item.annotated_data = (preset_index, 0, -1)
+        index_item.annotated_data = (preset_index, 0, _PRESET_LEVEL_PROPERTY)
         index_item.setFlags(index_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
-        tw.setItem(start_row, 0, index_item)
+        tw.setItem(start_row, _PRESET_INDEX_COLUMN, index_item)
         for step_index, (fade_in_time, transfer_function, accent_colors) in enumerate(preset.colors):
             self._add_step_to_table(
                 preset_index, step_index, start_row + step_index, fade_in_time, transfer_function, accent_colors
@@ -242,35 +276,37 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             fade_in_time: The fade in time of the step in steps.
             transfer_function: The transfer function of the step.
             accent_colors: The accent colors of the step.
+
         """
         tw = self._preset_table
         fade_in_item = AnnotatedTableWidgetItem(str(fade_in_time))
-        fade_in_item.annotated_data = (preset_index, step_index, 0)
+        fade_in_item.annotated_data = (preset_index, step_index, _FADE_IN_TIME_PROPERTY)
         fade_in_item.setData(Qt.ItemDataRole.EditRole, fade_in_time)
-        tw.setItem(row, 1, fade_in_item)
+        tw.setItem(row, _FADE_IN_TIME_COLUMN, fade_in_item)
 
         transfer_item = AnnotatedTableWidgetItem(transfer_function.value)
-        transfer_item.annotated_data = (preset_index, step_index, 1)
+        transfer_item.annotated_data = (preset_index, step_index, _TRANSFER_FUNCTION_PROPERTY)
         transfer_item.setData(Qt.ItemDataRole.EditRole, transfer_function)
-        tw.setItem(row, 2, transfer_item)
+        tw.setItem(row, _TRANSFER_FUNCTION_COLUMN, transfer_item)
 
         add_accent_color_item = AnnotatedTableWidgetItem(" + ")
-        add_accent_color_item.annotated_data = (preset_index, step_index, 2)
-        tw.setItem(row, 3, add_accent_color_item)
+        add_accent_color_item.annotated_data = (preset_index, step_index, _ADD_ACCENT_COLOR_PROPERTY)
+        add_accent_color_item.setFlags(add_accent_color_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
+        tw.setItem(row, _ADD_ACCENT_COLOR_COLUMN, add_accent_color_item)
         add_accent_color_button = QPushButton("+")
         add_accent_color_button.setToolTip("Add accent color to step.")
         add_accent_color_button.clicked.connect(lambda _, ac=accent_colors: self._add_accent_color(ac))
-        tw.setCellWidget(row, 3, add_accent_color_button)
+        tw.setCellWidget(row, _ADD_ACCENT_COLOR_COLUMN, add_accent_color_button)
 
         for color_index, accent_color in enumerate(accent_colors):
             accent_color_item = AnnotatedTableWidgetItem("   ")
             accent_color_item.setToolTip(
                 f"H: {accent_color.hue} S: {accent_color.saturation} I: {accent_color.intensity}\n{accent_color}"
             )
-            accent_color_item.annotated_data = (preset_index, step_index, 3 + color_index)
+            accent_color_item.annotated_data = (preset_index, step_index, _ACCENT_COLOR_PROPERTY_OFFSET + color_index)
             accent_color_item.setBackground(accent_color.to_qt_color())
             accent_color_item.setData(Qt.ItemDataRole.EditRole, accent_color)
-            tw.setItem(row, 4 + color_index, accent_color_item)
+            tw.setItem(row, _ACCENT_COLOR_COLUMN_OFFSET + color_index, accent_color_item)
 
     def _add_preset_buttons_to_table(
         self,
@@ -280,7 +316,11 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         first_row: int,
         last_row: int,
     ) -> None:
-        """Add the buttons managing a preset to the table.
+        """Add the widgets managing a preset to the table.
+
+        The preset index and the asset management button are placed within the first row used by the preset. The
+        buttons managing the steps and the preset itself are placed within the last row. Both widget groups are
+        combined into a single cell widget if the preset uses one row only.
 
         Args:
             preset_index: The index of the preset within the model.
@@ -288,46 +328,61 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             index_item: The table item holding the preset index within the first row.
             first_row: The first table row used by the preset.
             last_row: The last table row used by the preset.
+
         """
         tw = self._preset_table
-        add_step_widget = QWidget()
-        add_step_layout = QHBoxLayout()
-        add_step_layout.addWidget(QLabel(str(preset_index)))
-        add_step_layout.addStretch()
+        asset_mgmt_button = QPushButton()
+        asset_mgmt_button.setIcon(_IMAGE_ICON)
+        asset_mgmt_button.setToolTip("Select the visualization asset of this preset.")
+        asset_mgmt_button.clicked.connect(lambda _, p=preset: self._change_preset_asset_clicked(p))
+        asset_mgmt_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        management_layout = QHBoxLayout()
         add_step_button = QPushButton("↓")
+        add_step_button.setToolTip("Add a step to this preset.")
         add_step_button.clicked.connect(lambda _, p=preset: self._add_step_to_preset(p))
-        add_step_layout.addWidget(add_step_button)
+        management_layout.addWidget(add_step_button)
         if len(preset.colors) > 1:
             remove_last_step_button = QPushButton("🗑")
+            remove_last_step_button.setToolTip("Remove the last step from this preset.")
             remove_last_step_button.clicked.connect(lambda _, p=preset: self._remove_last_step_from_preset(p))
-            add_step_layout.addSpacing(10)
-            add_step_layout.addWidget(remove_last_step_button)
+            management_layout.addSpacing(10)
+            management_layout.addWidget(remove_last_step_button)
         remove_preset_button = QPushButton("❌")
         remove_preset_button.setToolTip("Remove this preset.")
         remove_preset_button.clicked.connect(lambda _, p=preset: self._remove_preset(p))
-        add_step_layout.addSpacing(10)
-        add_step_layout.addWidget(remove_preset_button)
-        add_step_widget.setLayout(add_step_layout)
-        tw.setCellWidget(last_row, 0, add_step_widget)
-        asset_mgmt_button = QPushButton()
-        asset_mgmt_button.setIcon(_IMAGE_ICON)
-        asset_mgmt_button.clicked.connect(lambda _, p=preset: self._change_preset_asset_clicked(p))
-        if len(preset.colors) < 2:
-            add_step_layout.addWidget(asset_mgmt_button)
-            index_item.setText("")
+        management_layout.addSpacing(10)
+        management_layout.addWidget(remove_preset_button)
+
+        index_label = QLabel(str(preset_index))
+        index_item.setText("")
+        if first_row == last_row:
+            # the preset uses a single row: combine the preset index, the management buttons and the asset button
+            combined_layout = QHBoxLayout()
+            combined_layout.addWidget(index_label)
+            combined_layout.addStretch()
+            combined_layout.addLayout(management_layout)
+            combined_layout.addWidget(asset_mgmt_button)
+            combined_widget = QWidget()
+            combined_widget.setLayout(combined_layout)
+            tw.setCellWidget(first_row, _PRESET_INDEX_COLUMN, combined_widget)
             return
-        first_index_item = tw.item(first_row, 0)
-        if first_index_item is None:
-            logger.error("Bug! Missing index item at %i:0 while rebuilding the presets table!", first_row)
-            return
-        cell_widget = QWidget()
-        asset_button_layout = QHBoxLayout()
-        asset_button_layout.addWidget(QLabel(first_index_item.text()))
-        asset_button_layout.addWidget(asset_mgmt_button)
-        asset_mgmt_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        cell_widget.setLayout(asset_button_layout)
-        first_index_item.setText("")
-        tw.setCellWidget(first_row, 0, cell_widget)
+
+        # the preset uses multiple rows: the first one shows the preset index and the asset management button
+        header_layout = QHBoxLayout()
+        header_layout.addWidget(index_label)
+        header_layout.addWidget(asset_mgmt_button)
+        header_widget = QWidget()
+        header_widget.setLayout(header_layout)
+        tw.setCellWidget(first_row, _PRESET_INDEX_COLUMN, header_widget)
+
+        # the last row shows the buttons managing the steps and the preset
+        last_row_layout = QHBoxLayout()
+        last_row_layout.addStretch()
+        last_row_layout.addLayout(management_layout)
+        last_row_widget = QWidget()
+        last_row_widget.setLayout(last_row_layout)
+        tw.setCellWidget(last_row, _PRESET_INDEX_COLUMN, last_row_widget)
 
     def _preset_cell_edited(self, row: int, column: int) -> None:
         if self._in_preset_table_rebuild:
@@ -353,34 +408,34 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             )
             return
         fade_in_time, tf, accent_colors = preset.colors[step_index]
-        match property_index:
-            case 0:
-                # Fade in time
-                edited_value = item.data(Qt.ItemDataRole.EditRole)
-                if not isinstance(edited_value, int):
-                    logger.error("Bug! Cell %i:%i received an invalid fade in time: %r!", row, column, edited_value)
-                    return
-                preset.colors[step_index] = (edited_value, tf, accent_colors)
+        if property_index == _FADE_IN_TIME_PROPERTY:
+            edited_value = item.data(Qt.ItemDataRole.EditRole)
+            if not isinstance(edited_value, int):
+                logger.error("Bug! Cell %i:%i received an invalid fade in time: %r!", row, column, edited_value)
                 return
-            case 1:
-                edited_value = item.data(Qt.ItemDataRole.EditRole)
-                if not isinstance(edited_value, TransferFunction):
-                    logger.error("Bug! Cell %i:%i received invalid transfer function: %r!", row, column, edited_value)
-                    return
-                preset.colors[step_index] = (fade_in_time, edited_value, accent_colors)
+            preset.colors[step_index] = (edited_value, tf, accent_colors)
+            return
+        if property_index == _TRANSFER_FUNCTION_PROPERTY:
+            edited_value = item.data(Qt.ItemDataRole.EditRole)
+            if not isinstance(edited_value, TransferFunction):
+                logger.error("Bug! Cell %i:%i received invalid transfer function: %r!", row, column, edited_value)
                 return
-            case _:
-                property_index -= 3
-                if not (0 <= property_index < len(accent_colors)):
-                    logger.error("Bug! cell %i:%i does not provide valid property: %i!", row, column, property_index)
-                    return
-                color = item.data(Qt.ItemDataRole.EditRole)
-                if not isinstance(color, ColorHSI):
-                    logger.error("Bug! Cell %i:%i received an invalid color: %r!", row, column, color)
-                    return
-                accent_colors[property_index] = color
-                item.setBackground(color.to_qt_color())
-                return
+            preset.colors[step_index] = (fade_in_time, edited_value, accent_colors)
+            return
+        if property_index == _ADD_ACCENT_COLOR_PROPERTY:
+            # the add accent color button is covered by a cell widget and its item is not editable
+            return
+        accent_color_index = property_index - _ACCENT_COLOR_PROPERTY_OFFSET
+        if not (0 <= accent_color_index < len(accent_colors)):
+            logger.error("Bug! cell %i:%i does not provide valid property: %i!", row, column, property_index)
+            return
+        color = item.data(Qt.ItemDataRole.EditRole)
+        if not isinstance(color, ColorHSI):
+            logger.error("Bug! Cell %i:%i received an invalid color: %r!", row, column, color)
+            return
+        accent_colors[accent_color_index] = color
+        item.setBackground(color.to_qt_color())
+        return
 
     def _load_default_colors_clicked_short(self) -> None:
         self._model.populate_presets_with_initial_data(True)
