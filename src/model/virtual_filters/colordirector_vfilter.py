@@ -1,0 +1,629 @@
+"""Color Director vFilter."""
+
+from __future__ import annotations
+
+from logging import getLogger
+from typing import TYPE_CHECKING, override
+
+from PySide6.QtCore import QObject, Signal
+
+from controller.network import NetworkManager
+from model import DataType, Filter
+from model.color_hsi import ColorHSI
+from model.filter import FilterTypeEnumeration, VirtualFilter
+from model.filter_data.cues.cue import Cue, EndAction, KeyFrame, StateColor
+from model.filter_data.cues.cue_filter_model import CueFilterModel
+from model.filter_data.transfer_function import TransferFunction
+from model.media_assets.image import AbstractImageAsset
+from model.media_assets.registry import get_asset_by_uuid
+from model.virtual_filters.cue_vfilter import CueFilter
+
+if TYPE_CHECKING:
+    import proto.FilterMode_pb2
+    from model.scene import Scene
+
+
+logger = getLogger(__name__)
+
+
+class ColorPreset:
+    """A color preset.
+
+    Contains all color steps with their fade in time (steps), transfer function and accent colors.
+
+    """
+
+    def __init__(self, filter_str: str = "") -> None:
+        """Initialize a color preset.
+
+        Args:
+            filter_str: Filter string representation to deserialize. An empty string will initialize an empty preset.
+                Malformed steps are ignored. Steps without accent colors keep an empty color list.
+
+        """
+        self.colors: list[tuple[int, TransferFunction, list[ColorHSI]]] = []
+        self._asset: AbstractImageAsset | str | None = None
+        if "?" in filter_str:
+            asset_uuid, filter_str = filter_str.split("?", 1)
+            self._asset = asset_uuid
+        if len(filter_str) > 0:
+            for step_str in filter_str.split("#"):
+                try:
+                    duration_str, transfer_function_str, colors_str = step_str.split("|")
+                    duration = int(duration_str)
+                    transfer_function = TransferFunction(transfer_function_str)
+                    colors = [ColorHSI.from_filter_str(part) for part in colors_str.split("@") if len(part) > 0]
+                except ValueError:
+                    continue
+                self.colors.append((duration, transfer_function, colors))
+
+    def get_button_visualization(self) -> list[ColorHSI]:
+        """Get the representation sequence for highlighting purposes in buttons.
+
+        Returns:
+            The first accent color of each step. Steps without colors are represented by the default color.
+
+        """
+        default = ColorHSI(128.0, 0.5, 1.0)
+        return [t[2][0] if t[2] else default for t in self.colors]
+
+    def serialize(self) -> str:
+        """Serialize the preset to a string."""
+        parts: list[str] = []
+        for duration, transfer_function, colors in self.colors:
+            parts.append(f"{duration}|{transfer_function.value}|{'@'.join(c.format_for_filter() for c in colors)}")
+        list_str = "#".join(parts)
+        asset = self.visualization_asset
+        if asset is not None:
+            return f"{asset.id}?{list_str}"
+        if isinstance(self._asset, str):
+            return f"{self._asset}?{list_str}"
+        return list_str
+
+    @property
+    def visualization_asset(self) -> AbstractImageAsset | None:
+        """Optional image used to represent the preset."""
+        if isinstance(self._asset, str):
+            resolved_asset = get_asset_by_uuid(self._asset)
+            if not isinstance(resolved_asset, AbstractImageAsset):
+                return None
+            self._asset = resolved_asset
+        return self._asset if isinstance(self._asset, AbstractImageAsset) else None
+
+    @visualization_asset.setter
+    def visualization_asset(self, asset: AbstractImageAsset | None) -> None:
+        self._asset = asset
+
+
+STEP_DURATION_MS = 40
+"""Duration of a single fade in time step in milliseconds. Fade in times are stored as multiples of this step."""
+
+_MAX_RECALL_COUNT = 1024
+"""Maximum number of recalls that may be saved using filter messages."""
+
+
+def _sanitize_channel_name(name: str) -> str:
+    """Remove characters that are problematic within channel names from the provided name."""
+    return name.replace(":", "").replace("#", "").replace("|", "").replace("__", "-").replace(" ", "_").strip()
+
+
+def is_valid_channel_name(name: str) -> bool:
+    """Check whether the provided color group or sub output name may be used.
+
+    Args:
+        name: The name to check.
+
+    Returns:
+        True if the name is valid and can be used as color group or sub output name.
+
+    """
+    if len(name) == 0 or "__" in name or name.endswith("_"):
+        return False
+    return all(char.isalnum() or char in "_-" for char in name)
+
+
+def bound_preset_index(preset_index: int, preset_count: int) -> int:
+    """Bound the provided color preset index to the available color presets.
+
+    Args:
+        preset_index: The color preset index to bound.
+        preset_count: The number of available color presets.
+
+    Returns:
+        The provided index if it addresses one of the available color presets. Zero if the provided index is invalid.
+
+    """
+    if 0 <= preset_index < preset_count:
+        return preset_index
+    return 0
+
+
+class SignalProvider(QObject):
+    """Class provides a QObject in order to enable filters using signals."""
+
+    mapped_signal = Signal()
+
+    def __init__(self, parent: QObject | None = None) -> None:
+        """Initialize a SignalProvider."""
+        super().__init__(parent)
+
+
+class ColordirectorVFilter(VirtualFilter):
+    """VFilter to provide selectable colors.
+
+    A Color Director is a filter that provides color values to defined color groups.
+    Color sequences and accent colors can be defined. Accent colors will be evenly distributed into the channels of
+    each color group.
+
+    Saved recalls can set color selections based on the stored settings.
+
+    Internally cue filters are used for each color group and presets are cues within them.
+    Accent colors are distributed using the formula `SubOut[i] = accent colors[i mod #accent colors]`.
+    If the apply all buttons of the UI widget are pressed, the state will be applied to all cues.
+    Fade-in times are stored as multiples of the step duration defined by STEP_DURATION_MS.
+
+    Setting live_preview_mode to true causes the filter to instantiate color constants that can be used instead of cues.
+
+    """
+
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
+        """Initializes the virtual filter."""
+        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, pos=pos)
+        self._color_groups: dict[str, list[str]] = {}
+        self._presets: list[ColorPreset] = []
+        self._recalls: list[list[int]] = []
+        self.in_data_types["time"] = DataType.DT_DOUBLE
+        self.in_data_types["time_scale"] = DataType.DT_DOUBLE
+        self._registered_callbacks: list[tuple[int, str]] = []
+        self._current_active_colors: list[int] = []
+        self._cue_filter_to_group_index_mapping: dict[str, int] = {}
+        self.configuration_changed = SignalProvider()
+        self.live_preview_mode: bool = False
+
+    @property
+    def presets(self) -> list[ColorPreset]:
+        """Returns the list of color presets."""
+        return self._presets
+
+    @presets.setter
+    def presets(self, presets: list[ColorPreset]) -> None:
+        self._presets = presets
+
+    @property
+    def output_groups(self) -> dict[str, list[str]]:
+        """Get the color output group dictionary."""
+        return self._color_groups
+
+    def remove_output_group(self, group_name: str) -> None:
+        """Remove the provided color group including its entries within the saved recalls.
+
+        Args:
+            group_name: The name of the color group to remove. Unknown group names are ignored.
+
+        """
+        if group_name not in self._color_groups:
+            return
+        group_index = list(self._color_groups.keys()).index(group_name)
+        del self._color_groups[group_name]
+        for recall in self._recalls:
+            if group_index < len(recall):
+                recall.pop(group_index)
+
+    @property
+    def recalls(self) -> list[list[int]]:
+        """Returns the list of setting recalls."""
+        return self._recalls
+
+    def normalize_recall(self, recall_index: int) -> None:
+        """Normalize the recall with the provided index to the current number of color groups.
+
+        Missing entries are filled with zeros. Surplus entries are removed. Unknown recall indices are ignored.
+
+        Args:
+            recall_index: The index of the recall to normalize.
+
+        """
+        if not 0 <= recall_index < len(self._recalls):
+            return
+        recall = self._recalls[recall_index]
+        group_count = len(self._color_groups)
+        while len(recall) < group_count:
+            recall.append(0)
+        del recall[group_count:]
+
+    def get_accent_color_count(self) -> int:
+        """Get the maximum number of accent colors in presets."""
+        maximum = 0
+        for preset in self.presets:
+            for _, _, colors in preset.colors:
+                maximum = max(maximum, len(colors))
+        return maximum
+
+    def _deserialize_color_groups(self) -> None:
+        self._color_groups.clear()
+        color_group_def = self.filter_configurations.get("colorgroups", "")
+        if len(color_group_def) == 0:
+            return
+        self.out_data_types.clear()
+        for group_def in color_group_def.split("#"):
+            if len(group_def) == 0:
+                continue
+            output_channels = group_def.split("|")
+            group_name = _sanitize_channel_name(output_channels[0])
+            if not is_valid_channel_name(group_name):
+                logger.warning("Ignoring the color group '%s' because its name is invalid.", output_channels[0])
+                continue
+            if group_name in self._color_groups:
+                logger.warning("Ignoring the color group '%s' because its name is already in use.", group_name)
+                continue
+            output_channels.pop(0)
+            channels: list[str] = []
+            for channel in output_channels:
+                channel_name = _sanitize_channel_name(channel)
+                if not is_valid_channel_name(channel_name):
+                    logger.warning(
+                        "Ignoring the sub output '%s' of the color group '%s' because its name is invalid.",
+                        channel,
+                        group_name,
+                    )
+                    continue
+                if channel_name in channels:
+                    logger.warning(
+                        "Ignoring the sub output '%s' because its name is already in use within the color group '%s'.",
+                        channel_name,
+                        group_name,
+                    )
+                    continue
+                channels.append(channel_name)
+            self._color_groups[group_name] = channels
+            for chan_name in channels:
+                self.out_data_types[f"{group_name}__{chan_name}"] = DataType.DT_COLOR
+
+    def _serialize_color_groups(self) -> None:
+        self.filter_configurations["colorgroups"] = "#".join(
+            f"{_sanitize_channel_name(name)}|{'|'.join(_sanitize_channel_name(c) for c in channels)}"
+            for name, channels in self._color_groups.items()
+        )
+
+    def _deserialize_presets(self) -> None:
+        self._presets.clear()
+        presets_def = self.filter_configurations.get("presets", "")
+        if len(presets_def) == 0:
+            return
+        self._presets.extend(ColorPreset(p_str) for p_str in presets_def.split("$"))
+
+    def _serialize_presets(self) -> None:
+        self.filter_configurations["presets"] = "$".join(c.serialize() for c in self._presets)
+
+    def _serialize_recalls(self) -> None:
+        self.filter_configurations["recalls"] = ";".join(
+            ",".join(str(state) for state in states) for states in self._recalls
+        )
+
+    def _deserialize_recalls(self) -> None:
+        self._recalls.clear()
+        recalls_def = self.filter_configurations.get("recalls", "")
+        if len(recalls_def) == 0:
+            return
+        for recall_def in recalls_def.split(";"):
+            if len(recall_def) == 0:
+                continue
+            recall: list[int] = []
+            for state in recall_def.split(","):
+                if len(state) == 0:
+                    continue
+                try:
+                    recall.append(int(state))
+                except ValueError:
+                    recall.append(0)
+            self._recalls.append(recall)
+
+    def populate_presets_with_initial_data(self, short: bool) -> None:
+        """Populate the color presets with common initial data.
+
+        This method will generate color presets for the most common color choices and replace all existing presets.
+        The default fade-in is linear with a fade-in time of three seconds.
+
+        Args:
+            short: If set to true, a smaller preset field will be generated.
+
+        """
+        self._presets.clear()
+
+        steps_per_second: int = 1000 // STEP_DURATION_MS
+        three_secs: int = steps_per_second * 3
+
+        white = ColorPreset()
+        white.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(0, 0, 1)]))
+        self._presets.append(white)
+
+        if short:
+            pink = ColorPreset()
+            pink.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(296.0, 0.89, 1.0)]))
+            self._presets.append(pink)
+            for hue in (0.0, 25.0, 60.0, 114.0, 170.0, 227.0, 265.0):
+                color = ColorPreset()
+                color.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(hue, 1.0, 1.0)]))
+                self._presets.append(color)
+        else:
+            for hue in range(0, 360, 18):
+                color = ColorPreset()
+                color.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(hue, 1, 1)]))
+                self._presets.append(color)
+
+    def get_outputs(self) -> list[str]:
+        """Get the outputs of this filter."""
+        output_list = []
+        for group, sub_outs in self._color_groups.items():
+            output_list.extend([f"{group}__{output}" for output in sub_outs])
+        output_list.sort()
+        return output_list
+
+    @override
+    def serialize(self) -> None:
+        super().serialize()
+        self._serialize_color_groups()
+        self._serialize_presets()
+        self._serialize_recalls()
+
+    @override
+    def deserialize(self) -> None:
+        super().deserialize()
+        self._deserialize_color_groups()
+        self._deserialize_presets()
+        self._deserialize_recalls()
+
+    @override
+    def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
+        parts = virtual_port_id.split("__")
+        if len(parts) != 2:
+            return None
+        color_group_name, group_output_channel = parts
+        if color_group_name not in self._color_groups:
+            return None
+        color_group = self._color_groups[color_group_name]
+        if group_output_channel not in color_group:
+            return None
+        if self.live_preview_mode:
+            return f"{self.filter_id}__preview_const__{color_group_name}__{group_output_channel}:value"
+        return f"{self.filter_id}__cue__{color_group_name}:{group_output_channel}"
+
+    @override
+    def instantiate_filters(self, filter_list: list[Filter]) -> None:
+        if self.live_preview_mode:
+            self._inst_filters_preview_mode(filter_list)
+        else:
+            self._inst_filters_normal_mode(filter_list)
+
+    def _inst_filters_normal_mode(self, filter_list: list[Filter]) -> None:
+        for callback in self._registered_callbacks:
+            self.scene.board_configuration.clear_filter_update_callbacks(callback[0], callback[1])
+        self._registered_callbacks.clear()
+        self._current_active_colors.clear()
+        self._cue_filter_to_group_index_mapping.clear()
+        timescale_input = self.channel_links.get("time_scale")
+        if timescale_input is None:
+            float_const = Filter(
+                self.scene,
+                f"{self.filter_id}__timescale_const",
+                FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                pos=self.pos,
+                initial_parameters={"value": "1.0"},
+            )
+            timescale_input = float_const.filter_id + ":value"
+            filter_list.append(float_const)
+        time_input = self.channel_links.get("time")
+        if time_input is None:
+            time_filter = Filter(
+                self.scene, f"{self.filter_id}__time", FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, pos=self.pos
+            )
+            time_input = time_filter.filter_id + ":value"
+            filter_list.append(time_filter)
+        for group_index, item in enumerate(self._color_groups.items()):
+            color_group_name, output_channels = item
+            cue_filter = CueFilter(
+                self.scene, f"{self.filter_id}__cue__{_sanitize_channel_name(color_group_name)}", pos=self.pos
+            )
+            cue_filter.channel_links["time"] = time_input
+            cue_filter.channel_links["time_scale"] = timescale_input
+            cfm = CueFilterModel()
+            for channel_name in output_channels:
+                cfm.add_channel(channel_name, DataType.DT_COLOR)
+            for preset in self._presets:
+                cue = Cue()
+                cfm.append_cue(cue)
+                last_time: float = 0
+                for fadein_time, transfer_function, colors in preset.colors:
+                    kf = KeyFrame(cue)
+                    last_time += fadein_time * STEP_DURATION_MS
+                    kf.timestamp = last_time / 1000.0
+                    for i in range(len(output_channels)):
+                        if len(colors) == 0:
+                            break
+                        state = StateColor(transfer_function.value)
+                        state.color = colors[i % len(colors)]
+                        kf.append_state(state)
+                    cue.insert_frame(kf)
+                cue.end_action = EndAction.HOLD if len(preset.colors) < 2 else EndAction.START_AGAIN
+            if len(self._presets) > 0:
+                cfm.default_cue = 0
+            cue_filter.filter_configurations.update(cfm.get_as_configuration())
+            cue_filter.instantiate_filters(filter_list)
+            self.scene.board_configuration.register_filter_update_callback(
+                self.scene.scene_id, cue_filter.filter_id, self._update_active_colors_from_filters
+            )
+            self._registered_callbacks.append((self.scene.scene_id, cue_filter.filter_id))
+            self._cue_filter_to_group_index_mapping[cue_filter.filter_id] = group_index
+
+    def _inst_filters_preview_mode(self, filter_list: list[Filter]) -> None:
+        for output_group, sub_outputs in self._color_groups.items():
+            for sub_output in sub_outputs:
+                color_const_filter = Filter(
+                    self.scene,
+                    f"{self.filter_id}__preview_const__{output_group}__{sub_output}",
+                    FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
+                    self.pos,
+                    {},
+                    {"value": "0.0,0.0,1.0"},
+                )
+                filter_list.append(color_const_filter)
+
+    def apply_colors_on_preview_constants(self, accent_colors: list[ColorHSI]) -> None:
+        """Apply the provided colors to the preview constants.
+
+        This method needs to be called from a Qt Event Thread. It will fail if the filter is not in live preview mode
+        or the scene has not been applied.
+
+        """
+        if not self.live_preview_mode:
+            return
+        if len(accent_colors) == 0:
+            accent_colors = [ColorHSI(0.0, 0.0, 1.0)]
+        nm = NetworkManager()
+        for output_group, sub_outputs in self._color_groups.items():
+            for i, sub_output in enumerate(sub_outputs):
+                nm.send_gui_update_to_fish(
+                    self.scene.scene_id,
+                    f"{self.filter_id}__preview_const__{output_group}__{sub_output}",
+                    "value",
+                    accent_colors[i % len(accent_colors)].format_for_filter(),
+                    enque=True,
+                )
+        nm.push_messages()
+
+    @override
+    def handle_filter_message(self, key: str, value: str) -> bool:
+        """Handle filter messages sent by show UI widgets.
+
+        Args:
+            key: The message key. Supported keys are "save-selection-to-recall", "recall", "call-group" and
+                "call-column".
+            value: The message value.
+
+        Returns:
+            True if the message was understood and handled. False otherwise.
+
+        """
+        match key:
+            case "save-selection-to-recall":
+                try:
+                    target_recall = int(value)
+                except ValueError:
+                    return False
+                if not 0 <= target_recall < _MAX_RECALL_COUNT:
+                    return False
+                current_colors = self.get_current_active_colors()
+                if len(current_colors) == 0:
+                    return False
+                while len(self._recalls) <= target_recall:
+                    self._recalls.append([0] * len(self._color_groups))
+                selected_recall = self._recalls[target_recall]
+                selected_recall.clear()
+                selected_recall.extend(current_colors)
+                self.configuration_changed.mapped_signal.emit()
+                return True
+            case "recall":
+                try:
+                    target_recall = int(value)
+                except ValueError:
+                    return False
+                if not 0 <= target_recall < len(self._recalls):
+                    return False
+                if len(self._presets) == 0:
+                    return False
+                recall = self._recalls[target_recall]
+                for i, group_name in enumerate(self._color_groups.keys()):
+                    stored_index = recall[i] if i < len(recall) else 0
+                    preset_index = bound_preset_index(stored_index, len(self._presets))
+                    if preset_index != stored_index:
+                        logger.warning(
+                            "Recall %i stores the invalid color preset index %i for group '%s'. Falling back to the "
+                            "first color preset.",
+                            target_recall,
+                            stored_index,
+                            group_name,
+                        )
+                    self._send_preset_change_update(group_name, preset_index)
+                return True
+            case "call":
+                try:
+                    group_name, preset_index_str = value.split(",")
+                    color_preset_index = int(preset_index_str)
+                except ValueError:
+                    return False
+                if group_name not in self._color_groups:
+                    return False
+                if not 0 <= color_preset_index < len(self._presets):
+                    return False
+                self._send_preset_change_update(group_name, color_preset_index)
+                return True
+            case "call-column":
+                try:
+                    preset_index = int(value)
+                except ValueError:
+                    return False
+                if not 0 <= preset_index < len(self._presets):
+                    return False
+                for group_name in self._color_groups:
+                    self._send_preset_change_update(group_name, preset_index)
+                return True
+            case _:
+                return False
+        return True
+
+    def _update_active_colors_from_filters(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        """Update the currently active color presets from a cue filter update message.
+
+        Messages of unknown cue filters, malformed messages and invalid color preset indices are ignored, since they
+        are received from the network.
+
+        """
+        group_index = self._cue_filter_to_group_index_mapping.get(param.filter_id)
+        if group_index is None or not 0 <= group_index < len(self._color_groups):
+            return
+        parts = param.parameter_value.split(";")
+        if len(parts) < 2:
+            return
+        try:
+            value = int(parts[1])
+        except ValueError:
+            return
+        if not 0 <= value < len(self._presets):
+            return
+        changed: bool = False
+        if len(self._current_active_colors) == 0:
+            self._current_active_colors.extend([0] * len(self._color_groups))
+            changed = True
+        if self._current_active_colors[group_index] != value:
+            self._current_active_colors[group_index] = value
+            changed = True
+        if changed:
+            self.configuration_changed.mapped_signal.emit()
+
+    def get_current_active_colors(self) -> list[int]:
+        """Get the current active color presets.
+
+        Returns:
+            A list of indexes or an empty list if the filter was not applied and did not receive updates.
+
+        """
+        return self._current_active_colors
+
+    def get_update_msg_for_group_preset_change(self, color_group_name: str, preset_index: int) -> tuple[str, str]:
+        """Generate message to set the color group value to the given preset.
+
+        Args:
+            color_group_name: The key of the group to update.
+            preset_index: The index of the preset to use.
+
+        Returns:
+            A tuple containing the [target filter ID]:[update key] and update value.
+
+        """
+        return f"{self.filter_id}__cue__{_sanitize_channel_name(color_group_name)}:run_cue", str(preset_index)
+
+    def _send_preset_change_update(self, group_name: str, preset_index: int) -> None:
+        """Send a network update message that applies the provided preset to the provided color group."""
+        filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, preset_index)
+        filter_id, msg_key = filter_id.split(":")
+        NetworkManager().send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)

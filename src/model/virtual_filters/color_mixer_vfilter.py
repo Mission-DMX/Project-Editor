@@ -1,12 +1,18 @@
+"""VFilter that mixes multiple color inputs into a single color output."""
+
 from model import Filter, Scene
 from model.filter import FilterTypeEnumeration, VirtualFilter
 
 
 class ColorMixerVFilter(VirtualFilter):
+    """VFilter that mixes multiple color inputs into a single color output using a fish color mixer filter."""
+
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
+        """Resolve the virtual output port to the port of the instantiated mixer filter."""
         return f"{self.filter_id}:{virtual_port_id}"
 
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
+        """Instantiate the fish color mixer filter using the configured mixing method."""
         method = self.filter_configurations.get("method")
         match method:
             case "hsv":
@@ -27,7 +33,8 @@ class ColorMixerVFilter(VirtualFilter):
             mixer_filter.channel_links[k] = v
         filter_list.append(mixer_filter)
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
+        """Initialize the color mixer v-filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_MIXER, pos=pos)
         if "method" not in self.filter_configurations:
             self.filter_configurations["method"] = "hsv"

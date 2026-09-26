@@ -268,6 +268,17 @@ class BoardConfiguration:
             return
         if c in callable_list:
             callable_list.remove(c)
+        logger.debug("Remaining callbacks for (%s, %s): %s", target_scene, target_filter_id, len(callable_list))
+
+    def clear_filter_update_callbacks(self, target_scene: int, target_filter_id: str) -> None:
+        """Clear out all callbacks for provided filter.
+
+        Args:
+            target_scene: The scene the callbacks belongs to.
+            target_filter_id: The filter id which they are listening on.
+
+        """
+        self._filter_update_msg_register.pop((target_scene, target_filter_id), None)
 
     def add_macro(self, macro: Macro) -> None:
         """Add a new macro to the show file.
@@ -341,7 +352,9 @@ class BoardConfiguration:
 
         """
         for fixture in self._fixtures.values():
-            if fixture.universe_id == fixture_univ and \
-                fixture.start_index <= fixture_chan < fixture.start_index + fixture.channel_length:
+            if (
+                fixture.universe_id == fixture_univ
+                and fixture.start_index <= fixture_chan < fixture.start_index + fixture.channel_length
+            ):
                 return fixture
         return None

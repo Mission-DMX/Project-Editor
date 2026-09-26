@@ -20,7 +20,7 @@ logger = getLogger(__name__)
 class SixteenBitToFloatRange(VirtualFilter):
     """Converts 16 bit ranges to float."""
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Instantiate the filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE, pos=pos)
 
@@ -69,7 +69,7 @@ class SixteenBitToFloatRange(VirtualFilter):
 class EightBitToFloatRange(VirtualFilter):
     """Convert 8-bit ranges into float ranges using a V-Filter."""
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Convert 8-bit ranges into float ranges using a V-Filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, pos=pos)
 
@@ -333,7 +333,7 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
     """V-Filter that provides the global brightness property."""
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Instantiate a color global brightness filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, pos=pos)
 

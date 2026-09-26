@@ -15,7 +15,7 @@ class ImportVFilter(VirtualFilter):
 
     """
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Initialize the virtual filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_IMPORT, pos=pos)
         if "target" not in self.filter_configurations:
