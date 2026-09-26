@@ -748,7 +748,7 @@ class ColordirectorVFilter(VirtualFilter):
                     accent_colors[i % len(accent_colors)].format_for_filter(),
                     enque=True,
                 )
-        nm.push_messages()
+        self._flush_pending_update_messages()
 
     @override
     def handle_filter_message(self, key: str, value: str) -> bool:
@@ -791,6 +791,7 @@ class ColordirectorVFilter(VirtualFilter):
                     return False
                 for group_name, preset_index in selection:
                     self._send_preset_change_update(group_name, preset_index)
+                self._flush_pending_update_messages()
                 return True
             case "call":
                 try:
@@ -803,6 +804,7 @@ class ColordirectorVFilter(VirtualFilter):
                 if not 0 <= color_preset_index < len(self._presets):
                     return False
                 self._send_preset_change_update(group_name, color_preset_index)
+                self._flush_pending_update_messages()
                 return True
             case "call-column":
                 try:
@@ -813,6 +815,7 @@ class ColordirectorVFilter(VirtualFilter):
                     return False
                 for group_name in self._color_groups:
                     self._send_preset_change_update(group_name, preset_index)
+                self._flush_pending_update_messages()
                 return True
             case _:
                 return False
@@ -889,6 +892,24 @@ class ColordirectorVFilter(VirtualFilter):
         return f"{filter_id}:{msg_key}", update_value
 
     def _send_preset_change_update(self, group_name: str, preset_index: int) -> None:
-        """Send a network update message that applies the provided preset to the provided color group."""
+        """Enqueue a network update message that applies the provided preset to the provided color group.
+
+        The message is only enqueued instead of being transmitted directly: Callers need to flush the pending update
+        messages using _flush_pending_update_messages once all desired messages have been enqueued.
+        """
         filter_id, msg_key, update_value = self._get_cue_update_msg(group_name, preset_index)
         NetworkManager().send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)
+
+    def _flush_pending_update_messages(self) -> None:
+        """Flush update messages enqueued by this filter to fish.
+
+        Enqueued update messages are only transmitted once the message queue is flushed. Instead of relying on other
+        components flushing the queue (such as the periodic fish state updates), this is done explicitly here. The
+        flush is skipped while the connection to fish is not established, since no messages are enqueued in that
+        case and the queue may still contain messages of other components waiting for a connection.
+
+        This method needs to be called from the Qt event thread.
+        """
+        nm = NetworkManager()
+        if nm.is_running:
+            nm.push_messages()
