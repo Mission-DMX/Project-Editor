@@ -19,7 +19,13 @@ def _storage_file(file_name: str) -> Path:
     Returns:
         the path of the user storage file within the local missionDMX data directory
 
+    Raises:
+        ValueError: if the given file name is not a plain file name, for example if it contains a
+            path separator or refers to the current or a parent directory
+
     """
+    if not file_name or file_name in {".", ".."} or Path(file_name).name != file_name:
+        raise ValueError(f"{file_name!r} is not a valid user storage file name.")
     return _USER_STORAGE_PATH / file_name
 
 
@@ -40,6 +46,7 @@ def read_stored_lines(file_name: str) -> list[str]:
         the stripped, non empty lines of the storage file or an empty list if the file does not exist
 
     Raises:
+        ValueError: if the given file name is not a valid user storage file name
         OSError: if the storage file exists but cannot be read
 
     """
@@ -64,9 +71,13 @@ def write_stored_lines(file_name: str, lines: list[str]) -> None:
         file_name: the name of the user storage file to write
         lines: the lines to store
 
+    Raises:
+        ValueError: if the given file name is not a valid user storage file name
+        OSError: if the user storage file cannot be written
+
     """
-    _ensure_storage_directory()
     storage_file = _storage_file(file_name)
+    _ensure_storage_directory()
     temp_fd, temp_name = tempfile.mkstemp(dir=_USER_STORAGE_PATH, prefix=file_name + ".", suffix=".tmp")
     try:
         with os.fdopen(temp_fd, "w", encoding="utf-8") as temp_file:
@@ -90,13 +101,14 @@ def append_stored_line(file_name: str, line: str) -> None:
         line: the line to append
 
     Raises:
+        ValueError: if the given file name is not a valid user storage file name
         OSError: if the line cannot be appended
 
     """
     if not line:
         return
-    _ensure_storage_directory()
     storage_file = _storage_file(file_name)
+    _ensure_storage_directory()
     with storage_file.open("a", encoding="utf-8") as file:
         file.write(line + "\n")
         file.flush()
