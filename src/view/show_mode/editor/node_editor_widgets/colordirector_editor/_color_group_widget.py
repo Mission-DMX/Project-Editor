@@ -1,4 +1,5 @@
 """Contains ColorGroupWidget."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -38,8 +39,9 @@ class _IterationAndTemplateDialog(QDialog):
         self.setWindowTitle("Specify Sub Outputs")
         self.setMinimumWidth(300)
         layout = QFormLayout()
-        layout.addWidget(QLabel("Please enter the name template and number of iterations.\n"
-                                "Math filters are supported."))
+        layout.addWidget(
+            QLabel("Please enter the name template and number of iterations.\nMath filters are supported.")
+        )
         self._name_tb = QLineEdit()
         self._name_tb.setText("{{ i }}")
         self._name_tb.setPlaceholderText("Use Jinja Tag {{ i }} to access iterator.")
@@ -66,7 +68,7 @@ class _IterationAndTemplateDialog(QDialog):
 class ColorGroupWidget(QWidget):
     """Widget to edit color groups in color director vfilter."""
 
-    group_added = Signal()
+    groups_changed = Signal()
 
     def __init__(self, model: ColordirectorVFilter, parent: QWidget | None = None) -> None:
         """Initialize using given model and optional parent."""
@@ -146,7 +148,8 @@ class ColorGroupWidget(QWidget):
         if not is_valid_channel_name(name):
             self._show_name_error(
                 "Invalid Group Name",
-                "Group names must not be empty and must not contain ':', '#', '|', double underscores or spaces."
+                "Group names must not be empty and may only contain letters, digits, single underscores and "
+                "hyphens. Double underscores and trailing underscores are not allowed.",
             )
             return
         if name in self._model.output_groups:
@@ -157,7 +160,7 @@ class ColorGroupWidget(QWidget):
         group_item.setText(0, name)
         group_item.annotated_data = (True, name)
         self._group_view.addTopLevelItem(group_item)
-        self.group_added.emit()
+        self.groups_changed.emit()
 
     def _show_name_error(self, title: str, message: str) -> None:
         """Show an error message box informing about a rejected name.
@@ -192,8 +195,9 @@ class ColorGroupWidget(QWidget):
         if not self._add_sub_output(name):
             self._show_name_error(
                 "Invalid Sub Output Name",
-                "Sub output names must not be empty, must be unique within their group and must not contain "
-                "':', '#', '|', double underscores or spaces."
+                "Sub output names must not be empty, must be unique within their group and may only contain "
+                "letters, digits, single underscores and hyphens. Double underscores and trailing underscores are "
+                "not allowed.",
             )
 
     def _add_sub_output(self, name: str) -> bool:
@@ -242,7 +246,7 @@ class ColorGroupWidget(QWidget):
             self._show_name_error(
                 "Skipped Sub Outputs",
                 f"{skipped_count} generated sub output(s) were skipped because their names are invalid or already "
-                "present within the group."
+                "present within the group.",
             )
 
     def _delete_selected_group_or_output(self) -> None:
@@ -254,8 +258,9 @@ class ColorGroupWidget(QWidget):
             return
         is_group, name = selected_item.annotated_data
         if is_group:
-            del self._model.output_groups[name]
+            self._model.remove_output_group(name)
             self._group_view.takeTopLevelItem(self._group_view.indexOfTopLevelItem(selected_item))
+            self.groups_changed.emit()
         else:
             group_item = selected_item.parent()
             if not isinstance(group_item, AnnotatedTreeWidgetItem):

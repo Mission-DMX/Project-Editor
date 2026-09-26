@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QObject, Signal
@@ -20,6 +21,9 @@ from model.virtual_filters.cue_vfilter import CueFilter
 if TYPE_CHECKING:
     import proto.FilterMode_pb2
     from model.scene import Scene
+
+
+logger = getLogger(__name__)
 
 
 class ColorPreset:
@@ -104,7 +108,25 @@ def is_valid_channel_name(name: str) -> bool:
         True if the name is valid and can be used as color group or sub output name.
 
     """
-    return len(name) > 0 and _sanitize_channel_name(name) == name
+    if len(name) == 0 or "__" in name or name.endswith("_"):
+        return False
+    return all(char.isalnum() or char in "_-" for char in name)
+
+
+def bound_preset_index(preset_index: int, preset_count: int) -> int:
+    """Bound the provided color preset index to the available color presets.
+
+    Args:
+        preset_index: The color preset index to bound.
+        preset_count: The number of available color presets.
+
+    Returns:
+        The provided index if it addresses one of the available color presets. Zero if the provided index is invalid.
+
+    """
+    if 0 <= preset_index < preset_count:
+        return preset_index
+    return 0
 
 
 class SignalProvider(QObject):
@@ -163,6 +185,21 @@ class ColordirectorVFilter(VirtualFilter):
         """Get the color output group dictionary."""
         return self._color_groups
 
+    def remove_output_group(self, group_name: str) -> None:
+        """Remove the provided color group including its entries within the saved recalls.
+
+        Args:
+            group_name: The name of the color group to remove. Unknown group names are ignored.
+
+        """
+        if group_name not in self._color_groups:
+            return
+        group_index = list(self._color_groups.keys()).index(group_name)
+        del self._color_groups[group_name]
+        for recall in self._recalls:
+            if group_index < len(recall):
+                recall.pop(group_index)
+
     @property
     def recalls(self) -> list[list[int]]:
         """Returns the list of setting recalls."""
@@ -183,14 +220,38 @@ class ColordirectorVFilter(VirtualFilter):
             return
         self.out_data_types.clear()
         for group_def in color_group_def.split("#"):
+            if len(group_def) == 0:
+                continue
             output_channels = group_def.split("|")
-            if len(output_channels) < 1:
-                raise ValueError("A least a name of the color group must be defined.")
-            name = output_channels[0]
+            group_name = _sanitize_channel_name(output_channels[0])
+            if not is_valid_channel_name(group_name):
+                logger.warning("Ignoring the color group '%s' because its name is invalid.", output_channels[0])
+                continue
+            if group_name in self._color_groups:
+                logger.warning("Ignoring the color group '%s' because its name is already in use.", group_name)
+                continue
             output_channels.pop(0)
-            self._color_groups[name] = output_channels
-            for chan_name in output_channels:
-                self.out_data_types[f"{name}__{chan_name}"] = DataType.DT_COLOR
+            channels: list[str] = []
+            for channel in output_channels:
+                channel_name = _sanitize_channel_name(channel)
+                if not is_valid_channel_name(channel_name):
+                    logger.warning(
+                        "Ignoring the sub output '%s' of the color group '%s' because its name is invalid.",
+                        channel,
+                        group_name,
+                    )
+                    continue
+                if channel_name in channels:
+                    logger.warning(
+                        "Ignoring the sub output '%s' because its name is already in use within the color group '%s'.",
+                        channel_name,
+                        group_name,
+                    )
+                    continue
+                channels.append(channel_name)
+            self._color_groups[group_name] = channels
+            for chan_name in channels:
+                self.out_data_types[f"{group_name}__{chan_name}"] = DataType.DT_COLOR
 
     def _serialize_color_groups(self) -> None:
         self.filter_configurations["colorgroups"] = "#".join(
@@ -305,7 +366,10 @@ class ColordirectorVFilter(VirtualFilter):
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
-        color_group_name, group_output_channel = virtual_port_id.split("__")
+        parts = virtual_port_id.split("__")
+        if len(parts) != 2:
+            return None
+        color_group_name, group_output_channel = parts
         if color_group_name not in self._color_groups:
             return None
         color_group = self._color_groups[color_group_name]
@@ -444,10 +508,21 @@ class ColordirectorVFilter(VirtualFilter):
                     return False
                 if not 0 <= target_recall < len(self._recalls):
                     return False
+                if len(self._presets) == 0:
+                    return False
                 recall = self._recalls[target_recall]
                 nm = NetworkManager()
                 for i, group_name in enumerate(self._color_groups.keys()):
-                    preset_index = recall[i] if i < len(recall) else 0
+                    stored_index = recall[i] if i < len(recall) else 0
+                    preset_index = bound_preset_index(stored_index, len(self._presets))
+                    if preset_index != stored_index:
+                        logger.warning(
+                            "Recall %i stores the invalid color preset index %i for group '%s'. Falling back to the "
+                            "first color preset.",
+                            target_recall,
+                            stored_index,
+                            group_name,
+                        )
                     filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, preset_index)
                     filter_id, msg_key = filter_id.split(":")
                     nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)
@@ -489,7 +564,8 @@ class ColordirectorVFilter(VirtualFilter):
     def _update_active_colors_from_filters(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Update the currently active color presets from a cue filter update message.
 
-        Messages of unknown cue filters and malformed messages are ignored, since they are received from the network.
+        Messages of unknown cue filters, malformed messages and invalid color preset indices are ignored, since they
+        are received from the network.
 
         """
         group_index = self._cue_filter_to_group_index_mapping.get(param.filter_id)
@@ -501,6 +577,8 @@ class ColordirectorVFilter(VirtualFilter):
         try:
             value = int(parts[1])
         except ValueError:
+            return
+        if not 0 <= value < len(self._presets):
             return
         changed: bool = False
         if len(self._current_active_colors) == 0:
