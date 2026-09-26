@@ -163,6 +163,7 @@ class CLITerminalIO(TerminalIO):
         self._history_cmd_stash = ""
         self._escape_state = _EscapeSequenceState.NONE
         self._cursor_in_buffer = 0
+        self._displayed_line_length = 0
         terminal.stdin_callback = self.write
         terminal.resize_callback = self.resize
         self.spawn()
@@ -180,6 +181,7 @@ class CLITerminalIO(TerminalIO):
     def write(self, buffer: bytes) -> None:
         executed_command = False
         execution_successful = True
+        input_line_changed = False
         # TODO implement tab completion here
         for b in buffer:
             if b == _NEWLINE_CHAR:
@@ -194,9 +196,12 @@ class CLITerminalIO(TerminalIO):
                 self._history_cmd_stash = ""
                 self._escape_state = _EscapeSequenceState.NONE
                 self._cursor_in_buffer = 0
+                self._displayed_line_length = 0
+                input_line_changed = False
             elif b == _BACKSPACE_CHAR:
                 self._escape_state = _EscapeSequenceState.NONE
-                self._remove_char_before_cursor()
+                if self._remove_char_before_cursor():
+                    input_line_changed = True
             elif b == _CANCEL_CHAR:
                 self._escape_state = _EscapeSequenceState.NONE
                 self._buffer.clear()
@@ -204,6 +209,8 @@ class CLITerminalIO(TerminalIO):
                 self._history_cursor = 0
                 self._history_cmd_stash = ""
                 self._stdout_callback(b"^C\r\n> ")
+                self._displayed_line_length = 0
+                input_line_changed = False
             elif b == _ESCAPE_CHAR:
                 self._escape_state = _EscapeSequenceState.ESCAPE
             elif self._escape_state == _EscapeSequenceState.ESCAPE:
@@ -212,6 +219,7 @@ class CLITerminalIO(TerminalIO):
                 elif b >= 32:
                     self._escape_state = _EscapeSequenceState.NONE
                     self._insert_byte(b)
+                    input_line_changed = True
                 else:
                     # an unexpected control byte terminates the partial escape sequence as well
                     self._escape_state = _EscapeSequenceState.NONE
@@ -222,20 +230,23 @@ class CLITerminalIO(TerminalIO):
                     self._escape_state = _EscapeSequenceState.NONE
                     if b == _ESC_UP_CHAR:
                         self._history_previous_pressed()
+                        input_line_changed = False
                     elif b == _ESC_DOWN_CHAR:
                         self._history_next_pressed()
+                        input_line_changed = False
                     elif b == _ESC_LEFT_CHAR:
                         self._cursor_left_pressed()
                     elif b == _ESC_RIGHT_CHAR:
                         self._cursor_right_pressed()
                 else:
-                    # a control or 8 bit byte within a CSI sequence aborts it and is dropped
                     self._escape_state = _EscapeSequenceState.NONE
             elif b < 32:
-                # control characters without dedicated handling (like tabs or line feeds) are ignored
                 continue
             else:
                 self._insert_byte(b)
+                input_line_changed = True
+        if input_line_changed:
+            self._redraw_input_line()
         if executed_command:
             if execution_successful:
                 self._stdout_callback(b"\r\n> ")
@@ -253,14 +264,11 @@ class CLITerminalIO(TerminalIO):
         if self._history_cursor == 0:
             self._history_cmd_stash = bytes(self._buffer).decode(errors="ignore")
         self._history_cursor += 1
-        self._stdout_callback(b"\r  ")
-        self._stdout_callback(bytes([ord(" ")] * len(self._buffer)))
-        self._stdout_callback(b"\r> ")
         next_cmd_bytes = self._history[-1 * self._history_cursor].encode()
-        self._stdout_callback(next_cmd_bytes)
         self._buffer.clear()
         self._buffer.extend(next_cmd_bytes)
         self._cursor_in_buffer = 0
+        self._redraw_input_line()
 
     def _history_next_pressed(self) -> None:
         """Replace the input line with the next (newer) history entry, if one exists.
@@ -271,15 +279,12 @@ class CLITerminalIO(TerminalIO):
         if self._history_cursor == 0:
             return
         self._history_cursor -= 1
-        self._stdout_callback(b"\r> ")
-        self._stdout_callback(bytes([ord(" ")] * len(self._buffer)))
-        self._stdout_callback(b"\r> ")
         next_cmd = self._history_cmd_stash if self._history_cursor == 0 else self._history[-1 * self._history_cursor]
         next_cmd_bytes = next_cmd.encode()
-        self._stdout_callback(next_cmd_bytes)
         self._buffer.clear()
         self._buffer.extend(next_cmd_bytes)
         self._cursor_in_buffer = 0
+        self._redraw_input_line()
 
     def _cursor_left_pressed(self) -> None:
         """Move the input cursor one position to the left, if the start of the line is not reached yet."""
@@ -296,52 +301,37 @@ class CLITerminalIO(TerminalIO):
         self._stdout_callback(bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_RIGHT_CHAR]))
 
     def _insert_byte(self, b: int) -> None:
-        """Insert a printable input byte at the cursor position and echo it.
-
-        The byte is inserted into the input buffer first. Afterwards the byte itself, the remainder of the input
-        line behind the cursor and a cursor repositioning escape sequence are echoed. Doing this per byte keeps the
-        terminal display in sync with the input buffer even if control bytes and printable bytes are received within
-        the same input chunk (for example when pasting).
+        """Insert a printable input byte at the cursor position.
 
         Args:
             b: the byte to insert
 
         """
         self._buffer.insert(len(self._buffer) - self._cursor_in_buffer, b)
-        self._stdout_callback(bytes([b]))
-        if self._cursor_in_buffer > 0:
-            self._stdout_callback(bytes(self._buffer[len(self._buffer) - self._cursor_in_buffer :]))
-            self._stdout_callback(bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_LEFT_CHAR] * self._cursor_in_buffer))
 
-    def _remove_char_before_cursor(self) -> None:
-        """Remove the character in front of the cursor and redraw the input line.
+    def _remove_char_before_cursor(self) -> bool:
+        """Remove the character in front of the cursor.
 
-        If the cursor is placed at the very start of the line, nothing is removed (matching the behaviour of common
-        shells). The character is always removed from the input buffer first, the terminal display is synchronized
-        afterwards.
+        Returns:
+            whether a character has been removed
+
         """
         if len(self._buffer) <= self._cursor_in_buffer:
-            return
-        previous_length = len(self._buffer)
+            return False
         del self._buffer[len(self._buffer) - self._cursor_in_buffer - 1]
-        self._redraw_input_line(previous_length)
+        return True
 
-    def _redraw_input_line(self, previous_length: int) -> None:
-        """Redraw the complete input line and reposition the terminal cursor on top of it.
-
-        Args:
-            previous_length: the length of the input buffer prior to its latest modification. All characters located
-                behind the new end of the buffer are blanked out.
-
-        """
+    def _redraw_input_line(self) -> None:
+        """Redraw the prompt and the complete input line and reposition the terminal cursor."""
         self._stdout_callback(b"\r> ")
         self._stdout_callback(bytes(self._buffer))
-        overflow = previous_length - len(self._buffer)
+        overflow = self._displayed_line_length - len(self._buffer)
         if overflow > 0:
             self._stdout_callback(bytes([ord(" ")] * overflow))
         cursor_moves = self._cursor_in_buffer + max(overflow, 0)
         if cursor_moves > 0:
             self._stdout_callback(bytes([_ESCAPE_CHAR, _ESC_SEQUENCE_CHAR, _ESC_LEFT_CHAR]) * cursor_moves)
+        self._displayed_line_length = len(self._buffer)
 
     @override
     def terminate(self) -> None:

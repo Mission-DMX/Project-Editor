@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from functools import partial
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -76,7 +77,6 @@ class MacroSetupWidget(QSplitter):
         self._show: BoardConfiguration = show_config
         self._selected_macro: Macro | None = None
         self._macro_panel: QWidget = QWidget(self)
-        self._dialog: QDialog | None = None
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Macros"))
         self._macro_actions = QToolBar(self._macro_panel)
@@ -240,30 +240,26 @@ class MacroSetupWidget(QSplitter):
         dialog.setLabelText("Specify Macro Context (leave empty to create a private one):")
         dialog.setOption(QInputDialog.InputDialogOption.UseListViewForComboBoxItems)
         dialog.setInputMode(QInputDialog.InputMode.TextInput)
-        dialog.accepted.connect(self._add_macro_final)
+        dialog.accepted.connect(partial(self._add_macro_final, dialog))
         self._show_dialog(dialog)
 
     def _show_dialog(self, dialog: QDialog) -> None:
-        """Show the given dialog and clean up after it has been closed.
+        """Show the given dialog and delete it once it has been closed.
 
         Args:
             dialog: the dialog to show
 
         """
-        self._dialog = dialog
         dialog.finished.connect(dialog.deleteLater)
-        dialog.finished.connect(self._forget_dialog)
         dialog.show()
 
-    def _forget_dialog(self) -> None:
-        """Drop the reference to the currently shown dialog once it has been closed."""
-        self._dialog = None
+    def _add_macro_final(self, dialog: QInputDialog) -> None:
+        """Create a new macro for the context selected in the given dialog.
 
-    def _add_macro_final(self) -> None:
-        dialog = self._dialog
-        if not isinstance(dialog, QInputDialog):
-            logger.error("Expected the macro context selection dialog to be open. Got: %s", type(dialog).__name__)
-            return
+        Args:
+            dialog: the macro context selection dialog that has been accepted
+
+        """
         context_id: str | None = dialog.textValue().strip()
         if context_id == "":
             context_id = None
@@ -297,7 +293,7 @@ class MacroSetupWidget(QSplitter):
 
     def _import_macro_clicked(self) -> None:
         dialog = self._create_file_dialog(True)
-        dialog.accepted.connect(self._load_macro)
+        dialog.accepted.connect(partial(self._load_macro, dialog))
         self._show_dialog(dialog)
 
     def _create_file_dialog(self, open_: bool) -> QFileDialog:
@@ -317,11 +313,13 @@ class MacroSetupWidget(QSplitter):
             dialog.setDirectory(os.path.expanduser("~"))
         return dialog
 
-    def _load_macro(self) -> None:
-        dialog = self._dialog
-        if not isinstance(dialog, QFileDialog):
-            logger.error("Expected the dialog to be of type QFileDialog. Got: %s", type(dialog).__name__)
-            return
+    def _load_macro(self, dialog: QFileDialog) -> None:
+        """Load the macro files selected in the given dialog.
+
+        Args:
+            dialog: the file dialog that has been accepted
+
+        """
         for f_path in dialog.selectedFiles():
             with open(f_path, "r", encoding="UTF-8") as f:
                 m = Macro(self._show)
@@ -331,14 +329,16 @@ class MacroSetupWidget(QSplitter):
 
     def _export_macro_clicked(self) -> None:
         dialog = self._create_file_dialog(False)
-        dialog.accepted.connect(self._export_macro)
+        dialog.accepted.connect(partial(self._export_macro, dialog))
         self._show_dialog(dialog)
 
-    def _export_macro(self) -> None:
-        dialog = self._dialog
-        if not isinstance(dialog, QFileDialog):
-            logger.error("Expected the dialog to be of type QFileDialog. Got: %s", type(dialog).__name__)
-            return
+    def _export_macro(self, dialog: QFileDialog) -> None:
+        """Export the selected macro to the file chosen in the given dialog.
+
+        Args:
+            dialog: the file dialog that has been accepted
+
+        """
         if self._selected_macro is None:
             logger.error("Aborting Macro Export. Please investigate bug.")
             return
@@ -389,14 +389,20 @@ class MacroSetupWidget(QSplitter):
         dialog.setWindowTitle("Rename Macro")
         dialog.setTextValue(self._selected_macro.name)
         dialog.setInputMode(QInputDialog.InputMode.TextInput)
-        dialog.accepted.connect(self._rename_macro_final)
+        dialog.accepted.connect(partial(self._rename_macro_final, dialog))
         self._show_dialog(dialog)
 
-    def _rename_macro_final(self) -> None:
-        if self._selected_macro is None or not isinstance(self._dialog, QInputDialog):
+    def _rename_macro_final(self, dialog: QInputDialog) -> None:
+        """Rename the selected macro to the name entered in the given dialog.
+
+        Args:
+            dialog: the rename dialog that has been accepted
+
+        """
+        if self._selected_macro is None:
             logger.error("Aborting Rename. Please investigate bug.")
             return
-        new_name = self._dialog.textValue()
+        new_name = dialog.textValue()
         if len(new_name) == 0:
             logger.warning("Aborted Rename due to empty name.")
             return
