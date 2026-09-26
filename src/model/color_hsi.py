@@ -103,9 +103,9 @@ class ColorHSI:
                 blue = 138.5177312231 * np.log(blue) - 305.0447927307
         else:
             red = temperature - 60
-            red = 329.698727446 * (red ** -0.1332047592)
+            red = 329.698727446 * (red**-0.1332047592)
             green = temperature - 60
-            green = 288.1221695283 * (green ** -0.0755148492)
+            green = 288.1221695283 * (green**-0.0755148492)
             blue = 255
         red = cutoff(red, 0, 255)
         green = cutoff(green, 0, 255)
@@ -135,7 +135,7 @@ class ColorHSI:
 
     def format_for_filter(self) -> str:
         """Format the color so it can be parsed by fish filters."""
-        return f"{float(self._hue)},{float(self._saturation)},{float(self._intensity)}"
+        return f"{float(self._hue) % 360},{float(self._saturation)},{float(self._intensity)}"
 
     def to_rgb(self) -> tuple[int, int, int]:
         """RGB representations as int between 0 and 255."""
