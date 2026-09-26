@@ -16,6 +16,7 @@ from controller.network import NetworkManager
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog, QWidget
 
+    import proto.FilterMode_pb2
     from model import Filter
     from model.scene import Scene
 
@@ -113,7 +114,7 @@ class UIWidget(ABC):
 
         while None in linked_filters:
             linked_filters.remove(None)
-        return linked_filters
+        return [linked_filter for linked_filter in linked_filters if linked_filter is not None]
 
     @property
     def associated_filters(self) -> dict[str, str]:
@@ -218,6 +219,60 @@ class UIWidget(ABC):
         return  # Implementing this is optional
 
 
+class FilterUpdateCallbackMixin:
+    """Mixin for UI widgets that listen to fish updates of their linked filter.
+
+    Classes using this mixin must provide an ``_update_from_fish`` method and are responsible for calling
+    ``_register_fish_callback`` once the linked filter has been set.
+    """
+
+    _registered_callback_key: tuple[Scene, str] | None = None
+
+    def _register_fish_callback(self, f: Filter) -> None:
+        """Register the fish update callback for the given filter, re-registering it upon filter changes.
+
+        Registering is skipped if the callback is already registered for the given filter.
+
+        Args:
+            f: The filter whose updates the widget wants to receive.
+
+        """
+        new_key = (f.scene, f.filter_id)
+        if self._registered_callback_key == new_key:
+            return
+        self._unregister_fish_callback()
+        f.scene.board_configuration.register_filter_update_callback(f.scene, f.filter_id, self._update_from_fish)
+        self._registered_callback_key = new_key
+
+    def _unregister_fish_callback(self) -> None:
+        """Remove the update callback registered for the linked filter, if any."""
+        registered_key = self._registered_callback_key
+        if registered_key is None:
+            return
+        self._registered_callback_key = None
+        scene, filter_id = registered_key
+        scene.board_configuration.remove_filter_update_callback(scene, filter_id, self._update_from_fish)
+
+    def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        """Handle a fish update parameter for the linked filter.
+
+        This default implementation is not functional; concrete widgets must override this method.
+
+        Args:
+            param: The update parameter sent by fish.
+
+        """
+        raise NotImplementedError
+
+    def __del__(self) -> None:
+        """Unregister the fish update callback (fallback in case close was not called)."""
+        self._unregister_fish_callback()
+
+    def close(self) -> None:
+        """Unregister the fish update callback as this widget is being removed."""
+        self._unregister_fish_callback()
+
+
 class UIPage:
     """Show UI Page.
 
@@ -293,7 +348,7 @@ class ShowUI:
     The _page_storage variable contains the pages per scene.
     """
 
-    _fish_connector: NetworkManager = None
+    _fish_connector: NetworkManager | None = None
 
     def __init__(self) -> None:
         """Initialize the show UI.
