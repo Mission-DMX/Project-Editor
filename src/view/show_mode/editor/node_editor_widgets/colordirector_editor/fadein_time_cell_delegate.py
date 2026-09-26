@@ -47,5 +47,5 @@ class FadeinTimeCellDelegate(QStyledItemDelegate):
         if not isinstance(editor, JogwheelDoubleSpinBox):
             return
         value = editor.value()
-        steps = int((value * 1000) / STEP_DURATION_MS)
+        steps = int((value * 1000) / STEP_DURATION_MS + 0.5)
         model.setData(index, steps, Qt.ItemDataRole.EditRole)

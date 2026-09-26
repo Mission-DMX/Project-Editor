@@ -95,7 +95,13 @@ class ShowCommand(Command):
                 if scene is not None:
                     filter_inst = scene.get_filter_by_id(args.filterid)
                     if isinstance(filter_inst, VirtualFilter):
-                        return filter_inst.handle_filter_message(args.parameterkey, args.parametervalue)
+                        if filter_inst.handle_filter_message(args.parameterkey, args.parametervalue):
+                            return True
+                        self.context.print(
+                            f"WARNING: the virtual filter '{args.filterid}' rejected the filter message "
+                            f"'{args.parameterkey}={args.parametervalue}'."
+                        )
+                        return False
                     if filter_inst is None:
                         self.context.print(
                             f"WARNING: no filter with ID '{args.filterid}' found in scene '{args.sceneid}'."

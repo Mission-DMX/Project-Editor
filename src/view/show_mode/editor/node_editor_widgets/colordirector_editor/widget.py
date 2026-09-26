@@ -43,8 +43,6 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTableWidgetItem
 
 if TYPE_CHECKING:
-    from PySide6.QtWidgets import QDialog
-
     from model import Filter
     from model.media_assets.asset import MediaAsset
     from view.show_mode.editor.nodes import FilterNode
@@ -99,6 +97,14 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._add_preset_button.clicked.connect(self._add_preset)
         preset_buttons_layout.addWidget(self._add_preset_button)
 
+        self._live_preview_button = QPushButton("Live Preview")
+        self._live_preview_button.setCheckable(True)
+        self._live_preview_button.setToolTip(
+            "Toggle the live preview mode. While it is active, color groups can not be edited."
+        )
+        self._live_preview_button.clicked.connect(self._live_preview_button_clicked)
+        preset_buttons_layout.addWidget(self._live_preview_button)
+
         preset_buttons_layout.addStretch()
         presets_layout.addLayout(preset_buttons_layout)
         self._preset_table = QTableWidget(presets_tab)
@@ -111,8 +117,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         recall_tab = RecallEditWidget(self._model, self._widget)
         self._color_groups_tab.groups_changed.connect(recall_tab.update_recall_table)
         self._widget.addTab(recall_tab, "Recalls")
-        self._dialog: QDialog | None = None
-        self._model.live_preview_mode = False
+        self._preview_dialog: YesNoDialog | None = None
+        self._asset_dialog: AssetSelectionDialog | None = None
+        self._apply_live_preview_ui_state()
 
     @override
     def _get_configuration(self) -> dict[str, str]:
@@ -146,10 +153,17 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
     def parent_opened(self) -> None:
         if len(self._model.output_groups) == 0:
             return
-        self._dialog = YesNoDialog(
+        # ask only once per session per filter: the live preview can also be toggled using the
+        # "Live Preview" button of the presets tab
+        if self._model.live_preview_mode or self._model.live_preview_prompted:
+            return
+        self._model.live_preview_prompted = True
+        if self._preview_dialog is not None:
+            self._preview_dialog.deleteLater()
+        self._preview_dialog = YesNoDialog(
             self._widget, "Preview Mode", "Would you like to enable live editing?", self._enable_live_preview
         )
-        self._dialog.setModal(True)
+        self._preview_dialog.setModal(True)
 
     def _reload_presets_table(self) -> None:
         self._load_default_colors_button.setEnabled(len(self._model.presets) == 0)
@@ -158,7 +172,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         tw.clear()
         row_sum = 0
         for preset in self._model.presets:
-            row_sum += len(preset.colors)
+            row_sum += max(len(preset.colors), 1)
         tw.setRowCount(row_sum)
         accent_color_maximum = self._model.get_accent_color_count()
         tw.setColumnCount(accent_color_maximum + 4)
@@ -228,6 +242,11 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 remove_last_step_button.clicked.connect(lambda _, p=preset: self._remove_last_step_from_preset(p))
                 add_step_layout.addSpacing(10)
                 add_step_layout.addWidget(remove_last_step_button)
+            remove_preset_button = QPushButton("❌")
+            remove_preset_button.setToolTip("Remove this preset.")
+            remove_preset_button.clicked.connect(lambda _, p=preset: self._remove_preset(p))
+            add_step_layout.addSpacing(10)
+            add_step_layout.addWidget(remove_preset_button)
             add_step_widget.setLayout(add_step_layout)
             tw.setCellWidget(preset_index + offsets, 0, add_step_widget)
             asset_mgmt_button = QPushButton()
@@ -257,7 +276,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             return
         item = self._preset_table.item(row, column)
         if not isinstance(item, AnnotatedTableWidgetItem):
-            logger.error("Bug! Preset Cell %i:%i does not provide position data!", row, column)
+            logger.error("Bug! Preset Cell %i:%i is not annotated!", row, column)
             return
         annotated_data = item.annotated_data
         if annotated_data is None:
@@ -331,27 +350,80 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         preset.colors.pop(-1)
         self._reload_presets_table()
 
+    def _remove_preset(self, preset: ColorPreset) -> None:
+        """Remove the provided preset from the model and rebuild the presets table.
+
+        Args:
+            preset: The preset to remove. Presets that are not part of the model are ignored.
+
+        """
+        try:
+            self._model.presets.remove(preset)
+        except ValueError:
+            return
+        self._reload_presets_table()
+
+    def _apply_live_preview_ui_state(self) -> None:
+        """Synchronize the color groups tab and the live preview button with the model state."""
+        preview_active = self._model.live_preview_mode
+        self._color_groups_tab.setEnabled(not preview_active)
+        self._widget.setTabEnabled(0, not preview_active)
+        self._live_preview_button.setChecked(preview_active)
+
+    def _live_preview_button_clicked(self, checked: bool) -> None:
+        if checked:
+            self._enable_live_preview()
+        else:
+            self._disable_live_preview()
+
     def _enable_live_preview(self) -> None:
-        self._widget.setCurrentIndex(1)
-        self._color_groups_tab.setEnabled(False)
-        self._widget.setTabEnabled(0, False)
+        """Enable the live preview mode and transmit the show to fish."""
         self._model.live_preview_mode = True
+        self._widget.setCurrentIndex(1)
+        self._apply_live_preview_ui_state()
         if not transmit_to_fish(self._model.scene.board_configuration, False):
             self._model.live_preview_mode = False
-            self._color_groups_tab.setEnabled(True)
-            self._widget.setTabEnabled(0, True)
             self._widget.setCurrentIndex(0)
-            error_box = QMessageBox(self._widget)
-            error_box.setWindowTitle("Live Preview Unavailable")
-            error_box.setText("Live preview could not be enabled because the show could not be transmitted to fish.")
-            error_box.setIcon(QMessageBox.Icon.Critical)
-            error_box.show()
+            self._apply_live_preview_ui_state()
+            self._show_transmit_error_box(
+                "Live Preview Unavailable",
+                "Live preview could not be enabled because the show could not be transmitted to fish.",
+            )
+
+    def _disable_live_preview(self) -> None:
+        """Disable the live preview mode and transmit the show without preview constants to fish."""
+        if not self._model.live_preview_mode:
+            return
+        self._model.live_preview_mode = False
+        self._widget.setCurrentIndex(0)
+        self._apply_live_preview_ui_state()
+        if not transmit_to_fish(self._model.scene.board_configuration, False):
+            logger.error("Failed to transmit the show to fish while disabling the live preview mode.")
+            self._show_transmit_error_box(
+                "Live Preview Still Active",
+                "The live preview could not be disabled because the show could not be transmitted to fish. "
+                "The show on fish may still use the live preview constants. Transmit the show again to fix this.",
+            )
+
+    def _show_transmit_error_box(self, title: str, message: str) -> None:
+        """Show a non-modal error box about a failed show transmission.
+
+        Args:
+            title: The window title of the message box.
+            message: The message explaining the transmission failure.
+
+        """
+        error_box = QMessageBox(self._widget)
+        error_box.setWindowTitle(title)
+        error_box.setText(message)
+        error_box.setIcon(QMessageBox.Icon.Critical)
+        error_box.show()
 
     def _preset_cell_clicked(self, row: int, column: int) -> None:
         if self._model.live_preview_mode:
             item = self._preset_table.item(row, column)
             if not isinstance(item, AnnotatedTableWidgetItem):
-                logger.error("Preview Cell %i:%i does not provide position data!", row, column)
+                logger.error("Preview Cell %i:%i is not annotated!", row, column)
                 return
             annotated_data = item.annotated_data
             if annotated_data is None:
@@ -374,25 +446,16 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
     @override
     def parent_closed(self, filter_node: FilterNode) -> None:
-        if self._model.live_preview_mode:
-            self._model.live_preview_mode = False
-            if not transmit_to_fish(self._model.scene.board_configuration, False):
-                logger.error("Failed to transmit the show to fish while disabling the live preview mode.")
-                error_box = QMessageBox(self._widget)
-                error_box.setWindowTitle("Live Preview Still Active")
-                error_box.setText(
-                    "The live preview could not be disabled because the show could not be transmitted to fish. "
-                    "The show on fish may still use the live preview constants. Transmit the show again to fix this."
-                )
-                error_box.setIcon(QMessageBox.Icon.Critical)
-                error_box.show()
+        self._disable_live_preview()
         self._model.serialize()
         super().parent_closed(filter_node)
 
     def _change_preset_asset_clicked(self, preset: ColorPreset) -> None:
-        self._dialog = AssetSelectionDialog(
+        if self._asset_dialog is not None:
+            self._asset_dialog.deleteLater()
+        self._asset_dialog = AssetSelectionDialog(
             self._widget, preselected=preset.visualization_asset, allowed_types=[MediaType.IMAGE]
         )
-        self._dialog.setModal(True)
-        self._dialog.asset_selected.connect(lambda asset, p=preset: _set_asset(asset, p))
-        self._dialog.show()
+        self._asset_dialog.setModal(True)
+        self._asset_dialog.asset_selected.connect(lambda asset, p=preset: _set_asset(asset, p))
+        self._asset_dialog.show()

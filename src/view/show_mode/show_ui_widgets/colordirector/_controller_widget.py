@@ -18,6 +18,13 @@ if TYPE_CHECKING:
     from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
 
 
+_ELEMENT_SIZE = 64
+"""Edge length of the square preset and apply buttons in pixels."""
+
+_GROUP_LABEL_WIDTH = 100
+"""Width of the color group label column in pixels."""
+
+
 class ControllerWidget(QWidget):
     """Widget provides button matrix, group labels and recall field."""
 
@@ -33,9 +40,7 @@ class ControllerWidget(QWidget):
         """Initialize and generate button matrix."""
         super().__init__(parent)
         self._update_list: list[tuple[str, str]] | None = update_list
-        element_size = 64
         self._model = model
-        self._preview_generator: PreviewBitmapGenerator | None = None
         number_of_groups = len(model.output_groups)
         number_of_presets = len(model.presets)
         layout = QGridLayout()
@@ -43,30 +48,31 @@ class ControllerWidget(QWidget):
         if update_list is not None:
             self._recall_sp.value_submitted.connect(self._recall_issued)
         self._update_recall_spinbox()
-        self._recall_sp.setMaximumSize(100, element_size)
+        self._recall_sp.setMaximumSize(_GROUP_LABEL_WIDTH, _ELEMENT_SIZE)
         layout.addWidget(self._recall_sp, 0, 0)
         self._output_group_list = list(model.output_groups)
         for i, group in enumerate(self._output_group_list):
             label = QLabel(group)
             label.setWordWrap(True)
-            label.setFixedWidth(100)
-            label.setMaximumHeight(element_size)
+            label.setFixedWidth(_GROUP_LABEL_WIDTH)
+            label.setMaximumHeight(_ELEMENT_SIZE)
             layout.addWidget(label, i + 1, 0)
         self._apply_group_buttons: list[QPushButton] = []
         for i in range(number_of_presets):
             group_button = QPushButton("🠋")
-            group_button.setFixedSize(element_size, element_size)
+            group_button.setToolTip("Apply this preset to all color groups.")
+            group_button.setFixedSize(_ELEMENT_SIZE, _ELEMENT_SIZE)
             if update_list is not None:
                 group_button.clicked.connect(lambda _, ii=i: self._apply_column_clicked(ii))
             self._apply_group_buttons.append(group_button)
             layout.addWidget(group_button, 0, i + 1)
         self._apply_single_buttons: list[list[QPushButton]] = []
-        preview_generator = PreviewBitmapGenerator(model.presets, size=element_size)
+        preview_generator = PreviewBitmapGenerator(model.presets, size=_ELEMENT_SIZE)
         for y in range(len(model.presets)):
             preset_buttons = []
             for x in range(len(self._output_group_list)):
                 button = QPushButton()
-                button.setFixedSize(element_size, element_size)
+                button.setFixedSize(_ELEMENT_SIZE, _ELEMENT_SIZE)
                 if update_list is not None:
                     button.clicked.connect(
                         lambda _, preset_i=y, group_i=x: self._apply_single_clicked(group_i, preset_i)
@@ -75,10 +81,12 @@ class ControllerWidget(QWidget):
                 layout.addWidget(button, x + 1, y + 1)
             self._apply_single_buttons.append(preset_buttons)
         preview_generator.preset_preview_generated.connect(self._add_preview_on_buttons)
-        preview_generator.finished.connect(self._delete_preview_generator)
+        self.destroyed.connect(preview_generator.requestInterruption)
         grid_content = QWidget()
         grid_content.setLayout(layout)
-        grid_content.setMinimumSize(number_of_presets * element_size + 100, (number_of_groups + 1) * element_size)
+        grid_content.setMinimumSize(
+            number_of_presets * _ELEMENT_SIZE + _GROUP_LABEL_WIDTH, (number_of_groups + 1) * _ELEMENT_SIZE
+        )
         scroll_area = QScrollArea()
         scroll_area.setWidget(grid_content)
         scroll_area.setWidgetResizable(True)
@@ -86,7 +94,6 @@ class ControllerWidget(QWidget):
         outer_layout.setContentsMargins(0, 0, 0, 0)
         outer_layout.addWidget(scroll_area)
         self.setLayout(outer_layout)
-        self._preview_generator = preview_generator
         preview_generator.start()
         self._model.configuration_changed.mapped_signal.connect(self._update_recall_spinbox)
         if feedback_enabled:
@@ -148,16 +155,9 @@ class ControllerWidget(QWidget):
             button.setIcon(icon)
             button.setIconSize(icon_size)
 
-    def _delete_preview_generator(self) -> None:
-        generator = self._preview_generator
-        self._preview_generator = None
-        if generator is not None:
-            generator.wait()
-            generator.deleteLater()
-
     def _active_colors_changed(self) -> None:
         active_colors = self._model.get_current_active_colors()
         for i, group_buttons in enumerate(self._apply_single_buttons):
             for j, button in enumerate(group_buttons):
-                active_color_in_group = active_colors[j] if len(active_colors) > j else -1
+                active_color_in_group = active_colors[j] if j < len(active_colors) else -1
                 button.setDown(i == active_color_in_group)

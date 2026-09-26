@@ -31,9 +31,12 @@ _RUNNING_GENERATORS: weakref.WeakSet[PreviewBitmapGenerator] = weakref.WeakSet()
 def _interrupt_running_generators() -> None:
     """Interrupt and wait for all still running workers before the interpreter shuts down."""
     for generator in list(_RUNNING_GENERATORS):
-        if generator.isRunning():
-            generator.requestInterruption()
-            generator.wait(_DELETION_GRACE_MS)
+        try:
+            if generator.isRunning():
+                generator.requestInterruption()
+                generator.wait(_DELETION_GRACE_MS)
+        except RuntimeError:
+            pass
 
 
 atexit.register(_interrupt_running_generators)
@@ -43,7 +46,7 @@ class PreviewBitmapGenerator(QThread):
     """Class to generate previews for presets.
 
     The thread emits the preset_preview_generated signal for every generated preset. Once the thread is done, the
-    built-in finished signal of QThread is emitted and the instance may be deleted.
+    built-in finished signal of QThread is emitted and the instance deletes itself.
 
     """
 
@@ -56,6 +59,7 @@ class PreviewBitmapGenerator(QThread):
         super().__init__(parent)
         self._presets = presets
         self._size = size
+        self.finished.connect(self.deleteLater)
         _RUNNING_GENERATORS.add(self)
 
     def __del__(self) -> None:

@@ -31,10 +31,15 @@ class RecallEditWidget(QWidget):
         self._add_recall_button = QPushButton("Add")
         self._add_recall_button.clicked.connect(self._add_recall)
         buttons_layout.addWidget(self._add_recall_button)
+        self._remove_recall_button = QPushButton("Remove")
+        self._remove_recall_button.clicked.connect(self._remove_selected_recall)
+        self._remove_recall_button.setEnabled(False)
+        buttons_layout.addWidget(self._remove_recall_button)
         buttons_layout.addStretch()
         layout.addLayout(buttons_layout)
         self._recall_table = QTableWidget()
         self._recall_table.setItemDelegate(RecallCellDelegate(self._recall_table, self._model))
+        self._recall_table.itemSelectionChanged.connect(self._update_remove_recall_button)
         layout.addWidget(self._recall_table)
         self.setLayout(layout)
         self.update_recall_table()
@@ -52,11 +57,12 @@ class RecallEditWidget(QWidget):
         header_labels: list[str] = ["Recall Number"]
         header_labels.extend(self._model.output_groups.keys())
         self._recall_table.setHorizontalHeaderLabels(header_labels)
+        self._update_remove_recall_button()
 
     def _add_recall_row_to_table(self, recall_index: int, recall_data: list[int]) -> None:
         index_item = AnnotatedTableWidgetItem(str(recall_index))
-        # recall index, step in recall, data
-        index_item.annotated_data = (recall_index, -1, 0)
+        # recall index, color group index, color preset index
+        index_item.annotated_data = (recall_index, -1, -1)
         index_item.setFlags(index_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
         self._recall_table.setItem(recall_index, 0, index_item)
         self._model.normalize_recall(recall_index)
@@ -71,3 +77,15 @@ class RecallEditWidget(QWidget):
         self._model.recalls.append(recall_data)
         self._recall_table.setRowCount(len(self._model.recalls))
         self._add_recall_row_to_table(len(self._model.recalls) - 1, recall_data)
+
+    def _update_remove_recall_button(self) -> None:
+        """Enable the remove button if a recall row is currently selected."""
+        self._remove_recall_button.setEnabled(0 <= self._recall_table.currentRow() < len(self._model.recalls))
+
+    def _remove_selected_recall(self) -> None:
+        """Remove the currently selected recall."""
+        recall_index = self._recall_table.currentRow()
+        if not 0 <= recall_index < len(self._model.recalls):
+            return
+        self._model.recalls.pop(recall_index)
+        self.update_recall_table()

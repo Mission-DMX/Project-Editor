@@ -126,6 +126,8 @@ class ColorGroupWidget(QWidget):
         item = selected_items[0]
         if not isinstance(item, AnnotatedTreeWidgetItem):
             self._delete_button.setEnabled(False)
+            self._add_sub_output_button.setEnabled(False)
+            self._add_sub_output_range_button.setEnabled(False)
             return
         self._delete_button.setEnabled(True)
         annotated_data = item.annotated_data

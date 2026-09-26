@@ -104,7 +104,7 @@ _MAX_RECALL_COUNT = 1024
 
 def _sanitize_channel_name(name: str) -> str:
     """Remove characters that are problematic within channel names from the provided name."""
-    return name.replace(":", "").replace("#", "").replace("|", "").replace("__", "-").replace(" ", "_").strip()
+    return name.strip().replace(":", "").replace("#", "").replace("|", "").replace(" ", "_").replace("__", "-")
 
 
 def is_valid_channel_name(name: str) -> bool:
@@ -182,6 +182,7 @@ class ColordirectorVFilter(VirtualFilter):
         self._cue_filter_to_group_index_mapping: dict[str, int] = {}
         self.configuration_changed = SignalProvider()
         self.live_preview_mode: bool = False
+        self.live_preview_prompted: bool = False
 
     @property
     def presets(self) -> list[ColorPreset]:
@@ -200,6 +201,9 @@ class ColordirectorVFilter(VirtualFilter):
     def remove_output_group(self, group_name: str) -> None:
         """Remove the provided color group including its entries within the saved recalls.
 
+        The currently active color selections are adjusted as well so their indexes keep matching the remaining
+        color groups.
+
         Args:
             group_name: The name of the color group to remove. Unknown group names are ignored.
 
@@ -211,6 +215,9 @@ class ColordirectorVFilter(VirtualFilter):
         for recall in self._recalls:
             if group_index < len(recall):
                 recall.pop(group_index)
+        if group_index < len(self._current_active_colors):
+            self._current_active_colors.pop(group_index)
+        self.configuration_changed.mapped_signal.emit()
 
     @property
     def recalls(self) -> list[list[int]]:
@@ -253,6 +260,10 @@ class ColordirectorVFilter(VirtualFilter):
                 continue
             output_channels = group_def.split("|")
             group_name = _sanitize_channel_name(output_channels[0])
+            if group_name != output_channels[0]:
+                logger.warning(
+                    "Renaming the color group '%s' to '%s' while deserializing.", output_channels[0], group_name
+                )
             if not is_valid_channel_name(group_name):
                 logger.warning("Ignoring the color group '%s' because its name is invalid.", output_channels[0])
                 continue
@@ -263,6 +274,13 @@ class ColordirectorVFilter(VirtualFilter):
             channels: list[str] = []
             for channel in output_channels:
                 channel_name = _sanitize_channel_name(channel)
+                if channel_name != channel:
+                    logger.warning(
+                        "Renaming the sub output '%s' of the color group '%s' to '%s' while deserializing.",
+                        channel,
+                        group_name,
+                        channel_name,
+                    )
                 if not is_valid_channel_name(channel_name):
                     logger.warning(
                         "Ignoring the sub output '%s' of the color group '%s' because its name is invalid.",
@@ -334,29 +352,29 @@ class ColordirectorVFilter(VirtualFilter):
         self._presets.clear()
 
         steps_per_second: int = 1000 // STEP_DURATION_MS
-        three_secs: int = steps_per_second * 3
+        three_second_fade: int = steps_per_second * 3
 
         white = ColorPreset()
-        white.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(0, 0, 1)]))
+        white.colors.append((three_second_fade, TransferFunction.LINEAR, [ColorHSI(0.0, 0.0, 1.0)]))
         self._presets.append(white)
 
         if short:
             pink = ColorPreset()
-            pink.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(296.0, 0.89, 1.0)]))
+            pink.colors.append((three_second_fade, TransferFunction.LINEAR, [ColorHSI(296.0, 0.89, 1.0)]))
             self._presets.append(pink)
             for hue in (0.0, 25.0, 60.0, 114.0, 170.0, 227.0, 265.0):
                 color = ColorPreset()
-                color.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(hue, 1.0, 1.0)]))
+                color.colors.append((three_second_fade, TransferFunction.LINEAR, [ColorHSI(hue, 1.0, 1.0)]))
                 self._presets.append(color)
         else:
             for hue in range(0, 360, 18):
                 color = ColorPreset()
-                color.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(hue, 1, 1)]))
+                color.colors.append((three_second_fade, TransferFunction.LINEAR, [ColorHSI(hue, 1.0, 1.0)]))
                 self._presets.append(color)
 
     def get_outputs(self) -> list[str]:
         """Get the outputs of this filter."""
-        output_list = []
+        output_list: list[str] = []
         for group, sub_outs in self._color_groups.items():
             output_list.extend([f"{group}__{output}" for output in sub_outs])
         output_list.sort()
@@ -448,12 +466,13 @@ class ColordirectorVFilter(VirtualFilter):
                     kf = KeyFrame(cue)
                     last_time += fadein_time * STEP_DURATION_MS
                     kf.timestamp = last_time / 1000.0
-                    for i in range(len(output_channels)):
-                        if len(colors) == 0:
-                            break
-                        state = StateColor(transfer_function.value)
-                        state.color = colors[i % len(colors)]
-                        kf.append_state(state)
+                    if len(colors) > 0:
+                        for i in range(len(output_channels)):
+                            state = StateColor(transfer_function.value)
+                            state.color = colors[i % len(colors)]
+                            kf.append_state(state)
+                    # steps without accent colors generate a stateless key frame that holds all channel values
+                    # until the next step begins
                     cue.insert_frame(kf)
                 cue.end_action = EndAction.HOLD if len(preset.colors) < 2 else EndAction.START_AGAIN
             if len(self._presets) > 0:
@@ -621,6 +640,23 @@ class ColordirectorVFilter(VirtualFilter):
         """
         return self._current_active_colors
 
+    def _get_cue_update_msg(self, color_group_name: str, preset_index: int) -> tuple[str, str, str]:
+        """Generate the network update message parts for applying a preset to a color group.
+
+        Args:
+            color_group_name: The key of the group to update.
+            preset_index: The index of the preset to use.
+
+        Returns:
+            A tuple containing the target filter id, the update key and the update value.
+
+        """
+        return (
+            f"{self.filter_id}__cue__{_sanitize_channel_name(color_group_name)}",
+            "run_cue",
+            str(preset_index),
+        )
+
     def get_update_msg_for_group_preset_change(self, color_group_name: str, preset_index: int) -> tuple[str, str]:
         """Generate message to set the color group value to the given preset.
 
@@ -632,10 +668,10 @@ class ColordirectorVFilter(VirtualFilter):
             A tuple containing the [target filter ID]:[update key] and update value.
 
         """
-        return f"{self.filter_id}__cue__{_sanitize_channel_name(color_group_name)}:run_cue", str(preset_index)
+        filter_id, msg_key, update_value = self._get_cue_update_msg(color_group_name, preset_index)
+        return f"{filter_id}:{msg_key}", update_value
 
     def _send_preset_change_update(self, group_name: str, preset_index: int) -> None:
         """Send a network update message that applies the provided preset to the provided color group."""
-        filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, preset_index)
-        filter_id, msg_key = filter_id.split(":")
+        filter_id, msg_key, update_value = self._get_cue_update_msg(group_name, preset_index)
         NetworkManager().send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)
