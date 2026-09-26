@@ -60,6 +60,7 @@ def get_math_enabled_jinja_env() -> Environment:
     env.filters["mod"] = _mod
     return env
 
+
 class ConnectCommand(Command):
     """Command to connect filters."""
 

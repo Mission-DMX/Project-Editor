@@ -137,8 +137,9 @@ def read_document(file_name: str, board_configuration: BoardConfiguration) -> bo
     for child in root:
         if child.tag == "uihint":
             _parse_ui_hint(child, board_configuration)
-    if board_configuration.ui_hints.get("media_assets"):
-        load_all_media_assets(board_configuration.ui_hints.get("media_assets"), file_name)
+    media_assets_hint = board_configuration.ui_hints.get("media_assets")
+    if media_assets_hint:
+        load_all_media_assets(media_assets_hint, file_name)
     for child in root:
         match child.tag:
             case "scene":
