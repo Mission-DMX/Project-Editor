@@ -73,7 +73,6 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         if not isinstance(model, ColordirectorVFilter):
             raise TypeError("Color Director filter must be a ColordirectorVFilter.")
         self._in_preset_table_rebuild: bool = False
-        self._serialized_since_load: bool = False
         self._model: ColordirectorVFilter = model
         self._widget = QTabWidget(parent)
         self._widget.setMinimumWidth(900)
@@ -112,14 +111,11 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
     @override
     def _get_configuration(self) -> dict[str, str]:
-        if not self._serialized_since_load:
-            self._model.serialize()
-            self._serialized_since_load = True
+        self._model.serialize()
         return {}
 
     @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
-        self._serialized_since_load = False
         self._reload_presets_table()
 
     @override
@@ -134,14 +130,11 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             parameters: Ignored as all state is managed by the model directly.
 
         """
-        self._serialized_since_load = False
         return {}
 
     @override
     def _get_parameters(self) -> dict[str, str]:
-        if not self._serialized_since_load:
-            self._model.serialize()
-            self._serialized_since_load = True
+        self._model.serialize()
         return self._model.initial_parameters
 
     @override
@@ -278,12 +271,18 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 return
             case 0:
                 # Fade in time
-                fade_in_time = int(item.data(Qt.ItemDataRole.EditRole))
-                preset.colors[step_index] = (fade_in_time, tf, accent_colors)
+                edited_value = item.data(Qt.ItemDataRole.EditRole)
+                if not isinstance(edited_value, int):
+                    logger.error("Bug! Cell %i:%i received an invalid fade in time: %r!", row, column, edited_value)
+                    return
+                preset.colors[step_index] = (edited_value, tf, accent_colors)
                 return
             case 1:
-                tf = item.data(Qt.ItemDataRole.EditRole)
-                preset.colors[step_index] = (fade_in_time, tf, accent_colors)
+                edited_value = item.data(Qt.ItemDataRole.EditRole)
+                if not isinstance(edited_value, TransferFunction):
+                    logger.error("Bug! Cell %i:%i received invalid transfer function: %r!", row, column, edited_value)
+                    return
+                preset.colors[step_index] = (fade_in_time, edited_value, accent_colors)
                 return
             case _:
                 property_index -= 3
@@ -292,7 +291,8 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                     return
                 color = item.data(Qt.ItemDataRole.EditRole)
                 if not isinstance(color, ColorHSI):
-                    raise ValueError("Received invalid color data.")
+                    logger.error("Bug! Cell %i:%i received an invalid color: %r!", row, column, color)
+                    return
                 accent_colors[property_index] = color
                 item.setBackground(color.to_qt_color())
                 return
@@ -366,9 +366,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             self._model.live_preview_mode = False
             if not transmit_to_fish(self._model.scene.board_configuration, False):
                 logger.error("Failed to transmit the show to fish while disabling the live preview mode.")
-        if not self._serialized_since_load:
-            self._model.serialize()
-            self._serialized_since_load = True
+        self._model.serialize()
         super().parent_closed(filter_node)
 
     def _change_preset_asset_clicked(self, preset: ColorPreset) -> None:

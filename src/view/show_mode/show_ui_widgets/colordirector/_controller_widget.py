@@ -41,9 +41,7 @@ class ControllerWidget(QWidget):
         self._recall_sp = JogwheelSpinBox()
         if update_list is not None:
             self._recall_sp.value_submitted.connect(self._recall_issued)
-        recall_count = len(model.recalls)
-        self._recall_sp.setRange(0, recall_count - 1)
-        self._recall_sp.setEnabled(recall_count > 0)
+        self._update_recall_spinbox()
         self._recall_sp.setMaximumSize(100, element_size)
         layout.addWidget(self._recall_sp, 0, 0)
         self._output_group_list = list(model.output_groups.keys())
@@ -80,6 +78,7 @@ class ControllerWidget(QWidget):
         self.setMinimumSize(number_of_presets * element_size + 100, (number_of_groups + 1) * element_size)
         self.setLayout(layout)
         self._preview_generator.start()
+        self._model.configuration_changed.mapped_signal.connect(self._update_recall_spinbox)
         if feedback_enabled:
             self._model.configuration_changed.mapped_signal.connect(self._active_colors_changed)
 
@@ -113,7 +112,15 @@ class ControllerWidget(QWidget):
         )
         self.update_requested.emit()
 
+    def _update_recall_spinbox(self) -> None:
+        """Update the recall spin box to the recalls currently available in the model."""
+        recall_count = len(self._model.recalls)
+        self._recall_sp.setEnabled(recall_count > 0)
+        self._recall_sp.setRange(0, max(recall_count - 1, 0))
+
     def _add_preview_on_buttons(self, preview_index: int, image: QImage) -> None:
+        if not 0 <= preview_index < len(self._apply_single_buttons):
+            return
         buttons = self._apply_single_buttons[preview_index]
         if not buttons:
             return
