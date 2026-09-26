@@ -26,10 +26,11 @@ def _sanitize_name(input_: str | dict | None) -> str:
         the sanitized channel name or a placeholder if no channel name could be extracted
 
     """
+    original_input = input_
     if isinstance(input_, dict):
         input_ = input_.get("insert")
     if input_ is None:
-        logger.error("Did not extract a channel name while creating fixture filters.")
+        logger.error("Did not extract a channel name while creating fixture filters. Got: %r", original_input)
         return "_unknown_channel"
     if input_ == "universe":
         return "_universe_channel"

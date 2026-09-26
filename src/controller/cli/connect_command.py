@@ -85,7 +85,7 @@ class ConnectCommand(Command):
     @override
     def execute(self, args: Namespace) -> bool:
         if self.context.selected_scene is None:
-            self.context.print("Error: No scene selected.")
+            self.context.print("ERROR: No scene selected.")
             return False
         if args.source_count < 1:
             self.context.print("ERROR: The source count must be at least 1.")

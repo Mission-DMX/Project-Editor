@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
-_NEWLINE_CHAR = 13
+_CARRIAGE_RETURN_CHAR = 13
 _BACKSPACE_CHAR = 8
 _CANCEL_CHAR = 3
 _ESCAPE_CHAR = 27
@@ -184,10 +184,10 @@ class CLITerminalIO(TerminalIO):
         input_line_changed = False
         # TODO implement tab completion here
         for b in buffer:
-            if b == _NEWLINE_CHAR:
+            if b == _CARRIAGE_RETURN_CHAR:
                 cmd = bytes(self._buffer).decode(errors="ignore").strip()
                 self._buffer.clear()
-                _command_history.append(cmd)
+                self._history.append(cmd)
                 execution_successful = self._context.exec_command(cmd)
                 self._stdout_callback(b"\n")
                 self._stdout_callback(self._context.fetch_print_buffer().encode())
