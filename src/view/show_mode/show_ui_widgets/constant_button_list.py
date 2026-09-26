@@ -46,7 +46,7 @@ class ConstantNumberButtonList(UIWidget):
         value_edit = QDoubleSpinBox(widget)
         if self._maximum == -1:
             value_edit.setMaximum(sys.float_info.max)
-            value_edit.setMinimum(sys.float_info.max)
+            value_edit.setMinimum(-sys.float_info.max)
             value_edit.setDecimals(20)
         else:
             value_edit.setMaximum(self._maximum)
@@ -112,8 +112,8 @@ class ConstantNumberButtonList(UIWidget):
         self._configuration_widget: QWidget | None = None
         self._model = None
         self._filter_type = None
-        self._value = 0
-        self._default_value = 0
+        self._value: int | float = 0
+        self._default_value: int | float = 0
         self._maximum = -1
         self._registered_callback_key: tuple[Scene, str] | None = None
         self._player_buttons: dict[float, QPushButton] = {}
@@ -159,7 +159,7 @@ class ConstantNumberButtonList(UIWidget):
         self._filter_type = f.filter_type
         self._default_value = (
             float(f.initial_parameters.get("value", "0"))
-            if f.filter_type == FilterTypeEnumeration.FILTER_CONSTANT_FLOAT
+            if self._is_float_filter
             else int(f.initial_parameters.get("value", "0"))
         )
         self._value = self._default_value
