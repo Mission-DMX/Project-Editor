@@ -272,6 +272,12 @@ class BoardConfiguration:
     def clear_filter_update_callbacks(self, target_scene: int, target_filter_id: str) -> None:
         """Clear out all callbacks for provided filter.
 
+        This removes every callback registered for the provided filter including the ones registered by other
+        components. It is intended for components owning all callbacks of their (internal) filters, such as virtual
+        filters cleaning up the callbacks they registered for their generated sub filters. Use
+        remove_filter_update_callback instead if other components may have registered callbacks for the same filter
+        as well.
+
         Args:
             target_scene: The scene the callbacks belongs to.
             target_filter_id: The filter id which they are listening on.
