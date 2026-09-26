@@ -22,12 +22,26 @@ class _JogwheelInputMixin(_JogwheelSpinBoxBase):
     """Mixin adding jog wheel input and enter key value submission to spin boxes."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """Initialize the spin box and connect the jog wheel rotation signals of the broadcaster."""
+        """Initialize the spin box and connect the jog wheel rotation signals of the broadcaster.
+
+        Jog wheel rotation events are only processed while the spin box has the keyboard focus.
+
+        """
         super().__init__(parent)
         self._broadcaster = Broadcaster()
         self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
         self._broadcaster.jogwheel_rotated_right.connect(self._jg_up)
+        self.destroyed.connect(self._disconnect_from_broadcaster)
         # TODO also trigger value_submitted if in focus and xtouch enter pressed
+
+    def _disconnect_from_broadcaster(self) -> None:
+        """Disconnect the jog wheel rotation signals when the spin box is destroyed."""
+        try:
+            self._broadcaster.jogwheel_rotated_left.disconnect(self._jg_down)
+            self._broadcaster.jogwheel_rotated_right.disconnect(self._jg_up)
+        except RuntimeError:
+            # the connections have already been removed, e.g. by Qt while destroying the spin box
+            pass
 
     def _submit_value(self) -> None:
         """Submit the current value. Implemented by the class using this mixin."""

@@ -42,11 +42,11 @@ class ColorPresetSerializationTest(unittest.TestCase):
     def test_empty_preset_serializes_to_empty_string(self):
         """An empty preset serializes to an empty string and back."""
         self.assertEqual(ColorPreset().serialize(), "")
-        self.assertEqual(ColorPreset("").colors, [])
+        self.assertEqual(ColorPreset.from_filter_str("").colors, [])
 
     def test_single_step_round_trip(self):
         """A single fade in step survives a serialization round trip."""
-        preset = ColorPreset("12|lin|120.0,0.5,0.75")
+        preset = ColorPreset.from_filter_str("12|lin|120.0,0.5,0.75")
         self.assertEqual(len(preset.colors), 1)
         duration, transfer_function, colors = preset.colors[0]
         self.assertEqual(duration, 12)
@@ -56,7 +56,7 @@ class ColorPresetSerializationTest(unittest.TestCase):
 
     def test_multiple_steps_round_trip(self):
         """Multiple fade in steps keep their order and values."""
-        preset = ColorPreset("3|e_i|10.0,0.25,0.5#7|sig|200.0,0.8,0.9")
+        preset = ColorPreset.from_filter_str("3|e_i|10.0,0.25,0.5#7|sig|200.0,0.8,0.9")
         self.assertEqual([step[0] for step in preset.colors], [3, 7])
         self.assertEqual(
             [step[1] for step in preset.colors], [TransferFunction.EASE_IN, TransferFunction.SIGMOIDAL]
@@ -67,20 +67,20 @@ class ColorPresetSerializationTest(unittest.TestCase):
         """All transfer function identifiers survive a serialization round trip."""
         for transfer_function in TransferFunction:
             with self.subTest(transfer_function=transfer_function):
-                preset = ColorPreset(f"5|{transfer_function.value}|1.0,0.2,0.3")
+                preset = ColorPreset.from_filter_str(f"5|{transfer_function.value}|1.0,0.2,0.3")
                 self.assertEqual(len(preset.colors), 1)
                 self.assertIs(preset.colors[0][1], transfer_function)
                 self.assertEqual(preset.serialize(), f"5|{transfer_function.value}|1.0,0.2,0.3")
 
     def test_step_without_accent_colors_round_trip(self):
         """Steps without accent colors keep an empty color list and serialize stably."""
-        preset = ColorPreset("12|lin|")
+        preset = ColorPreset.from_filter_str("12|lin|")
         self.assertEqual(preset.colors, [(12, TransferFunction.LINEAR, [])])
         self.assertEqual(preset.serialize(), "12|lin|")
 
     def test_multiple_accent_colors_round_trip(self):
         """All accent colors of a step survive a serialization round trip."""
-        preset = ColorPreset("4|edg|10.0,0.25,0.5@300.0,0.75,1.0")
+        preset = ColorPreset.from_filter_str("4|edg|10.0,0.25,0.5@300.0,0.75,1.0")
         self.assertEqual(len(preset.colors), 1)
         self.assertEqual(
             [color.format_for_filter() for color in preset.colors[0][2]],
@@ -90,38 +90,38 @@ class ColorPresetSerializationTest(unittest.TestCase):
 
     def test_malformed_duration_is_ignored(self):
         """Steps with a non integer duration are ignored."""
-        self.assertEqual(ColorPreset("ab|lin|1.0,0.2,0.3").colors, [])
+        self.assertEqual(ColorPreset.from_filter_str("ab|lin|1.0,0.2,0.3").colors, [])
 
     def test_step_with_wrong_field_count_is_ignored(self):
         """Steps that do not provide exactly three fields are ignored."""
-        self.assertEqual(ColorPreset("12|lin").colors, [])
-        self.assertEqual(ColorPreset("12|lin|1.0,0.2,0.3|extra").colors, [])
+        self.assertEqual(ColorPreset.from_filter_str("12|lin").colors, [])
+        self.assertEqual(ColorPreset.from_filter_str("12|lin|1.0,0.2,0.3|extra").colors, [])
 
     def test_unparsable_accent_color_is_ignored(self):
         """Steps with an unparsable accent color are ignored completely."""
-        self.assertEqual(ColorPreset("12|lin|x,y,z").colors, [])
+        self.assertEqual(ColorPreset.from_filter_str("12|lin|x,y,z").colors, [])
 
     def test_accent_color_without_commas_falls_back_to_default(self):
         """Accent colors without the expected comma separation fall back to the default color."""
-        preset = ColorPreset("12|lin|abc")
+        preset = ColorPreset.from_filter_str("12|lin|abc")
         self.assertEqual(len(preset.colors), 1)
         self.assertEqual(preset.colors[0][2][0].format_for_filter(), "128.0,0.5,1.0")
 
     def test_asset_uuid_prefix_round_trip(self):
         """An unresolvable asset uuid prefix is preserved on serialization."""
-        preset = ColorPreset("123e4567?12|lin|120.0,0.5,0.75")
+        preset = ColorPreset.from_filter_str("123e4567?12|lin|120.0,0.5,0.75")
         self.assertIsNone(preset.visualization_asset)
         self.assertEqual(preset.serialize(), "123e4567?12|lin|120.0,0.5,0.75")
 
     def test_asset_uuid_without_steps_round_trip(self):
         """A preset that only consists of an asset uuid survives a round trip."""
-        preset = ColorPreset("xyz?")
+        preset = ColorPreset.from_filter_str("xyz?")
         self.assertIsNone(preset.visualization_asset)
         self.assertEqual(preset.serialize(), "xyz?")
 
     def test_get_button_visualization_uses_default_color_for_empty_steps(self):
         """Steps without accent colors are represented by the default button color."""
-        preset = ColorPreset("12|lin|120.0,0.5,0.75#5|edg|")
+        preset = ColorPreset.from_filter_str("12|lin|120.0,0.5,0.75#5|edg|")
         self.assertEqual(
             [color.format_for_filter() for color in preset.get_button_visualization()],
             ["120.0,0.5,0.75", "128.0,0.5,1.0"],
@@ -146,6 +146,16 @@ class ChannelNameTest(unittest.TestCase):
     def test_sanitize_channel_name(self):
         """Sanitizing removes problematic characters and collapses double underscores."""
         self.assertEqual(_sanitize_channel_name(" a:b#c|d e__f "), "abcd_e-f")
+
+    def test_sanitize_channel_name_replaces_consecutive_spaces_by_hyphen(self):
+        """Consecutive spaces turn into double underscores which collapse into a single hyphen."""
+        self.assertEqual(_sanitize_channel_name("a  b"), "a-b")
+
+    def test_sanitize_channel_name_replacement_order_matters(self):
+        """Triple underscores become a hyphen followed by an underscore, matching the serialized name."""
+        sanitized = _sanitize_channel_name("a___b")
+        self.assertEqual(sanitized, "a-_b")
+        self.assertEqual(_sanitize_channel_name(sanitized), sanitized)
 
 
 class BoundPresetIndexTest(unittest.TestCase):
@@ -412,3 +422,96 @@ class PopulatePresetsTest(_ColorDirectorTestBase):
         reparsed.serialize()
         self.assertEqual(reparsed.filter_configurations["presets"], preset_configuration)
         self.assertEqual(len(reparsed.presets), len(director.presets))
+
+
+class ModelMutationTest(_ColorDirectorTestBase):
+    """Tests for the model methods modifying presets, recalls and color groups."""
+
+    def test_presets_property_returns_copy(self):
+        """The presets property returns a copy: Structural changes of it do not affect the filter."""
+        director = self._make_director()
+        presets = director.presets
+        presets.append(ColorPreset())
+        self.assertEqual(director.presets, [])
+
+    def test_add_and_remove_preset(self):
+        """add_preset appends presets and remove_preset removes known presets only."""
+        director = self._make_director()
+        preset = ColorPreset()
+        director.add_preset(preset)
+        self.assertEqual(director.presets, [preset])
+        self.assertTrue(director.remove_preset(preset))
+        self.assertEqual(director.presets, [])
+        self.assertFalse(director.remove_preset(preset))
+
+    def test_recalls_property_returns_copy(self):
+        """The recalls property returns a copy: Structural changes of it do not affect the filter."""
+        director = self._make_director(color_groups="g|a", recalls="0")
+        recalls = director.recalls
+        recalls.pop(0)
+        self.assertEqual(director.recalls, [[0]])
+
+    def test_add_and_remove_recall(self):
+        """add_recall creates a recall with an entry per color group, remove_recall ignores unknown indices."""
+        director = self._make_director(color_groups="g|a#b|c")
+        recall = director.add_recall()
+        self.assertEqual(recall, [0, 0])
+        self.assertEqual(director.recalls, [[0, 0]])
+        director.remove_recall(0)
+        self.assertEqual(director.recalls, [])
+        director.remove_recall(0)
+
+    def test_set_recall_preset_normalizes_and_bounds(self):
+        """set_recall_preset normalizes the recall and bounds the stored preset index."""
+        director = self._make_director(
+            color_groups="g|a#b|c", presets="12|lin|120.0,0.5,0.75$12|lin|10.0,0.5,0.5"
+        )
+        recall = director.add_recall()
+        self.assertTrue(director.set_recall_preset(0, 1, 1))
+        self.assertEqual(recall, [0, 1])
+        self.assertTrue(director.set_recall_preset(0, 1, 5))
+        self.assertEqual(recall, [0, 0])
+        self.assertFalse(director.set_recall_preset(0, -1, 0))
+        self.assertFalse(director.set_recall_preset(0, 2, 0))
+        self.assertFalse(director.set_recall_preset(1, 0, 0))
+
+    def test_output_groups_property_returns_copy(self):
+        """The output_groups property returns a copy: Changes of its structure do not affect the filter."""
+        director = self._make_director(color_groups="g|a")
+        groups = director.output_groups
+        groups["new"] = []
+        del groups["g"]
+        self.assertEqual(director.output_groups, {"g": ["a"]})
+
+    def test_add_output_group_and_sub_output(self):
+        """add_output_group and add_sub_output validate their names within the model."""
+        director = self._make_director(color_groups="g|a")
+        self.assertFalse(director.add_output_group("g"))
+        self.assertFalse(director.add_output_group("a__b"))
+        self.assertTrue(director.add_output_group("h"))
+        self.assertEqual(director.output_groups, {"g": ["a"], "h": []})
+        self.assertFalse(director.add_sub_output("g", "a"))
+        self.assertFalse(director.add_sub_output("g", "a__b"))
+        self.assertFalse(director.add_sub_output("bogus", "x"))
+        self.assertTrue(director.add_sub_output("g", "b"))
+        self.assertEqual(director.output_groups, {"g": ["a", "b"], "h": []})
+        self.assertEqual(director.get_outputs(), ["g__a", "g__b"])
+
+    def test_remove_sub_output(self):
+        """remove_sub_output removes known sub outputs only."""
+        director = self._make_director(color_groups="g|a#b|c")
+        self.assertFalse(director.remove_sub_output("bogus", "a"))
+        self.assertFalse(director.remove_sub_output("g", "x"))
+        self.assertTrue(director.remove_sub_output("g", "a"))
+        self.assertEqual(director.output_groups, {"g": [], "b": ["c"]})
+
+    def test_get_current_active_colors_returns_copy(self):
+        """get_current_active_colors returns a copy that may be modified without affecting the filter."""
+        director = self._make_director(color_groups="g|a", presets="12|lin|120.0,0.5,0.75")
+        director._cue_filter_to_group_index_mapping["colordirector__cue__g"] = 0
+        director._update_active_colors_from_filters(_FakeFilterUpdateMessage("colordirector__cue__g", "run;0"))
+        active_colors = director.get_current_active_colors()
+        self.assertEqual(active_colors, [0])
+        self.assertIsNot(active_colors, director.get_current_active_colors())
+        active_colors.clear()
+        self.assertEqual(director.get_current_active_colors(), [0])

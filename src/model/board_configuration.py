@@ -268,7 +268,6 @@ class BoardConfiguration:
             return
         if c in callable_list:
             callable_list.remove(c)
-        logger.debug("Remaining callbacks for (%s, %s): %s", target_scene, target_filter_id, len(callable_list))
 
     def clear_filter_update_callbacks(self, target_scene: int, target_filter_id: str) -> None:
         """Clear out all callbacks for provided filter.

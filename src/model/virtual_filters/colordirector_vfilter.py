@@ -64,19 +64,27 @@ class ColorPreset:
 
     """
 
-    def __init__(self, filter_str: str = "") -> None:
-        """Initialize a color preset.
-
-        Args:
-            filter_str: Filter string representation to deserialize. An empty string will initialize an empty preset.
-                Malformed steps are ignored. Steps without accent colors keep an empty color list.
-
-        """
+    def __init__(self) -> None:
+        """Initialize an empty color preset without steps and visualization asset."""
         self.colors: list[tuple[int, TransferFunction, list[ColorHSI]]] = []
         self._asset: AbstractImageAsset | str | None = None
+
+    @classmethod
+    def from_filter_str(cls, filter_str: str) -> ColorPreset:
+        """Initialize a color preset from its serialized filter configuration string.
+
+        Args:
+            filter_str: Filter string representation to deserialize. An empty string will initialize an empty
+                preset. Malformed steps are ignored. Steps without accent colors keep an empty color list.
+
+        Returns:
+            The deserialized color preset.
+
+        """
+        preset = cls()
         if _ASSET_DELIMITER in filter_str:
             asset_uuid, filter_str = filter_str.split(_ASSET_DELIMITER, 1)
-            self._asset = asset_uuid
+            preset._asset = asset_uuid
         if len(filter_str) > 0:
             for step_str in filter_str.split(_LIST_ELEMENT_DELIMITER):
                 try:
@@ -90,7 +98,8 @@ class ColorPreset:
                     ]
                 except ValueError:
                     continue
-                self.colors.append((duration, transfer_function, colors))
+                preset.colors.append((duration, transfer_function, colors))
+        return preset
 
     def get_button_visualization(self) -> list[ColorHSI]:
         """Get the representation sequence for highlighting purposes in buttons.
@@ -131,7 +140,15 @@ class ColorPreset:
 
 
 def _sanitize_channel_name(name: str) -> str:
-    """Remove characters that are problematic within channel names from the provided name."""
+    """Remove characters that are problematic within channel names from the provided name.
+
+    Args:
+        name: The channel name to sanitize.
+
+    Returns:
+        The sanitized channel name.
+
+    """
     return name.strip().replace(":", "").replace("#", "").replace("|", "").replace(" ", "_").replace("__", "-")
 
 
@@ -214,17 +231,58 @@ class ColordirectorVFilter(VirtualFilter):
 
     @property
     def presets(self) -> list[ColorPreset]:
-        """Returns the list of color presets."""
-        return self._presets
+        """Get the color presets.
+
+        Returns:
+            A shallow copy of the color preset list. The preset objects themselves are owned by the filter:
+            Changes applied to them are reflected within the filter. Structural changes of the list need to be
+            performed using add_preset and remove_preset.
+
+        """
+        return list(self._presets)
 
     @presets.setter
     def presets(self, presets: list[ColorPreset]) -> None:
         self._presets = presets
 
+    def add_preset(self, preset: ColorPreset) -> None:
+        """Add the provided color preset to the end of the color preset list.
+
+        Args:
+            preset: The color preset to add.
+
+        """
+        self._presets.append(preset)
+        self.configuration_changed.mapped_signal.emit()
+
+    def remove_preset(self, preset: ColorPreset) -> bool:
+        """Remove the provided color preset from the color preset list.
+
+        Args:
+            preset: The color preset to remove.
+
+        Returns:
+            True if the color preset was removed. False if it is not part of the filter.
+
+        """
+        try:
+            self._presets.remove(preset)
+        except ValueError:
+            return False
+        self.configuration_changed.mapped_signal.emit()
+        return True
+
     @property
     def output_groups(self) -> dict[str, list[str]]:
-        """Get the color output group dictionary."""
-        return self._color_groups
+        """Get the color output group dictionary.
+
+        Returns:
+            A shallow copy of the color group dictionary. The sub output lists of the individual groups are
+            owned by the filter: Structural changes need to be performed using add_output_group,
+            add_sub_output, remove_sub_output and remove_output_group.
+
+        """
+        return dict(self._color_groups)
 
     def remove_output_group(self, group_name: str) -> None:
         """Remove the provided color group including its entries within the saved recalls.
@@ -247,10 +305,118 @@ class ColordirectorVFilter(VirtualFilter):
             self._current_active_colors.pop(group_index)
         self.configuration_changed.mapped_signal.emit()
 
+    def add_output_group(self, group_name: str) -> bool:
+        """Add a new color group without sub outputs.
+
+        Args:
+            group_name: The name of the color group to add.
+
+        Returns:
+            True if the color group was added. False if the name is invalid or already in use.
+
+        """
+        if not is_valid_channel_name(group_name) or group_name in self._color_groups:
+            return False
+        self._color_groups[group_name] = []
+        self.configuration_changed.mapped_signal.emit()
+        return True
+
+    def add_sub_output(self, group_name: str, sub_output: str) -> bool:
+        """Add a sub output to the provided color group.
+
+        Args:
+            group_name: The name of the color group to extend.
+            sub_output: The name of the sub output to add.
+
+        Returns:
+            True if the sub output was added. False if the color group is unknown, the sub output name is
+            invalid or already in use within the group.
+
+        """
+        if group_name not in self._color_groups:
+            return False
+        if not is_valid_channel_name(sub_output) or sub_output in self._color_groups[group_name]:
+            return False
+        self._color_groups[group_name].append(sub_output)
+        self.configuration_changed.mapped_signal.emit()
+        return True
+
+    def remove_sub_output(self, group_name: str, sub_output: str) -> bool:
+        """Remove the sub output from the provided color group.
+
+        Args:
+            group_name: The name of the color group to shrink.
+            sub_output: The name of the sub output to remove.
+
+        Returns:
+            True if the sub output was removed. False if the color group or the sub output is unknown.
+
+        """
+        if group_name not in self._color_groups:
+            return False
+        channels = self._color_groups[group_name]
+        if sub_output not in channels:
+            return False
+        channels.remove(sub_output)
+        self.configuration_changed.mapped_signal.emit()
+        return True
+
     @property
     def recalls(self) -> list[list[int]]:
-        """Returns the list of setting recalls."""
-        return self._recalls
+        """Get the saved recalls.
+
+        Returns:
+            A shallow copy of the list of recalls. The recall lists themselves are owned by the filter:
+            Modifications need to be performed using add_recall, remove_recall and set_recall_preset.
+
+        """
+        return list(self._recalls)
+
+    def add_recall(self) -> list[int]:
+        """Add a new recall selecting the first color preset for every color group.
+
+        Returns:
+            The newly created recall. The returned list is owned by the filter and shared with the list
+            returned by the recalls property.
+
+        """
+        recall: list[int] = [0] * len(self._color_groups)
+        self._recalls.append(recall)
+        self.configuration_changed.mapped_signal.emit()
+        return recall
+
+    def remove_recall(self, recall_index: int) -> None:
+        """Remove the recall with the provided index.
+
+        Args:
+            recall_index: The index of the recall to remove. Unknown recall indices are ignored.
+
+        """
+        if not 0 <= recall_index < len(self._recalls):
+            return
+        self._recalls.pop(recall_index)
+        self.configuration_changed.mapped_signal.emit()
+
+    def set_recall_preset(self, recall_index: int, group_index: int, preset_index: int) -> bool:
+        """Set the color preset index stored by a recall for a single color group.
+
+        Args:
+            recall_index: The index of the recall to modify.
+            group_index: The index of the color group to store the value for.
+            preset_index: The color preset index to store.
+
+        Returns:
+            True if the value was stored. False if the recall index or the color group index is unknown.
+
+        """
+        if not 0 <= recall_index < len(self._recalls) or group_index < 0:
+            return False
+        self.normalize_recall(recall_index)
+        recall = self._recalls[recall_index]
+        if group_index >= len(recall):
+            return False
+        recall[group_index] = bound_preset_index(preset_index, len(self._presets))
+        return True
 
     def normalize_recall(self, recall_index: int) -> None:
         """Normalize the recall with the provided index to the current number of color groups.
@@ -339,7 +505,7 @@ class ColordirectorVFilter(VirtualFilter):
         presets_def = self.filter_configurations.get("presets", "")
         if len(presets_def) == 0:
             return
-        self._presets.extend(ColorPreset(p_str) for p_str in presets_def.split(_PRESET_DELIMITER))
+        self._presets.extend(ColorPreset.from_filter_str(p_str) for p_str in presets_def.split(_PRESET_DELIMITER))
 
     def _serialize_presets(self) -> None:
         self.filter_configurations["presets"] = _PRESET_DELIMITER.join(c.serialize() for c in self._presets)
@@ -399,6 +565,7 @@ class ColordirectorVFilter(VirtualFilter):
                 color = ColorPreset()
                 color.colors.append((three_second_fade, TransferFunction.LINEAR, [ColorHSI(hue, 1.0, 1.0)]))
                 self._presets.append(color)
+        self.configuration_changed.mapped_signal.emit()
 
     def get_outputs(self) -> list[str]:
         """Get the outputs of this filter."""
@@ -662,10 +829,12 @@ class ColordirectorVFilter(VirtualFilter):
         """Get the current active color presets.
 
         Returns:
-            A list of indexes or an empty list if the filter was not applied and did not receive updates.
+            A copy of the list of indexes or an empty list if the filter was not applied and did not receive
+            updates. The internal list is updated asynchronously by network callbacks: Callers may iterate the
+            returned list without having to expect concurrent modifications.
 
         """
-        return self._current_active_colors
+        return list(self._current_active_colors)
 
     def _get_cue_update_msg(self, color_group_name: str, preset_index: int) -> tuple[str, str, str]:
         """Generate the network update message parts for applying a preset to a color group.

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import atexit
+import math
 import os
 import weakref
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtCore import QCoreApplication, QThread, Signal
+from PySide6.QtCore import QCoreApplication, QPointF, QThread, Signal
 from PySide6.QtGui import QBrush, QImage, QPainter, Qt
 
 from utility import resource_path
@@ -67,9 +68,10 @@ class PreviewBitmapGenerator(QThread):
         if parent is None:
             parent = QCoreApplication.instance()
         super().__init__(parent)
-        self._render_data: list[tuple[list[ColorHSI], bool, AbstractImageAsset | None]] = [
+        self._render_data: list[tuple[list[ColorHSI], list[list[ColorHSI]], bool, AbstractImageAsset | None]] = [
             (
                 preset.get_button_visualization(),
+                [step[2] for step in preset.colors],
                 len(preset.colors) > 1,
                 preset.visualization_asset,
             )
@@ -91,8 +93,8 @@ class PreviewBitmapGenerator(QThread):
     @override
     def run(self) -> None:
         repeat_image = QImage(resource_path(os.path.join("resources", "icons", "repeat.svg")))
-        repeat_image = repeat_image.scaled(int(self._size * 0.5), int(self._size * 0.5))
-        for i, (colors, repeats, visualization_asset) in enumerate(self._render_data):
+        repeat_image = repeat_image.scaled(self._size // 2, self._size // 2)
+        for i, (colors, accent_colors, repeats, visualization_asset) in enumerate(self._render_data):
             if self.isInterruptionRequested():
                 break
             image = QImage(self._size, self._size, QImage.Format.Format_ARGB32_Premultiplied)
@@ -102,17 +104,56 @@ class PreviewBitmapGenerator(QThread):
             num_colors = len(colors)
             last_angle = 0
             arc_size = _FULL_CIRCLE_SPAN // num_colors if num_colors > 0 else 0
+            segment_bounds: list[tuple[int, int]] = []
             p.setPen(Qt.PenStyle.NoPen)
             for color_index, color in enumerate(colors):
                 p.setBrush(QBrush(color.to_qt_color()))
                 span = _FULL_CIRCLE_SPAN - last_angle if color_index == num_colors - 1 else arc_size
                 p.drawPie(rect, last_angle, span)
+                segment_bounds.append((last_angle, last_angle + span))
                 last_angle += span
-            # TODO for each accent color in the preset draw a little dot evenly spaced on the arc
+            self._draw_accent_color_dots(p, accent_colors, segment_bounds)
             if repeats:
-                p.drawImage(int(self._size * 0.55), 0, repeat_image)
+                icon_position = self._size - repeat_image.width()
+                p.drawImage(icon_position, 0, repeat_image)
             if visualization_asset is not None:
                 asset_image = visualization_asset.get_image_for_ui().scaled(self._size, self._size)
                 p.drawImage(0, 0, asset_image)
             p.end()
             self.preset_preview_generated.emit(i, image)
+
+    def _draw_accent_color_dots(
+        self, painter: QPainter, accent_colors: list[list[ColorHSI]], segment_bounds: list[tuple[int, int]]
+    ) -> None:
+        """Draw the accent colors of every preset step as little dots evenly spaced on the arc of the segments.
+
+        Args:
+            painter: The painter used to draw the preview image. The pie segments are expected to be drawn
+                already.
+            accent_colors: The accent colors of every preset step.
+            segment_bounds: The start and end angle of every pie segment in Qt degrees.
+        """
+        painter.setPen(Qt.PenStyle.NoPen)
+        dot_radius = max(2, self._size // 12)
+        dot_distance = self._size * 0.4
+        center = self._size / 2
+        for step_index, step_accent_colors in enumerate(accent_colors):
+            if step_index >= len(segment_bounds) or len(step_accent_colors) == 0:
+                continue
+            start_angle, end_angle = segment_bounds[step_index]
+            margin = (end_angle - start_angle) // 8
+            first_angle = float(start_angle + margin)
+            last_angle = float(end_angle - margin)
+            dot_count = len(step_accent_colors)
+            if dot_count == 1:
+                angles = [first_angle]
+            else:
+                angles = [first_angle + k * (last_angle - first_angle) / (dot_count - 1) for k in range(dot_count)]
+            for dot_index, accent_color in enumerate(step_accent_colors):
+                radians = math.radians(angles[dot_index] / 16)
+                position = QPointF(
+                    center + dot_distance * math.cos(radians),
+                    center + dot_distance * math.sin(radians),
+                )
+                painter.setBrush(QBrush(accent_color.to_qt_color()))
+                painter.drawEllipse(position, dot_radius, dot_radius)

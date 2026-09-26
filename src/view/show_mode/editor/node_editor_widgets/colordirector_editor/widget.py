@@ -114,9 +114,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         presets_tab.setLayout(presets_layout)
         self._widget.addTab(presets_tab, "Presets")
 
-        recall_tab = RecallEditWidget(self._model, self._widget)
-        self._color_groups_tab.groups_changed.connect(recall_tab.update_recall_table)
-        self._widget.addTab(recall_tab, "Recalls")
+        self._recall_tab = RecallEditWidget(self._model, self._widget)
+        self._color_groups_tab.groups_changed.connect(self._recall_tab.update_recall_table)
+        self._widget.addTab(self._recall_tab, "Recalls")
         self._preview_dialog: YesNoDialog | None = None
         self._asset_dialog: AssetSelectionDialog | None = None
         self._apply_live_preview_ui_state()
@@ -166,8 +166,19 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._preview_dialog.setModal(True)
 
     def _reload_presets_table(self) -> None:
+        """Rebuild the presets table from the current model state."""
         self._load_default_colors_button.setEnabled(len(self._model.presets) == 0)
         self._in_preset_table_rebuild = True
+        try:
+            self._prepare_preset_table_layout()
+            row_offset = 0
+            for preset_index, preset in enumerate(self._model.presets):
+                row_offset += self._add_preset_to_table(preset_index, preset, row_offset)
+        finally:
+            self._in_preset_table_rebuild = False
+
+    def _prepare_preset_table_layout(self) -> None:
+        """Clear the presets table and prepare its layout, sizes and item delegates."""
         tw = self._preset_table
         tw.clear()
         row_sum = 0
@@ -185,91 +196,138 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         color_edit_delegate = ColorCellDelegate(tw)
         for i in range(accent_color_maximum):
             tw.setItemDelegateForColumn(i + 4, color_edit_delegate)
-        offsets = 0
-        for preset_index, preset in enumerate(self._model.presets):
-            index_widget = AnnotatedTableWidgetItem(str(preset_index))
-            index_widget.annotated_data = (preset_index, 0, -1)
-            index_widget.setFlags(index_widget.flags() ^ Qt.ItemFlag.ItemIsEditable)
-            last_index_item = index_widget
-            initial_row = preset_index + offsets
-            tw.setItem(preset_index + offsets, 0, index_widget)
-            first_iteration = True
-            step_index = -1
-            for fade_in_time, transfer_function, accent_colors in preset.colors:
-                if not first_iteration:
-                    offsets += 1
-                first_iteration = False
-                step_index += 1
 
-                fade_in_item = AnnotatedTableWidgetItem(str(fade_in_time))
-                fade_in_item.annotated_data = (preset_index, step_index, 0)
-                fade_in_item.setData(Qt.ItemDataRole.EditRole, fade_in_time)
-                tw.setItem(preset_index + offsets, 1, fade_in_item)
+    def _add_preset_to_table(self, preset_index: int, preset: ColorPreset, start_row: int) -> int:
+        """Populate the table rows used by a single color preset.
 
-                transfer_item = AnnotatedTableWidgetItem(transfer_function.value)
-                transfer_item.annotated_data = (preset_index, step_index, 1)
-                transfer_item.setData(Qt.ItemDataRole.EditRole, transfer_function)
-                tw.setItem(preset_index + offsets, 2, transfer_item)
+        Every step of the preset occupies one row. Presets without steps occupy a single row without step
+        content. The buttons managing the preset are placed within the last row of the preset.
 
-                add_accent_color_item = AnnotatedTableWidgetItem(" + ")
-                add_accent_color_item.annotated_data = (preset_index, step_index, 2)
-                tw.setItem(preset_index + offsets, 3, add_accent_color_item)
-                add_accent_color_button = QPushButton("+")
-                add_accent_color_button.setToolTip("Add accent color to step.")
-                add_accent_color_button.clicked.connect(lambda _, ac=accent_colors: self._add_accent_color(ac))
-                tw.setCellWidget(preset_index + offsets, 3, add_accent_color_button)
+        Args:
+            preset_index: The index of the preset within the model.
+            preset: The preset to populate the table rows for.
+            start_row: The first table row used by the preset.
 
-                for color_index, accent_color in enumerate(accent_colors):
-                    accent_color_item = AnnotatedTableWidgetItem("   ")
-                    accent_color_item.setToolTip(
-                        f"H: {accent_color.hue} S: {accent_color.saturation} I: {accent_color.intensity}\n{
-                            accent_color
-                        }"
-                    )
-                    accent_color_item.annotated_data = (preset_index, step_index, 3 + color_index)
-                    accent_color_item.setBackground(accent_color.to_qt_color())
-                    accent_color_item.setData(Qt.ItemDataRole.EditRole, accent_color)
-                    tw.setItem(preset_index + offsets, 4 + color_index, accent_color_item)
-            add_step_widget = QWidget()
-            add_step_layout = QHBoxLayout()
-            add_step_layout.addWidget(QLabel(str(preset_index)))
-            add_step_layout.addStretch()
-            add_step_button = QPushButton("↓")
-            add_step_button.clicked.connect(lambda _, p=preset: self._add_step_to_preset(p))
-            add_step_layout.addWidget(add_step_button)
-            if len(preset.colors) > 1:
-                remove_last_step_button = QPushButton("🗑")
-                remove_last_step_button.clicked.connect(lambda _, p=preset: self._remove_last_step_from_preset(p))
-                add_step_layout.addSpacing(10)
-                add_step_layout.addWidget(remove_last_step_button)
-            remove_preset_button = QPushButton("❌")
-            remove_preset_button.setToolTip("Remove this preset.")
-            remove_preset_button.clicked.connect(lambda _, p=preset: self._remove_preset(p))
+        Returns:
+            The number of table rows used by the preset.
+        """
+        tw = self._preset_table
+        index_item = AnnotatedTableWidgetItem(str(preset_index))
+        index_item.annotated_data = (preset_index, 0, -1)
+        index_item.setFlags(index_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
+        tw.setItem(start_row, 0, index_item)
+        for step_index, (fade_in_time, transfer_function, accent_colors) in enumerate(preset.colors):
+            self._add_step_to_table(
+                preset_index, step_index, start_row + step_index, fade_in_time, transfer_function, accent_colors
+            )
+        used_rows = max(len(preset.colors), 1)
+        self._add_preset_buttons_to_table(preset_index, preset, index_item, start_row, start_row + used_rows - 1)
+        return used_rows
+
+    def _add_step_to_table(
+        self,
+        preset_index: int,
+        step_index: int,
+        row: int,
+        fade_in_time: int,
+        transfer_function: TransferFunction,
+        accent_colors: list[ColorHSI],
+    ) -> None:
+        """Add the table row displaying a single preset step.
+
+        Args:
+            preset_index: The index of the preset the step belongs to.
+            step_index: The index of the step within the preset.
+            row: The table row to display the step in.
+            fade_in_time: The fade in time of the step in steps.
+            transfer_function: The transfer function of the step.
+            accent_colors: The accent colors of the step.
+        """
+        tw = self._preset_table
+        fade_in_item = AnnotatedTableWidgetItem(str(fade_in_time))
+        fade_in_item.annotated_data = (preset_index, step_index, 0)
+        fade_in_item.setData(Qt.ItemDataRole.EditRole, fade_in_time)
+        tw.setItem(row, 1, fade_in_item)
+
+        transfer_item = AnnotatedTableWidgetItem(transfer_function.value)
+        transfer_item.annotated_data = (preset_index, step_index, 1)
+        transfer_item.setData(Qt.ItemDataRole.EditRole, transfer_function)
+        tw.setItem(row, 2, transfer_item)
+
+        add_accent_color_item = AnnotatedTableWidgetItem(" + ")
+        add_accent_color_item.annotated_data = (preset_index, step_index, 2)
+        tw.setItem(row, 3, add_accent_color_item)
+        add_accent_color_button = QPushButton("+")
+        add_accent_color_button.setToolTip("Add accent color to step.")
+        add_accent_color_button.clicked.connect(lambda _, ac=accent_colors: self._add_accent_color(ac))
+        tw.setCellWidget(row, 3, add_accent_color_button)
+
+        for color_index, accent_color in enumerate(accent_colors):
+            accent_color_item = AnnotatedTableWidgetItem("   ")
+            accent_color_item.setToolTip(
+                f"H: {accent_color.hue} S: {accent_color.saturation} I: {accent_color.intensity}\n{accent_color}"
+            )
+            accent_color_item.annotated_data = (preset_index, step_index, 3 + color_index)
+            accent_color_item.setBackground(accent_color.to_qt_color())
+            accent_color_item.setData(Qt.ItemDataRole.EditRole, accent_color)
+            tw.setItem(row, 4 + color_index, accent_color_item)
+
+    def _add_preset_buttons_to_table(
+        self,
+        preset_index: int,
+        preset: ColorPreset,
+        index_item: AnnotatedTableWidgetItem,
+        first_row: int,
+        last_row: int,
+    ) -> None:
+        """Add the buttons managing a preset to the table.
+
+        Args:
+            preset_index: The index of the preset within the model.
+            preset: The preset the buttons manage.
+            index_item: The table item holding the preset index within the first row.
+            first_row: The first table row used by the preset.
+            last_row: The last table row used by the preset.
+        """
+        tw = self._preset_table
+        add_step_widget = QWidget()
+        add_step_layout = QHBoxLayout()
+        add_step_layout.addWidget(QLabel(str(preset_index)))
+        add_step_layout.addStretch()
+        add_step_button = QPushButton("↓")
+        add_step_button.clicked.connect(lambda _, p=preset: self._add_step_to_preset(p))
+        add_step_layout.addWidget(add_step_button)
+        if len(preset.colors) > 1:
+            remove_last_step_button = QPushButton("🗑")
+            remove_last_step_button.clicked.connect(lambda _, p=preset: self._remove_last_step_from_preset(p))
             add_step_layout.addSpacing(10)
-            add_step_layout.addWidget(remove_preset_button)
-            add_step_widget.setLayout(add_step_layout)
-            tw.setCellWidget(preset_index + offsets, 0, add_step_widget)
-            asset_mgmt_button = QPushButton()
-            asset_mgmt_button.setIcon(_IMAGE_ICON)
-            asset_mgmt_button.clicked.connect(lambda _, p=preset: self._change_preset_asset_clicked(p))
-            if len(preset.colors) < 2:
-                add_step_layout.addWidget(asset_mgmt_button)
-            else:
-                first_index_item = tw.item(initial_row, 0)
-                if first_index_item is None:
-                    logger.error("Bug! Missing index item at %i:0 while rebuilding the presets table!", initial_row)
-                    continue
-                cell_widget = QWidget()
-                asset_button_layout = QHBoxLayout()
-                asset_button_layout.addWidget(QLabel(first_index_item.text()))
-                asset_button_layout.addWidget(asset_mgmt_button)
-                asset_mgmt_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-                cell_widget.setLayout(asset_button_layout)
-                first_index_item.setText("")
-                tw.setCellWidget(first_index_item.row(), 0, cell_widget)
-            if len(preset.colors) < 2:
-                last_index_item.setText("")
-        self._in_preset_table_rebuild = False
+            add_step_layout.addWidget(remove_last_step_button)
+        remove_preset_button = QPushButton("❌")
+        remove_preset_button.setToolTip("Remove this preset.")
+        remove_preset_button.clicked.connect(lambda _, p=preset: self._remove_preset(p))
+        add_step_layout.addSpacing(10)
+        add_step_layout.addWidget(remove_preset_button)
+        add_step_widget.setLayout(add_step_layout)
+        tw.setCellWidget(last_row, 0, add_step_widget)
+        asset_mgmt_button = QPushButton()
+        asset_mgmt_button.setIcon(_IMAGE_ICON)
+        asset_mgmt_button.clicked.connect(lambda _, p=preset: self._change_preset_asset_clicked(p))
+        if len(preset.colors) < 2:
+            add_step_layout.addWidget(asset_mgmt_button)
+            index_item.setText("")
+            return
+        first_index_item = tw.item(first_row, 0)
+        if first_index_item is None:
+            logger.error("Bug! Missing index item at %i:0 while rebuilding the presets table!", first_row)
+            return
+        cell_widget = QWidget()
+        asset_button_layout = QHBoxLayout()
+        asset_button_layout.addWidget(QLabel(first_index_item.text()))
+        asset_button_layout.addWidget(asset_mgmt_button)
+        asset_mgmt_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        cell_widget.setLayout(asset_button_layout)
+        first_index_item.setText("")
+        tw.setCellWidget(first_row, 0, cell_widget)
 
     def _preset_cell_edited(self, row: int, column: int) -> None:
         if self._in_preset_table_rebuild:
@@ -327,14 +385,17 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
     def _load_default_colors_clicked_short(self) -> None:
         self._model.populate_presets_with_initial_data(True)
         self._reload_presets_table()
+        self._recall_tab.update_recall_table()
 
     def _load_default_colors_clicked_long(self) -> None:
         self._model.populate_presets_with_initial_data(False)
         self._reload_presets_table()
+        self._recall_tab.update_recall_table()
 
     def _add_preset(self) -> None:
-        self._model.presets.append(ColorPreset())
+        self._model.add_preset(ColorPreset())
         self._reload_presets_table()
+        self._recall_tab.update_recall_table()
 
     def _add_accent_color(self, accent_color_list: list[ColorHSI]) -> None:
         accent_color_list.append(ColorHSI(0.0, 0.0, 1.0))
@@ -357,11 +418,10 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             preset: The preset to remove. Presets that are not part of the model are ignored.
 
         """
-        try:
-            self._model.presets.remove(preset)
-        except ValueError:
+        if not self._model.remove_preset(preset):
             return
         self._reload_presets_table()
+        self._recall_tab.update_recall_table()
 
     def _apply_live_preview_ui_state(self) -> None:
         """Synchronize the color groups tab and the live preview button with the model state."""

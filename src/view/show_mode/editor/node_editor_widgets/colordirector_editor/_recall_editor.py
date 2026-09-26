@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QTableWidget, QVBoxLayout, QWidget
 
+from model.virtual_filters.colordirector_vfilter import bound_preset_index
 from view.show_mode.editor.node_editor_widgets.colordirector_editor.recall_cell_delegate import RecallCellDelegate
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTableWidgetItem
 
@@ -18,7 +19,8 @@ class RecallEditWidget(QWidget):
     """Enable editing of recalls.
 
     The widget disables itself if no presets are present. Otherwise, it will populate itself.
-    When the output groups change, the table needs to be updated.
+    The owning editor widget refreshes the table using update_recall_table whenever the output groups or the
+    color presets change.
 
     """
 
@@ -66,15 +68,15 @@ class RecallEditWidget(QWidget):
         index_item.setFlags(index_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
         self._recall_table.setItem(recall_index, 0, index_item)
         self._model.normalize_recall(recall_index)
+        preset_count = len(self._model.presets)
         for group_index, value in enumerate(recall_data):
-            step_item = AnnotatedTableWidgetItem(str(value))
+            displayed_value = bound_preset_index(value, preset_count)
+            step_item = AnnotatedTableWidgetItem(str(displayed_value))
             step_item.annotated_data = (recall_index, group_index, value)
             self._recall_table.setItem(recall_index, group_index + 1, step_item)
 
     def _add_recall(self) -> None:
-        group_count = len(self._model.output_groups)
-        recall_data: list[int] = [0] * group_count
-        self._model.recalls.append(recall_data)
+        recall_data = self._model.add_recall()
         self._recall_table.setRowCount(len(self._model.recalls))
         self._add_recall_row_to_table(len(self._model.recalls) - 1, recall_data)
 
@@ -87,5 +89,5 @@ class RecallEditWidget(QWidget):
         recall_index = self._recall_table.currentRow()
         if not 0 <= recall_index < len(self._model.recalls):
             return
-        self._model.recalls.pop(recall_index)
+        self._model.remove_recall(recall_index)
         self.update_recall_table()

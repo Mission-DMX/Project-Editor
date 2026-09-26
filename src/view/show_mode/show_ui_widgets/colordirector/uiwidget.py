@@ -78,4 +78,4 @@ class ColorDirectorShowUIWidget(UIWidget):
 
     @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
-        return QLabel("Nothing to configure.")
+        return QLabel("Nothing to configure.", parent)

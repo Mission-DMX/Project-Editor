@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
 )
 
 from controller.cli.connect_command import get_math_enabled_jinja_env
-from model.virtual_filters.colordirector_vfilter import is_valid_channel_name
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 if TYPE_CHECKING:
@@ -154,17 +153,13 @@ class ColorGroupWidget(QWidget):
         name = dialog.textValue()
         dialog.deleteLater()
         self._input_dialog = None
-        if not is_valid_channel_name(name):
+        if not self._model.add_output_group(name):
             self._show_name_error(
                 "Invalid Group Name",
-                "Group names must not be empty and may only contain ASCII letters, digits, single underscores "
-                "and hyphens. Double underscores and trailing underscores are not allowed.",
+                "Group names must not be empty, must be unique and may only contain ASCII letters, digits, "
+                "single underscores and hyphens. Double underscores and trailing underscores are not allowed.",
             )
             return
-        if name in self._model.output_groups:
-            self._show_name_error("Group Already Exists", "Group names need to be unique.")
-            return
-        self._model.output_groups[name] = []
         group_item = AnnotatedTreeWidgetItem(self._group_view)
         group_item.setText(0, name)
         group_item.annotated_data = (True, name)
@@ -233,9 +228,8 @@ class ColorGroupWidget(QWidget):
         if not isinstance(annotated_data, tuple) or len(annotated_data) < 2:
             return False
         group_name = annotated_data[1]
-        if not is_valid_channel_name(name) or name in self._model.output_groups[group_name]:
+        if not self._model.add_sub_output(group_name, name):
             return False
-        self._model.output_groups[group_name].append(name)
         output_item = AnnotatedTreeWidgetItem(group_item)
         output_item.setText(0, name)
         output_item.annotated_data = (False, name)
@@ -297,5 +291,6 @@ class ColorGroupWidget(QWidget):
             if not isinstance(parent_data, tuple) or len(parent_data) < 2:
                 return
             _, group_name = parent_data
-            self._model.output_groups[group_name].remove(name)
+            if not self._model.remove_sub_output(group_name, name):
+                return
             group_item.takeChild(group_item.indexOfChild(selected_item))
