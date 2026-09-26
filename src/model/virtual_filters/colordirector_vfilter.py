@@ -110,6 +110,9 @@ def _sanitize_channel_name(name: str) -> str:
 def is_valid_channel_name(name: str) -> bool:
     """Check whether the provided color group or sub output name may be used.
 
+    Only ASCII letters, digits, single underscores and hyphens are allowed since the names are used within filter
+    ids, network update messages and serialized show files.
+
     Args:
         name: The name to check.
 
@@ -117,7 +120,7 @@ def is_valid_channel_name(name: str) -> bool:
         True if the name is valid and can be used as color group or sub output name.
 
     """
-    if len(name) == 0 or "__" in name or name.endswith("_"):
+    if len(name) == 0 or "__" in name or name.endswith("_") or not name.isascii():
         return False
     return all(char.isalnum() or char in "_-" for char in name)
 
@@ -241,10 +244,10 @@ class ColordirectorVFilter(VirtualFilter):
 
     def _deserialize_color_groups(self) -> None:
         self._color_groups.clear()
+        self.out_data_types.clear()
         color_group_def = self.filter_configurations.get("colorgroups", "")
         if len(color_group_def) == 0:
             return
-        self.out_data_types.clear()
         for group_def in color_group_def.split("#"):
             if len(group_def) == 0:
                 continue
@@ -395,12 +398,20 @@ class ColordirectorVFilter(VirtualFilter):
         else:
             self._inst_filters_normal_mode(filter_list)
 
-    def _inst_filters_normal_mode(self, filter_list: list[Filter]) -> None:
-        for callback in self._registered_callbacks:
-            self.scene.board_configuration.clear_filter_update_callbacks(callback[0], callback[1])
+    def _clear_runtime_state(self) -> None:
+        """Remove all runtime state that was populated by a previous filter instantiation.
+
+        This unregisters all filter update callbacks and forgets the currently active color presets. It needs to
+        be called before the filters are instantiated anew, independent of the instantiation mode.
+        """
+        for scene_id, filter_id in self._registered_callbacks:
+            self.scene.board_configuration.clear_filter_update_callbacks(scene_id, filter_id)
         self._registered_callbacks.clear()
         self._current_active_colors.clear()
         self._cue_filter_to_group_index_mapping.clear()
+
+    def _inst_filters_normal_mode(self, filter_list: list[Filter]) -> None:
+        self._clear_runtime_state()
         timescale_input = self.channel_links.get("time_scale")
         if timescale_input is None:
             float_const = Filter(
@@ -456,6 +467,7 @@ class ColordirectorVFilter(VirtualFilter):
             self._cue_filter_to_group_index_mapping[cue_filter.filter_id] = group_index
 
     def _inst_filters_preview_mode(self, filter_list: list[Filter]) -> None:
+        self._clear_runtime_state()
         for output_group, sub_outputs in self._color_groups.items():
             for sub_output in sub_outputs:
                 color_const_filter = Filter(

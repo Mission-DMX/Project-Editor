@@ -378,6 +378,14 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             self._model.live_preview_mode = False
             if not transmit_to_fish(self._model.scene.board_configuration, False):
                 logger.error("Failed to transmit the show to fish while disabling the live preview mode.")
+                error_box = QMessageBox(self._widget)
+                error_box.setWindowTitle("Live Preview Still Active")
+                error_box.setText(
+                    "The live preview could not be disabled because the show could not be transmitted to fish. "
+                    "The show on fish may still use the live preview constants. Transmit the show again to fix this."
+                )
+                error_box.setIcon(QMessageBox.Icon.Critical)
+                error_box.show()
         self._model.serialize()
         super().parent_closed(filter_node)
 

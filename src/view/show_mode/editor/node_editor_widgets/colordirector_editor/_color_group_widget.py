@@ -155,8 +155,8 @@ class ColorGroupWidget(QWidget):
         if not is_valid_channel_name(name):
             self._show_name_error(
                 "Invalid Group Name",
-                "Group names must not be empty and may only contain letters, digits, single underscores and "
-                "hyphens. Double underscores and trailing underscores are not allowed.",
+                "Group names must not be empty and may only contain ASCII letters, digits, single underscores "
+                "and hyphens. Double underscores and trailing underscores are not allowed.",
             )
             return
         if name in self._model.output_groups:
@@ -205,7 +205,7 @@ class ColorGroupWidget(QWidget):
         if not self._add_sub_output(name):
             self._show_name_error(
                 "Invalid Sub Output Name",
-                "Sub output names must not be empty, must be unique within their group and may only contain "
+                "Sub output names must not be empty, must be unique within their group and may only contain ASCII "
                 "letters, digits, single underscores and hyphens. Double underscores and trailing underscores are "
                 "not allowed.",
             )
