@@ -176,6 +176,7 @@ class FilterTypeEnumeration(IntFlag):
     FILTER_SWITCH_16BIT = 77
     FILTER_SWITCH_FLOAT = 78
     FILTER_SWITCH_COLOR = 79
+    FILTER_EVENT_SCHEDULER = 80
 
 
 class Filter:

@@ -77,6 +77,7 @@ from view.show_mode.editor.nodes.impl.faders import (
     FaderMainBrightness,
     FaderRawNode,
 )
+from view.show_mode.editor.nodes.impl.misc import EventSchedulerNode
 from view.show_mode.editor.nodes.impl.routing import Switch8BitNode, Switch16BitNode, SwitchColorNode, SwitchFloatNode
 from view.show_mode.editor.nodes.impl.scripting import LuaFilterNode
 from view.show_mode.editor.nodes.impl.time import (
@@ -192,4 +193,5 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_SWITCH_16BIT: Switch16BitNode.nodeName,
     FilterTypeEnumeration.FILTER_SWITCH_FLOAT: SwitchFloatNode.nodeName,
     FilterTypeEnumeration.FILTER_SWITCH_COLOR: SwitchColorNode.nodeName,
+    FilterTypeEnumeration.FILTER_EVENT_SCHEDULER: EventSchedulerNode.nodeName,
 }

@@ -32,6 +32,9 @@ from .node_editor_widgets.color_mixing_setup_widget import ColorMixingSetupWidge
 from .node_editor_widgets.color_to_colorwheel_adapter_settings_widget import ColorToColorwheelAdapterSetupWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.dimmer_brightness_mixin_config_widget import DimmerBrightnessMixinConfigWidget
+from .node_editor_widgets.event_scheduler_config_widget.event_scheduler_filter_config_widget import (
+    EventSchedulerSettingsWidget,
+)
 from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSettingsWidget
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
 from .node_editor_widgets.number_constant_settings_widget import NumberConstantSettingsWidget
@@ -156,6 +159,10 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
                                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
                                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT]:
         return NumberConstantSettingsWidget(filter_)
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
+        return ColorChaserFilterConfigWidget(filter_)
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_EVENT_SCHEDULER:
+        return EventSchedulerSettingsWidget()
     return None
 
 
