@@ -40,7 +40,9 @@ class PreviewBitmapGenerator(QThread):
     """Class to generate previews for presets.
 
     The runner will call the preset_preview_generated signal for every generated preset. Once the thread is done, the
-    built-in finished signal of QThread is emitted and the instance may be deleted."""
+    built-in finished signal of QThread is emitted and the instance may be deleted.
+
+    """
 
     preset_preview_generated = Signal(int, QImage)
 
