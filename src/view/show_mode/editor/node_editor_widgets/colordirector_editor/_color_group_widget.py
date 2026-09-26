@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from jinja2 import TemplateError
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QDialog,
@@ -236,8 +237,15 @@ class ColorGroupWidget(QWidget):
         self._input_dialog.show()
 
     def _add_sub_output_range_final(self) -> None:
+        try:
+            generated_names = self._input_dialog.generated_names
+        except (TemplateError, ValueError) as e:
+            self._input_dialog.deleteLater()
+            self._input_dialog = None
+            self._show_name_error("Invalid Name Template", f"The entered name template is invalid: {e}")
+            return
         skipped_count = 0
-        for name in self._input_dialog.generated_names:
+        for name in generated_names:
             if not self._add_sub_output(name):
                 skipped_count += 1
         self._input_dialog.deleteLater()

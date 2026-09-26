@@ -500,6 +500,7 @@ class ColordirectorVFilter(VirtualFilter):
                 selected_recall = self._recalls[target_recall]
                 selected_recall.clear()
                 selected_recall.extend(current_colors)
+                self.configuration_changed.mapped_signal.emit()
                 return True
             case "recall":
                 try:

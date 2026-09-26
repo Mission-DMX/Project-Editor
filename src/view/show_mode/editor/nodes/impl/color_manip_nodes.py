@@ -1,4 +1,5 @@
 """Contains filter nodes for color manipulation."""
+
 from typing import override
 
 from model.filter import DataType, Filter, FilterTypeEnumeration
@@ -54,23 +55,27 @@ class ColorDirectorVFilterNode(FilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(model, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, name,
-                         terminals={"time": {"io": "in"}, "time_scale": {"io": "in"}})
+        super().__init__(
+            model,
+            FilterTypeEnumeration.VFILTER_COLORDIRECTOR,
+            name,
+            terminals={"time": {"io": "in"}, "time_scale": {"io": "in"}},
+        )
         self.update_node_after_settings_changed()
 
     @override
     def update_node_after_settings_changed(self) -> None:
-        f = self.filter
-        if not isinstance(f, ColordirectorVFilter):
+        director_filter = self.filter
+        if not isinstance(director_filter, ColordirectorVFilter):
             raise ValueError("Expected ColordirectorVFilter.")
         existing_outputs = self.outputs().keys()
-        new_outputs = f.get_outputs()
+        new_outputs = director_filter.get_outputs()
         for output in new_outputs:
             if output not in existing_outputs:
                 self.filter.out_data_types[output] = DataType.DT_COLOR
                 self.addOutput(output)
         outputs_to_remove = [output for output in existing_outputs if output not in new_outputs]
         for output in outputs_to_remove:
-            self.filter.out_data_types[output] = None
+            self.filter.out_data_types.pop(output, None)
             self.removeTerminal(output)
 
