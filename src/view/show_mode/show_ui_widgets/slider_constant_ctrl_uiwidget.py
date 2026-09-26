@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import warnings
+from logging import getLogger
+from math import isfinite
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import Qt
@@ -22,8 +25,43 @@ from model.filter import DataType, FilterTypeEnumeration
 
 if TYPE_CHECKING:
     import proto.FilterMode_pb2
+    from model import Scene
 
 _FLOAT_SLIDER_STEPS = 10000
+
+logger = getLogger(__name__)
+
+
+def _parse_config_float(raw: str, fallback: float) -> float:
+    """Parse a float configuration entry, falling back on malformed input.
+
+    Args:
+        raw: The raw configuration value to parse.
+        fallback: The value to return instead if the raw value is not a finite number.
+
+    Returns:
+        The parsed value, or the fallback for unparseable, NaN or infinite input.
+
+    """
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return fallback
+    return value if isfinite(value) else fallback
+
+
+def _parse_config_int(raw: str, fallback: int) -> int:
+    """Parse an integer configuration entry, falling back on malformed input.
+
+    Args:
+        raw: The raw configuration value to parse. Decimal fractions are truncated towards zero.
+        fallback: The value to return instead if the raw value cannot be converted.
+
+    Returns:
+        The parsed value, or the fallback for unparseable input.
+
+    """
+    return int(_parse_config_float(raw, float(fallback)))
 
 
 class SliderConstantUIWidget(UIWidget):
@@ -40,14 +78,16 @@ class SliderConstantUIWidget(UIWidget):
         super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
-        self._model = None
+        self._model: Filter | None = None
         self._value: int | float = 0
         self._minimum = 0
         self._maximum = 255
         self._orientation = Qt.Orientation.Horizontal
-        self._ui_update_callback_initialized = False
+        self._registered_callback_key: tuple[Scene, str] | None = None
         self._player_slider: QSlider | None = None
         self._value_label: QLabel | None = None
+        self._preview_sliders: list[QSlider] = []
+        self._preview_labels: list[QLabel] = []
         self._data_type: DataType = DataType.DT_8_BIT
         self._range_min: float = 0.0
         self._range_max: float = 255.0
@@ -61,13 +101,23 @@ class SliderConstantUIWidget(UIWidget):
             )
 
     def __del__(self) -> None:
-        """Unregister callbacks."""
-        if self._ui_update_callback_initialized and self._model is not None:
-            self._model.scene.board_configuration.remove_filter_update_callback(
-                self._model.scene.scene_id,
-                self._model.filter_id,
-                self._update_from_fish
-            )
+        """Unregister the fish update callback (fallback in case close was not called)."""
+        self._unregister_fish_callback()
+
+    @override
+    def close(self) -> None:
+        """Unregister the fish update callback as this widget is being removed."""
+        self._unregister_fish_callback()
+
+    def _unregister_fish_callback(self) -> None:
+        """Remove the update callback registered for the linked filter, if any."""
+        # getattr keeps this safe for partially initialized instances whose __del__ runs early.
+        registered_key = getattr(self, "_registered_callback_key", None)
+        if registered_key is None:
+            return
+        self._registered_callback_key = None
+        scene, filter_id = registered_key
+        scene.board_configuration.remove_filter_update_callback(scene, filter_id, self._update_from_fish)
 
     def set_filter(self, f: Filter, i: int) -> None:
         """Set the filter associated with this UI widget.
@@ -83,42 +133,66 @@ class SliderConstantUIWidget(UIWidget):
         self._model = f
         self.associated_filters["constant"] = f.filter_id
 
-        if f.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
-                             FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT]:
+        if f.filter_type in (
+            FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
+            FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+        ):
             self._data_type = DataType.DT_8_BIT
-            default_min, default_max, type_lo, type_hi = 0.0, 255.0, 0.0, 255.0
-            self._range_min = max(type_lo, min(type_hi - 1, float(self._configuration.get("min", str(default_min)))))
-            self._range_max = max(type_lo + 1, min(type_hi, float(self._configuration.get("max", str(default_max)))))
-            self._minimum, self._maximum = int(self._range_min), int(self._range_max)
-            self._value = int(f.initial_parameters.get("value", "0"))
-        elif f.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
-                               FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT]:
+            self._setup_integer_slider_range(0.0, 255.0)
+            self._value = self._clamp_value(_parse_config_int(f.initial_parameters.get("value", "0"), 0))
+        elif f.filter_type in (
+            FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+            FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+        ):
             self._data_type = DataType.DT_16_BIT
-            default_min, default_max, type_lo, type_hi = 0.0, 65535.0, 0.0, 65535.0
-            self._range_min = max(type_lo, min(type_hi - 1, float(self._configuration.get("min", str(default_min)))))
-            self._range_max = max(type_lo + 1, min(type_hi, float(self._configuration.get("max", str(default_max)))))
-            self._minimum, self._maximum = int(self._range_min), int(self._range_max)
-            self._value = int(f.initial_parameters.get("value", "0"))
+            self._setup_integer_slider_range(0.0, 65535.0)
+            self._value = self._clamp_value(_parse_config_int(f.initial_parameters.get("value", "0"), 0))
         else:  # FILTER_CONSTANT_FLOAT / FILTER_RESPONDING_CONSTANT_FLOAT
             self._data_type = DataType.DT_DOUBLE
-            self._range_min = float(self._configuration.get("min", "0.0"))
-            self._range_max = float(self._configuration.get("max", "1.0"))
+            range_min = _parse_config_float(self._configuration.get("min", "0.0"), 0.0)
+            range_max = _parse_config_float(self._configuration.get("max", "1.0"), 1.0)
+            if range_min >= range_max:
+                logger.warning(
+                    "Invalid configured slider range [%s, %s] (min >= max), falling back to [0.0, 1.0].",
+                    range_min,
+                    range_max,
+                )
+                range_min, range_max = 0.0, 1.0
+            self._range_min, self._range_max = range_min, range_max
             self._minimum = 0
             self._maximum = _FLOAT_SLIDER_STEPS
-            self._value = float(f.initial_parameters.get("value", "0.0"))
+            self._value = self._clamp_value(_parse_config_float(f.initial_parameters.get("value", "0.0"), 0.0))
 
-        if self._player_slider is not None:
-            self._player_slider.setMinimum(self._minimum)
-            self._player_slider.setMaximum(self._maximum)
-            self._player_slider.setValue(self._value_to_slider_pos())
-            if self._value_label is not None:
-                self._value_label.setText(self._format_value())
+        self._sync_sliders(reset_bounds=True)
 
-        if not self._ui_update_callback_initialized:
-            f.scene.board_configuration.register_filter_update_callback(
-                f.scene, f.filter_id, self._update_from_fish
+        if self._registered_callback_key != (f.scene, f.filter_id):
+            self._unregister_fish_callback()
+            f.scene.board_configuration.register_filter_update_callback(f.scene, f.filter_id, self._update_from_fish)
+            self._registered_callback_key = (f.scene, f.filter_id)
+
+    def _setup_integer_slider_range(self, default_min: float, default_max: float) -> None:
+        """Set up the integer slider range from the widget configuration.
+
+        Args:
+            default_min: The lowest allowed and default lower range bound.
+            default_max: The highest allowed and default upper range bound.
+
+        """
+        range_min = _parse_config_float(self._configuration.get("min", str(default_min)), default_min)
+        range_max = _parse_config_float(self._configuration.get("max", str(default_max)), default_max)
+        range_min = max(default_min, min(default_max - 1, range_min))
+        range_max = max(default_min + 1, min(default_max, range_max))
+        if range_min >= range_max:
+            logger.warning(
+                "Invalid configured slider range [%s, %s] (min >= max), falling back to [%s, %s].",
+                range_min,
+                range_max,
+                default_min,
+                default_max,
             )
-            self._ui_update_callback_initialized = True
+            range_min, range_max = default_min, default_max
+        self._range_min, self._range_max = range_min, range_max
+        self._minimum, self._maximum = int(range_min), int(range_max)
 
     def _value_to_slider_pos(self) -> int:
         """Convert the current value to an integer slider position."""
@@ -134,6 +208,90 @@ class SliderConstantUIWidget(UIWidget):
         """Convert a slider position to a float value."""
         return self._range_min + (pos / _FLOAT_SLIDER_STEPS) * (self._range_max - self._range_min)
 
+    def _clamp_value(self, value: float) -> float:
+        """Clamp a value to the range representable by the slider.
+
+        Args:
+            value: The value to clamp.
+
+        Returns:
+            The clamped value: bounded by the configured float range for float filters or by
+            the integer slider bounds for 8/16 bit filters.
+
+        """
+        if self._data_type == DataType.DT_DOUBLE:
+            return min(self._range_max, max(self._range_min, float(value)))
+        return min(self._maximum, max(self._minimum, int(value)))
+
+    def _sync_sliders(self, *, reset_bounds: bool = False) -> None:
+        """Synchronize all tracked sliders and value labels with the current widget state.
+
+        Qt objects that were already destroyed are pruned from the tracking lists. Slider values
+        are updated with blocked signals to avoid feedback loops with the update logic.
+
+        Args:
+            reset_bounds: Whether to also re-apply the slider minimum and maximum bounds.
+
+        """
+        self._player_slider = self._sync_slider(self._player_slider, reset_bounds=reset_bounds)
+        self._value_label = self._sync_label(self._value_label)
+
+        alive_preview_sliders: list[QSlider] = []
+        for current_slider in self._preview_sliders:
+            synced_slider = self._sync_slider(current_slider, reset_bounds=reset_bounds)
+            if synced_slider is not None:
+                alive_preview_sliders.append(synced_slider)
+        self._preview_sliders = alive_preview_sliders
+
+        alive_preview_labels: list[QLabel] = []
+        for current_label in self._preview_labels:
+            synced_label = self._sync_label(current_label)
+            if synced_label is not None:
+                alive_preview_labels.append(synced_label)
+        self._preview_labels = alive_preview_labels
+
+    def _sync_slider(self, slider: QSlider | None, *, reset_bounds: bool = False) -> QSlider | None:
+        """Update a single slider to the current value, pruning it if its Qt object is gone.
+
+        Args:
+            slider: The slider to update, or None.
+            reset_bounds: Whether to also re-apply the slider minimum and maximum bounds.
+
+        Returns:
+            The updated slider, or None if it was None or its Qt object was already destroyed.
+
+        """
+        if slider is None:
+            return None
+        try:
+            if reset_bounds:
+                slider.setMinimum(self._minimum)
+                slider.setMaximum(self._maximum)
+            slider.blockSignals(True)
+            slider.setValue(self._value_to_slider_pos())
+            slider.blockSignals(False)
+        except RuntimeError:
+            return None  # underlying Qt object was already deleted
+        return slider
+
+    def _sync_label(self, label: QLabel | None) -> QLabel | None:
+        """Update a single value label, pruning it if its Qt object is gone.
+
+        Args:
+            label: The label to update, or None.
+
+        Returns:
+            The updated label, or None if it was None or its Qt object was already destroyed.
+
+        """
+        if label is None:
+            return None
+        try:
+            label.setText(self._format_value())
+        except RuntimeError:
+            return None  # underlying Qt object was already deleted
+        return label
+
     def _format_value(self) -> str:
         if self._data_type == DataType.DT_DOUBLE:
             return f"{float(self._value):.4f}"
@@ -145,8 +303,7 @@ class SliderConstantUIWidget(UIWidget):
             self._value = self._slider_pos_to_float(slider_pos)
         else:
             self._value = slider_pos
-        if self._value_label is not None:
-            self._value_label.setText(self._format_value())
+        self._sync_sliders()
         self.push_update()
 
     @override
@@ -179,7 +336,7 @@ class SliderConstantUIWidget(UIWidget):
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         """Get the configuration widget for the editor."""
         w = QWidget(parent)
-        self._configuration_widget = self._construct_player_widget(w)
+        self._configuration_widget = self._construct_preview_widget(w)
         layout = QVBoxLayout()
         layout.addWidget(self._configuration_widget)
         w.setLayout(layout)
@@ -191,12 +348,24 @@ class SliderConstantUIWidget(UIWidget):
         """Create a deep copy of this widget."""
         w = SliderConstantUIWidget(new_parent, self.configuration.copy())
         super().copy_base(w)
+        linked_filter_id = self.associated_filters.get("constant")
+        if linked_filter_id is not None:
+            linked_filter = new_parent.scene.get_filter_by_id(linked_filter_id)
+            if linked_filter is not None:
+                w.set_filter(linked_filter, 0)
         return w
 
     def _construct_player_widget(self, parent: QWidget | None) -> QWidget:
-        """Construct the player widget with slider and return it."""
+        """Construct the interactive player widget with slider and return it."""
         player_widget = QWidget(parent)
 
+        if self._player_slider is not None:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                try:
+                    self._player_slider.valueChanged.disconnect(self._set_value)
+                except (RuntimeError, TypeError):
+                    pass  # the old slider was already destroyed or disconnected
         self._player_slider = QSlider(self._orientation, player_widget)
         self._player_slider.setMinimum(self._minimum)
         self._player_slider.setMaximum(self._maximum)
@@ -209,7 +378,7 @@ class SliderConstantUIWidget(UIWidget):
         self._value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Set layout
-        size = int(self._configuration.get("size", "200"))
+        size = _parse_config_int(self._configuration.get("size", "200"), 200)
         if self._orientation == Qt.Orientation.Vertical:
             layout = QVBoxLayout()
             player_widget.setMinimumHeight(size)
@@ -223,12 +392,49 @@ class SliderConstantUIWidget(UIWidget):
         player_widget.setLayout(layout)
         return player_widget
 
+    def _construct_preview_widget(self, parent: QWidget | None) -> QWidget:
+        """Construct a non-interactive preview of the player widget.
+
+        The preview slider is disabled and not connected to any update logic, so editor views
+        never push filter updates to fish.
+        """
+        preview_widget = QWidget(parent)
+        preview_slider = QSlider(self._orientation, preview_widget)
+        preview_slider.setMinimum(self._minimum)
+        preview_slider.setMaximum(self._maximum)
+        preview_slider.setValue(self._value_to_slider_pos())
+        preview_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        preview_slider.setTickInterval(max(1, (self._maximum - self._minimum) // 10))
+        preview_slider.setEnabled(False)
+        self._preview_sliders.append(preview_slider)
+
+        preview_label = QLabel(self._format_value(), preview_widget)
+        preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._preview_labels.append(preview_label)
+
+        # Set layout
+        size = _parse_config_int(self._configuration.get("size", "200"), 200)
+        layout: QVBoxLayout | QHBoxLayout
+        if self._orientation == Qt.Orientation.Vertical:
+            layout = QVBoxLayout()
+            layout.addWidget(preview_label)
+            layout.addWidget(preview_slider)
+            preview_widget.setMinimumHeight(size)
+            preview_widget.setMinimumWidth(80)
+        else:
+            layout = QHBoxLayout()
+            layout.addWidget(preview_slider)
+            layout.addWidget(preview_label)
+            preview_widget.setMinimumHeight(80)
+            preview_widget.setMinimumWidth(size)
+        preview_widget.setLayout(layout)
+        return preview_widget
+
     def _construct_configuration_widget(self, parent: QWidget | None) -> QWidget:
         """Construct the configuration controls widget and return it."""
-        if self._player_widget is None:
-            self._player_widget = self._construct_player_widget(None)
         controls = QWidget(parent)
         layout = QVBoxLayout()
+        layout.addWidget(self._construct_preview_widget(None))
 
         # Orientation selection
         orientation_group = QWidget(controls)
@@ -256,7 +462,7 @@ class SliderConstantUIWidget(UIWidget):
         size_spinbox = QSpinBox(size_group)
         size_spinbox.setMinimum(50)
         size_spinbox.setMaximum(500)
-        size_spinbox.setValue(int(self._configuration.get("size", "200")))
+        size_spinbox.setValue(_parse_config_int(self._configuration.get("size", "200"), 200))
         size_layout.addWidget(size_spinbox)
         size_group.setLayout(size_layout)
         layout.addWidget(size_group)
@@ -327,12 +533,8 @@ class SliderConstantUIWidget(UIWidget):
             self._configuration["min"] = str(new_min_f)
             if self._data_type != DataType.DT_DOUBLE:
                 self._minimum = int(new_min_f)
-                if self._player_slider is not None:
-                    self._player_slider.setMinimum(self._minimum)
-            elif self._player_slider is not None:
-                self._player_slider.blockSignals(True)
-                self._player_slider.setValue(self._value_to_slider_pos())
-                self._player_slider.blockSignals(False)
+            self._value = self._clamp_value(self._value)
+            self._sync_sliders(reset_bounds=True)
 
         def update_max(new_max: float) -> None:
             new_max_f = float(new_max)
@@ -342,12 +544,8 @@ class SliderConstantUIWidget(UIWidget):
             self._configuration["max"] = str(new_max_f)
             if self._data_type != DataType.DT_DOUBLE:
                 self._maximum = int(new_max_f)
-                if self._player_slider is not None:
-                    self._player_slider.setMaximum(self._maximum)
-            elif self._player_slider is not None:
-                self._player_slider.blockSignals(True)
-                self._player_slider.setValue(self._value_to_slider_pos())
-                self._player_slider.blockSignals(False)
+            self._value = self._clamp_value(self._value)
+            self._sync_sliders(reset_bounds=True)
 
         min_box.valueChanged.connect(update_min)
         max_box.valueChanged.connect(update_max)
@@ -363,20 +561,11 @@ class SliderConstantUIWidget(UIWidget):
         """Update slider position based on filter updates from fish."""
         if param.parameter_key != "value":
             return
-        try:
-            if self._data_type == DataType.DT_DOUBLE:
-                self._value = float(param.parameter_value)
-            else:
-                self._value = int(float(param.parameter_value))
-
-            if self._player_slider is not None:
-                self._player_slider.blockSignals(True)
-                self._player_slider.setValue(self._value_to_slider_pos())
-                self._player_slider.blockSignals(False)
-            if self._value_label is not None:
-                self._value_label.setText(self._format_value())
-        except (ValueError, TypeError):
-            pass
+        if self._data_type == DataType.DT_DOUBLE:
+            self._value = self._clamp_value(_parse_config_float(param.parameter_value, float(self._value)))
+        else:
+            self._value = self._clamp_value(_parse_config_int(param.parameter_value, int(self._value)))
+        self._sync_sliders()
 
     @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
