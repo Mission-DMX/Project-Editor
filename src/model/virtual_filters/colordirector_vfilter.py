@@ -108,7 +108,9 @@ def is_valid_channel_name(name: str) -> bool:
         True if the name is valid and can be used as color group or sub output name.
 
     """
-    return len(name) > 0 and _sanitize_channel_name(name) == name
+    if len(name) == 0 or "__" in name or name.endswith("_"):
+        return False
+    return all(char.isalnum() or char in "_-" for char in name)
 
 
 def bound_preset_index(preset_index: int, preset_count: int) -> int:
@@ -183,6 +185,21 @@ class ColordirectorVFilter(VirtualFilter):
         """Get the color output group dictionary."""
         return self._color_groups
 
+    def remove_output_group(self, group_name: str) -> None:
+        """Remove the provided color group including its entries within the saved recalls.
+
+        Args:
+            group_name: The name of the color group to remove. Unknown group names are ignored.
+
+        """
+        if group_name not in self._color_groups:
+            return
+        group_index = list(self._color_groups.keys()).index(group_name)
+        del self._color_groups[group_name]
+        for recall in self._recalls:
+            if group_index < len(recall):
+                recall.pop(group_index)
+
     @property
     def recalls(self) -> list[list[int]]:
         """Returns the list of setting recalls."""
@@ -203,14 +220,38 @@ class ColordirectorVFilter(VirtualFilter):
             return
         self.out_data_types.clear()
         for group_def in color_group_def.split("#"):
+            if len(group_def) == 0:
+                continue
             output_channels = group_def.split("|")
-            if len(output_channels) < 1:
-                raise ValueError("A least a name of the color group must be defined.")
-            name = output_channels[0]
+            group_name = _sanitize_channel_name(output_channels[0])
+            if not is_valid_channel_name(group_name):
+                logger.warning("Ignoring the color group '%s' because its name is invalid.", output_channels[0])
+                continue
+            if group_name in self._color_groups:
+                logger.warning("Ignoring the color group '%s' because its name is already in use.", group_name)
+                continue
             output_channels.pop(0)
-            self._color_groups[name] = output_channels
-            for chan_name in output_channels:
-                self.out_data_types[f"{name}__{chan_name}"] = DataType.DT_COLOR
+            channels: list[str] = []
+            for channel in output_channels:
+                channel_name = _sanitize_channel_name(channel)
+                if not is_valid_channel_name(channel_name):
+                    logger.warning(
+                        "Ignoring the sub output '%s' of the color group '%s' because its name is invalid.",
+                        channel,
+                        group_name,
+                    )
+                    continue
+                if channel_name in channels:
+                    logger.warning(
+                        "Ignoring the sub output '%s' because its name is already in use within the color group '%s'.",
+                        channel_name,
+                        group_name,
+                    )
+                    continue
+                channels.append(channel_name)
+            self._color_groups[group_name] = channels
+            for chan_name in channels:
+                self.out_data_types[f"{group_name}__{chan_name}"] = DataType.DT_COLOR
 
     def _serialize_color_groups(self) -> None:
         self.filter_configurations["colorgroups"] = "#".join(
@@ -325,7 +366,10 @@ class ColordirectorVFilter(VirtualFilter):
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
-        color_group_name, group_output_channel = virtual_port_id.split("__")
+        parts = virtual_port_id.split("__")
+        if len(parts) != 2:
+            return None
+        color_group_name, group_output_channel = parts
         if color_group_name not in self._color_groups:
             return None
         color_group = self._color_groups[color_group_name]

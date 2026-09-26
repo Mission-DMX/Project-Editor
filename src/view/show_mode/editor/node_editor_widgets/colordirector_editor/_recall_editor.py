@@ -60,6 +60,7 @@ class RecallEditWidget(QWidget):
         self._recall_table.setItem(recall_index, 0, index_item)
         while len(recall_data) < group_count:
             recall_data.append(0)
+        del recall_data[group_count:]
         for group_index, value in enumerate(recall_data):
             step_item = AnnotatedTableWidgetItem(str(value))
             step_item.annotated_data = (recall_index, group_index, value)

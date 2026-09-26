@@ -105,7 +105,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._widget.addTab(presets_tab, "Presets")
 
         recall_tab = RecallEditWidget(self._model, self._widget)
-        self._color_groups_tab.group_added.connect(recall_tab.update_recall_table)
+        self._color_groups_tab.groups_changed.connect(recall_tab.update_recall_table)
         self._widget.addTab(recall_tab, "Recalls")
         self._dialog: QDialog | None = None
         self._model.live_preview_mode = False
@@ -332,6 +332,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             self._model.live_preview_mode = False
             self._color_groups_tab.setEnabled(True)
             self._widget.setTabEnabled(0, True)
+            self._widget.setCurrentIndex(0)
             error_box = QMessageBox(self._widget)
             error_box.setWindowTitle("Live Preview Unavailable")
             error_box.setText("Live preview could not be enabled because the show could not be transmitted to fish.")
@@ -363,7 +364,8 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
     def parent_closed(self, filter_node: FilterNode) -> None:
         if self._model.live_preview_mode:
             self._model.live_preview_mode = False
-            transmit_to_fish(self._model.scene.board_configuration, False)
+            if not transmit_to_fish(self._model.scene.board_configuration, False):
+                logger.error("Failed to transmit the show to fish while disabling the live preview mode.")
         if not self._serialized_since_load:
             self._model.serialize()
             self._serialized_since_load = True
