@@ -56,6 +56,15 @@ _MAX_RECALL_COUNT = 1024
 _DEFAULT_BUTTON_COLOR = ColorHSI(128.0, 0.5, 1.0)
 """Color used to represent color preset steps without accent colors in button visualizations."""
 
+_FORMAT_VERSION = 1
+"""Version of the serialized configuration format implemented by this editor.
+
+Configurations without a format_version entry were written by editor versions predating the format version entry:
+They are interpreted using this version. The version must be increased whenever the serialized format changes in an
+incompatible way: Editors implementing an older format version refuse to deserialize configurations of newer
+versions instead of guessing their meaning.
+"""
+
 
 class ColorPreset:
     """A color preset.
@@ -214,6 +223,9 @@ class ColordirectorVFilter(VirtualFilter):
 
     Setting live_preview_mode to true causes the filter to instantiate color constants that can be used instead of cues.
 
+    The serialized configuration is versioned using the format_version configuration entry: Configurations written by
+    a newer editor using an unsupported format version are neither deserialized nor overwritten while serializing.
+
     """
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
@@ -230,6 +242,17 @@ class ColordirectorVFilter(VirtualFilter):
         self.configuration_changed = SignalProvider()
         self.live_preview_mode: bool = False
         self.live_preview_prompted: bool = False
+        self._configuration_format_supported: bool = True
+
+    @property
+    def configuration_format_supported(self) -> bool:
+        """Whether the configuration deserialized last uses a format version supported by this implementation.
+
+        False if the last deserialization skipped the configuration entries because they use an unsupported format
+        version: Widgets editing this filter should disable their editing controls since changes are not serialized
+        while the configuration of the unsupported format is preserved.
+        """
+        return self._configuration_format_supported
 
     @property
     def presets(self) -> list[ColorPreset]:
@@ -629,16 +652,52 @@ class ColordirectorVFilter(VirtualFilter):
     @override
     def serialize(self) -> None:
         super().serialize()
+        if not self._configuration_format_supported:
+            # do not overwrite the configuration entries of the unsupported format: deserializing them was skipped,
+            # so serializing the (empty) model would discard the stored data
+            return
         self._serialize_color_groups()
         self._serialize_presets()
         self._serialize_recalls()
+        self.filter_configurations["format_version"] = str(_FORMAT_VERSION)
 
     @override
     def deserialize(self) -> None:
         super().deserialize()
+        format_version = self._read_format_version()
+        self._configuration_format_supported = format_version == _FORMAT_VERSION
+        if not self._configuration_format_supported:
+            logger.warning(
+                "Ignoring the color director configuration of '%s' using the unsupported format version %i "
+                "(this editor supports the format version %i).",
+                self.filter_id,
+                format_version,
+                _FORMAT_VERSION,
+            )
+            return
         self._deserialize_color_groups()
         self._deserialize_presets()
         self._deserialize_recalls()
+
+    def _read_format_version(self) -> int:
+        """Read the format version of the serialized configuration.
+
+        Returns:
+            The format version of the serialized configuration. Configurations without a format_version entry were
+            written by an editor version predating the version entry: They are reported as the initial format
+            version. The same applies to configurations providing a malformed version entry since the configuration
+            parsers are fault tolerant: Misinterpreting such configurations is unlikely.
+
+        """
+        version_str = self.filter_configurations.get("format_version", "")
+        try:
+            return int(version_str)
+        except ValueError:
+            if len(version_str) > 0:
+                logger.warning(
+                    "Ignoring the malformed format version %r of the color director '%s'.", version_str, self.filter_id
+                )
+            return _FORMAT_VERSION
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:

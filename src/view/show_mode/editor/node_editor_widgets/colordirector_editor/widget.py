@@ -160,6 +160,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._preview_dialog: YesNoDialog | None = None
         self._asset_dialog: AssetSelectionDialog | None = None
         self._apply_live_preview_ui_state()
+        if not self._model.configuration_format_supported:
+            self._widget.setEnabled(False)
+            self._show_unsupported_format_error_box()
 
     @override
     def _get_configuration(self) -> dict[str, str]:
@@ -557,6 +560,18 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 "The live preview could not be disabled because the show could not be transmitted to fish. "
                 "The show on fish may still use the live preview constants. Transmit the show again to fix this.",
             )
+
+    def _show_unsupported_format_error_box(self) -> None:
+        """Show a non-modal error box informing about an unsupported configuration format version."""
+        error_box = QMessageBox(self._widget)
+        error_box.setWindowTitle("Unsupported Configuration Format")
+        error_box.setText(
+            "The configuration of this color director was written using a newer, unsupported format version. "
+            "Its data is preserved within the show file and editing is disabled. Update the editor to edit "
+            "this color director."
+        )
+        error_box.setIcon(QMessageBox.Icon.Critical)
+        error_box.show()
 
     def _show_transmit_error_box(self, title: str, message: str) -> None:
         """Show a non-modal error box about a failed show transmission.
