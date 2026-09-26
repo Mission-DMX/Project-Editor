@@ -16,13 +16,15 @@ if TYPE_CHECKING:
     from model.virtual_filters.colordirector_vfilter import ColorPreset
 
 
+_DELETION_GRACE_MS = 5000
+"""Maximum time in milliseconds __del__ waits for a still running worker before the thread is destroyed."""
+
+
 class PreviewBitmapGenerator(QThread):
     """Class to generate previews for presets.
 
-    The runner will call the preset_preview_generated for every generated preset and will call finished once it is
-    finished and can be deleted.
-
-    """
+    The runner will call the preset_preview_generated signal for every generated preset. Once the thread is done, the
+    built-in finished signal of QThread is emitted and the instance may be deleted."""
 
     preset_preview_generated = Signal(int, QImage)
 
@@ -31,11 +33,22 @@ class PreviewBitmapGenerator(QThread):
         self._presets = presets
         self._size = size
 
+    def __del__(self) -> None:
+        """Ensure the worker has stopped before the underlying QThread is destroyed."""
+        try:
+            if self.isRunning():
+                self.requestInterruption()
+                self.wait(_DELETION_GRACE_MS)
+        except RuntimeError:
+            pass
+
     @override
     def run(self) -> None:
         repeat_image = QImage(resource_path(os.path.join("resources", "icons", "repeat.svg")))
         repeat_image = repeat_image.scaled(int(self._size * 0.5), int(self._size * 0.5))
         for i, preset in enumerate(self._presets):
+            if self.isInterruptionRequested():
+                break
             image = QImage(self._size, self._size, QImage.Format.Format_ARGB32_Premultiplied)
             image.fill(Qt.GlobalColor.transparent)
             p = QPainter(image)
@@ -58,4 +71,3 @@ class PreviewBitmapGenerator(QThread):
                 p.drawImage(0, 0, asset_image)
             p.end()
             self.preset_preview_generated.emit(i, image)
-        self.finished.emit()
