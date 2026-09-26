@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
 from logging import getLogger
-from typing import TYPE_CHECKING, Never, Union, override
+from typing import TYPE_CHECKING, Union, override
 
 from model import DataType
 from model.color_hsi import ColorHSI
@@ -45,8 +45,6 @@ class EndAction(Enum):
                 return "Restart cue"
             case _:
                 return "Jump to next cue"
-
-        return "Unknown action"
 
     @staticmethod
     def formatted_value_list() -> list[str]:
@@ -102,7 +100,7 @@ class State(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def decode(self, content: str) -> Never:
+    def decode(self, content: str) -> None:
         """Get the state configuration from a filter config string."""
         raise NotImplementedError
 
@@ -278,13 +276,19 @@ class KeyFrame:
         return f"{self.timestamp}:{'&'.join([s.encode() for s in self._states])}"
 
     @staticmethod
-    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: Cue) -> KeyFrame:
+    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: Cue) -> KeyFrame | None:
         """Deserialize from filter representation.
 
         Args:
             f_str: Filter representation string.
             channel_data_types: Associated channels.
             parent_cue: Parent cue.
+
+        Returns:
+            The deserialized key frame or None if the definition contains no states and the cue defines no channels.
+
+        Raises:
+            ArgumentError: if the given key frame definition is malformed.
 
         """
         parts = f_str.split(":")

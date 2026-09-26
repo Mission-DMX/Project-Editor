@@ -106,6 +106,10 @@ class ConnectCommand(Command):
         destination_iter: int,
         guards: list[str],
     ) -> bool:
+        scene = self.context.selected_scene
+        if scene is None:
+            self.context.print("Error: No scene selected.")
+            return False
         source_filter: Filter | None = None
         destination_filter: Filter | None = None
         try:
@@ -122,12 +126,9 @@ class ConnectCommand(Command):
                     "<source_filter_id>:<channel_name>"
                 )
                 return False
-            source_filter = self.context.selected_scene.get_filter_by_id(source_filter_id)
+            source_filter = scene.get_filter_by_id(source_filter_id)
             if source_filter is None:
-                self.context.print(
-                    f"Source filter '{source_filter_id}' does not exist in scene "
-                    f"'{self.context.selected_scene.scene_id}'."
-                )
+                self.context.print(f"Source filter '{source_filter_id}' does not exist in scene '{scene.scene_id}'.")
                 return False
         except IndexError as e:
             self.context.print(f"ERROR: The source filter format is invalid: {e}")
@@ -139,11 +140,10 @@ class ConnectCommand(Command):
             return False
         try:
             destination_filter_id, destination_channel_name = rendered_destination.split(":")
-            destination_filter = self.context.selected_scene.get_filter_by_id(destination_filter_id)
+            destination_filter = scene.get_filter_by_id(destination_filter_id)
             if destination_filter is None:
                 self.context.print(
-                    f"Destination filter '{destination_filter_id}' does not exist in scene "
-                    f"'{self.context.selected_scene.scene_id}'."
+                    f"Destination filter '{destination_filter_id}' does not exist in scene '{scene.scene_id}'."
                 )
                 return False
         except IndexError as e:
@@ -159,14 +159,14 @@ class ConnectCommand(Command):
         if source_data_type is None:
             self.context.print(
                 f"Source channel '{source_channel_name}' of filter '{source_filter_id}' does not exist "
-                f"in scene '{self.context.selected_scene.scene_id}'."
+                f"in scene '{scene.scene_id}'."
             )
             return False
         dest_data_type = destination_filter.in_data_types.get(destination_channel_name)
         if dest_data_type is None:
             self.context.print(
                 f"Destination channel '{destination_channel_name}' of filter '{destination_filter_id}' "
-                f"does not exist in scene '{self.context.selected_scene.scene_id}'."
+                f"does not exist in scene '{scene.scene_id}'."
             )
             return False
         if source_data_type != dest_data_type:

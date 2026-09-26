@@ -84,8 +84,8 @@ def generate_keyframes_from_image(
         _channel_name, data_type = channel
         if data_type == DataType.DT_COLOR:
             pixel: QColor = image.pixelColor(x, y)
-            state = StateColor(transition_types[i])
-            state.color = ColorHSI.from_qt_color(pixel)
+            color_state = StateColor(transition_types[i])
+            color_state.color = ColorHSI.from_qt_color(pixel)
             if columns_first:
                 y += 1
                 if (y - break_point_offset) >= break_point or y >= image_height:
@@ -108,8 +108,9 @@ def generate_keyframes_from_image(
                     if break_point_offset >= image_width:
                         break_point_offset = 0
                     x = break_point_offset
-            kf.append_state(state)
+            kf.append_state(color_state)
         else:
+            state: State
             if (
                 last_frame is not None
                 and i < last_frame.state_count
@@ -117,7 +118,6 @@ def generate_keyframes_from_image(
             ):
                 state = last_frame.state_at(i).copy()
                 state.transition = transition_types[i]
-                kf.append_state(state)
             else:
                 match data_type:
                     case DataType.DT_8_BIT:
@@ -128,6 +128,6 @@ def generate_keyframes_from_image(
                         state = StateDouble(transition_types[i])
                     case _:
                         raise NotImplementedError(f"Data type {data_type} not implemented for initialization yet.")
-                kf.append_state(state)
+            kf.append_state(state)
 
     c.insert_frame(kf)
