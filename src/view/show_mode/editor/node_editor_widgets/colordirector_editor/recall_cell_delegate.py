@@ -53,6 +53,6 @@ class RecallCellDelegate(QStyledItemDelegate):
         recall_index: int = index.row()
         group_index: int = index.column() - 1
         value = bound_preset_index(editor.value(), len(self._model.presets))
-        if not self._model.set_recall_preset(recall_index, group_index, editor.value()):
+        if not self._model.set_recall_preset(recall_index, group_index, value):
             return
         model.setData(index, value, Qt.ItemDataRole.EditRole)

@@ -113,7 +113,12 @@ class ControllerWidget(QWidget):
             self._model.configuration_changed.mapped_signal.connect(self._active_colors_changed)
 
     def _apply_column_clicked(self, preset_index: int) -> None:
-        """Enqueue the update messages applying the preset to every color group and request their transmission."""
+        """Enqueue the update messages applying the preset to every color group and request their transmission.
+
+        Update messages collected before are discarded: Pressing this button expresses the intent to apply
+        this preset everywhere, replacing any partial selection collected before.
+
+        """
         if self._update_list is None:
             return
         self._update_list.clear()
@@ -124,7 +129,13 @@ class ControllerWidget(QWidget):
         self.update_requested.emit()
 
     def _apply_single_clicked(self, group_index: int, preset_index: int) -> None:
-        """Enqueue the update message applying the preset to the color group and request its transmission."""
+        """Enqueue the update message applying the preset to the color group and request its transmission.
+
+        The update message is added to the messages collected before instead of replacing them: Single
+        selections are composable, so pressing multiple buttons before the updates are transmitted applies
+        every pressed selection.
+
+        """
         if self._update_list is None:
             return
         self._update_list.append(
@@ -133,7 +144,12 @@ class ControllerWidget(QWidget):
         self.update_requested.emit()
 
     def _recall_issued(self, recall_index: int) -> None:
-        """Enqueue the update messages applying the saved selection of the recall and request their transmission."""
+        """Enqueue the update messages applying the saved selection of the recall and request their transmission.
+
+        Update messages collected before are discarded: Applying a recall expresses the intent to restore the
+        complete saved selection, replacing any partial selection collected before.
+
+        """
         if self._update_list is None:
             return
         selection = self._model.get_recall_preset_selection(recall_index)

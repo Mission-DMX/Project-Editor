@@ -20,7 +20,8 @@ class RecallEditWidget(QWidget):
 
     The widget disables itself if no presets are present. Otherwise, it will populate itself.
     The owning editor widget refreshes the table using update_recall_table whenever the output groups or the
-    color presets change.
+    color presets change. In addition, the widget refreshes itself whenever the model emits its
+    configuration_changed signal (see _refresh_stale_table).
 
     """
 
@@ -45,6 +46,7 @@ class RecallEditWidget(QWidget):
         layout.addWidget(self._recall_table)
         self.setLayout(layout)
         self.update_recall_table()
+        self._model.configuration_changed.mapped_signal.connect(self._refresh_stale_table)
 
     def update_recall_table(self) -> None:
         """Update the recall table and enabled state."""
@@ -83,19 +85,50 @@ class RecallEditWidget(QWidget):
             self._recall_table.setItem(recall_index, group_index + 1, step_item)
 
     def _add_recall(self) -> None:
-        """Add a new recall to the model and append it to the table."""
-        recall_data = self._model.add_recall()
-        self._recall_table.setRowCount(len(self._model.recalls))
-        self._add_recall_row_to_table(len(self._model.recalls) - 1, recall_data)
+        """Add a new recall to the model.
+
+        The table refreshes itself using the configuration_changed signal emitted by the model.
+
+        """
+        self._model.add_recall()
 
     def _update_remove_recall_button(self) -> None:
         """Enable the remove button if a recall row is currently selected."""
         self._remove_recall_button.setEnabled(0 <= self._recall_table.currentRow() < len(self._model.recalls))
 
     def _remove_selected_recall(self) -> None:
-        """Remove the currently selected recall."""
+        """Remove the currently selected recall.
+
+        The table refreshes itself using the configuration_changed signal emitted by the model.
+
+        """
         recall_index = self._recall_table.currentRow()
         if not 0 <= recall_index < len(self._model.recalls):
             return
         self._model.remove_recall(recall_index)
-        self.update_recall_table()
+
+    def _refresh_stale_table(self) -> None:
+        """Synchronize the recall table with the current model state.
+
+        Cell values differing from the model are updated in place: This preserves the current selection and
+        open cell editors while the table stays in sync with changes made externally, e.g. by filter messages
+        received from the network. The table is rebuilt completely only if its structure no longer matches the
+        model, e.g. after recalls or color groups were added or removed.
+
+        """
+        group_count = len(self._model.output_groups)
+        recall_count = len(self._model.recalls)
+        self.setEnabled(len(self._model.presets) > 0)
+        if self._recall_table.columnCount() != group_count + 1 or self._recall_table.rowCount() != recall_count:
+            self.update_recall_table()
+            return
+        preset_count = len(self._model.presets)
+        for row, recall_data in enumerate(self._model.recalls):
+            for group_index, value in enumerate(recall_data):
+                item = self._recall_table.item(row, group_index + 1)
+                if item is None:
+                    self.update_recall_table()
+                    return
+                displayed_value = str(bound_preset_index(value, preset_count))
+                if item.text() != displayed_value:
+                    item.setText(displayed_value)

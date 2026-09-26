@@ -20,7 +20,10 @@ class FadeinTimeCellDelegate(QStyledItemDelegate):
 
     @override
     def displayText(self, value: str, locale: QLocale | QLocale.Language, /) -> str:
-        fade_in_time = int(value)
+        try:
+            fade_in_time = int(value)
+        except (TypeError, ValueError):
+            return str(value)
         return f"{(fade_in_time * STEP_DURATION_MS) / 1000:.3f}s"
 
     @override
@@ -37,7 +40,10 @@ class FadeinTimeCellDelegate(QStyledItemDelegate):
         if not isinstance(editor, JogwheelDoubleSpinBox):
             return
         value = index.data(Qt.ItemDataRole.EditRole)
-        fade_in_time = int(value)
+        try:
+            fade_in_time = int(value)
+        except (TypeError, ValueError):
+            return
         editor.setValue((fade_in_time * STEP_DURATION_MS) / 1000)
 
     @override
