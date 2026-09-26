@@ -55,7 +55,7 @@ class _EscapeSequenceState(Enum):
 
 
 class _CommandHistory:
-    """Process wide shared CLI command history persisted in the user data storage."""
+    """CLI command history of a single terminal instance, persisted in the user data storage."""
 
     def __init__(self) -> None:
         """Initialize the history as not yet loaded from disk."""
@@ -65,7 +65,7 @@ class _CommandHistory:
         self._appends_since_trim = 0
 
     def entries(self) -> list[str]:
-        """Return the shared history entries, loading them from disk on first use."""
+        """Return the history entries, loading them from disk on first use."""
         if not self._loaded:
             self._loaded = True
             try:
@@ -78,11 +78,11 @@ class _CommandHistory:
         return self._entries
 
     def __len__(self) -> int:
-        """Return the number of shared history entries."""
+        """Return the number of history entries."""
         return len(self.entries())
 
     def __getitem__(self, index: int) -> str:
-        """Return the shared history entry at the given index.
+        """Return the history entry at the given index.
 
         Negative indexes count from the most recent entry backwards, matching the behaviour of a plain list.
 
@@ -96,7 +96,7 @@ class _CommandHistory:
         return self.entries()[index]
 
     def append(self, command: str) -> None:
-        """Append a command to the shared history and persist it.
+        """Append a command to the history and persist it.
 
         Empty commands and consecutive duplicates of the last entry are ignored.
 
@@ -146,9 +146,6 @@ class _CommandHistory:
             logger.warning("Unable to save the CLI command history: %s", e)
 
 
-_command_history = _CommandHistory()
-
-
 class CLITerminalIO(TerminalIO):
     """Terminal IO implementation to adapter CLIContext."""
 
@@ -158,7 +155,7 @@ class CLITerminalIO(TerminalIO):
         self._context = CLIContext(show=show, network_manager=NetworkManager())
         self._stdout_callback = terminal.stdout
         self._buffer: list[int] = []
-        self._history: _CommandHistory = _command_history
+        self._history = _CommandHistory()
         self._history_cursor = 0
         self._history_cmd_stash = ""
         self._escape_state = _EscapeSequenceState.NONE
