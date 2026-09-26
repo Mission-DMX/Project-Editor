@@ -43,6 +43,7 @@ class EventSchedulerCtrlUIWidget(UIWidget):
         self.size = (800, 600)
 
     def __del__(self) -> None:
+        """Clean up any residual fish event handler callbacks."""
         if not self._callback_registered:
             return
         self.parent.scene.board_configuration.remove_filter_update_callback(
