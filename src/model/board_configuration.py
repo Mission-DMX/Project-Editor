@@ -36,6 +36,7 @@ class BoardConfiguration:
         self._macros: list[Macro] = []
 
         self._show_file_path: str = ""
+        self._has_unsaved_changes: bool = False
         self._broadcaster: Broadcaster = Broadcaster()
 
         self._broadcaster.add_universe.connect(self._add_universe)
@@ -68,6 +69,7 @@ class BoardConfiguration:
         self._scenes_index = {}
         self._ui_hints = {}
         self._show_file_path = ""
+        self._has_unsaved_changes = False
         self._filter_update_msg_register.clear()
         self._macros.clear()
 
@@ -213,6 +215,15 @@ class BoardConfiguration:
     def file_path(self, new_path: str) -> None:
         self._show_file_path = new_path
         self._broadcaster.show_file_path_changed.emit(new_path)
+
+    @property
+    def has_unsaved_changes(self) -> bool:
+        """Whether the show data contains changes that were not saved to the show file yet."""
+        return self._has_unsaved_changes
+
+    @has_unsaved_changes.setter
+    def has_unsaved_changes(self, has_unsaved_changes: bool) -> None:
+        self._has_unsaved_changes = has_unsaved_changes
 
     def get_scene_by_id(self, scene_id: int) -> Scene | None:
         """Get a scene by her id."""

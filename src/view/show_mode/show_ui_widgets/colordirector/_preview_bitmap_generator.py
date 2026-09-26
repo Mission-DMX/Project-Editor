@@ -6,6 +6,7 @@ import atexit
 import math
 import os
 import weakref
+from logging import getLogger
 from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QCoreApplication, QPointF, QThread, Signal
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from model.media_assets.image import AbstractImageAsset
     from model.virtual_filters.colordirector_vfilter import ColorPreset
 
+logger = getLogger(__name__)
 
 _DELETION_GRACE_MS = 5000
 """Maximum time in milliseconds __del__ waits for a still running worker before the thread is destroyed."""
@@ -126,15 +128,33 @@ class PreviewBitmapGenerator(QThread):
             self._draw_accent_color_dots(p, accent_colors, segment_bounds)
             if repeats:
                 if repeat_image is None:
-                    repeat_image = QImage(resource_path(os.path.join("resources", "icons", "repeat.svg")))
-                    repeat_image = repeat_image.scaled(self._size // 2, self._size // 2)
-                icon_position = self._size - repeat_image.width()
-                p.drawImage(icon_position, 0, repeat_image)
+                    repeat_image = self._load_repeat_image()
+                if repeat_image is not None:
+                    icon_position = self._size - repeat_image.width()
+                    p.drawImage(icon_position, 0, repeat_image)
             if visualization_asset is not None:
-                asset_image = visualization_asset.get_image_for_ui().scaled(self._size, self._size)
-                p.drawImage(0, 0, asset_image)
+                asset_image = visualization_asset.get_image_for_ui()
+                if asset_image is None or asset_image.isNull():
+                    logger.warning("The visualization asset of preset %i provides no loadable image: Skipped.", i)
+                else:
+                    p.drawImage(0, 0, asset_image.scaled(self._size, self._size))
             p.end()
             self.preset_preview_generated.emit(i, image)
+
+    def _load_repeat_image(self) -> QImage | None:
+        """Load the icon marking repeating presets.
+
+        Returns:
+            The scaled repeat icon or None if the icon file could not be loaded: Presets are generated without the
+            icon instead of breaking the preview generation.
+
+        """
+        icon_path = resource_path(os.path.join("resources", "icons", "repeat.svg"))
+        icon_image = QImage(icon_path)
+        if icon_image is None or icon_image.isNull():
+            logger.warning("The repeat icon '%s' could not be loaded: Presets are generated without it.", icon_path)
+            return None
+        return icon_image.scaled(self._size // 2, self._size // 2)
 
     def _draw_accent_color_dots(
         self, painter: QPainter, accent_colors: list[list[ColorHSI]], segment_bounds: list[tuple[int, int]]

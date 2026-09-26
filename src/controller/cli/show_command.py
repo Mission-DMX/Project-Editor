@@ -97,7 +97,13 @@ class ShowCommand(Command):
                 if scene is not None:
                     filter_inst = scene.get_filter_by_id(args.filterid)
                     if isinstance(filter_inst, VirtualFilter):
+                        had_unsaved_changes = self.context.show.has_unsaved_changes
                         if filter_inst.handle_filter_message(args.parameterkey, args.parametervalue):
+                            if self.context.show.has_unsaved_changes and not had_unsaved_changes:
+                                self.context.print(
+                                    "NOTE: the filter message modified the show data. Save the show file in order to "
+                                    "keep the changes."
+                                )
                             return True
                         self.context.print(
                             f"WARNING: the virtual filter '{args.filterid}' rejected the filter message "

@@ -224,7 +224,8 @@ class ColordirectorVFilter(VirtualFilter):
     Setting live_preview_mode to true causes the filter to instantiate color constants that can be used instead of cues.
 
     The serialized configuration is versioned using the format_version configuration entry: Configurations written by
-    a newer editor using an unsupported format version are neither deserialized nor overwritten while serializing.
+    a newer editor using an unsupported or malformed format version are neither deserialized nor overwritten while
+    serializing.
 
     """
 
@@ -248,9 +249,9 @@ class ColordirectorVFilter(VirtualFilter):
     def configuration_format_supported(self) -> bool:
         """Whether the configuration deserialized last uses a format version supported by this implementation.
 
-        False if the last deserialization skipped the configuration entries because they use an unsupported format
-        version: Widgets editing this filter should disable their editing controls since changes are not serialized
-        while the configuration of the unsupported format is preserved.
+        False if the last deserialization skipped the configuration entries because they use an unsupported or
+        malformed format version: Widgets editing this filter should disable their editing controls since changes
+        are not serialized while the configuration of the unsupported format is preserved.
         """
         return self._configuration_format_supported
 
@@ -667,37 +668,45 @@ class ColordirectorVFilter(VirtualFilter):
         format_version = self._read_format_version()
         self._configuration_format_supported = format_version == _FORMAT_VERSION
         if not self._configuration_format_supported:
-            logger.warning(
-                "Ignoring the color director configuration of '%s' using the unsupported format version %i "
-                "(this editor supports the format version %i).",
-                self.filter_id,
-                format_version,
-                _FORMAT_VERSION,
-            )
+            if format_version is None:
+                logger.warning(
+                    "Ignoring the color director configuration of '%s' because of its malformed format version.",
+                    self.filter_id,
+                )
+            else:
+                logger.warning(
+                    "Ignoring the color director configuration of '%s' using the unsupported format version %i "
+                    "(this editor supports the format version %i).",
+                    self.filter_id,
+                    format_version,
+                    _FORMAT_VERSION,
+                )
             return
         self._deserialize_color_groups()
         self._deserialize_presets()
         self._deserialize_recalls()
 
-    def _read_format_version(self) -> int:
+    def _read_format_version(self) -> int | None:
         """Read the format version of the serialized configuration.
 
         Returns:
-            The format version of the serialized configuration. Configurations without a format_version entry were
-            written by an editor version predating the version entry: They are reported as the initial format
-            version. The same applies to configurations providing a malformed version entry since the configuration
-            parsers are fault tolerant: Misinterpreting such configurations is unlikely.
+            The format version of the serialized configuration or None if the configuration provides a malformed
+            version entry: Malformed versions are treated like unsupported versions instead of reporting the
+            initial format version since guessing the intended version could misinterpret configurations written
+            by newer editors. Configurations without a format_version entry were written by an editor version
+            predating the version entry: They are reported as the initial format version.
 
         """
         version_str = self.filter_configurations.get("format_version", "")
+        if len(version_str) == 0:
+            return _FORMAT_VERSION
         try:
             return int(version_str)
         except ValueError:
-            if len(version_str) > 0:
-                logger.warning(
-                    "Ignoring the malformed format version %r of the color director '%s'.", version_str, self.filter_id
-                )
-            return _FORMAT_VERSION
+            logger.warning(
+                "Ignoring the malformed format version %r of the color director '%s'.", version_str, self.filter_id
+            )
+            return None
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -847,9 +856,9 @@ class ColordirectorVFilter(VirtualFilter):
     def handle_filter_message(self, key: str, value: str) -> bool:
         """Handle filter messages sent by show UI widgets.
 
-        The "save-selection-to-recall" message modifies the recalls stored within this filter. This modification is
-        not tracked as an unsaved change of the show file yet: The show needs to be saved manually in order to keep
-        recalls saved using filter messages.
+        The "save-selection-to-recall" message modifies the recalls stored within this filter and marks the show
+        file as containing unsaved changes: The show file needs to be saved in order to keep recalls saved using
+        filter messages.
 
         Args:
             key: The message key. Supported keys are "save-selection-to-recall", "recall", "call" and
@@ -877,7 +886,7 @@ class ColordirectorVFilter(VirtualFilter):
                 selected_recall.clear()
                 selected_recall.extend(current_colors)
                 logger.info("Saved the current color selection as recall %i.", target_recall)
-                # TODO: mark the show as modified as soon as the editor tracks unsaved changes.
+                self.scene.board_configuration.has_unsaved_changes = True
                 self.configuration_changed.mapped_signal.emit()
                 return True
             case "recall":
