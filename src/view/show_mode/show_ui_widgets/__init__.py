@@ -19,6 +19,7 @@ from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelecti
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
+from view.show_mode.show_ui_widgets.event_scheduler_ctrl_uiwidget import EventSchedulerCtrlUIWidget
 from view.show_mode.show_ui_widgets.macro_buttons_ui_widget import MacroButtonUIWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
 from view.show_mode.show_ui_widgets.sequencer_control import SequencerControlUIWidget
@@ -106,6 +107,11 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
             ]
         ],
     ),
+    "event_scheduler_ctrl": (
+        "Event Scheduler Control",
+        EventSchedulerCtrlUIWidget,
+        [[FilterTypeEnumeration.FILTER_EVENT_SCHEDULER]]
+    )
 }
 
 

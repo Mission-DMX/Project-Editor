@@ -16,6 +16,7 @@ from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.tri
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog
 
+    import proto.FilterMode_pb2
     from model import UIPage
 
 logger = getLogger(__name__)
@@ -38,6 +39,15 @@ class EventSchedulerCtrlUIWidget(UIWidget):
         super().__init__(parent, configuration)
         self._active_matrix_editor: TriggerMatrixEditor | None = None
         self._operations_queue: Queue[tuple[str, str]] = Queue()
+        self._callback_registered: bool = False
+        self.size = (800, 600)
+
+    def __del__(self) -> None:
+        if not self._callback_registered:
+            return
+        self.parent.scene.board_configuration.remove_filter_update_callback(
+            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
+        )
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
@@ -49,6 +59,11 @@ class EventSchedulerCtrlUIWidget(UIWidget):
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
+        if not self._callback_registered:
+            self.parent.scene.board_configuration.register_filter_update_callback(
+                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
+            )
+            self._callback_registered = True
         return self._generate_widget(True)
 
     @override
@@ -63,7 +78,7 @@ class EventSchedulerCtrlUIWidget(UIWidget):
 
     @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
-        pass  # TODO
+        return QLabel("TODO")  # TODO
 
     def _generate_widget(self, used_in_player: bool) -> QWidget:
         w = QWidget()
@@ -93,10 +108,27 @@ class EventSchedulerCtrlUIWidget(UIWidget):
             decrease_steps_button.clicked.connect(self._decrease_clicked)
             increase_steps_button.clicked.connect(self._increase_clicked)
             override_step_spinbox.valueChanged.connect(self._received_new_step)
-        # TODO load filter settings
+            associated_filter = self.parent.scene.get_filter_by_id(self.filter_ids[0])
+            matrix_editor.number_of_steps = int(associated_filter.initial_parameters.get("length", "0"))
+            event_data = associated_filter.filter_configurations.get("event_data", "").split(";")
+            event_names = associated_filter.filter_configurations.get("event_names", "").split(";")
+            for ed, e_name in zip(event_data, event_names, strict=True):
+                if len(ed) < 1:
+                    continue
+                matrix_editor.add_event(ed, e_name)
+            matrix_editor.active_event_data = associated_filter.initial_parameters.get("update_triggers", "")
+            matrix_editor.highlight_current_step = True
         w.setEnabled(used_in_player)
-        # TODO set fixed size based on widget settings
+        w.setFixedSize(800, 600)# FIXME set fixed size based on widget settings
+        w.setMinimumSize(800, 600)
         return w
+
+    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        if self._active_matrix_editor is None:
+            return
+        if param.parameter_key != "step":
+            return
+        self._active_matrix_editor.current_step = int(param.parameter_value)
 
     def _decrease_clicked(self, _: bool) -> None:
         if self._active_matrix_editor is None:
