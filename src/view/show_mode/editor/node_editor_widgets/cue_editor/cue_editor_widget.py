@@ -421,9 +421,7 @@ class CueEditor(PreviewEditWidget):
         cue = self._timeline_container.cue
         if cue is None:
             return
-        cue.restart_on_another_play_press = (
-            self._current_cue_another_play_pressed_checkbox.checkState().Checked
-        )
+        cue.restart_on_another_play_press = self._current_cue_another_play_pressed_checkbox.isChecked()
 
     def _rec_pressed(self) -> None:
         super()._rec_pressed()
