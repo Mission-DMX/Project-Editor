@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Any, override
 
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
+from PySide6.QtCore import QAbstractTableModel, QItemSelection, QModelIndex, Qt, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTableView, QToolBar, QVBoxLayout, QWidget
 
@@ -49,15 +49,18 @@ class _AssetTableModel(QAbstractTableModel):
             self._selected_media_types.clear()
         types_to_add = types - self._selected_media_types
         types_to_remove = self._selected_media_types - types
-        new_asset_list: list[MediaAsset] = [asset for asset in self._filtered_asset_list if
-                                            ((asset.get_type() not in types_to_remove) and (name in asset.name))]
+        new_asset_list: list[MediaAsset] = [
+            asset
+            for asset in self._filtered_asset_list
+            if ((asset.get_type() not in types_to_remove) and (name in asset.name))
+        ]
         for new_type in types_to_add:
             new_asset_list.extend([asset for asset in get_all_assets_of_type(new_type) if name in asset.name])
-        changes_occured = new_asset_list != self._filtered_asset_list
+        changes_occurred = new_asset_list != self._filtered_asset_list
         self._selected_media_types = types
         self._name_filter = name
         self._filtered_asset_list = new_asset_list
-        if changes_occured:
+        if changes_occurred:
             self.modelReset.emit()
 
     @override
@@ -140,7 +143,7 @@ class _AssetTableModel(QAbstractTableModel):
         """Get the asset at the provided index."""
         return self._filtered_asset_list[index]
 
-    def get_row_indicies(self, assets: list[MediaAsset]) -> list[int]:
+    def get_row_indices(self, assets: list[MediaAsset]) -> list[int]:
         """Get the indices of the rows whose assets are in the provided list."""
         return [index for index, asset in enumerate(self._filtered_asset_list) if asset in assets]
 
@@ -150,8 +153,12 @@ class AssetSelectionWidget(QWidget):
 
     asset_selection_changed: Signal = Signal()
 
-    def __init__(self, parent: QWidget | None = None, allowed_types: list[MediaType] | None = None,
-                 multiselection_allowed: bool = True) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        allowed_types: list[MediaType] | None = None,
+        multiselection_allowed: bool = True,
+    ) -> None:
         """Initialize the asset selection widget.
 
         Args:
@@ -201,7 +208,11 @@ class AssetSelectionWidget(QWidget):
 
         self.setLayout(layout)
         self._update_filter()
-        self._asset_view.selectionModel().selectionChanged.connect(self.asset_selection_changed.emit)
+        self._asset_view.selectionModel().selectionChanged.connect(self._view_selection_changed)
+
+    def _view_selection_changed(self, _selected: QItemSelection, _deselected: QItemSelection) -> None:
+        """Reemit the selection change of the table view as :attr:`asset_selection_changed`."""
+        self.asset_selection_changed.emit()
 
     def _update_filter(self, force: bool = False) -> None:
         selected_types: set[MediaType] = set()
@@ -226,6 +237,5 @@ class AssetSelectionWidget(QWidget):
 
     @selected_asset.setter
     def selected_asset(self, selection: list[MediaAsset]) -> None:
-        for index in self._model.get_row_indicies(selection):
+        for index in self._model.get_row_indices(selection):
             self._asset_view.selectRow(index)
-

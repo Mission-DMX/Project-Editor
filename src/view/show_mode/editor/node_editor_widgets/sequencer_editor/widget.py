@@ -129,6 +129,7 @@ class SequencerEditor(PreviewEditWidget):
         timeline_toolbar = QToolBar(timeline_panel)
         timeline_toolbar.addWidget(self.transition_type_select_widget)
         timeline_toolbar.addAction(self._gui_rec_action)
+        timeline_toolbar.addAction(self._record_from_image_action)
         timeline_toolbar.addWidget(self.zoom_panel)
         layout.addWidget(timeline_toolbar)
         layout.addWidget(self._timeline_container)
@@ -147,7 +148,7 @@ class SequencerEditor(PreviewEditWidget):
 
     def _get_configuration(self) -> dict[str, str]:
         """Get the configuration of the sequencer filter."""
-        if self._selected_transition is not None:
+        if self._selected_transition is not None and self._timeline_container.cue is not None:
             self._selected_transition.update_frames_from_cue(self._timeline_container.cue, self._model.channels)
         return self._model.get_configuration()
 
@@ -209,7 +210,9 @@ class SequencerEditor(PreviewEditWidget):
         """Deselect any previous transition."""
         if self._selected_transition is None:
             return
-        self._selected_transition.update_frames_from_cue(self._timeline_container.cue, self._model.channels)
+        cue = self._timeline_container.cue
+        if cue is not None:
+            self._selected_transition.update_frames_from_cue(cue, self._model.channels)
         self._timeline_container.cue = None
         self._selected_transition = None
         self._remove_transition_action.setEnabled(False)
@@ -286,8 +289,7 @@ class SequencerEditor(PreviewEditWidget):
     def _add_multi_channel_action_triggered(self) -> None:
         """Same as _add_channel_pressed but for multi dialog."""
         self._input_dialog = MultiChannelInputDialog(
-            self._parent_widget,
-            lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
+            self._parent_widget, lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
         )
         self._input_dialog.show()
 

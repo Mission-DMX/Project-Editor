@@ -147,6 +147,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return SequencerEditor(f=filter_)
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN:
         return DimmerBrightnessMixinConfigWidget()
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
+        return ColorChaserFilterConfigWidget(filter_)
     if filter_.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
                                FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
                                FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
@@ -154,8 +156,6 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
                                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
                                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT]:
         return NumberConstantSettingsWidget(filter_)
-    if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
-        return ColorChaserFilterConfigWidget(filter_)
     return None
 
 
