@@ -66,11 +66,11 @@ class ColorHSI:
             blue: Blue component of the color. It must be in the range [0, 255]
 
         Returns:
-            The HSI color object.
+            The HSI color object. The conversion is the inverse of to_rgb and therefore lossless.
 
         """
-        hue, luminescence, saturation = colorsys.rgb_to_hls(red / 255, green / 255, blue / 255)
-        return ColorHSI(hue, luminescence, saturation)
+        hue, saturation, intensity = colorsys.rgb_to_hsv(red / 255, green / 255, blue / 255)
+        return ColorHSI(hue * 360.0, saturation, intensity)
 
     @classmethod
     def from_color_temperature(cls, temperature: float | str) -> ColorHSI:
@@ -152,8 +152,12 @@ class ColorHSI:
 
     @classmethod
     def from_qt_color(cls, c: QColor) -> ColorHSI:
-        """Generate a HSI color from qt color format."""
-        return ColorHSI(c.hsvHueF() * 360.0, c.hsvSaturationF(), c.lightnessF())
+        """Generate a HSI color from qt color format.
+
+        All color components are interpreted using the HSV color model consistent with to_qt_color.
+
+        """
+        return ColorHSI((c.hsvHueF() * 360.0) % 360.0, c.hsvSaturationF(), c.valueF())
 
     def __str__(self) -> str:
         """Format color as HTML color code."""

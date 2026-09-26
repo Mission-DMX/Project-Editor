@@ -60,7 +60,7 @@ class PreviewBitmapGenerator(QThread):
             if self.isRunning() and QThread.currentThread() is not self:
                 self.requestInterruption()
                 self.wait(_DELETION_GRACE_MS)
-        except RuntimeError:
+        except (RuntimeError, TypeError):
             pass
 
     @override
