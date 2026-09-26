@@ -118,9 +118,11 @@ class ControllerWidget(QWidget):
             button.setIconSize(icon_size)
 
     def _delete_preview_generator(self) -> None:
-        if self._preview_generator is not None:
-            self._preview_generator.deleteLater()
+        generator = self._preview_generator
         self._preview_generator = None
+        if generator is not None:
+            generator.wait()
+            generator.deleteLater()
 
     def _active_colors_changed(self) -> None:
         active_colors = self._model.get_current_active_colors()

@@ -234,13 +234,15 @@ class ColordirectorVFilter(VirtualFilter):
     def populate_presets_with_initial_data(self, short: bool) -> None:
         """Populate the color presets with common initial data.
 
-        This method will generate color presets for the most common color choices.
+        This method will generate color presets for the most common color choices and replace all existing presets.
         The default fade-in is linear with a fade-in time of three seconds.
 
         Args:
             short: If set to true, a smaller preset field will be generated.
 
         """
+        self._presets.clear()
+
         steps_per_second: int = int(1000 / 40)
         three_secs: int = steps_per_second * 3
 
@@ -485,12 +487,25 @@ class ColordirectorVFilter(VirtualFilter):
         return True
 
     def _update_active_colors_from_filters(self, param: proto.FilterMode_pb2.update_parameter) -> None:
-        group_index = self._cue_filter_to_group_index_mapping[param.filter_id]
+        """Update the currently active color presets from a cue filter update message.
+
+        Messages of unknown cue filters and malformed messages are ignored, since they are received from the network.
+
+        """
+        group_index = self._cue_filter_to_group_index_mapping.get(param.filter_id)
+        if group_index is None or not 0 <= group_index < len(self._color_groups):
+            return
+        parts = param.parameter_value.split(";")
+        if len(parts) < 2:
+            return
+        try:
+            value = int(parts[1])
+        except ValueError:
+            return
         changed: bool = False
         if len(self._current_active_colors) == 0:
             self._current_active_colors.extend([0] * len(self._color_groups))
             changed = True
-        value = int(param.parameter_value.split(";")[1])
         if self._current_active_colors[group_index] != value:
             self._current_active_colors[group_index] = value
             changed = True
