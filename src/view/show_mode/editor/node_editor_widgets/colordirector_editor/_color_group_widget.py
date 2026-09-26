@@ -280,7 +280,7 @@ class ColorGroupWidget(QWidget):
         if not isinstance(selected_item, AnnotatedTreeWidgetItem):
             return
         annotated_data = selected_item.annotated_data
-        if not isinstance(annotated_data, tuple):
+        if not isinstance(annotated_data, tuple) or len(annotated_data) != 2:
             return
         is_group, name = annotated_data
         if is_group:

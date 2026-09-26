@@ -35,7 +35,8 @@ class ControllerWidget(QWidget):
         self._update_list: list[tuple[str, str]] | None = update_list
         element_size = 64
         self._model = model
-        number_of_groups = len(model.output_groups.keys())
+        self._preview_generator: PreviewBitmapGenerator | None = None
+        number_of_groups = len(model.output_groups)
         number_of_presets = len(model.presets)
         layout = QGridLayout()
         self._recall_sp = JogwheelSpinBox()
@@ -44,7 +45,7 @@ class ControllerWidget(QWidget):
         self._update_recall_spinbox()
         self._recall_sp.setMaximumSize(100, element_size)
         layout.addWidget(self._recall_sp, 0, 0)
-        self._output_group_list = list(model.output_groups.keys())
+        self._output_group_list = list(model.output_groups)
         for i, group in enumerate(self._output_group_list):
             label = QLabel(group)
             label.setWordWrap(True)
@@ -56,7 +57,7 @@ class ControllerWidget(QWidget):
             group_button = QPushButton("🠋")
             group_button.setFixedSize(element_size, element_size)
             if update_list is not None:
-                group_button.clicked.connect(lambda _, ii=i: self._apply_whole_group_clicked(ii))
+                group_button.clicked.connect(lambda _, ii=i: self._apply_column_clicked(ii))
             self._apply_group_buttons.append(group_button)
             layout.addWidget(group_button, 0, i + 1)
         self._apply_single_buttons: list[list[QPushButton]] = []
@@ -85,13 +86,13 @@ class ControllerWidget(QWidget):
         outer_layout.setContentsMargins(0, 0, 0, 0)
         outer_layout.addWidget(scroll_area)
         self.setLayout(outer_layout)
-        self._preview_generator: PreviewBitmapGenerator | None = preview_generator
+        self._preview_generator = preview_generator
         preview_generator.start()
         self._model.configuration_changed.mapped_signal.connect(self._update_recall_spinbox)
         if feedback_enabled:
             self._model.configuration_changed.mapped_signal.connect(self._active_colors_changed)
 
-    def _apply_whole_group_clicked(self, preset_index: int) -> None:
+    def _apply_column_clicked(self, preset_index: int) -> None:
         if self._update_list is None:
             return
         self._update_list.clear()
@@ -112,13 +113,13 @@ class ControllerWidget(QWidget):
     def _recall_issued(self, recall_index: int) -> None:
         if self._update_list is None:
             return
-        self._update_list.clear()
         if not 0 <= recall_index < len(self._model.recalls):
             return
         preset_count = len(self._model.presets)
         if preset_count == 0:
             return
         recall = self._model.recalls[recall_index]
+        self._update_list.clear()
         self._update_list.extend(
             self._model.get_update_msg_for_group_preset_change(
                 group_name, bound_preset_index(recall[i] if i < len(recall) else 0, preset_count)

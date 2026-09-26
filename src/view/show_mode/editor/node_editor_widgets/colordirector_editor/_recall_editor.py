@@ -17,12 +17,13 @@ if TYPE_CHECKING:
 class RecallEditWidget(QWidget):
     """Enable editing of recalls.
 
-    Widget disables itself when no output groups are detected. Otherwise, it will populate itself.
-    When a new group is added, the table needs to be updated.
+    The widget disables itself if no presets are present. Otherwise, it will populate itself.
+    When the output groups change, the table needs to be updated.
 
     """
 
     def __init__(self, model: ColordirectorVFilter, parent: QWidget | None = None) -> None:
+        """Initialize using given model and optional parent."""
         super().__init__(parent)
         self._model: ColordirectorVFilter = model
         layout = QVBoxLayout()

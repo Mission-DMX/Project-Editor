@@ -13,8 +13,9 @@ if TYPE_CHECKING:
     from PySide6.QtGui import QKeyEvent
     from PySide6.QtWidgets import QWidget
 
+
 class JogwheelSpinBox(QSpinBox):
-    """QSpinBox implementation supporting jog wheel and enter key causing action.
+    """Spin box supporting jog wheel input.
 
     If the user presses enter while editing, the value_submitted signal will be emitted.
 
@@ -50,8 +51,9 @@ class JogwheelSpinBox(QSpinBox):
             if val <= self.maximum():
                 self.setValue(val)
 
+
 class JogwheelDoubleSpinBox(QDoubleSpinBox):
-    """DoubleSpinBox with jogwheel support and enter key causing action.
+    """Double spin box supporting jog wheel input.
 
     If the user presses enter while editing, the value_submitted signal will be emitted.
 

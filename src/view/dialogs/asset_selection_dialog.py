@@ -26,7 +26,7 @@ class AssetSelectionDialog(QDialog):
                  multiselection_allowed: bool = False) -> None:
         """Initialize the dialog.
 
-        Raises the asset_selected signal on user change.
+        Emits the asset_selected signal when the user changes the selection.
 
         Args:
             parent: The parent widget.

@@ -1,4 +1,5 @@
 """Item Delegate for fade time display."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -16,10 +17,6 @@ if TYPE_CHECKING:
 
 class FadeinTimeCellDelegate(QStyledItemDelegate):
     """Presents formatted view to fadein time properties of presets table."""
-
-    def __init__(self, parent: QWidget) -> None:
-        """Initialize."""
-        super().__init__(parent)
 
     @override
     def displayText(self, value: str, locale: QLocale | QLocale.Language, /) -> str:

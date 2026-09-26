@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, override
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QStyledItemDelegate
 
+from model.virtual_filters.colordirector_vfilter import bound_preset_index
 from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
 
 if TYPE_CHECKING:
@@ -39,6 +40,8 @@ class RecallCellDelegate(QStyledItemDelegate):
         if not isinstance(editor, JogwheelSpinBox):
             return
         value = index.data(Qt.ItemDataRole.EditRole)
+        if value is None:
+            return
         editor.setValue(int(value))
 
     @override
@@ -47,13 +50,14 @@ class RecallCellDelegate(QStyledItemDelegate):
     ) -> None:
         if not isinstance(editor, JogwheelSpinBox):
             return
-        value = editor.value()
-        model.setData(index, value, Qt.ItemDataRole.EditRole)
         recall_index: int = index.row()
         group_index: int = index.column() - 1
         if group_index < 0 or not 0 <= recall_index < len(self._model.recalls):
             return
         self._model.normalize_recall(recall_index)
         recall = self._model.recalls[recall_index]
-        if group_index < len(recall):
-            recall[group_index] = value
+        if group_index >= len(recall):
+            return
+        value = bound_preset_index(editor.value(), len(self._model.presets))
+        model.setData(index, value, Qt.ItemDataRole.EditRole)
+        recall[group_index] = value

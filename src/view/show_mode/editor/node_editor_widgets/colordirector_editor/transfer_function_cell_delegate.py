@@ -1,4 +1,5 @@
 """Item delegate for transfer function display."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -15,10 +16,6 @@ if TYPE_CHECKING:
 
 class TransferFunctionCellDelegate(QStyledItemDelegate):
     """Allows editing of transfer function using reasonable widget."""
-
-    def __init__(self, parent: QWidget) -> None:
-        """Initialize."""
-        super().__init__(parent)
 
     @override
     def displayText(self, value: TransferFunction, locale: QLocale | QLocale.Language, /) -> str:
@@ -37,7 +34,10 @@ class TransferFunctionCellDelegate(QStyledItemDelegate):
     def setEditorData(self, editor: QWidget, index: QModelIndex | QPersistentModelIndex, /) -> None:
         if not isinstance(editor, QComboBox):
             return
-        editor.setCurrentText(index.data(Qt.ItemDataRole.EditRole).value)
+        value = index.data(Qt.ItemDataRole.EditRole)
+        if not isinstance(value, TransferFunction):
+            return
+        editor.setCurrentText(value.value)
 
     @override
     def setModelData(
