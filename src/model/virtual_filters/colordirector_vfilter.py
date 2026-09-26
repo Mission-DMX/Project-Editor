@@ -34,7 +34,7 @@ class ColorPreset:
 
         Args:
             filter_str: Filter string representation to deserialize. An empty string will initialize an empty preset.
-                Malformed steps are ignored.
+                Malformed steps are ignored. Steps without accent colors keep an empty color list.
 
         """
         self.colors: list[tuple[int, TransferFunction, list[ColorHSI]]] = []
@@ -48,7 +48,7 @@ class ColorPreset:
                     duration, transf, colors = step_str.split("|")
                     duration = int(duration)
                     transf = TransferFunction(transf)
-                    colors = [ColorHSI.from_filter_str(part) for part in colors.split("@")]
+                    colors = [ColorHSI.from_filter_str(part) for part in colors.split("@") if len(part) > 0]
                 except ValueError:
                     continue
                 self.colors.append((duration, transf, colors))
