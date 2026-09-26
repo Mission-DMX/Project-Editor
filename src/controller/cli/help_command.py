@@ -127,6 +127,11 @@ class HelpCommand(Command):
                 self.context.print(
                     "\tmod -- integer modulo, the result takes the sign of the divisor, e.g. {{ -7 | mod(2) }} is 1"
                 )
+                self.context.print("The source and destination counts must be at least 1.")
+                self.context.print(
+                    "All connections are validated before the first channel link is modified: a failing command"
+                    " does not leave partial connections behind."
+                )
             case "uipage":
                 self.context.print("Manipulate content and display of ui pages.")
                 self.context.print("\tset-displayed-index <window> <scene> <page>")

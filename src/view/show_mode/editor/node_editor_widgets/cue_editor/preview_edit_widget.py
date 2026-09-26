@@ -306,10 +306,21 @@ class PreviewEditWidget(NodeEditorFilterConfigWidget, ABC):
         if self._timeline_container.cue is None:
             logger.warning("Cannot record keyframes from an image without a loaded cue.")
             return
-        self._add_from_image_dialog = _AddKFFromImageDialog(
-            self._timeline_container, self.transition_type_select_widget.currentText(), self._filter_instance
+        self._show_dialog(
+            _AddKFFromImageDialog(
+                self._timeline_container, self.transition_type_select_widget.currentText(), self._filter_instance
+            )
         )
-        self._add_from_image_dialog.show()
+
+    def _show_dialog(self, dialog: QDialog) -> None:
+        """Show the given dialog and delete it once it has been closed.
+
+        Args:
+            dialog: the dialog to show
+
+        """
+        dialog.finished.connect(dialog.deleteLater)
+        dialog.show()
 
 
 class _AddKFFromImageDialog(QDialog):

@@ -289,8 +289,7 @@ class SequencerEditor(PreviewEditWidget):
     def _add_multi_channel_action_triggered(self) -> None:
         """Same as _add_channel_pressed but for multi dialog."""
         self._input_dialog = MultiChannelInputDialog(
-            self._parent_widget,
-            lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
+            self._parent_widget, lambda name, dtype: self._add_channel(SequencerChannel(name=name, dtype=dtype))
         )
         self._input_dialog.show()
 

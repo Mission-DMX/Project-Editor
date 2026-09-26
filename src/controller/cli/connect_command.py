@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from jinja2.environment import Template
 
     from controller.cli.cli_context import CLIContext
+    from model import Filter
 
 
 def _add(value: str, arg: str) -> str:
@@ -46,7 +47,7 @@ def _mod(value: str, arg: str) -> str:
 
 
 class _FatalConnectError(Exception):
-    """Fatal connect command error that requires the whole command to be aborted."""
+    """Fatal connect command error that aborts the whole command before any channel link is modified."""
 
 
 class ConnectCommand(Command):
@@ -86,7 +87,12 @@ class ConnectCommand(Command):
         if self.context.selected_scene is None:
             self.context.print("Error: No scene selected.")
             return False
-        success = True
+        if args.source_count < 1:
+            self.context.print("ERROR: The source count must be at least 1.")
+            return False
+        if args.destination_count < 1:
+            self.context.print("ERROR: The destination count must be at least 1.")
+            return False
         try:
             src_template = self._jinja_env.from_string(args.source[0])
         except TemplateSyntaxError as e:
@@ -97,25 +103,30 @@ class ConnectCommand(Command):
         except TemplateSyntaxError as e:
             self.context.print(f"ERROR: Failed to parse a destination filter template: {e}")
             return False
+        planned_links: list[tuple[Filter, str, str]] = []
         try:
             for i in range(args.source_count):
                 for dest_template in dest_templates:
                     for j in range(args.destination_count):
-                        success &= self._connect(src_template, dest_template, i, j, args.guard)
+                        planned_link = self._plan_connection(src_template, dest_template, i, j, args.guard)
+                        if planned_link is not None:
+                            planned_links.append(planned_link)
         except _FatalConnectError as e:
             self.context.print(f"ERROR: {e}")
             return False
-        return success
+        for destination_filter, destination_channel_name, link_target in planned_links:
+            destination_filter.channel_links[destination_channel_name] = link_target
+        return True
 
-    def _connect(
+    def _plan_connection(
         self,
         source_template: Template,
         destination_template: Template,
         source_iter: int,
         destination_iter: int,
         guards: list[str],
-    ) -> bool:
-        """Connect a single rendered source channel to a rendered destination channel.
+    ) -> tuple[Filter, str, str] | None:
+        """Validate a single rendered source and destination channel pair and plan its connection.
 
         Args:
             source_template: the template rendering the source filter id and channel name
@@ -125,18 +136,19 @@ class ConnectCommand(Command):
             guards: the connection guards to evaluate
 
         Returns:
-            whether the connection has been established. Guards may skip single connections without failing the
+            the planned connection as a tuple of the destination filter, the destination channel name and the
+            link target, or None if the guards rejected the connection. Rejected connections do not fail the
             command.
 
         Raises:
-            _FatalConnectError: if a template cannot be evaluated or a guard is malformed. These errors do not
-                depend on the iteration indices, so the whole command is aborted instead of retrying them.
+            _FatalConnectError: if the connection cannot be validated, for example because a template cannot be
+                evaluated, a filter or channel does not exist, the data types do not match or a guard is
+                malformed. The whole command is aborted before any channel link is modified.
 
         """
         scene = self.context.selected_scene
         if scene is None:
-            self.context.print("Error: No scene selected.")
-            return False
+            raise _FatalConnectError("No scene selected.")
         try:
             rendered_source = source_template.render({"si": source_iter, "di": destination_iter})
         except (UndefinedError, ValueError) as e:
@@ -144,15 +156,13 @@ class ConnectCommand(Command):
         try:
             source_filter_id, source_channel_name = rendered_source.split(":")
         except ValueError as e:
-            self.context.print(
-                f"ERROR: The source filter format is invalid: {e}. Got: '{rendered_source}'."
-                f" Use the following format: <source_filter_id>:<channel_name>"
-            )
-            return False
+            raise _FatalConnectError(
+                f"The source filter format is invalid: {e}. Got: '{rendered_source}'."
+                " Use the following format: <source_filter_id>:<channel_name>"
+            ) from e
         source_filter = scene.get_filter_by_id(source_filter_id)
         if source_filter is None:
-            self.context.print(f"Source filter '{source_filter_id}' does not exist in scene '{scene.scene_id}'.")
-            return False
+            raise _FatalConnectError(f"Source filter '{source_filter_id}' does not exist in scene '{scene.scene_id}'.")
         try:
             rendered_destination = destination_template.render({"si": source_iter, "di": destination_iter})
         except (UndefinedError, ValueError) as e:
@@ -160,37 +170,32 @@ class ConnectCommand(Command):
         try:
             destination_filter_id, destination_channel_name = rendered_destination.split(":")
         except ValueError as e:
-            self.context.print(
-                f"ERROR: The destination filter format is invalid: {e}. Got: '{rendered_destination}'."
-                f" Use the following format: <destination_filter_id>:<channel_name>"
-            )
-            return False
+            raise _FatalConnectError(
+                f"The destination filter format is invalid: {e}. Got: '{rendered_destination}'."
+                " Use the following format: <destination_filter_id>:<channel_name>"
+            ) from e
         destination_filter = scene.get_filter_by_id(destination_filter_id)
         if destination_filter is None:
-            self.context.print(
+            raise _FatalConnectError(
                 f"Destination filter '{destination_filter_id}' does not exist in scene '{scene.scene_id}'."
             )
-            return False
         source_data_type = source_filter.out_data_types.get(source_channel_name)
         if source_data_type is None:
-            self.context.print(
-                f"Source channel '{source_channel_name}' of filter '{source_filter_id}' does not exist "
-                f"in scene '{scene.scene_id}'."
+            raise _FatalConnectError(
+                f"Source channel '{source_channel_name}' of filter '{source_filter_id}' does not exist in scene"
+                f" '{scene.scene_id}'."
             )
-            return False
         dest_data_type = destination_filter.in_data_types.get(destination_channel_name)
         if dest_data_type is None:
-            self.context.print(
-                f"Destination channel '{destination_channel_name}' of filter '{destination_filter_id}' "
-                f"does not exist in scene '{scene.scene_id}'."
+            raise _FatalConnectError(
+                f"Destination channel '{destination_channel_name}' of filter '{destination_filter_id}' does not"
+                f" exist in scene '{scene.scene_id}'."
             )
-            return False
         if source_data_type != dest_data_type:
-            self.context.print(
-                f"Source ({source_data_type}) and destination ({dest_data_type}) data "
-                f"types do not match. Filters: {source_filter_id} and {destination_filter_id}."
+            raise _FatalConnectError(
+                f"Source ({source_data_type}) and destination ({dest_data_type}) data types do not match."
+                f" Filters: {source_filter_id} and {destination_filter_id}."
             )
-            return False
         can_run = True
         for guard in guards:
             try:
@@ -224,5 +229,5 @@ class ConnectCommand(Command):
                     f"Guard '{guard}' is not in a valid format. Allowed: <guard>:<argument>"
                 ) from e
         if can_run:
-            destination_filter.channel_links[destination_channel_name] = source_filter_id + ":" + source_channel_name
-        return True
+            return destination_filter, destination_channel_name, source_filter_id + ":" + source_channel_name
+        return None
