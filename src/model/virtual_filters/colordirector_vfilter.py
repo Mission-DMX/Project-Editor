@@ -49,13 +49,13 @@ class ColorPreset:
         if len(filter_str) > 0:
             for step_str in filter_str.split("#"):
                 try:
-                    duration, transf, colors = step_str.split("|")
-                    duration = int(duration)
-                    transf = TransferFunction(transf)
-                    colors = [ColorHSI.from_filter_str(part) for part in colors.split("@") if len(part) > 0]
+                    duration_str, transfer_function_str, colors_str = step_str.split("|")
+                    duration = int(duration_str)
+                    transfer_function = TransferFunction(transfer_function_str)
+                    colors = [ColorHSI.from_filter_str(part) for part in colors_str.split("@") if len(part) > 0]
                 except ValueError:
                     continue
-                self.colors.append((duration, transf, colors))
+                self.colors.append((duration, transfer_function, colors))
 
     def get_button_visualization(self) -> list[ColorHSI]:
         """Get the representation sequence for highlighting purposes in buttons.
@@ -73,23 +73,30 @@ class ColorPreset:
         for duration, transfer_function, colors in self.colors:
             parts.append(f"{duration}|{transfer_function.value}|{'@'.join(c.format_for_filter() for c in colors)}")
         list_str = "#".join(parts)
-        if self.visualization_asset is not None:
-            return f"{self.visualization_asset.id}?{list_str}"
+        asset = self.visualization_asset
+        if asset is not None:
+            return f"{asset.id}?{list_str}"
+        if isinstance(self._asset, str):
+            return f"{self._asset}?{list_str}"
         return list_str
 
     @property
     def visualization_asset(self) -> AbstractImageAsset | None:
         """Optional image used to represent the preset."""
         if isinstance(self._asset, str):
-            self._asset = get_asset_by_uuid(self._asset)
-            if not isinstance(self._asset, AbstractImageAsset):
-                self._asset = None
-        return self._asset
+            resolved_asset = get_asset_by_uuid(self._asset)
+            if not isinstance(resolved_asset, AbstractImageAsset):
+                return None
+            self._asset = resolved_asset
+        return self._asset if isinstance(self._asset, AbstractImageAsset) else None
 
     @visualization_asset.setter
     def visualization_asset(self, asset: AbstractImageAsset | None) -> None:
         self._asset = asset
 
+
+STEP_DURATION_MS = 40
+"""Duration of a single fade in time step in milliseconds. Fade in times are stored as multiples of this step."""
 
 _MAX_RECALL_COUNT = 1024
 
@@ -157,7 +164,7 @@ class ColordirectorVFilter(VirtualFilter):
 
     """
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Initializes the virtual filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, pos=pos)
         self._color_groups: dict[str, list[str]] = {}
@@ -204,6 +211,23 @@ class ColordirectorVFilter(VirtualFilter):
     def recalls(self) -> list[list[int]]:
         """Returns the list of setting recalls."""
         return self._recalls
+
+    def normalize_recall(self, recall_index: int) -> None:
+        """Normalize the recall with the provided index to the current number of color groups.
+
+        Missing entries are filled with zeros. Surplus entries are removed. Unknown recall indices are ignored.
+
+        Args:
+            recall_index: The index of the recall to normalize.
+
+        """
+        if not 0 <= recall_index < len(self._recalls):
+            return
+        recall = self._recalls[recall_index]
+        group_count = len(self._color_groups)
+        while len(recall) < group_count:
+            recall.append(0)
+        del recall[group_count:]
 
     def get_ambient_color_count(self) -> int:
         """Get the maximum number of ambient colors in presets."""
@@ -304,7 +328,7 @@ class ColordirectorVFilter(VirtualFilter):
         """
         self._presets.clear()
 
-        steps_per_second: int = int(1000 / 40)
+        steps_per_second: int = 1000 // STEP_DURATION_MS
         three_secs: int = steps_per_second * 3
 
         white = ColorPreset()
@@ -426,7 +450,7 @@ class ColordirectorVFilter(VirtualFilter):
                 last_time: float = 0
                 for fadein_time, transfer_function, colors in preset.colors:
                     kf = KeyFrame(cue)
-                    last_time += fadein_time * 40
+                    last_time += fadein_time * STEP_DURATION_MS
                     kf.timestamp = last_time / 1000.0
                     for i in range(len(output_channels)):
                         if len(colors) == 0:
@@ -530,8 +554,8 @@ class ColordirectorVFilter(VirtualFilter):
                 return True
             case "call":
                 try:
-                    group_name, color_preset_index = value.split(",")
-                    color_preset_index = int(color_preset_index)
+                    group_name, preset_index_str = value.split(",")
+                    color_preset_index = int(preset_index_str)
                 except ValueError:
                     return False
                 if group_name not in self._color_groups:
@@ -545,16 +569,14 @@ class ColordirectorVFilter(VirtualFilter):
                 return True
             case "call-column":
                 try:
-                    color_preset_index = int(value)
+                    preset_index = int(value)
                 except ValueError:
                     return False
-                if not 0 <= color_preset_index < len(self._presets):
+                if not 0 <= preset_index < len(self._presets):
                     return False
                 nm = NetworkManager()
                 for group_name in self._color_groups:
-                    filter_id, update_value = self.get_update_msg_for_group_preset_change(
-                        group_name, color_preset_index
-                    )
+                    filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, preset_index)
                     filter_id, msg_key = filter_id.split(":")
                     nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)
                 return True

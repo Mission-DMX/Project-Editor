@@ -47,20 +47,18 @@ class RecallEditWidget(QWidget):
         self._recall_table.setColumnCount(group_count + 1)
         self._recall_table.setRowCount(len(self._model.recalls))
         for i, recall_data in enumerate(self._model.recalls):
-            self._add_recall_row_to_table(group_count, i, recall_data)
+            self._add_recall_row_to_table(i, recall_data)
         header_labels: list[str] = ["Recall Number"]
         header_labels.extend(self._model.output_groups.keys())
         self._recall_table.setHorizontalHeaderLabels(header_labels)
 
-    def _add_recall_row_to_table(self, group_count: int, recall_index: int, recall_data: list[int]) -> None:
+    def _add_recall_row_to_table(self, recall_index: int, recall_data: list[int]) -> None:
         index_item = AnnotatedTableWidgetItem(str(recall_index))
         # recall index, step in recall, data
         index_item.annotated_data = (recall_index, -1, 0)
         index_item.setFlags(index_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
         self._recall_table.setItem(recall_index, 0, index_item)
-        while len(recall_data) < group_count:
-            recall_data.append(0)
-        del recall_data[group_count:]
+        self._model.normalize_recall(recall_index)
         for group_index, value in enumerate(recall_data):
             step_item = AnnotatedTableWidgetItem(str(value))
             step_item.annotated_data = (recall_index, group_index, value)
@@ -71,4 +69,4 @@ class RecallEditWidget(QWidget):
         recall_data: list[int] = [0] * group_count
         self._model.recalls.append(recall_data)
         self._recall_table.setRowCount(len(self._model.recalls))
-        self._add_recall_row_to_table(group_count, len(self._model.recalls) - 1, recall_data)
+        self._add_recall_row_to_table(len(self._model.recalls) - 1, recall_data)

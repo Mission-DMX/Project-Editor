@@ -15,11 +15,4 @@ class TransferFunction(Enum):
     @classmethod
     def values(cls) -> list[str]:
         """Get all valid transfer function identifiers."""
-        candidates = [
-            cls.EDGE,
-            cls.LINEAR,
-            cls.SIGMOIDAL,
-            cls.EASE_IN,
-            cls.EASE_OUT,
-        ]
-        return [candidate.value for candidate in candidates]
+        return [member.value for member in cls]

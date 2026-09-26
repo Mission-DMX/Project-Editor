@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from controller.file.transmitting_to_fish import transmit_to_fish
 from model.color_hsi import ColorHSI
 from model.filter_data.transfer_function import TransferFunction
+from model.media_assets.image import AbstractImageAsset
 from model.media_assets.media_type import MediaType
 from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter, ColorPreset
 from utility import resource_path
@@ -57,7 +58,11 @@ def _set_asset(asset: list[MediaAsset], preset: ColorPreset) -> None:
     if len(asset) == 0:
         preset.visualization_asset = None
         return
-    preset.visualization_asset = asset[0]
+    selected_asset = asset[0]
+    if isinstance(selected_asset, AbstractImageAsset):
+        preset.visualization_asset = selected_asset
+    else:
+        preset.visualization_asset = None
 
 
 class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
@@ -139,7 +144,6 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
 
     @override
     def parent_opened(self) -> None:
-        super().parent_opened()
         if len(self._model.output_groups) == 0:
             return
         self._dialog = YesNoDialog(
@@ -193,9 +197,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 transfer_item.setData(Qt.ItemDataRole.EditRole, transfer_function)
                 tw.setItem(preset_index + offsets, 2, transfer_item)
 
-                add_accent_color_button = AnnotatedTableWidgetItem(" + ")
-                add_accent_color_button.annotated_data = (preset_index, step_index, 2)
-                tw.setItem(preset_index + offsets, 3, add_accent_color_button)
+                add_accent_color_item = AnnotatedTableWidgetItem(" + ")
+                add_accent_color_item.annotated_data = (preset_index, step_index, 2)
+                tw.setItem(preset_index + offsets, 3, add_accent_color_item)
                 add_accent_color_button = QPushButton("+")
                 add_accent_color_button.setToolTip("Add accent color to step.")
                 add_accent_color_button.clicked.connect(lambda _, ac=ambient_colors: self._add_accent_color(ac))
@@ -233,6 +237,9 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 add_step_layout.addWidget(asset_mgmt_button)
             else:
                 first_index_item = tw.item(initial_row, 0)
+                if first_index_item is None:
+                    logger.error("Bug! Missing index item at %i:0 while rebuilding the presets table!", initial_row)
+                    continue
                 cell_widget = QWidget()
                 asset_button_layout = QHBoxLayout()
                 asset_button_layout.addWidget(QLabel(first_index_item.text()))
@@ -252,7 +259,11 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         if not isinstance(item, AnnotatedTableWidgetItem):
             logger.error("Bug! Preset Cell %i:%i does not provide position data!", row, column)
             return
-        preset_index, step_index, property_index = item.annotated_data
+        annotated_data = item.annotated_data
+        if annotated_data is None:
+            logger.error("Bug! Preset Cell %i:%i does not provide position data!", row, column)
+            return
+        preset_index, step_index, property_index = annotated_data
         if property_index < 0:
             return
         if not (0 <= preset_index < len(self._model.presets)):
@@ -345,7 +356,11 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             if not isinstance(item, AnnotatedTableWidgetItem):
                 logger.error("Preview Cell %i:%i does not provide position data!", row, column)
                 return
-            preset_index, step_index, property_index = item.annotated_data
+            annotated_data = item.annotated_data
+            if annotated_data is None:
+                logger.error("Preview Cell %i:%i does not provide position data!", row, column)
+                return
+            preset_index, step_index, property_index = annotated_data
             if property_index < 0:
                 return
             if not (0 <= preset_index < len(self._model.presets)):
