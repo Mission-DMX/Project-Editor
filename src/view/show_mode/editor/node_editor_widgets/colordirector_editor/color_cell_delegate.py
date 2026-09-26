@@ -12,7 +12,7 @@ from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
 if TYPE_CHECKING:
-    from PySide6.QtCore import QAbstractItemModel, QLocale, QModelIndex, QPersistentModelIndex
+    from PySide6.QtCore import QAbstractItemModel, QModelIndex, QPersistentModelIndex
     from PySide6.QtWidgets import QStyleOptionViewItem
 
 

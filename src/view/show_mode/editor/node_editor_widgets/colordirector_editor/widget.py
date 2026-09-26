@@ -160,16 +160,16 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         for preset in self._model.presets:
             row_sum += len(preset.colors)
         tw.setRowCount(row_sum)
-        ambient_color_maximum = self._model.get_ambient_color_count()
-        tw.setColumnCount(ambient_color_maximum + 4)
-        for i in range(ambient_color_maximum + 4):
+        accent_color_maximum = self._model.get_accent_color_count()
+        tw.setColumnCount(accent_color_maximum + 4)
+        for i in range(accent_color_maximum + 4):
             tw.setColumnWidth(i, 125 if i > 0 else 175)
         for i in range(row_sum):
             tw.setRowHeight(i, 45)
         tw.setItemDelegateForColumn(1, FadeinTimeCellDelegate(tw))
         tw.setItemDelegateForColumn(2, TransferFunctionCellDelegate(tw))
         color_edit_delegate = ColorCellDelegate(tw)
-        for i in range(ambient_color_maximum):
+        for i in range(accent_color_maximum):
             tw.setItemDelegateForColumn(i + 4, color_edit_delegate)
         offsets = 0
         for preset_index, preset in enumerate(self._model.presets):
@@ -181,7 +181,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             tw.setItem(preset_index + offsets, 0, index_widget)
             first_iteration = True
             step_index = -1
-            for fade_in_time, transfer_function, ambient_colors in preset.colors:
+            for fade_in_time, transfer_function, accent_colors in preset.colors:
                 if not first_iteration:
                     offsets += 1
                 first_iteration = False
@@ -202,10 +202,10 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
                 tw.setItem(preset_index + offsets, 3, add_accent_color_item)
                 add_accent_color_button = QPushButton("+")
                 add_accent_color_button.setToolTip("Add accent color to step.")
-                add_accent_color_button.clicked.connect(lambda _, ac=ambient_colors: self._add_accent_color(ac))
+                add_accent_color_button.clicked.connect(lambda _, ac=accent_colors: self._add_accent_color(ac))
                 tw.setCellWidget(preset_index + offsets, 3, add_accent_color_button)
 
-                for color_index, accent_color in enumerate(ambient_colors):
+                for color_index, accent_color in enumerate(accent_colors):
                     accent_color_item = AnnotatedTableWidgetItem("   ")
                     accent_color_item.setToolTip(
                         f"H: {accent_color.hue} S: {accent_color.saturation} I: {accent_color.intensity}\n{
@@ -277,9 +277,6 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
             return
         fade_in_time, tf, accent_colors = preset.colors[step_index]
         match property_index:
-            case -1:
-                # Nothing to do for the index cell, this shouldn't happen anyway
-                return
             case 0:
                 # Fade in time
                 edited_value = item.data(Qt.ItemDataRole.EditRole)
@@ -320,8 +317,8 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._model.presets.append(ColorPreset())
         self._reload_presets_table()
 
-    def _add_accent_color(self, ambient_color_list: list[ColorHSI]) -> None:
-        ambient_color_list.append(ColorHSI(0.0, 0.0, 1.0))
+    def _add_accent_color(self, accent_color_list: list[ColorHSI]) -> None:
+        accent_color_list.append(ColorHSI(0.0, 0.0, 1.0))
         self._reload_presets_table()
 
     def _add_step_to_preset(self, preset: ColorPreset) -> None:

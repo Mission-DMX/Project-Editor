@@ -99,9 +99,11 @@ STEP_DURATION_MS = 40
 """Duration of a single fade in time step in milliseconds. Fade in times are stored as multiples of this step."""
 
 _MAX_RECALL_COUNT = 1024
+"""Maximum number of recalls that may be saved using filter messages."""
 
 
 def _sanitize_channel_name(name: str) -> str:
+    """Remove characters that are problematic within channel names from the provided name."""
     return name.replace(":", "").replace("#", "").replace("|", "").replace("__", "-").replace(" ", "_").strip()
 
 
@@ -158,7 +160,7 @@ class ColordirectorVFilter(VirtualFilter):
     Internally cue filters are used for each color group and presets are cues within them.
     Accent colors are distributed using the formula `SubOut[i] = accent colors[i mod #accent colors]`.
     If the apply all buttons of the UI widget are pressed, the state will be applied to all cues.
-    Fade-in curves are stored with the new steps per second time reference.
+    Fade-in times are stored as multiples of the step duration defined by STEP_DURATION_MS.
 
     Setting live_preview_mode to true causes the filter to instantiate color constants that can be used instead of cues.
 
@@ -171,7 +173,7 @@ class ColordirectorVFilter(VirtualFilter):
         self._presets: list[ColorPreset] = []
         self._recalls: list[list[int]] = []
         self.in_data_types["time"] = DataType.DT_DOUBLE
-        self._in_data_types["time_scale"] = DataType.DT_DOUBLE
+        self.in_data_types["time_scale"] = DataType.DT_DOUBLE
         self._registered_callbacks: list[tuple[int, str]] = []
         self._current_active_colors: list[int] = []
         self._cue_filter_to_group_index_mapping: dict[str, int] = {}
@@ -229,8 +231,8 @@ class ColordirectorVFilter(VirtualFilter):
             recall.append(0)
         del recall[group_count:]
 
-    def get_ambient_color_count(self) -> int:
-        """Get the maximum number of ambient colors in presets."""
+    def get_accent_color_count(self) -> int:
+        """Get the maximum number of accent colors in presets."""
         maximum = 0
         for preset in self.presets:
             for _, _, colors in preset.colors:
@@ -291,7 +293,7 @@ class ColordirectorVFilter(VirtualFilter):
         self._presets.extend(ColorPreset(p_str) for p_str in presets_def.split("$"))
 
     def _serialize_presets(self) -> None:
-        self._filter_configurations["presets"] = "$".join(c.serialize() for c in self._presets)
+        self.filter_configurations["presets"] = "$".join(c.serialize() for c in self._presets)
 
     def _serialize_recalls(self) -> None:
         self.filter_configurations["recalls"] = ";".join(
@@ -306,7 +308,7 @@ class ColordirectorVFilter(VirtualFilter):
         for recall_def in recalls_def.split(";"):
             if len(recall_def) == 0:
                 continue
-            recall = []
+            recall: list[int] = []
             for state in recall_def.split(","):
                 if len(state) == 0:
                     continue
@@ -337,29 +339,12 @@ class ColordirectorVFilter(VirtualFilter):
 
         if short:
             pink = ColorPreset()
-            pink.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(296.0, 0.89, 1)]))
+            pink.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(296.0, 0.89, 1.0)]))
             self._presets.append(pink)
-            red = ColorPreset()
-            red.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(0.0, 1, 1)]))
-            self._presets.append(red)
-            orange = ColorPreset()
-            orange.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(25, 1, 1)]))
-            self._presets.append(orange)
-            yellow = ColorPreset()
-            yellow.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(60.0, 1, 1)]))
-            self._presets.append(yellow)
-            green = ColorPreset()
-            green.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(114.0, 1, 1)]))
-            self._presets.append(green)
-            cyan = ColorPreset()
-            cyan.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(170.0, 1, 1)]))
-            self._presets.append(cyan)
-            blue = ColorPreset()
-            blue.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(227, 1, 1)]))
-            self._presets.append(blue)
-            purple = ColorPreset()
-            purple.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(265.0, 1, 1)]))
-            self._presets.append(purple)
+            for hue in (0.0, 25.0, 60.0, 114.0, 170.0, 227.0, 265.0):
+                color = ColorPreset()
+                color.colors.append((three_secs, TransferFunction.LINEAR, [ColorHSI(hue, 1.0, 1.0)]))
+                self._presets.append(color)
         else:
             for hue in range(0, 360, 18):
                 color = ColorPreset()
@@ -490,11 +475,11 @@ class ColordirectorVFilter(VirtualFilter):
         or the scene has not been applied.
 
         """
-        nm = NetworkManager()
         if not self.live_preview_mode:
             return
         if len(accent_colors) == 0:
-            accent_colors = [ColorHSI.from_filter_str("0.0,0.0,1.0")]
+            accent_colors = [ColorHSI(0.0, 0.0, 1.0)]
+        nm = NetworkManager()
         for output_group, sub_outputs in self._color_groups.items():
             for i, sub_output in enumerate(sub_outputs):
                 nm.send_gui_update_to_fish(
@@ -508,6 +493,17 @@ class ColordirectorVFilter(VirtualFilter):
 
     @override
     def handle_filter_message(self, key: str, value: str) -> bool:
+        """Handle filter messages sent by show UI widgets.
+
+        Args:
+            key: The message key. Supported keys are "save-selection-to-recall", "recall", "call-group" and
+                "call-column".
+            value: The message value.
+
+        Returns:
+            True if the message was understood and handled. False otherwise.
+
+        """
         match key:
             case "save-selection-to-recall":
                 try:
@@ -536,7 +532,6 @@ class ColordirectorVFilter(VirtualFilter):
                 if len(self._presets) == 0:
                     return False
                 recall = self._recalls[target_recall]
-                nm = NetworkManager()
                 for i, group_name in enumerate(self._color_groups.keys()):
                     stored_index = recall[i] if i < len(recall) else 0
                     preset_index = bound_preset_index(stored_index, len(self._presets))
@@ -548,9 +543,7 @@ class ColordirectorVFilter(VirtualFilter):
                             stored_index,
                             group_name,
                         )
-                    filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, preset_index)
-                    filter_id, msg_key = filter_id.split(":")
-                    nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)
+                    self._send_preset_change_update(group_name, preset_index)
                 return True
             case "call":
                 try:
@@ -562,10 +555,7 @@ class ColordirectorVFilter(VirtualFilter):
                     return False
                 if not 0 <= color_preset_index < len(self._presets):
                     return False
-                nm = NetworkManager()
-                filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, color_preset_index)
-                filter_id, msg_key = filter_id.split(":")
-                nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)
+                self._send_preset_change_update(group_name, color_preset_index)
                 return True
             case "call-column":
                 try:
@@ -574,11 +564,8 @@ class ColordirectorVFilter(VirtualFilter):
                     return False
                 if not 0 <= preset_index < len(self._presets):
                     return False
-                nm = NetworkManager()
                 for group_name in self._color_groups:
-                    filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, preset_index)
-                    filter_id, msg_key = filter_id.split(":")
-                    nm.send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)
+                    self._send_preset_change_update(group_name, preset_index)
                 return True
             case _:
                 return False
@@ -634,3 +621,9 @@ class ColordirectorVFilter(VirtualFilter):
 
         """
         return f"{self.filter_id}__cue__{_sanitize_channel_name(color_group_name)}:run_cue", str(preset_index)
+
+    def _send_preset_change_update(self, group_name: str, preset_index: int) -> None:
+        """Send a network update message that applies the provided preset to the provided color group."""
+        filter_id, update_value = self.get_update_msg_for_group_preset_change(group_name, preset_index)
+        filter_id, msg_key = filter_id.split(":")
+        NetworkManager().send_gui_update_to_fish(self.scene.scene_id, filter_id, msg_key, update_value, enque=True)

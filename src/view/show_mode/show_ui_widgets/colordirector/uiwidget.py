@@ -58,16 +58,16 @@ class ColorDirectorShowUIWidget(UIWidget):
         linked_filter = self._get_linked_filter()
         if linked_filter is None:
             return self._generate_missing_filter_widget(parent)
-        w = ControllerWidget(linked_filter, self._pending_updates, True, parent)
-        w.update_requested.connect(self.push_update)
-        return w
+        controller = ControllerWidget(linked_filter, self._pending_updates, feedback_enabled=True, parent=parent)
+        controller.update_requested.connect(self.push_update)
+        return controller
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         linked_filter = self._get_linked_filter()
         if linked_filter is None:
             return self._generate_missing_filter_widget(parent)
-        return ControllerWidget(linked_filter, None, False, parent)
+        return ControllerWidget(linked_filter, None, feedback_enabled=False, parent=parent)
 
     @override
     def copy(self, new_parent: UIPage) -> UIWidget:

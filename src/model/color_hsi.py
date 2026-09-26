@@ -31,14 +31,12 @@ class ColorHSI:
         """Initialize an HSI color from the given filter configuration string.
 
         Args:
-        filter_format: The color provided as a filter configuration string.
+            filter_format: The color provided as a filter configuration string.
 
         """
         if not filter_format or filter_format.count(",") < 2:
             return ColorHSI(128.0, 0.5, 1.0)
         parts = filter_format.split(",")
-        if len(parts) < 3:
-            raise ValueError("Expected HSI format: hue,saturation,intensity")
         return ColorHSI(float(parts[0]), float(parts[1]), float(parts[2]))
 
     @classmethod
@@ -120,29 +118,29 @@ class ColorHSI:
 
     def format_for_filter(self) -> str:
         """Format the color so it can be parsed by fish filters."""
-        return f"{float(self._hue) % 360},{float(self._saturation)},{float(self._intensity)}"
+        return f"{self._hue},{self._saturation},{self._intensity}"
 
     def to_rgb(self) -> tuple[int, int, int]:
         """RGB representations as int between 0 and 255."""
-        rr, rg, rb = colorsys.hsv_to_rgb((self._hue % 360) / 360.0, self._saturation, self._intensity)
+        rr, rg, rb = colorsys.hsv_to_rgb(self._hue / 360.0, self._saturation, self._intensity)
         return int(rr * 255), int(rg * 255), int(rb * 255)
 
     def to_qt_color(self) -> QColor:
         """Return color in qt color format."""
-        return QColor.fromHsvF((self._hue % 360.0) / 360.0, self._saturation, self._intensity)
+        return QColor.fromHsvF(self._hue / 360.0, self._saturation, self._intensity)
 
     def copy(self) -> ColorHSI:
-        """Return a copy of The color object."""
+        """Return a copy of the color object."""
         return ColorHSI(self._hue, self._saturation, self._intensity)
 
     @classmethod
-    def from_qt_color(cls, c: QColor) -> ColorHSI:
+    def from_qt_color(cls, color: QColor) -> ColorHSI:
         """Generate a HSI color from qt color format.
 
         All color components are interpreted using the HSV color model consistent with to_qt_color.
 
         """
-        return ColorHSI((c.hsvHueF() * 360.0) % 360.0, c.hsvSaturationF(), c.valueF())
+        return ColorHSI(color.hsvHueF() * 360.0, color.hsvSaturationF(), color.valueF())
 
     def __str__(self) -> str:
         """Format color as HTML color code."""
