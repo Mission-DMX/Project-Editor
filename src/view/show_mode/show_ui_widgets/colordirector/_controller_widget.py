@@ -24,6 +24,9 @@ _ELEMENT_SIZE = 64
 _GROUP_LABEL_WIDTH = 100
 """Width of the color group label column in pixels."""
 
+_PREVIEW_ICON_SCALE = 0.75
+"""Scale factor applied to preview bitmaps when using them as button icons."""
+
 
 class ControllerWidget(QWidget):
     """Widget provides button matrix, group labels and recall field."""
@@ -148,8 +151,8 @@ class ControllerWidget(QWidget):
         if not buttons:
             return
         icon_size = buttons[0].size()
-        icon_size.setWidth(int(icon_size.width() * 0.75))
-        icon_size.setHeight(int(icon_size.height() * 0.75))
+        icon_size.setWidth(int(icon_size.width() * _PREVIEW_ICON_SCALE))
+        icon_size.setHeight(int(icon_size.height() * _PREVIEW_ICON_SCALE))
         icon = QIcon(QPixmap.fromImage(image))
         for button in buttons:
             button.setIcon(icon)

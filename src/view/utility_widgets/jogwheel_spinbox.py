@@ -11,10 +11,47 @@ from model import Broadcaster
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QKeyEvent
-    from PySide6.QtWidgets import QWidget
+    from PySide6.QtWidgets import QAbstractSpinBox, QWidget
+
+    _JogwheelSpinBoxBase = QAbstractSpinBox
+else:
+    _JogwheelSpinBoxBase = object
 
 
-class JogwheelSpinBox(QSpinBox):
+class _JogwheelInputMixin(_JogwheelSpinBoxBase):
+    """Mixin adding jog wheel input and enter key value submission to spin boxes."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        """Initialize the spin box and connect the jog wheel rotation signals of the broadcaster."""
+        super().__init__(parent)
+        self._broadcaster = Broadcaster()
+        self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
+        self._broadcaster.jogwheel_rotated_right.connect(self._jg_up)
+        # TODO also trigger value_submitted if in focus and xtouch enter pressed
+
+    def _submit_value(self) -> None:
+        """Submit the current value. Implemented by the class using this mixin."""
+        raise NotImplementedError
+
+    @override
+    def keyPressEvent(self, event: QKeyEvent, /) -> None:
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and self.hasFocus():
+            self.interpretText()
+            self._submit_value()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def _jg_down(self) -> None:
+        if self.hasFocus():
+            self.stepBy(-1)
+
+    def _jg_up(self) -> None:
+        if self.hasFocus():
+            self.stepBy(1)
+
+
+class JogwheelSpinBox(_JogwheelInputMixin, QSpinBox):
     """Spin box supporting jog wheel input.
 
     If the user presses enter while editing, the value_submitted signal will be emitted.
@@ -23,36 +60,12 @@ class JogwheelSpinBox(QSpinBox):
 
     value_submitted = Signal(int)
 
-    def __init__(self, parent: QWidget | None = None) -> None:
-        """Initialize just like QSpinBox."""
-        super().__init__(parent)
-        self._broadcaster = Broadcaster()
-        self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
-        self._broadcaster.jogwheel_rotated_right.connect(self._jg_up)
-        # TODO also trigger value_submitted if in focus and xtouch enter pressed
-
-    @override
-    def keyPressEvent(self, event: QKeyEvent, /) -> None:
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and self.hasFocus():
-            self.value_submitted.emit(self.value())
-            event.accept()
-        else:
-            super().keyPressEvent(event)
-
-    def _jg_down(self) -> None:
-        if self.hasFocus():
-            val = self.value() - self.singleStep()
-            if val >= self.minimum():
-                self.setValue(val)
-
-    def _jg_up(self) -> None:
-        if self.hasFocus():
-            val = self.value() + self.singleStep()
-            if val <= self.maximum():
-                self.setValue(val)
+    def _submit_value(self) -> None:
+        """Emit the current value using the value_submitted signal."""
+        self.value_submitted.emit(self.value())
 
 
-class JogwheelDoubleSpinBox(QDoubleSpinBox):
+class JogwheelDoubleSpinBox(_JogwheelInputMixin, QDoubleSpinBox):
     """Double spin box supporting jog wheel input.
 
     If the user presses enter while editing, the value_submitted signal will be emitted.
@@ -61,30 +74,6 @@ class JogwheelDoubleSpinBox(QDoubleSpinBox):
 
     value_submitted = Signal(float)
 
-    def __init__(self, parent: QWidget | None = None) -> None:
-        """Initialize just like QDoubleSpinBox."""
-        super().__init__(parent)
-        self._broadcaster = Broadcaster()
-        self._broadcaster.jogwheel_rotated_left.connect(self._jg_down)
-        self._broadcaster.jogwheel_rotated_right.connect(self._jg_up)
-        # TODO also trigger value_submitted if in focus and xtouch enter pressed
-
-    @override
-    def keyPressEvent(self, event: QKeyEvent, /) -> None:
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and self.hasFocus():
-            self.value_submitted.emit(self.value())
-            event.accept()
-        else:
-            super().keyPressEvent(event)
-
-    def _jg_down(self) -> None:
-        if self.hasFocus():
-            val = self.value() - self.singleStep()
-            if val >= self.minimum():
-                self.setValue(val)
-
-    def _jg_up(self) -> None:
-        if self.hasFocus():
-            val = self.value() + self.singleStep()
-            if val <= self.maximum():
-                self.setValue(val)
+    def _submit_value(self) -> None:
+        """Emit the current value using the value_submitted signal."""
+        self.value_submitted.emit(self.value())

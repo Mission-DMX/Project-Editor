@@ -25,7 +25,9 @@ class ColorMixerAdditiveRGBNode(AggregatingFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
+        super().__init__(
+            DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_ADDITIVE_RGB
+        )
 
 
 class ColorMixerNormativeRGBNode(AggregatingFilterNode):
@@ -35,7 +37,9 @@ class ColorMixerNormativeRGBNode(AggregatingFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
+        super().__init__(
+            DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_NORMATIVE_RGB
+        )
 
 
 class ColorMixerVFilterNode(AggregatingFilterNode):
@@ -78,4 +82,3 @@ class ColorDirectorVFilterNode(FilterNode):
         for output in outputs_to_remove:
             self.filter.out_data_types.pop(output, None)
             self.removeTerminal(output)
-

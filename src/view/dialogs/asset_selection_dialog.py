@@ -6,27 +6,29 @@ from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QPushButton, QVBoxLayout, QWidget
-from qasync import QApplication
 
-from model.media_assets.asset import MediaAsset
 from view.utility_widgets.asset_selection_widget import AssetSelectionWidget
 
 if TYPE_CHECKING:
+    from model.media_assets.asset import MediaAsset
     from model.media_assets.media_type import MediaType
 
 
 class AssetSelectionDialog(QDialog):
     """A dialog for selecting assets."""
 
-    asset_selected = Signal(MediaAsset)
+    asset_selected = Signal(list)
 
-    def __init__(self, parent: QWidget | None = None,
-                 allowed_types: list[MediaType] | None = None,
-                 preselected: MediaAsset | None = None,
-                 multiselection_allowed: bool = False) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        allowed_types: list[MediaType] | None = None,
+        preselected: MediaAsset | None = None,
+        multiselection_allowed: bool = False,
+    ) -> None:
         """Initialize the dialog.
 
-        Emits the asset_selected signal when the user changes the selection.
+        Emits the asset_selected signal with the list of selected assets when the user accepts the dialog.
 
         Args:
             parent: The parent widget.
@@ -36,9 +38,11 @@ class AssetSelectionDialog(QDialog):
 
         """
         super().__init__(parent)
-        self._selection_widget = AssetSelectionWidget(self,
-                                                      allowed_types=allowed_types if allowed_types is not None else [],
-                                                      multiselection_allowed=multiselection_allowed)
+        self._selection_widget = AssetSelectionWidget(
+            self,
+            allowed_types=allowed_types if allowed_types is not None else [],
+            multiselection_allowed=multiselection_allowed,
+        )
         self._selection_widget.selected_asset = [preselected] if preselected is not None else []
         self._clear_selection_button = QPushButton("Clear Selection")
         self._clear_selection_button.clicked.connect(self._clear)
@@ -58,7 +62,6 @@ class AssetSelectionDialog(QDialog):
     @override
     def accept(self) -> None:
         self.asset_selected.emit(self._selection_widget.selected_asset)
-        QApplication.processEvents()
         super().accept()
         self.close()
 

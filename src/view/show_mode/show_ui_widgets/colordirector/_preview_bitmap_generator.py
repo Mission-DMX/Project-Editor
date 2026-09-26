@@ -15,6 +15,8 @@ from utility import resource_path
 if TYPE_CHECKING:
     from PySide6.QtCore import QObject
 
+    from model.color_hsi import ColorHSI
+    from model.media_assets.image import AbstractImageAsset
     from model.virtual_filters.colordirector_vfilter import ColorPreset
 
 
@@ -53,11 +55,26 @@ class PreviewBitmapGenerator(QThread):
     preset_preview_generated = Signal(int, QImage)
 
     def __init__(self, presets: list[ColorPreset], size: int = 32, parent: QObject | None = None) -> None:
-        """Initialize using the presets to generate previews for and the preview size in pixels."""
+        """Initialize using the presets to generate previews for and the preview size in pixels.
+
+
+        Args:
+            presets: The color presets to generate preview images for.
+            size: The edge length of the generated preview images in pixels.
+            parent: The parent object.
+
+        """
         if parent is None:
             parent = QCoreApplication.instance()
         super().__init__(parent)
-        self._presets = presets
+        self._render_data: list[tuple[list[ColorHSI], bool, AbstractImageAsset | None]] = [
+            (
+                preset.get_button_visualization(),
+                len(preset.colors) > 1,
+                preset.visualization_asset,
+            )
+            for preset in presets
+        ]
         self._size = size
         self.finished.connect(self.deleteLater)
         _RUNNING_GENERATORS.add(self)
@@ -75,14 +92,13 @@ class PreviewBitmapGenerator(QThread):
     def run(self) -> None:
         repeat_image = QImage(resource_path(os.path.join("resources", "icons", "repeat.svg")))
         repeat_image = repeat_image.scaled(int(self._size * 0.5), int(self._size * 0.5))
-        for i, preset in enumerate(self._presets):
+        for i, (colors, repeats, visualization_asset) in enumerate(self._render_data):
             if self.isInterruptionRequested():
                 break
             image = QImage(self._size, self._size, QImage.Format.Format_ARGB32_Premultiplied)
             image.fill(Qt.GlobalColor.transparent)
             p = QPainter(image)
             rect = image.rect()
-            colors = preset.get_button_visualization()
             num_colors = len(colors)
             last_angle = 0
             arc_size = _FULL_CIRCLE_SPAN // num_colors if num_colors > 0 else 0
@@ -93,9 +109,8 @@ class PreviewBitmapGenerator(QThread):
                 p.drawPie(rect, last_angle, span)
                 last_angle += span
             # TODO for each accent color in the preset draw a little dot evenly spaced on the arc
-            if len(preset.colors) > 1:
+            if repeats:
                 p.drawImage(int(self._size * 0.55), 0, repeat_image)
-            visualization_asset = preset.visualization_asset
             if visualization_asset is not None:
                 asset_image = visualization_asset.get_image_for_ui().scaled(self._size, self._size)
                 p.drawImage(0, 0, asset_image)

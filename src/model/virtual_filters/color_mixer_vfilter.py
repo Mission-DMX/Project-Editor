@@ -22,7 +22,7 @@ class ColorMixerVFilter(VirtualFilter):
             case "additive_rgb":
                 f_type = FilterTypeEnumeration.FILTER_COLOR_MIXER_ADDITIVE_RGB
             case "normative_rgb":
-                f_type = FilterTypeEnumeration.FILTER_COLOR_MIXER_NORMATVE_RGB
+                f_type = FilterTypeEnumeration.FILTER_COLOR_MIXER_NORMATIVE_RGB
             case _:
                 f_type = FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV
         mixer_filter = Filter(scene=self.scene, filter_id=self.filter_id, filter_type=f_type, pos=self.pos,

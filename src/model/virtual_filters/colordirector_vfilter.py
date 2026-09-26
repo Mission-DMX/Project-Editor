@@ -26,6 +26,37 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
+_PRESET_DELIMITER = "$"
+"""Delimiter separating the serialized color presets within the presets configuration."""
+
+_LIST_ELEMENT_DELIMITER = "#"
+"""Delimiter separating the list elements within a serialized configuration (fade in steps and color groups)."""
+
+_FIELD_DELIMITER = "|"
+"""Delimiter separating the fields of a serialized list element (step fields and color group fields)."""
+
+_ACCENT_COLOR_DELIMITER = "@"
+"""Delimiter separating the serialized accent colors of a fade in step."""
+
+_ASSET_DELIMITER = "?"
+"""Delimiter separating the asset uuid from the fade in steps of a serialized color preset."""
+
+_RECALL_DELIMITER = ";"
+"""Delimiter separating the serialized recalls within the recalls configuration."""
+
+_RECALL_STATE_DELIMITER = ","
+"""Delimiter separating the color group states of a serialized recall."""
+
+STEP_DURATION_MS = 40
+"""Duration of a single fade in time step in milliseconds. Fade in times are stored as multiples of this step."""
+
+_MAX_RECALL_COUNT = 1024
+"""Maximum number of recalls that may be saved using filter messages."""
+
+_DEFAULT_BUTTON_COLOR = ColorHSI(128.0, 0.5, 1.0)
+"""Color used to represent color preset steps without accent colors in button visualizations."""
+
+
 class ColorPreset:
     """A color preset.
 
@@ -43,16 +74,20 @@ class ColorPreset:
         """
         self.colors: list[tuple[int, TransferFunction, list[ColorHSI]]] = []
         self._asset: AbstractImageAsset | str | None = None
-        if "?" in filter_str:
-            asset_uuid, filter_str = filter_str.split("?", 1)
+        if _ASSET_DELIMITER in filter_str:
+            asset_uuid, filter_str = filter_str.split(_ASSET_DELIMITER, 1)
             self._asset = asset_uuid
         if len(filter_str) > 0:
-            for step_str in filter_str.split("#"):
+            for step_str in filter_str.split(_LIST_ELEMENT_DELIMITER):
                 try:
-                    duration_str, transfer_function_str, colors_str = step_str.split("|")
+                    duration_str, transfer_function_str, colors_str = step_str.split(_FIELD_DELIMITER)
                     duration = int(duration_str)
                     transfer_function = TransferFunction(transfer_function_str)
-                    colors = [ColorHSI.from_filter_str(part) for part in colors_str.split("@") if len(part) > 0]
+                    colors = [
+                        ColorHSI.from_filter_str(part)
+                        for part in colors_str.split(_ACCENT_COLOR_DELIMITER)
+                        if len(part) > 0
+                    ]
                 except ValueError:
                     continue
                 self.colors.append((duration, transfer_function, colors))
@@ -64,20 +99,20 @@ class ColorPreset:
             The first accent color of each step. Steps without colors are represented by the default color.
 
         """
-        default = ColorHSI(128.0, 0.5, 1.0)
-        return [t[2][0] if t[2] else default for t in self.colors]
+        return [t[2][0] if t[2] else _DEFAULT_BUTTON_COLOR for t in self.colors]
 
     def serialize(self) -> str:
         """Serialize the preset to a string."""
         parts: list[str] = []
         for duration, transfer_function, colors in self.colors:
-            parts.append(f"{duration}|{transfer_function.value}|{'@'.join(c.format_for_filter() for c in colors)}")
-        list_str = "#".join(parts)
+            accent_colors = _ACCENT_COLOR_DELIMITER.join(c.format_for_filter() for c in colors)
+            parts.append(_FIELD_DELIMITER.join((str(duration), transfer_function.value, accent_colors)))
+        list_str = _LIST_ELEMENT_DELIMITER.join(parts)
         asset = self.visualization_asset
         if asset is not None:
-            return f"{asset.id}?{list_str}"
+            return f"{asset.id}{_ASSET_DELIMITER}{list_str}"
         if isinstance(self._asset, str):
-            return f"{self._asset}?{list_str}"
+            return f"{self._asset}{_ASSET_DELIMITER}{list_str}"
         return list_str
 
     @property
@@ -93,13 +128,6 @@ class ColorPreset:
     @visualization_asset.setter
     def visualization_asset(self, asset: AbstractImageAsset | None) -> None:
         self._asset = asset
-
-
-STEP_DURATION_MS = 40
-"""Duration of a single fade in time step in milliseconds. Fade in times are stored as multiples of this step."""
-
-_MAX_RECALL_COUNT = 1024
-"""Maximum number of recalls that may be saved using filter messages."""
 
 
 def _sanitize_channel_name(name: str) -> str:
@@ -255,10 +283,10 @@ class ColordirectorVFilter(VirtualFilter):
         color_group_def = self.filter_configurations.get("colorgroups", "")
         if len(color_group_def) == 0:
             return
-        for group_def in color_group_def.split("#"):
+        for group_def in color_group_def.split(_LIST_ELEMENT_DELIMITER):
             if len(group_def) == 0:
                 continue
-            output_channels = group_def.split("|")
+            output_channels = group_def.split(_FIELD_DELIMITER)
             group_name = _sanitize_channel_name(output_channels[0])
             if group_name != output_channels[0]:
                 logger.warning(
@@ -301,8 +329,8 @@ class ColordirectorVFilter(VirtualFilter):
                 self.out_data_types[f"{group_name}__{chan_name}"] = DataType.DT_COLOR
 
     def _serialize_color_groups(self) -> None:
-        self.filter_configurations["colorgroups"] = "#".join(
-            f"{_sanitize_channel_name(name)}|{'|'.join(_sanitize_channel_name(c) for c in channels)}"
+        self.filter_configurations["colorgroups"] = _LIST_ELEMENT_DELIMITER.join(
+            _FIELD_DELIMITER.join([_sanitize_channel_name(name), *(_sanitize_channel_name(c) for c in channels)])
             for name, channels in self._color_groups.items()
         )
 
@@ -311,14 +339,14 @@ class ColordirectorVFilter(VirtualFilter):
         presets_def = self.filter_configurations.get("presets", "")
         if len(presets_def) == 0:
             return
-        self._presets.extend(ColorPreset(p_str) for p_str in presets_def.split("$"))
+        self._presets.extend(ColorPreset(p_str) for p_str in presets_def.split(_PRESET_DELIMITER))
 
     def _serialize_presets(self) -> None:
-        self.filter_configurations["presets"] = "$".join(c.serialize() for c in self._presets)
+        self.filter_configurations["presets"] = _PRESET_DELIMITER.join(c.serialize() for c in self._presets)
 
     def _serialize_recalls(self) -> None:
-        self.filter_configurations["recalls"] = ";".join(
-            ",".join(str(state) for state in states) for states in self._recalls
+        self.filter_configurations["recalls"] = _RECALL_DELIMITER.join(
+            _RECALL_STATE_DELIMITER.join(str(state) for state in states) for states in self._recalls
         )
 
     def _deserialize_recalls(self) -> None:
@@ -326,11 +354,11 @@ class ColordirectorVFilter(VirtualFilter):
         recalls_def = self.filter_configurations.get("recalls", "")
         if len(recalls_def) == 0:
             return
-        for recall_def in recalls_def.split(";"):
+        for recall_def in recalls_def.split(_RECALL_DELIMITER):
             if len(recall_def) == 0:
                 continue
             recall: list[int] = []
-            for state in recall_def.split(","):
+            for state in recall_def.split(_RECALL_STATE_DELIMITER):
                 if len(state) == 0:
                     continue
                 try:
@@ -527,7 +555,7 @@ class ColordirectorVFilter(VirtualFilter):
         """Handle filter messages sent by show UI widgets.
 
         Args:
-            key: The message key. Supported keys are "save-selection-to-recall", "recall", "call-group" and
+            key: The message key. Supported keys are "save-selection-to-recall", "recall", "call" and
                 "call-column".
             value: The message value.
 
@@ -600,7 +628,6 @@ class ColordirectorVFilter(VirtualFilter):
                 return True
             case _:
                 return False
-        return True
 
     def _update_active_colors_from_filters(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Update the currently active color presets from a cue filter update message.

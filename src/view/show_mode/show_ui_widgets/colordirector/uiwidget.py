@@ -71,9 +71,10 @@ class ColorDirectorShowUIWidget(UIWidget):
 
     @override
     def copy(self, new_parent: UIPage) -> UIWidget:
-        c = ColorDirectorShowUIWidget(new_parent, self.configuration.copy())
-        super().copy_base(c)
-        return c
+        """Copy the widget including its configuration."""
+        copied_widget = ColorDirectorShowUIWidget(new_parent, self.configuration.copy())
+        super().copy_base(copied_widget)
+        return copied_widget
 
     @override
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:

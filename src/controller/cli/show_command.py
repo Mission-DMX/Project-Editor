@@ -63,10 +63,12 @@ class ShowCommand(Command):
         filtercmd_parser.add_argument("parameterkey", help="The key of the parameter to update")
         filtercmd_parser.add_argument("parametervalue", help="The value to transmit")
 
-        readymode_parser: ArgumentParser = subparsers.add_parser("readymode", help="Ready mode controls",
-                                                                 exit_on_error=False)
-        readymode_parser.add_argument("action", type=str, help="The action to perform",
-                                      choices=["enable", "abort", "commit", "query"])
+        readymode_parser: ArgumentParser = subparsers.add_parser(
+            "readymode", help="Ready mode controls", exit_on_error=False
+        )
+        readymode_parser.add_argument(
+            "action", type=str, help="The action to perform", choices=["enable", "abort", "commit", "query"]
+        )
 
     def execute(self, args: Namespace) -> bool:
         """Execute the showctl command based on parsed arguments.
@@ -104,10 +106,14 @@ class ShowCommand(Command):
                         return False
                     if filter_inst is None:
                         self.context.print(
-                            f"WARNING: no filter with ID '{args.filterid}' found in scene '{args.sceneid}'."
+                            f"WARNING: no filter with ID '{args.filterid}' found in scene '{args.sceneid}'. "
+                            "Forwarding the message to fish anyway."
                         )
                 else:
-                    self.context.print(f"WARNING: scene with ID '{args.sceneid}' not found.")
+                    self.context.print(
+                        f"WARNING: scene with ID '{args.sceneid}' not found. Forwarding the message to fish anyway."
+                    )
+                # regular filters receive GUI updates directly on fish, hence the message is always forwarded
                 self.context.network_manager.send_gui_update_to_fish(
                     args.sceneid, args.filterid, args.parameterkey, args.parametervalue, enque=True
                 )
