@@ -96,8 +96,15 @@ class PreviewBitmapGenerator(QThread):
 
     @override
     def run(self) -> None:
-        repeat_image = QImage(resource_path(os.path.join("resources", "icons", "repeat.svg")))
-        repeat_image = repeat_image.scaled(self._size // 2, self._size // 2)
+        """Generate a preview image for every color preset.
+
+        Every preview consists of pie segments visualizing the colors of the preset steps, accent color dots drawn
+        onto the segments, an icon marking repeating presets and the visualization asset if one is set. The
+        generated images are provided using the preset_preview_generated signal. The generation stops before the
+        current preset if an interruption was requested using requestInterruption.
+
+        """
+        repeat_image: QImage | None = None
         for i, (colors, accent_colors, repeats, visualization_asset) in enumerate(self._render_data):
             if self.isInterruptionRequested():
                 break
@@ -118,6 +125,9 @@ class PreviewBitmapGenerator(QThread):
                 last_angle += span
             self._draw_accent_color_dots(p, accent_colors, segment_bounds)
             if repeats:
+                if repeat_image is None:
+                    repeat_image = QImage(resource_path(os.path.join("resources", "icons", "repeat.svg")))
+                    repeat_image = repeat_image.scaled(self._size // 2, self._size // 2)
                 icon_position = self._size - repeat_image.width()
                 p.drawImage(icon_position, 0, repeat_image)
             if visualization_asset is not None:

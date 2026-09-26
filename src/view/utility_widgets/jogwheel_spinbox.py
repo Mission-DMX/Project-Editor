@@ -58,10 +58,12 @@ class _JogwheelInputMixin(_JogwheelSpinBoxBase):
             super().keyPressEvent(event)
 
     def _jg_down(self) -> None:
+        """Decrease the value by a single step if the spin box has the keyboard focus."""
         if self.hasFocus():
             self.stepBy(-1)
 
     def _jg_up(self) -> None:
+        """Increase the value by a single step if the spin box has the keyboard focus."""
         if self.hasFocus():
             self.stepBy(1)
 

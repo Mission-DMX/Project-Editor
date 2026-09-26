@@ -84,6 +84,15 @@ consecutive indices."""
 
 
 def _set_asset(asset: list[MediaAsset], preset: ColorPreset) -> None:
+    """Set the visualization asset of the preset to the first selected image asset.
+
+    The visualization asset is cleared if the selection is empty or does not contain an image asset.
+
+    Args:
+        asset: The assets selected within the asset selection dialog.
+        preset: The preset whose visualization asset is set.
+
+    """
     if len(asset) == 0:
         preset.visualization_asset = None
         return
@@ -385,6 +394,13 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         tw.setCellWidget(last_row, _PRESET_INDEX_COLUMN, last_row_widget)
 
     def _preset_cell_edited(self, row: int, column: int) -> None:
+        """Apply the value edited within a presets table cell to the model.
+
+        Edits triggered while the table is rebuilt are ignored as they do not originate from the user. Cells that
+        are not annotated or provide invalid position or edit data are reported and ignored: They indicate a bug
+        within the table population.
+
+        """
         if self._in_preset_table_rebuild:
             return
         item = self._preset_table.item(row, column)
@@ -438,29 +454,50 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         return
 
     def _load_default_colors_clicked_short(self) -> None:
+        """Replace the presets by a short list of common colors and rebuild the tables."""
         self._model.populate_presets_with_initial_data(True)
         self._reload_presets_table()
         self._recall_tab.update_recall_table()
 
     def _load_default_colors_clicked_long(self) -> None:
+        """Replace the presets by a long list of common colors and rebuild the tables."""
         self._model.populate_presets_with_initial_data(False)
         self._reload_presets_table()
         self._recall_tab.update_recall_table()
 
     def _add_preset(self) -> None:
+        """Add a new empty preset to the model and rebuild the tables."""
         self._model.add_preset(ColorPreset())
         self._reload_presets_table()
         self._recall_tab.update_recall_table()
 
     def _add_accent_color(self, accent_color_list: list[ColorHSI]) -> None:
+        """Append a white accent color to the accent colors of a preset step and rebuild the presets table.
+
+        Args:
+            accent_color_list: The accent color list of the preset step extended by another accent color.
+
+        """
         accent_color_list.append(ColorHSI(0.0, 0.0, 1.0))
         self._reload_presets_table()
 
     def _add_step_to_preset(self, preset: ColorPreset) -> None:
+        """Append a new step without accent colors to the preset and rebuild the presets table.
+
+        Args:
+            preset: The preset extended by another step.
+
+        """
         preset.colors.append((0, TransferFunction.LINEAR, []))
         self._reload_presets_table()
 
     def _remove_last_step_from_preset(self, preset: ColorPreset) -> None:
+        """Remove the last step from the preset and rebuild the presets table.
+
+        Args:
+            preset: The preset whose last step is removed. Presets without steps are ignored.
+
+        """
         if len(preset.colors) == 0:
             return
         preset.colors.pop(-1)
@@ -486,6 +523,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         self._live_preview_button.setChecked(preview_active)
 
     def _live_preview_button_clicked(self, checked: bool) -> None:
+        """Enable or disable the live preview mode depending on the new state of the toggle button."""
         if checked:
             self._enable_live_preview()
         else:
@@ -535,6 +573,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         error_box.show()
 
     def _preset_cell_clicked(self, row: int, column: int) -> None:
+        """Apply the accent colors of the clicked preset step to the live preview while it is active."""
         if self._model.live_preview_mode:
             item = self._preset_table.item(row, column)
             if not isinstance(item, AnnotatedTableWidgetItem):
@@ -566,6 +605,7 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         super().parent_closed(filter_node)
 
     def _change_preset_asset_clicked(self, preset: ColorPreset) -> None:
+        """Open the asset selection dialog changing the visualization asset of the preset."""
         if self._asset_dialog is not None:
             self._asset_dialog.deleteLater()
         self._asset_dialog = AssetSelectionDialog(

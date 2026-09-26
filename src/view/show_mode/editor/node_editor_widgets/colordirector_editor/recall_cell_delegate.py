@@ -21,7 +21,7 @@ class RecallCellDelegate(QStyledItemDelegate):
     """Delegate to provide limited number editing for recall table."""
 
     def __init__(self, parent: QWidget, model: ColordirectorVFilter) -> None:
-        """Initialize."""
+        """Initialize using the parent and the color director filter providing the editable recalls."""
         super().__init__(parent)
         self._model: ColordirectorVFilter = model
 

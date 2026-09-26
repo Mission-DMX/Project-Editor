@@ -62,6 +62,13 @@ class RecallEditWidget(QWidget):
         self._update_remove_recall_button()
 
     def _add_recall_row_to_table(self, recall_index: int, recall_data: list[int]) -> None:
+        """Add a table row displaying the preset selection of a single recall.
+
+        Args:
+            recall_index: The index of the recall displayed by the row.
+            recall_data: The preset index stored by the recall for every color group.
+
+        """
         index_item = AnnotatedTableWidgetItem(str(recall_index))
         # recall index, color group index, color preset index
         index_item.annotated_data = (recall_index, -1, -1)
@@ -76,6 +83,7 @@ class RecallEditWidget(QWidget):
             self._recall_table.setItem(recall_index, group_index + 1, step_item)
 
     def _add_recall(self) -> None:
+        """Add a new recall to the model and append it to the table."""
         recall_data = self._model.add_recall()
         self._recall_table.setRowCount(len(self._model.recalls))
         self._add_recall_row_to_table(len(self._model.recalls) - 1, recall_data)

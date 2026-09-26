@@ -53,6 +53,7 @@ class ColorEditWidget(QWidget):
         return ColorHSI(self._hue_edit.value(), self._sat_edit.value(), self._val_edit.value())
 
     def _update_color(self) -> None:
+        """Update the color preview label to the values currently entered within the spin boxes."""
         self._color_label.set_hsi(self._hue_edit.value(), self._sat_edit.value(), self._val_edit.value())
 
 

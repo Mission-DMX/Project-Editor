@@ -137,6 +137,7 @@ class ColorPreset:
 
     @visualization_asset.setter
     def visualization_asset(self, asset: AbstractImageAsset | None) -> None:
+        """Set the image used to represent the preset. None removes the visualization asset."""
         self._asset = asset
 
 
@@ -479,6 +480,12 @@ class ColordirectorVFilter(VirtualFilter):
         return maximum
 
     def _deserialize_color_groups(self) -> None:
+        """Load the color groups and their output data types from the filter configuration.
+
+        Channel names are sanitized if possible: Channels that remain invalid or duplicated are skipped with a
+        warning.
+
+        """
         self._color_groups.clear()
         self.out_data_types.clear()
         color_group_def = self.filter_configurations.get("colorgroups", "")
@@ -530,12 +537,14 @@ class ColordirectorVFilter(VirtualFilter):
                 self.out_data_types[f"{group_name}__{chan_name}"] = DataType.DT_COLOR
 
     def _serialize_color_groups(self) -> None:
+        """Store the color groups and their sub outputs within the filter configuration."""
         self.filter_configurations["colorgroups"] = _LIST_ELEMENT_DELIMITER.join(
             _FIELD_DELIMITER.join([_sanitize_channel_name(name), *(_sanitize_channel_name(c) for c in channels)])
             for name, channels in self._color_groups.items()
         )
 
     def _deserialize_presets(self) -> None:
+        """Load the color presets from the filter configuration."""
         self._presets.clear()
         presets_def = self.filter_configurations.get("presets", "")
         if len(presets_def) == 0:
@@ -543,14 +552,21 @@ class ColordirectorVFilter(VirtualFilter):
         self._presets.extend(ColorPreset.from_filter_str(p_str) for p_str in presets_def.split(_PRESET_DELIMITER))
 
     def _serialize_presets(self) -> None:
+        """Store the color presets within the filter configuration."""
         self.filter_configurations["presets"] = _PRESET_DELIMITER.join(c.serialize() for c in self._presets)
 
     def _serialize_recalls(self) -> None:
+        """Store the recalls within the filter configuration."""
         self.filter_configurations["recalls"] = _RECALL_DELIMITER.join(
             _RECALL_STATE_DELIMITER.join(str(state) for state in states) for states in self._recalls
         )
 
     def _deserialize_recalls(self) -> None:
+        """Load the recalls from the filter configuration.
+
+        Non-integer preset indices are replaced by zero.
+
+        """
         self._recalls.clear()
         recalls_def = self.filter_configurations.get("recalls", "")
         if len(recalls_def) == 0:
@@ -659,6 +675,16 @@ class ColordirectorVFilter(VirtualFilter):
         self._cue_filter_to_group_index_mapping.clear()
 
     def _inst_filters_normal_mode(self, filter_list: list[Filter]) -> None:
+        """Instantiate the cue filters implementing the color groups in normal mode.
+
+        Every color group is represented by a cue filter containing one cue per color preset. Missing time and
+        timescale links are replaced by generated filters. The update callbacks reporting the active colors are
+        registered for every generated cue filter.
+
+        Args:
+            filter_list: The list all generated filters are appended to.
+
+        """
         self._clear_runtime_state()
         timescale_input = self.channel_links.get("time_scale")
         if timescale_input is None:
@@ -716,6 +742,12 @@ class ColordirectorVFilter(VirtualFilter):
             self._cue_filter_to_group_index_mapping[cue_filter.filter_id] = group_index
 
     def _inst_filters_preview_mode(self, filter_list: list[Filter]) -> None:
+        """Instantiate the color constant filters used as preview outputs while the live preview mode is active.
+
+        Args:
+            filter_list: The list all generated filters are appended to.
+
+        """
         self._clear_runtime_state()
         for output_group, sub_outputs in self._color_groups.items():
             for sub_output in sub_outputs:

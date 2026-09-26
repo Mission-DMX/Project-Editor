@@ -26,6 +26,9 @@ _GROUP_LABEL_WIDTH = 100
 _PREVIEW_ICON_SCALE = 0.75
 """Scale factor applied to preview bitmaps when using them as button icons."""
 
+_APPLY_COLUMN_BUTTON_TEXT = "🠋"
+"""Text of the buttons applying a preset to every color group at once."""
+
 
 class ControllerWidget(QWidget):
     """Widget provides button matrix, group labels and recall field."""
@@ -39,7 +42,17 @@ class ControllerWidget(QWidget):
         feedback_enabled: bool = False,
         parent: QWidget | None = None,
     ) -> None:
-        """Initialize and generate button matrix."""
+        """Initialize and generate the button matrix.
+
+        Args:
+            model: The color director filter providing the color groups, presets and recalls.
+            update_list: The list the update messages to fish are collected within. If None, the widget does not
+                collect any update messages since it is used to configure the show only.
+            feedback_enabled: Whether the buttons of the currently active colors are highlighted using feedback
+                messages sent by fish.
+            parent: The parent widget.
+
+        """
         super().__init__(parent)
         self._update_list: list[tuple[str, str]] | None = update_list
         self._model = model
@@ -59,14 +72,12 @@ class ControllerWidget(QWidget):
             label.setFixedWidth(_GROUP_LABEL_WIDTH)
             label.setMaximumHeight(_ELEMENT_SIZE)
             layout.addWidget(label, i + 1, 0)
-        self._apply_group_buttons: list[QPushButton] = []
         for i in range(number_of_presets):
-            group_button = QPushButton("🠋")
+            group_button = QPushButton(_APPLY_COLUMN_BUTTON_TEXT)
             group_button.setToolTip("Apply this preset to all color groups.")
             group_button.setFixedSize(_ELEMENT_SIZE, _ELEMENT_SIZE)
             if update_list is not None:
                 group_button.clicked.connect(lambda _, ii=i: self._apply_column_clicked(ii))
-            self._apply_group_buttons.append(group_button)
             layout.addWidget(group_button, 0, i + 1)
         self._apply_single_buttons: list[list[QPushButton]] = []
         preview_generator = PreviewBitmapGenerator(model.presets, size=_ELEMENT_SIZE)
@@ -102,6 +113,7 @@ class ControllerWidget(QWidget):
             self._model.configuration_changed.mapped_signal.connect(self._active_colors_changed)
 
     def _apply_column_clicked(self, preset_index: int) -> None:
+        """Enqueue the update messages applying the preset to every color group and request their transmission."""
         if self._update_list is None:
             return
         self._update_list.clear()
@@ -112,6 +124,7 @@ class ControllerWidget(QWidget):
         self.update_requested.emit()
 
     def _apply_single_clicked(self, group_index: int, preset_index: int) -> None:
+        """Enqueue the update message applying the preset to the color group and request its transmission."""
         if self._update_list is None:
             return
         self._update_list.append(
@@ -120,6 +133,7 @@ class ControllerWidget(QWidget):
         self.update_requested.emit()
 
     def _recall_issued(self, recall_index: int) -> None:
+        """Enqueue the update messages applying the saved selection of the recall and request their transmission."""
         if self._update_list is None:
             return
         selection = self._model.get_recall_preset_selection(recall_index)
@@ -139,6 +153,13 @@ class ControllerWidget(QWidget):
         self._recall_sp.setRange(0, max(recall_count - 1, 0))
 
     def _add_preview_on_buttons(self, preview_index: int, image: QImage) -> None:
+        """Set the generated preview image as icon of all buttons applying the preset it was generated for.
+
+        Args:
+            preview_index: The index of the preset the image was generated for.
+            image: The generated preview image.
+
+        """
         if not 0 <= preview_index < len(self._apply_single_buttons):
             return
         buttons = self._apply_single_buttons[preview_index]
@@ -153,6 +174,7 @@ class ControllerWidget(QWidget):
             button.setIconSize(icon_size)
 
     def _active_colors_changed(self) -> None:
+        """Highlight the buttons of the colors currently active within their color group."""
         active_colors = self._model.get_current_active_colors()
         for i, group_buttons in enumerate(self._apply_single_buttons):
             for j, button in enumerate(group_buttons):

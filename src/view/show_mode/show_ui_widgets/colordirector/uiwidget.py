@@ -19,6 +19,7 @@ class ColorDirectorShowUIWidget(UIWidget):
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
+        """Return the update messages collected since the last call and clear the collected messages."""
         copied_list = self._pending_updates.copy()
         self._pending_updates.clear()
         return copied_list
