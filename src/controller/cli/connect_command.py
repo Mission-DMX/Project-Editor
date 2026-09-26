@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from jinja2 import Environment
+from jinja2 import Environment, StrictUndefined, TemplateSyntaxError, UndefinedError
 
 from controller.cli.command import Command
 from model import DataType
@@ -51,7 +51,7 @@ class ConnectCommand(Command):
         """Initialize the command."""
         super().__init__(context, "connect")
         self._help_text = "Connect filter channels"
-        self._jinja_env = Environment()  # NOQA: S701 the editor is not a web page.
+        self._jinja_env = Environment(undefined=StrictUndefined)  # NOQA: S701 the editor is not a web page.
         self._jinja_env.filters["add"] = _add
         self._jinja_env.filters["sub"] = _sub
         self._jinja_env.filters["mul"] = _mul
@@ -82,8 +82,16 @@ class ConnectCommand(Command):
             self.context.print("Error: No scene selected.")
             return False
         success = True
-        src_template = self._jinja_env.from_string(args.source[0])
-        dest_templates = [self._jinja_env.from_string(dest_template_str) for dest_template_str in args.targets]
+        try:
+            src_template = self._jinja_env.from_string(args.source[0])
+        except TemplateSyntaxError as e:
+            self.context.print(f"ERROR: Failed to parse the source filter template: {e}")
+            return False
+        try:
+            dest_templates = [self._jinja_env.from_string(dest_template_str) for dest_template_str in args.targets]
+        except TemplateSyntaxError as e:
+            self.context.print(f"ERROR: Failed to parse a destination filter template: {e}")
+            return False
         for i in range(args.source_count):
             for dest_template in dest_templates:
                 for j in range(args.destination_count):
@@ -102,12 +110,12 @@ class ConnectCommand(Command):
         destination_filter: Filter | None = None
         try:
             try:
-                source_template = source_template.render({"si": source_iter, "di": destination_iter})
-            except ValueError as e:
+                rendered_source = source_template.render({"si": source_iter, "di": destination_iter})
+            except (UndefinedError, ValueError) as e:
                 self.context.print(f"ERROR: Failed to evaluate the source filter template: {e}")
                 return False
             try:
-                source_filter_id, source_channel_name = source_template.split(":")
+                source_filter_id, source_channel_name = rendered_source.split(":")
             except ValueError:
                 self.context.print(
                     "Source filter id and channel name are invalid. Use the following format: "
@@ -125,12 +133,12 @@ class ConnectCommand(Command):
             self.context.print(f"ERROR: The source filter format is invalid: {e}")
             return False
         try:
-            destination_template = destination_template.render({"si": source_iter, "di": destination_iter})
-        except ValueError as e:
+            rendered_destination = destination_template.render({"si": source_iter, "di": destination_iter})
+        except (UndefinedError, ValueError) as e:
             self.context.print(f"ERROR: Failed to evaluate the destination filter template: {e}")
             return False
         try:
-            destination_filter_id, destination_channel_name = destination_template.split(":")
+            destination_filter_id, destination_channel_name = rendered_destination.split(":")
             destination_filter = self.context.selected_scene.get_filter_by_id(destination_filter_id)
             if destination_filter is None:
                 self.context.print(
@@ -143,7 +151,7 @@ class ConnectCommand(Command):
             return False
         except ValueError as e:
             self.context.print(
-                f"ERROR: The destination filter format is invalid: {e}. Got: '{destination_template}'."
+                f"ERROR: The destination filter format is invalid: {e}. Got: '{rendered_destination}'."
                 f" Use the following format: <destination_filter_id>:<channel_name>"
             )
             return False
