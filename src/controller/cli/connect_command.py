@@ -31,6 +31,7 @@ def _mul(value: str, arg: str) -> str:
 
 
 def _div(value: str, arg: str) -> str:
+    """Divide the given value by the given divisor using integer floor division."""
     divisor = int(arg)
     if divisor == 0:
         raise ValueError("The 'div' filter requires a divisor other than zero.")
@@ -38,6 +39,7 @@ def _div(value: str, arg: str) -> str:
 
 
 def _mod(value: str, arg: str) -> str:
+    """Compute the integer modulo of the given value by the given divisor."""
     divisor = int(arg)
     if divisor == 0:
         raise ValueError("The 'mod' filter requires a divisor other than zero.")

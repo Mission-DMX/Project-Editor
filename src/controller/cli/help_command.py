@@ -115,6 +115,18 @@ class HelpCommand(Command):
                     "|<dmod:X>|<dt:DT>|<sfid_contains:STR>|<dfid_contains:STR>|<schan_contains:STR>|"
                     "<dchan_contains:STR>] [--source-count <count>] [--destination-count <count>]"
                 )
+                self.context.print("The source and destination arguments are Jinja templates:")
+                self.context.print("\tsi -- index of the current source iteration")
+                self.context.print("\tdi -- index of the current destination iteration")
+                self.context.print("The following filters are available inside the templates:")
+                self.context.print("\tadd, sub, mul -- integer addition, subtraction and multiplication")
+                self.context.print(
+                    "\tdiv -- integer floor division, it rounds towards negative infinity (not towards zero),"
+                    " e.g. {{ -7 | div(2) }} is -4"
+                )
+                self.context.print(
+                    "\tmod -- integer modulo, the result takes the sign of the divisor, e.g. {{ -7 | mod(2) }} is 1"
+                )
             case "uipage":
                 self.context.print("Manipulate content and display of ui pages.")
                 self.context.print("\tset-displayed-index <window> <scene> <page>")
