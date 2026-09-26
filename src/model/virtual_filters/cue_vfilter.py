@@ -26,7 +26,7 @@ class PreviewFilter(VirtualFilter):
         filter_id: str,
         filter_type: FilterTypeEnumeration,
         inst_filter_type: FilterTypeEnumeration,
-        pos: tuple[int] | None = None,
+        pos: tuple[int, int] | tuple[float, float] | None = None,
     ) -> None:
         """V-filter.
 
@@ -141,7 +141,7 @@ class CueFilter(PreviewFilter):
     elaboration.
     """
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Instantiate the cue v-filter."""
         super().__init__(
             scene, filter_id, FilterTypeEnumeration.VFILTER_CUES, FilterTypeEnumeration.FILTER_TYPE_CUES, pos=pos

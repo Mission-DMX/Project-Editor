@@ -12,7 +12,7 @@ from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorLabel
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
 if TYPE_CHECKING:
-    from PySide6.QtCore import QAbstractItemModel, QLocale, QModelIndex
+    from PySide6.QtCore import QAbstractItemModel, QLocale, QModelIndex, QPersistentModelIndex
     from PySide6.QtWidgets import QStyleOptionViewItem
 
 
@@ -64,14 +64,16 @@ class ColorCellDelegate(QStyledItemDelegate):
     """
 
     @override
-    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex, /) -> QWidget:
+    def createEditor(
+        self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex, /
+    ) -> QWidget:
         if index.data(Qt.ItemDataRole.EditRole) is None:
             return QLabel("No Color.", parent)
         return ColorEditWidget(parent)
 
     @override
-    def setEditorData(self, editor: QLabel | ColorEditWidget, index: QModelIndex, /) -> None:
-        if isinstance(editor, QLabel):
+    def setEditorData(self, editor: QWidget, index: QModelIndex | QPersistentModelIndex, /) -> None:
+        if not isinstance(editor, ColorEditWidget):
             return
         data = index.data(Qt.ItemDataRole.EditRole)
         if data is None:
@@ -79,8 +81,10 @@ class ColorCellDelegate(QStyledItemDelegate):
         editor.set_color(data)
 
     @override
-    def setModelData(self, editor: QLabel | ColorEditWidget, model: QAbstractItemModel, index: QModelIndex, /) -> None:
-        if isinstance(editor, QLabel):
+    def setModelData(
+        self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex | QPersistentModelIndex, /
+    ) -> None:
+        if not isinstance(editor, ColorEditWidget):
             return
         color = editor.get_color()
         model.setData(index, color, Qt.ItemDataRole.EditRole)

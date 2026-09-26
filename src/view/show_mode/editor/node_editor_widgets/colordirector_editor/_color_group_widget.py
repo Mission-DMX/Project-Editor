@@ -128,7 +128,10 @@ class ColorGroupWidget(QWidget):
             self._delete_button.setEnabled(False)
             return
         self._delete_button.setEnabled(True)
-        enabled = item.annotated_data[0]
+        annotated_data = item.annotated_data
+        if not isinstance(annotated_data, tuple):
+            return
+        enabled = annotated_data[0]
         self._add_sub_output_button.setEnabled(enabled)
         self._add_sub_output_range_button.setEnabled(enabled)
 
@@ -143,8 +146,11 @@ class ColorGroupWidget(QWidget):
         self._input_dialog.show()
 
     def _add_group_final(self) -> None:
-        name = self._input_dialog.textValue()
-        self._input_dialog.deleteLater()
+        dialog = self._input_dialog
+        if not isinstance(dialog, QInputDialog):
+            return
+        name = dialog.textValue()
+        dialog.deleteLater()
         self._input_dialog = None
         if not is_valid_channel_name(name):
             self._show_name_error(
@@ -190,8 +196,11 @@ class ColorGroupWidget(QWidget):
         self._input_dialog.show()
 
     def _add_sub_output_final(self) -> None:
-        name = self._input_dialog.textValue()
-        self._input_dialog.deleteLater()
+        dialog = self._input_dialog
+        if not isinstance(dialog, QInputDialog):
+            return
+        name = dialog.textValue()
+        dialog.deleteLater()
         self._input_dialog = None
         if not self._add_sub_output(name):
             self._show_name_error(
@@ -218,7 +227,10 @@ class ColorGroupWidget(QWidget):
         group_item = selected_items[0]
         if not isinstance(group_item, AnnotatedTreeWidgetItem):
             return False
-        group_name = group_item.annotated_data[1]
+        annotated_data = group_item.annotated_data
+        if not isinstance(annotated_data, tuple) or len(annotated_data) < 2:
+            return False
+        group_name = annotated_data[1]
         if not is_valid_channel_name(name) or name in self._model.output_groups[group_name]:
             return False
         self._model.output_groups[group_name].append(name)
@@ -237,10 +249,13 @@ class ColorGroupWidget(QWidget):
         self._input_dialog.show()
 
     def _add_sub_output_range_final(self) -> None:
+        dialog = self._input_dialog
+        if not isinstance(dialog, _IterationAndTemplateDialog):
+            return
         try:
-            generated_names = self._input_dialog.generated_names
+            generated_names = dialog.generated_names
         except (TemplateError, ValueError) as e:
-            self._input_dialog.deleteLater()
+            dialog.deleteLater()
             self._input_dialog = None
             self._show_name_error("Invalid Name Template", f"The entered name template is invalid: {e}")
             return
@@ -248,7 +263,7 @@ class ColorGroupWidget(QWidget):
         for name in generated_names:
             if not self._add_sub_output(name):
                 skipped_count += 1
-        self._input_dialog.deleteLater()
+        dialog.deleteLater()
         self._input_dialog = None
         if skipped_count > 0:
             self._show_name_error(
@@ -258,13 +273,16 @@ class ColorGroupWidget(QWidget):
             )
 
     def _delete_selected_group_or_output(self) -> None:
-        selected_item = self._group_view.selectedItems()
-        if len(selected_item) == 0:
+        selected_items = self._group_view.selectedItems()
+        if len(selected_items) == 0:
             return
-        selected_item = selected_item[0]
+        selected_item = selected_items[0]
         if not isinstance(selected_item, AnnotatedTreeWidgetItem):
             return
-        is_group, name = selected_item.annotated_data
+        annotated_data = selected_item.annotated_data
+        if not isinstance(annotated_data, tuple):
+            return
+        is_group, name = annotated_data
         if is_group:
             self._model.remove_output_group(name)
             self._group_view.takeTopLevelItem(self._group_view.indexOfTopLevelItem(selected_item))
@@ -273,6 +291,9 @@ class ColorGroupWidget(QWidget):
             group_item = selected_item.parent()
             if not isinstance(group_item, AnnotatedTreeWidgetItem):
                 return
-            _, group_name = group_item.annotated_data
+            parent_data = group_item.annotated_data
+            if not isinstance(parent_data, tuple) or len(parent_data) < 2:
+                return
+            _, group_name = parent_data
             self._model.output_groups[group_name].remove(name)
             group_item.takeChild(group_item.indexOfChild(selected_item))

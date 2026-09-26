@@ -51,7 +51,7 @@ def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index
 class ColorToColorWheel(VirtualFilter):
     """A vFilter that takes a color channel as an input and maps it to a color wheel channel."""
 
-    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int] | None = None) -> None:
+    def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Initialize the vFilter.
 
         The following filter configuration properties are available:

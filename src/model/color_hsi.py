@@ -3,32 +3,28 @@
 from __future__ import annotations
 
 import colorsys
-from typing import TYPE_CHECKING
 
 import numpy as np
 from PySide6.QtGui import QColor
-
-if TYPE_CHECKING:
-    from pydantic import confloat
 
 
 class ColorHSI:
     """Color Definition."""
 
-    def __init__(
-        self, hue: confloat(ge=0, le=360), saturation: confloat(ge=0, le=1), intensity: confloat(ge=0, le=1)
-    ) -> None:
+    def __init__(self, hue: float, saturation: float, intensity: float) -> None:
         """HSI color.
 
         Args:
-            hue: Color itself in the form of an angle between [0, 360] degrees.
-            saturation: Value in the range [0, 1].
-            intensity: Value in the range [0, 1], where 0 is black and 1 is white.
+            hue: Color itself in the form of an angle between [0, 360) degrees. Values outside the range are
+                normalized using modulo.
+            saturation: Value in the range [0, 1]. Values outside the range are cut off.
+            intensity: Value in the range [0, 1], where 0 is black and 1 is white. Values outside the range are cut
+                off.
 
         """
-        self._hue: confloat(ge=0, le=360) = hue
-        self._saturation: confloat(ge=0, le=1) = saturation
-        self._intensity: confloat(ge=0, le=1) = intensity
+        self._hue: float = hue % 360.0
+        self._saturation: float = max(0.0, min(saturation, 1.0))
+        self._intensity: float = max(0.0, min(intensity, 1.0))
 
     @classmethod
     def from_filter_str(cls, filter_format: str) -> ColorHSI:
@@ -43,18 +39,7 @@ class ColorHSI:
         parts = filter_format.split(",")
         if len(parts) < 3:
             raise ValueError("Expected HSI format: hue,saturation,intensity")
-        hue = float(parts[0]) % 360.0
-        saturation = float(parts[1])
-        if saturation < 0:
-            saturation = 0.0
-        elif saturation > 1:
-            saturation = 1.0
-        intensity = float(parts[2])
-        if intensity < 0:
-            intensity = 0.0
-        elif intensity > 1:
-            intensity = 1.0
-        return ColorHSI(hue, saturation, intensity)
+        return ColorHSI(float(parts[0]), float(parts[1]), float(parts[2]))
 
     @classmethod
     def from_rgb(cls, red: int, green: int, blue: int) -> ColorHSI:
@@ -93,11 +78,11 @@ class ColorHSI:
             temperature = float(temperature.lower().replace(" ", "").replace("k", ""))
         temperature = temperature / 100
         if temperature <= 66:
-            red = 255
+            red: float = 255
             green = temperature
             green = 99.4708025861 * np.log(green) - 161.1195681661
             if temperature <= 19:
-                blue = 0
+                blue: float = 0
             else:
                 blue = temperature - 10
                 blue = 138.5177312231 * np.log(blue) - 305.0447927307
@@ -113,12 +98,12 @@ class ColorHSI:
         return ColorHSI.from_rgb(red, green, blue)
 
     @property
-    def hue(self) -> confloat(ge=0, le=360):
-        """Color itself in the form of an angle between [0,360] degrees."""
+    def hue(self) -> float:
+        """Color itself in the form of an angle between [0, 360) degrees."""
         return self._hue
 
     @property
-    def saturation(self) -> confloat(ge=0, le=1):
+    def saturation(self) -> float:
         """Saturation of the color.
 
         Float between (including) zero (100% white, 0% color) and 1 (0% white, 100% color).
@@ -126,7 +111,7 @@ class ColorHSI:
         return self._saturation
 
     @property
-    def intensity(self) -> confloat(ge=0, le=1):
+    def intensity(self) -> float:
         """Perceived illuminance.
 
         float [0, 1] where 0 is black, and 1 is white.

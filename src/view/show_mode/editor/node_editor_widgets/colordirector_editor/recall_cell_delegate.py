@@ -10,10 +10,11 @@ from PySide6.QtWidgets import QStyledItemDelegate
 from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
 
 if TYPE_CHECKING:
-    from PySide6.QtCore import QAbstractItemModel, QLocale, QModelIndex
+    from PySide6.QtCore import QAbstractItemModel, QModelIndex, QPersistentModelIndex
     from PySide6.QtWidgets import QStyleOptionViewItem, QWidget
 
     from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
+
 
 class RecallCellDelegate(QStyledItemDelegate):
     """Delegate to provide limited number editing for recall table."""
@@ -24,7 +25,9 @@ class RecallCellDelegate(QStyledItemDelegate):
         self._model: ColordirectorVFilter = model
 
     @override
-    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex, /) -> QWidget:
+    def createEditor(
+        self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex, /
+    ) -> QWidget:
         editor = JogwheelSpinBox(parent)
         editor.setMinimum(0)
         editor.setSingleStep(1)
@@ -32,17 +35,25 @@ class RecallCellDelegate(QStyledItemDelegate):
         return editor
 
     @override
-    def setEditorData(self, editor: JogwheelSpinBox, index: QModelIndex, /) -> None:
+    def setEditorData(self, editor: QWidget, index: QModelIndex | QPersistentModelIndex, /) -> None:
+        if not isinstance(editor, JogwheelSpinBox):
+            return
         value = index.data(Qt.ItemDataRole.EditRole)
         editor.setValue(int(value))
 
     @override
-    def setModelData(self, editor: JogwheelSpinBox, model: QAbstractItemModel, index: QModelIndex, /) -> None:
+    def setModelData(
+        self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex | QPersistentModelIndex, /
+    ) -> None:
+        if not isinstance(editor, JogwheelSpinBox):
+            return
         value = editor.value()
         model.setData(index, value, Qt.ItemDataRole.EditRole)
         recall_index: int = index.row()
         group_index: int = index.column() - 1
-        recall_date = self._model.recalls[recall_index]
-        while len(recall_date) < len(self._model.output_groups):
-            recall_date.append(0)
-        recall_date[group_index] = value
+        if group_index < 0 or not 0 <= recall_index < len(self._model.recalls):
+            return
+        self._model.normalize_recall(recall_index)
+        recall = self._model.recalls[recall_index]
+        if group_index < len(recall):
+            recall[group_index] = value

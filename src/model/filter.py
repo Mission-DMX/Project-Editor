@@ -357,7 +357,13 @@ class VirtualFilter(Filter, abc.ABC):
     that the show will be serialized for fish.
     """
 
-    def __init__(self, scene: Scene, filter_id: str, filter_type: int, pos: tuple[int] | None = None) -> None:
+    def __init__(
+        self,
+        scene: Scene,
+        filter_id: str,
+        filter_type: int,
+        pos: tuple[int, int] | tuple[float, float] | None = None,
+    ) -> None:
         """Initialize a virtual filter.
 
         Args:
