@@ -1,9 +1,10 @@
 """Contains command to connect filter channels in batch mode."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from jinja2 import Environment
+from jinja2 import Environment, StrictUndefined, TemplateSyntaxError, UndefinedError
 
 from controller.cli.command import Command
 from model import DataType
@@ -20,14 +21,34 @@ if TYPE_CHECKING:
 def _add(value: str, arg: str) -> str:
     return str(int(int(value) + int(arg)))
 
+
 def _sub(value: str, arg: str) -> str:
     return str(int(int(value) - int(arg)))
 
+
 def _mul(value: str, arg: str) -> str:
-    return str(int(int(value) + int(arg)))
+    return str(int(int(value) * int(arg)))
+
 
 def _div(value: str, arg: str) -> str:
-    return str(int(int(value) / int(arg)))
+    """Divide the given value by the given divisor using integer floor division."""
+    divisor = int(arg)
+    if divisor == 0:
+        raise ValueError("The 'div' filter requires a divisor other than zero.")
+    return str(int(value) // divisor)
+
+
+def _mod(value: str, arg: str) -> str:
+    """Compute the integer modulo of the given value by the given divisor."""
+    divisor = int(arg)
+    if divisor == 0:
+        raise ValueError("The 'mod' filter requires a divisor other than zero.")
+    return str(int(int(value) % divisor))
+
+
+class _FatalConnectError(Exception):
+    """Fatal connect command error that aborts the whole command before any channel link is modified."""
+
 
 class ConnectCommand(Command):
     """Command to connect filters."""
@@ -36,103 +57,160 @@ class ConnectCommand(Command):
         """Initialize the command."""
         super().__init__(context, "connect")
         self._help_text = "Connect filter channels"
-        self._jinja_env = Environment()  # NOQA: S701 the editor is not a web page.
+        self._jinja_env = Environment(undefined=StrictUndefined)  # NOQA: S701 the editor is not a web page.
         self._jinja_env.filters["add"] = _add
         self._jinja_env.filters["sub"] = _sub
         self._jinja_env.filters["mul"] = _mul
         self._jinja_env.filters["div"] = _div
+        self._jinja_env.filters["mod"] = _mod
 
     @override
     def configure_parser(self, parser: ArgumentParser) -> None:
-        parser.add_argument("source", type=str, nargs=1,
-                            help="Source filter id and channel name, split by colon.")
-        parser.add_argument("targets", type=str, nargs="+",
-                            help="Targets filter id and channel name, split by colon.")
-        parser.add_argument("-g", "--guard", type=str, nargs="*", default=[],
-                            help="Specify condition required to make the connection")
-        parser.add_argument("-s", "--source-count", type=int, default=1,
-                            help="Specify the number of source channel iterations")
-        parser.add_argument("-d", "--destination-count", type=int, default=1,
-                            help="Specify the number of destination channel iterations")
+        parser.add_argument("source", type=str, nargs=1, help="Source filter id and channel name, split by colon.")
+        parser.add_argument("targets", type=str, nargs="+", help="Targets filter id and channel name, split by colon.")
+        parser.add_argument(
+            "-g", "--guard", type=str, nargs="*", default=[], help="Specify condition required to make the connection"
+        )
+        parser.add_argument(
+            "-s", "--source-count", type=int, default=1, help="Specify the number of source channel iterations"
+        )
+        parser.add_argument(
+            "-d",
+            "--destination-count",
+            type=int,
+            default=1,
+            help="Specify the number of destination channel iterations",
+        )
 
     @override
     def execute(self, args: Namespace) -> bool:
         if self.context.selected_scene is None:
-            self.context.print("Error: No scene selected.")
+            self.context.print("ERROR: No scene selected.")
             return False
-        success = True
-        src_template = self._jinja_env.from_string(args.source[0])
-        dest_templates = [self._jinja_env.from_string(dest_template_str) for dest_template_str in args.targets]
-        for i in range(args.source_count):
-            for dest_template in dest_templates:
-                for j in range(args.destination_count):
-                    success &= self._connect(src_template, dest_template, i, j, args.guard)
-        return success
+        if args.source_count < 1:
+            self.context.print("ERROR: The source count must be at least 1.")
+            return False
+        if args.destination_count < 1:
+            self.context.print("ERROR: The destination count must be at least 1.")
+            return False
+        try:
+            src_template = self._jinja_env.from_string(args.source[0])
+        except TemplateSyntaxError as e:
+            self.context.print(f"ERROR: Failed to parse the source filter template: {e}")
+            return False
+        try:
+            dest_templates = [self._jinja_env.from_string(dest_template_str) for dest_template_str in args.targets]
+        except TemplateSyntaxError as e:
+            self.context.print(f"ERROR: Failed to parse a destination filter template: {e}")
+            return False
+        planned_links: list[tuple[Filter, str, str]] = []
+        try:
+            for i in range(args.source_count):
+                for dest_template in dest_templates:
+                    for j in range(args.destination_count):
+                        planned_link = self._plan_connection(src_template, dest_template, i, j, args.guard)
+                        if planned_link is not None:
+                            planned_links.append(planned_link)
+        except _FatalConnectError as e:
+            self.context.print(f"ERROR: {e}")
+            return False
+        for destination_filter, destination_channel_name, link_target in planned_links:
+            destination_filter.channel_links[destination_channel_name] = link_target
+        return True
 
-    def _connect(self, source_template: Template, destination_template: Template, source_iter: int,
-                 destination_iter: int, guards: list[str]) -> bool:
-        source_filter: Filter | None = None
-        destination_filter: Filter | None = None
+    def _plan_connection(
+        self,
+        source_template: Template,
+        destination_template: Template,
+        source_iter: int,
+        destination_iter: int,
+        guards: list[str],
+    ) -> tuple[Filter, str, str] | None:
+        """Validate a single rendered source and destination channel pair and plan its connection.
+
+        Args:
+            source_template: the template rendering the source filter id and channel name
+            destination_template: the template rendering the destination filter id and channel name
+            source_iter: the current source iteration index
+            destination_iter: the current destination iteration index
+            guards: the connection guards to evaluate
+
+        Returns:
+            the planned connection as a tuple of the destination filter, the destination channel name and the
+            link target, or None if the guards rejected the connection. Rejected connections do not fail the
+            command.
+
+        Raises:
+            _FatalConnectError: if the connection cannot be validated, for example because a template cannot be
+                evaluated, a filter or channel does not exist, the data types do not match or a guard is
+                malformed. The whole command is aborted before any channel link is modified.
+
+        """
+        scene = self.context.selected_scene
+        if scene is None:
+            raise _FatalConnectError("No scene selected.")
         try:
-            source_template = source_template.render({
-                "si": source_iter,
-                "di": destination_iter
-            })
-            try:
-                source_filter_id, source_channel_name = source_template.split(":")
-            except ValueError:
-                self.context.print("Source filter id and channel name are invalid. Use the following format: "
-                                   "<source_filter_id>:<channel_name>")
-                return False
-            source_filter = self.context.selected_scene.get_filter_by_id(source_filter_id)
-            if source_filter is None:
-                self.context.print(f"Source filter '{source_filter_id}' does not exist in scene "
-                                   f"'{self.context.selected_scene.scene_id}'.")
-                return False
-        except IndexError as e:
-            self.context.print(f"ERROR: The source filter format is invalid: {e}")
-            return False
+            rendered_source = source_template.render({"si": source_iter, "di": destination_iter})
+        except (UndefinedError, ValueError) as e:
+            raise _FatalConnectError(f"Failed to evaluate the source filter template: {e}") from e
         try:
-            destination_template = destination_template.render({
-                "si": source_iter,
-                "di": destination_iter
-            })
-            destination_filter_id, destination_channel_name = destination_template.split(":")
-            destination_filter = self.context.selected_scene.get_filter_by_id(destination_filter_id)
-            if destination_filter is None:
-                self.context.print(f"Destination filter '{destination_filter_id}' does not exist in scene "
-                                   f"'{self.context.selected_scene.scene_id}'.")
-                return False
-        except IndexError as e:
-            self.context.print(f"ERROR: The destination filter format is invalid: {e}")
-            return False
+            source_filter_id, source_channel_name = rendered_source.split(":")
         except ValueError as e:
-            self.context.print(f"ERROR: The destination filter format is invalid: {e}. Got: '{destination_template}'."
-                               f" Use the following format: <destination_filter_id>:<channel_name>")
-            return False
+            raise _FatalConnectError(
+                f"The source filter format is invalid: {e}. Got: '{rendered_source}'."
+                " Use the following format: <source_filter_id>:<channel_name>"
+            ) from e
+        source_filter = scene.get_filter_by_id(source_filter_id)
+        if source_filter is None:
+            raise _FatalConnectError(f"Source filter '{source_filter_id}' does not exist in scene '{scene.scene_id}'.")
+        try:
+            rendered_destination = destination_template.render({"si": source_iter, "di": destination_iter})
+        except (UndefinedError, ValueError) as e:
+            raise _FatalConnectError(f"Failed to evaluate the destination filter template: {e}") from e
+        try:
+            destination_filter_id, destination_channel_name = rendered_destination.split(":")
+        except ValueError as e:
+            raise _FatalConnectError(
+                f"The destination filter format is invalid: {e}. Got: '{rendered_destination}'."
+                " Use the following format: <destination_filter_id>:<channel_name>"
+            ) from e
+        destination_filter = scene.get_filter_by_id(destination_filter_id)
+        if destination_filter is None:
+            raise _FatalConnectError(
+                f"Destination filter '{destination_filter_id}' does not exist in scene '{scene.scene_id}'."
+            )
         source_data_type = source_filter.out_data_types.get(source_channel_name)
         if source_data_type is None:
-            self.context.print(f"Source channel '{source_channel_name}' of filter '{source_filter_id}' does not exist "
-                               f"in scene '{self.context.selected_scene.scene_id}'.")
-            return False
+            raise _FatalConnectError(
+                f"Source channel '{source_channel_name}' of filter '{source_filter_id}' does not exist in scene"
+                f" '{scene.scene_id}'."
+            )
         dest_data_type = destination_filter.in_data_types.get(destination_channel_name)
         if dest_data_type is None:
-            self.context.print(f"Destination channel '{destination_channel_name}' of filter '{destination_filter_id}' "
-                               f"does not exist in scene '{self.context.selected_scene.scene_id}'.")
-            return False
+            raise _FatalConnectError(
+                f"Destination channel '{destination_channel_name}' of filter '{destination_filter_id}' does not"
+                f" exist in scene '{scene.scene_id}'."
+            )
         if source_data_type != dest_data_type:
-            self.context.print(f"Source ({source_data_type}) and destination ({dest_data_type}) data "
-                               f"types do not match. Filters: {source_filter_id} and {destination_filter_id}.")
-            return False
+            raise _FatalConnectError(
+                f"Source ({source_data_type}) and destination ({dest_data_type}) data types do not match."
+                f" Filters: {source_filter_id} and {destination_filter_id}."
+            )
         can_run = True
         for guard in guards:
             try:
                 g_filter, argument = guard.split(":")
                 match g_filter:
                     case "smod":
-                        can_run &= (source_iter % int(argument) == 0)
+                        divisor = int(argument)
+                        if divisor == 0:
+                            raise _FatalConnectError(f"Guard '{guard}' requires a divisor other than zero.")
+                        can_run &= source_iter % divisor == 0
                     case "dmod":
-                        can_run &= (destination_iter % int(argument) == 0)
+                        divisor = int(argument)
+                        if divisor == 0:
+                            raise _FatalConnectError(f"Guard '{guard}' requires a divisor other than zero.")
+                        can_run &= destination_iter % divisor == 0
                     case "dt":
                         required_dt = DataType.from_filter_str(argument)
                         can_run &= source_data_type == required_dt
@@ -145,13 +223,11 @@ class ConnectCommand(Command):
                     case "dchan_contains":
                         can_run &= argument in destination_channel_name
                     case _:
-                        self.context.print(f"ERROR: The guard '{g_filter}' is unknown.")
-                        return False
-            except ValueError:
-                self.context.print(
-                    f"Error: Guard '{guard}' is not in a valid format. Allowed: <guard>:<argument>"
-                )
-                return False
+                        raise _FatalConnectError(f"The guard '{g_filter}' is unknown.")
+            except ValueError as e:
+                raise _FatalConnectError(
+                    f"Guard '{guard}' is not in a valid format. Allowed: <guard>:<argument>"
+                ) from e
         if can_run:
-            destination_filter.channel_links[destination_channel_name] = source_filter_id + ":" + source_channel_name
-        return True
+            return destination_filter, destination_channel_name, source_filter_id + ":" + source_channel_name
+        return None

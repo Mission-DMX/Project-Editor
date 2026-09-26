@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from ctypes import ArgumentError
 from enum import Enum
 from logging import getLogger
-from typing import TYPE_CHECKING, Never, Union, override
+from typing import TYPE_CHECKING, Union, override
 
 from model import DataType
 from model.color_hsi import ColorHSI
@@ -45,8 +45,6 @@ class EndAction(Enum):
                 return "Restart cue"
             case _:
                 return "Jump to next cue"
-
-        return "Unknown action"
 
     @staticmethod
     def formatted_value_list() -> list[str]:
@@ -102,7 +100,7 @@ class State(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def decode(self, content: str) -> Never:
+    def decode(self, content: str) -> None:
         """Get the state configuration from a filter config string."""
         raise NotImplementedError
 
@@ -278,13 +276,19 @@ class KeyFrame:
         return f"{self.timestamp}:{'&'.join([s.encode() for s in self._states])}"
 
     @staticmethod
-    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: Cue) -> KeyFrame:
+    def from_format_str(f_str: str, channel_data_types: list[tuple[str, DataType]], parent_cue: Cue) -> KeyFrame | None:
         """Deserialize from filter representation.
 
         Args:
             f_str: Filter representation string.
             channel_data_types: Associated channels.
             parent_cue: Parent cue.
+
+        Returns:
+            The deserialized key frame or None if the definition contains no states and the cue defines no channels.
+
+        Raises:
+            ArgumentError: if the given key frame definition is malformed.
 
         """
         parts = f_str.split(":")
@@ -332,6 +336,20 @@ class KeyFrame:
         for s in self._states:
             kf._states.append(s.copy())
         return kf
+
+    @property
+    def state_count(self) -> int:
+        """The number of states of this frame (one per channel at the time of its creation)."""
+        return len(self._states)
+
+    def state_at(self, i: int) -> State:
+        """Get the state at given index.
+
+        Raises:
+            IndexError: if the given index is out of bounds; use ``state_count`` to check for valid indexes.
+
+        """
+        return self._states[i]
 
 
 class Cue:
@@ -429,6 +447,14 @@ class Cue:
     def insert_frame(self, f: KeyFrame) -> None:
         """Add a frame to the cue."""
         self._frames.append(f)
+
+    def get_keyframe_before(self, timestamp: float) -> KeyFrame | None:
+        """Get the keyframe with the largest timestamp below the given one (if it exists)."""
+        found_frame = None
+        for kf in self._frames:
+            if kf.timestamp < timestamp and (found_frame is None or kf.timestamp > found_frame.timestamp):
+                found_frame = kf
+        return found_frame
 
     def remove_channel(self, c: Union[ExternalChannelDefinition, tuple[str, DataType]]) -> None:
         """Remove the specified channel from the model."""
