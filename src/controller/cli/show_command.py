@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from controller.cli.command import Command
 from controller.file.read import read_document
 from controller.file.transmitting_to_fish import transmit_to_fish
+from model.filter import VirtualFilter
 
 if TYPE_CHECKING:
     import argparse
@@ -62,10 +63,12 @@ class ShowCommand(Command):
         filtercmd_parser.add_argument("parameterkey", help="The key of the parameter to update")
         filtercmd_parser.add_argument("parametervalue", help="The value to transmit")
 
-        readymode_parser: ArgumentParser = subparsers.add_parser("readymode", help="Ready mode controls",
-                                                                 exit_on_error=False)
-        readymode_parser.add_argument("action", type=str, help="The action to perform",
-                                      choices=["enable", "abort", "commit", "query"])
+        readymode_parser: ArgumentParser = subparsers.add_parser(
+            "readymode", help="Ready mode controls", exit_on_error=False
+        )
+        readymode_parser.add_argument(
+            "action", type=str, help="The action to perform", choices=["enable", "abort", "commit", "query"]
+        )
 
     def execute(self, args: Namespace) -> bool:
         """Execute the showctl command based on parsed arguments.
@@ -90,6 +93,33 @@ class ShowCommand(Command):
                 self.context.network_manager.enter_scene(scene, push_direct=False)
                 return True
             case "filtermsg":
+                scene = self.context.show.get_scene_by_id(args.sceneid)
+                if scene is not None:
+                    filter_inst = scene.get_filter_by_id(args.filterid)
+                    if isinstance(filter_inst, VirtualFilter):
+                        had_unsaved_changes = self.context.show.has_unsaved_changes
+                        if filter_inst.handle_filter_message(args.parameterkey, args.parametervalue):
+                            if self.context.show.has_unsaved_changes and not had_unsaved_changes:
+                                self.context.print(
+                                    "NOTE: the filter message modified the show data. Save the show file in order to "
+                                    "keep the changes."
+                                )
+                            return True
+                        self.context.print(
+                            f"WARNING: the virtual filter '{args.filterid}' rejected the filter message "
+                            f"'{args.parameterkey}={args.parametervalue}'."
+                        )
+                        return False
+                    if filter_inst is None:
+                        self.context.print(
+                            f"WARNING: no filter with ID '{args.filterid}' found in scene '{args.sceneid}'. "
+                            "Forwarding the message to fish anyway."
+                        )
+                else:
+                    self.context.print(
+                        f"WARNING: scene with ID '{args.sceneid}' not found. Forwarding the message to fish anyway."
+                    )
+                # regular filters receive GUI updates directly on fish, hence the message is always forwarded
                 self.context.network_manager.send_gui_update_to_fish(
                     args.sceneid, args.filterid, args.parameterkey, args.parametervalue, enque=True
                 )
