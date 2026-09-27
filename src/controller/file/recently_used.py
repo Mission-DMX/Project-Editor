@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-_STORAGE_PATH = Path.home() / ".local" / "share" / "missionDMX"
-_STORAGE_FILE = _STORAGE_PATH / "recently_used.list"
+from controller.file.user_data_storage import read_stored_lines, write_stored_lines
 
-_STORAGE_PATH.mkdir(parents=True, mode=0o770, exist_ok=True)
-
-if not _STORAGE_FILE.exists():
-    _STORAGE_FILE.touch()
+_STORAGE_FILE_NAME = "recently_used.list"
+_MAX_RECENTLY_USED_ENTRIES = 10
 
 
 def get_recently_used_files() -> list[str]:
@@ -20,11 +17,7 @@ def get_recently_used_files() -> list[str]:
         A list of the recently used files in descending order.
 
     """
-    return [
-        entry.strip()
-        for entry in _STORAGE_FILE.read_text(encoding="utf-8").splitlines()
-        if entry.strip() and Path(entry).exists()
-    ]
+    return [entry for entry in read_stored_lines(_STORAGE_FILE_NAME) if Path(entry).exists()]
 
 
 def register_opened_file(path: str) -> None:
@@ -41,7 +34,4 @@ def register_opened_file(path: str) -> None:
         *[entry for entry in get_recently_used_files() if entry != path],
     ]
 
-    _STORAGE_FILE.write_text(
-        "\n".join(entries[:10]),
-        encoding="utf-8",
-    )
+    write_stored_lines(_STORAGE_FILE_NAME, entries[:_MAX_RECENTLY_USED_ENTRIES])

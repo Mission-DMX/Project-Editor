@@ -1,4 +1,5 @@
 """Commands for Help."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
@@ -33,8 +34,10 @@ class HelpCommand(Command):
                 self.context.print("\tcolumn -- Select the control desk column to perform actions on")
                 self.context.print("\tbank_set -- Select the control desk bank set to perform actions on")
             case "extract":
-                self.context.print("Use this command to extract data from concatenated lists and store it in the "
-                                   "specified destination variable.")
+                self.context.print(
+                    "Use this command to extract data from concatenated lists and store it in the "
+                    "specified destination variable."
+                )
                 self.context.print("Usage: extract <destination> <element> <target> <...>")
                 self.context.print("The following targets exist:")
                 self.context.print("\tfilter-param [--scene <scene>] <filter-id> <parameter> <delimiter>")
@@ -58,28 +61,40 @@ class HelpCommand(Command):
                 self.context.print("Usage: if <expression> <command>")
                 self.context.print("Executes the specified command if the expression evaluates to true.")
             case "patch":
-                self.context.print("Patch a fixture. Usage: patch <fixture name> [number of fixtures]@<universe>"
-                                   "[@<start channel>[@<offset>]]")
+                self.context.print(
+                    "Patch a fixture. Usage: patch <fixture name> [number of fixtures]@<universe>"
+                    "[@<start channel>[@<offset>]]"
+                )
                 self.context.print("\tfixture name -- The name of the fixture to patch")
                 self.context.print("\tuniverse -- The index (not the name) of the destination universe")
                 self.context.print("\tstart channel -- The start channel of the first fixture")
-                self.context.print("\toffset -- The number of gap channels between fixtures (excluding the"
-                                   "own length of the fixture)")
-            case "bank_set":
-                self.context.print("Modify the selected bank set. Usage: bank_set commit/create <description>"
-                                   "/add --bank <bank> --col-type <type>/info/activate")
+                self.context.print(
+                    "\toffset -- The number of gap channels between fixtures (excluding the own length of the fixture)"
+                )
+            case "bankset":
+                self.context.print("Modify the selected bank set. Usage: bankset <subcommand>")
+                self.context.print("\tcreate [<description>] -- Create a new bank set and make it the selected one")
+                self.context.print("\tcommit -- Commit the changes made to the selected bank set")
+                self.context.print(
+                    "\tadd [--bank <bank>] [--col-type <raw|color>] [--name <name>] -- Add a column"
+                    " to the specified bank"
+                )
+                self.context.print("\tinfo -- Display the content of the selected bank set")
+                self.context.print("\tactivate -- Activate the selected bank set")
             case "event":
                 self.context.print("Manage the fish event system")
-                self.context.print("\tadd-sender -- Add a bew event sender to fish")
+                self.context.print("\tadd-sender -- Add a new event sender to fish")
                 self.context.print("\tsend -- Insert a new event into fish")
             case "showctl":
                 self.context.print("Manage the general show file and execution on fish")
                 self.context.print("\tload <show file> -- Load the provided show file and make it the current one")
-                self.context.print("\tfiltermsg <scene id> <filter id> <key> <value> -- Update the parameter <key> of "
-                                   "\n\t\tfilter <filter id> from scene <scene id> to value <value>.")
+                self.context.print(
+                    "\tfiltermsg <scene id> <filter id> <key> <value> -- Update the parameter <key> of "
+                    "\n\t\tfilter <filter id> from scene <scene id> to value <value>."
+                )
                 self.context.print("\tselect-scene <scene id> -- switch to scene with ID <scene id>")
                 self.context.print("\tcommit [--select-default-scene] -- apply the current loaded show file to fish")
-                self.content.print("\treadymode <enable|abort|commit|query> -- Control the ready mode state.")
+                self.context.print("\treadymode <enable|abort|commit|query> -- Control the ready mode state.")
             case "delay":
                 self.context.print("delay the execution of the macro by the specified amount of milliseconds")
             case "fish":
@@ -96,16 +111,35 @@ class HelpCommand(Command):
                 self.context.print("load <class> <info>")
             case "connect":
                 self.context.print("Connect filter channels. Requires to have a scene selected.")
-                self.context.print("\t<source channel ID template> <destination channel ID templates> [--guard <smod:X>"
-                                   "|<dmod:X>|<dt:DT>|<sfid_contains:STR>|<dfid_contains:STR>|<schan_contains:STR>|"
-                                   "<dchan_contains:STR>] [--source-count <count>] [--destination-count <count>]")
+                self.context.print(
+                    "\t<source channel ID template> <destination channel ID templates> [--guard <smod:X>"
+                    "|<dmod:X>|<dt:DT>|<sfid_contains:STR>|<dfid_contains:STR>|<schan_contains:STR>|"
+                    "<dchan_contains:STR>] [--source-count <count>] [--destination-count <count>]"
+                )
+                self.context.print("The source and destination arguments are Jinja templates:")
+                self.context.print("\tsi -- index of the current source iteration")
+                self.context.print("\tdi -- index of the current destination iteration")
+                self.context.print("The following filters are available inside the templates:")
+                self.context.print("\tadd, sub, mul -- integer addition, subtraction and multiplication")
+                self.context.print(
+                    "\tdiv -- integer floor division, it rounds towards negative infinity (not towards zero),"
+                    " e.g. {{ -7 | div(2) }} is -4"
+                )
+                self.context.print(
+                    "\tmod -- integer modulo, the result takes the sign of the divisor, e.g. {{ -7 | mod(2) }} is 1"
+                )
+                self.context.print("The source and destination counts must be at least 1.")
+                self.context.print(
+                    "All connections are validated before the first channel link is modified: a failing command"
+                    " does not leave partial connections behind."
+                )
             case "uipage":
                 self.context.print("Manipulate content and display of ui pages.")
                 self.context.print("\tset-displayed-index <window> <scene> <page>")
             case _:
                 self.context.print(f"ERROR: The requested help topic '{args.topic}' is unknown.")
                 self.context.print("The following topics are known:")
-                self.context.print("\tevent\tselect\tlist\tpatch\tbank_set\tshowctl\tdelay\tmacro")
+                self.context.print("\tevent\tselect\tlist\tpatch\tbankset\tshowctl\tdelay\tmacro")
                 self.context.print("\tprint\tasset\tset\tif\tconnect\tfish\tuipage\textract")
                 return False
         return True
