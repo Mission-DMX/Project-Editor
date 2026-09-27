@@ -367,6 +367,8 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                     self._broadcaster.desk_media_rec_pressed.emit()
                 case proto.Console_pb2.ButtonCode.BTN_SCRUB_JOGWHEELMODESWITCH:
                     self._broadcaster.desk_media_scrub_pressed.emit()
+                case proto.Console_pb2.ButtonCode.BTN_ENTER_ENTER:
+                    self._broadcaster.desk_enter_pressed.emit()
                 case proto.Console_pb2.ButtonCode.BTN_REPLACE_TEMPERATURE:
                     self._broadcaster.view_to_temperature.emit()
                 case proto.Console_pb2.ButtonCode.BTN_DROP_COLOR:

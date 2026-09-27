@@ -110,6 +110,7 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     desk_media_scrub_pressed: QtCore.Signal = QtCore.Signal()
     desk_media_scrub_released: QtCore.Signal = QtCore.Signal()
     desk_f_key_pressed: QtCore.Signal = QtCore.Signal(int)
+    desk_enter_pressed: QtCore.Signal = QtCore.Signal()
 
     handle_joystick_event: QtCore.Signal = QtCore.Signal(object, float, bool)
     joystick_selected_event: QtCore.Signal = QtCore.Signal(object)
