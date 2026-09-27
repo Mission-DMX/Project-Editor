@@ -6,12 +6,14 @@ from logging import getLogger
 from queue import Queue
 from typing import TYPE_CHECKING, override
 
+from PySide6.QtCore import QSize
 from PySide6.QtWidgets import (
     QFormLayout,
     QHBoxLayout,
     QLabel,
     QPushButton,
     QScrollArea,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -32,6 +34,37 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
+class _EventSchedulerWidget(QWidget):
+    """Inner widget of the event scheduler control.
+
+    The widget holder derives the holder size from this widget's size hints. A plain QWidget with a layout reports
+    hints computed from its layout contents, which are independent of the configured (fixed) widget size -- for this
+    widget they are dominated by the embedded scroll area and therefore small. Overriding the hints to report the
+    configured size keeps the holder sizing in sync with the configuration.
+    """
+
+    def __init__(self, parent: QWidget | None) -> None:
+        super().__init__(parent)
+        self._configured_size = QSize(800, 600)
+
+    def set_configured_size(self, width: int, height: int) -> None:
+        """Update the size this widget reports to its holder and parent layout."""
+        if width < 1 or height < 1:
+            return
+        if self._configured_size == QSize(width, height):
+            return
+        self._configured_size = QSize(width, height)
+        self.updateGeometry()
+
+    @override
+    def sizeHint(self) -> QSize:
+        return QSize(self._configured_size)
+
+    @override
+    def minimumSizeHint(self) -> QSize:
+        return QSize(self._configured_size)
+
+
 class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     """Event scheduler control widget.
 
@@ -50,12 +83,13 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         self._active_matrix_editor: TriggerMatrixEditor | None = None
         self._operations_queue: Queue[tuple[str, str]] = Queue()
         self._callback_registered: bool = False
-        self._latest_player_widget: QWidget | None = None
-        self._latest_config_widget: QWidget | None = None
+        self._latest_player_widget: _EventSchedulerWidget | None = None
+        self._latest_config_widget: _EventSchedulerWidget | None = None
         if not self.configuration.get("width"):
             self.configuration["width"] = "800"
         if not self.configuration.get("height"):
             self.configuration["height"] = "600"
+        self.size = (int(self.configuration["width"]), int(self.configuration["height"]))
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
@@ -88,13 +122,13 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         w.setMinimumWidth(300)
         w.setMinimumHeight(100)
         form_layout = QFormLayout()
-        width_box = JogwheelSpinBox()
+        width_box = QSpinBox()
         width_box.setMinimum(200)
         width_box.setMaximum(16384)
         width_box.setValue(int(self.configuration.get("width") or "800"))
         width_box.valueChanged.connect(self._config_width_value_changed)
         form_layout.addRow("Width", width_box)
-        height_box = JogwheelSpinBox()
+        height_box = QSpinBox()
         height_box.setMinimum(150)
         height_box.setMaximum(16384)
         height_box.setValue(int(self.configuration.get("height") or "600"))
@@ -105,7 +139,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         return w
 
     def _generate_widget(self, used_in_player: bool, parent: QWidget | None) -> QWidget:
-        w = QWidget(parent=parent)
+        w = _EventSchedulerWidget(parent)
         layout = QVBoxLayout()
         button_layout = QHBoxLayout()
         button_layout.addWidget(QLabel("Step: "))
@@ -144,33 +178,34 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
             matrix_editor.active_event_data = associated_filter.initial_parameters.get("update_triggers", "")
             matrix_editor.highlight_current_step = True
         w.setEnabled(used_in_player)
-        width = max(int(self.configuration.get("width") or "800"), w.minimumSizeHint().width())
-        height = max(int(self.configuration.get("height") or "600"), w.minimumSizeHint().height())
-        w.setFixedWidth(width)
-        w.setFixedHeight(height)
-        w.setMinimumSize(width, height)
-        self.size = (width, height)
+        configured_width = int(self.configuration.get("width") or "800")
+        configured_height = int(self.configuration.get("height") or "600")
+        w.set_configured_size(configured_width, configured_height)
+        w.setFixedSize(configured_width, configured_height)
         return w
 
     def _config_width_value_changed(self, new_value: int) -> None:
-        self.size = (new_value, self.size[1])
-        for widget in [self._latest_player_widget, self._latest_config_widget]:
-            if widget is not None:
-                widget.setFixedWidth(new_value)
-                wh = widget.parent()
-                if isinstance(wh, UIWidgetHolder):
-                    wh.update_size()
         self.configuration["width"] = str(new_value)
+        self._apply_configured_size()
 
     def _config_height_value_changed(self, new_value: int) -> None:
-        self.size = (self.size[0], new_value)
-        for widget in [self._latest_player_widget, self._latest_config_widget]:
-            if widget is not None:
-                widget.setFixedHeight(new_value)
-                wh = widget.parent()
-                if isinstance(wh, UIWidgetHolder):
-                    wh.update_size()
         self.configuration["height"] = str(new_value)
+        self._apply_configured_size()
+
+    def _apply_configured_size(self) -> None:
+        """Push the configured size into the model, the generated widgets and their holders."""
+        width = int(self.configuration.get("width") or "800")
+        height = int(self.configuration.get("height") or "600")
+        self.size = (width, height)
+        for widget in [self._latest_player_widget, self._latest_config_widget]:
+            if widget is None:
+                continue
+            widget.set_configured_size(width, height)
+            widget.setFixedWidth(width)
+            widget.setFixedHeight(height)
+            wh = widget.parent()
+            if isinstance(wh, UIWidgetHolder):
+                wh.update_size()
 
     def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         if self._active_matrix_editor is None:
