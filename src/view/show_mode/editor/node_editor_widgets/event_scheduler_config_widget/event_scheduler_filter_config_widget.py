@@ -5,11 +5,14 @@ from __future__ import annotations
 from logging import getLogger
 from typing import override
 
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QListWidget,
+    QListWidgetItem,
     QPushButton,
     QSpinBox,
     QWidget,
@@ -42,7 +45,10 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._widget = QWidget()
         layout = QFormLayout()
         self._event_list = QListWidget()
-        # TODO implement text edited for _event_list to rename events
+        self._event_list.setEditTriggers(
+            QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.EditKeyPressed
+        )
+        self._event_list.itemChanged.connect(self._event_list_item_changed)
         # TODO make trigger type editable
         # TODO introduce a custom list item widget that displays the event data alongside the name
         layout.addRow("Events", self._event_list)
@@ -110,6 +116,7 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
                 list_item = AnnotatedListWidgetItem(self._event_list)
                 list_item.annotated_data = decoded_representation
                 list_item.setText(name)
+                list_item.setFlags(list_item.flags() | Qt.ItemFlag.ItemIsEditable)
                 self._event_list.addItem(list_item)
         except ValueError as e:
             logger.error("Unable to unpack configuration: %s. Event descriptions: %s, event_names: %s",
@@ -163,6 +170,26 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
             )
         return event_str_list
 
+    def _event_list_item_changed(self, item: QListWidgetItem) -> None:
+        """Propagate the name of a renamed list entry to the trigger matrix editor."""
+        row = self._event_list.row(item)
+        event_names = list(self._matrix_editor.event_names)
+        if not 0 <= row < len(event_names):
+            logger.warning("Changed list entry %d has no matching event in the matrix editor.", row)
+            return
+        # ";" separates event names in the serialized configuration and must therefore
+        # not be part of a name. Empty names are replaced by a placeholder.
+        new_name = item.text().replace(";", "").strip()
+        if not new_name:
+            new_name = "No Name"
+        if new_name != item.text():
+            with QSignalBlocker(self._event_list):
+                item.setText(new_name)
+        if event_names[row] == new_name:
+            return
+        event_names[row] = new_name
+        self._matrix_editor.event_names = event_names
+
     def _select_trigger_clicked(self, _: bool) -> None:
         self._dialog = EventSelectionDialog()
         self._dialog.accepted.connect(self._event_selected_callback)
@@ -198,4 +225,5 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         list_item = AnnotatedListWidgetItem(self._event_list)
         list_item.annotated_data = (sender, sender_function, event_type, args)
         list_item.setText(initial_name)
+        list_item.setFlags(list_item.flags() | Qt.ItemFlag.ItemIsEditable)
         self._event_list.addItem(list_item)
