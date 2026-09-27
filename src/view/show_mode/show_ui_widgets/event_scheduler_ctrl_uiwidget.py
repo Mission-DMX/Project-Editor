@@ -8,10 +8,11 @@ from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QScrollArea, QSpinBox, QVBoxLayout, QWidget
 
-from model import UIWidget
+from model import FilterUpdateCallbackMixin, UIWidget
 from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.trigger_matrix_editor import (
     TriggerMatrixEditor,
 )
+from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-class EventSchedulerCtrlUIWidget(UIWidget):
+class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     """Event scheduler control widget.
 
     This widget allows the user to override the event scheduler parameters live.
@@ -42,14 +43,6 @@ class EventSchedulerCtrlUIWidget(UIWidget):
         self._callback_registered: bool = False
         self.size = (800, 600)
 
-    def __del__(self) -> None:
-        """Clean up any residual fish event handler callbacks."""
-        if not self._callback_registered:
-            return
-        self.parent.scene.board_configuration.remove_filter_update_callback(
-            self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
-        )
-
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
         outstanding_updates_list = []
@@ -60,11 +53,7 @@ class EventSchedulerCtrlUIWidget(UIWidget):
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        if not self._callback_registered:
-            self.parent.scene.board_configuration.register_filter_update_callback(
-                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
-            )
-            self._callback_registered = True
+        self._register_fish_callback(self.parent.scene.get_filter_by_id(self.filter_ids[0]))
         return self._generate_widget(True)
 
     @override
@@ -86,7 +75,7 @@ class EventSchedulerCtrlUIWidget(UIWidget):
         layout = QVBoxLayout()
         button_layout = QHBoxLayout()
         button_layout.addWidget(QLabel("Step: "))
-        override_step_spinbox = QSpinBox()  # FIXME use JogwheelSpinBox once PR #416 got merged.
+        override_step_spinbox = JogwheelSpinBox()
         override_step_spinbox.setMinimum(1)
         button_layout.addWidget(override_step_spinbox)
         button_layout.addStretch()
@@ -109,6 +98,7 @@ class EventSchedulerCtrlUIWidget(UIWidget):
             decrease_steps_button.clicked.connect(self._decrease_clicked)
             increase_steps_button.clicked.connect(self._increase_clicked)
             override_step_spinbox.valueChanged.connect(self._received_new_step)
+
             associated_filter = self.parent.scene.get_filter_by_id(self.filter_ids[0])
             matrix_editor.number_of_steps = int(associated_filter.initial_parameters.get("length", "0"))
             event_data = associated_filter.filter_configurations.get("event_data", "").split(";")
@@ -124,7 +114,7 @@ class EventSchedulerCtrlUIWidget(UIWidget):
         w.setMinimumSize(800, 600)
         return w
 
-    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+    def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         if self._active_matrix_editor is None:
             return
         if param.parameter_key != "step":

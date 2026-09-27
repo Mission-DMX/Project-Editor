@@ -9,6 +9,7 @@ Classes:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from controller.network import NetworkManager
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from model import Filter
     from model.scene import Scene
 
+logger = getLogger(__name__)
 
 class UIWidget(ABC):
     """Show UI widget.
@@ -236,7 +238,7 @@ class FilterUpdateCallbackMixin(ABC):
 
     _registered_callback_key: tuple[Scene, str] | None = None
 
-    def _register_fish_callback(self, f: Filter) -> None:
+    def _register_fish_callback(self, f: Filter | None) -> None:
         """Register the fish update callback for the given filter, re-registering it upon filter changes.
 
         Registering is skipped if the callback is already registered for the given filter.
@@ -245,6 +247,8 @@ class FilterUpdateCallbackMixin(ABC):
             f: The filter whose updates the widget wants to receive.
 
         """
+        if f is None:
+            raise ValueError("The provided filter was None.")
         new_key = (f.scene, f.filter_id)
         if self._registered_callback_key == new_key:
             return
