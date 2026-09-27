@@ -54,11 +54,11 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
         self._register_fish_callback(self.parent.scene.get_filter_by_id(self.filter_ids[0]))
-        return self._generate_widget(True)
+        return self._generate_widget(True, parent)
 
     @override
     def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
-        return self._generate_widget(False)
+        return self._generate_widget(False, parent)
 
     @override
     def copy(self, new_parent: UIPage) -> UIWidget:
@@ -70,8 +70,8 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     def get_config_dialog_widget(self, parent: QDialog) -> QWidget:
         return QLabel("TODO")  # TODO
 
-    def _generate_widget(self, used_in_player: bool) -> QWidget:
-        w = QWidget()
+    def _generate_widget(self, used_in_player: bool, parent: QWidget | None) -> QWidget:
+        w = QWidget(parent)
         layout = QVBoxLayout()
         button_layout = QHBoxLayout()
         button_layout.addWidget(QLabel("Step: "))
