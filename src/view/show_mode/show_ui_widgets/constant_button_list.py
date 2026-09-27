@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, override
+from math import isnan, nan
+from typing import TYPE_CHECKING, cast, override
 
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -18,16 +19,40 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model import Filter, UIPage, UIWidget
+from model import Filter, FilterUpdateCallbackMixin, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
+from view.show_mode.show_ui_widgets.slider_constant_ctrl_uiwidget import _parse_config_float, _parse_config_int
 
 if TYPE_CHECKING:
     import proto.FilterMode_pb2
-    from model import Scene
 
 
-class ConstantNumberButtonList(UIWidget):
+def _parse_button_entries(raw: str | None) -> list[tuple[str, str]]:
+    """Parse a button list configuration into name and raw value pairs.
+
+    Args:
+        raw: The raw ``buttons`` configuration string (``name:value;name:value``), or None.
+
+    Returns:
+        The parsed pairs in configuration order. Malformed entries - empty segments from stray
+        separators, missing separators, empty names or non-numeric values - are skipped.
+
+    """
+    entries: list[tuple[str, str]] = []
+    if not raw:
+        return entries
+    for entry in raw.split(";"):
+        name, separator, raw_value = entry.partition(":")
+        if not separator or not name or not raw_value:
+            continue
+        if isnan(_parse_config_float(raw_value, nan)):
+            continue
+        entries.append((name, raw_value))
+    return entries
+
+
+class ConstantNumberButtonList(FilterUpdateCallbackMixin, UIWidget):
     """Show UI widget to provide the user with configurable buttons that alter the content of a constant filter."""
 
     @override
@@ -64,37 +89,35 @@ class ConstantNumberButtonList(UIWidget):
         flash_checkbox.toggled.connect(flash_toggled)
         layout.addWidget(flash_checkbox)
         list_widget = QListWidget(widget)
-        bc = self.configuration.get("buttons")
-        if bc:
-            for entry in bc.split(";"):
-                name, value = entry.split(":")
-                list_widget.addItem(f"{name} -> {value}")
+        for name, value in _parse_button_entries(self.configuration.get("buttons")):
+            list_widget.addItem(f"{name} -> {value}")
         layout.addWidget(list_widget)
         widget.setLayout(layout)
 
         def add_action() -> None:
+            button_name = name_edit.text().strip().replace(";", "").replace(":", "")
+            if not button_name:
+                return
             if not self.configuration.get("buttons"):
                 self.configuration["buttons"] = ""
             self.configuration["buttons"] += (
                 f"{';' if len(self.configuration['buttons']) else ''}"
-                f"{name_edit.text().replace(';', '').replace(':', '')}:"
+                f"{button_name}:"
                 f"{int(value_edit.value()) if self._maximum != -1 else value_edit.value()}"
             )
 
-            list_widget.addItem(f"{name_edit.text()} -> {value_edit.value()}")
+            list_widget.addItem(f"{button_name} -> {value_edit.value()}")
             if self._configuration_widget:
-                conf_button = QPushButton(name_edit.text(), self._configuration_widget)
+                conf_button = QPushButton(button_name, self._configuration_widget)
                 conf_button.setEnabled(False)
-                conf_button.setMinimumWidth(max(30, len(name_edit.text()) * 10))
+                conf_button.setMinimumWidth(max(30, len(button_name) * 10))
                 conf_button.setMinimumHeight(30)
                 wl = self._configuration_widget.layout()
-                wl.addWidget(conf_button)
-                self._configuration_widget.setLayout(wl)
-                holder = self._configuration_widget.parent()
-                while not isinstance(holder, UIWidgetHolder) and holder is not None:
-                    holder = holder.parent()
-                if holder is not None:
-                    holder.update_size()
+                if wl is not None:
+                    wl.addWidget(conf_button)
+                    self._configuration_widget.setLayout(wl)
+            self._rebuild_player_widget()
+            self._notify_size_change()
 
         add_button.clicked.connect(add_action)
         return widget
@@ -110,30 +133,12 @@ class ConstantNumberButtonList(UIWidget):
         super().__init__(parent, configuration)
         self._player_widget: QWidget | None = None
         self._configuration_widget: QWidget | None = None
-        self._model = None
-        self._filter_type = None
+        self._model: Filter | None = None
+        self._filter_type: FilterTypeEnumeration | None = None
         self._value: int | float = 0
         self._default_value: int | float = 0
         self._maximum = -1
-        self._registered_callback_key: tuple[Scene, str] | None = None
-        self._player_buttons: dict[float, QPushButton] = {}
-
-    def __del__(self) -> None:
-        """Unregister the fish update callback (fallback in case close was not called)."""
-        self._unregister_fish_callback()
-
-    @override
-    def close(self) -> None:
-        """Unregister the fish update callback as this widget is being removed."""
-        self._unregister_fish_callback()
-
-    def _unregister_fish_callback(self) -> None:
-        """Remove the update callback registered for the linked filter, if any."""
-        if self._registered_callback_key is None:
-            return
-        scene, filter_id = self._registered_callback_key
-        self._registered_callback_key = None
-        scene.board_configuration.remove_filter_update_callback(scene, filter_id, self._update_from_fish)
+        self._player_buttons: dict[float, list[QPushButton]] = {}
 
     @property
     def _is_float_filter(self) -> bool:
@@ -151,16 +156,15 @@ class ConstantNumberButtonList(UIWidget):
             i: The index of the button to update.
 
         """
-        if f is None:
+        if not f:
             return
         super().set_filter(f, i)
         self._model = f
         self.associated_filters["constant"] = f.filter_id
-        self._filter_type = f.filter_type
+        self._filter_type = cast("FilterTypeEnumeration", f.filter_type)
+        raw_value = f.initial_parameters.get("value", "0")
         self._default_value = (
-            float(f.initial_parameters.get("value", "0"))
-            if self._is_float_filter
-            else int(f.initial_parameters.get("value", "0"))
+            _parse_config_float(raw_value, 0.0) if self._is_float_filter else _parse_config_int(raw_value, 0)
         )
         self._value = self._default_value
         match f.filter_type:
@@ -170,10 +174,13 @@ class ConstantNumberButtonList(UIWidget):
                 self._maximum = (2**16) - 1
             case _:
                 self._maximum = -1
-        if self._registered_callback_key != (f.scene, f.filter_id):
-            self._unregister_fish_callback()
-            f.scene.board_configuration.register_filter_update_callback(f.scene, f.filter_id, self._update_from_fish)
-            self._registered_callback_key = (f.scene, f.filter_id)
+        self._register_fish_callback(f)
+
+    @override
+    def notify_id_rename(self, old_id: str, new_id: str) -> None:
+        """Move the linked constant filter id and the fish callback along when the filter is renamed."""
+        super().notify_id_rename(old_id, new_id)
+        self._handle_filter_id_rename(old_id, new_id)
 
     def _set_value(self, new_value: float) -> None:
         self._value = new_value
@@ -188,7 +195,8 @@ class ConstantNumberButtonList(UIWidget):
         w = QWidget(parent)
         self._construct_player_widget(w)
         layout = QHBoxLayout()
-        layout.addWidget(self._player_widget)
+        if self._player_widget is not None:
+            layout.addWidget(self._player_widget)
         w.setLayout(layout)
         return w
 
@@ -197,15 +205,21 @@ class ConstantNumberButtonList(UIWidget):
         w = QWidget(parent)
         self._construct_configuration_widget(w)
         layout = QHBoxLayout()
-        layout.addWidget(self._configuration_widget)
+        if self._configuration_widget is not None:
+            layout.addWidget(self._configuration_widget)
         w.setLayout(layout)
         return w
 
     @override
     def copy(self, new_parent: UIPage) -> UIWidget:
+        """Create a deep copy of this widget, re-linking the copied filter within the new parent's scene."""
         w = type(self)(new_parent, self.configuration.copy())
-        w.set_filter(self._model, 0)
         super().copy_base(w)
+        linked_filter_id = self.associated_filters.get("constant")
+        if linked_filter_id is not None:
+            linked_filter = new_parent.scene.get_filter_by_id(linked_filter_id)
+            if linked_filter is not None:
+                w.set_filter(linked_filter, 0)
         return w
 
     def _construct_player_widget(self, parent: QWidget | None) -> None:
@@ -216,22 +230,21 @@ class ConstantNumberButtonList(UIWidget):
         flash_behaviour = self.configuration.get("flash_behaviour", "false") == "true"
         total_min_width = 0
         self._player_buttons.clear()
-        button_configuration = self.configuration.get("buttons")
-        if button_configuration:
-            for value_name_tuple in button_configuration.split(";"):
-                name, value = value_name_tuple.split(":")
-                value = float(value) if self._is_float_filter else int(float(value))
-                button = QPushButton(name, self._player_widget)
-                if flash_behaviour:
-                    button.pressed.connect(lambda _value=value: self._set_value(_value))
-                    button.released.connect(lambda: self._set_value(self._default_value))
-                else:
-                    button.clicked.connect(lambda _value=value: self._set_value(_value))
-                button.setMinimumWidth(max(30, len(name) * 10))
-                total_min_width += button.minimumSizeHint().width()
-                button.setMinimumHeight(30)
-                layout.addWidget(button)
-                self._player_buttons[value] = button
+        for name, raw_value in _parse_button_entries(self.configuration.get("buttons")):
+            button_value = (
+                _parse_config_float(raw_value, 0.0) if self._is_float_filter else _parse_config_int(raw_value, 0)
+            )
+            button = QPushButton(name, self._player_widget)
+            if flash_behaviour:
+                button.pressed.connect(lambda _value=button_value: self._set_value(_value))
+                button.released.connect(lambda: self._set_value(self._default_value))
+            else:
+                button.clicked.connect(lambda _value=button_value: self._set_value(_value))
+            button.setMinimumWidth(max(30, len(name) * 10))
+            total_min_width += button.minimumSizeHint().width()
+            button.setMinimumHeight(30)
+            layout.addWidget(button)
+            self._player_buttons.setdefault(button_value, []).append(button)
         self._player_widget.setLayout(layout)
         self._player_widget.setMinimumWidth(max(50, 2 * total_min_width))
 
@@ -240,37 +253,81 @@ class ConstantNumberButtonList(UIWidget):
         self._configuration_widget = QWidget(parent)
         self._configuration_widget.setMinimumHeight(30)
         layout = QHBoxLayout()
-        button_configuration = self.configuration.get("buttons")
         total_min_width = 0
-        if button_configuration:
-            for value_name_tuple in button_configuration.split(";"):
-                name, _ = value_name_tuple.split(":")
-                button = QPushButton(name, self._configuration_widget)
-                button.setEnabled(False)
-                min_width = max(30, len(name) * 15)
-                button.setMinimumWidth(min_width)
-                total_min_width += button.minimumSizeHint().width()
-                button.setMinimumHeight(30)
-                layout.addWidget(button)
+        for name, _ in _parse_button_entries(self.configuration.get("buttons")):
+            button = QPushButton(name, self._configuration_widget)
+            button.setEnabled(False)
+            min_width = max(30, len(name) * 10)
+            button.setMinimumWidth(min_width)
+            total_min_width += button.minimumSizeHint().width()
+            button.setMinimumHeight(30)
+            layout.addWidget(button)
         self._configuration_widget.setLayout(layout)
         self._configuration_widget.setMinimumWidth(max(50, total_min_width))
+
+    def _rebuild_player_widget(self) -> None:
+        """Rebuild the player widget in place so that configuration changes become visible immediately.
+
+        The old player widget is replaced within its parent layout and destroyed, and the tracked
+        player buttons are rebuilt from the current configuration. Nothing happens if no player
+        widget was constructed yet or if its Qt object was already destroyed.
+        """
+        old_widget = self._player_widget
+        if old_widget is None:
+            return
+        try:
+            parent = old_widget.parentWidget()
+            if parent is None:
+                return
+            layout = parent.layout()
+            if layout is None:
+                return
+            self._construct_player_widget(parent)
+            new_widget = self._player_widget
+            if new_widget is None:  # defensive: _construct_player_widget always sets a widget
+                return
+            layout.replaceWidget(old_widget, new_widget)
+            old_widget.deleteLater()
+        except RuntimeError:
+            return
+
+    def _notify_size_change(self) -> None:
+        """Inform the enclosing widget holders about changed widget dimensions."""
+        for widget in (self._player_widget, self._configuration_widget):
+            if widget is None:
+                continue
+            try:
+                ancestor: QWidget | None = widget.parentWidget()
+                while ancestor is not None:
+                    if isinstance(ancestor, UIWidgetHolder):
+                        ancestor.update_size()
+                        break
+                    ancestor = ancestor.parentWidget()
+            except RuntimeError:
+                continue
 
     def __str__(self) -> str:
         """Get the filter id string or an error message."""
         return str(self._model.filter_id if self._model else "Error: No Filter configured.")
 
     def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        """Update the currently pressed buttons from a fish update.
+
+        All buttons sharing the value of the update are highlighted together; unparseable or
+        non-finite update values are ignored so that the last button state is kept.
+        """
         if param.parameter_key != "value":
             return
-        try:
-            new_value = float(param.parameter_value)
-        except ValueError:
+        new_value = _parse_config_float(param.parameter_value, nan)
+        if isnan(new_value):
             return
         try:
-            for button in self._player_buttons.values():
-                button.setDown(False)
-            next_button = self._player_buttons.get(new_value)
-            if next_button is not None:
-                next_button.setDown(True)
+            for buttons in self._player_buttons.values():
+                for button in buttons:
+                    button.setDown(False)
+            next_buttons = self._player_buttons.get(new_value)
+            if next_buttons is not None:
+                for button in next_buttons:
+                    button.setDown(True)
         except RuntimeError:
             self._player_buttons.clear()
