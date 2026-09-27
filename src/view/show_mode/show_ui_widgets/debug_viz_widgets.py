@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, override
 from PySide6.QtGui import QColor, QPainter, QPaintEvent
 from PySide6.QtWidgets import QComboBox, QDialog, QFormLayout, QHBoxLayout, QLabel, QSpinBox, QWidget
 
-from model import UIWidget
+from model import FilterUpdateCallbackMixin, UIWidget
 from model.color_hsi import ColorHSI
 from model.filter import FilterTypeEnumeration
 
@@ -23,12 +23,12 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     import proto.FilterMode_pb2
-    from model import UIPage
+    from model import Filter, UIPage
 
 logger = getLogger(__name__)
 
 
-class _DebugVizWidget(UIWidget, ABC):
+class _DebugVizWidget(FilterUpdateCallbackMixin, UIWidget, ABC):
     """Provide the foundation for widgets that display the state of remote debug nodes."""
 
     def __init__(
@@ -48,11 +48,29 @@ class _DebugVizWidget(UIWidget, ABC):
             configuration["width"] = "100"
         self.presentation_mode = presentation_mode
 
+    @override
+    def set_filter(self, f: Filter, i: int) -> None:
+        """Link the debug widget to a filter and start listening to its fish updates."""
+        if not f:
+            return
+        super().set_filter(f, i)
+        self._register_fish_callback(f)
+
+    @override
+    def notify_id_rename(self, old_id: str, new_id: str) -> None:
+        """Move the linked filter id and the fish callback along when the filter is renamed."""
+        super().notify_id_rename(old_id, new_id)
+        self._handle_filter_id_rename(old_id, new_id)
+
     def __del__(self) -> None:
-        if self._config_widget is not None:
-            self._config_widget.deleteLater()
-        if self._placeholder_widget is not None:
-            self._placeholder_widget.deleteLater()
+        try:
+            if self._config_widget is not None:
+                self._config_widget.deleteLater()
+            if self._placeholder_widget is not None:
+                self._placeholder_widget.deleteLater()
+        except (RuntimeError, AttributeError):
+            pass
+        super().__del__()
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
@@ -215,7 +233,6 @@ class ColorDebugVizWidget(_DebugVizWidget):
         super().__init__(parent, configuration)
         self.configured_dimensions_changed_callback = self._dimensions_changed
         self._show_widget: ColorLabel | None = None
-        self._callback_registered = False
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
@@ -227,25 +244,6 @@ class ColorDebugVizWidget(_DebugVizWidget):
         w.setFixedWidth(self.configured_width)
         w.setFixedHeight(self.configured_height)
         self._show_widget = w
-        if not self._callback_registered:
-            self.parent.scene.board_configuration.register_filter_update_callback(
-                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
-            )
-            self._callback_registered = True
-
-    def _delete_callback(self) -> None:
-        if self._show_widget is not None:
-            self.parent.scene.board_configuration.remove_filter_update_callback(
-                self.parent.scene.scene_id,
-                self.filter_ids[0],
-                self._recv_update,
-            )
-            self._show_widget = None
-
-    def __del__(self) -> None:
-        """Delete callbacks on object deletion."""
-        self._delete_callback()
-        super().__del__()
 
     @override
     def copy(self, new_parent: UIPage) -> UIWidget:
@@ -259,7 +257,7 @@ class ColorDebugVizWidget(_DebugVizWidget):
         self._show_widget.setFixedWidth(self.configured_width)
         self._show_widget.setFixedHeight(self.configured_height)
 
-    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+    def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Check for correct filter and updates the displayed color."""
         if self._show_widget is None:
             return
@@ -274,10 +272,12 @@ class ColorDebugVizWidget(_DebugVizWidget):
                 param.filter_id,
                 param.parameter_key,
             )
+        except RuntimeError:
+            self._show_widget = None
 
 
 class _NumberLabel(QWidget):
-    def __init__(self, parent: QWidget, is_16bit: bool) -> None:
+    def __init__(self, parent: QWidget | None, is_16bit: bool) -> None:
         super().__init__(parent)
         self.mode: str = ""
         self._number: float = 0.0
@@ -329,19 +329,15 @@ class NumberDebugVizWidget(_DebugVizWidget):
         super().__init__(parent, configuration, ["Plain", "Illumination"])
         self._show_widget: _NumberLabel | None = None
         self.configured_dimensions_changed_callback = self._dimensions_changed
-        self._callback_registered = False
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        self._show_widget = _NumberLabel(parent,
-                                         self.parent.scene.get_filter_by_id(self.filter_ids[0]).filter_type ==
-                                         FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT)
+        linked_filter = self.parent.scene.get_filter_by_id(self.filter_ids[0]) if self.filter_ids else None
+        self._show_widget = _NumberLabel(
+            parent,
+            linked_filter is not None and linked_filter.filter_type == FilterTypeEnumeration.FILTER_REMOTE_DEBUG_16BIT,
+        )
         self._dimensions_changed()
-        if not self._callback_registered:
-            self.parent.scene.board_configuration.register_filter_update_callback(
-                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
-            )
-            self._callback_registered = True
         return self._show_widget
 
     @override
@@ -357,7 +353,7 @@ class NumberDebugVizWidget(_DebugVizWidget):
         self._show_widget.setFixedHeight(self.configured_height)
         self._show_widget.mode = self.configuration.get("mode") or "Plain"
 
-    def _recv_update(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+    def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Check for correct filter and updates the displayed number."""
         if self._show_widget is None:
             return
@@ -371,26 +367,15 @@ class NumberDebugVizWidget(_DebugVizWidget):
                 param.parameter_key,
                 param.parameter_value,
             )
+        except RuntimeError:
+            self._show_widget = None
 
     def __del__(self) -> None:
-        """Cleanup registered callbacks on object delete."""
-        self._delete_callback()
-        super().__del__()
-
-    def _delete_callback(self) -> None:
-        if len(self.filter_ids) > 0 and self._callback_registered:
-            self.parent.scene.board_configuration.remove_filter_update_callback(
-                self.parent.scene.scene_id, self.filter_ids[0], self._recv_update
-            )
+        """Clean up the number label on object deletion."""
         if self._show_widget is not None:
             try:
-                if self._show_widget is not None:
-                    self._show_widget.deleteLater()
+                self._show_widget.deleteLater()
             except RuntimeError:
-                pass
-            try:
-                if self._placeholder_widget is not None:
-                    self._placeholder_widget.deleteLater()
-            except RuntimeError:
-                pass
+                pass  # The Qt widget was already destroyed.
             self._show_widget = None
+        super().__del__()

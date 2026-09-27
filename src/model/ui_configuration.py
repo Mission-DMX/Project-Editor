@@ -203,6 +203,7 @@ class UIWidget(ABC):
     def push_update(self) -> None:
         """Use this method to trigger a filter update process."""
         # TODO ensure that this honors ready wait
+        filter_ids = self.filter_ids
         for entry in self.generate_update_content():
             k = entry[0]
             v = entry[1]
@@ -211,7 +212,9 @@ class UIWidget(ABC):
                 target_fid = split_key[0]
                 k = split_key[1]
             else:
-                target_fid = self.filter_ids[0]
+                if not filter_ids:
+                    continue
+                target_fid = filter_ids[0]
             self._network_manager.send_gui_update_to_fish(self.parent.scene.scene_id, target_fid, k, v)
 
     def close(self) -> None:
@@ -219,11 +222,16 @@ class UIWidget(ABC):
         return  # Implementing this is optional
 
 
-class FilterUpdateCallbackMixin:
+class FilterUpdateCallbackMixin(ABC):
     """Mixin for UI widgets that listen to fish updates of their linked filter.
 
-    Classes using this mixin must provide an ``_update_from_fish`` method and are responsible for calling
-    ``_register_fish_callback`` once the linked filter has been set.
+    Classes using this mixin must implement the abstract ``_update_from_fish`` method and are responsible
+    for calling ``_register_fish_callback`` once the linked filter has been set.
+
+    The callback registration lives as long as the widget model itself and is removed by ``close`` once
+    the widget is removed from its page. Player pages may construct and destroy Qt views of the same
+    widget model at any time, so ``_update_from_fish`` implementations must tolerate their Qt views
+    being already destroyed.
     """
 
     _registered_callback_key: tuple[Scene, str] | None = None
@@ -253,10 +261,25 @@ class FilterUpdateCallbackMixin:
         scene, filter_id = registered_key
         scene.board_configuration.remove_filter_update_callback(scene, filter_id, self._update_from_fish)
 
+    def _handle_filter_id_rename(self, old_id: str, new_id: str) -> None:
+        """Move the fish update registration along with a rename of the linked filter.
+
+        Args:
+            old_id: The filter id under which the callback is currently registered.
+            new_id: The filter id to register the callback for instead.
+
+        """
+        registered_key = self._registered_callback_key
+        if registered_key is None or registered_key[1] != old_id:
+            return
+        scene = registered_key[0]
+        self._unregister_fish_callback()
+        scene.board_configuration.register_filter_update_callback(scene, new_id, self._update_from_fish)
+        self._registered_callback_key = (scene, new_id)
+
+    @abstractmethod
     def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
         """Handle a fish update parameter for the linked filter.
-
-        This default implementation is not functional; concrete widgets must override this method.
 
         Args:
             param: The update parameter sent by fish.
@@ -266,10 +289,17 @@ class FilterUpdateCallbackMixin:
 
     def __del__(self) -> None:
         """Unregister the fish update callback (fallback in case close was not called)."""
-        self._unregister_fish_callback()
+        try:
+            self._unregister_fish_callback()
+        except (RuntimeError, AttributeError):
+            pass
 
     def close(self) -> None:
-        """Unregister the fish update callback as this widget is being removed."""
+        """Unregister the fish update callback as this widget is being removed.
+
+        Subclasses overriding this method must call ``super().close()`` so that the fish update
+        registration is removed as well.
+        """
         self._unregister_fish_callback()
 
 

@@ -1,8 +1,10 @@
 """Show UI widget to control cue filters."""
 
+from __future__ import annotations
+
 import os
 from logging import getLogger
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
@@ -19,12 +21,15 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model import Filter, UIPage, UIWidget
+from model import Filter, FilterUpdateCallbackMixin, UIPage, UIWidget
 from model.file_support.cue_state import CueState
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.virtual_filters.cue_vfilter import CueFilter
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
+
+if TYPE_CHECKING:
+    import proto.FilterMode_pb2
 
 logger = getLogger(__name__)
 
@@ -53,7 +58,7 @@ class _CueLabel(QWidget):
         self._play_label.setVisible(new_value)
 
 
-class CueControlUIWidget(UIWidget):
+class CueControlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     """Widget to  allow user to control cue filters.
 
     This widget supports the 'widget_height' parameter indicating its height in pixels.
@@ -90,23 +95,25 @@ class CueControlUIWidget(UIWidget):
             return
         if isinstance(self._filter, CueFilter):
             self._filter.linked_ui_widgets.remove(self)
-        if self._filter is not None:
-            f.scene.board_configuration.remove_filter_update_callback(
-                self._filter.scene.scene_id,
-                self._filter.filter_id,
-                self._cue_state.update,
-            )
         super().set_filter(f, i)
         self.associated_filters["cue_filter"] = f.filter_id
         self._filter = f
         if isinstance(self._filter, CueFilter):
             self._filter.linked_ui_widgets.append(self)
-        f.scene.board_configuration.register_filter_update_callback(
-            f.scene.scene_id, f.filter_id, self._cue_state.update
-        )
+        self._register_fish_callback(f)
         self.update_model(clear_model=False)
         self._migrate_name_list()
         self._model = None
+
+    def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        """Forward fish updates of the linked cue filter to the cue state."""
+        self._cue_state.update(param)
+
+    @override
+    def notify_id_rename(self, old_id: str, new_id: str) -> None:
+        """Move the linked filter id and the fish callback along when the filter is renamed."""
+        super().notify_id_rename(old_id, new_id)
+        self._handle_filter_id_rename(old_id, new_id)
 
     def _migrate_name_list(self) -> None:
         cue_list_str = self.configuration.get("cue_names")
@@ -223,7 +230,7 @@ class CueControlUIWidget(UIWidget):
         return self._config_widget
 
     @override
-    def copy(self, new_parent: "UIPage") -> "UIWidget":
+    def copy(self, new_parent: UIPage) -> UIWidget:
         w = CueControlUIWidget(new_parent, self.configuration)
         super().copy_base(w)
         w.set_filter(self._filter, 0)
