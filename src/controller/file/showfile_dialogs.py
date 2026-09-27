@@ -54,8 +54,10 @@ def _save_show_file(file_name: str, show_data: BoardConfiguration) -> None:
         show_data: Board configuration to be saved.
 
     """
-    if write_document(file_name, show_data) and show_data.file_path != file_name:
-        show_data.file_path = file_name
+    if write_document(file_name, show_data):
+        show_data.has_unsaved_changes = False
+        if show_data.file_path != file_name:
+            show_data.file_path = file_name
 
 
 def show_save_showfile_dialog(parent: QWidget, show_data: BoardConfiguration) -> None:

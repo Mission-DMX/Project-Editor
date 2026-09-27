@@ -16,6 +16,7 @@ from view.show_mode.show_ui_widgets.chaser_apply_preset_uiwidget import ChaserAp
 from view.show_mode.show_ui_widgets.chaser_create_config_uiwidget import ChaserCreateConfigUIWidget
 from view.show_mode.show_ui_widgets.clock_ui_widget import ClockUIWidget
 from view.show_mode.show_ui_widgets.color_selection_uiwidget import ColorSelectionUIWidget
+from view.show_mode.show_ui_widgets.colordirector.uiwidget import ColorDirectorShowUIWidget
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
@@ -24,17 +25,20 @@ from view.show_mode.show_ui_widgets.macro_buttons_ui_widget import MacroButtonUI
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
 from view.show_mode.show_ui_widgets.sequencer_control import SequencerControlUIWidget
 from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
+from view.show_mode.show_ui_widgets.slider_constant_ctrl_uiwidget import SliderConstantUIWidget
 
 """
-The widget library contains information about widgets, provided by their slug. The infomration that is stored consists
-out of the human readable name, the type required to instantiate a requested widget, the supported filter types (that
-should be selected for construction) and a number indicating how many filters should be selected.
+The widget library contains information about widgets, provided by their slug. The information that is stored consists
+of the human readable name, the widget type used to instantiate the requested widget, the supported filter types (one
+group of alternative filter types per filter to select for construction) and the category the widget is grouped under
+in the editor's widget selection menu (None for ungrouped widgets).
 """
-WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]]]] = {
+WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]], str | None]] = {
     "autotracker": (
         "Auto Tracker",
         AutoTrackerUIWidget,
         [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, FilterTypeEnumeration.VFILTER_AUTOTRACKER]],
+        None,
     ),
     "buttonarray_submit": (
         "Button Array w/ Submit",
@@ -49,6 +53,7 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
                 FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT,
             ]
         ],
+        "Constants",
     ),
     "buttonarray": (
         "Button Array",
@@ -63,39 +68,70 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
                 FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT,
             ]
         ],
+        "Constants",
     ),
-    "colorpicker": ("Color Picker", ColorSelectionUIWidget, [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]]),
+    "slider": (
+        "Slider",
+        SliderConstantUIWidget,
+        [
+            [
+                FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+                FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_8BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
+                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT,
+            ]
+        ],
+        "Constants",
+    ),
+    "colorpicker": (
+        "Color Picker",
+        ColorSelectionUIWidget,
+        [[FilterTypeEnumeration.FILTER_CONSTANT_COLOR]],
+        "Constants",
+    ),
     "cuecontrol": (
         "Cue Control",
         CueControlUIWidget,
         [[FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]],
+        None,
     ),
     "pantiltconstant": (
         "Pan/Tilt Control",
         PanTiltConstantControlUIWidget,
         [[FilterTypeEnumeration.VFILTER_POSITION_CONSTANT]],
+        "Constants",
     ),
     "sequencercontrol": (
         "Sequence Listing",
         SequencerControlUIWidget,
         [[FilterTypeEnumeration.VFILTER_SEQUENCER, FilterTypeEnumeration.FILTER_SEQUENCER]],
+        None,
     ),
     "chaser-preset-selector": (
         "Chaser Preset Selector",
         ChaserApplyPresetUIWidget,
-        [[FilterTypeEnumeration.FILTER_COLOR_CHASER]]
+        [[FilterTypeEnumeration.FILTER_COLOR_CHASER]],
+        None,
     ),
     "chaser-live-config": (
         "Chaser Live Config Tool",
         ChaserCreateConfigUIWidget,
-        [[FilterTypeEnumeration.FILTER_COLOR_CHASER]]
+        [[FilterTypeEnumeration.FILTER_COLOR_CHASER]],
+        None,
     ),
-    "label": ("Text Label", ShowLabelUIWidget, []),
-    "clock": ("BF Clock", ClockUIWidget, []),
-    "macrobuttons": ("Macro Buttons", MacroButtonUIWidget, []),
+    "label": ("Text Label", ShowLabelUIWidget, [], "Utility"),
+    "clock": ("BF Clock", ClockUIWidget, [], "Utility"),
+    "macrobuttons": ("Macro Buttons", MacroButtonUIWidget, [], None),
     # TODO add direct inputs
     # TODO add fader update widgets
-    "debug_color": ("Color Visualizer", ColorDebugVizWidget, [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]]),
+    "debug_color": (
+        "Color Visualizer",
+        ColorDebugVizWidget,
+        [[FilterTypeEnumeration.FILTER_REMOTE_DEBUG_PIXEL]],
+        "Output",
+    ),
     "debug_number": (
         "Number Output",
         NumberDebugVizWidget,
@@ -106,11 +142,17 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
                 FilterTypeEnumeration.FILTER_REMOTE_DEBUG_8BIT,
             ]
         ],
+        "Output",
     ),
     "event_scheduler_ctrl": (
         "Event Scheduler Control",
         EventSchedulerCtrlUIWidget,
         [[FilterTypeEnumeration.FILTER_EVENT_SCHEDULER]]
+    ),
+    "color_director": (
+        "Color Director",
+        ColorDirectorShowUIWidget,
+        [[FilterTypeEnumeration.VFILTER_COLORDIRECTOR]],
     )
 }
 
@@ -134,12 +176,16 @@ def get_widget_key(w: UIWidget) -> str | None:
 @deprecated
 def filter_to_ui_widget(
     filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None
-) -> UIWidget:
+) -> UIWidget | None:
     """Do not use.
 
     Deprecated.
 
     We used to construct widgets this way, but the WIDGET_LIBRARY method should be used instead.
+
+    Returns:
+        The constructed widget, or None if the filter type is not supported.
+
     """
     selected_configuration = configuration or {}
     match filter_.filter_type:
