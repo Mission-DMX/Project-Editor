@@ -399,6 +399,12 @@ def _append_ui_page(page_def: ET.Element, scene: Scene) -> None:
         if widget_cdef is None:
             logger.warning("Opening legacy show file. Attempting to match scene UI widget by used filter.")
             ui_widget = filter_to_ui_widget(filters[0], page, conf)
+            if ui_widget is None:
+                logger.error(
+                    "No UI widget is known for the filter type of filter '%s', skipping its scene UI widget.",
+                    filters[0],
+                )
+                continue
         else:
             ui_widget = widget_cdef[1](page, conf)
 

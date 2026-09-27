@@ -26,9 +26,10 @@ from view.show_mode.show_ui_widgets.show_label import ShowLabelUIWidget
 from view.show_mode.show_ui_widgets.slider_constant_ctrl_uiwidget import SliderConstantUIWidget
 
 """
-The widget library contains information about widgets, provided by their slug. The infomration that is stored consists
-out of the human readable name, the type required to instantiate a requested widget, the supported filter types (that
-should be selected for construction) and a number indicating how many filters should be selected.
+The widget library contains information about widgets, provided by their slug. The information that is stored consists
+of the human readable name, the widget type used to instantiate the requested widget, the supported filter types (one
+group of alternative filter types per filter to select for construction) and the category the widget is grouped under
+in the editor's widget selection menu (None for ungrouped widgets).
 """
 WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]], str | None]] = {
     "autotracker": (
@@ -163,12 +164,16 @@ def get_widget_key(w: UIWidget) -> str | None:
 @deprecated
 def filter_to_ui_widget(
     filter_: Filter, parent_page: "UIPage", configuration: dict[str, str] | None = None
-) -> UIWidget:
+) -> UIWidget | None:
     """Do not use.
 
     Deprecated.
 
     We used to construct widgets this way, but the WIDGET_LIBRARY method should be used instead.
+
+    Returns:
+        The constructed widget, or None if the filter type is not supported.
+
     """
     selected_configuration = configuration or {}
     match filter_.filter_type:

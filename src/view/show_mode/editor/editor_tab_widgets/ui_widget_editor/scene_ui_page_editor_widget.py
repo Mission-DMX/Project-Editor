@@ -1,4 +1,5 @@
 """A scene can have multiple pages."""
+from logging import getLogger
 from typing import override
 
 from PySide6.QtCore import QPoint, Qt
@@ -10,6 +11,8 @@ from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor.widget_setup_dialog import WidgetSetupDialog
 from view.show_mode.show_ui_widgets import WIDGET_LIBRARY, filter_to_ui_widget
+
+logger = getLogger(__name__)
 
 
 class SceneUIPageEditorWidget(QWidget):
@@ -64,6 +67,9 @@ class SceneUIPageEditorWidget(QWidget):
         # FIXME we should use this method to provide a context menu to nodes, enabling them to place widgets without
         #  relesecting them.
         config_widget = filter_to_ui_widget(filter_, self._ui_page)
+        if config_widget is None:
+            logger.warning("No UI widget is known for filter '%s', not creating a widget for it.", filter_)
+            return
         self._add_generic_widget(config_widget, pos)
 
     def _inst_generic_widget(self, widget_def: tuple[str, type[UIWidget], list[list[FilterTypeEnumeration]], str|None],
