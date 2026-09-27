@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from PySide6.QtWidgets import QLabel, QListWidget, QListWidgetItem, QVBoxLayout, QWidget
 
-from model import UIWidget
+from model import FilterUpdateCallbackMixin, UIWidget
 
 if TYPE_CHECKING:
-    from model import UIPage
+    from model import Filter, UIPage
     from proto import FilterMode_pb2
 
 
-class SequencerControlUIWidget(UIWidget):
+class SequencerControlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     """Information Widget for an associated sequencer.
 
     Most notably the current running transitions.
@@ -32,6 +32,20 @@ class SequencerControlUIWidget(UIWidget):
         self._configuration_widget: QWidget | None = None
         self._player_list: QListWidget | None = None
 
+    @override
+    def set_filter(self, f: Filter, i: int) -> None:
+        """Link the sequencer widget to a filter and start listening to its fish updates."""
+        if not f:
+            return
+        super().set_filter(f, i)
+        self._register_fish_callback(f)
+
+    @override
+    def notify_id_rename(self, old_id: str, new_id: str) -> None:
+        """Move the linked filter id and the fish callback along when the filter is renamed."""
+        super().notify_id_rename(old_id, new_id)
+        self._handle_filter_id_rename(old_id, new_id)
+
     def generate_update_content(self) -> list[tuple[str, str]]:
         """Generate messages to be sent to the filter.
 
@@ -49,11 +63,7 @@ class SequencerControlUIWidget(UIWidget):
         layout.addWidget(QLabel("Current Active Sequences:"))
         list_widget = QListWidget()
         if for_player:
-            self.close()
             self._player_list = list_widget
-            self.parent.scene.board_configuration.register_filter_update_callback(
-                self.parent.scene.scene_id, self.filter_ids[0], self._update_received
-            )
         layout.addWidget(list_widget)
         w.setLayout(layout)
         return w
@@ -79,30 +89,31 @@ class SequencerControlUIWidget(UIWidget):
         # TODO should we provide configuration options?
         return QWidget(parent=parent)
 
-    def _update_received(self, param: FilterMode_pb2.update_parameter) -> None:
-        """Refresh the current sequence list on new updates from the filter."""
-        if self._player_list is not None and param.parameter_key == "active_transition_list":
-            transition_name_list = set(param.parameter_value.split(";"))
+    def _update_from_fish(self, param: FilterMode_pb2.update_parameter) -> None:
+        """Refresh the current sequence list on new updates from the filter.
+
+        Empty transition names are ignored, and newly appearing transitions are appended in a
+        stable (sorted) order.
+        """
+        player_list = self._player_list
+        if player_list is None or param.parameter_key != "active_transition_list":
+            return
+        try:
+            transition_name_list = {name for name in param.parameter_value.split(";") if name}
             item_rows_to_remove = []
-            for i in range(self._player_list.count()):
-                item = self._player_list.item(i)
+            for i in range(player_list.count()):
+                item = player_list.item(i)
                 if item.text() in transition_name_list:
                     transition_name_list.remove(item.text())
                 else:
                     item_rows_to_remove.append(i)
             item_rows_to_remove.sort(reverse=True)
             for i in item_rows_to_remove:
-                self._player_list.takeItem(i)
+                player_list.takeItem(i)
             del item_rows_to_remove
-            for missing_transition in transition_name_list:
+            for missing_transition in sorted(transition_name_list):
                 item = QListWidgetItem()
                 item.setText(missing_transition)
-                self._player_list.addItem(item)
-
-    def close(self) -> None:
-        """Deregister the update request upon close."""
-        if self._player_list is None:
-            return
-        self.parent.scene.board_configuration.remove_filter_update_callback(
-            self.parent.scene.scene_id, self.filter_ids[0], self._update_received
-        )
+                player_list.addItem(item)
+        except RuntimeError:
+            self._player_list = None

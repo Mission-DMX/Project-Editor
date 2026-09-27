@@ -5,5 +5,5 @@ from .broadcaster import Broadcaster
 from .device import Device
 from .filter import DataType, Filter
 from .scene import Scene
-from .ui_configuration import UIPage, UIWidget
+from .ui_configuration import FilterUpdateCallbackMixin, UIPage, UIWidget
 from .universe import Universe
