@@ -15,6 +15,7 @@ from PySide6 import QtCore, QtWidgets
 from model.broadcaster import Broadcaster
 from model.visualizer.dmx.dmx_parser import DmxParser, MovementRole, auto_detect_mapping, get_movement_range
 from model.visualizer.stage.fixture_group import FixtureGroup
+from model.visualizer.stage.so_pixel_fixture import PixelFixture
 from model.visualizer.stage.stage_config import (
     STAGE_DIR,
     StageConfig,
@@ -34,6 +35,40 @@ if TYPE_CHECKING:
     from model.visualizer.stage.stage_object import StageObject
 
 logger = getLogger(__name__)
+
+# Channel-name role words recognised by :func:`_classify_pixel_channel`.
+_PIXEL_COLOUR_ROLES: dict[str, str] = {
+    "red": "red",
+    "green": "green",
+    "blue": "blue",
+    "white": "white",
+}
+_DIMMER_ROLE_WORDS = ("dimmer", "intensity", "master dimmer", "master intensity")
+
+
+def _classify_pixel_channel(name: str) -> tuple[str, str | None]:
+    """Parse a fixture channel name into ``(role, pixel_key)``.
+
+    Roles are ``"red"|"green"|"blue"|"white"|"dimmer"|"unknown"``. ``pixel_key``
+    is the identifier string that follows the role word (e.g. ``"(0, 0, 0)"``
+    from ``eachPixelXYZ`` or a custom ``pixelKey`` from ``eachPixelABC``); it is
+    ``None`` for global fixture-wide channels like a leading master dimmer.
+    """
+    text = (name or "").strip()
+    if not text:
+        return "unknown", None
+    parts = text.split(maxsplit=1)
+    head = parts[0].lower()
+    tail = parts[1].strip() if len(parts) > 1 else ""
+
+    if head in _PIXEL_COLOUR_ROLES:
+        return _PIXEL_COLOUR_ROLES[head], tail or None
+
+    lower = text.lower()
+    if any(lower == word or lower.startswith(word + " ") for word in _DIMMER_ROLE_WORDS):
+        return "dimmer", None
+
+    return "unknown", None
 
 
 class StageVisualizerWidget(QtWidgets.QSplitter):
@@ -208,17 +243,20 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         # Auto-link the selected DMX device, if any.
         if device is not None:
             try:
-                ch_names = [ch.name for ch in device.fixture_channels]
-                mapping = auto_detect_mapping(ch_names, MovementRole)
-                new_obj.device_config = {
-                    "movement": {
-                        "universe": device.universe_id,
-                        "start_channel": device.start_index,
-                        "channel_count": device.channel_length,
-                        "mapping": mapping,
-                        "pan_tilt_range": get_movement_range(device),
+                if isinstance(new_obj, PixelFixture):
+                    self._auto_configure_pixel_fixture(new_obj, device)
+                else:
+                    ch_names = [ch.name for ch in device.fixture_channels]
+                    mapping = auto_detect_mapping(ch_names, MovementRole)
+                    new_obj.device_config = {
+                        "movement": {
+                            "universe": device.universe_id,
+                            "start_channel": device.start_index,
+                            "channel_count": device.channel_length,
+                            "mapping": mapping,
+                            "pan_tilt_range": get_movement_range(device),
+                        }
                     }
-                }
             except Exception as e:
                 logger.warning("Could not auto-link device: %s", e)
 
@@ -230,6 +268,78 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._gl_widget.doneCurrent()
         self._gl_widget.update()
         self._save_stage()
+
+    def _auto_configure_pixel_fixture(self, obj: PixelFixture, device: UsedFixture) -> None:
+        """Populate matrix layout, dimensions and per-pixel DMX mapping from an OFL fixture.
+
+        Parses channel names to find per-pixel R/G/B/W channels and any global
+        dimmer / intensity channel. This is name-based (rather than segment-map based)
+        because matrix-generated channels in the OFL importer are currently created
+        without a channel template, so their :class:`FixtureChannelType` stays
+        ``UNDEFINED`` and the type-based segment maps come back empty.
+        """
+        # Grid shape: prefer OFL matrix.pixelCount, but the channel-parsing pass below
+        # can override it if the actual channel count implies a different layout.
+        matrix = getattr(device, "_fixture", None)
+        if matrix is not None and hasattr(matrix, "matrix"):
+            pc = matrix.matrix.pixelCount
+            cols = max(1, int(pc[0]))
+            rows = max(1, int(pc[1] or 1))
+            # Some bar-style fixtures declare pixels along a single axis.
+            if rows == 1 and pc[2] and int(pc[2]) > 1:
+                rows = int(pc[2])
+            obj.pixel_matrix = (cols, rows)
+
+            dims = matrix.physical.dimensions
+            if any(dims):
+                w = float(dims[0]) if dims[0] else obj.physical_size[0]
+                h = float(dims[1]) if dims[1] else obj.physical_size[1]
+                d = float(dims[2]) if dims[2] else obj.physical_size[2]
+                obj.physical_size = (w, h, d)
+
+        universe_id = device.universe_id
+        start = device.start_index
+
+        # Walk the channel list, classify each channel and group per-pixel channels
+        # by the pixel identifier that follows the role word (e.g. "(0, 0, 0)" from
+        # ``eachPixelXYZ`` or a custom pixelKey string from ``eachPixelABC``).
+        per_pixel: dict[str, dict[str, int]] = {}
+        pixel_order: list[str] = []
+        global_dimmer_channel = -1
+
+        for offset, ch in enumerate(device.fixture_channels):
+            abs_channel = start + offset
+            role, key = _classify_pixel_channel(ch.name)
+            if role == "dimmer" and key is None:
+                if global_dimmer_channel < 0:
+                    global_dimmer_channel = abs_channel
+                continue
+            if role in ("red", "green", "blue", "white"):
+                pixel_key = key if key is not None else "single"
+                if pixel_key not in per_pixel:
+                    per_pixel[pixel_key] = {"r": -1, "g": -1, "b": -1, "w": -1}
+                    pixel_order.append(pixel_key)
+                per_pixel[pixel_key][role[0]] = abs_channel
+
+        # Reconcile matrix layout with the actual per-pixel channel count. If the
+        # fixture provided distinct per-pixel channels but the OFL matrix layout
+        # doesn't match, collapse to a single row rather than silently dropping pixels.
+        derived = len(pixel_order)
+        if derived > 0 and derived != obj.pixel_matrix[0] * obj.pixel_matrix[1]:
+            obj.pixel_matrix = (derived, 1)
+
+        entries = [per_pixel[k] for k in pixel_order]
+        device_config: dict[str, Any] = {
+            "pixels": {
+                "universe": universe_id,
+                "start_channel": start,
+                "channel_count": device.channel_length,
+                "channels": entries,
+            }
+        }
+        if global_dimmer_channel >= 0:
+            device_config["pixels"]["dimmer"] = global_dimmer_channel
+        obj.device_config = device_config
 
     def _on_remove_object(self, object_id: str) -> None:
         obj = self._stage_config.remove_object(object_id)
@@ -244,6 +354,11 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._editor_widget.refresh_list()
 
     def _on_object_changed(self, object_id: str) -> None:
+        obj = self._stage_config.get_object(object_id)
+        if obj is not None and hasattr(obj, "get_procedural_mesh_data"):
+            # Matrix or dimensions may have changed; rebuild the mesh so the
+            # cuboid + recessed lenses match the new configuration on next draw.
+            self._gl_widget.reload_object_models(obj)
         self._gl_widget.update()
         self._schedule_save()
 

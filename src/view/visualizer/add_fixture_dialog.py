@@ -59,7 +59,7 @@ class AddFixtureDialog(QtWidgets.QDialog):
 
         # Category selector
         self._category_combo = QtWidgets.QComboBox()
-        self._category_combo.addItems(["Truss", "Moving Head"])
+        self._category_combo.addItems(["Truss", "Moving Head", "LED Bar", "Matrix Blinder"])
         self._category_combo.currentIndexChanged.connect(self._on_category_changed)
         form.addRow("Fixture:", self._category_combo)
 
@@ -95,12 +95,14 @@ class AddFixtureDialog(QtWidgets.QDialog):
 
     def _on_category_changed(self) -> None:
         """Show/hide category-specific controls."""
-        is_truss = self._category_combo.currentText() == "Truss"
+        category = self._category_combo.currentText()
+        is_truss = category == "Truss"
         self._variant_combo.setVisible(is_truss)
         self._variant_label.setVisible(is_truss)
-        is_mh = self._category_combo.currentText() == "Moving Head"
-        self._device_combo.setVisible(is_mh)
-        self._device_label.setVisible(is_mh)
+        # The DMX device combo is offered for any fixture that reacts to DMX.
+        can_link_device = category in ("Moving Head", "LED Bar", "Matrix Blinder")
+        self._device_combo.setVisible(can_link_device)
+        self._device_label.setVisible(can_link_device)
         self._update_suggested_name()
 
     def _update_suggested_name(self) -> None:
@@ -110,15 +112,21 @@ class AddFixtureDialog(QtWidgets.QDialog):
         self._name_edit.setPlaceholderText(candidate)
 
     def _get_base_name(self) -> str:
-        if self._category_combo.currentText() == "Truss":
+        category = self._category_combo.currentText()
+        if category == "Truss":
             return f"Truss {self._variant_combo.currentText()}"
-        return "Moving Head"
+        return category
 
     def selected_fixture_key(self) -> str:
         """Return the internal fixture key for the selected type."""
-        if self._category_combo.currentText() == "Truss":
+        category = self._category_combo.currentText()
+        if category == "Truss":
             v = self._variant_combo.currentText()
             return TRUSS_VARIANTS.get(v, "truss_default")
+        if category == "LED Bar":
+            return "led_bar"
+        if category == "Matrix Blinder":
+            return "matrix_blinder"
         return "moving_head"
 
     def selected_name(self) -> str:

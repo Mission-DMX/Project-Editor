@@ -27,6 +27,8 @@ FIXTURE_KEYS = [
     "truss_long",
     "truss_medium",
     "moving_head",
+    "led_bar",
+    "matrix_blinder",
 ]
 
 TRUSS_VARIANTS: dict[str, str] = {
