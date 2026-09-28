@@ -5,14 +5,11 @@ from __future__ import annotations
 from logging import getLogger
 from typing import override
 
-from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QListWidget,
-    QListWidgetItem,
     QPushButton,
     QSpinBox,
     QWidget,
@@ -20,6 +17,9 @@ from PySide6.QtWidgets import (
 
 from model.events import TriggerType
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
+from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.event_list_item_widget import (
+    EventListItemWidget,
+)
 from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.trigger_matrix_editor import (
     TriggerMatrixEditor,
 )
@@ -45,12 +45,6 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._widget = QWidget()
         layout = QFormLayout()
         self._event_list = QListWidget()
-        self._event_list.setEditTriggers(
-            QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.EditKeyPressed
-        )
-        self._event_list.itemChanged.connect(self._event_list_item_changed)
-        # TODO make trigger type editable
-        # TODO introduce a custom list item widget that displays the event data alongside the name
         layout.addRow("Events", self._event_list)
         self._default_step_tb = QSpinBox()
         layout.addRow("Default step position", self._default_step_tb)
@@ -113,11 +107,8 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
             for event_description, decoded_representation, name in (
                     zip(event_entries, decoded_event_entries, event_names, strict=True)):
                 self._matrix_editor.add_event(event_description, name)
-                list_item = AnnotatedListWidgetItem(self._event_list)
-                list_item.annotated_data = decoded_representation
-                list_item.setText(name)
-                list_item.setFlags(list_item.flags() | Qt.ItemFlag.ItemIsEditable)
-                self._event_list.addItem(list_item)
+                sender, sender_function, event_type, ev_arguments = decoded_representation
+                self._append_event_item(name, sender, sender_function, event_type, ev_arguments)
         except ValueError as e:
             logger.error("Unable to unpack configuration: %s. Event descriptions: %s, event_names: %s",
                          str(e), str(event_entries), str(event_names))
@@ -170,25 +161,62 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
             )
         return event_str_list
 
-    def _event_list_item_changed(self, item: QListWidgetItem) -> None:
-        """Propagate the name of a renamed list entry to the trigger matrix editor."""
-        row = self._event_list.row(item)
+    def _append_event_item(
+            self,
+            name: str,
+            sender_id: int,
+            sender_function: int,
+            event_type: TriggerType,
+            arguments: list[int],
+    ) -> None:
+        """Add a fully populated list entry backed by an EventListItemWidget."""
+        list_item = AnnotatedListWidgetItem(self._event_list)
+        list_item.annotated_data = (sender_id, sender_function, event_type, arguments)
+        item_widget = EventListItemWidget(
+            name, sender_id, sender_function, event_type, arguments, self._event_list
+        )
+        item_widget.name_changed.connect(
+            lambda text, w=item_widget: self._on_event_name_changed(w, text)
+        )
+        item_widget.trigger_type_changed.connect(
+            lambda new_type, w=item_widget: self._on_event_trigger_type_changed(w, new_type)
+        )
+        list_item.setSizeHint(item_widget.sizeHint())
+        self._event_list.addItem(list_item)
+        self._event_list.setItemWidget(list_item, item_widget)
+
+    def _row_for_widget(self, widget: QWidget) -> int:
+        for row in range(self._event_list.count()):
+            item = self._event_list.item(row)
+            if self._event_list.itemWidget(item) is widget:
+                return row
+        return -1
+
+    def _on_event_name_changed(self, widget: EventListItemWidget, new_name: str) -> None:
+        row = self._row_for_widget(widget)
+        if row < 0:
+            return
         event_names = list(self._matrix_editor.event_names)
         if not 0 <= row < len(event_names):
-            logger.warning("Changed list entry %d has no matching event in the matrix editor.", row)
+            logger.warning("Renamed list entry %d has no matching event in the matrix editor.", row)
             return
-        # ";" separates event names in the serialized configuration and must therefore
-        # not be part of a name. Empty names are replaced by a placeholder.
-        new_name = item.text().replace(";", "").strip()
-        if not new_name:
-            new_name = "No Name"
-        if new_name != item.text():
-            with QSignalBlocker(self._event_list):
-                item.setText(new_name)
         if event_names[row] == new_name:
             return
         event_names[row] = new_name
         self._matrix_editor.event_names = event_names
+
+    def _on_event_trigger_type_changed(self, widget: EventListItemWidget, new_type: TriggerType) -> None:
+        row = self._row_for_widget(widget)
+        if row < 0:
+            return
+        item = self._event_list.item(row)
+        if not isinstance(item, AnnotatedListWidgetItem):
+            return
+        data = item.annotated_data
+        if not isinstance(data, tuple):
+            return
+        sender_id, sender_function, _, arguments = data
+        item.annotated_data = (sender_id, sender_function, new_type, arguments)
 
     def _select_trigger_clicked(self, _: bool) -> None:
         self._dialog = EventSelectionDialog()
@@ -221,9 +249,5 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         args = [ord(c) for c in args]
         event_type = TriggerType.SINGLE_TRIGGER
         self._matrix_editor.add_event(f"{sender},{sender_function},{event_type.value}{
-            ',' + ','.join(args) if len(args) > 0 else ''}", initial_name)
-        list_item = AnnotatedListWidgetItem(self._event_list)
-        list_item.annotated_data = (sender, sender_function, event_type, args)
-        list_item.setText(initial_name)
-        list_item.setFlags(list_item.flags() | Qt.ItemFlag.ItemIsEditable)
-        self._event_list.addItem(list_item)
+            ',' + ','.join(str(a) for a in args) if len(args) > 0 else ''}", initial_name)
+        self._append_event_item(initial_name, sender, sender_function, event_type, args)
