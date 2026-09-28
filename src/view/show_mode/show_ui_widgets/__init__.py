@@ -147,12 +147,14 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
     "event_scheduler_ctrl": (
         "Event Scheduler Control",
         EventSchedulerCtrlUIWidget,
-        [[FilterTypeEnumeration.FILTER_EVENT_SCHEDULER]]
+        [[FilterTypeEnumeration.FILTER_EVENT_SCHEDULER]],
+        None
     ),
     "color_director": (
         "Color Director",
         ColorDirectorShowUIWidget,
         [[FilterTypeEnumeration.VFILTER_COLORDIRECTOR]],
+        None
     )
 }
 
