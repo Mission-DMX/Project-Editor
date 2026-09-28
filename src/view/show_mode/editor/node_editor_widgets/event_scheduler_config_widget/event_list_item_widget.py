@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QLineEdit, QWidget
 
 from model.events import TriggerType
+
+_TRIGGER_TYPE_LABELS: dict[TriggerType, str] = {
+    TriggerType.SINGLE_TRIGGER: "Single Trigger",
+    TriggerType.START: "Start",
+    TriggerType.RELEASE: "Release",
+    TriggerType.ONGOING_EVENT: "Ongoing Event",
+}
 
 
 class EventListItemWidget(QWidget):
@@ -19,13 +28,6 @@ class EventListItemWidget(QWidget):
 
     name_changed = Signal(str)
     trigger_type_changed = Signal(TriggerType)
-
-    _TRIGGER_TYPE_LABELS: dict[TriggerType, str] = {
-        TriggerType.SINGLE_TRIGGER: "Single Trigger",
-        TriggerType.START: "Start",
-        TriggerType.RELEASE: "Release",
-        TriggerType.ONGOING_EVENT: "Ongoing Event",
-    }
 
     def __init__(
             self,
@@ -60,7 +62,7 @@ class EventListItemWidget(QWidget):
         layout.addWidget(self._args_label)
         self._trigger_type_combo = QComboBox(self)
         for tt in TriggerType:
-            self._trigger_type_combo.addItem(self._TRIGGER_TYPE_LABELS.get(tt, tt.name), tt)
+            self._trigger_type_combo.addItem(_TRIGGER_TYPE_LABELS.get(tt, tt.name), tt)
         index = self._trigger_type_combo.findData(trigger_type)
         if index >= 0:
             self._trigger_type_combo.setCurrentIndex(index)
