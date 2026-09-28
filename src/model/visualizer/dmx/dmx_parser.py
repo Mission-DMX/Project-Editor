@@ -18,6 +18,7 @@ from PySide6 import QtCore
 
 from model.broadcaster import Broadcaster
 from model.visualizer.stage.so_moving_head import MovingHead
+from model.visualizer.stage.so_pixel_fixture import PixelFixture
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget
@@ -229,21 +230,25 @@ class DmxParser(QtCore.QObject):
 
         any_updated = False
         for obj in self._stage_config.objects:
-            if not isinstance(obj, MovingHead):
-                continue
             dc = obj.device_config
             if not dc:
                 continue
 
-            mv = dc.get("movement")
-            if mv and mv.get("universe", -1) == universe_id:
-                self._apply_movement(obj, raw, mv)
-                any_updated = True
+            if isinstance(obj, MovingHead):
+                mv = dc.get("movement")
+                if mv and mv.get("universe", -1) == universe_id:
+                    self._apply_movement(obj, raw, mv)
+                    any_updated = True
 
-            col = dc.get("color")
-            if col and col.get("universe", -1) == universe_id:
-                self._apply_color(obj, raw, col)
-                any_updated = True
+                col = dc.get("color")
+                if col and col.get("universe", -1) == universe_id:
+                    self._apply_color(obj, raw, col)
+                    any_updated = True
+            elif isinstance(obj, PixelFixture):
+                pixels = dc.get("pixels")
+                if pixels and pixels.get("universe", -1) == universe_id:
+                    self._apply_pixels(obj, raw, pixels)
+                    any_updated = True
 
         if any_updated:
             self.fixtures_updated.emit()
@@ -311,3 +316,40 @@ class DmxParser(QtCore.QObject):
         # TODO if multiple segments are present: apply them in order
         for lense_light in obj.lense_colors:
             lense_light.color = (r, g, b)
+
+    def _apply_pixels(self, obj: PixelFixture, raw: list[int], cfg: dict[str, Any]) -> None:
+        """Update every pixel colour of a :class:`PixelFixture` from the DMX frame.
+
+        The mapping stored in ``cfg["channels"]`` is a list of per-pixel entries
+        ``{"r": ch, "g": ch, "b": ch, "w": ch}`` where each ``ch`` is an absolute
+        universe channel index (``-1`` = unmapped). ``cfg["dimmer"]`` is an
+        optional absolute channel index of a fixture-wide master dimmer that
+        scales every pixel's RGB. White (if present) is folded into R/G/B
+        before the dimmer is applied.
+        """
+        channels = cfg.get("channels") or []
+        dimmer_channel = int(cfg.get("dimmer", -1))
+        dimmer = raw[dimmer_channel] / 255.0 if 0 <= dimmer_channel < 512 else 1.0
+
+        def read(entry: dict[str, int], role: str) -> int:
+            ch = int(entry.get(role, -1))
+            if 0 <= ch < 512:
+                return int(raw[ch])
+            return 0
+
+        for i, entry in enumerate(channels):
+            if not isinstance(entry, dict):
+                continue
+            r = read(entry, "r")
+            g = read(entry, "g")
+            b = read(entry, "b")
+            w = read(entry, "w") if entry.get("w", -1) >= 0 else 0
+            if w > 0:
+                r = min(255, r + w)
+                g = min(255, g + w)
+                b = min(255, b + w)
+            if dimmer < 1.0:
+                r = int(r * dimmer)
+                g = int(g * dimmer)
+                b = int(b * dimmer)
+            obj.set_pixel_color(i, (r, g, b))

@@ -11,6 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from model.visualizer.dmx.dmx_parser import ColorRole, MovementRole, auto_detect_mapping, parse_pan_tilt_range
 from model.visualizer.stage.so_moving_head import MovingHead
+from model.visualizer.stage.so_pixel_fixture import PixelFixture
 from view.visualizer.add_fixture_dialog import AddFixtureDialog, fixture_label
 from view.visualizer.stage_group_name_dialog import GroupNameDialog
 
@@ -404,7 +405,62 @@ class StageEditorWidget(QtWidgets.QWidget):
         if isinstance(obj, MovingHead):
             self._setup_movinghead_settings(obj)
 
+        # Pixel fixture layout properties (LED bar, matrix blinder)
+        if isinstance(obj, PixelFixture):
+            self._setup_pixel_fixture_settings(obj)
+
         self._updating_ui = False
+
+    def _setup_pixel_fixture_settings(self, obj: PixelFixture) -> None:
+        """Add matrix + physical-dimension editors for pixel fixtures."""
+        self._add_separator()
+        self._add_section_header("Pixel Matrix")
+
+        cols, rows = obj.pixel_matrix
+        self._pixel_cols_spin = QtWidgets.QSpinBox()
+        self._pixel_cols_spin.setRange(1, 512)
+        self._pixel_cols_spin.setValue(cols)
+        self._pixel_cols_spin.valueChanged.connect(self._on_pixel_matrix_changed)
+        self._prop_layout.addRow("Cols:", self._pixel_cols_spin)
+
+        self._pixel_rows_spin = QtWidgets.QSpinBox()
+        self._pixel_rows_spin.setRange(1, 512)
+        self._pixel_rows_spin.setValue(rows)
+        self._pixel_rows_spin.valueChanged.connect(self._on_pixel_matrix_changed)
+        self._prop_layout.addRow("Rows:", self._pixel_rows_spin)
+
+        self._add_separator()
+        self._add_section_header("Physical Dimensions")
+
+        w, h, d = obj.physical_size
+        self._physical_spins: list[QtWidgets.QDoubleSpinBox] = []
+        for axis, val in (("Width:", w), ("Height:", h), ("Depth:", d)):
+            sp = QtWidgets.QDoubleSpinBox()
+            sp.setRange(1.0, 20000.0)
+            sp.setDecimals(1)
+            sp.setSingleStep(10.0)
+            sp.setSuffix("  mm")
+            sp.setValue(val)
+            sp.valueChanged.connect(self._on_physical_size_changed)
+            self._prop_layout.addRow(axis, sp)
+            self._physical_spins.append(sp)
+
+    def _on_pixel_matrix_changed(self) -> None:
+        if self._updating_ui or not isinstance(self._current_obj, PixelFixture):
+            return
+        cols = self._pixel_cols_spin.value()
+        rows = self._pixel_rows_spin.value()
+        self._current_obj.pixel_matrix = (cols, rows)
+        self._emit_changed()
+
+    def _on_physical_size_changed(self) -> None:
+        if self._updating_ui or not isinstance(self._current_obj, PixelFixture):
+            return
+        w = self._physical_spins[0].value()
+        h = self._physical_spins[1].value()
+        d = self._physical_spins[2].value()
+        self._current_obj.physical_size = (w, h, d)
+        self._emit_changed()
 
     def _setup_movinghead_settings(self, obj: MovingHead) -> None:
         self._add_separator()
