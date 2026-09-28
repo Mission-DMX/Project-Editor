@@ -357,6 +357,9 @@ class StageEditorWidget(QtWidgets.QWidget):
         if isinstance(obj, MovingHead):
             self._add_separator()
             self._build_device_section(obj)
+        elif isinstance(obj, PixelFixture):
+            self._add_separator()
+            self._build_pixel_device_section(obj)
 
         # Position
         self._add_separator()
@@ -460,6 +463,112 @@ class StageEditorWidget(QtWidgets.QWidget):
         h = self._physical_spins[1].value()
         d = self._physical_spins[2].value()
         self._current_obj.physical_size = (w, h, d)
+        self._emit_changed()
+
+    def _build_pixel_device_section(self, obj: PixelFixture) -> None:
+        """Show and edit the DMX device that drives a pixel fixture.
+
+        Displays the current base address (universe + start channel) and the
+        detected master dimmer offset, and lets the user reassign the linked
+        device via the same combo used for moving heads.
+        """
+        self._add_section_header("DMX Device")
+
+        self._pix_device_combo = QtWidgets.QComboBox(self._prop_container)
+        self._pix_device_combo.addItem("(None)", None)
+        for fix in self._used_fixtures:
+            self._pix_device_combo.addItem(fixture_label(fix), fix)
+
+        pixel_cfg = (obj.device_config or {}).get("pixels") or {}
+        current_universe = pixel_cfg.get("universe")
+        current_start = pixel_cfg.get("start_channel")
+        self._pix_device_combo.setCurrentIndex(0)
+        if current_universe is not None and current_start is not None:
+            for i in range(1, self._pix_device_combo.count()):
+                fix = self._pix_device_combo.itemData(i)
+                if fix is not None and fix.universe_id == current_universe and fix.start_index == current_start:
+                    self._pix_device_combo.setCurrentIndex(i)
+                    break
+        self._pix_device_combo.currentIndexChanged.connect(self._on_pixel_device_changed)
+        self._prop_layout.addRow("Device:", self._pix_device_combo)
+
+        self._pix_address_label = QtWidgets.QLabel()
+        self._prop_layout.addRow("Address:", self._pix_address_label)
+
+        self._pix_dimmer_label = QtWidgets.QLabel()
+        self._prop_layout.addRow("Dimmer CH:", self._pix_dimmer_label)
+
+        self._pix_pixel_count_label = QtWidgets.QLabel()
+        self._prop_layout.addRow("Mapped px:", self._pix_pixel_count_label)
+
+        self._refresh_pixel_device_labels(obj)
+
+    def _refresh_pixel_device_labels(self, obj: PixelFixture) -> None:
+        """Update the read-only DMX info labels from the fixture's current mapping."""
+        pixel_cfg = (obj.device_config or {}).get("pixels") or {}
+        universe = pixel_cfg.get("universe")
+        start = pixel_cfg.get("start_channel")
+        count = pixel_cfg.get("channel_count")
+        dimmer = pixel_cfg.get("dimmer", -1)
+        entries = pixel_cfg.get("channels") or []
+
+        if universe is not None and start is not None:
+            # Users think in 1-based DMX addresses, so show that alongside the internal offset.
+            addr_text = f"Universe {universe}, CH{start + 1}"
+            if count:
+                addr_text += f"  ({count} ch)"
+        else:
+            addr_text = "(not linked)"
+        self._pix_address_label.setText(addr_text)
+
+        if isinstance(dimmer, int) and dimmer >= 0:
+            if universe is not None and start is not None:
+                self._pix_dimmer_label.setText(f"CH{dimmer + 1} (offset {dimmer - start})")
+            else:
+                self._pix_dimmer_label.setText(f"CH{dimmer + 1}")
+        else:
+            self._pix_dimmer_label.setText("(none)")
+
+        mapped = sum(1 for e in entries if isinstance(e, dict) and any(e.get(k, -1) >= 0 for k in ("r", "g", "b", "w")))
+        self._pix_pixel_count_label.setText(f"{mapped} / {len(entries)}")
+
+    def _on_pixel_device_changed(self, _: int) -> None:
+        if self._updating_ui or not isinstance(self._current_obj, PixelFixture):
+            return
+        selected = self._pix_device_combo.currentData()
+        if selected is None:
+            if self._current_obj.device_config:
+                self._current_obj.device_config.pop("pixels", None)
+                if not self._current_obj.device_config:
+                    self._current_obj.device_config = None
+        else:
+            # Delegate to the visualizer widget's auto-configure so the same
+            # channel-name parsing runs here as in the add-fixture flow.
+            parent = self.parent()
+            configure = getattr(parent, "_auto_configure_pixel_fixture", None)
+            if callable(configure):
+                configure(self._current_obj, selected)
+            else:
+                logger.warning("Cannot auto-configure pixel fixture: parent has no _auto_configure_pixel_fixture")
+
+        # Auto-configure may have adjusted matrix/dimensions from the new fixture
+        # definition; push the new values into the matching spin boxes without
+        # re-triggering their change handlers.
+        self._updating_ui = True
+        try:
+            if hasattr(self, "_pixel_cols_spin") and hasattr(self, "_pixel_rows_spin"):
+                cols, rows = self._current_obj.pixel_matrix
+                self._pixel_cols_spin.setValue(cols)
+                self._pixel_rows_spin.setValue(rows)
+            if hasattr(self, "_physical_spins") and len(self._physical_spins) == 3:
+                w, h, d = self._current_obj.physical_size
+                self._physical_spins[0].setValue(w)
+                self._physical_spins[1].setValue(h)
+                self._physical_spins[2].setValue(d)
+        finally:
+            self._updating_ui = False
+
+        self._refresh_pixel_device_labels(self._current_obj)
         self._emit_changed()
 
     def _setup_movinghead_settings(self, obj: MovingHead) -> None:
