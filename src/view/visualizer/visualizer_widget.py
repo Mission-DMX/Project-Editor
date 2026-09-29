@@ -36,27 +36,61 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
-# Channel-name role words recognised by :func:`_classify_pixel_channel`.
+# Single-word roles handled by the fast path in :func:`_classify_pixel_channel`.
 _PIXEL_COLOUR_ROLES: dict[str, str] = {
     "red": "red",
     "green": "green",
     "blue": "blue",
+    "amber": "amber",
+    "uv": "uv",
+    "ultraviolet": "uv",
     "white": "white",
 }
+# Two-word colour prefixes checked before falling back to the single-word map.
+# Ordered so that the more specific prefixes (warm/cold/cool white) win over "white".
+_PIXEL_COLOUR_PREFIXES: tuple[tuple[str, str], ...] = (
+    ("warm white", "warm_white"),
+    ("cold white", "cold_white"),
+    ("cool white", "cold_white"),
+    ("warmwhite", "warm_white"),
+    ("coldwhite", "cold_white"),
+    ("coolwhite", "cold_white"),
+)
 _DIMMER_ROLE_WORDS = ("dimmer", "intensity", "master dimmer", "master intensity")
+
+# Short keys used inside each pixel entry of ``device_config["pixels"]["channels"]``.
+_ROLE_TO_ENTRY_KEY: dict[str, str] = {
+    "red": "r",
+    "green": "g",
+    "blue": "b",
+    "white": "w",
+    "cold_white": "cw",
+    "warm_white": "ww",
+    "amber": "a",
+    "uv": "uv",
+}
 
 
 def _classify_pixel_channel(name: str) -> tuple[str, str | None]:
     """Parse a fixture channel name into ``(role, pixel_key)``.
 
-    Roles are ``"red"|"green"|"blue"|"white"|"dimmer"|"unknown"``. ``pixel_key``
-    is the identifier string that follows the role word (e.g. ``"(0, 0, 0)"``
+    Roles are one of ``red|green|blue|white|cold_white|warm_white|amber|uv|dimmer|unknown``.
+    ``pixel_key`` is the identifier string that follows the role word (e.g. ``"(0, 0, 0)"``
     from ``eachPixelXYZ`` or a custom ``pixelKey`` from ``eachPixelABC``); it is
     ``None`` for global fixture-wide channels like a leading master dimmer.
     """
     text = (name or "").strip()
     if not text:
         return "unknown", None
+    lower = text.lower()
+
+    # Two-word colour prefixes (warm/cold/cool white) must be tried before the
+    # single-word "white" fallback, otherwise "Warm White" would classify as "white".
+    for prefix, role in _PIXEL_COLOUR_PREFIXES:
+        if lower.startswith(prefix):
+            tail = text[len(prefix):].strip()
+            return role, tail or None
+
     parts = text.split(maxsplit=1)
     head = parts[0].lower()
     tail = parts[1].strip() if len(parts) > 1 else ""
@@ -64,11 +98,74 @@ def _classify_pixel_channel(name: str) -> tuple[str, str | None]:
     if head in _PIXEL_COLOUR_ROLES:
         return _PIXEL_COLOUR_ROLES[head], tail or None
 
-    lower = text.lower()
     if any(lower == word or lower.startswith(word + " ") for word in _DIMMER_ROLE_WORDS):
         return "dimmer", None
 
     return "unknown", None
+
+
+def _extract_wheel_configs(device: UsedFixture) -> list[dict[str, Any]]:
+    """Build ``[{channel, slots: [{dmx_min, dmx_max, color}]}, ...]`` for wheel channels.
+
+    Uses each channel's template ``WheelSlot`` capabilities together with the
+    fixture-level ``wheels`` dict; the slot's :meth:`WheelSlot.resulting_color`
+    (which understands ``colorTemperature``, colour name lookup and open/closed
+    slots) is converted to 0-255 RGB. Slots without a resolvable colour or with
+    a non-integer ``slotNumber`` (interpolation between slots) are skipped.
+    """
+    # Local imports keep the module import surface small and avoid pulling the OFL
+    # code into the visualizer package for the RGB(W) fast path.
+    from model.ofl.ofl_fixture import CapabilityType
+
+    fixture = getattr(device, "_fixture", None)
+    if fixture is None:
+        return []
+
+    wheel_defs = getattr(fixture, "wheels", None) or {}
+    if not wheel_defs:
+        return []
+
+    wheels_out: list[dict[str, Any]] = []
+    for offset, ch in enumerate(device.fixture_channels):
+        template = ch.channel_template
+        if template is None:
+            continue
+        wheel = wheel_defs.get(ch.name)
+        if wheel is None or not wheel.slots:
+            continue
+
+        slots: list[dict[str, Any]] = []
+        for capability in template.get_capabilities():
+            if capability.type != CapabilityType.WHEEL_SLOT:
+                continue
+            slot_number = capability.capabilityProperties.get("slotNumber")
+            if not isinstance(slot_number, int) or isinstance(slot_number, bool):
+                # slotNumber is a float for transitions between slots; skip those
+                # so we only mix in colours the wheel actually locks onto.
+                continue
+            index = (slot_number - 1) % len(wheel.slots)
+            wheel_slot = wheel.slots[index]
+            try:
+                r, g, b = wheel_slot.resulting_color.to_rgb()
+            except Exception as e:
+                logger.debug("Could not resolve wheel slot colour on %s: %s", ch.name, e)
+                continue
+            dmx_range = capability.dmxRange
+            dmx_min = int(dmx_range[0]) if len(dmx_range) > 0 else 0
+            dmx_max = int(dmx_range[1]) if len(dmx_range) > 1 else dmx_min
+            slots.append(
+                {
+                    "dmx_min": dmx_min,
+                    "dmx_max": dmx_max,
+                    "color": [int(r), int(g), int(b)],
+                }
+            )
+
+        if slots and any(any(s.get("color", (0, 0, 0))) for s in slots):
+            # Skip wheels whose slots are all black (typical for gobo wheels,
+            # where resulting_color falls back to black for unnamed shapes).
+            wheels_out.append({"channel": device.start_index + offset, "slots": slots})
+    return wheels_out
 
 
 class StageVisualizerWidget(QtWidgets.QSplitter):
@@ -314,12 +411,14 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
                 if global_dimmer_channel < 0:
                     global_dimmer_channel = abs_channel
                 continue
-            if role in ("red", "green", "blue", "white"):
-                pixel_key = key if key is not None else "single"
-                if pixel_key not in per_pixel:
-                    per_pixel[pixel_key] = {"r": -1, "g": -1, "b": -1, "w": -1}
-                    pixel_order.append(pixel_key)
-                per_pixel[pixel_key][role[0]] = abs_channel
+            entry_key = _ROLE_TO_ENTRY_KEY.get(role)
+            if entry_key is None:
+                continue
+            pixel_key = key if key is not None else "single"
+            if pixel_key not in per_pixel:
+                per_pixel[pixel_key] = {}
+                pixel_order.append(pixel_key)
+            per_pixel[pixel_key][entry_key] = abs_channel
 
         # Reconcile matrix layout with the actual per-pixel channel count. If the
         # fixture provided distinct per-pixel channels but the OFL matrix layout
@@ -329,17 +428,23 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
             obj.pixel_matrix = (derived, 1)
 
         entries = [per_pixel[k] for k in pixel_order]
-        device_config: dict[str, Any] = {
-            "pixels": {
-                "universe": universe_id,
-                "start_channel": start,
-                "channel_count": device.channel_length,
-                "channels": entries,
-            }
+
+        # Colour wheels are fixture-wide; store the first one at the top level so
+        # every pixel shares it when the parser computes the pixel colour.
+        wheel_configs = _extract_wheel_configs(device)
+
+        pixels_cfg: dict[str, Any] = {
+            "universe": universe_id,
+            "start_channel": start,
+            "channel_count": device.channel_length,
+            "channels": entries,
         }
         if global_dimmer_channel >= 0:
-            device_config["pixels"]["dimmer"] = global_dimmer_channel
-        obj.device_config = device_config
+            pixels_cfg["dimmer"] = global_dimmer_channel
+        if wheel_configs:
+            pixels_cfg["wheel"] = wheel_configs[0]
+
+        obj.device_config = {"pixels": pixels_cfg}
 
     def _on_remove_object(self, object_id: str) -> None:
         obj = self._stage_config.remove_object(object_id)

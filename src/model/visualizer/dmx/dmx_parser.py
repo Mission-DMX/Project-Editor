@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any
 from PySide6 import QtCore
 
 from model.broadcaster import Broadcaster
+from model.color_hsi import ColorHSI
 from model.visualizer.stage.so_moving_head import MovingHead
 from model.visualizer.stage.so_pixel_fixture import PixelFixture
 
@@ -54,6 +55,22 @@ class ColorRole(StrEnum):
 # Physical rotation range of typical moving heads.
 DEFAULT_PAN_MAX_DEG = 540.0
 DEFAULT_TILT_MAX_DEG = 270.0
+
+# Base colours for each per-pixel channel role at 100% DMX. Ordered so that mixing
+# behaves consistently between fixture types; the exact values for white variants
+# come from :class:`ColorHSI` and typical stage-lighting colour-temperature ratings.
+_WARM_WHITE_KELVIN = 3200.0
+_COLD_WHITE_KELVIN = 6500.0
+_PIXEL_BASE_COLOURS: tuple[tuple[str, tuple[int, int, int]], ...] = (
+    ("r", (255, 0, 0)),
+    ("g", (0, 255, 0)),
+    ("b", (0, 0, 255)),
+    ("w", (255, 255, 255)),
+    ("ww", ColorHSI.from_color_temperature(_WARM_WHITE_KELVIN).to_rgb()),
+    ("cw", ColorHSI.from_color_temperature(_COLD_WHITE_KELVIN).to_rgb()),
+    ("a", (255, 191, 0)),
+    ("uv", (140, 0, 255)),
+)
 
 
 def default_pan_tilt_range() -> tuple[float, float, float, float]:
@@ -320,36 +337,114 @@ class DmxParser(QtCore.QObject):
     def _apply_pixels(self, obj: PixelFixture, raw: list[int], cfg: dict[str, Any]) -> None:
         """Update every pixel colour of a :class:`PixelFixture` from the DMX frame.
 
-        The mapping stored in ``cfg["channels"]`` is a list of per-pixel entries
-        ``{"r": ch, "g": ch, "b": ch, "w": ch}`` where each ``ch`` is an absolute
-        universe channel index (``-1`` = unmapped). ``cfg["dimmer"]`` is an
-        optional absolute channel index of a fixture-wide master dimmer that
-        scales every pixel's RGB. White (if present) is folded into R/G/B
-        before the dimmer is applied.
+        Per-pixel entries in ``cfg["channels"]`` list any of the short keys
+        below, each holding an absolute universe channel index (missing =
+        unmapped). Every mapped channel contributes to the pixel's RGB by
+        scaling its base colour by ``raw[ch] / 255``:
+
+        * ``r``, ``g``, ``b`` — primary colour channels
+        * ``w`` — plain white LED
+        * ``cw`` / ``ww`` — cold / warm white (temperature-blended)
+        * ``a`` — amber, ``uv`` — ultraviolet
+
+        A fixture-wide ``cfg["wheel"]`` (colour wheel) is looked up by DMX value
+        and its slot colour is added into every pixel. ``cfg["dimmer"]`` scales
+        the final pixel RGB. Fixtures that carry only a dimmer channel (no colour
+        source at all) fall back to a plain-white base so the dimmer produces a
+        visible white output.
         """
+        pixel_count = obj.pixel_matrix[0] * obj.pixel_matrix[1]
         channels = cfg.get("channels") or []
         dimmer_channel = int(cfg.get("dimmer", -1))
         dimmer = raw[dimmer_channel] / 255.0 if 0 <= dimmer_channel < 512 else 1.0
+        wheel_color = self._lookup_wheel_color(raw, cfg.get("wheel"))
 
-        def read(entry: dict[str, int], role: str) -> int:
-            ch = int(entry.get(role, -1))
-            if 0 <= ch < 512:
-                return int(raw[ch])
-            return 0
-
-        for i, entry in enumerate(channels):
-            if not isinstance(entry, dict):
-                continue
-            r = read(entry, "r")
-            g = read(entry, "g")
-            b = read(entry, "b")
-            w = read(entry, "w") if entry.get("w", -1) >= 0 else 0
-            if w > 0:
-                r = min(255, r + w)
-                g = min(255, g + w)
-                b = min(255, b + w)
-            if dimmer < 1.0:
-                r = int(r * dimmer)
-                g = int(g * dimmer)
-                b = int(b * dimmer)
+        for i in range(pixel_count):
+            entry = channels[i] if i < len(channels) and isinstance(channels[i], dict) else {}
+            r, g, b = self._compose_pixel_color(raw, entry, wheel_color)
+            r = int(min(255.0, r * dimmer))
+            g = int(min(255.0, g * dimmer))
+            b = int(min(255.0, b * dimmer))
             obj.set_pixel_color(i, (r, g, b))
+
+    def _compose_pixel_color(
+        self,
+        raw: list[int],
+        entry: dict[str, int],
+        wheel_color: tuple[int, int, int] | None,
+    ) -> tuple[float, float, float]:
+        """Sum the colour contributions declared in a single pixel entry.
+
+        Returns the pre-dimmer ``(r, g, b)`` in floating point 0-255 range. If
+        no channel contributes at all — as with pure dimmer-only fixtures — a
+        plain-white base is returned so the caller's dimmer multiplication still
+        produces visible white light.
+        """
+        r_total = g_total = b_total = 0.0
+        has_contribution = False
+
+        for role_key, base in _PIXEL_BASE_COLOURS:
+            ch = int(entry.get(role_key, -1))
+            if not (0 <= ch < 512):
+                continue
+            frac = raw[ch] / 255.0
+            if frac <= 0.0:
+                # Zero-value channels contribute nothing but still count as "mapped"
+                # so the dimmer-only fallback doesn't kick in for a black RGB signal.
+                has_contribution = True
+                continue
+            r_total += base[0] * frac
+            g_total += base[1] * frac
+            b_total += base[2] * frac
+            has_contribution = True
+
+        if wheel_color is not None:
+            r_total += wheel_color[0]
+            g_total += wheel_color[1]
+            b_total += wheel_color[2]
+            has_contribution = True
+
+        if not has_contribution:
+            # Fixture exposes only a dimmer (or nothing colour-related was mapped);
+            # treat the emitted light as plain white so the dimmer becomes visible.
+            r_total = g_total = b_total = 255.0
+
+        return r_total, g_total, b_total
+
+    def _lookup_wheel_color(
+        self, raw: list[int], wheel_cfg: dict[str, Any] | None
+    ) -> tuple[int, int, int] | None:
+        """Find the wheel slot covering the current DMX value and return its RGB.
+
+        Falls back to the nearest slot by centre distance if no range contains
+        the DMX value exactly — this handles fixtures whose OFL definitions
+        leave small gaps between slot capabilities.
+        """
+        if not wheel_cfg:
+            return None
+        ch = int(wheel_cfg.get("channel", -1))
+        if not (0 <= ch < 512):
+            return None
+        slots = wheel_cfg.get("slots") or []
+        if not slots:
+            return None
+        dmx_value = int(raw[ch])
+
+        best: dict[str, Any] | None = None
+        best_dist: float = float("inf")
+        for slot in slots:
+            dmx_min = int(slot.get("dmx_min", 0))
+            dmx_max = int(slot.get("dmx_max", dmx_min))
+            if dmx_min <= dmx_value <= dmx_max:
+                best = slot
+                break
+            center = (dmx_min + dmx_max) / 2.0
+            dist = abs(dmx_value - center)
+            if dist < best_dist:
+                best_dist = dist
+                best = slot
+
+        if best is None:
+            return None
+        c = best.get("color", [0, 0, 0])
+        return int(c[0]), int(c[1]), int(c[2])
