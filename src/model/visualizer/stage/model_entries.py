@@ -27,6 +27,7 @@ FIXTURE_KEYS = [
     "truss_long",
     "truss_medium",
     "moving_head",
+    "par_can",
     "led_bar",
     "matrix_blinder",
 ]

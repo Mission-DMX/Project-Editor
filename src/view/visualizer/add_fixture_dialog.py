@@ -59,7 +59,7 @@ class AddFixtureDialog(QtWidgets.QDialog):
 
         # Category selector
         self._category_combo = QtWidgets.QComboBox()
-        self._category_combo.addItems(["Truss", "Moving Head", "LED Bar", "Matrix Blinder"])
+        self._category_combo.addItems(["Truss", "Moving Head", "PAR Can", "LED Bar", "Matrix Blinder"])
         self._category_combo.currentIndexChanged.connect(self._on_category_changed)
         form.addRow("Fixture:", self._category_combo)
 
@@ -100,7 +100,7 @@ class AddFixtureDialog(QtWidgets.QDialog):
         self._variant_combo.setVisible(is_truss)
         self._variant_label.setVisible(is_truss)
         # The DMX device combo is offered for any fixture that reacts to DMX.
-        can_link_device = category in ("Moving Head", "LED Bar", "Matrix Blinder")
+        can_link_device = category in ("Moving Head", "PAR Can", "LED Bar", "Matrix Blinder")
         self._device_combo.setVisible(can_link_device)
         self._device_label.setVisible(can_link_device)
         self._update_suggested_name()
@@ -127,6 +127,8 @@ class AddFixtureDialog(QtWidgets.QDialog):
             return "led_bar"
         if category == "Matrix Blinder":
             return "matrix_blinder"
+        if category == "PAR Can":
+            return "par_can"
         return "moving_head"
 
     def selected_name(self) -> str:

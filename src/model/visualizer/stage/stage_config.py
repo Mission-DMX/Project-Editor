@@ -19,6 +19,7 @@ from model.visualizer.stage.paths import DEFAULT_STAGE_PATH, STAGE_DIR
 from model.visualizer.stage.so_led_bar import LEDBar
 from model.visualizer.stage.so_matrix_blinder import MatrixBlinder
 from model.visualizer.stage.so_moving_head import MovingHead
+from model.visualizer.stage.so_par_can import ParCan
 from model.visualizer.stage.so_platform import Platform
 from model.visualizer.stage.so_truss import Truss
 from model.visualizer.stage.stage_object import StageObject
@@ -59,6 +60,8 @@ def create_object_from_key(fixture_key: str, object_id: str, name: str = "") -> 
         obj = Truss(object_id, variant=variant)
     elif key.startswith("moving_head"):
         obj = MovingHead(object_id)
+    elif key == "par_can":
+        obj = ParCan(object_id)
     elif key == "led_bar":
         obj = LEDBar(object_id)
     elif key == "matrix_blinder":
@@ -121,6 +124,8 @@ class StageConfig:
                     obj = Truss.from_dict(obj_data)
                 elif type_name.startswith("moving_head"):
                     obj = MovingHead.from_dict(obj_data)
+                elif type_name == "par_can":
+                    obj = ParCan.from_dict(obj_data)
                 elif type_name == "led_bar":
                     obj = LEDBar.from_dict(obj_data)
                 elif type_name == "matrix_blinder":
