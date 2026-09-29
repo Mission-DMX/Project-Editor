@@ -222,6 +222,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("Save Stagefile As", self._save_stage_file, None),
                 ("---", None, None),
                 ("Settings", self.open_show_settings, ","),
+                ("---", None, None),
+                ("Quit", self.close, "Q"),
             ],
             "Edit": [
                 ("&Undo", None, "Z"),  # TODO implement edit history
