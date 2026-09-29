@@ -19,6 +19,7 @@ from PySide6 import QtCore
 from model.broadcaster import Broadcaster
 from model.color_hsi import ColorHSI
 from model.visualizer.stage.so_moving_head import MovingHead
+from model.visualizer.stage.so_par_can import ParCan
 from model.visualizer.stage.so_pixel_fixture import PixelFixture
 
 if TYPE_CHECKING:
@@ -50,6 +51,21 @@ class ColorRole(StrEnum):
     GREEN = "green"
     BLUE = "blue"
     WHITE = "white"
+    AMBER = "amber"
+    UV = "uv"
+
+
+# Base RGB colours used when mixing per-role channel values into a single beam
+# colour. Values match ``model.visualizer.dmx.dmx_parser._PIXEL_BASE_COLOURS`` so
+# per-pixel and per-fixture colour mixing stay visually consistent.
+_COLOR_ROLE_BASES: dict[ColorRole, tuple[int, int, int]] = {
+    ColorRole.RED: (255, 0, 0),
+    ColorRole.GREEN: (0, 255, 0),
+    ColorRole.BLUE: (0, 0, 255),
+    ColorRole.WHITE: (255, 255, 255),
+    ColorRole.AMBER: (255, 191, 0),
+    ColorRole.UV: (140, 0, 255),
+}
 
 
 # Physical rotation range of typical moving heads.
@@ -129,6 +145,11 @@ def auto_detect_mapping(channel_names: list[str], roles: type[MovementRole | Col
             mapping[ColorRole.BLUE] = i
         if p == ColorRole.WHITE and ColorRole.WHITE in roles:
             mapping[ColorRole.WHITE] = i
+        if "amber" in p and ColorRole.AMBER in roles:
+            mapping[ColorRole.AMBER] = i
+        # UV / ultraviolet — match on the primary token to avoid catching "cover".
+        if (p == "uv" or p == "ultraviolet") and ColorRole.UV in roles:
+            mapping[ColorRole.UV] = i
 
     # ruamel.yaml cannot represent StrEnum members, so normalize keys to plain strings.
     return {str(role): offset for role, offset in mapping.items()}
@@ -251,7 +272,10 @@ class DmxParser(QtCore.QObject):
             if not dc:
                 continue
 
-            if isinstance(obj, MovingHead):
+            if isinstance(obj, (MovingHead, ParCan)):
+                # ParCans reuse the movement section purely for their dimmer channel
+                # (no pan/tilt mapping); ``_apply_movement`` only touches fields that
+                # have a channel mapped so leaving pan/tilt at -1 is a no-op.
                 mv = dc.get("movement")
                 if mv and mv.get("universe", -1) == universe_id:
                     self._apply_movement(obj, raw, mv)
@@ -301,7 +325,14 @@ class DmxParser(QtCore.QObject):
             obj.update_beam_state()
 
     def _apply_color(self, obj: MovingHead, raw: list[int], cfg: dict[str, Any]) -> None:
-        """Map R/G/B/W channels to beam_color."""
+        """Mix every mapped colour channel into ``obj.beam_color``.
+
+        Each role's DMX value scales its base RGB colour from
+        :data:`_COLOR_ROLE_BASES` (red=(255,0,0), amber=(255,191,0), UV=(140,0,255)…)
+        and the results are summed and clamped, so a fixture like the Stairville
+        CX60 Hex — which carries dedicated amber and UV LEDs on top of RGBW —
+        produces the correct blended colour when those channels are driven.
+        """
         start = cfg.get("start_channel", 0)
         m = cfg.get("mapping", {})
 
@@ -311,26 +342,36 @@ class DmxParser(QtCore.QObject):
                 return None
             return int(raw[start + off])
 
-        r, g, b = rd(ColorRole.RED), rd(ColorRole.GREEN), rd(ColorRole.BLUE)
-        w = rd(ColorRole.WHITE)
-        if r is None and g is None and b is None and w is None:
-            # No color channel mapped (or all out of range); nothing to apply.
+        r_total = g_total = b_total = 0.0
+        any_mapped = False
+        for role, base in _COLOR_ROLE_BASES.items():
+            v = rd(role)
+            if v is None:
+                continue
+            any_mapped = True
+            if v <= 0:
+                continue
+            frac = v / 255.0
+            r_total += base[0] * frac
+            g_total += base[1] * frac
+            b_total += base[2] * frac
+
+        if not any_mapped:
+            # No colour channel mapped (or all out of range); nothing to apply.
             return
 
-        # Unmapped channels contribute nothing. The white LED adds on top of RGB
-        # (RGBW fixtures); on white-only fixtures it becomes the beam color.
-        r = 0 if r is None else r
-        g = 0 if g is None else g
-        b = 0 if b is None else b
-        if w is not None and w > 0:
-            r = min(255, r + w)
-            g = min(255, g + w)
-            b = min(255, b + w)
+        r = int(min(255.0, r_total))
+        g = int(min(255.0, g_total))
+        b = int(min(255.0, b_total))
 
         obj.beam_color = (r, g, b)
         obj.update_beam_state()
 
-        # TODO if multiple segments are present: apply them in order
+        # Keep the emissive-lens colour in sync too. For fixtures whose
+        # ``lense_colors`` is a @property (e.g. :class:`ParCan`) this mutation is
+        # a no-op — the property reads ``beam_color`` above — but for
+        # :class:`MovingHead`, which stores the list, we still need to update
+        # each entry so the lens renders the new colour.
         for lense_light in obj.lense_colors:
             lense_light.color = (r, g, b)
 

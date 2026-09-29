@@ -13,8 +13,15 @@ from typing import TYPE_CHECKING, Any, override
 from PySide6 import QtCore, QtWidgets
 
 from model.broadcaster import Broadcaster
-from model.visualizer.dmx.dmx_parser import DmxParser, MovementRole, auto_detect_mapping, get_movement_range
+from model.visualizer.dmx.dmx_parser import (
+    ColorRole,
+    DmxParser,
+    MovementRole,
+    auto_detect_mapping,
+    get_movement_range,
+)
 from model.visualizer.stage.fixture_group import FixtureGroup
+from model.visualizer.stage.so_par_can import ParCan
 from model.visualizer.stage.so_pixel_fixture import PixelFixture
 from model.visualizer.stage.stage_config import (
     STAGE_DIR,
@@ -342,6 +349,8 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
             try:
                 if isinstance(new_obj, PixelFixture):
                     self._auto_configure_pixel_fixture(new_obj, device)
+                elif isinstance(new_obj, ParCan):
+                    self._auto_configure_par_can(new_obj, device)
                 else:
                     ch_names = [ch.name for ch in device.fixture_channels]
                     mapping = auto_detect_mapping(ch_names, MovementRole)
@@ -365,6 +374,35 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._gl_widget.doneCurrent()
         self._gl_widget.update()
         self._save_stage()
+
+    def _auto_configure_par_can(self, obj: ParCan, device: UsedFixture) -> None:
+        """Populate a PAR can's ``device_config`` from a linked OFL fixture.
+
+        Auto-detects both a dimmer channel (stored under the ``movement`` key so it
+        travels the same code path as :meth:`DmxParser._apply_movement`) and RGB/W
+        colour channels (under the ``color`` key). Both point at the same device
+        since a PAR can typically drives all its channels from a single fixture.
+        """
+        ch_names = [ch.name for ch in device.fixture_channels]
+        mv_mapping = auto_detect_mapping(ch_names, MovementRole)
+        col_mapping = auto_detect_mapping(ch_names, ColorRole)
+
+        dc: dict[str, Any] = {}
+        if mv_mapping.get(MovementRole.DIMMER.value, -1) >= 0:
+            dc["movement"] = {
+                "universe": device.universe_id,
+                "start_channel": device.start_index,
+                "channel_count": device.channel_length,
+                "mapping": mv_mapping,
+            }
+        if any(col_mapping.get(role, -1) >= 0 for role in ("red", "green", "blue", "white")):
+            dc["color"] = {
+                "universe": device.universe_id,
+                "start_channel": device.start_index,
+                "channel_count": device.channel_length,
+                "mapping": col_mapping,
+            }
+        obj.device_config = dc or None
 
     def _auto_configure_pixel_fixture(self, obj: PixelFixture, device: UsedFixture) -> None:
         """Populate matrix layout, dimensions and per-pixel DMX mapping from an OFL fixture.

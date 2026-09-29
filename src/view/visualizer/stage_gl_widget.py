@@ -910,6 +910,22 @@ class Stage3DWidget(QOpenGLWidget):
             else:
                 base_dir = QtGui.QVector3D(0.0, 1.0, 0.0)
             dir_vec = rotation_mat.map(base_dir)
+
+            # Object may also nudge the beam origin away from its own position — used
+            # by fixtures whose emissive point sits deep inside their model geometry,
+            # e.g. a PAR can's lens at the top of the tube. Offsets are given in
+            # local model units so they scale with the object's ``scale`` factor.
+            local_origin = getattr(obj, "beam_local_origin", None)
+            if isinstance(local_origin, QtGui.QVector3D):
+                offset_vec = QtGui.QVector3D(local_origin)
+            elif isinstance(local_origin, (list, tuple)) and len(local_origin) == 3:
+                offset_vec = QtGui.QVector3D(
+                    float(local_origin[0]), float(local_origin[1]), float(local_origin[2])
+                )
+            else:
+                offset_vec = None
+            if offset_vec is not None:
+                origin_pos += rotation_mat.map(offset_vec) * float(getattr(obj, "scale", 1.0))
         return origin_pos, dir_vec
 
     def _update_camera_pos(self) -> None:

@@ -11,6 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from model.visualizer.dmx.dmx_parser import ColorRole, MovementRole, auto_detect_mapping, parse_pan_tilt_range
 from model.visualizer.stage.so_moving_head import MovingHead
+from model.visualizer.stage.so_par_can import ParCan
 from model.visualizer.stage.so_pixel_fixture import PixelFixture
 from view.visualizer.add_fixture_dialog import AddFixtureDialog, fixture_label
 from view.visualizer.stage_group_name_dialog import GroupNameDialog
@@ -357,6 +358,9 @@ class StageEditorWidget(QtWidgets.QWidget):
         if isinstance(obj, MovingHead):
             self._add_separator()
             self._build_device_section(obj)
+        elif isinstance(obj, ParCan):
+            self._add_separator()
+            self._build_parcan_device_section(obj)
         elif isinstance(obj, PixelFixture):
             self._add_separator()
             self._build_pixel_device_section(obj)
@@ -407,6 +411,10 @@ class StageEditorWidget(QtWidgets.QWidget):
         # MovingHead beam properties
         if isinstance(obj, MovingHead):
             self._setup_movinghead_settings(obj)
+
+        # PAR can beam properties (same shape as moving head, minus pan/tilt)
+        if isinstance(obj, ParCan):
+            self._setup_parcan_settings(obj)
 
         # Pixel fixture layout properties (LED bar, matrix blinder)
         if isinstance(obj, PixelFixture):
@@ -571,6 +579,157 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._refresh_pixel_device_labels(self._current_obj)
         self._emit_changed()
 
+    def _build_parcan_device_section(self, obj: ParCan) -> None:
+        """Show and edit the DMX device that drives a PAR can.
+
+        PAR cans have no pan/tilt: only the dimmer and RGB(W) channels are shown.
+        A single device selector configures both since a PAR can's dimmer and
+        colour channels come from the same OFL fixture in practice.
+        """
+        self._add_section_header("DMX Device")
+
+        self._par_device_combo = QtWidgets.QComboBox(self._prop_container)
+        self._par_device_combo.addItem("(None)", None)
+        for fix in self._used_fixtures:
+            self._par_device_combo.addItem(fixture_label(fix), fix)
+
+        dc = obj.device_config or {}
+        # Look for the currently-linked device in either section — they should be
+        # the same fixture, but we pick whichever is set to seed the combo.
+        current_universe = None
+        current_start = None
+        for section in ("color", "movement"):
+            sub = dc.get(section) or {}
+            if "universe" in sub and "start_channel" in sub:
+                current_universe = sub["universe"]
+                current_start = sub["start_channel"]
+                break
+
+        self._par_device_combo.setCurrentIndex(0)
+        if current_universe is not None and current_start is not None:
+            for i in range(1, self._par_device_combo.count()):
+                fix = self._par_device_combo.itemData(i)
+                if fix is not None and fix.universe_id == current_universe and fix.start_index == current_start:
+                    self._par_device_combo.setCurrentIndex(i)
+                    break
+        self._par_device_combo.currentIndexChanged.connect(self._on_par_device_changed)
+        self._prop_layout.addRow("Device:", self._par_device_combo)
+
+        self._par_address_label = QtWidgets.QLabel()
+        self._prop_layout.addRow("Address:", self._par_address_label)
+
+        self._par_dimmer_label = QtWidgets.QLabel()
+        self._prop_layout.addRow("Dimmer CH:", self._par_dimmer_label)
+
+        self._par_color_label = QtWidgets.QLabel()
+        self._prop_layout.addRow("Colour CH:", self._par_color_label)
+
+        self._refresh_parcan_device_labels(obj)
+
+    def _refresh_parcan_device_labels(self, obj: ParCan) -> None:
+        """Update the DMX info labels for a PAR can from its current mapping."""
+        dc = obj.device_config or {}
+        mv = dc.get("movement") or {}
+        col = dc.get("color") or {}
+
+        universe = mv.get("universe") if mv else col.get("universe")
+        start = mv.get("start_channel") if mv else col.get("start_channel")
+        count = mv.get("channel_count") if mv else col.get("channel_count")
+
+        if universe is not None and start is not None:
+            addr = f"Universe {universe}, CH{start + 1}"
+            if count:
+                addr += f"  ({count} ch)"
+        else:
+            addr = "(not linked)"
+        self._par_address_label.setText(addr)
+
+        mv_map = mv.get("mapping", {}) if mv else {}
+        dim_off = int(mv_map.get(MovementRole.DIMMER.value, -1))
+        mv_start = mv.get("start_channel", 0) if mv else 0
+        if dim_off >= 0:
+            self._par_dimmer_label.setText(f"CH{mv_start + dim_off + 1} (offset {dim_off})")
+        else:
+            self._par_dimmer_label.setText("(none)")
+
+        col_map = col.get("mapping", {}) if col else {}
+        col_start = col.get("start_channel", 0) if col else 0
+        role_bits = []
+        for role in ("red", "green", "blue", "white"):
+            off = int(col_map.get(role, -1))
+            if off >= 0:
+                role_bits.append(f"{role[0].upper()}=CH{col_start + off + 1}")
+        self._par_color_label.setText(", ".join(role_bits) if role_bits else "(none)")
+
+    def _on_par_device_changed(self, _: int) -> None:
+        if self._updating_ui or not isinstance(self._current_obj, ParCan):
+            return
+        selected = self._par_device_combo.currentData()
+        if selected is None:
+            self._current_obj.device_config = None
+        else:
+            parent = self.parent()
+            configure = getattr(parent, "_auto_configure_par_can", None)
+            if callable(configure):
+                configure(self._current_obj, selected)
+            else:
+                logger.warning("Cannot auto-configure PAR can: parent has no _auto_configure_par_can")
+        self._refresh_parcan_device_labels(self._current_obj)
+        self._apply_dmx_locks(self._current_obj)
+        self._emit_changed()
+
+    def _setup_parcan_settings(self, obj: ParCan) -> None:
+        """Beam / dimmer / colour controls for a PAR can.
+
+        Mirrors the moving-head editor UI (same widget names so :meth:`_apply_dmx_locks`
+        and :meth:`update_live_values` can drive both), but without the pan/tilt row.
+        """
+        self._add_separator()
+        self._add_section_header("Beam Control")
+
+        self._beam_cb = QtWidgets.QCheckBox("Enabled")
+        self._beam_cb.setChecked(obj.beam_on)
+        self._beam_cb.stateChanged.connect(self._on_beam_toggled)
+        self._prop_layout.addRow("Beam:", self._beam_cb)
+
+        self._dimmer_spin = QtWidgets.QDoubleSpinBox()
+        self._dimmer_spin.setRange(0, 1)
+        self._dimmer_spin.setDecimals(2)
+        self._dimmer_spin.setSingleStep(0.05)
+        self._dimmer_spin.setValue(obj.dimmer)
+        self._dimmer_spin.valueChanged.connect(lambda v: self._on_attr("dimmer", v))
+        self._prop_layout.addRow("Dimmer:", self._dimmer_spin)
+
+        self._dimmer_slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self._dimmer_slider.setRange(0, 100)
+        self._dimmer_slider.setValue(int(obj.dimmer * 100))
+        self._dimmer_slider.valueChanged.connect(self._on_dimmer_slider)
+        self._prop_layout.addRow("", self._dimmer_slider)
+
+        self._add_separator()
+        self._add_section_header("Beam Color")
+
+        r, g, b = obj.beam_color
+        self._color_btn = QtWidgets.QPushButton()
+        self._color_btn.setFixedHeight(28)
+        self._update_color_btn_style(r, g, b)
+        self._color_btn.clicked.connect(self._on_color_picker)
+        self._prop_layout.addRow("Pick:", self._color_btn)
+
+        self._rgb_spins = []
+        for axis, val in (("R:", r), ("G:", g), ("B:", b)):
+            sp = QtWidgets.QSpinBox()
+            sp.setRange(0, 255)
+            sp.setSingleStep(5)
+            sp.setValue(val)
+            sp.valueChanged.connect(self._on_rgb_changed)
+            self._prop_layout.addRow(axis, sp)
+            self._rgb_spins.append(sp)
+
+        # Pan/tilt widgets don't exist for PAR cans; ``_apply_dmx_locks`` and
+        # ``update_live_values`` guard on ``hasattr`` before touching them.
+        self._apply_dmx_locks(obj)
+
     def _setup_movinghead_settings(self, obj: MovingHead) -> None:
         self._add_separator()
         self._add_section_header("Beam Control")
@@ -668,23 +827,32 @@ class StageEditorWidget(QtWidgets.QWidget):
         """Disable UI controls for channels that are driven by live DMX.
 
         When DMX Live is off, all controls remain unlocked for manual editing.
+        Works for both moving heads and PAR cans; the pan/tilt widgets are only
+        touched if they exist (they don't for PAR cans).
         """
-        if not isinstance(obj, MovingHead):
+        if not isinstance(obj, (MovingHead, ParCan)):
             return
 
         lock_style = "background-color: #3a3a2a; color: #aa9;"
         unlock_style = ""
 
-        # Reset all controls to unlocked state first
-        for widget in [self._pan_spin, self._tilt_spin, self._dimmer_spin]:
+        # Reset all controls to unlocked state first (guarding for widgets that
+        # only exist on one of the two fixture types).
+        for attr in ("_pan_spin", "_tilt_spin", "_dimmer_spin"):
+            widget = getattr(self, attr, None)
+            if widget is None:
+                continue
             widget.setEnabled(True)
             widget.setToolTip("")
             widget.setStyleSheet(unlock_style)
-        self._dimmer_slider.setEnabled(True)
-        self._beam_cb.setEnabled(True)
-        self._color_btn.setEnabled(True)
-        self._color_btn.setToolTip("")
-        for sp in self._rgb_spins:
+        if hasattr(self, "_dimmer_slider"):
+            self._dimmer_slider.setEnabled(True)
+        if hasattr(self, "_beam_cb"):
+            self._beam_cb.setEnabled(True)
+        if hasattr(self, "_color_btn"):
+            self._color_btn.setEnabled(True)
+            self._color_btn.setToolTip("")
+        for sp in getattr(self, "_rgb_spins", ()):
             sp.setEnabled(True)
             sp.setStyleSheet(unlock_style)
 
@@ -692,22 +860,21 @@ class StageEditorWidget(QtWidgets.QWidget):
         if not self._dmx_cb.isChecked():
             return
 
-        # Lock DMX-controlled movement channels
-        has_pan = self._has_dmx_role(obj, "movement", MovementRole.PAN_COARSE)
-        has_tilt = self._has_dmx_role(obj, "movement", MovementRole.TILT_COARSE)
+        # Lock DMX-controlled movement channels (only applies to moving heads)
+        if isinstance(obj, MovingHead):
+            if self._has_dmx_role(obj, "movement", MovementRole.PAN_COARSE):
+                self._pan_spin.setEnabled(False)
+                self._pan_spin.setToolTip("Controlled by DMX")
+                self._pan_spin.setStyleSheet(lock_style)
+            if self._has_dmx_role(obj, "movement", MovementRole.TILT_COARSE):
+                self._tilt_spin.setEnabled(False)
+                self._tilt_spin.setToolTip("Controlled by DMX")
+                self._tilt_spin.setStyleSheet(lock_style)
+
         has_dim = self._has_dmx_role(obj, "movement", MovementRole.DIMMER) or self._has_dmx_role(
             obj, "color", ColorRole.WHITE
         )
-
-        if has_pan:
-            self._pan_spin.setEnabled(False)
-            self._pan_spin.setToolTip("Controlled by DMX")
-            self._pan_spin.setStyleSheet(lock_style)
-        if has_tilt:
-            self._tilt_spin.setEnabled(False)
-            self._tilt_spin.setToolTip("Controlled by DMX")
-            self._tilt_spin.setStyleSheet(lock_style)
-        if has_dim:
+        if has_dim and hasattr(self, "_dimmer_spin"):
             self._dimmer_spin.setEnabled(False)
             self._dimmer_slider.setEnabled(False)
             self._beam_cb.setEnabled(False)
@@ -718,7 +885,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         has_r = self._has_dmx_role(obj, "color", ColorRole.RED)
         has_g = self._has_dmx_role(obj, "color", ColorRole.GREEN)
         has_b = self._has_dmx_role(obj, "color", ColorRole.BLUE)
-        if has_r and has_g and has_b:
+        if has_r and has_g and has_b and hasattr(self, "_color_btn"):
             self._color_btn.setEnabled(False)
             self._color_btn.setToolTip("Controlled by DMX")
             for sp in self._rgb_spins:
@@ -727,8 +894,13 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     def _refresh_locks(self) -> None:
         """Re-apply lock state after a device or mapping change."""
-        if self._current_obj and isinstance(self._current_obj, MovingHead) and hasattr(self, "_pan_spin"):
-            self._apply_dmx_locks(self._current_obj)
+        obj = self._current_obj
+        if obj is None:
+            return
+        if (isinstance(obj, MovingHead) and hasattr(self, "_pan_spin")) or (
+            isinstance(obj, ParCan) and hasattr(self, "_dimmer_spin")
+        ):
+            self._apply_dmx_locks(obj)
 
     def update_live_values(self) -> None:
         """Refresh the property panel with current fixture values from DMX.
@@ -743,7 +915,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._last_live_update = now
 
         obj = self._current_obj
-        if not obj or not isinstance(obj, MovingHead):
+        if not obj or not isinstance(obj, (MovingHead, ParCan)):
             return
 
         self._updating_ui = True
@@ -1041,14 +1213,14 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._emit_changed()
 
     def _on_beam_toggled(self, state: bool) -> None:
-        if self._updating_ui or not isinstance(self._current_obj, MovingHead):
+        if self._updating_ui or not isinstance(self._current_obj, (MovingHead, ParCan)):
             return
         self._current_obj.beam_on = bool(state)
         self._emit_changed()
 
     def _on_dimmer_slider(self, val: float) -> None:
         """Synchronize the dimmer slider with the spin box."""
-        if self._updating_ui or not isinstance(self._current_obj, MovingHead):
+        if self._updating_ui or not isinstance(self._current_obj, (MovingHead, ParCan)):
             return
         v = val / 100.0
         self._current_obj.dimmer = v
@@ -1058,7 +1230,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         self._emit_changed()
 
     def _on_rgb_changed(self) -> None:
-        if self._updating_ui or not isinstance(self._current_obj, MovingHead):
+        if self._updating_ui or not isinstance(self._current_obj, (MovingHead, ParCan)):
             return
         r, g, b = (s.value() for s in self._rgb_spins)
         self._current_obj.beam_color = (r, g, b)
@@ -1067,7 +1239,7 @@ class StageEditorWidget(QtWidgets.QWidget):
 
     def _on_color_picker(self) -> None:
         """Open a QColorDialog and apply the chosen color."""
-        if not isinstance(self._current_obj, MovingHead):
+        if not isinstance(self._current_obj, (MovingHead, ParCan)):
             return
         r, g, b = self._current_obj.beam_color
         color = QtWidgets.QColorDialog.getColor(QtGui.QColor(r, g, b), self, "Beam Color")
@@ -1286,7 +1458,7 @@ class StageEditorWidget(QtWidgets.QWidget):
         device combos no longer show the fixtures of the previous show file.
         """
         self._used_fixtures = used_fixtures or []
-        if isinstance(self._current_obj, MovingHead):
+        if isinstance(self._current_obj, (MovingHead, ParCan, PixelFixture)):
             self._build_properties(self._current_obj)
 
     def dmx_live_enabled(self) -> bool:
