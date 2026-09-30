@@ -315,7 +315,7 @@ def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] 
 class TriggerType(Enum):
     """Event trigger representation as it is used by fish."""
 
-    SINGLE_TRIGGER = 0
-    START = 1
-    RELEASE = 2
-    ONGOING_EVENT = 3
+    SINGLE_TRIGGER = prot_event_type.SINGLE_TRIGGER
+    START = prot_event_type.START
+    RELEASE = prot_event_type.RELEASE
+    ONGOING_EVENT = prot_event_type.ONGOING_EVENT

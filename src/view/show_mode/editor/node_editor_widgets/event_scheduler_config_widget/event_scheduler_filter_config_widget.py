@@ -105,15 +105,18 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
             if len(args) < 3:
                 logger.warning("Skipping malformed event entry %r.", event_entry)
                 continue
-            event_type_value = to_int(args[2], -1)
             try:
-                event_type = TriggerType(event_type_value)
+                sender = int(args[0])
+                sender_function = int(args[1])
+                ev_arguments: list[int] = [int(s) for s in args[3:] if len(s) > 0]
+            except ValueError:
+                logger.warning("Skipping malformed event entry %r.", event_entry)
+                continue
+            try:
+                event_type = TriggerType(int(args[2]))
             except ValueError:
                 logger.warning("Skipping event entry %r with unknown trigger type %r.", event_entry, args[2])
                 continue
-            sender = to_int(args[0], 0)
-            sender_function = to_int(args[1], 0)
-            ev_arguments: list[int] = [to_int(s, 0) for s in args[3:] if len(s) > 0]
             decoded_event_entries.append((sender, sender_function, event_type, ev_arguments))
             event_descriptions.append(event_entry)
         event_names = conf.get("event_names", "").split(";")
