@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from model import FilterUpdateCallbackMixin, UIWidget
+from utility import to_int
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.trigger_matrix_editor import (
     TriggerMatrixEditor,
@@ -32,15 +33,6 @@ if TYPE_CHECKING:
     from model import Filter, UIPage
 
 logger = getLogger(__name__)
-
-
-def _to_int(value: str, default: int) -> int:
-    """Parse an integer configuration value, falling back to a default for malformed input."""
-    try:
-        return int(value)
-    except ValueError:
-        logger.warning("Malformed integer value %r, falling back to %d.", value, default)
-        return default
 
 
 class _EventSchedulerWidget(QWidget):
@@ -192,6 +184,26 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         scroll_area.setWidget(matrix_editor)
         layout.addWidget(scroll_area)
         w.setLayout(layout)
+        associated_filter = self._get_linked_filter()
+        if associated_filter is None:
+            logger.warning("No resolvable event scheduler filter linked; the generated widget stays empty.")
+            override_step_spinbox.setMaximum(0)
+        else:
+            number_of_steps = to_int(associated_filter.initial_parameters.get("length", "0"), 0)
+            matrix_editor.number_of_steps = number_of_steps
+            event_data = associated_filter.filter_configurations.get("event_data", "").split(";")
+            event_names = associated_filter.filter_configurations.get("event_names", "").split(";")
+            while len(event_names) < len(event_data):
+                event_names.append("No Name")
+            for ed, e_name in zip(event_data, event_names, strict=False):
+                if len(ed) < 1:
+                    continue
+                matrix_editor.add_event(ed, e_name)
+            matrix_editor.active_event_data = associated_filter.initial_parameters.get("update_triggers", "")
+            matrix_editor.current_step = to_int(associated_filter.initial_parameters.get("step", "0"), 0)
+            override_step_spinbox.setMaximum(max(number_of_steps - 1, 0))
+            override_step_spinbox.setValue(matrix_editor.current_step)
+            matrix_editor.highlight_current_step = True
         if used_in_player:
             if self._active_matrix_editor is not None:
                 logger.error("The matrix editor widget is already populated.")
@@ -200,30 +212,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
             decrease_steps_button.clicked.connect(self._decrease_clicked)
             increase_steps_button.clicked.connect(self._increase_clicked)
             self._step_spinbox = override_step_spinbox
-
-            associated_filter = self._get_linked_filter()
-            if associated_filter is None:
-                logger.warning("No resolvable event scheduler filter linked; the player widget stays empty.")
-                override_step_spinbox.setMaximum(0)
-            else:
-                number_of_steps = _to_int(associated_filter.initial_parameters.get("length", "0"), 0)
-                matrix_editor.number_of_steps = number_of_steps
-                event_data = associated_filter.filter_configurations.get("event_data", "").split(";")
-                event_names = associated_filter.filter_configurations.get("event_names", "").split(";")
-                while len(event_names) < len(event_data):
-                    event_names.append("No Name")
-                for ed, e_name in zip(event_data, event_names, strict=False):
-                    if len(ed) < 1:
-                        continue
-                    matrix_editor.add_event(ed, e_name)
-                matrix_editor.active_event_data = associated_filter.initial_parameters.get("update_triggers", "")
-                matrix_editor.current_step = _to_int(associated_filter.initial_parameters.get("step", "0"), 0)
-                # The spin box mirrors the step range and current step of the linked filter. Connecting it after
-                # setting the initial value avoids pushing that value back to fish.
-                override_step_spinbox.setMaximum(max(number_of_steps - 1, 0))
-                override_step_spinbox.setValue(matrix_editor.current_step)
-                override_step_spinbox.valueChanged.connect(self._received_new_step)
-                matrix_editor.highlight_current_step = True
+            override_step_spinbox.valueChanged.connect(self._received_new_step)
         w.setEnabled(used_in_player)
         configured_width = int(self.configuration.get("width") or "800")
         configured_height = int(self.configuration.get("height") or "600")
@@ -260,7 +249,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         if param.parameter_key != "step":
             return
         matrix_editor = self._active_matrix_editor
-        matrix_editor.current_step = _to_int(param.parameter_value, matrix_editor.current_step)
+        matrix_editor.current_step = to_int(param.parameter_value, matrix_editor.current_step)
         spinbox = self._step_spinbox
         if spinbox is not None:
             spinbox.blockSignals(True)

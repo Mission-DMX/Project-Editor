@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from logging import getLogger
 from typing import override
 
 import numpy as np
 from PySide6.QtCore import QRect, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
+
+logger = getLogger(__name__)
 
 
 class TriggerMatrixEditor(QWidget):
@@ -169,8 +172,21 @@ class TriggerMatrixEditor(QWidget):
             self._states.fill(False)
 
         for entry in value.split(";"):
-            step, event, state = entry.split(",")
-            self._states[int(event), int(step)] = state.lower() == "true"
+            parts = entry.split(",")
+            if len(parts) != 3:
+                logger.warning("Skipping malformed update trigger entry %r.", entry)
+                continue
+            try:
+                step = int(parts[0])
+                event = int(parts[1])
+            except ValueError:
+                logger.warning("Skipping malformed update trigger entry %r.", entry)
+                continue
+            if not (0 <= event < self._states.shape[0] and 0 <= step < self._states.shape[1]):
+                logger.warning("Skipping out-of-range update trigger entry %r (%d events, %d steps).",
+                               entry, self._states.shape[0], self._states.shape[1])
+                continue
+            self._states[event, step] = parts[2].lower() == "true"
 
         self.update()
 
@@ -248,7 +264,7 @@ class TriggerMatrixEditor(QWidget):
             super().mousePressEvent(event)
             return
 
-        pos = event.pos()
+        pos = event.position().toPoint()
         x, y = pos.x(), pos.y()
 
         # Check if click is in the cell area (not headers or event names)
