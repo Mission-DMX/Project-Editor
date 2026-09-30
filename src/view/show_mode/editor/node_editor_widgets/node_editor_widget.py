@@ -40,7 +40,7 @@ class NodeEditorFilterConfigWidget(ABC):
         """Returns the widget that should be displayed."""
 
     @abstractmethod
-    def _load_parameters(self, parameters: dict[str, str]) -> dict:
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         """Parse the current filter parameters."""
 
     @abstractmethod

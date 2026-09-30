@@ -225,12 +225,12 @@ class MacroButtonUIWidget(UIWidget):
         self._context.return_text = ""
 
     @override
-    def get_player_widget(self, parent: QWidget) -> QWidget:
+    def get_player_widget(self, parent: QWidget | None) -> QWidget:
         self._latest_player_widget = self._construct_widget(parent)
         return self._latest_player_widget
 
     @override
-    def get_configuration_widget(self, parent: QWidget) -> QWidget:
+    def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
         self._latest_config_widget = self._construct_widget(parent)
         return self._latest_config_widget
 

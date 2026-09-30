@@ -162,8 +162,6 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
                                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_16BIT,
                                FilterTypeEnumeration.FILTER_RESPONDING_CONSTANT_FLOAT]:
         return NumberConstantSettingsWidget(filter_)
-    if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
-        return ColorChaserFilterConfigWidget(filter_)
     if filter_.filter_type == FilterTypeEnumeration.FILTER_EVENT_SCHEDULER:
         return EventSchedulerSettingsWidget()
     return None

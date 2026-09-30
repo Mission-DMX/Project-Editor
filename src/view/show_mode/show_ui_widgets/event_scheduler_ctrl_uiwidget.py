@@ -172,7 +172,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         w.setLayout(form_layout)
         return w
 
-    def _generate_widget(self, used_in_player: bool, parent: QWidget | None) -> QWidget:
+    def _generate_widget(self, used_in_player: bool, parent: QWidget | None) -> _EventSchedulerWidget:
         w = _EventSchedulerWidget(parent)
         layout = QVBoxLayout()
         button_layout = QHBoxLayout()

@@ -61,7 +61,7 @@ class TriggerMatrixEditor(QWidget):
 
         # Enable mouse tracking for better interaction
         self.setMouseTracking(False)
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
     def clear(self) -> None:
         """Clear all events and reset the matrix."""
@@ -146,7 +146,7 @@ class TriggerMatrixEditor(QWidget):
         if self._number_of_steps == 0 or len(self._events) == 0:
             return ""
 
-        steps_data = []
+        steps_data: list[str] = []
         for step in range(self._number_of_steps):
             steps_data.extend(f"{step},{event},TRUE" for event in range(len(self._events)) if self._states[event, step])
         return ";".join(steps_data)
@@ -196,7 +196,7 @@ class TriggerMatrixEditor(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:
         """Custom paint event for efficient rendering."""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         update_rect = event.rect()
 
@@ -214,7 +214,7 @@ class TriggerMatrixEditor(QWidget):
                 painter.drawRect(header_rect)
 
                 painter.setPen(self._color_text)
-                painter.drawText(header_rect, Qt.AlignCenter, str(step))
+                painter.drawText(header_rect, Qt.AlignmentFlag.AlignCenter, str(step))
 
         # Draw event names
         for event_idx, event_name in enumerate(self._event_names):
@@ -225,7 +225,7 @@ class TriggerMatrixEditor(QWidget):
                 painter.setPen(self._color_grid)
                 painter.drawRect(event_rect)
                 painter.setPen(self._color_text)
-                painter.drawText(event_rect, Qt.AlignCenter, event_name)
+                painter.drawText(event_rect, Qt.AlignmentFlag.AlignCenter, event_name)
 
         # Draw cells
         for event_idx in range(len(self._event_names)):
@@ -244,7 +244,7 @@ class TriggerMatrixEditor(QWidget):
     @override
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Handle mouse click to toggle cell state."""
-        if event.button() != Qt.LeftButton:
+        if event.button() != Qt.MouseButton.LeftButton:
             super().mousePressEvent(event)
             return
 

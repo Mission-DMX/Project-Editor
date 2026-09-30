@@ -118,7 +118,7 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         return self._widget
 
     @override
-    def _load_parameters(self, parameters: dict[str, str]) -> dict:
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         number_of_steps = int(parameters.get("length", "0"))
         self._matrix_editor.number_of_steps = number_of_steps
         self._matrix_editor.active_event_data = parameters.get("update_triggers", "")
@@ -224,7 +224,11 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._dialog.show()
 
     def _event_selected_callback(self) -> None:
-        sender, function, _ = self._dialog.selected_event
+        dialog = self._dialog
+        if dialog is None:
+            logger.warning("No event selection dialog open; ignoring accepted signal.")
+            return
+        sender, function, _ = dialog.selected_event
         self._sync_trigger_sender_tb.setValue(sender)
         self._sync_trigger_function_tb.setValue(function)
 
@@ -244,7 +248,11 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._dialog.show()
 
     def _event_added_final(self) -> None:
-        sender, sender_function, args = self._dialog.selected_event
+        dialog = self._dialog
+        if dialog is None:
+            logger.warning("No event selection dialog open; ignoring accepted signal.")
+            return
+        sender, sender_function, args = dialog.selected_event
         initial_name = f"New event [{sender}:{sender_function}]"
         args = [ord(c) for c in args]
         event_type = TriggerType.SINGLE_TRIGGER

@@ -201,14 +201,13 @@ class ColorChaserFilterConfigWidget(NodeEditorFilterConfigWidget):
         return self._widget
 
     @override
-    def _load_parameters(self, parameters: dict[str, str]) -> dict:
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         if self._model is None:
             logger.critical("Model should not be None at this point.")
-            return {}
+            return
         default_config_str = parameters.get("config")
         if default_config_str is not None:
             self._model.default_config = ChaserConfig(default_config_str)
-        return parameters
 
     @override
     def _get_parameters(self) -> dict[str, str]:

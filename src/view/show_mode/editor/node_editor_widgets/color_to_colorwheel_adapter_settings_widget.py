@@ -88,9 +88,9 @@ class _ColorSlotInputDialog(QDialog):
 
     @override
     def accept(self) -> None:
-        _ColorMappingListWidgetItem(self._list_widget,
-                                    ColorHSI(self._hue_tb.value(), self._saturation_tb.value(), 0.5),
-                                    self._slot_tb.value())
+        _ColorMappingListWidgetItem(
+            self._list_widget, ColorHSI(self._hue_tb.value(), self._saturation_tb.value(), 0.5), self._slot_tb.value()
+        )
         super().accept()
 
 
@@ -143,9 +143,9 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         layout.addWidget(self._color_mapping_list)
         self._mapping_manipulation_buttongroup = QWidget()
         self._mapping_manipulation_buttongroup.setLayout(QHBoxLayout())
-        self._mapping_manipulation_buttongroup.layout().addItem(QSpacerItem(
-            10, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        ))
+        self._mapping_manipulation_buttongroup.layout().addItem(
+            QSpacerItem(10, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        )
         self._add_mapping_button = QPushButton("Add Mapping")
         self._add_mapping_button.clicked.connect(self._add_mapping_clicked)
         self._mapping_manipulation_buttongroup.layout().addWidget(self._add_mapping_button)
@@ -187,9 +187,14 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         fixture_names = [
             f"[{f.universe_id}:{f.start_index}] {f.name}" for f in self._filter.scene.board_configuration.fixtures
         ]
-        self._input_dialog = SelectionDialog("Select Fixture", "Please select the target fixture",
-                                             fixture_names, parent=self._widget, multi_selection_allowed=False,
-                                             selected_callback=self._fixture_selected_callback)
+        self._input_dialog = SelectionDialog(
+            "Select Fixture",
+            "Please select the target fixture",
+            fixture_names,
+            parent=self._widget,
+            multi_selection_allowed=False,
+            selected_callback=self._fixture_selected_callback,
+        )
         self._input_dialog.setModal(True)
         self._input_dialog.show()
 
@@ -197,8 +202,9 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         fixture_univ, fixture_chan = sd.selected_items[0].split("] ", 1)[0].replace("[", "").split(":")
         fixture_chan = int(fixture_chan)
         fixture_univ = int(fixture_univ)
-        self._selected_fixture = self._filter.scene.board_configuration.\
-                                 get_fixture_by_address(fixture_univ, fixture_chan)
+        self._selected_fixture = self._filter.scene.board_configuration.get_fixture_by_address(
+            fixture_univ, fixture_chan
+        )
         self._update_selected_fixture()
 
     def _parse_color_mapping(self, mapping: str) -> None:
@@ -227,10 +233,11 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
             self._selected_fixture_label.setText(self._selected_fixture.name)
             self._remove_mapping_button.setEnabled(False)
             self._add_mapping_button.setEnabled(False)
-            self._parse_color_mapping(extract_colorwheel_mappings_from_fixture(
-                self._selected_fixture,
-                selected_slot_index=self._colorwheel_index_spinbox.value()
-            ))
+            self._parse_color_mapping(
+                extract_colorwheel_mappings_from_fixture(
+                    self._selected_fixture, selected_slot_index=self._colorwheel_index_spinbox.value()
+                )
+            )
 
     def _compile_color_mapping_string(self) -> str:
         parts: list[_ColorMappingListWidgetItem] = []
@@ -272,8 +279,8 @@ class ColorToColorwheelAdapterSetupWidget(NodeEditorFilterConfigWidget):
         self._dimm_when_wheel_is_moving_cb.setChecked(conf["dim_when_off"] == "true")
 
     @override
-    def _load_parameters(self, parameters: dict[str, str]) -> dict:
-        return parameters  # Nothing to do here
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
+        pass  # Nothing to do here
 
     @override
     def _get_parameters(self) -> dict[str, str]:

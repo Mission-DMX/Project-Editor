@@ -56,7 +56,7 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
     def get_widget(self) -> QWidget:
         return self._parent_widget
 
-    def _load_parameters(self, parameters: dict[str, str]) -> bool:
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         for key, value in parameters.items():
             try:
                 if key == "pan":
@@ -65,11 +65,10 @@ class PanTiltConstantWidget(NodeEditorFilterConfigWidget):
                     self._filter.tilt = float(value)
                 else:
                     logger.info("wrong key: %s", key)
-                    return False
+                    return
             except:
                 logger.info("error parsing parameter, value: %s for param: %s", value, key)
-                return False
-        return True
+                return
 
     def _get_parameters(self) -> dict[str, str]:
         return {"pan": self._filter.pan,
