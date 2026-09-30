@@ -18,6 +18,9 @@ class TriggerMatrixEditor(QWidget):
 
     The widget uses a custom renderer and only updates the required parts.
 
+    Step indices in the API and in the serialized data are 0-based; the painted step header shows 1-based step
+    numbers for readability.
+
     Usage:
     0. (Call clear() if required)
     1. Call add_event for every output event
@@ -29,7 +32,7 @@ class TriggerMatrixEditor(QWidget):
 
     Properties:
     - highlight_current_step: bool -- should the current step the filter is in be highlighted?
-    - current_step: int -- get or set the current step (0 to highlight_current_step)
+    - current_step: int -- get or set the current step (0 to number_of_steps - 1)
     - event_data: str -- get or set all event cells. See https://mission-dmx.org/docs/Filters/Filter_Types/misc.html
       for the format.
     - event_names: list[str] -- Associated names of the events
@@ -144,9 +147,9 @@ class TriggerMatrixEditor(QWidget):
 
     @current_step.setter
     def current_step(self, value: int) -> None:
-        """Set the current step."""
+        """Set the current step, clamping it into the valid step range."""
         if self._current_step != value:
-            self._current_step = max(0, min(value, self._number_of_steps - 1)) if self._number_of_steps > 0 else 0
+            self._current_step = self._clamped_step(value)
             if self._highlight_current_step:
                 # FIXME only update the affected regions
                 self.update()
@@ -158,11 +161,18 @@ class TriggerMatrixEditor(QWidget):
 
     @number_of_steps.setter
     def number_of_steps(self, value: int) -> None:
-        """Set the number of steps."""
-        if self._number_of_steps != value:
-            self._number_of_steps = max(0, value)
-            self._resize_states()
-            self.update()
+        """Set the number of steps, keeping the current step inside the new range."""
+        new_step_count = max(0, value)
+        if self._number_of_steps == new_step_count:
+            return
+        self._number_of_steps = new_step_count
+        self._resize_states()
+        self._current_step = self._clamped_step(self._current_step)
+        self.update()
+
+    def _clamped_step(self, step: int) -> int:
+        """Clamp a step index into the range allowed by the current number of steps."""
+        return max(0, min(step, self._number_of_steps - 1)) if self._number_of_steps > 0 else 0
 
     @property
     def active_event_data(self) -> str:
@@ -251,7 +261,7 @@ class TriggerMatrixEditor(QWidget):
                 painter.drawRect(header_rect)
 
                 painter.setPen(self._color_text)
-                painter.drawText(header_rect, Qt.AlignmentFlag.AlignCenter, str(step))
+                painter.drawText(header_rect, Qt.AlignmentFlag.AlignCenter, str(step + 1))
 
         # Draw event names
         for event_idx, event_name in enumerate(self._event_names):

@@ -77,7 +77,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     It provides a matrix editor for triggers, buttons to control the number of steps, and a spin box to override the
     current step.
 
-    In the future, a mechanism to enable/disaable the advancement es well as a method to override the synchronization
+    In the future, a mechanism to enable/disable the advancement as well as a method to override the synchronization
     event might be added.
 
     """
@@ -203,7 +203,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         button_layout = QHBoxLayout()
         button_layout.addWidget(QLabel("Step: "))
         override_step_spinbox = JogwheelSpinBox()
-        override_step_spinbox.setMinimum(0)
+        override_step_spinbox.setMinimum(1)
         button_layout.addWidget(override_step_spinbox)
         button_layout.addStretch()
         decrease_steps_button = QPushButton("-")
@@ -220,7 +220,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         associated_filter = self._get_linked_filter()
         if associated_filter is None:
             logger.warning("No resolvable event scheduler filter linked; the generated widget stays empty.")
-            override_step_spinbox.setMaximum(0)
+            override_step_spinbox.setMaximum(1)
         else:
             number_of_steps = to_int(associated_filter.initial_parameters.get("length", "0"), 0)
             matrix_editor.number_of_steps = number_of_steps
@@ -234,8 +234,8 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
                 matrix_editor.add_event(ed, e_name)
             matrix_editor.active_event_data = associated_filter.initial_parameters.get("update_triggers", "")
             matrix_editor.current_step = to_int(associated_filter.initial_parameters.get("step", "0"), 0)
-            override_step_spinbox.setMaximum(max(number_of_steps - 1, 0))
-            override_step_spinbox.setValue(matrix_editor.current_step)
+            override_step_spinbox.setMaximum(max(number_of_steps, 1))
+            override_step_spinbox.setValue(matrix_editor.current_step + 1)
             matrix_editor.highlight_current_step = True
         if used_in_player:
             if self._active_matrix_editor is not None:
@@ -283,7 +283,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
             spinbox = self._step_spinbox
             if spinbox is not None:
                 spinbox.blockSignals(True)
-                spinbox.setValue(matrix_editor.current_step)
+                spinbox.setValue(matrix_editor.current_step + 1)
                 spinbox.blockSignals(False)
         except RuntimeError:
             self._active_matrix_editor = None
@@ -308,14 +308,15 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         self.push_update()
 
     def _update_step_spinbox_bounds(self, number_of_steps: int) -> None:
-        """Keep the step spin box range in sync with the number of steps of the linked filter."""
+        """Keep the 1-based step spin box range in sync with the number of steps of the linked filter."""
         spinbox = self._step_spinbox
         if spinbox is None:
             return
-        spinbox.setMaximum(max(number_of_steps - 1, 0))
+        spinbox.setMaximum(max(number_of_steps, 1))
 
-    def _received_new_step(self, new_default_step: int) -> None:
-        self._operations_queue.put(("step", str(new_default_step)))
+    def _received_new_step(self, displayed_step: int) -> None:
+        """Push a step override to fish, converting the 1-based display value into the 0-based step index."""
+        self._operations_queue.put(("step", str(displayed_step - 1)))
         self.push_update()
 
     def _event_state_updated(self, step: int, event_idx: int, new_state: bool) -> None:

@@ -40,7 +40,9 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
      * default Trigger Event
      * output event data
      * default number of steps
+     * default step position
      * default trigger data
+     * synchronization trigger
 
     """
 
@@ -52,6 +54,7 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._event_list = QListWidget()
         layout.addRow("Events", self._event_list)
         self._default_step_tb = QSpinBox()
+        self._default_step_tb.setMinimum(1)
         layout.addRow("Default step position", self._default_step_tb)
         btn_layout = QHBoxLayout()
         self._add_event_btn = QPushButton("Add Event")
@@ -145,8 +148,8 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._matrix_editor.active_event_data = parameters.get("update_triggers", "")
         default_step = to_int(parameters.get("step", "0"), 0)
         self._matrix_editor.current_step = default_step
-        self._default_step_tb.setValue(default_step)
-        self._default_step_tb.setMaximum(max(number_of_steps - 1, 0))
+        self._default_step_tb.setMaximum(max(number_of_steps, 1))
+        self._default_step_tb.setValue(self._matrix_editor.current_step + 1)
         self._remove_step_btn.setEnabled(self._matrix_editor.number_of_steps > 0)
         sync_target_parts = parameters.get("synchronization_target", "0,0").split(",")
         if len(sync_target_parts) != 2:
@@ -163,7 +166,7 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         return {
             "length": str(self._matrix_editor.number_of_steps),
             "update_triggers": self._matrix_editor.active_event_data,
-            "step": str(self._default_step_tb.value()),
+            "step": str(self._default_step_tb.value() - 1),
             "synchronization_target": (
                 f"{self._sync_trigger_sender_tb.value()},{self._sync_trigger_function_tb.value()}"
             ),
@@ -279,13 +282,13 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
 
     def _add_step(self, _: bool) -> None:
         self._matrix_editor.number_of_steps += 1
-        self._default_step_tb.setMaximum(max(self._matrix_editor.number_of_steps - 1, 0))
+        self._default_step_tb.setMaximum(max(self._matrix_editor.number_of_steps, 1))
         self._remove_step_btn.setEnabled(self._matrix_editor.number_of_steps > 0)
 
     def _remove_step(self, _: bool) -> None:
         self._matrix_editor.number_of_steps -= 1
         self._remove_step_btn.setEnabled(self._matrix_editor.number_of_steps > 0)
-        self._default_step_tb.setMaximum(max(self._matrix_editor.number_of_steps - 1, 0))
+        self._default_step_tb.setMaximum(max(self._matrix_editor.number_of_steps, 1))
 
     def _add_event_clicked(self, _: bool) -> None:
         self._open_event_selection_dialog(self._event_added)

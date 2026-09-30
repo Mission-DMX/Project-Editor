@@ -45,7 +45,7 @@ def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
             case "fish.builtin.audioextract":
                 ev = AudioExtractEventSender(msg.name)
             case _:
-                logger.error("Unexpaected event sender type: '%s'", msg.type)
+                logger.error("Unexpected event sender type: '%s'", msg.type)
                 return
         _senders[msg.name] = ev
         _senders_by_id[msg.sender_id] = ev
@@ -298,8 +298,8 @@ def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] 
     If the event sender is not yet known, it will be marked once it is announced to the editor.
 
     Args:
-    name: The unique name of the sender.
-    renaming: The renaming data indicator of the sender. It will be noted as well.
+        name: The unique name of the sender.
+        renaming: The renaming data indicator of the sender. It will be noted as well.
 
     """
     if renaming is None:
