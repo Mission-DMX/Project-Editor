@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model.events import MAX_EVENT_ID_VALUE, TriggerType
+from model.events import MAX_EVENT_ID_VALUE, ScheduledEvent, TriggerType, clamp_event_arguments
 from utility import to_int
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.event_list_item_widget import (
@@ -108,28 +108,18 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         for event_entry, raw_name in zip(event_entries, event_names, strict=True):
             if not event_entry:
                 continue
-            parts = event_entry.split(",")
-            if len(parts) < 3:
-                logger.warning("Skipping malformed event entry %r.", event_entry)
+            scheduled_event = ScheduledEvent.from_str(event_entry)
+            if scheduled_event is None:
                 continue
-            try:
-                sender = int(parts[0])
-                sender_function = int(parts[1])
-                raw_arguments = [int(s) for s in parts[3:] if len(s) > 0]
-            except ValueError:
-                logger.warning("Skipping malformed event entry %r.", event_entry)
-                continue
-            try:
-                event_type = TriggerType(int(parts[2]))
-            except ValueError:
-                logger.warning("Skipping event entry %r with unknown trigger type %r.", event_entry, parts[2])
-                continue
-            ev_arguments = [max(min(argument, 255), 0) for argument in raw_arguments]
-            if ev_arguments != raw_arguments:
-                logger.warning("Clamping arguments of event entry %r into the range 0..255.", event_entry)
             name = raw_name.strip() or "No Name"
-            self._matrix_editor.add_event(self._encode_event(sender, sender_function, event_type, ev_arguments), name)
-            self._append_event_item(name, sender, sender_function, event_type, ev_arguments)
+            self._matrix_editor.add_event(scheduled_event.serialize(), name)
+            self._append_event_item(
+                name,
+                scheduled_event.sender_id,
+                scheduled_event.sender_function,
+                scheduled_event.trigger_type,
+                scheduled_event.arguments,
+            )
 
     @override
     def get_widget(self) -> QWidget:
@@ -169,14 +159,6 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
     def parent_opened(self) -> None:
         pass  # nothing to do here
 
-    @staticmethod
-    def _encode_event(sender_id: int, sender_function: int, event_type: TriggerType, arguments: list[int]) -> str:
-        """Serialize an event description, omitting the argument section if the event has no arguments."""
-        event_section = f"{sender_id},{sender_function},{event_type.value}"
-        if arguments:
-            event_section += "," + ",".join(str(argument) for argument in arguments)
-        return event_section
-
     def _encode_event_data(self) -> list[str]:
         event_str_list = []
         for i in range(self._event_list.count()):
@@ -189,7 +171,7 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
                 logger.error("Expected AnnotatedListWidgetItem to be of correct type.")
                 continue
             sender_id, sender_function, event_type, arguments = item_data
-            event_str_list.append(self._encode_event(sender_id, sender_function, event_type, arguments))
+            event_str_list.append(ScheduledEvent(sender_id, sender_function, event_type, arguments).serialize())
         return event_str_list
 
     def _append_event_item(
@@ -244,7 +226,9 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
             return
         sender_id, sender_function, _, arguments = data
         item.annotated_data = (sender_id, sender_function, new_type, arguments)
-        self._matrix_editor.update_event(row, self._encode_event(sender_id, sender_function, new_type, arguments))
+        self._matrix_editor.update_event(
+            row, ScheduledEvent(sender_id, sender_function, new_type, arguments).serialize()
+        )
 
     def _select_trigger_clicked(self, _: bool) -> None:
         self._open_event_selection_dialog(self._event_selected)
@@ -312,7 +296,14 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         """
         sender, sender_function, arg_string = dialog.selected_event
         initial_name = f"New event [{sender}:{sender_function}]"
-        ev_arguments = [ord(c) for c in arg_string]
+        raw_arguments = [ord(c) for c in arg_string]
+        ev_arguments = clamp_event_arguments(raw_arguments)
+        if ev_arguments != raw_arguments:
+            logger.warning(
+                "Clamping arguments of the newly added event [%d:%d] into the range 0..255.",
+                sender,
+                sender_function,
+            )
         event_type = TriggerType.SINGLE_TRIGGER
         for row in range(self._event_list.count()):
             item = self._event_list.item(row)
@@ -327,6 +318,6 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
                     row,
                 )
                 break
-        event_description = self._encode_event(sender, sender_function, event_type, ev_arguments)
+        event_description = ScheduledEvent(sender, sender_function, event_type, ev_arguments).serialize()
         self._matrix_editor.add_event(event_description, initial_name)
         self._append_event_item(initial_name, sender, sender_function, event_type, ev_arguments)

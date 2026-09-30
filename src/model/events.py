@@ -322,3 +322,95 @@ class TriggerType(Enum):
     START = prot_event_type.START
     RELEASE = prot_event_type.RELEASE
     ONGOING_EVENT = prot_event_type.ONGOING_EVENT
+
+
+def clamp_event_arguments(arguments: list[int]) -> list[int]:
+    """Clamp event arguments into the argument byte range 0..255 used by fish.
+
+    Args:
+        arguments: The arguments to clamp.
+
+    Returns:
+        The clamped arguments as a new list.
+
+    """
+    return [max(min(argument, 255), 0) for argument in arguments]
+
+
+class ScheduledEvent(NamedTuple):
+    """Description of an event scheduled by the event scheduler filter."""
+
+    sender_id: int
+    sender_function: int
+    trigger_type: TriggerType
+    arguments: list[int]
+
+    @classmethod
+    def from_str(cls, raw: str) -> ScheduledEvent | None:
+        """Parse a serialized scheduled event description.
+
+        Args:
+            raw: The serialized event description.
+
+        Returns:
+            The parsed event, or None if the description is malformed.
+
+        """
+        parts = raw.split(",")
+        if len(parts) < 3:
+            logger.warning("Skipping malformed event entry %r.", raw)
+            return None
+        try:
+            sender_id = int(parts[0])
+            sender_function = int(parts[1])
+            raw_arguments = [int(s) for s in parts[3:] if s]
+        except ValueError:
+            logger.warning("Skipping malformed event entry %r.", raw)
+            return None
+        try:
+            trigger_type = TriggerType(int(parts[2]))
+        except ValueError:
+            logger.warning("Skipping event entry %r with unknown trigger type %r.", raw, parts[2])
+            return None
+        arguments = clamp_event_arguments(raw_arguments)
+        if arguments != raw_arguments:
+            logger.warning("Clamping arguments of event entry %r into the range 0..255.", raw)
+        return cls(sender_id, sender_function, trigger_type, arguments)
+
+    def serialize(self) -> str:
+        """Serialize the event description, omitting the argument section if the event has no arguments."""
+        event_section = f"{self.sender_id},{self.sender_function},{self.trigger_type.value}"
+        arguments = clamp_event_arguments(self.arguments)
+        if arguments:
+            event_section += "," + ",".join(str(argument) for argument in arguments)
+        return event_section
+
+
+def parse_update_trigger_entries(value: str) -> list[tuple[int, int, bool]]:
+    """Parse the ``update_triggers`` entries exchanged with the event scheduler filter on fish.
+
+    Args:
+        value: One or more ``<step>,<event-index>,<TRUE|FALSE>`` entries separated by ``;``. Step and event
+            indices are 0-based.
+
+    Returns:
+        The parsed ``(step, event_index, state)`` entries in the order of their appearance. Empty segments are
+        ignored; malformed entries are skipped with a warning.
+
+    """
+    entries: list[tuple[int, int, bool]] = []
+    for raw_entry in value.split(";"):
+        if not raw_entry:
+            continue
+        parts = raw_entry.split(",")
+        if len(parts) != 3:
+            logger.warning("Skipping malformed update trigger entry %r.", raw_entry)
+            continue
+        try:
+            step = int(parts[0])
+            event_index = int(parts[1])
+        except ValueError:
+            logger.warning("Skipping malformed update trigger entry %r.", raw_entry)
+            continue
+        entries.append((step, event_index, parts[2].lower() == "true"))
+    return entries

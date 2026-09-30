@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from model import FilterUpdateCallbackMixin, UIWidget
+from model.events import ScheduledEvent, parse_update_trigger_entries
 from utility import to_int
 from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.trigger_matrix_editor import (
@@ -302,28 +303,10 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         for event_description, event_name in zip(event_data, event_names, strict=True):
             if not event_description:
                 continue
-            if not self._is_valid_event_description(event_description):
-                logger.warning(
-                    "Skipping malformed event entry %r of filter %s.", event_description, associated_filter.filter_id
-                )
+            scheduled_event = ScheduledEvent.from_str(event_description)
+            if scheduled_event is None:
                 continue
-            matrix_editor.add_event(event_description, event_name.strip() or "No Name")
-
-    @staticmethod
-    def _is_valid_event_description(event_description: str) -> bool:
-        """Check that an event description matches the ``<sender>,<function>,<type>[,<arguments>]`` format."""
-        if not event_description:
-            return False
-        parts = event_description.split(",")
-        if len(parts) < 3:
-            return False
-        try:
-            int(parts[0])
-            int(parts[1])
-            int(parts[2])
-        except ValueError:
-            return False
-        return True
+            matrix_editor.add_event(scheduled_event.serialize(), event_name.strip() or "No Name")
 
     def _config_width_value_changed(self, new_value: int) -> None:
         self.configuration["width"] = str(new_value)
@@ -389,20 +372,8 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
             value: One or more ``<step>,<event-index>,<TRUE|FALSE>`` entries separated by ``;``.
 
         """
-        for entry in value.split(";"):
-            if not entry:
-                continue
-            parts = entry.split(",")
-            if len(parts) != 3:
-                logger.warning("Skipping malformed update trigger entry %r received from fish.", entry)
-                continue
-            try:
-                step = int(parts[0])
-                event_idx = int(parts[1])
-            except ValueError:
-                logger.warning("Skipping malformed update trigger entry %r received from fish.", entry)
-                continue
-            matrix_editor.apply_event_state(step, event_idx, parts[2].lower() == "true")
+        for step, event_index, state in parse_update_trigger_entries(value):
+            matrix_editor.apply_event_state(step, event_index, state)
 
     def _decrease_clicked(self, _: bool) -> None:
         if self._active_matrix_editor is None:

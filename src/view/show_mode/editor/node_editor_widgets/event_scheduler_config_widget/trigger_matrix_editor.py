@@ -10,6 +10,8 @@ from PySide6.QtCore import QRect, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
+from model.events import parse_update_trigger_entries
+
 logger = getLogger(__name__)
 
 
@@ -227,26 +229,17 @@ class TriggerMatrixEditor(QWidget):
         if self._states.size > 0:
             self._states.fill(False)
 
-        for entry in value.split(";"):
-            parts = entry.split(",")
-            if len(parts) != 3:
-                logger.warning("Skipping malformed update trigger entry %r.", entry)
-                continue
-            try:
-                step = int(parts[0])
-                event = int(parts[1])
-            except ValueError:
-                logger.warning("Skipping malformed update trigger entry %r.", entry)
-                continue
+        for step, event, state in parse_update_trigger_entries(value):
             if not (0 <= event < self._states.shape[0] and 0 <= step < self._states.shape[1]):
                 logger.warning(
-                    "Skipping out-of-range update trigger entry %r (%d events, %d steps).",
-                    entry,
+                    "Skipping out-of-range update trigger entry (event %d, step %d; %d events, %d steps).",
+                    event,
+                    step,
                     self._states.shape[0],
                     self._states.shape[1],
                 )
                 continue
-            self._states[event, step] = parts[2].lower() == "true"
+            self._states[event, step] = state
 
         self.update()
 
