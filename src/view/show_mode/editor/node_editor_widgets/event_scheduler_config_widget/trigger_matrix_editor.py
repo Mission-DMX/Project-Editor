@@ -106,6 +106,29 @@ class TriggerMatrixEditor(QWidget):
             return
         self._events[event_idx] = event_description
 
+    def apply_event_state(self, step: int, event_idx: int, state: bool) -> None:
+        """Set the state of a single cell without emitting the event_updated signal.
+
+        Args:
+            step: The 0-based step index of the cell to update.
+            event_idx: The index of the event whose cell should be updated.
+            state: The new trigger state of the cell.
+
+        """
+        if not (0 <= event_idx < len(self._events) and 0 <= step < self._number_of_steps):
+            logger.warning(
+                "Cannot apply the state of non-existing cell (event %d, step %d; %d events, %d steps).",
+                event_idx,
+                step,
+                len(self._events),
+                self._number_of_steps,
+            )
+            return
+        if self._states[event_idx, step] == state:
+            return
+        self._states[event_idx, step] = state
+        self.update(self._get_cell_rect(event_idx, step))
+
     def _resize_states(self) -> None:
         """Resize the states array to match current events and steps."""
         num_events = len(self._events)
@@ -137,8 +160,8 @@ class TriggerMatrixEditor(QWidget):
 
     @property
     def event_names(self) -> list[str]:
-        """Get list of event names."""
-        return self._event_names
+        """Get a copy of the event name list."""
+        return list(self._event_names)
 
     @event_names.setter
     def event_names(self, value: list[str]) -> None:
@@ -154,10 +177,11 @@ class TriggerMatrixEditor(QWidget):
     def current_step(self, value: int) -> None:
         """Set the current step, clamping it into the valid step range."""
         if self._current_step != value:
+            old_step = self._current_step
             self._current_step = self._clamped_step(value)
             if self._highlight_current_step:
-                # FIXME only update the affected regions
-                self.update()
+                for step in {old_step, self._current_step}:
+                    self.update(self._get_step_rect(step))
 
     @property
     def number_of_steps(self) -> int:

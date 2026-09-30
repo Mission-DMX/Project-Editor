@@ -18,9 +18,9 @@ def resource_path(relative_path: str) -> str:
 
 
 def to_int(value: str, default: int) -> int:
-    """Parse an integer configuration value, falling back to a default for malformed input."""
+    """Parse an integer configuration value, falling back to a default for missing or malformed input."""
     try:
         return int(value)
-    except ValueError:
+    except (TypeError, ValueError):
         logger.warning("Malformed integer value %r, falling back to %d.", value, default)
         return default

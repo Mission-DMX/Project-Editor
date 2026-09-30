@@ -37,6 +37,9 @@ logger = getLogger(__name__)
 
 _DEFAULT_WIDGET_WIDTH = 800
 _DEFAULT_WIDGET_HEIGHT = 600
+_MIN_WIDGET_WIDTH = 200
+_MIN_WIDGET_HEIGHT = 150
+_MAX_WIDGET_SIZE = 16384
 
 
 class _EventSchedulerWidget(QWidget):
@@ -97,10 +100,16 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
-        outstanding_updates_list = []
+        """Drain the queued operations, superseding repeated step and length updates with their latest value."""
+        latest_overrides: dict[str, str] = {}
+        outstanding_updates_list: list[tuple[str, str]] = []
         while not self._operations_queue.empty():
-            item = self._operations_queue.get(block=False)
-            outstanding_updates_list.append(item)
+            key, value = self._operations_queue.get(block=False)
+            if key in ("step", "length"):
+                latest_overrides[key] = value
+            else:
+                outstanding_updates_list.append((key, value))
+        outstanding_updates_list.extend(latest_overrides.items())
         return outstanding_updates_list
 
     @override
@@ -135,21 +144,32 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     def _get_configured_size(self) -> tuple[int, int]:
         """Parse the configured widget size, falling back to the default size for invalid entries."""
         return (
-            self._parse_size_entry(self.configuration.get("width"), _DEFAULT_WIDGET_WIDTH, "width"),
-            self._parse_size_entry(self.configuration.get("height"), _DEFAULT_WIDGET_HEIGHT, "height"),
+            self._parse_size_entry(self.configuration.get("width"), _DEFAULT_WIDGET_WIDTH, _MIN_WIDGET_WIDTH, "width"),
+            self._parse_size_entry(
+                self.configuration.get("height"), _DEFAULT_WIDGET_HEIGHT, _MIN_WIDGET_HEIGHT, "height"
+            ),
         )
 
     @staticmethod
-    def _parse_size_entry(raw_value: str | None, default: int, entry_name: str) -> int:
-        """Parse a single configured size entry, using the default for missing or invalid values."""
+    def _parse_size_entry(raw_value: str | None, default: int, minimum: int, entry_name: str) -> int:
+        """Parse a single configured size entry, using the default for missing or malformed input.
+
+        Args:
+            raw_value: The raw configuration value to parse.
+            default: The fallback value for missing or malformed input.
+            minimum: The smallest accepted size.
+            entry_name: The name of the entry, used for warning messages.
+
+        """
         if not raw_value:
             return default
         value = to_int(raw_value, default)
-        if value < 1:
-            logger.warning(
-                "Ignoring non-positive configured %s %r, falling back to %d.", entry_name, raw_value, default
-            )
-            return default
+        if value < minimum:
+            logger.warning("Raising configured %s %r to the minimum of %d.", entry_name, raw_value, minimum)
+            return minimum
+        if value > _MAX_WIDGET_SIZE:
+            logger.warning("Clamping configured %s %r to the maximum of %d.", entry_name, raw_value, _MAX_WIDGET_SIZE)
+            return _MAX_WIDGET_SIZE
         return value
 
     @override
@@ -181,14 +201,14 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         form_layout = QFormLayout()
         configured_width, configured_height = self._get_configured_size()
         width_box = QSpinBox()
-        width_box.setMinimum(200)
-        width_box.setMaximum(16384)
+        width_box.setMinimum(_MIN_WIDGET_WIDTH)
+        width_box.setMaximum(_MAX_WIDGET_SIZE)
         width_box.setValue(configured_width)
         width_box.valueChanged.connect(self._config_width_value_changed)
         form_layout.addRow("Width", width_box)
         height_box = QSpinBox()
-        height_box.setMinimum(150)
-        height_box.setMaximum(16384)
+        height_box.setMinimum(_MIN_WIDGET_HEIGHT)
+        height_box.setMaximum(_MAX_WIDGET_SIZE)
         height_box.setValue(configured_height)
         height_box.valueChanged.connect(self._config_height_value_changed)
         form_layout.addRow("Height", height_box)
@@ -240,14 +260,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         else:
             number_of_steps = to_int(associated_filter.initial_parameters.get("length", "0"), 0)
             matrix_editor.number_of_steps = number_of_steps
-            event_data = associated_filter.filter_configurations.get("event_data", "").split(";")
-            event_names = associated_filter.filter_configurations.get("event_names", "").split(";")
-            while len(event_names) < len(event_data):
-                event_names.append("No Name")
-            for ed, e_name in zip(event_data, event_names, strict=False):
-                if len(ed) < 1:
-                    continue
-                matrix_editor.add_event(ed, e_name)
+            self._populate_matrix_events(matrix_editor, associated_filter)
             matrix_editor.active_event_data = associated_filter.initial_parameters.get("update_triggers", "")
             matrix_editor.current_step = to_int(associated_filter.initial_parameters.get("step", "0"), 0)
             override_step_spinbox.setMaximum(max(number_of_steps, 1))
@@ -266,6 +279,51 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         w.set_configured_size(configured_width, configured_height)
         w.setFixedSize(configured_width, configured_height)
         return w
+
+    def _populate_matrix_events(self, matrix_editor: TriggerMatrixEditor, associated_filter: Filter) -> None:
+        """Populate the matrix editor with the events configured in the linked filter.
+
+        Args:
+            matrix_editor: The matrix editor to populate.
+            associated_filter: The linked event scheduler filter.
+
+        """
+        event_data = associated_filter.filter_configurations.get("event_data", "").split(";")
+        event_names = associated_filter.filter_configurations.get("event_names", "").split(";")
+        if len(event_names) > len(event_data):
+            logger.warning(
+                "Dropping %d surplus event names of filter %s.",
+                len(event_names) - len(event_data),
+                associated_filter.filter_id,
+            )
+            del event_names[len(event_data) :]
+        while len(event_names) < len(event_data):
+            event_names.append("No Name")
+        for event_description, event_name in zip(event_data, event_names, strict=True):
+            if not event_description:
+                continue
+            if not self._is_valid_event_description(event_description):
+                logger.warning(
+                    "Skipping malformed event entry %r of filter %s.", event_description, associated_filter.filter_id
+                )
+                continue
+            matrix_editor.add_event(event_description, event_name.strip() or "No Name")
+
+    @staticmethod
+    def _is_valid_event_description(event_description: str) -> bool:
+        """Check that an event description matches the ``<sender>,<function>,<type>[,<arguments>]`` format."""
+        if not event_description:
+            return False
+        parts = event_description.split(",")
+        if len(parts) < 3:
+            return False
+        try:
+            int(parts[0])
+            int(parts[1])
+            int(parts[2])
+        except ValueError:
+            return False
+        return True
 
     def _config_width_value_changed(self, new_value: int) -> None:
         self.configuration["width"] = str(new_value)
@@ -290,19 +348,61 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
                 wh.update_size()
 
     def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
+        """Apply step, length and trigger updates received from fish to the linked player view."""
         matrix_editor = self._active_matrix_editor
-        if matrix_editor is None or param.parameter_key != "step":
+        if matrix_editor is None:
             return
         try:
-            matrix_editor.current_step = to_int(param.parameter_value, matrix_editor.current_step)
-            spinbox = self._step_spinbox
-            if spinbox is not None:
-                spinbox.blockSignals(True)
-                spinbox.setValue(matrix_editor.current_step + 1)
-                spinbox.blockSignals(False)
+            if param.parameter_key == "step":
+                matrix_editor.current_step = to_int(param.parameter_value, matrix_editor.current_step)
+                self._set_step_spinbox_silently(matrix_editor)
+            elif param.parameter_key == "length":
+                matrix_editor.number_of_steps = to_int(param.parameter_value, matrix_editor.number_of_steps)
+                self._set_step_spinbox_silently(matrix_editor)
+            elif param.parameter_key == "update_triggers":
+                self._apply_update_trigger_entries(matrix_editor, param.parameter_value)
         except RuntimeError:
             self._active_matrix_editor = None
             self._step_spinbox = None
+
+    def _set_step_spinbox_silently(self, matrix_editor: TriggerMatrixEditor) -> None:
+        """Adopt the current step of the given matrix editor into the step spin box.
+
+        Args:
+            matrix_editor: The matrix editor providing the step range and the step to display.
+
+        """
+        spinbox = self._step_spinbox
+        if spinbox is None:
+            return
+        spinbox.blockSignals(True)
+        spinbox.setMaximum(max(matrix_editor.number_of_steps, 1))
+        spinbox.setValue(matrix_editor.current_step + 1)
+        spinbox.blockSignals(False)
+
+    @staticmethod
+    def _apply_update_trigger_entries(matrix_editor: TriggerMatrixEditor, value: str) -> None:
+        """Apply update trigger entries received from fish to the given matrix editor.
+
+        Args:
+            matrix_editor: The matrix editor whose cells should be updated.
+            value: One or more ``<step>,<event-index>,<TRUE|FALSE>`` entries separated by ``;``.
+
+        """
+        for entry in value.split(";"):
+            if not entry:
+                continue
+            parts = entry.split(",")
+            if len(parts) != 3:
+                logger.warning("Skipping malformed update trigger entry %r received from fish.", entry)
+                continue
+            try:
+                step = int(parts[0])
+                event_idx = int(parts[1])
+            except ValueError:
+                logger.warning("Skipping malformed update trigger entry %r received from fish.", entry)
+                continue
+            matrix_editor.apply_event_state(step, event_idx, parts[2].lower() == "true")
 
     def _decrease_clicked(self, _: bool) -> None:
         if self._active_matrix_editor is None:

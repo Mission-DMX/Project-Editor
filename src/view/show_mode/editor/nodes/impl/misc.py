@@ -1,4 +1,4 @@
-"""Contains miscullaneus filter nodes."""
+"""Contains miscellaneous filter nodes."""
 
 from __future__ import annotations
 

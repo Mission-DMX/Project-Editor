@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model.events import TriggerType
+from model.events import MAX_EVENT_ID_VALUE, TriggerType
 from utility import to_int
 from view.show_mode.editor.node_editor_widgets import NodeEditorFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.event_list_item_widget import (
@@ -32,20 +32,15 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
-_MAX_EVENT_ID_VALUE = 2**31 - 1
-
 
 class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
     """A widget to configure the event scheduler filter.
 
     Configuration options are:
-     * default Trigger Event
-     * output event data
-     * default number of steps
-     * default step position
-     * default trigger data
-     * synchronization trigger
-
+     * the list of schedulable events, including their names, trigger types and arguments
+     * the number of steps and the default step position
+     * the trigger state of every event at every step
+     * the synchronization trigger event
     """
 
     def __init__(self) -> None:
@@ -78,10 +73,10 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._sync_trigger_group = QGroupBox("Synchronization Trigger", self._widget)
         sync_trigger_layout = QFormLayout()
         self._sync_trigger_sender_tb = QSpinBox()
-        self._sync_trigger_sender_tb.setMaximum(_MAX_EVENT_ID_VALUE)
+        self._sync_trigger_sender_tb.setMaximum(MAX_EVENT_ID_VALUE)
         sync_trigger_layout.addRow("Sender ID", self._sync_trigger_sender_tb)
         self._sync_trigger_function_tb = QSpinBox()
-        self._sync_trigger_function_tb.setMaximum(_MAX_EVENT_ID_VALUE)
+        self._sync_trigger_function_tb.setMaximum(MAX_EVENT_ID_VALUE)
         sync_trigger_layout.addRow("Function", self._sync_trigger_function_tb)
         self._sync_trigger_selection_btn = QPushButton("Select Trigger")
         self._sync_trigger_selection_btn.clicked.connect(self._select_trigger_clicked)
@@ -100,45 +95,40 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
 
     @override
     def _load_configuration(self, conf: dict[str, str]) -> None:
+        """Load and normalize the stored event configuration."""
         self._matrix_editor.clear()
         self._event_list.clear()
         event_entries = conf.get("event_data", "").split(";")
-        event_descriptions: list[str] = []
-        decoded_event_entries: list[tuple[int, int, TriggerType, list[int]]] = []
-        for event_entry in event_entries:
-            if len(event_entry) < 1:
-                continue
-            args = event_entry.split(",")
-            if len(args) < 3:
-                logger.warning("Skipping malformed event entry %r.", event_entry)
-                continue
-            try:
-                sender = int(args[0])
-                sender_function = int(args[1])
-                ev_arguments: list[int] = [int(s) for s in args[3:] if len(s) > 0]
-            except ValueError:
-                logger.warning("Skipping malformed event entry %r.", event_entry)
-                continue
-            try:
-                event_type = TriggerType(int(args[2]))
-            except ValueError:
-                logger.warning("Skipping event entry %r with unknown trigger type %r.", event_entry, args[2])
-                continue
-            decoded_event_entries.append((sender, sender_function, event_type, ev_arguments))
-            event_descriptions.append(event_entry)
         event_names = conf.get("event_names", "").split(";")
-        if len(decoded_event_entries) == 0:
-            return
-        if len(event_names) > len(decoded_event_entries):
-            logger.warning("Dropping %d surplus event name entries.", len(event_names) - len(decoded_event_entries))
-            del event_names[len(decoded_event_entries) :]
-        while len(event_names) < len(decoded_event_entries):
+        if len(event_names) > len(event_entries):
+            logger.warning("Dropping %d surplus event name entries.", len(event_names) - len(event_entries))
+            del event_names[len(event_entries) :]
+        while len(event_names) < len(event_entries):
             event_names.append("No Name")
-        for event_description, decoded_representation, name in zip(
-            event_descriptions, decoded_event_entries, event_names, strict=False
-        ):
-            self._matrix_editor.add_event(event_description, name)
-            sender, sender_function, event_type, ev_arguments = decoded_representation
+        for event_entry, raw_name in zip(event_entries, event_names, strict=True):
+            if not event_entry:
+                continue
+            parts = event_entry.split(",")
+            if len(parts) < 3:
+                logger.warning("Skipping malformed event entry %r.", event_entry)
+                continue
+            try:
+                sender = int(parts[0])
+                sender_function = int(parts[1])
+                raw_arguments = [int(s) for s in parts[3:] if len(s) > 0]
+            except ValueError:
+                logger.warning("Skipping malformed event entry %r.", event_entry)
+                continue
+            try:
+                event_type = TriggerType(int(parts[2]))
+            except ValueError:
+                logger.warning("Skipping event entry %r with unknown trigger type %r.", event_entry, parts[2])
+                continue
+            ev_arguments = [max(min(argument, 255), 0) for argument in raw_arguments]
+            if ev_arguments != raw_arguments:
+                logger.warning("Clamping arguments of event entry %r into the range 0..255.", event_entry)
+            name = raw_name.strip() or "No Name"
+            self._matrix_editor.add_event(self._encode_event(sender, sender_function, event_type, ev_arguments), name)
             self._append_event_item(name, sender, sender_function, event_type, ev_arguments)
 
     @override
@@ -152,9 +142,8 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._matrix_editor.active_event_data = parameters.get("update_triggers", "")
         default_step = to_int(parameters.get("step", "0"), 0)
         self._matrix_editor.current_step = default_step
-        self._default_step_tb.setMaximum(max(number_of_steps, 1))
+        self._update_step_controls()
         self._default_step_tb.setValue(self._matrix_editor.current_step + 1)
-        self._remove_step_btn.setEnabled(self._matrix_editor.number_of_steps > 0)
         sync_target_parts = parameters.get("synchronization_target", "0,0").split(",")
         if len(sync_target_parts) != 2:
             logger.warning(
@@ -284,15 +273,18 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._sync_trigger_sender_tb.setValue(sender)
         self._sync_trigger_function_tb.setValue(function)
 
-    def _add_step(self, _: bool) -> None:
-        self._matrix_editor.number_of_steps += 1
+    def _update_step_controls(self) -> None:
+        """Synchronize the default step spin box and the remove step button with the matrix step count."""
         self._default_step_tb.setMaximum(max(self._matrix_editor.number_of_steps, 1))
         self._remove_step_btn.setEnabled(self._matrix_editor.number_of_steps > 0)
 
+    def _add_step(self, _: bool) -> None:
+        self._matrix_editor.number_of_steps += 1
+        self._update_step_controls()
+
     def _remove_step(self, _: bool) -> None:
         self._matrix_editor.number_of_steps -= 1
-        self._remove_step_btn.setEnabled(self._matrix_editor.number_of_steps > 0)
-        self._default_step_tb.setMaximum(max(self._matrix_editor.number_of_steps, 1))
+        self._update_step_controls()
 
     def _add_event_clicked(self, _: bool) -> None:
         self._open_event_selection_dialog(self._event_added)
@@ -312,11 +304,29 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._matrix_editor.remove_event(selected_row)
 
     def _event_added(self, dialog: EventSelectionDialog) -> None:
-        """Add the event selected in the given dialog to the scheduler configuration."""
+        """Add the event selected in the given dialog to the scheduler configuration.
+
+        Args:
+            dialog: The accepted dialog whose selected event should be added.
+
+        """
         sender, sender_function, arg_string = dialog.selected_event
         initial_name = f"New event [{sender}:{sender_function}]"
         ev_arguments = [ord(c) for c in arg_string]
         event_type = TriggerType.SINGLE_TRIGGER
+        for row in range(self._event_list.count()):
+            item = self._event_list.item(row)
+            if isinstance(item, AnnotatedListWidgetItem) and item.annotated_data == (
+                sender,
+                sender_function,
+                event_type,
+                ev_arguments,
+            ):
+                logger.warning(
+                    "The selected event is already scheduled in row %d; it is added again as a separate trigger row.",
+                    row,
+                )
+                break
         event_description = self._encode_event(sender, sender_function, event_type, ev_arguments)
         self._matrix_editor.add_event(event_description, initial_name)
         self._append_event_item(initial_name, sender, sender_function, event_type, ev_arguments)

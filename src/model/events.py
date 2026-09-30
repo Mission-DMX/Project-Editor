@@ -312,6 +312,9 @@ def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] 
         _persistence_notes[name] = renaming.copy()
 
 
+MAX_EVENT_ID_VALUE = 2**31 - 1
+
+
 class TriggerType(Enum):
     """Event trigger representation as it is used by fish."""
 
