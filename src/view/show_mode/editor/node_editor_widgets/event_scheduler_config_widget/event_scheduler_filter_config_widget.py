@@ -32,6 +32,8 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
+_MAX_EVENT_ID_VALUE = 2**31 - 1
+
 
 class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
     """A widget to configure the event scheduler filter.
@@ -76,8 +78,10 @@ class EventSchedulerSettingsWidget(NodeEditorFilterConfigWidget):
         self._sync_trigger_group = QGroupBox("Synchronization Trigger", self._widget)
         sync_trigger_layout = QFormLayout()
         self._sync_trigger_sender_tb = QSpinBox()
+        self._sync_trigger_sender_tb.setMaximum(_MAX_EVENT_ID_VALUE)
         sync_trigger_layout.addRow("Sender ID", self._sync_trigger_sender_tb)
         self._sync_trigger_function_tb = QSpinBox()
+        self._sync_trigger_function_tb.setMaximum(_MAX_EVENT_ID_VALUE)
         sync_trigger_layout.addRow("Function", self._sync_trigger_function_tb)
         self._sync_trigger_selection_btn = QPushButton("Select Trigger")
         self._sync_trigger_selection_btn.clicked.connect(self._select_trigger_clicked)

@@ -120,8 +120,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     @override
     def close(self) -> None:
         """Forget the generated Qt views and stop listening to fish updates."""
-        self._active_matrix_editor = None
-        self._step_spinbox = None
+        self._forget_player_view_references()
         self._latest_player_widget = None
         self._latest_config_widget = None
         super().close()
@@ -197,6 +196,23 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         w.setLayout(form_layout)
         return w
 
+    def _forget_player_view_references(self) -> None:
+        """Disconnect the current player view widgets and drop the references to them."""
+        matrix_editor = self._active_matrix_editor
+        if matrix_editor is not None:
+            try:
+                matrix_editor.event_updated.disconnect(self._event_state_updated)
+            except (RuntimeError, TypeError):
+                pass
+        spinbox = self._step_spinbox
+        if spinbox is not None:
+            try:
+                spinbox.valueChanged.disconnect(self._received_new_step)
+            except (RuntimeError, TypeError):
+                pass
+        self._active_matrix_editor = None
+        self._step_spinbox = None
+
     def _generate_widget(self, used_in_player: bool, parent: QWidget | None) -> _EventSchedulerWidget:
         w = _EventSchedulerWidget(parent)
         layout = QVBoxLayout()
@@ -238,8 +254,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
             override_step_spinbox.setValue(matrix_editor.current_step + 1)
             matrix_editor.highlight_current_step = True
         if used_in_player:
-            if self._active_matrix_editor is not None:
-                logger.error("The matrix editor widget is already populated.")
+            self._forget_player_view_references()
             self._active_matrix_editor = matrix_editor
             matrix_editor.event_updated.connect(self._event_state_updated)
             decrease_steps_button.clicked.connect(self._decrease_clicked)
@@ -316,6 +331,9 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
 
     def _received_new_step(self, displayed_step: int) -> None:
         """Push a step override to fish, converting the 1-based display value into the 0-based step index."""
+        matrix_editor = self._active_matrix_editor
+        if matrix_editor is None or matrix_editor.number_of_steps < 1:
+            return
         self._operations_queue.put(("step", str(displayed_step - 1)))
         self.push_update()
 

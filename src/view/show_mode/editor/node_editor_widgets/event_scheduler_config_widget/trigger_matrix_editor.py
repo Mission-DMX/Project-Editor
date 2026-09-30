@@ -76,14 +76,14 @@ class TriggerMatrixEditor(QWidget):
         self._number_of_steps = 0
         self._current_step = 0
         self._states = np.zeros((0, 0), dtype=bool)
-        self.update()
+        self._notify_size_change()
 
     def add_event(self, event_description: str, event_name: str) -> None:
         """Add a new event to the matrix."""
         self._events.append(event_description)
         self._event_names.append(event_name)
         self._resize_states()
-        self.update()
+        self._notify_size_change()
 
     def remove_event(self, event_idx: int) -> None:
         """Remove the event with the given index from the matrix.
@@ -97,7 +97,7 @@ class TriggerMatrixEditor(QWidget):
         del self._event_names[event_idx]
         if event_idx < self._states.shape[0]:
             self._states = np.delete(self._states, event_idx, axis=0)
-        self.update()
+        self._notify_size_change()
 
     def update_event(self, event_idx: int, event_description: str) -> None:
         """Update the stored description of an existing event without touching its trigger states."""
@@ -117,6 +117,11 @@ class TriggerMatrixEditor(QWidget):
             new_states[:min_events, :min_steps] = self._states[:min_events, :min_steps]
 
         self._states = new_states
+
+    def _notify_size_change(self) -> None:
+        """Invalidate layout caches and schedule a repaint after a size hint change."""
+        self.updateGeometry()
+        self.update()
 
     @property
     def highlight_current_step(self) -> bool:
@@ -168,7 +173,7 @@ class TriggerMatrixEditor(QWidget):
         self._number_of_steps = new_step_count
         self._resize_states()
         self._current_step = self._clamped_step(self._current_step)
-        self.update()
+        self._notify_size_change()
 
     def _clamped_step(self, step: int) -> int:
         """Clamp a step index into the range allowed by the current number of steps."""
