@@ -210,7 +210,7 @@ class TriggerMatrixEditor(QWidget):
 
     @override
     def paintEvent(self, event: QPaintEvent) -> None:
-        """Custom paint event for efficient rendering."""
+        """Paint the matrix content, rendering only the parts that intersect the update region."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 

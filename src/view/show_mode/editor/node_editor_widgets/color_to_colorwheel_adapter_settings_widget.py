@@ -37,7 +37,7 @@ class _ColorMappingListWidgetItem(QListWidgetItem):
     """Purpose of this widget is to display a single mapping."""
 
     def __init__(self, parent: QListWidget, color: ColorHSI, slot_value: int) -> None:
-        """Initializes and adds the widget based on the provided color and slot value."""
+        """Initialize and add the widget based on the provided color and slot value."""
         super().__init__()
         self.color = color
         self.slot_value = slot_value
@@ -60,7 +60,7 @@ class _ColorSlotInputDialog(QDialog):
     """Query a color and a slot."""
 
     def __init__(self, parent: QWidget, list_widget: QListWidget) -> None:
-        """Initializes the dialog."""
+        """Initialize the dialog."""
         super().__init__(parent)
 
         self._list_widget = list_widget
