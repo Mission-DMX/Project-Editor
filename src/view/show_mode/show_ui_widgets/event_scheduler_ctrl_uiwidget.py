@@ -35,6 +35,10 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
+_DEFAULT_WIDGET_WIDTH = 800
+_DEFAULT_WIDGET_HEIGHT = 600
+
+
 class _EventSchedulerWidget(QWidget):
     """Inner widget of the event scheduler control.
 
@@ -46,7 +50,7 @@ class _EventSchedulerWidget(QWidget):
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
-        self._configured_size = QSize(800, 600)
+        self._configured_size = QSize(_DEFAULT_WIDGET_WIDTH, _DEFAULT_WIDGET_HEIGHT)
 
     def set_configured_size(self, width: int, height: int) -> None:
         """Update the size this widget reports to its holder and parent layout."""
@@ -86,11 +90,10 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         self._operations_queue: Queue[tuple[str, str]] = Queue()
         self._latest_player_widget: _EventSchedulerWidget | None = None
         self._latest_config_widget: _EventSchedulerWidget | None = None
-        if not self.configuration.get("width"):
-            self.configuration["width"] = "800"
-        if not self.configuration.get("height"):
-            self.configuration["height"] = "600"
-        self.size = (int(self.configuration["width"]), int(self.configuration["height"]))
+        width, height = self._get_configured_size()
+        self.configuration["width"] = str(width)
+        self.configuration["height"] = str(height)
+        self.size = (width, height)
 
     @override
     def generate_update_content(self) -> list[tuple[str, str]]:
@@ -114,12 +117,41 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         super().notify_id_rename(old_id, new_id)
         self._handle_filter_id_rename(old_id, new_id)
 
+    @override
+    def close(self) -> None:
+        """Forget the generated Qt views and stop listening to fish updates."""
+        self._active_matrix_editor = None
+        self._step_spinbox = None
+        self._latest_player_widget = None
+        self._latest_config_widget = None
+        super().close()
+
     def _get_linked_filter(self) -> Filter | None:
         """Return the linked event scheduler filter if it is set and resolvable."""
         filter_ids = self.filter_ids
         if not filter_ids:
             return None
         return self.parent.scene.get_filter_by_id(filter_ids[0])
+
+    def _get_configured_size(self) -> tuple[int, int]:
+        """Parse the configured widget size, falling back to the default size for invalid entries."""
+        return (
+            self._parse_size_entry(self.configuration.get("width"), _DEFAULT_WIDGET_WIDTH, "width"),
+            self._parse_size_entry(self.configuration.get("height"), _DEFAULT_WIDGET_HEIGHT, "height"),
+        )
+
+    @staticmethod
+    def _parse_size_entry(raw_value: str | None, default: int, entry_name: str) -> int:
+        """Parse a single configured size entry, using the default for missing or invalid values."""
+        if not raw_value:
+            return default
+        value = to_int(raw_value, default)
+        if value < 1:
+            logger.warning(
+                "Ignoring non-positive configured %s %r, falling back to %d.", entry_name, raw_value, default
+            )
+            return default
+        return value
 
     @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
@@ -148,16 +180,17 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         w.setMinimumWidth(300)
         w.setMinimumHeight(100)
         form_layout = QFormLayout()
+        configured_width, configured_height = self._get_configured_size()
         width_box = QSpinBox()
         width_box.setMinimum(200)
         width_box.setMaximum(16384)
-        width_box.setValue(int(self.configuration.get("width") or "800"))
+        width_box.setValue(configured_width)
         width_box.valueChanged.connect(self._config_width_value_changed)
         form_layout.addRow("Width", width_box)
         height_box = QSpinBox()
         height_box.setMinimum(150)
         height_box.setMaximum(16384)
-        height_box.setValue(int(self.configuration.get("height") or "600"))
+        height_box.setValue(configured_height)
         height_box.valueChanged.connect(self._config_height_value_changed)
         form_layout.addRow("Height", height_box)
         # TODO add controls for enabling/disabling the scheduler advancement and for overriding the sync event
@@ -214,8 +247,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
             self._step_spinbox = override_step_spinbox
             override_step_spinbox.valueChanged.connect(self._received_new_step)
         w.setEnabled(used_in_player)
-        configured_width = int(self.configuration.get("width") or "800")
-        configured_height = int(self.configuration.get("height") or "600")
+        configured_width, configured_height = self._get_configured_size()
         w.set_configured_size(configured_width, configured_height)
         w.setFixedSize(configured_width, configured_height)
         return w
@@ -230,8 +262,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
 
     def _apply_configured_size(self) -> None:
         """Push the configured size into the model, the generated widgets and their holders."""
-        width = int(self.configuration.get("width") or "800")
-        height = int(self.configuration.get("height") or "600")
+        width, height = self._get_configured_size()
         self.size = (width, height)
         for widget in [self._latest_player_widget, self._latest_config_widget]:
             if widget is None:
@@ -244,17 +275,19 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
                 wh.update_size()
 
     def _update_from_fish(self, param: proto.FilterMode_pb2.update_parameter) -> None:
-        if self._active_matrix_editor is None:
-            return
-        if param.parameter_key != "step":
-            return
         matrix_editor = self._active_matrix_editor
-        matrix_editor.current_step = to_int(param.parameter_value, matrix_editor.current_step)
-        spinbox = self._step_spinbox
-        if spinbox is not None:
-            spinbox.blockSignals(True)
-            spinbox.setValue(matrix_editor.current_step)
-            spinbox.blockSignals(False)
+        if matrix_editor is None or param.parameter_key != "step":
+            return
+        try:
+            matrix_editor.current_step = to_int(param.parameter_value, matrix_editor.current_step)
+            spinbox = self._step_spinbox
+            if spinbox is not None:
+                spinbox.blockSignals(True)
+                spinbox.setValue(matrix_editor.current_step)
+                spinbox.blockSignals(False)
+        except RuntimeError:
+            self._active_matrix_editor = None
+            self._step_spinbox = None
 
     def _decrease_clicked(self, _: bool) -> None:
         if self._active_matrix_editor is None:
@@ -286,5 +319,6 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         self.push_update()
 
     def _event_state_updated(self, step: int, event_idx: int, new_state: bool) -> None:
+        """Push a single toggled matrix cell to fish as an ``update_triggers`` update."""
         self._operations_queue.put(("update_triggers", f"{step},{event_idx},{'TRUE' if new_state else 'FALSE'}"))
         self.push_update()

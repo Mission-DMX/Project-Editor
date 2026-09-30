@@ -74,17 +74,15 @@ class EventFilter(NamedTuple):
 
     @staticmethod
     def from_filter_str(filter_str: str) -> EventFilter:
-        """Create a EventFilter instance from a filter string."""
+        """Create an EventFilter instance from a filter string."""
         parts = filter_str.split(":")
         if len(parts) < 2:
             raise ValueError(f"Invalid filter string: '{filter_str}'")
-        ef = EventFilter()
-        ef.event_sender = int(parts[0])
-        ef.event_sender_function = int(parts[1])
-        parts.pop(0)
-        parts.pop(0)
-        for arg in parts:
-            ef.args.append(int(arg))
+        return EventFilter(
+            event_sender=int(parts[0]),
+            event_sender_function=int(parts[1]),
+            args=[int(arg) for arg in parts[2:]],
+        )
 
     def format_for_filters(self) -> str:
         """Serialize the event filter into a string representation."""
@@ -313,6 +311,7 @@ def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] 
     else:
         _persistence_notes[name] = renaming.copy()
 
+
 class TriggerType(Enum):
     """Event trigger representation as it is used by fish."""
 
@@ -320,4 +319,3 @@ class TriggerType(Enum):
     START = 1
     RELEASE = 2
     ONGOING_EVENT = 3
-

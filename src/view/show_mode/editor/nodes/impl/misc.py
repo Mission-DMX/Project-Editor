@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from model import Scene
     from model.filter import Filter
 
+
 class EventSchedulerNode(FilterNode):
     """Filter to schedule events."""
 
@@ -18,16 +19,16 @@ class EventSchedulerNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize the filter."""
-        super().__init__(
-            model=model,
-            filter_type=FilterTypeEnumeration.FILTER_EVENT_SCHEDULER,
-            name=name
-        )
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_EVENT_SCHEDULER, name=name)
         # TODO setup GUI for recommended trigger event types, default trigger event type and event data list
         if "event_data" not in self.filter.filter_configurations:
             self.filter.filter_configurations["event_data"] = ""
         parameter_keys = self.filter.initial_parameters.keys()
-        for entry, default_val in [("length", "0"), ("update_triggers", ""), ("step", "0"),
-                                   ("synchronization_target", "0,0")]:
+        for entry, default_val in [
+            ("length", "0"),
+            ("update_triggers", ""),
+            ("step", "0"),
+            ("synchronization_target", "0,0"),
+        ]:
             if entry not in parameter_keys:
                 self.filter.initial_parameters[entry] = default_val

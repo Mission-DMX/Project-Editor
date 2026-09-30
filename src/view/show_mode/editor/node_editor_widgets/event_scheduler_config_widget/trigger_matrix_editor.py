@@ -82,6 +82,27 @@ class TriggerMatrixEditor(QWidget):
         self._resize_states()
         self.update()
 
+    def remove_event(self, event_idx: int) -> None:
+        """Remove the event with the given index from the matrix.
+
+        The trigger states of the remaining events are preserved and keep their association with their event.
+        """
+        if not 0 <= event_idx < len(self._events):
+            logger.warning("Cannot remove non-existing event with index %d.", event_idx)
+            return
+        del self._events[event_idx]
+        del self._event_names[event_idx]
+        if event_idx < self._states.shape[0]:
+            self._states = np.delete(self._states, event_idx, axis=0)
+        self.update()
+
+    def update_event(self, event_idx: int, event_description: str) -> None:
+        """Update the stored description of an existing event without touching its trigger states."""
+        if not 0 <= event_idx < len(self._events):
+            logger.warning("Cannot update non-existing event with index %d.", event_idx)
+            return
+        self._events[event_idx] = event_description
+
     def _resize_states(self) -> None:
         """Resize the states array to match current events and steps."""
         num_events = len(self._events)
@@ -156,11 +177,7 @@ class TriggerMatrixEditor(QWidget):
 
     @active_event_data.setter
     def active_event_data(self, value: str) -> None:
-        """Set the event data from a string.
-
-        Format: For each step, comma-separated event indices that are enabled.
-        Steps are separated by semicolons.
-        """
+        """Set the event data from a string, replacing all previous states."""
         if not value:
             if self._states.size > 0:
                 self._states.fill(False)
@@ -183,8 +200,12 @@ class TriggerMatrixEditor(QWidget):
                 logger.warning("Skipping malformed update trigger entry %r.", entry)
                 continue
             if not (0 <= event < self._states.shape[0] and 0 <= step < self._states.shape[1]):
-                logger.warning("Skipping out-of-range update trigger entry %r (%d events, %d steps).",
-                               entry, self._states.shape[0], self._states.shape[1])
+                logger.warning(
+                    "Skipping out-of-range update trigger entry %r (%d events, %d steps).",
+                    entry,
+                    self._states.shape[0],
+                    self._states.shape[1],
+                )
                 continue
             self._states[event, step] = parts[2].lower() == "true"
 
@@ -299,5 +320,4 @@ class TriggerMatrixEditor(QWidget):
     @override
     def minimumSizeHint(self) -> QSize:
         """Minimum size hint."""
-        return QSize(self._event_name_width + 5 * self._cell_width,
-                self._header_height + 3 * self._cell_height)
+        return QSize(self._event_name_width + 5 * self._cell_width, self._header_height + 3 * self._cell_height)

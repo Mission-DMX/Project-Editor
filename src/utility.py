@@ -1,4 +1,5 @@
 """Startup and general utility functions."""
+
 import os
 import sys
 from logging import getLogger

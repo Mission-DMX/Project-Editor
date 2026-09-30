@@ -30,13 +30,13 @@ class EventListItemWidget(QWidget):
     trigger_type_changed = Signal(TriggerType)
 
     def __init__(
-            self,
-            name: str,
-            sender_id: int,
-            sender_function: int,
-            trigger_type: TriggerType,
-            arguments: list[int],
-            parent: QWidget | None = None,
+        self,
+        name: str,
+        sender_id: int,
+        sender_function: int,
+        trigger_type: TriggerType,
+        arguments: list[int],
+        parent: QWidget | None = None,
     ) -> None:
         """Create a widget describing a single scheduler event.
 
