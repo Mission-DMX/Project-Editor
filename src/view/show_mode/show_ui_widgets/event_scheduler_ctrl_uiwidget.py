@@ -29,9 +29,18 @@ if TYPE_CHECKING:
     from PySide6.QtWidgets import QDialog
 
     import proto.FilterMode_pb2
-    from model import UIPage
+    from model import Filter, UIPage
 
 logger = getLogger(__name__)
+
+
+def _to_int(value: str, default: int) -> int:
+    """Parse an integer configuration value, falling back to a default for malformed input."""
+    try:
+        return int(value)
+    except ValueError:
+        logger.warning("Malformed integer value %r, falling back to %d.", value, default)
+        return default
 
 
 class _EventSchedulerWidget(QWidget):
@@ -81,8 +90,8 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         """Initialize the UI widget."""
         super().__init__(parent, configuration)
         self._active_matrix_editor: TriggerMatrixEditor | None = None
+        self._step_spinbox: JogwheelSpinBox | None = None
         self._operations_queue: Queue[tuple[str, str]] = Queue()
-        self._callback_registered: bool = False
         self._latest_player_widget: _EventSchedulerWidget | None = None
         self._latest_config_widget: _EventSchedulerWidget | None = None
         if not self.configuration.get("width"):
@@ -100,8 +109,33 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         return outstanding_updates_list
 
     @override
+    def set_filter(self, f: Filter, i: int) -> None:
+        """Link the widget to an event scheduler filter and start listening to its fish updates."""
+        if not f:
+            return
+        super().set_filter(f, i)
+        self._register_fish_callback(f)
+
+    @override
+    def notify_id_rename(self, old_id: str, new_id: str) -> None:
+        """Move the linked filter id and the fish callback along when the filter is renamed."""
+        super().notify_id_rename(old_id, new_id)
+        self._handle_filter_id_rename(old_id, new_id)
+
+    def _get_linked_filter(self) -> Filter | None:
+        """Return the linked event scheduler filter if it is set and resolvable."""
+        filter_ids = self.filter_ids
+        if not filter_ids:
+            return None
+        return self.parent.scene.get_filter_by_id(filter_ids[0])
+
+    @override
     def get_player_widget(self, parent: QWidget | None) -> QWidget:
-        self._register_fish_callback(self.parent.scene.get_filter_by_id(self.filter_ids[0]))
+        associated_filter = self._get_linked_filter()
+        if associated_filter is None:
+            logger.warning("No resolvable event scheduler filter linked; fish updates stay disabled.")
+        else:
+            self._register_fish_callback(associated_filter)
         self._latest_player_widget = self._generate_widget(True, parent)
         return self._latest_player_widget
 
@@ -144,7 +178,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         button_layout = QHBoxLayout()
         button_layout.addWidget(QLabel("Step: "))
         override_step_spinbox = JogwheelSpinBox()
-        override_step_spinbox.setMinimum(1)
+        override_step_spinbox.setMinimum(0)
         button_layout.addWidget(override_step_spinbox)
         button_layout.addStretch()
         decrease_steps_button = QPushButton("-")
@@ -165,18 +199,31 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
             matrix_editor.event_updated.connect(self._event_state_updated)
             decrease_steps_button.clicked.connect(self._decrease_clicked)
             increase_steps_button.clicked.connect(self._increase_clicked)
-            override_step_spinbox.valueChanged.connect(self._received_new_step)
+            self._step_spinbox = override_step_spinbox
 
-            associated_filter = self.parent.scene.get_filter_by_id(self.filter_ids[0])
-            matrix_editor.number_of_steps = int(associated_filter.initial_parameters.get("length", "0"))
-            event_data = associated_filter.filter_configurations.get("event_data", "").split(";")
-            event_names = associated_filter.filter_configurations.get("event_names", "").split(";")
-            for ed, e_name in zip(event_data, event_names, strict=True):
-                if len(ed) < 1:
-                    continue
-                matrix_editor.add_event(ed, e_name)
-            matrix_editor.active_event_data = associated_filter.initial_parameters.get("update_triggers", "")
-            matrix_editor.highlight_current_step = True
+            associated_filter = self._get_linked_filter()
+            if associated_filter is None:
+                logger.warning("No resolvable event scheduler filter linked; the player widget stays empty.")
+                override_step_spinbox.setMaximum(0)
+            else:
+                number_of_steps = _to_int(associated_filter.initial_parameters.get("length", "0"), 0)
+                matrix_editor.number_of_steps = number_of_steps
+                event_data = associated_filter.filter_configurations.get("event_data", "").split(";")
+                event_names = associated_filter.filter_configurations.get("event_names", "").split(";")
+                while len(event_names) < len(event_data):
+                    event_names.append("No Name")
+                for ed, e_name in zip(event_data, event_names, strict=False):
+                    if len(ed) < 1:
+                        continue
+                    matrix_editor.add_event(ed, e_name)
+                matrix_editor.active_event_data = associated_filter.initial_parameters.get("update_triggers", "")
+                matrix_editor.current_step = _to_int(associated_filter.initial_parameters.get("step", "0"), 0)
+                # The spin box mirrors the step range and current step of the linked filter. Connecting it after
+                # setting the initial value avoids pushing that value back to fish.
+                override_step_spinbox.setMaximum(max(number_of_steps - 1, 0))
+                override_step_spinbox.setValue(matrix_editor.current_step)
+                override_step_spinbox.valueChanged.connect(self._received_new_step)
+                matrix_editor.highlight_current_step = True
         w.setEnabled(used_in_player)
         configured_width = int(self.configuration.get("width") or "800")
         configured_height = int(self.configuration.get("height") or "600")
@@ -212,7 +259,13 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
             return
         if param.parameter_key != "step":
             return
-        self._active_matrix_editor.current_step = int(param.parameter_value)
+        matrix_editor = self._active_matrix_editor
+        matrix_editor.current_step = _to_int(param.parameter_value, matrix_editor.current_step)
+        spinbox = self._step_spinbox
+        if spinbox is not None:
+            spinbox.blockSignals(True)
+            spinbox.setValue(matrix_editor.current_step)
+            spinbox.blockSignals(False)
 
     def _decrease_clicked(self, _: bool) -> None:
         if self._active_matrix_editor is None:
@@ -220,6 +273,7 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         if self._active_matrix_editor.number_of_steps < 1:
             return
         self._active_matrix_editor.number_of_steps -= 1
+        self._update_step_spinbox_bounds(self._active_matrix_editor.number_of_steps)
         self._operations_queue.put(("length", str(self._active_matrix_editor.number_of_steps)))
         self.push_update()
 
@@ -227,13 +281,21 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         if self._active_matrix_editor is None:
             return
         self._active_matrix_editor.number_of_steps += 1
+        self._update_step_spinbox_bounds(self._active_matrix_editor.number_of_steps)
         self._operations_queue.put(("length", str(self._active_matrix_editor.number_of_steps)))
         self.push_update()
+
+    def _update_step_spinbox_bounds(self, number_of_steps: int) -> None:
+        """Keep the step spin box range in sync with the number of steps of the linked filter."""
+        spinbox = self._step_spinbox
+        if spinbox is None:
+            return
+        spinbox.setMaximum(max(number_of_steps - 1, 0))
 
     def _received_new_step(self, new_default_step: int) -> None:
         self._operations_queue.put(("step", str(new_default_step)))
         self.push_update()
 
     def _event_state_updated(self, step: int, event_idx: int, new_state: bool) -> None:
-        self._operations_queue.put(("update_triggers", f"{step},{event_idx},{"TRUE" if new_state else "FALSE"}"))
+        self._operations_queue.put(("update_triggers", f"{step},{event_idx},{'TRUE' if new_state else 'FALSE'}"))
         self.push_update()
