@@ -16,7 +16,6 @@ logger = getLogger(__name__)
 
 
 class PanTiltConstantControlUIWidget(UIWidget):
-
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
         super().__init__(parent, configuration)
         self._command_chain: list[tuple[str, str]] = []  # ??
@@ -25,8 +24,6 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._conf_widget: QWidget | None = None
 
     def set_filter(self, f: Filter, i: int) -> None:
-        if not f:
-            return
         super().set_filter(f, i)
         self.associated_filters["pan_tilt_vfilter_fid"] = f.filter_id
         if not isinstance(f, PanTiltConstantFilter):
@@ -55,7 +52,8 @@ class PanTiltConstantControlUIWidget(UIWidget):
         self._chosen_joystick = QComboBox()
         self._chosen_joystick.addItems(JoystickHandler.joystick_map.keys())
         self._chosen_joystick.currentTextChanged.connect(
-            lambda x: self._filter.set_joystick(JoystickHandler.joystick_map[x]))
+            lambda x: self._filter.set_joystick(JoystickHandler.joystick_map[x])
+        )
         layout.addWidget(self._chosen_joystick)
 
         w.setLayout(layout)
@@ -85,8 +83,7 @@ class PanTiltConstantControlUIWidget(UIWidget):
         combined_fid = self.associated_filters["pan_tilt_vfilter_fid"]
         command = (f"{combined_fid}_16bit_pan:value", str(int(self._filter.pan * 65535)))
         self._command_chain.append(command)
-        command = (
-            f"{combined_fid}_16bit_tilt:value", str(int(self._filter.tilt * 65535)))  # Todo: inverse Tilt?
+        command = (f"{combined_fid}_16bit_tilt:value", str(int(self._filter.tilt * 65535)))  # Todo: inverse Tilt?
         self._command_chain.append(command)
         self.push_update()
         self._command_chain.clear()
