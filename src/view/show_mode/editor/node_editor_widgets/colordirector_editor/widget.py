@@ -178,14 +178,13 @@ class ColordirectorEditorWidget(NodeEditorFilterConfigWidget):
         return self._widget
 
     @override
-    def _load_parameters(self, parameters: dict[str, str]) -> dict:
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         """Adopt the current model state without re-reading the stored configuration.
 
         Args:
             parameters: Ignored as all state is managed by the model directly.
 
         """
-        return {}
 
     @override
     def _get_parameters(self) -> dict[str, str]:

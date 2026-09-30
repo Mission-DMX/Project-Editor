@@ -194,8 +194,8 @@ class MacroButtonUIWidget(UIWidget):
     def generate_update_content(self) -> list[tuple[str, str]]:
         return []
 
-    def _construct_widget(self) -> QWidget:
-        w = BoxGridRenderer()
+    def _construct_widget(self, parent: QWidget | None) -> QWidget:
+        w = BoxGridRenderer(parent)
         w.setFixedWidth(max(int(self.configuration.get("width") or "64"), w.minimumWidth()))
         w.setFixedHeight(max(int(self.configuration.get("height") or "64"), w.minimumHeight()))
         self._populate_button_items(w)
@@ -225,13 +225,13 @@ class MacroButtonUIWidget(UIWidget):
         self._context.return_text = ""
 
     @override
-    def get_player_widget(self, parent: QWidget) -> QWidget:
-        self._latest_player_widget = self._construct_widget()
+    def get_player_widget(self, parent: QWidget | None) -> QWidget:
+        self._latest_player_widget = self._construct_widget(parent)
         return self._latest_player_widget
 
     @override
-    def get_configuration_widget(self, parent: QWidget) -> QWidget:
-        self._latest_config_widget = self._construct_widget()
+    def get_configuration_widget(self, parent: QWidget | None) -> QWidget:
+        self._latest_config_widget = self._construct_widget(parent)
         return self._latest_config_widget
 
     @override

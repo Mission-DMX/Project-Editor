@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from logging import getLogger
 from typing import NamedTuple
 
@@ -44,7 +45,7 @@ def handle_incoming_sender_update(msg: proto.Events_pb2.event_sender) -> None:
             case "fish.builtin.audioextract":
                 ev = AudioExtractEventSender(msg.name)
             case _:
-                logger.error("Unexpaected event sender type: '%s'", msg.type)
+                logger.error("Unexpected event sender type: '%s'", msg.type)
                 return
         _senders[msg.name] = ev
         _senders_by_id[msg.sender_id] = ev
@@ -73,17 +74,15 @@ class EventFilter(NamedTuple):
 
     @staticmethod
     def from_filter_str(filter_str: str) -> EventFilter:
-        """Create a EventFilter instance from a filter string."""
+        """Create an EventFilter instance from a filter string."""
         parts = filter_str.split(":")
         if len(parts) < 2:
             raise ValueError(f"Invalid filter string: '{filter_str}'")
-        ef = EventFilter()
-        ef.event_sender = int(parts[0])
-        ef.event_sender_function = int(parts[1])
-        parts.pop(0)
-        parts.pop(0)
-        for arg in parts:
-            ef.args.append(int(arg))
+        return EventFilter(
+            event_sender=int(parts[0]),
+            event_sender_function=int(parts[1]),
+            args=[int(arg) for arg in parts[2:]],
+        )
 
     def format_for_filters(self) -> str:
         """Serialize the event filter into a string representation."""
@@ -299,8 +298,8 @@ def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] 
     If the event sender is not yet known, it will be marked once it is announced to the editor.
 
     Args:
-    name: The unique name of the sender.
-    renaming: The renaming data indicator of the sender. It will be noted as well.
+        name: The unique name of the sender.
+        renaming: The renaming data indicator of the sender. It will be noted as well.
 
     """
     if renaming is None:
@@ -311,3 +310,107 @@ def mark_sender_persistent(name: str, renaming: dict[tuple[int, int, str], str] 
         sender.renamed_events.update(renaming)
     else:
         _persistence_notes[name] = renaming.copy()
+
+
+MAX_EVENT_ID_VALUE = 2**31 - 1
+
+
+class TriggerType(Enum):
+    """Event trigger representation as it is used by fish."""
+
+    SINGLE_TRIGGER = prot_event_type.SINGLE_TRIGGER
+    START = prot_event_type.START
+    RELEASE = prot_event_type.RELEASE
+    ONGOING_EVENT = prot_event_type.ONGOING_EVENT
+
+
+def clamp_event_arguments(arguments: list[int]) -> list[int]:
+    """Clamp event arguments into the argument byte range 0..255 used by fish.
+
+    Args:
+        arguments: The arguments to clamp.
+
+    Returns:
+        The clamped arguments as a new list.
+
+    """
+    return [max(min(argument, 255), 0) for argument in arguments]
+
+
+class ScheduledEvent(NamedTuple):
+    """Description of an event scheduled by the event scheduler filter."""
+
+    sender_id: int
+    sender_function: int
+    trigger_type: TriggerType
+    arguments: list[int]
+
+    @classmethod
+    def from_str(cls, raw: str) -> ScheduledEvent | None:
+        """Parse a serialized scheduled event description.
+
+        Args:
+            raw: The serialized event description.
+
+        Returns:
+            The parsed event, or None if the description is malformed.
+
+        """
+        parts = raw.split(",")
+        if len(parts) < 3:
+            logger.warning("Skipping malformed event entry %r.", raw)
+            return None
+        try:
+            sender_id = int(parts[0])
+            sender_function = int(parts[1])
+            raw_arguments = [int(s) for s in parts[3:] if s]
+        except ValueError:
+            logger.warning("Skipping malformed event entry %r.", raw)
+            return None
+        try:
+            trigger_type = TriggerType(int(parts[2]))
+        except ValueError:
+            logger.warning("Skipping event entry %r with unknown trigger type %r.", raw, parts[2])
+            return None
+        arguments = clamp_event_arguments(raw_arguments)
+        if arguments != raw_arguments:
+            logger.warning("Clamping arguments of event entry %r into the range 0..255.", raw)
+        return cls(sender_id, sender_function, trigger_type, arguments)
+
+    def serialize(self) -> str:
+        """Serialize the event description, omitting the argument section if the event has no arguments."""
+        event_section = f"{self.sender_id},{self.sender_function},{self.trigger_type.value}"
+        arguments = clamp_event_arguments(self.arguments)
+        if arguments:
+            event_section += "," + ",".join(str(argument) for argument in arguments)
+        return event_section
+
+
+def parse_update_trigger_entries(value: str) -> list[tuple[int, int, bool]]:
+    """Parse the ``update_triggers`` entries exchanged with the event scheduler filter on fish.
+
+    Args:
+        value: One or more ``<step>,<event-index>,<TRUE|FALSE>`` entries separated by ``;``. Step and event
+            indices are 0-based.
+
+    Returns:
+        The parsed ``(step, event_index, state)`` entries in the order of their appearance. Empty segments are
+        ignored; malformed entries are skipped with a warning.
+
+    """
+    entries: list[tuple[int, int, bool]] = []
+    for raw_entry in value.split(";"):
+        if not raw_entry:
+            continue
+        parts = raw_entry.split(",")
+        if len(parts) != 3:
+            logger.warning("Skipping malformed update trigger entry %r.", raw_entry)
+            continue
+        try:
+            step = int(parts[0])
+            event_index = int(parts[1])
+        except ValueError:
+            logger.warning("Skipping malformed update trigger entry %r.", raw_entry)
+            continue
+        entries.append((step, event_index, parts[2].lower() == "true"))
+    return entries

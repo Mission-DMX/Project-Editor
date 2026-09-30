@@ -13,11 +13,16 @@ from PySide6.QtWidgets import (
 )
 
 from model import events
+from model.events import MAX_EVENT_ID_VALUE
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 
 class EventSelectionDialog(QDialog):
-    """Prompt the user to select an event to link."""
+    """Prompt the user to select an event to link.
+
+    Use the selected_event property to query the selection after the user accepted it.
+
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Prompt the user to select an event to link."""
@@ -33,13 +38,18 @@ class EventSelectionDialog(QDialog):
         self._sender_tb = QSpinBox(self)
         self._sender_tb.valueChanged.connect(self._sender_value_changed)
         self._sender_tb.setMinimum(0)
+        self._sender_tb.setMaximum(MAX_EVENT_ID_VALUE)
         layout.addRow("Sender", self._sender_tb)
         self._function_tb = QSpinBox(self)
         self._function_tb.valueChanged.connect(self._function_value_changed)
         self._function_tb.setMinimum(0)
+        self._function_tb.setMaximum(MAX_EVENT_ID_VALUE)
         layout.addRow("Function", self._function_tb)
         self._argument_tb = QLineEdit(self)
         self._argument_tb.setInputMask("9999999")
+        self._argument_tb.setToolTip(
+            "Arguments are a character sequence: every character is sent as one argument byte (its character code)."
+        )
         self._argument_tb.textChanged.connect(self._arguments_changed)
         layout.addRow("Arguments", self._argument_tb)
         button_box = QDialogButtonBox(

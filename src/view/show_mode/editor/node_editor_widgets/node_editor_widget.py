@@ -32,15 +32,15 @@ class NodeEditorFilterConfigWidget(ABC):
 
     @configuration.setter
     def configuration(self, conf: dict[str, str]) -> None:
-        """Loads the configuration already present in the filter configuration."""
+        """Load the configuration already present in the filter configuration."""
         self._load_configuration(conf)
 
     @abstractmethod
     def get_widget(self) -> QWidget:
-        """Returns the widget that should be displayed."""
+        """Return the widget that should be displayed."""
 
     @abstractmethod
-    def _load_parameters(self, parameters: dict[str, str]) -> dict:
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         """Parse the current filter parameters."""
 
     @abstractmethod
@@ -59,11 +59,11 @@ class NodeEditorFilterConfigWidget(ABC):
 
     @parameters.setter
     def parameters(self, parameters: dict[str, str]) -> None:
-        """Sets the filter parameters on the widget."""
+        """Set the filter parameters on the widget."""
         self._load_parameters(parameters)
 
     def parent_closed(self, filter_node: "FilterNode") -> None:
-        """Method might be overridden to listen for parent close events.
+        """Override this method to listen for parent close events.
 
         Args:
             filter_node: might be used to alter the filter being presented.
@@ -75,4 +75,4 @@ class NodeEditorFilterConfigWidget(ABC):
 
     @abstractmethod
     def parent_opened(self) -> None:
-        """Method might be overridden to listen for parent open events."""
+        """Override this method to listen for parent open events."""

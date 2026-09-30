@@ -69,7 +69,11 @@ def load_fixture(file: str) -> OflFixture:
             logger.error("Fixture definition (%s) JSON error: %s", file, e)
             raise FixtureDefNotFoundError(file, f"The file is not valid JSON: {e}") from e
     ob.update({"fileName": _fixture_display_name(file)})
-    return OflFixture.model_validate(ob)
+    try:
+        return OflFixture.model_validate(ob)
+    except Exception as e:
+        logger.error("Fixture definition (%s) validation error: %s", file, e)
+        raise e
 
 
 def _fixture_display_name(file: str) -> str:

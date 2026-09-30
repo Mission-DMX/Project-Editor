@@ -76,7 +76,7 @@ class DimmerBrightnessMixinConfigWidget(NodeEditorFilterConfigWidget):
         return self._widget
 
     @override
-    def _load_parameters(self, parameters: dict[str, str]) -> dict:
+    def _load_parameters(self, parameters: dict[str, str]) -> None:
         # Nothing to do here
         pass
 
