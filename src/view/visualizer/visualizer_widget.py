@@ -21,6 +21,7 @@ from model.visualizer.dmx.dmx_parser import (
     get_movement_range,
 )
 from model.visualizer.stage.fixture_group import FixtureGroup
+from model.visualizer.stage.so_moving_head import MovingHead
 from model.visualizer.stage.so_par_can import ParCan
 from model.visualizer.stage.so_pixel_fixture import PixelFixture
 from model.visualizer.stage.stage_config import (
@@ -109,6 +110,35 @@ def _classify_pixel_channel(name: str) -> tuple[str, str | None]:
         return "dimmer", None
 
     return "unknown", None
+
+
+def _build_color_section(device: UsedFixture) -> dict[str, Any] | None:
+    """Build the ``color`` section of ``device_config`` for a beam fixture.
+
+    Combines auto-detected per-colour-role channel offsets with the first
+    colour-carrying wheel extracted via :func:`_extract_wheel_configs`. Returns
+    ``None`` if the fixture exposes no colour source at all so the caller can
+    skip adding an empty section to ``device_config``.
+    """
+    ch_names = [ch.name for ch in device.fixture_channels]
+    col_mapping = auto_detect_mapping(ch_names, ColorRole)
+    wheel_configs = _extract_wheel_configs(device)
+
+    has_direct = any(col_mapping.get(role, -1) >= 0 for role in ("red", "green", "blue", "white", "amber", "uv"))
+    if not has_direct and not wheel_configs:
+        return None
+
+    cfg: dict[str, Any] = {
+        "universe": device.universe_id,
+        "start_channel": device.start_index,
+        "channel_count": device.channel_length,
+        "mapping": col_mapping,
+    }
+    if wheel_configs:
+        # Fixtures rarely carry more than one colour-contributing wheel; take the
+        # first and fold its slot colours into the beam colour alongside any RGB.
+        cfg["wheel"] = wheel_configs[0]
+    return cfg
 
 
 def _extract_wheel_configs(device: UsedFixture) -> list[dict[str, Any]]:
@@ -242,6 +272,12 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._save_timer.timeout.connect(self._save_stage)
         self._save_failed = False
 
+        # When the show file was loaded before the visualizer was constructed,
+        # the ``show_file_loaded`` signal never fires here. Run the backfill once
+        # against whatever fixtures the board already knows about.
+        if self._backfill_color_sections():
+            self._schedule_save()
+
     @override
     def showEvent(self, event: QtGui.QShowEvent) -> None:
         """Start DMX polling once the visualizer becomes visible."""
@@ -302,7 +338,72 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         self._gl_widget.set_stage_config(new_config)
         self._editor_widget.set_stage_config(new_config)
 
+        # Backfill the ``color`` section on beam fixtures (MovingHead / ParCan)
+        # that were saved before the auto-config knew how to detect RGB(W/A/UV)
+        # and colour wheels. Also persist, so the stage file converges once the
+        # user re-opens it with the show file loaded.
+        if self._backfill_color_sections():
+            self._schedule_save()
+
         logger.info("Stage loaded: %d objects", len(new_config.objects))
+
+    def _backfill_color_sections(self) -> bool:
+        """Add missing ``color`` sections to loaded beam fixtures.
+
+        Walks the current :class:`StageConfig` and, for every :class:`MovingHead`
+        or :class:`ParCan` whose ``device_config`` has a ``movement`` entry but
+        no ``color`` entry, looks up the fixture at that DMX address in the
+        board configuration and runs :func:`_build_color_section` to synthesise
+        one (RGB/W/A/UV channels and the first colour wheel, if any).
+
+        Returns:
+            ``True`` if at least one object was upgraded, so the caller can
+            schedule a save.
+
+        """
+        if not self._stage_config.objects:
+            return False
+        upgraded = False
+        for obj in self._stage_config.objects:
+            if not isinstance(obj, (MovingHead, ParCan)):
+                continue
+            dc = obj.device_config
+            if not dc or "color" in dc:
+                continue
+            mv = dc.get("movement") or {}
+            universe = mv.get("universe")
+            start = mv.get("start_channel")
+            if universe is None or start is None:
+                continue
+            fixture = self._find_fixture_by_address(int(universe), int(start))
+            if fixture is None:
+                continue
+            try:
+                color_cfg = _build_color_section(fixture)
+            except Exception as e:
+                logger.debug("Could not backfill colour section for %s: %s", obj.id, e)
+                continue
+            if color_cfg is None:
+                continue
+            dc["color"] = color_cfg
+            upgraded = True
+            logger.info(
+                "Backfilled DMX colour section for %s (%s) from %s",
+                obj.id,
+                obj.get_type(),
+                fixture.name,
+            )
+        return upgraded
+
+    def _find_fixture_by_address(self, universe: int, start_channel: int) -> UsedFixture | None:
+        """Return the patched fixture at the given DMX base address, or ``None``."""
+        try:
+            for fixture in self._board_configuration.fixtures:
+                if fixture.universe_id == universe and fixture.start_index == start_channel:
+                    return fixture
+        except Exception:
+            return None
+        return None
 
     def _populate_pan_tilt_range_for_object(self, obj: StageObject, movement_cfg: dict[str, Any]) -> None:
         if "universe" not in movement_cfg or "start_channel" not in movement_cfg:
@@ -326,6 +427,11 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
 
     def _refresh_fixtures(self) -> None:
         self._editor_widget.set_used_fixtures(self._get_fixtures())
+        # Fixtures may have appeared or changed address; try again to backfill
+        # colour sections on any beam fixtures that are still missing one.
+        if self._backfill_color_sections():
+            self._schedule_save()
+            self._gl_widget.update()
 
     def _on_connection_state_updated(self, connected: bool) -> None:
         """Refresh the fixture list shortly after a connection to Fish was established.
@@ -354,7 +460,7 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
                 else:
                     ch_names = [ch.name for ch in device.fixture_channels]
                     mapping = auto_detect_mapping(ch_names, MovementRole)
-                    new_obj.device_config = {
+                    dc: dict[str, Any] = {
                         "movement": {
                             "universe": device.universe_id,
                             "start_channel": device.start_index,
@@ -363,6 +469,12 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
                             "pan_tilt_range": get_movement_range(device),
                         }
                     }
+                    # Pick up RGB(W/A/UV) channels and any colour wheel so wheel-only
+                    # moving heads (no RGB channels) still drive the beam colour.
+                    color_cfg = _build_color_section(device)
+                    if color_cfg is not None:
+                        dc["color"] = color_cfg
+                    new_obj.device_config = dc
             except Exception as e:
                 logger.warning("Could not auto-link device: %s", e)
 
@@ -385,7 +497,6 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
         """
         ch_names = [ch.name for ch in device.fixture_channels]
         mv_mapping = auto_detect_mapping(ch_names, MovementRole)
-        col_mapping = auto_detect_mapping(ch_names, ColorRole)
 
         dc: dict[str, Any] = {}
         if mv_mapping.get(MovementRole.DIMMER.value, -1) >= 0:
@@ -395,13 +506,9 @@ class StageVisualizerWidget(QtWidgets.QSplitter):
                 "channel_count": device.channel_length,
                 "mapping": mv_mapping,
             }
-        if any(col_mapping.get(role, -1) >= 0 for role in ("red", "green", "blue", "white")):
-            dc["color"] = {
-                "universe": device.universe_id,
-                "start_channel": device.start_index,
-                "channel_count": device.channel_length,
-                "mapping": col_mapping,
-            }
+        color_cfg = _build_color_section(device)
+        if color_cfg is not None:
+            dc["color"] = color_cfg
         obj.device_config = dc or None
 
     def _auto_configure_pixel_fixture(self, obj: PixelFixture, device: UsedFixture) -> None:
