@@ -162,7 +162,9 @@ class ParCan(StageObject):
             mv_map = dc.get("movement", {}).get("mapping", {})
             col_map = dc.get("color", {}).get("mapping", {})
             has_dimmer = mv_map.get("dimmer", -1) >= 0
-            has_color = any(col_map.get(role, -1) >= 0 for role in ("red", "green", "blue", "white"))
+            has_color = any(
+                col_map.get(role, -1) >= 0 for role in ("red", "green", "blue", "white", "amber", "uv")
+            ) or bool((dc.get("color") or {}).get("wheel"))
             if has_dimmer:
                 obj.dimmer = 1.0
             if has_color:

@@ -356,6 +356,18 @@ class DmxParser(QtCore.QObject):
             g_total += base[1] * frac
             b_total += base[2] * frac
 
+        # Add the current colour-wheel slot's colour on top of any direct RGB. For
+        # wheel-only fixtures (no R/G/B channels at all) the wheel is the sole
+        # colour source — otherwise it tints whatever RGB mix the user dialed in.
+        wheel_cfg = cfg.get("wheel")
+        wheel_color = self._lookup_wheel_color(raw, wheel_cfg)
+        if wheel_cfg is not None:
+            any_mapped = True
+        if wheel_color is not None:
+            r_total += wheel_color[0]
+            g_total += wheel_color[1]
+            b_total += wheel_color[2]
+
         if not any_mapped:
             # No colour channel mapped (or all out of range); nothing to apply.
             return
