@@ -114,6 +114,8 @@ class PatchingDialog(QtWidgets.QDialog):
                 self._select_mode.currentIndex(),
                 self.patching_information.universe,
                 start_index,
+                None,
+                None
             )
 
             if self._patching_information.offset == 0:
