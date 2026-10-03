@@ -382,9 +382,14 @@ class DimmerBrightnessMixinNode(FilterNode):
             if self.filter.filter_configurations.get(setting) == "true":
                 if self.outputs().get(term_name) is None:
                     self.addOutput(term_name)
+                if self.filter.out_data_types.get(term_name) is None:
+                    self.filter.out_data_types[term_name] = \
+                        DataType.DT_8_BIT if setting == "has_8bit_output" else DataType.DT_16_BIT
             else:
                 if self.outputs().get(term_name) is not None:
                     self.removeTerminal(term_name)
+                if self.filter.out_data_types.get(term_name) is not None:
+                    self.filter.out_data_types.pop(term_name)
 
     @override
     def update_node_after_settings_changed(self) -> None:
