@@ -3,6 +3,7 @@ import json
 import os
 import xml.etree.ElementTree as ET
 from logging import getLogger
+from uuid import UUID
 
 import xmlschema
 from defusedxml.ElementTree import parse
@@ -684,6 +685,8 @@ def _parse_patching(board_configuration: BoardConfiguration, location_element: E
                 int(child.attrib["mode"]),
                 universe_id,
                 int(child.attrib["start"]),
+                UUID(child.attrib.get("id")) if child.attrib.get("id") else None,
+                child.attrib.get("color"),
             )
         except FixtureDefNotFoundError as e:
             # Calling Dialog exec is not an issue here as we're in the process of loading the show file anyway
