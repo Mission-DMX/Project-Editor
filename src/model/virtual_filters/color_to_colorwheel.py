@@ -170,6 +170,9 @@ class ColorToColorWheel(VirtualFilter):
             "colorwheel_datatype": self.filter_configurations.get("colorwheel-datatype", "8bit"),
         })
 
+        time_filter = Filter(self.scene, self._filter_id + "__time_filter",
+                             FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, pos=self.pos)
+
         f = Filter(self.scene, self.filter_id, FilterTypeEnumeration.FILTER_SCRIPTING_LUA, pos=self.pos)
         f.initial_parameters["script"] = script
         f.filter_configurations["in_mapping"] = "input:color;time:float"
@@ -178,5 +181,7 @@ class ColorToColorWheel(VirtualFilter):
         f.filter_configurations["out_mapping"] = f"colorwheel:{"16bit" if colorwheel_is_16bit else "8bit"}"
         if dimmer_output_required:
             f.filter_configurations["out_mapping"] += f";dimmer:{required_dimmer_output_data_type}"
+        f.channel_links["time"] = time_filter.filter_id + ":value"
         f.channel_links.update(self.channel_links)
+        filter_list.append(time_filter)
         filter_list.append(f)

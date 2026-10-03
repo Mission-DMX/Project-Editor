@@ -900,7 +900,32 @@ class Stage3DWidget(QOpenGLWidget):
             rotation_mat.rotate(obj.rotation[2], 0.0, 0.0, 1.0)
             rotation_mat.rotate(obj.rotation[1], 0.0, 1.0, 0.0)
             rotation_mat.rotate(obj.rotation[0], 1.0, 0.0, 0.0)
-            dir_vec = rotation_mat.map(QtGui.QVector3D(0.0, 1.0, 0.0))
+            # Object may override the default upward beam direction (e.g. pixel fixtures
+            # whose emissive face points along +Z out of the model).
+            local_dir = getattr(obj, "beam_local_direction", None)
+            if isinstance(local_dir, QtGui.QVector3D):
+                base_dir = QtGui.QVector3D(local_dir)
+            elif isinstance(local_dir, (list, tuple)) and len(local_dir) == 3:
+                base_dir = QtGui.QVector3D(float(local_dir[0]), float(local_dir[1]), float(local_dir[2]))
+            else:
+                base_dir = QtGui.QVector3D(0.0, 1.0, 0.0)
+            dir_vec = rotation_mat.map(base_dir)
+
+            # Object may also nudge the beam origin away from its own position — used
+            # by fixtures whose emissive point sits deep inside their model geometry,
+            # e.g. a PAR can's lens at the top of the tube. Offsets are given in
+            # local model units so they scale with the object's ``scale`` factor.
+            local_origin = getattr(obj, "beam_local_origin", None)
+            if isinstance(local_origin, QtGui.QVector3D):
+                offset_vec = QtGui.QVector3D(local_origin)
+            elif isinstance(local_origin, (list, tuple)) and len(local_origin) == 3:
+                offset_vec = QtGui.QVector3D(
+                    float(local_origin[0]), float(local_origin[1]), float(local_origin[2])
+                )
+            else:
+                offset_vec = None
+            if offset_vec is not None:
+                origin_pos += rotation_mat.map(offset_vec) * float(getattr(obj, "scale", 1.0))
         return origin_pos, dir_vec
 
     def _update_camera_pos(self) -> None:
@@ -1039,9 +1064,37 @@ class Stage3DWidget(QOpenGLWidget):
 
     def _ensure_models_loaded(self, obj: StageObject) -> None:
         """Ensure all 3D models for a stage object are uploaded to the GPU."""
+        # Register any procedural meshes the object generates itself before falling
+        # back to file-based loading. Keyed by ``model_path`` so cache lookups by
+        # subsequent passes hit the same entry.
+        if hasattr(obj, "get_procedural_mesh_data"):
+            for entry in getattr(obj, "get_model_entries", list)():
+                path = entry.model_path
+                if not path or path in self._models or path in self._gltf_models:
+                    continue
+                try:
+                    verts, indices = obj.get_procedural_mesh_data()
+                except Exception as e:
+                    logger.exception("Procedural mesh generation failed for %s: %s", obj.id, e)
+                    continue
+                self.makeCurrent()
+                self._models[path] = Model3D.upload_mesh(verts, indices, context=self.context())
         for entry in getattr(obj, "get_model_entries", list)():
             self._ensure_model_loaded_by_path(entry.model_path)
         self._validate_gltf_override_nodes(obj)
+
+    def reload_object_models(self, obj: StageObject) -> None:
+        """Rebuild any procedural meshes for an object whose geometry changed.
+
+        Safe to call for objects that don't provide procedural geometry — those
+        keep their file-based model as-is.
+        """
+        if not self._gl_initialized:
+            return
+        self.makeCurrent()
+        self._ensure_models_loaded(obj)
+        self._unload_unused_models()
+        self.doneCurrent()
 
     def _validate_gltf_override_nodes(self, obj: StageObject) -> None:
         """Log an error when pan/tilt joint nodes are missing from the model.
