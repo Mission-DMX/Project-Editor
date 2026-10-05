@@ -16,6 +16,7 @@ class PatchingInformation:
     """Information for Patching."""
 
     def __init__(self, fixture: OflFixture) -> None:
+        """Initialize patching information structure."""
         self._fixture: OflFixture = fixture
         self.count: int = 0
         self.universe: int = 0
@@ -106,7 +107,6 @@ class PatchingDialog(QtWidgets.QDialog):
 
     def generate_fixtures(self) -> None:
         """Generate a used Fixture list from Patching information."""
-
         start_index = self.patching_information.channel
         for _ in range(self.patching_information.count):
             used_fixture = make_used_fixture(
