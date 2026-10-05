@@ -32,6 +32,7 @@ class PatchPlanExportWizard(QWizard):
     """Wizard guides the user to export the patching configuration as a CSV file.
 
     Provide a power distribution guide in the process.
+
     """
 
     def __init__(self, parent: QWidget, show_data: BoardConfiguration) -> None:
@@ -93,6 +94,7 @@ class PatchPlanExportWizard(QWizard):
         """Handle export button click.
 
         Prompts the user to select an CSV file export destination.
+
         """
         self._file_selection_dialog.show()
 
@@ -105,6 +107,7 @@ class PatchPlanExportWizard(QWizard):
         """Load all available fixtures into the list widget.
 
         Prompting the user to select the one desired for export.
+
         """
         for fixture in self._show.fixtures:
             item = AnnotatedListWidgetItem(self._fixture_list)
