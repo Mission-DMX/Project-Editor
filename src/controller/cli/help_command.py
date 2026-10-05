@@ -88,6 +88,8 @@ class HelpCommand(Command):
             case "showctl":
                 self.context.print("Manage the general show file and execution on fish")
                 self.context.print("\tload <show file> -- Load the provided show file and make it the current one")
+                self.context.print("\tsave [file path] -- Save the current show file. If argument is omitted, use the "
+                                   "current location.")
                 self.context.print(
                     "\tfiltermsg <scene id> <filter id> <key> <value> -- Update the parameter <key> of "
                     "\n\t\tfilter <filter id> from scene <scene id> to value <value>."
