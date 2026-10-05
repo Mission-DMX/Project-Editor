@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from controller.cli.command import Command
 from controller.file.read import read_document
 from controller.file.transmitting_to_fish import transmit_to_fish
+from controller.file.write import write_document
 from model.filter import VirtualFilter
 
 if TYPE_CHECKING:
@@ -48,7 +49,11 @@ class ShowCommand(Command):
         )
 
         load_parser: ArgumentParser = subparsers.add_parser("load", help="Load a show file", exit_on_error=False)
-        load_parser.add_argument("filename", help="The location of the .show file.")
+        load_parser.add_argument("filename", help="The location of the .show file.", type=str)
+
+        save_parser: ArgumentParser = subparsers.add_parser("save", help="Save a show file", exit_on_error=False)
+        save_parser.add_argument("filename", help="The location of the .show file. Optional.", default="",
+                                 type=str, nargs='?')
 
         scene_parser: ArgumentParser = subparsers.add_parser(
             "select-scene", help="Select a specific scene in the running show.", exit_on_error=False
@@ -85,6 +90,16 @@ class ShowCommand(Command):
                 return transmit_to_fish(self.context.show, goto_default_scene=args.select_default_scene)
             case "load":
                 return read_document(args.filename, self.context.show)
+            case "save":
+                if args.filename is not None and len(args.filename) > 0:
+                    chosen_file_name = args.filename
+                else:
+                    chosen_file_name = self.context.show.file_path
+                try:
+                    return write_document(chosen_file_name, self.context.show)
+                except FileNotFoundError:
+                    self.context.print(f"Unable to write to file {chosen_file_name}.")
+                    return False
             case "select-scene":
                 scene = self.context.show.get_scene_by_id(args.sceneid)
                 if not scene:
