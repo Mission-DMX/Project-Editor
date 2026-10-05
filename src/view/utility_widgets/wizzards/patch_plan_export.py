@@ -172,7 +172,7 @@ class PatchPlanExportWizard(QWizard):
                         fixture.name_on_stage or fixture.name,
                         fixture.fixture_file,
                         str(fixture.universe_id),
-                        str(fixture.start_index),
+                        str(fixture.start_index + 1),
                         f"L{fixture_phase + 1}",
                         str(fixture.power),
                         str(phases[fixture_phase]),
@@ -191,7 +191,7 @@ class PatchPlanExportWizard(QWizard):
 
         """
         number_of_phases = self._number_phases_sb.value()
-        fixtures.sort(key=lambda f: f.physical.power, reverse=True)
+        fixtures.sort(key=lambda f: f.power, reverse=True)
         for fixture in fixtures:
             selected_phase = 0
             for i in range(number_of_phases):
