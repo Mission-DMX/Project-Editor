@@ -33,7 +33,7 @@ from model.patching.fixture_channel import FixtureChannelType
 from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
-from view.show_mode.editor.show_browser.fixture_to_filter import place_fixture_filters_in_scene
+from controller.show_manipulation.fixture_to_filter import place_fixture_filters_in_scene
 from view.utility_widgets.button_container import ButtonContainer
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 from view.utility_widgets.wizzards._composable_wizard_page import ComposableWizardPage
