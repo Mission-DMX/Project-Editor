@@ -31,7 +31,7 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 
 from .annotated_item import AnnotatedTreeWidgetItem
-from .fixture_to_filter import place_fixture_filters_in_scene
+from controller.show_manipulation.fixture_to_filter import place_fixture_filters_in_scene
 
 logger = getLogger(__name__)
 
