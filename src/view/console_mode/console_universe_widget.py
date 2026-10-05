@@ -122,6 +122,15 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
         if fixture.universe_id != self._universe.id:
             return
         layout = self._universe_widget.layout()
+
+        insert_index = layout.count()
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            widget = item.widget() if item is not None else None
+            if isinstance(widget, ChannelWidget) and widget._channel.address > fixture.start_index:
+                insert_index = i
+                break
+
         for channel_index in range(fixture.channel_length):
             channel_widget = ChannelWidget(
                 fixture.get_fixture_channel(channel_index),
@@ -130,8 +139,8 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
                 self._bank_set_control_elements,
                 self,
             )
-            layout.addWidget(channel_widget)
+            layout.insertWidget(insert_index + channel_index, channel_widget)
             self._universe.channels[fixture.start_index + channel_index].updated.connect(
                 lambda _, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe)
             )
-        layout.addWidget(QtWidgets.QLabel(fixture.name))
+        layout.insertWidget(insert_index + fixture.channel_length, QtWidgets.QLabel(fixture.name))
