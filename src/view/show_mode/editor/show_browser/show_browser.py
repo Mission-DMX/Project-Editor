@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from controller.file.transmitting_to_fish import transmit_to_fish
+from controller.show_manipulation.fixture_to_filter import place_fixture_filters_in_scene
 from model import BoardConfiguration, Scene, UIPage
 from model.control_desk import BankSet
 from model.ofl.fixture import UsedFixture
@@ -31,7 +32,6 @@ from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import Y
 from view.utility_widgets.universe_tree_browser_widget import UniverseTreeBrowserWidget
 
 from .annotated_item import AnnotatedTreeWidgetItem
-from .fixture_to_filter import place_fixture_filters_in_scene
 
 logger = getLogger(__name__)
 
