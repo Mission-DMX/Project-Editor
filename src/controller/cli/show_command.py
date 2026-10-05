@@ -53,7 +53,7 @@ class ShowCommand(Command):
 
         save_parser: ArgumentParser = subparsers.add_parser("save", help="Save a show file", exit_on_error=False)
         save_parser.add_argument("filename", help="The location of the .show file. Optional.", default="",
-                                 type=str, nargs='?')
+                                 type=str, nargs="?")
 
         scene_parser: ArgumentParser = subparsers.add_parser(
             "select-scene", help="Select a specific scene in the running show.", exit_on_error=False
