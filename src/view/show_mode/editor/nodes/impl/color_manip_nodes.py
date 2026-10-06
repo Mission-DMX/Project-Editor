@@ -8,38 +8,34 @@ from view.show_mode.editor.nodes import FilterNode
 from view.show_mode.editor.nodes.base.aggregating_filter_node import AggregatingFilterNode
 
 
-class ColorMixerHSVNode(AggregatingFilterNode):
+class ColorMixerHSVNode(FilterNode):
     """Node to mix colors based on their HSV representation."""
 
     nodeName = "Color Mixer HSV"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_HSV, name=name)
 
 
-class ColorMixerAdditiveRGBNode(AggregatingFilterNode):
+class ColorMixerAdditiveRGBNode(FilterNode):
     """Node to mix colors based on their RGB representation using the additive algorithm."""
 
     nodeName = "Color Mixer Additive RGB"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(
-            DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_ADDITIVE_RGB
-        )
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_ADDITIVE_RGB, name=name)
 
 
-class ColorMixerNormativeRGBNode(AggregatingFilterNode):
+class ColorMixerNormativeRGBNode(FilterNode):
     """Node to mix colors based on their RGB representation using the normative algorithm."""
 
     nodeName = "Color Mixer Normative RGB"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(
-            DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_NORMATIVE_RGB
-        )
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_NORMATIVE_RGB, name=name)
 
 
 class ColorMixerVFilterNode(AggregatingFilterNode):

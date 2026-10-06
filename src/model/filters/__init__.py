@@ -15,6 +15,7 @@ new category means adding a new import below.
 
 from . import (  # side-effect import so @register_filter runs
     adapters,
+    aggregating,
     arithmetics,
     constants,
     debug,

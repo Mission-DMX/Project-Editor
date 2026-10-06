@@ -1,7 +1,5 @@
 """Basic arithmetic filter nodes."""
-from model import DataType
 from model.filter import Filter, FilterTypeEnumeration
-from view.show_mode.editor.nodes.base.aggregating_filter_node import AggregatingFilterNode
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -105,7 +103,7 @@ class ArithmeticMaximumNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_MAXIMUM, name=name)
 
 
-class Sum8BitNode(AggregatingFilterNode):
+class Sum8BitNode(FilterNode):
     """Filter node for sum filter.
 
     This filter accepts a configurable number of input channels and sums up all of their values.
@@ -117,10 +115,10 @@ class Sum8BitNode(AggregatingFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(DataType.DT_8_BIT, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_8BIT)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_SUM_8BIT, name=name)
 
 
-class Sum16BitNode(AggregatingFilterNode):
+class Sum16BitNode(FilterNode):
     """Filter node for sum filter.
 
     This filter accepts a configurable number of input channels and sums up all of their values.
@@ -132,10 +130,10 @@ class Sum16BitNode(AggregatingFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(DataType.DT_16_BIT, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_16BIT)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_SUM_16BIT, name=name)
 
 
-class SumFloatNode(AggregatingFilterNode):
+class SumFloatNode(FilterNode):
     """Filter node for sum filter.
 
     This filter accepts a configurable number of input channels and sums up all of their values.
@@ -147,4 +145,4 @@ class SumFloatNode(AggregatingFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(DataType.DT_DOUBLE, model, name, filter_type=FilterTypeEnumeration.FILTER_SUM_FLOAT)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_SUM_FLOAT, name=name)
