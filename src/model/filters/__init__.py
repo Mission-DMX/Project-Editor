@@ -18,6 +18,7 @@ from . import (  # side-effect import so @register_filter runs
     arithmetics,
     constants,
     debug,
+    scripting,
     time,
     trigonometrics,
     waves,

@@ -137,7 +137,35 @@ class FilterNode(Node):
         return self._filter
 
     def update_node_after_settings_changed(self) -> None:
-        """Override this method in order to update ports after the settings have changed"""
+        """Re-derive the filter's I/O signature and sync pyqtgraph terminals to match.
+
+        Dynamic-I/O filter subclasses derive their ``in_data_types`` / ``out_data_types``
+        from ``filter_configurations`` in :meth:`model.filter.Filter._rebuild_io`. After the
+        settings widget commits a configuration change the model dicts are stale until that
+        hook re-runs; this method triggers the hook and then diffs the current pyqtgraph
+        terminals against the fresh model signature, adding or removing terminals as needed.
+        Static-I/O filters produce a stable signature so the diff is a no-op.
+
+        Subclasses may still override for custom behaviour (e.g. preserving user-managed
+        extra terminals), but the default now handles the generic rebuild + sync case.
+        """
+        if self._filter is None:
+            return
+        self._filter._rebuild_io()
+        desired_in = set(self._filter.in_data_types.keys())
+        desired_out = set(self._filter.out_data_types.keys())
+        for name in list(self.inputs().keys()):
+            if name not in desired_in:
+                self.removeTerminal(name)
+        for name in list(self.outputs().keys()):
+            if name not in desired_out:
+                self.removeTerminal(name)
+        for name in desired_in:
+            if name not in self.inputs():
+                self.addInput(name)
+        for name in desired_out:
+            if name not in self.outputs():
+                self.addOutput(name)
 
     @staticmethod
     def _terminals_from_filter(filter_: Filter) -> dict[str, dict[str, str]]:
