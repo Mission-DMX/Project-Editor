@@ -20,6 +20,7 @@ from . import (  # side-effect import so @register_filter runs
     constants,
     debug,
     misc,
+    routing,
     scripting,
     time,
     trigonometrics,

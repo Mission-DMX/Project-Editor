@@ -1250,6 +1250,118 @@ class FixtureToFilterRegressionTests(unittest.TestCase):
         self.assertTrue(len(dimmer_vfilters[0].out_data_types) > 0)
 
 
+class SwitchSubclassTests(unittest.TestCase):
+    """Per-type assertions for the native switch subclasses migrated in PR 11.
+
+    Also confirms the latent bug fix: ``out_data_types["out"]`` is now set (previously the
+    typed output was mistakenly stored under ``in_data_types["out"]``).
+    """
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_default_two_inputs_plus_select(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.FILTER_SWITCH_8BIT, filter_id="sw"
+        )
+        self.assertEqual(f.filter_configurations["nr_inputs"], "2")
+        self.assertEqual(
+            f.in_data_types,
+            {"select": DataType.DT_16_BIT, "0": DataType.DT_8_BIT, "1": DataType.DT_8_BIT},
+        )
+        self.assertEqual(f.out_data_types, {"out": DataType.DT_8_BIT})
+        self.assertEqual(f.default_values["select"], "0")
+        self.assertEqual(f.default_values["0"], "0")
+
+    def test_data_type_per_subclass_and_defaults(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        cases = [
+            (FilterTypeEnumeration.FILTER_SWITCH_8BIT, DataType.DT_8_BIT, "0"),
+            (FilterTypeEnumeration.FILTER_SWITCH_16BIT, DataType.DT_16_BIT, "0"),
+            (FilterTypeEnumeration.FILTER_SWITCH_FLOAT, DataType.DT_DOUBLE, "0"),
+            (FilterTypeEnumeration.FILTER_SWITCH_COLOR, DataType.DT_COLOR, "0,0,0"),
+        ]
+        for ft, expected_dt, expected_default in cases:
+            with self.subTest(filter_type=ft.name):
+                f = construct_filter_instance(scene=scene, filter_type=ft, filter_id=f"s_{ft.name}")
+                self.assertEqual(f.in_data_types["0"], expected_dt)
+                self.assertEqual(f.in_data_types["select"], DataType.DT_16_BIT)
+                self.assertEqual(f.out_data_types, {"out": expected_dt})
+                self.assertEqual(f.default_values["0"], expected_default)
+
+    def test_output_is_in_out_data_types_not_in_data_types(self) -> None:
+        """Guard against the pre-PR 11 bug that stored the output type under in_data_types."""
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.FILTER_SWITCH_FLOAT, filter_id="s"
+        )
+        self.assertNotIn("out", f.in_data_types)
+        self.assertIn("out", f.out_data_types)
+
+    def test_nr_inputs_three_grows_input_set(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.FILTER_SWITCH_COLOR,
+            filter_id="s",
+            filter_configurations={"nr_inputs": "3"},
+        )
+        self.assertEqual(set(f.in_data_types.keys()), {"select", "0", "1", "2"})
+        for key in ("0", "1", "2"):
+            self.assertEqual(f.in_data_types[key], DataType.DT_COLOR)
+            self.assertEqual(f.default_values[key], "0,0,0")
+
+    def test_invalid_nr_inputs_falls_back_to_zero(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.FILTER_SWITCH_8BIT,
+            filter_id="s",
+            filter_configurations={"nr_inputs": "garbage"},
+        )
+        # Only the select input remains.
+        self.assertEqual(set(f.in_data_types.keys()), {"select"})
+        self.assertEqual(f.in_data_types["select"], DataType.DT_16_BIT)
+        self.assertEqual(f.filter_configurations["nr_inputs"], "0")
+
+    def test_switch_node_syncs_terminals_on_settings_change(self) -> None:
+        """Dynamic rebuild: 2 inputs → 4 inputs → 1 input via base update_node_after_settings_changed."""
+        from view.show_mode.editor.nodes.impl.routing import Switch8BitNode
+
+        scene = self._make_scene()
+        node = Switch8BitNode(model=scene, name="sw")
+        self.assertEqual(set(node.inputs().keys()), {"select", "0", "1"})
+        self.assertEqual(set(node.outputs().keys()), {"out"})
+        node.filter.filter_configurations["nr_inputs"] = "4"
+        node.update_node_after_settings_changed()
+        self.assertEqual(set(node.inputs().keys()), {"select", "0", "1", "2", "3"})
+        node.filter.filter_configurations["nr_inputs"] = "1"
+        node.update_node_after_settings_changed()
+        self.assertEqual(set(node.inputs().keys()), {"select", "0"})
+        self.assertEqual(set(node.outputs().keys()), {"out"})
+
+
 class NodeTerminalsFromFilterTests(unittest.TestCase):
     """When a node passes ``terminals=None``, the base derives terminals from the filter.
 
