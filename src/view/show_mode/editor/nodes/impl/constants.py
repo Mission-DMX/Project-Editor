@@ -50,16 +50,7 @@ class Constants8BitNode(TextPreviewRendererMixin):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_8BIT, name=name, terminals={
-            "value": {"io": "out"},
-        })
-
-        try:
-            self.filter.initial_parameters["value"] = model.initial_parameters["value"]
-        except:
-            self.filter.initial_parameters["value"] = "0"
-        self.filter.out_data_types["value"] = DataType.DT_8_BIT
-        self.filter.gui_update_keys["value"] = DataType.DT_8_BIT
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_8BIT, name=name)
 
     @override
     def update_node_after_settings_changed(self) -> None:
@@ -78,16 +69,7 @@ class Constants16BitNode(TextPreviewRendererMixin):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, name=name, terminals={
-            "value": {"io": "out"},
-        })
-
-        try:
-            self.filter.initial_parameters["value"] = model.initial_parameters["value"]
-        except:
-            self.filter.initial_parameters["value"] = "0"
-        self.filter.out_data_types["value"] = DataType.DT_16_BIT
-        self.filter.gui_update_keys["value"] = DataType.DT_16_BIT
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_16_BIT, name=name)
 
     @override
     def update_node_after_settings_changed(self) -> None:
@@ -106,16 +88,7 @@ class ConstantsFloatNode(TextPreviewRendererMixin):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, name=name, terminals={
-            "value": {"io": "out"},
-        })
-        try:
-            self.filter.initial_parameters["value"] = model.initial_parameters["value"]
-        except:
-            self.filter.initial_parameters["value"] = "0.0"
-        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
-        self.filter.gui_update_keys["value"] = DataType.DT_DOUBLE
-        self.graphicsItem().additional_rendering_method = self._draw_preview
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_FLOAT, name=name)
 
     @override
     def update_node_after_settings_changed(self) -> None:
@@ -138,15 +111,7 @@ class ConstantsColorNode(FilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name, terminals={
-            "value": {"io": "out"},
-        })
-        try:
-            self.filter.initial_parameters["value"] = model.initial_parameters["value"]
-        except:
-            self.filter.initial_parameters["value"] = "0,0,0"
-        self.filter.out_data_types["value"] = DataType.DT_COLOR
-        self.filter.gui_update_keys["value"] = DataType.DT_COLOR
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_COLOR, name=name)
         self.graphicsItem().additional_rendering_method = self._draw_preview
         self._color_brush = QBrush(ColorHSI.from_filter_str(self.filter.initial_parameters["value"]).to_qt_color())
 
