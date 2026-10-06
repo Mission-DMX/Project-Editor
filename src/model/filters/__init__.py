@@ -13,4 +13,4 @@ runs on package import; this is what populates ``factory._FILTER_TYPE_TO_CLASS``
 new category means adding a new import below.
 """
 
-from . import adapters, constants, debug  # side-effect import so @register_filter runs
+from . import adapters, arithmetics, constants, debug  # side-effect import so @register_filter runs
