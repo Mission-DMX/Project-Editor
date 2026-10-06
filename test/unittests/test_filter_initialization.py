@@ -1059,6 +1059,197 @@ class AggregatingSubclassTests(unittest.TestCase):
         self.assertEqual(set(node.outputs().keys()), {"value"})
 
 
+class EventSchedulerTests(unittest.TestCase):
+    """Per-type assertions for the EventScheduler subclass migrated in PR 10."""
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_event_scheduler_defaults(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.FILTER_EVENT_SCHEDULER, filter_id="e"
+        )
+        self.assertEqual(f.in_data_types, {})
+        self.assertEqual(f.out_data_types, {})
+        self.assertEqual(f.filter_configurations["event_data"], "")
+        self.assertEqual(f.initial_parameters["length"], "0")
+        self.assertEqual(f.initial_parameters["update_triggers"], "")
+        self.assertEqual(f.initial_parameters["step"], "0")
+        self.assertEqual(f.initial_parameters["synchronization_target"], "0,0")
+
+
+class UniverseOutputTests(unittest.TestCase):
+    """Per-type assertions for the UniverseOutput subclass migrated in PR 10.
+
+    The universe filter is dynamic: every non-``"universe"`` config key becomes an 8-bit
+    input terminal. The node-side ``UniverseNode`` keeps interactive add/remove behaviour.
+    """
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_empty_config_yields_no_inputs(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, filter_id="u"
+        )
+        self.assertEqual(f.in_data_types, {})
+        self.assertEqual(f.out_data_types, {})
+
+    def test_configs_populate_inputs_excluding_universe_key(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
+            filter_id="u",
+            filter_configurations={"universe": "3", "input_1": "0", "fixture_a": "17"},
+        )
+        self.assertEqual(f.filter_configurations["universe"], "3")
+        self.assertEqual(set(f.in_data_types.keys()), {"input_1", "fixture_a"})
+        for key in ("input_1", "fixture_a"):
+            self.assertEqual(f.in_data_types[key], DataType.DT_8_BIT)
+            self.assertEqual(f.default_values[key], "0")
+
+    def test_fresh_universe_node_seeds_default_universe_id_and_input(self) -> None:
+        from view.show_mode.editor.nodes.impl.universenode import UniverseNode
+
+        scene = self._make_scene()
+        node = UniverseNode(model=scene, name="Universe0")
+        self.assertEqual(node.filter.filter_configurations["universe"], "1")
+        self.assertEqual(node.filter.filter_configurations["input_1"], "0")
+        self.assertEqual(set(node.inputs().keys()), {"input_1"})
+
+    def test_universe_node_add_input_updates_model_and_terminals(self) -> None:
+        from view.show_mode.editor.nodes.impl.universenode import UniverseNode
+
+        scene = self._make_scene()
+        node = UniverseNode(model=scene, name="Universe0")
+        node.addInput()
+        self.assertIn("input_2", node.inputs())
+        self.assertEqual(node.filter.filter_configurations["input_2"], "1")
+        self.assertEqual(node.filter.in_data_types["input_2"].value, 1)  # DT_8_BIT
+
+    def test_universe_node_remove_terminal_clears_config_and_model(self) -> None:
+        from view.show_mode.editor.nodes.impl.universenode import UniverseNode
+
+        scene = self._make_scene()
+        node = UniverseNode(model=scene, name="Universe0")
+        node.addInput()  # adds input_2
+        self.assertIn("input_2", node.filter.filter_configurations)
+        node.removeTerminal(node.inputs()["input_2"])
+        self.assertNotIn("input_2", node.filter.filter_configurations)
+        self.assertNotIn("input_2", node.filter.in_data_types)
+
+
+class FixtureToFilterRegressionTests(unittest.TestCase):
+    """Guard against the "fixture-created filters have no ports" regression.
+
+    ``place_fixture_filters_in_scene`` used to construct native filters via a direct
+    ``Filter(...)`` call. After the subclass migrations the bare ``Filter`` has no
+    ``_rebuild_io`` and lands with empty ``in_data_types`` / ``out_data_types``, which
+    surfaces as port-less editor nodes. These tests pin the fix: every filter the fixture
+    helper creates must come back with its I/O signature populated.
+    """
+
+    def _make_scene_and_page(self):
+        from model import BoardConfiguration, Scene
+        from model.scene import FilterPage
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        page = FilterPage(scene)
+        scene._filter_pages.append(page)
+        return scene, page
+
+    @staticmethod
+    def _make_drgbw_fixture_stub():
+        """Minimal stub providing the attributes ``place_fixture_filters_in_scene`` reads.
+
+        Mirrors a 5-channel Dimmer / Red / Green / Blue / White fixture.
+        """
+
+        class _ChannelStub:
+            def __init__(self, name: str) -> None:
+                self.name = name
+
+        class _FixtureStub:
+            def __init__(self) -> None:
+                self.parent_universe = 1
+                self.start_index = 0
+                self.name = "GenericDRGBW"
+                self._channels = tuple(_ChannelStub(n) for n in ("Dimmer", "Red", "Green", "Blue", "White"))
+
+            @property
+            def channel_length(self) -> int:
+                return len(self._channels)
+
+            @property
+            def fixture_channels(self):  # noqa: ANN202
+                return self._channels
+
+            def get_fixture_channel(self, index: int):  # noqa: ANN202
+                return self._channels[index]
+
+        return _FixtureStub()
+
+    def test_drgbw_fixture_produces_filters_with_populated_io(self) -> None:
+        """Regression: every placed filter must have a non-empty I/O signature."""
+        from model.filter import DataType, FilterTypeEnumeration
+        from view.show_mode.editor.show_browser.fixture_to_filter import place_fixture_filters_in_scene
+
+        scene, page = self._make_scene_and_page()
+        fixture = self._make_drgbw_fixture_stub()
+
+        self.assertTrue(place_fixture_filters_in_scene(fixture, page))
+
+        # Group filters by type for focused assertions.
+        by_type: dict[int, list] = {}
+        for f in scene.filters:
+            by_type.setdefault(int(f.filter_type), []).append(f)
+
+        # Universe output: five inputs, one per channel, each DT_8_BIT; no outputs.
+        universe_filters = by_type.get(int(FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT), [])
+        self.assertEqual(len(universe_filters), 1)
+        uf = universe_filters[0]
+        self.assertEqual(set(uf.in_data_types.keys()), {"Dimmer", "Red", "Green", "Blue", "White"})
+        for dt in uf.in_data_types.values():
+            self.assertEqual(dt, DataType.DT_8_BIT)
+        self.assertEqual(uf.filter_configurations["universe"], "1")
+
+        # Colour-to-RGBW adapter: one input ``value`` DT_COLOR, four 8-bit outputs r/g/b/w.
+        rgbw_filters = by_type.get(int(FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBW), [])
+        self.assertEqual(len(rgbw_filters), 1)
+        rgbw = rgbw_filters[0]
+        self.assertEqual(rgbw.in_data_types, {"value": DataType.DT_COLOR})
+        self.assertEqual(set(rgbw.out_data_types.keys()), {"r", "g", "b", "w"})
+
+        # Dimmer brightness mixin v-filter (unchanged path through its own ctor).
+        dimmer_vfilters = by_type.get(int(FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN), [])
+        self.assertEqual(len(dimmer_vfilters), 1)
+        self.assertTrue(len(dimmer_vfilters[0].out_data_types) > 0)
+
+
 class NodeTerminalsFromFilterTests(unittest.TestCase):
     """When a node passes ``terminals=None``, the base derives terminals from the filter.
 
