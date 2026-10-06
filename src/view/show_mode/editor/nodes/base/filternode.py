@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 from pyqtgraph.flowchart.Flowchart import Node, Terminal
 
 from model import Filter, Scene
-from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
+from model.filters.factory import construct_filter_instance
 from view.show_mode.editor.filter_settings_item import FilterSettingsItem
 from view.show_mode.editor.nodes.base.filternode_graphicsitem import FilterNodeGraphicsItem
 
@@ -25,16 +25,17 @@ class FilterNode(Node):
                  allow_add_input: bool = False,
                  allow_add_output: bool = False) -> None:
         if isinstance(model, Scene):
-            if filter_type < 0:
-                self._filter = construct_virtual_filter_instance(scene=model, filter_id=name, filter_type=filter_type)
-            else:
-                self._filter = Filter(scene=model, filter_id=name, filter_type=filter_type)
-            model.append_filter(self._filter)
+            self._filter = construct_filter_instance(scene=model, filter_id=name, filter_type=filter_type)
+            if self._filter is not None:
+                model.append_filter(self._filter)
         elif isinstance(model, Filter):
             self._filter = model
         else:
             self._filter = None
             logger.warning("Tried creating filter node with unknown model %s", str(type(model)))
+
+        if terminals is None and self._filter is not None:
+            terminals = self._terminals_from_filter(self._filter)
 
         super().__init__(name, terminals, allowAddInput=allow_add_input, allowAddOutput=allow_add_output)
 
@@ -137,6 +138,24 @@ class FilterNode(Node):
 
     def update_node_after_settings_changed(self) -> None:
         """Override this method in order to update ports after the settings have changed"""
+
+    @staticmethod
+    def _terminals_from_filter(filter_: Filter) -> dict[str, dict[str, str]]:
+        """Derive the pyqtgraph ``terminals`` dict from a fully-initialised filter.
+
+        Used by :meth:`__init__` when the subclass does not pass an explicit ``terminals``
+        argument. Returns ``{"name": {"io": "in"/"out"}}`` by walking the filter's
+        ``in_data_types`` and ``out_data_types``. Returns an empty dict if neither is
+        populated yet, which keeps the existing "subclass passes terminals explicitly"
+        pattern working for filter types that have not yet been migrated to the
+        :mod:`model.filters` subclass hierarchy.
+        """
+        terminals: dict[str, dict[str, str]] = {}
+        for name in filter_.in_data_types:
+            terminals[name] = {"io": "in"}
+        for name in filter_.out_data_types:
+            terminals[name] = {"io": "out"}
+        return terminals
 
     def close(self) -> None:
         """Closes the node and removes the linked filter from the scene."""

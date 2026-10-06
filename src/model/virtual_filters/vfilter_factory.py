@@ -1,7 +1,12 @@
 """V-Filter factory.
 
-This file provides a factory for v-filter instances. The primary use case is for restoring efforts after loading a
-show file.
+This file originally provided the sole construction entry point for virtual filters. It now
+exists as a backward-compatibility shim that delegates to
+:func:`model.filters.factory.construct_filter_instance`, keeping existing call sites working
+while the subclass hierarchy under :mod:`model.filters` is populated incrementally. The
+legacy ``match``-based construction logic lives in
+:func:`_construct_virtual_filter_instance_legacy` and is used as the fallback for v-filter
+types that have not yet been migrated.
 """
 
 from __future__ import annotations
@@ -33,18 +38,28 @@ if TYPE_CHECKING:
 def construct_virtual_filter_instance(
     scene: Scene, filter_type: int, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None
 ) -> VirtualFilter | None:
-    """Construct virtual filters.
+    """Legacy entry point for virtual filter construction.
 
-    This method constructs instances of v-filter based on the provided model for the restoring of show files.
+    Delegates to :func:`model.filters.factory.construct_filter_instance`, which looks the
+    type up in the subclass registry and falls back to
+    :func:`_construct_virtual_filter_instance_legacy` when no subclass is registered. Kept
+    so existing call sites (``theater_scene_wizard``, ``fixture_to_filter``, ...) keep
+    working during the migration.
+    """
+    from model.filters.factory import construct_filter_instance
 
-    Args:
-        scene: The parent scene of the filter to be constructed.
-        filter_type: The type of filter to instantiate
-        filter_id: The id of the filter to instantiate
-        pos: The position inside the editor of the filter to instantiate.
+    return construct_filter_instance(scene=scene, filter_type=filter_type, filter_id=filter_id, pos=pos)
 
-    Returns: The generated v-filter
 
+def _construct_virtual_filter_instance_legacy(
+    scene: Scene, filter_type: int, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None
+) -> VirtualFilter | None:
+    """Original match-based v-filter construction.
+
+    Used by :func:`model.filters.factory.construct_filter_instance` as the fallback for
+    v-filter type codes that do not yet have a subclass registered under
+    :mod:`model.filters.virtual`. Once every v-filter has been migrated this function and
+    its public shim can be deleted.
     """
     if not filter_type < 0:
         raise ValueError("The provided filter is not a virtual description.")

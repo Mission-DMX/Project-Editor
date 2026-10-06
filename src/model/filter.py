@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import abc
 from enum import IntFlag, auto
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, ClassVar, Union
 
 if TYPE_CHECKING:
     from . import Scene
@@ -184,6 +184,15 @@ class FilterTypeEnumeration(IntFlag):
 class Filter:
     """Filter for a show file."""
 
+    CONFIGURATION_SUPPORTED: ClassVar[bool] = True
+    """Class-level default for :attr:`_configuration_supported`.
+
+    Subclasses opt out of the settings widget by overriding this class attribute to ``False``.
+    The per-instance :attr:`_configuration_supported` is initialised from this value and may
+    still be flipped by legacy code paths that write directly to it; the
+    :attr:`configuration_supported` property is the public read API.
+    """
+
     def __init__(
         self,
         scene: Scene,
@@ -218,7 +227,30 @@ class Filter:
         self._in_data_types: dict[str, DataType] = {}
         self._default_values: dict[str, str] = {}
         self._out_data_types: dict[str, DataType] = {}
-        self._configuration_supported: bool = True
+        self._configuration_supported: bool = type(self).CONFIGURATION_SUPPORTED
+        self._rebuild_io()
+
+    def _rebuild_io(self) -> None:
+        """Populate ``in_data_types``/``out_data_types``/``default_values``/``gui_update_keys`` from state.
+
+        Default implementation is a no-op kept for compatibility with filter types that are not
+        yet migrated to the :mod:`model.filters` subclass hierarchy. Subclasses override to
+        declare their static I/O signature (optionally via :class:`model.filters._mixins.StaticIOMixin`)
+        or to derive terminals from the current :attr:`filter_configurations`. The method is
+        called at the end of :meth:`__init__` and again after
+        :meth:`update_filter_configuration` writes a configuration value.
+        """
+
+    def update_filter_configuration(self, key: str, value: str) -> None:
+        """Write a filter configuration entry and refresh any configuration-dependent I/O.
+
+        This is the preferred entry point for UI code that mutates ``filter_configurations``
+        because it keeps dynamic terminal signatures (e.g. switch inputs, cue list outputs,
+        sequencer channels) in sync with the configuration value. Direct dict mutation
+        remains legal during migration but will not trigger an automatic rebuild.
+        """
+        self._filter_configurations[key] = value
+        self._rebuild_io()
 
     @property
     def scene(self) -> Scene:
@@ -316,30 +348,30 @@ class Filter:
             new_id: New id of the new filter object.
 
         """
-        from .virtual_filters.vfilter_factory import construct_virtual_filter_instance
+        from .filters.factory import construct_filter_instance
 
-        if self.is_virtual_filter:
-            f = construct_virtual_filter_instance(
-                new_scene or self.scene,
-                self._filter_type,
-                new_id or self._filter_id,
-                pos=self._pos,
-            )
-            f.filter_configurations.update(self.filter_configurations.copy())
-        else:
-            f = Filter(
-                new_scene or self.scene,
-                new_id or self._filter_id,
-                self._filter_type,
-                self._pos,
-                self.filter_configurations.copy(),
-            )
+        f = construct_filter_instance(
+            scene=new_scene or self.scene,
+            filter_type=self._filter_type,
+            filter_id=new_id or self._filter_id,
+            pos=self._pos,
+            filter_configurations=self.filter_configurations.copy(),
+            initial_parameters=self.initial_parameters.copy(),
+        )
         f._channel_links = self.channel_links.copy()
-        f._initial_parameters = self.initial_parameters.copy()
-        f._in_data_types = self._in_data_types.copy()
-        f._out_data_types = self._out_data_types.copy()
-        f._gui_update_keys = self._gui_update_keys.copy()
-        f._default_values = self._default_values.copy()
+        # The dict copies below are preserved for filter types that have not yet been migrated
+        # to a subclass with a real _rebuild_io() implementation. For those types the factory
+        # returns an instance whose I/O dicts are empty, so we must transfer them from the
+        # source. For migrated types the copies overwrite with identical values. Remove in the
+        # cleanup PR once every FilterTypeEnumeration value has a registered subclass.
+        if not f._in_data_types:
+            f._in_data_types = self._in_data_types.copy()
+        if not f._out_data_types:
+            f._out_data_types = self._out_data_types.copy()
+        if not f._gui_update_keys:
+            f._gui_update_keys = self._gui_update_keys.copy()
+        if not f._default_values:
+            f._default_values = self._default_values.copy()
         if isinstance(f, VirtualFilter):
             f.deserialize()
         return f
