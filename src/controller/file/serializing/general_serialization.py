@@ -58,12 +58,13 @@ def create_xml(board_configuration: BoardConfiguration, pn: ProcessNotifier,
         else:
             _create_physical_location_element(physical=proto.physical_location, parent=universe_element)
 
-        if fixtures := board_configuration.fixtures:
-            patching_element = ET.SubElement(universe_element, "patching")
-            for fixture in fixtures:
-                if fixture.universe_id == universe.id:
-                    _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
-                    remaining_fixtures.remove(fixture)
+        # Fish's schema requires every universe to carry a <patching/> element, so emit it
+        # unconditionally even when the show has no patched fixtures yet.
+        patching_element = ET.SubElement(universe_element, "patching")
+        for fixture in board_configuration.fixtures:
+            if fixture.universe_id == universe.id:
+                _create_fixture_element(fixture, patching_element, assemble_for_fish_loading)
+                remaining_fixtures.remove(fixture)
     if len(remaining_fixtures) > 0:
         logger.error("Some fixtures are not bound to any universe. These are: %s",
                      ", ".join(remaining_fixtures))
