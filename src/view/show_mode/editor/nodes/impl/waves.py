@@ -1,5 +1,4 @@
 """Wave forming filter nodes"""
-from model import DataType
 from model.filter import Filter, FilterTypeEnumeration
 
 from .trigonometics import TrigonometricNode
@@ -13,9 +12,6 @@ class SquareWaveNode(_WaveNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_WAVES_SQUARE, name=name)
-        self.addInput("length")
-        self.filter.in_data_types["length"] = DataType.DT_DOUBLE
-        self.filter.default_values["length"] = "180"
 
 
 class TriangleWaveNode(_WaveNode):
