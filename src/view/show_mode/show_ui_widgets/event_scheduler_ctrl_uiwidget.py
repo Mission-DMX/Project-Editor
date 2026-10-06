@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
 from model import FilterUpdateCallbackMixin, UIWidget
 from model.events import ScheduledEvent, parse_update_trigger_entries
 from utility import to_int
-from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.editor.node_editor_widgets.event_scheduler_config_widget.trigger_matrix_editor import (
     TriggerMatrixEditor,
 )
@@ -318,6 +317,10 @@ class EventSchedulerCtrlUIWidget(FilterUpdateCallbackMixin, UIWidget):
 
     def _apply_configured_size(self) -> None:
         """Push the configured size into the model, the generated widgets and their holders."""
+        # Local import breaks the view-side circular import between _widget_holder, the node
+        # editor widget package, and this module.
+        from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
+
         width, height = self._get_configured_size()
         self.size = (width, height)
         for widget in [self._latest_player_widget, self._latest_config_widget]:
