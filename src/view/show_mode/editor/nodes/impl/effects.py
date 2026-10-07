@@ -4,8 +4,6 @@ from typing import override
 
 from model import DataType, Scene
 from model.filter import Filter, FilterTypeEnumeration
-from model.filter_data.sequencer.sequencer_channel import SequencerChannel
-from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -142,29 +140,7 @@ class AutoTrackerNode(FilterNode):
             filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER,
             name=name,
             allow_add_output=True,
-            terminals={},
         )
-        self._setup_output_terminals()
-
-    def _setup_output_terminals(self) -> None:
-        f = self.filter
-        if isinstance(f, AutoTrackerFilter):
-            trackers = f.number_of_concurrent_trackers + 1
-            if trackers < len(self.terminals) / 3:
-                self.terminals.clear()
-            for i in range(int(len(self.terminals) / 3), trackers, 1):
-                min_brightness_filter_id: str = f.get_min_brightness_filter_id()
-                self.addOutput(min_brightness_filter_id)
-                self.addOutput(f"Tracker{i}_Pan")
-                self.addOutput(f"Tracker{i}_Tilt")
-                associated_dt = f.get_data_type_of_tracker(i)
-                self.filter.out_data_types[f"Tracker{i}_Pan"] = associated_dt
-                self.filter.out_data_types[f"Tracker{i}_Tilt"] = associated_dt
-                self.filter.out_data_types[min_brightness_filter_id] = DataType.DT_DOUBLE
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        self._setup_output_terminals()
 
 
 class EffectsStackNode(FilterNode):
@@ -179,18 +155,7 @@ class EffectsStackNode(FilterNode):
             filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK,
             name=name,
             allow_add_output=True,
-            terminals={},
         )
-        self._setup_output_terminals()
-
-    def _setup_output_terminals(self) -> None:
-        # TODO
-        pass
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        super().update_node_after_settings_changed()
-        self._setup_output_terminals()
 
 
 class SequencerNode(FilterNode):
@@ -204,23 +169,8 @@ class SequencerNode(FilterNode):
             model=model,
             filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER,
             name=name,
-            terminals={"time": {"io": "in"}, "time_scale": {"io": "in"}},
             allow_add_output=True,
         )
-
-        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
-        self.filter.default_values["time_scale"] = "1.0"
-
-        try:
-            for c_str in self.filter.filter_configurations["channels"].split(";"):
-                c = SequencerChannel.from_filter_str(c_str)
-                self.addOutput(c.name)
-                self.filter.out_data_types[c.name] = c.data_type
-        except KeyError:
-            self.filter.filter_configurations["channels"] = ""
-        if self.filter.filter_configurations.get("transitions") is None:
-            self.filter.filter_configurations["transitions"] = ""
 
 class ChaserNode(FilterNode):
     """Filter node for color chaser filter."""

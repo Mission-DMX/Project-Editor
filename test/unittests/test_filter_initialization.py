@@ -1545,6 +1545,135 @@ class CueFilterTests(unittest.TestCase):
         self.assertEqual(f.out_data_types, {"a": DataType.DT_8_BIT})
 
 
+class SequencerFilterTests(unittest.TestCase):
+    """Per-type assertions for SequencerFilter migrated in PR 14."""
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_default_signature_without_channels(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(scene=scene, filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER, filter_id="s")
+        self.assertEqual(
+            f.in_data_types, {"time": DataType.DT_DOUBLE, "time_scale": DataType.DT_DOUBLE}
+        )
+        self.assertEqual(f.out_data_types, {})
+        self.assertEqual(f.default_values["time_scale"], "1.0")
+        self.assertEqual(f.filter_configurations["channels"], "")
+        self.assertEqual(f.filter_configurations["transitions"], "")
+
+    def test_channels_populate_typed_outputs(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filter_data.sequencer.sequencer_channel import SequencerChannel
+        from model.filters.factory import construct_filter_instance
+
+        # Serialise two channels through SequencerChannel so we match the exact format.
+        c1 = SequencerChannel("intensity", DataType.DT_8_BIT)
+        c2 = SequencerChannel("hue", DataType.DT_COLOR)
+        channels_str = f"{c1.format_for_filter()};{c2.format_for_filter()}"
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER,
+            filter_id="s",
+            filter_configurations={"channels": channels_str},
+        )
+        self.assertEqual(set(f.out_data_types.keys()), {"intensity", "hue"})
+        self.assertEqual(f.out_data_types["intensity"], DataType.DT_8_BIT)
+        self.assertEqual(f.out_data_types["hue"], DataType.DT_COLOR)
+
+    def test_malformed_channel_entry_is_skipped(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER,
+            filter_id="s",
+            filter_configurations={"channels": "not_a_valid_sequencer_channel_entry"},
+        )
+        # Degraded gracefully — no outputs added, inputs still present.
+        self.assertEqual(f.out_data_types, {})
+        self.assertIn("time", f.in_data_types)
+
+
+class AutoTrackerFilterTests(unittest.TestCase):
+    """Per-type assertions for AutoTrackerFilter migrated in PR 14."""
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_default_zero_trackers_still_exposes_one_pan_tilt_pair(self) -> None:
+        """Preserves the pre-migration ``trackers + 1`` loop semantics."""
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER, filter_id="at"
+        )
+        min_id = f.get_min_brightness_filter_id()
+        self.assertIn(min_id, f.out_data_types)
+        self.assertEqual(f.out_data_types[min_id], DataType.DT_DOUBLE)
+        self.assertIn("Tracker0_Pan", f.out_data_types)
+        self.assertIn("Tracker0_Tilt", f.out_data_types)
+
+    def test_tracker_count_two_adds_more_outputs(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER,
+            filter_id="at",
+            filter_configurations={"trackercount": "2"},
+        )
+        for i in range(3):  # 2 + 1 per the preserved loop semantics
+            self.assertIn(f"Tracker{i}_Pan", f.out_data_types)
+            self.assertIn(f"Tracker{i}_Tilt", f.out_data_types)
+
+
+class EffectsStackTests(unittest.TestCase):
+    """Smoke test for EffectsStack: no I/O to derive, just verify factory + node work."""
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_effects_stack_constructs_with_empty_io(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+        from model.virtual_filters.effects_stacks.vfilter import EffectsStack
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK, filter_id="es"
+        )
+        self.assertIsInstance(f, EffectsStack)
+        self.assertEqual(f.in_data_types, {})
+        self.assertEqual(f.out_data_types, {})
+
+
 class NodeTerminalsFromFilterTests(unittest.TestCase):
     """When a node passes ``terminals=None``, the base derives terminals from the filter.
 
