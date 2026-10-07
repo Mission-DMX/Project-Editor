@@ -19,6 +19,7 @@ from . import (  # side-effect import so @register_filter runs
     arithmetics,
     constants,
     debug,
+    faders,
     misc,
     routing,
     scripting,
