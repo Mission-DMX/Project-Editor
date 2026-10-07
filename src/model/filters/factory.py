@@ -85,10 +85,15 @@ def construct_filter_instance(
         instance = _construct_virtual_filter_instance_legacy(scene, type_code, filter_id, pos=pos)
         if instance is None:
             return None
-        if filter_configurations:
-            instance.filter_configurations.update(filter_configurations)
-        if initial_parameters:
-            instance.initial_parameters.update(initial_parameters)
+        if filter_configurations or initial_parameters:
+            if filter_configurations:
+                instance.filter_configurations.update(filter_configurations)
+            if initial_parameters:
+                instance.initial_parameters.update(initial_parameters)
+            # The legacy v-filter constructor runs _rebuild_io with empty configs; re-run
+            # it now that the real configuration and parameters are populated so dynamic
+            # subclasses (e.g. CueFilter deriving outputs from "mapping") see the final state.
+            instance._rebuild_io()
         return instance
 
     return Filter(

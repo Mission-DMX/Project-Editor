@@ -20,51 +20,9 @@ class CueListNode(FilterNode):
             model=model,
             filter_type=FilterTypeEnumeration.VFILTER_CUES,
             name=name,
-            terminals={
-                "time": {"io": "in"},
-                "time_scale": {"io": "in"},
-            },
             allow_add_output=True,
         )
-
-        try:
-            mapping_from_file = model.filter_configurations["mapping"]
-            self.filter.filter_configurations["mapping"] = mapping_from_file
-            self._parse_and_add_output_channels(mapping_from_file)
-        except:
-            self.filter.filter_configurations["mapping"] = ""
-
-        try:
-            self.filter.filter_configurations["end_handling"] = model.filter_configurations["end_handling"]
-        except:
-            self.filter.filter_configurations["end_handling"] = ""
-
-        try:
-            self.filter.filter_configurations["cuelist"] = model.filter_configurations["cuelist"]
-        except:
-            self.filter.filter_configurations["cuelist"] = ""
-
-        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
-        self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]
-        self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
-        self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
-        self.filter.default_values["time_scale"] = "1.0"
         self.channel_hints["time"] = " [ms]"
-
-    def _parse_and_add_output_channels(self, mappings: str) -> None:
-        output_list = []
-        for channel_dev in mappings.split(";"):
-            if channel_dev:
-                splitted_channel_dev = channel_dev.split(":")
-                if len(splitted_channel_dev) > 1:
-                    channel_name = splitted_channel_dev[0]
-                    channel_type = DataType.from_filter_str(splitted_channel_dev[1])
-                    if channel_name not in self.outputs():
-                        # TODO also check data type compatibility here
-                        self.addOutput(channel_name)
-                    output_list.append(channel_name)
-                    self.filter.out_data_types[channel_name] = channel_type
 
 
 class ShiftFilterNode(FilterNode):
