@@ -1,4 +1,4 @@
-"""Universe filter node"""
+"""Universe filter node."""
 from logging import getLogger
 from typing import Any, ClassVar, override
 
@@ -14,11 +14,13 @@ logger = getLogger(__name__)
 
 class UniverseNode(FilterNode):
     """Filter to represent a dmx universe. By default, it has 8 outputs, put more can be added."""
+
     nodeName = "Universe"  # noqa: N815
 
     universe_ids: ClassVar[list[int]] = []
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
+        """Initialize filter node."""
         super().__init__(
             model=model, filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT, name=name, allow_add_input=True
         )
@@ -36,7 +38,7 @@ class UniverseNode(FilterNode):
 
     @override
     def addInput(self, name: str = "input", **args: dict[str, Any]) -> None:
-        """Allows adding up to 512 input channels.
+        """Allow adding up to 512 input channels.
 
         Two call sites hit this:
 
