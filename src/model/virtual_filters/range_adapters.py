@@ -7,7 +7,7 @@ ColorGlobalBrightnessMixinVFilter -- Global Brightness output.
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 
@@ -347,6 +347,8 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
 
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
     """V-Filter that provides the global brightness property."""
+
+    CONFIGURATION_SUPPORTED: ClassVar[bool] = False
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Instantiate a color global brightness filter."""

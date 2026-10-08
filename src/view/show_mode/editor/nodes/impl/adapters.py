@@ -241,7 +241,6 @@ class ColorBrightnessMixinNode(FilterNode):
             model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, name=name
         )
         self.channel_hints["brightness"] = "[0-255, optional]"
-        self.filter._configuration_supported = False
 
 
 class DimmerBrightnessMixinNode(FilterNode):

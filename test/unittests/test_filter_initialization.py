@@ -137,14 +137,16 @@ class ConstructFilterInstanceTests(unittest.TestCase):
         self.assertEqual(f.filter_configurations["key"], "value")
         self.assertEqual(call_count[0], 1)
 
-    def test_legacy_shim_delegates_to_unified_factory(self) -> None:
-        """``construct_virtual_filter_instance`` must still work during the migration."""
+    def test_virtual_filter_construction_via_unified_factory(self) -> None:
+        """V-filters are instantiated through the single ``construct_filter_instance`` entry point."""
         from model.filter import FilterTypeEnumeration
-        from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
+        from model.filters.factory import construct_filter_instance
 
         scene = self._make_scene()
-        instance = construct_virtual_filter_instance(
-            scene, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, "legacy"
+        instance = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE,
+            filter_id="legacy",
         )
         self.assertIsNotNone(instance)
         self.assertEqual(int(instance.filter_type), int(FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE))

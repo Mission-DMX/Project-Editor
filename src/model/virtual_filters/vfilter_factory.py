@@ -1,12 +1,11 @@
 """V-Filter factory.
 
-This file originally provided the sole construction entry point for virtual filters. It now
-exists as a backward-compatibility shim that delegates to
-:func:`model.filters.factory.construct_filter_instance`, keeping existing call sites working
-while the subclass hierarchy under :mod:`model.filters` is populated incrementally. The
-legacy ``match``-based construction logic lives in
-:func:`_construct_virtual_filter_instance_legacy` and is used as the fallback for v-filter
-types that have not yet been migrated.
+Internal module used exclusively by :func:`model.filters.factory.construct_filter_instance`
+to construct :class:`~model.filter.VirtualFilter` subclasses. External callers should go
+through the unified :func:`construct_filter_instance` entry point rather than importing
+from here directly — v-filter classes aren't registered in the type → subclass map today
+(their constructors use the pre-migration ``(scene, filter_id, pos)`` signature), so this
+module provides the dispatch instead.
 """
 
 from __future__ import annotations
@@ -33,22 +32,6 @@ from model.virtual_filters.sequencer_vfilter import SequencerFilter
 if TYPE_CHECKING:
     from model import Scene
     from model.filter import VirtualFilter
-
-
-def construct_virtual_filter_instance(
-    scene: Scene, filter_type: int, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None
-) -> VirtualFilter | None:
-    """Legacy entry point for virtual filter construction.
-
-    Delegates to :func:`model.filters.factory.construct_filter_instance`, which looks the
-    type up in the subclass registry and falls back to
-    :func:`_construct_virtual_filter_instance_legacy` when no subclass is registered. Kept
-    so existing call sites (``theater_scene_wizard``, ``fixture_to_filter``, ...) keep
-    working during the migration.
-    """
-    from model.filters.factory import construct_filter_instance
-
-    return construct_filter_instance(scene=scene, filter_type=filter_type, filter_id=filter_id, pos=pos)
 
 
 def _construct_virtual_filter_instance_legacy(
