@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
 
 from model import Filter, FilterUpdateCallbackMixin, UIPage, UIWidget
 from model.filter import FilterTypeEnumeration
-from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 from view.show_mode.show_ui_widgets.slider_constant_ctrl_uiwidget import _parse_config_float, _parse_config_int
 
 if TYPE_CHECKING:
@@ -293,6 +292,10 @@ class ConstantNumberButtonList(FilterUpdateCallbackMixin, UIWidget):
 
     def _notify_size_change(self) -> None:
         """Inform the enclosing widget holders about changed widget dimensions."""
+        # Local import breaks the view-side circular import between _widget_holder, the node
+        # editor widget package, and this module (see git history for context).
+        from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
+
         for widget in (self._player_widget, self._configuration_widget):
             if widget is None:
                 continue

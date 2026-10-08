@@ -1,25 +1,26 @@
-"""Column fader filter nodes"""
+"""Column fader filter nodes."""
 
-from model import DataType, Filter, Scene
+from typing import override
+
+from model import Filter, Scene
 from model.control_desk import BankSet
 from model.filter import FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
 class _FaderNode(FilterNode):
-    def __init__(self, model: Filter | Scene, filter_type: FilterTypeEnumeration, name: str,
-                 terminals: dict[str, dict[str, str]]) -> None:
-        self._bankset_model: BankSet | None = None
-        super().__init__(model=model, filter_type=filter_type, name=name, terminals=terminals)
+    """Base node for the column-fader filters.
 
-        try:
-            self.filter.filter_configurations["set_id"] = model.filter_configurations["set_id"]
-        except AttributeError:
-            self.filter.filter_configurations["set_id"] = ""
-        try:
-            self.filter.filter_configurations["column_id"] = model.filter_configurations["column_id"]
-        except AttributeError:
-            self.filter.filter_configurations["column_id"] = ""
+    Model-side state (``set_id`` / ``column_id`` defaults, I/O signature) lives on the
+    registered Filter subclasses under :mod:`model.filters.faders`. The node itself only
+    manages the BankSet listener subscription so that id renames propagate into the filter's
+    configuration.
+    """
+
+    def __init__(self, model: Filter | Scene, filter_type: FilterTypeEnumeration, name: str) -> None:
+        """Initialize filter node."""
+        self._bankset_model: BankSet | None = None
+        super().__init__(model=model, filter_type=filter_type, name=name)
         self._update_bankset_listener()
 
     def _update_bankset_listener(self) -> None:
@@ -45,9 +46,14 @@ class _FaderNode(FilterNode):
     def notify_on_new_id(self, new_id: str) -> None:
         self.filter.filter_configurations["set_id"] = new_id
 
+    @override
     def update_node_after_settings_changed(self) -> None:
+        # Keep pyqtgraph terminals in sync with the (static) filter signature, then re-anchor
+        # the BankSet listener in case the user picked a different bank set in the settings.
+        super().update_node_after_settings_changed()
         if self._bankset_model is not None:
             self._bankset_model.id_update_listeners.remove(self)
+            self._bankset_model = None
         self._update_bankset_listener()
 
     def __del__(self) -> None:
@@ -56,106 +62,60 @@ class _FaderNode(FilterNode):
 
 
 class FaderRawNode(_FaderNode):
-    """Filter to represent any filter fader"""
+    """Filter to represent any filter fader."""
 
     nodeName = "Raw"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_RAW, name=name, terminals={
-            "primary": {"io": "out"},
-            "secondary": {"io": "out"},
-        })
-
-        self.filter.out_data_types["primary"] = DataType.DT_16_BIT
-        self.filter.out_data_types["secondary"] = DataType.DT_16_BIT
+        """Initialize filter node."""
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_RAW, name=name)
 
 
 class FaderHSINode(_FaderNode):
-    """Filter to represent a hsi filter fader"""
+    """Filter to represent a hsi filter fader."""
+
     nodeName = "HSI"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name, terminals={
-            "color": {"io": "out"},
-        })
-
-        try:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
-                "ignore_main_brightness_control"]
-        except AttributeError:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
-
-        self.filter.out_data_types["color"] = DataType.DT_COLOR
+        """Initialize filter node."""
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name)
 
 
 class FaderHSIANode(_FaderNode):
-    """Filter to represent a hsia filter fader"""
+    """Filter to represent a hsia filter fader."""
+
     nodeName = "HSI-A"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIA, name=name, terminals={
-            "color": {"io": "out"},
-            "amber": {"io": "out"},
-        })
-
-        try:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
-                "ignore_main_brightness_control"]
-        except AttributeError:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
-
-        self.filter.out_data_types["color"] = DataType.DT_COLOR
-        self.filter.out_data_types["amber"] = DataType.DT_8_BIT
+        """Initialize filter node."""
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIA, name=name)
 
 
 class FaderHSIUNode(_FaderNode):
-    """Filter to represent a hsiu filter fader"""
+    """Filter to represent a hsiu filter fader."""
+
     nodeName = "HSI_U"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIU, name=name, terminals={
-            "color": {"io": "out"},
-            "uv": {"io": "out"},
-        })
-
-        try:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
-                "ignore_main_brightness_control"]
-        except AttributeError:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
-
-        self.filter.out_data_types["color"] = DataType.DT_COLOR
-        self.filter.out_data_types["uv"] = DataType.DT_8_BIT
+        """Initialize filter node."""
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIU, name=name)
 
 
 class FaderHSIAUNode(_FaderNode):
-    """Filter to represent a hasiau filter fader"""
+    """Filter to represent a hasiau filter fader."""
+
     nodeName = "HSI-AU"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIAU, name=name, terminals={
-            "color": {"io": "out"},
-            "amber": {"io": "out"},
-            "uv": {"io": "out"},
-        })
-        try:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = model.filter_configurations[
-                "ignore_main_brightness_control"]
-        except AttributeError:
-            self.filter.filter_configurations["ignore_main_brightness_control"] = "false"
-
-        self.filter.out_data_types["color"] = DataType.DT_COLOR
-        self.filter.out_data_types["amber"] = DataType.DT_8_BIT
-        self.filter.out_data_types["uv"] = DataType.DT_8_BIT
+        """Initialize filter node."""
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIAU, name=name)
 
 
 class FaderMainBrightness(FilterNode):
-    """Filter to the main brightness fader"""
+    """Filter to the main brightness fader."""
+
     nodeName = "global-ilumination"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS, name=name,
-                         terminals={"brightness": {"io": "out"}})
-
-        self.filter.out_data_types["brightness"] = DataType.DT_16_BIT
-        self.filter._configuration_supported = False
+        """Initialize filter node."""
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS, name=name)

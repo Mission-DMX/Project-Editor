@@ -1,11 +1,7 @@
 """Filter Nodes for effect filters."""
 
-from typing import override
-
-from model import DataType, Scene
+from model import Scene
 from model.filter import Filter, FilterTypeEnumeration
-from model.filter_data.sequencer.sequencer_channel import SequencerChannel
-from model.virtual_filters.auto_tracker_filter import AutoTrackerFilter
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -20,116 +16,19 @@ class CueListNode(FilterNode):
             model=model,
             filter_type=FilterTypeEnumeration.VFILTER_CUES,
             name=name,
-            terminals={
-                "time": {"io": "in"},
-                "time_scale": {"io": "in"},
-            },
             allow_add_output=True,
         )
-
-        try:
-            mapping_from_file = model.filter_configurations["mapping"]
-            self.filter.filter_configurations["mapping"] = mapping_from_file
-            self._parse_and_add_output_channels(mapping_from_file)
-        except:
-            self.filter.filter_configurations["mapping"] = ""
-
-        try:
-            self.filter.filter_configurations["end_handling"] = model.filter_configurations["end_handling"]
-        except:
-            self.filter.filter_configurations["end_handling"] = ""
-
-        try:
-            self.filter.filter_configurations["cuelist"] = model.filter_configurations["cuelist"]
-        except:
-            self.filter.filter_configurations["cuelist"] = ""
-
-        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
-        self.filter.gui_update_keys["run_mode"] = ["play", "pause", "to_next_cue", "stop"]
-        self.filter.gui_update_keys["run_cue"] = DataType.DT_16_BIT
-        self.filter.gui_update_keys["next_cue"] = DataType.DT_16_BIT
-        self.filter.default_values["time_scale"] = "1.0"
         self.channel_hints["time"] = " [ms]"
-
-    def _parse_and_add_output_channels(self, mappings: str) -> None:
-        output_list = []
-        for channel_dev in mappings.split(";"):
-            if channel_dev:
-                splitted_channel_dev = channel_dev.split(":")
-                if len(splitted_channel_dev) > 1:
-                    channel_name = splitted_channel_dev[0]
-                    channel_type = DataType.from_filter_str(splitted_channel_dev[1])
-                    if channel_name not in self.outputs():
-                        # TODO also check data type compatibility here
-                        self.addOutput(channel_name)
-                    output_list.append(channel_name)
-                    self.filter.out_data_types[channel_name] = channel_type
 
 
 class ShiftFilterNode(FilterNode):
     """Filter node to represent an abstract shift filter."""
 
-    def __init__(self, model: Filter, name: str, id_: int, data_type: DataType) -> None:
+    def __init__(self, model: Filter, name: str, id_: int) -> None:
         """Initialize filter node."""
-        super().__init__(
-            model=model,
-            filter_type=id_,
-            name=name,
-            allow_add_output=True,
-            terminals={
-                "input": {"io": "in"},
-                "switch_time": {"io": "in"},
-                "time": {"io": "in"},
-            },
-        )
-
-        self.filter.in_data_types["input"] = data_type
-        self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.default_values["time"] = "0"
-        self.filter.default_values["switch_time"] = "1000"
+        super().__init__(model=model, filter_type=id_, name=name, allow_add_output=True)
         self.channel_hints["switch_time"] = " [ms]"
         self.channel_hints["time"] = " [ms]"
-
-        try:
-            if isinstance(model, Scene):
-                # FIXME using the filter type as its ID seams odd
-                found_filter = model.get_filter_by_id(str(id_))
-                if found_filter:
-                    self.filter.filter_configurations["nr_outputs"] = str(
-                        int(found_filter.filter_configurations.get("nr_outputs"))
-                    )
-                else:
-                    self.filter.filter_configurations["nr_outputs"] = "0"
-            else:
-                self.filter.filter_configurations["nr_outputs"] = str(
-                    int(model.filter_configurations.get("nr_outputs"))
-                )
-        except ValueError:
-            self.filter.filter_configurations["nr_outputs"] = "0"
-
-        self._data_type = data_type
-        self._setup_output_terminals()
-
-    def _setup_output_terminals(self) -> None:
-        existing_output_keys = list(self.outputs())
-        previous_output_count = len(existing_output_keys)
-        new_output_count = int(self.filter.filter_configurations["nr_outputs"])
-        if previous_output_count > new_output_count:
-            for i in range(previous_output_count - new_output_count):
-                key_to_drop = existing_output_keys[len(existing_output_keys) - i - 1]
-                self.removeTerminal(key_to_drop)
-        else:
-            for i in range(new_output_count):
-                if i >= previous_output_count:
-                    channel_name = "output_" + str(i + 1)
-                    self.addOutput(channel_name)
-                    self.filter.out_data_types[channel_name] = self._data_type
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        self._setup_output_terminals()
 
 
 class Shift8BitNode(ShiftFilterNode):
@@ -139,7 +38,7 @@ class Shift8BitNode(ShiftFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT, DataType.DT_8_BIT)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT)
 
 
 class Shift16BitNode(ShiftFilterNode):
@@ -149,7 +48,7 @@ class Shift16BitNode(ShiftFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT, DataType.DT_16_BIT)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT)
 
 
 class ShiftFloatNode(ShiftFilterNode):
@@ -159,7 +58,7 @@ class ShiftFloatNode(ShiftFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT, DataType.DT_DOUBLE)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT)
 
 
 class ShiftColorNode(ShiftFilterNode):
@@ -169,7 +68,7 @@ class ShiftColorNode(ShiftFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR, DataType.DT_COLOR)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR)
 
 
 class AutoTrackerNode(FilterNode):
@@ -184,29 +83,7 @@ class AutoTrackerNode(FilterNode):
             filter_type=FilterTypeEnumeration.VFILTER_AUTOTRACKER,
             name=name,
             allow_add_output=True,
-            terminals={},
         )
-        self._setup_output_terminals()
-
-    def _setup_output_terminals(self) -> None:
-        f = self.filter
-        if isinstance(f, AutoTrackerFilter):
-            trackers = f.number_of_concurrent_trackers + 1
-            if trackers < len(self.terminals) / 3:
-                self.terminals.clear()
-            for i in range(int(len(self.terminals) / 3), trackers, 1):
-                min_brightness_filter_id: str = f.get_min_brightness_filter_id()
-                self.addOutput(min_brightness_filter_id)
-                self.addOutput(f"Tracker{i}_Pan")
-                self.addOutput(f"Tracker{i}_Tilt")
-                associated_dt = f.get_data_type_of_tracker(i)
-                self.filter.out_data_types[f"Tracker{i}_Pan"] = associated_dt
-                self.filter.out_data_types[f"Tracker{i}_Tilt"] = associated_dt
-                self.filter.out_data_types[min_brightness_filter_id] = DataType.DT_DOUBLE
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        self._setup_output_terminals()
 
 
 class EffectsStackNode(FilterNode):
@@ -221,18 +98,7 @@ class EffectsStackNode(FilterNode):
             filter_type=FilterTypeEnumeration.VFILTER_EFFECTSSTACK,
             name=name,
             allow_add_output=True,
-            terminals={},
         )
-        self._setup_output_terminals()
-
-    def _setup_output_terminals(self) -> None:
-        # TODO
-        pass
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        super().update_node_after_settings_changed()
-        self._setup_output_terminals()
 
 
 class SequencerNode(FilterNode):
@@ -246,23 +112,8 @@ class SequencerNode(FilterNode):
             model=model,
             filter_type=FilterTypeEnumeration.VFILTER_SEQUENCER,
             name=name,
-            terminals={"time": {"io": "in"}, "time_scale": {"io": "in"}},
             allow_add_output=True,
         )
-
-        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
-        self.filter.default_values["time_scale"] = "1.0"
-
-        try:
-            for c_str in self.filter.filter_configurations["channels"].split(";"):
-                c = SequencerChannel.from_filter_str(c_str)
-                self.addOutput(c.name)
-                self.filter.out_data_types[c.name] = c.data_type
-        except KeyError:
-            self.filter.filter_configurations["channels"] = ""
-        if self.filter.filter_configurations.get("transitions") is None:
-            self.filter.filter_configurations["transitions"] = ""
 
 class ChaserNode(FilterNode):
     """Filter node for color chaser filter."""
@@ -274,68 +125,7 @@ class ChaserNode(FilterNode):
         super().__init__(
             model=model,
             filter_type=FilterTypeEnumeration.FILTER_COLOR_CHASER,
-            name = name,
-            terminals={"time": {"io": "in"}, "time_scale": {"io": "in"}},
+            name=name,
             allow_add_input=True,
-            allow_add_output=True
+            allow_add_output=True,
         )
-
-        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["time_scale"] = DataType.DT_DOUBLE
-        self.filter.default_values["time_scale"] = "1.0"
-
-        if self.filter.filter_configurations.get("number_of_pixels") is None:
-            self.filter.filter_configurations["number_of_pixels"] = "1"
-
-        if self.filter.filter_configurations.get("color_parameters") is None:
-            self.filter.filter_configurations["color_parameters"] = ""
-
-        if self.filter.filter_configurations.get("number_parameters") is None:
-            self.filter.filter_configurations["number_parameters"] = ""
-
-        if self.filter.filter_configurations.get("presets") is None:
-            self.filter.filter_configurations["presets"] = ""
-
-        if self.filter.filter_configurations.get("trigger_event") is None:
-            self.filter.filter_configurations["trigger_event"] = ""
-
-        if self.filter.initial_parameters.get("config") is None:
-            self.filter.initial_parameters["config"] = ""
-
-        self._update_ports()
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        self._update_ports()
-
-    def _update_ports(self) -> None:
-        required_number_inputs = self.filter.filter_configurations["number_parameters"]
-        required_number_inputs = set(required_number_inputs.split(":")) if len(required_number_inputs) > 0 else set()
-        required_color_inputs = self.filter.filter_configurations["color_parameters"]
-        required_color_inputs = set(required_color_inputs.split(":")) if len(required_color_inputs) > 0 else set()
-
-        existing_inputs = set(self.inputs())
-        for input_to_remove in existing_inputs - (
-                required_number_inputs | required_color_inputs | {"time", "time_scale"}):
-            self.removeTerminal(input_to_remove)
-
-        for number_input in required_number_inputs:
-            if number_input not in existing_inputs:
-                self.addInput(number_input)
-                self.filter.in_data_types[number_input] = DataType.DT_16_BIT
-                self.filter.default_values[number_input] = "0"
-
-        for color_input in required_color_inputs:
-            if color_input not in existing_inputs:
-                self.addInput(color_input)
-                self.filter.in_data_types[color_input] = DataType.DT_COLOR
-                self.filter.default_values[color_input] = "360.0,1.0,1.0"
-
-        required_outputs = {str(i) for i in range(int(self.filter.filter_configurations["number_of_pixels"]))}
-        existing_outputs = set(self.outputs())
-        for output_to_remove in existing_outputs - required_outputs:
-            self.removeTerminal(output_to_remove)
-
-        for output_to_add in required_outputs - existing_outputs:
-            self.addOutput(output_to_add)
-            self.filter.out_data_types[output_to_add] = DataType.DT_COLOR

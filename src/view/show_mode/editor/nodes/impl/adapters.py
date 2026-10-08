@@ -1,9 +1,6 @@
 """Adapters and converters filter nodes."""
-from typing import override
-
 from model import DataType, Scene
-from model.filter import Filter, FilterTypeEnumeration, VirtualFilter
-from view.show_mode.editor.filter_settings_item import FilterSettingsItem
+from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -15,15 +12,7 @@ class Adapter16BitTo8BitNode(FilterNode):
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize 16bit to 8bit splitter adapter node."""
         super().__init__(model=model, filter_type=int(FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT),
-                         name=name, terminals={
-                "value": {"io": "in"},
-                "value_lower": {"io": "out"},
-                "value_upper": {"io": "out"},
-            })
-        self.filter.in_data_types["value"] = DataType.DT_16_BIT
-        self.filter.out_data_types["value_lower"] = DataType.DT_8_BIT
-        self.filter.out_data_types["value_upper"] = DataType.DT_8_BIT
-        self.filter._configuration_supported = False
+                         name=name)
 
 
 class Adapter16BitToBoolNode(FilterNode):
@@ -36,14 +25,7 @@ class Adapter16BitToBoolNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize 16bit to boolean adapter node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL, name=name,
-                         terminals={
-                             "value_in": {"io": "in"},
-                             "value": {"io": "out"},
-                         })
-        self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
-        self.filter.out_data_types["value"] = DataType.DT_BOOL
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_BOOL, name=name)
 
 
 class Adapter16bitToFloat(FilterNode):
@@ -53,15 +35,7 @@ class Adapter16bitToFloat(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize 16bit to float adapter node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT, name=name,
-                         terminals={
-                             "value_in": {"io": "in"},
-                             "value": {"io": "out"},
-                         })
-
-        self.filter.in_data_types["value_in"] = DataType.DT_16_BIT
-        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT, name=name)
 
 
 class Adapter8bitToFloat(FilterNode):
@@ -71,15 +45,7 @@ class Adapter8bitToFloat(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize 8bit to float adapter node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT, name=name,
-                         terminals={
-                             "value_in": {"io": "in"},
-                             "value": {"io": "out"},
-                         })
-
-        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
-        self.filter.out_data_types["value"] = DataType.DT_DOUBLE
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT, name=name)
 
 
 class AdapterColorToRGBNode(FilterNode):
@@ -89,18 +55,7 @@ class AdapterColorToRGBNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Color to rgb adapter node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGB, name=name,
-                         terminals={
-                             "value": {"io": "in"},
-                             "r": {"io": "out"},
-                             "g": {"io": "out"},
-                             "b": {"io": "out"},
-                         })
-        self.filter.in_data_types["value"] = DataType.DT_COLOR
-        self.filter.out_data_types["r"] = DataType.DT_8_BIT
-        self.filter.out_data_types["g"] = DataType.DT_8_BIT
-        self.filter.out_data_types["b"] = DataType.DT_8_BIT
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGB, name=name)
 
 
 class AdapterColorToRGBWNode(FilterNode):
@@ -110,20 +65,7 @@ class AdapterColorToRGBWNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Color to rgb-w adapter node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBW, name=name,
-                         terminals={
-                             "value": {"io": "in"},
-                             "r": {"io": "out"},
-                             "g": {"io": "out"},
-                             "b": {"io": "out"},
-                             "w": {"io": "out"},
-                         })
-        self.filter.in_data_types["value"] = DataType.DT_COLOR
-        self.filter.out_data_types["r"] = DataType.DT_8_BIT
-        self.filter.out_data_types["g"] = DataType.DT_8_BIT
-        self.filter.out_data_types["b"] = DataType.DT_8_BIT
-        self.filter.out_data_types["w"] = DataType.DT_8_BIT
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBW, name=name)
 
 
 class AdapterColorToRGBWANode(FilterNode):
@@ -133,22 +75,7 @@ class AdapterColorToRGBWANode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Color to rgb-wa adapter node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBWA, name=name,
-                         terminals={
-                             "value": {"io": "in"},
-                             "r": {"io": "out"},
-                             "g": {"io": "out"},
-                             "b": {"io": "out"},
-                             "w": {"io": "out"},
-                             "a": {"io": "out"},
-                         })
-        self.filter.in_data_types["value"] = DataType.DT_COLOR
-        self.filter.out_data_types["r"] = DataType.DT_8_BIT
-        self.filter.out_data_types["g"] = DataType.DT_8_BIT
-        self.filter.out_data_types["b"] = DataType.DT_8_BIT
-        self.filter.out_data_types["w"] = DataType.DT_8_BIT
-        self.filter.out_data_types["a"] = DataType.DT_8_BIT
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBWA, name=name)
 
 
 class AdapterFloatToColorNode(FilterNode):
@@ -158,19 +85,7 @@ class AdapterFloatToColorNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Float to color combining converter node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR, name=name,
-                         terminals={
-                             "h": {"io": "in"},
-                             "s": {"io": "in"},
-                             "i": {"io": "in"},
-                             "value": {"io": "out"},
-                         })
-        self.filter.in_data_types["h"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["s"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["i"] = DataType.DT_DOUBLE
-        self.filter.out_data_types["value"] = DataType.DT_COLOR
-        self.filter.default_values["i"] = "1"
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_COLOR, name=name)
 
 
 class AdapterColorToFloatsNode(FilterNode):
@@ -180,18 +95,7 @@ class AdapterColorToFloatsNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Color to Float converter node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_FLOAT, name=name,
-                         terminals={
-                             "input": {"io": "in"},
-                             "h": {"io": "out"},
-                             "s": {"io": "out"},
-                             "i": {"io": "out"},
-                         })
-        self.filter.in_data_types["input"] = DataType.DT_COLOR
-        self.filter.out_data_types["h"] = DataType.DT_DOUBLE
-        self.filter.out_data_types["s"] = DataType.DT_DOUBLE
-        self.filter.out_data_types["i"] = DataType.DT_DOUBLE
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_FLOAT, name=name)
 
 
 class AdapterFloatToRange(FilterNode):
@@ -308,16 +212,7 @@ class CombineTwo8BitToSingle16Bit(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Dual 8bit to single 16bit combiner node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_DUAL_BYTE_TO_16BIT, name=name,
-                         terminals={
-                             "lower": {"io": "in"},
-                             "upper": {"io": "in"},
-                             "value": {"io": "out"},
-                         })
-        self.filter.in_data_types["lower"] = DataType.DT_8_BIT
-        self.filter.in_data_types["upper"] = DataType.DT_8_BIT
-        self.filter.out_data_types["value"] = DataType.DT_16_BIT
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_DUAL_BYTE_TO_16BIT, name=name)
 
 
 class Map8BitTo16Bit(FilterNode):
@@ -327,14 +222,7 @@ class Map8BitTo16Bit(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Map 8bit to 16bit map node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_8BIT_TO_16BIT, name=name,
-                         terminals={
-                             "value_in": {"io": "in"},
-                             "value": {"io": "out"},
-                         })
-        self.filter.in_data_types["value_in"] = DataType.DT_8_BIT
-        self.filter.out_data_types["value"] = DataType.DT_16_BIT
-        self.filter._configuration_supported = False
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_8BIT_TO_16BIT, name=name)
 
 
 class ColorBrightnessMixinNode(FilterNode):
@@ -349,18 +237,10 @@ class ColorBrightnessMixinNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Color Brightness Mixin node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
-                         name=name, terminals={
-                "out": {"io": "out"},
-                "color_in": {"io": "in"},
-                "brightness": {"io": "in"},
-            },
-                         )
-        self.filter.out_data_types["out"] = DataType.DT_COLOR
-        self.filter.in_data_types["color_in"] = DataType.DT_COLOR
-        self.filter.in_data_types["brightness"] = DataType.DT_8_BIT
+        super().__init__(
+            model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, name=name
+        )
         self.channel_hints["brightness"] = "[0-255, optional]"
-        self.filter._configuration_supported = False
 
 
 class DimmerBrightnessMixinNode(FilterNode):
@@ -370,29 +250,10 @@ class DimmerBrightnessMixinNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize Dimmer Brightness Mixin node."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, name=name,
-                         terminals={"input": {"io": "in"}, "mixin": {"io": "in"}, "offset": {"io": "in"}})
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, name=name)
         self.channel_hints["offset"] = "[(-1, 1), optional]"
         self.channel_hints["input"] = "[default: global brightness]"
         self.channel_hints["mixin"] = "[optional]"
-        self._update_output_terminals()
-
-    def _update_output_terminals(self) -> None:
-        for setting, term_name in [("has_8bit_output", "dimmer_out8b"), ("has_16bit_output", "dimmer_out16b")]:
-            if self.filter.filter_configurations.get(setting) == "true":
-                if self.outputs().get(term_name) is None:
-                    self.addOutput(term_name)
-            else:
-                if self.outputs().get(term_name) is not None:
-                    self.removeTerminal(term_name)
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        if isinstance(self.filter, VirtualFilter):
-            self.filter.deserialize()
-        else:
-            raise ValueError("Expected filter instance to be a DimmerGlobalBrightnessMixinVFilter, implying a vFilter.")
-        self._update_output_terminals()
 
 
 class ColorToColorwheelAdapterNode(FilterNode):
@@ -402,49 +263,4 @@ class ColorToColorwheelAdapterNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, name=name,
-                         terminals={
-                             "input": {"io": "in"},
-                             "colorwheel": {"io": "out"}
-                         })
-        self.update_node_after_settings_changed()
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        self.filter.in_data_types["input"] = DataType.DT_COLOR
-
-        dimmer_input_dt_str = self.filter.filter_configurations.get("dimmer-input", "")
-        if len(dimmer_input_dt_str) > 0:
-            if "in_dimmer" not in self.inputs():
-                self.addInput("in_dimmer")
-            match dimmer_input_dt_str:
-                case "16bit":
-                    self.filter.in_data_types["in_dimmer"] = DataType.DT_16_BIT
-                case "float":
-                    self.filter.in_data_types["in_dimmer"] = DataType.DT_DOUBLE
-                case _:
-                    self.filter.in_data_types["in_dimmer"] = DataType.DT_8_BIT
-        else:
-            if "in_dimmer" in self.inputs():
-                self.removeTerminal("in_dimmer")
-        dimmer_output_dt_str = self.filter.filter_configurations.get("dimmer-output", "")
-        if len(dimmer_output_dt_str) > 0:
-            if "dimmer" not in self.outputs():
-                self.addOutput("dimmer")
-            match dimmer_output_dt_str:
-                case "16bit":
-                    self.filter.out_data_types["dimmer"] = DataType.DT_16_BIT
-                case "float":
-                    self.filter.out_data_types["dimmer"] = DataType.DT_DOUBLE
-                case _:
-                    self.filter.out_data_types["dimmer"] = DataType.DT_8_BIT
-        else:
-            if "dimmer" in self.outputs():
-                self.removeTerminal("dimmer")
-        match self.filter.filter_configurations.get("colorwheel-datatype"):
-            case "16bit":
-                self.filter.out_data_types["colorwheel"] = DataType.DT_16_BIT
-            case "float":
-                self.filter.out_data_types["colorwheel"] = DataType.DT_DOUBLE
-            case _:
-                self.filter.out_data_types["colorwheel"] = DataType.DT_8_BIT
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, name=name)

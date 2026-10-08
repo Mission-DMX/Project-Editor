@@ -17,10 +17,30 @@ class AutoTrackerFilter(VirtualFilter):
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Initialize the auto tracker filter."""
-        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_AUTOTRACKER, pos=pos)
         self._control_filters: dict[int, _MHControlInstance] = {}
         self._light_controller: VFilterLightController = VFilterLightController()
-        self.out_data_types["minimum_brightness"] = DataType.DT_DOUBLE
+        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_AUTOTRACKER, pos=pos)
+
+    def _rebuild_io(self) -> None:
+        """Derive outputs from ``number_of_concurrent_trackers`` and the registered tracker types.
+
+        Always exposes a float ``minimum_brightness`` output; adds pan / tilt outputs per tracker
+        whose data type comes from the registered :class:`_MHControlInstance`, falling back to
+        16-bit when the tracker hasn't been bound yet.
+        """
+        self._in_data_types = {}
+        self._out_data_types = {}
+        self._default_values = {}
+        self._gui_update_keys = {}
+        self._out_data_types[self.get_min_brightness_filter_id()] = DataType.DT_DOUBLE
+        trackers = self.number_of_concurrent_trackers + 1
+        for i in range(trackers):
+            try:
+                dt = self.get_data_type_of_tracker(i)
+            except KeyError:
+                dt = DataType.DT_16_BIT
+            self._out_data_types[f"Tracker{i}_Pan"] = dt
+            self._out_data_types[f"Tracker{i}_Tilt"] = dt
 
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         """Resolve the virtual output port to the id of the constant filter providing it."""

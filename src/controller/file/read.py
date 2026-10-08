@@ -19,6 +19,7 @@ from model.color_hsi import ColorHSI
 from model.control_desk import BankSet, ColorDeskColumn, FaderBank, RawDeskColumn
 from model.events import EventSender, mark_sender_persistent
 from model.filter import VirtualFilter
+from model.filters.factory import construct_filter_instance
 from model.macro import Macro, trigger_factory
 from model.media_assets.asset_loading_factory import load_asset
 from model.media_assets.factory_hint import AssetFactoryObjectHint
@@ -26,7 +27,6 @@ from model.media_assets.registry import clear as clear_media_registry
 from model.ofl.fixture import load_fixture, make_used_fixture
 from model.ofl.fixture_not_found_exception import FixtureDefNotFoundError
 from model.scene import FilterPage
-from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 from utility import resource_path
 from view.dialogs import ExceptionsDialog
 from view.show_mode.player.external_ui_windows import update_window_count
@@ -443,10 +443,10 @@ def _parse_filter(filter_element: ET.Element, scene: Scene) -> None:
                     "Found attribute %s=%s while parsing filter for scene %s", key, value, scene.human_readable_name
                 )
 
-    if filter_type < 0:
-        filter_ = construct_virtual_filter_instance(scene, filter_type, filter_id, pos=pos)
-    else:
-        filter_ = Filter(scene=scene, filter_id=filter_id, filter_type=filter_type, pos=pos)
+    filter_ = construct_filter_instance(scene=scene, filter_type=filter_type, filter_id=filter_id, pos=pos)
+    if filter_ is None:
+        logger.warning("Filter type %s is not implemented, skipping filter %s", filter_type, filter_id)
+        return
 
     for child in filter_element:
         match child.tag:
@@ -460,6 +460,10 @@ def _parse_filter(filter_element: ET.Element, scene: Scene) -> None:
                 logger.warning("Filter %s contains unknown element: %s", filter_id, child.tag)
 
     filter_ = replace_old_filter_configurations(filter_)
+    # Give the subclass (or the base no-op) a chance to re-derive terminals now that
+    # filter_configurations and initial_parameters have been fully populated from the XML.
+    # Harmless for unregistered legacy types whose _rebuild_io is still the base no-op.
+    filter_._rebuild_io()
     if isinstance(filter_, VirtualFilter):
         filter_.deserialize()
     scene.append_filter(filter_)
