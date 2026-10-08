@@ -5,7 +5,6 @@ from typing import override
 from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.virtual_filters.colordirector_vfilter import ColordirectorVFilter
 from view.show_mode.editor.nodes import FilterNode
-from view.show_mode.editor.nodes.base.aggregating_filter_node import AggregatingFilterNode
 
 
 class ColorMixerHSVNode(FilterNode):
@@ -38,14 +37,14 @@ class ColorMixerNormativeRGBNode(FilterNode):
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_COLOR_MIXER_NORMATIVE_RGB, name=name)
 
 
-class ColorMixerVFilterNode(AggregatingFilterNode):
+class ColorMixerVFilterNode(FilterNode):
     """Node to mix colors, using configurable virtual filter."""
 
     nodeName = "Color Mixer"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize."""
-        super().__init__(DataType.DT_COLOR, model, name, filter_type=FilterTypeEnumeration.VFILTER_COLOR_MIXER)
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_MIXER, name=name)
 
 
 class ColorDirectorVFilterNode(FilterNode):
