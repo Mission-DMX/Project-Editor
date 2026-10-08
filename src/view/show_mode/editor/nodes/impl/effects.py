@@ -26,66 +26,11 @@ class CueListNode(FilterNode):
 class ShiftFilterNode(FilterNode):
     """Filter node to represent an abstract shift filter."""
 
-    def __init__(self, model: Filter, name: str, id_: int, data_type: DataType) -> None:
+    def __init__(self, model: Filter, name: str, id_: int) -> None:
         """Initialize filter node."""
-        super().__init__(
-            model=model,
-            filter_type=id_,
-            name=name,
-            allow_add_output=True,
-            terminals={
-                "input": {"io": "in"},
-                "switch_time": {"io": "in"},
-                "time": {"io": "in"},
-            },
-        )
-
-        self.filter.in_data_types["input"] = data_type
-        self.filter.in_data_types["switch_time"] = DataType.DT_DOUBLE
-        self.filter.in_data_types["time"] = DataType.DT_DOUBLE
-        self.filter.default_values["time"] = "0"
-        self.filter.default_values["switch_time"] = "1000"
+        super().__init__(model=model, filter_type=id_, name=name, allow_add_output=True)
         self.channel_hints["switch_time"] = " [ms]"
         self.channel_hints["time"] = " [ms]"
-
-        try:
-            if isinstance(model, Scene):
-                # FIXME using the filter type as its ID seams odd
-                found_filter = model.get_filter_by_id(str(id_))
-                if found_filter:
-                    self.filter.filter_configurations["nr_outputs"] = str(
-                        int(found_filter.filter_configurations.get("nr_outputs"))
-                    )
-                else:
-                    self.filter.filter_configurations["nr_outputs"] = "0"
-            else:
-                self.filter.filter_configurations["nr_outputs"] = str(
-                    int(model.filter_configurations.get("nr_outputs"))
-                )
-        except ValueError:
-            self.filter.filter_configurations["nr_outputs"] = "0"
-
-        self._data_type = data_type
-        self._setup_output_terminals()
-
-    def _setup_output_terminals(self) -> None:
-        existing_output_keys = list(self.outputs())
-        previous_output_count = len(existing_output_keys)
-        new_output_count = int(self.filter.filter_configurations["nr_outputs"])
-        if previous_output_count > new_output_count:
-            for i in range(previous_output_count - new_output_count):
-                key_to_drop = existing_output_keys[len(existing_output_keys) - i - 1]
-                self.removeTerminal(key_to_drop)
-        else:
-            for i in range(new_output_count):
-                if i >= previous_output_count:
-                    channel_name = "output_" + str(i + 1)
-                    self.addOutput(channel_name)
-                    self.filter.out_data_types[channel_name] = self._data_type
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        self._setup_output_terminals()
 
 
 class Shift8BitNode(ShiftFilterNode):
@@ -95,7 +40,7 @@ class Shift8BitNode(ShiftFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT, DataType.DT_8_BIT)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_8BIT)
 
 
 class Shift16BitNode(ShiftFilterNode):
@@ -105,7 +50,7 @@ class Shift16BitNode(ShiftFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT, DataType.DT_16_BIT)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_16BIT)
 
 
 class ShiftFloatNode(ShiftFilterNode):
@@ -115,7 +60,7 @@ class ShiftFloatNode(ShiftFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT, DataType.DT_DOUBLE)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_FLOAT)
 
 
 class ShiftColorNode(ShiftFilterNode):
@@ -125,7 +70,7 @@ class ShiftColorNode(ShiftFilterNode):
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
-        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR, DataType.DT_COLOR)
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_EFFECT_SHIFT_COLOR)
 
 
 class AutoTrackerNode(FilterNode):

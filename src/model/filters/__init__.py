@@ -23,6 +23,7 @@ from . import (  # side-effect import so @register_filter runs
     misc,
     routing,
     scripting,
+    shift,
     time,
     trigonometrics,
     universe,
