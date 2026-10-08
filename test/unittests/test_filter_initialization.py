@@ -2078,6 +2078,84 @@ class ColorMixerVFilterTests(unittest.TestCase):
                 self.assertEqual(set(produced[0].in_data_types.keys()), {"0", "1"})
 
 
+class BrightnessMixinVFilterTests(unittest.TestCase):
+    """Per-type assertions for the two brightness-mixin v-filters migrated in PR 19."""
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_dimmer_mixin_default_signature_matches_default_configs(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, filter_id="d"
+        )
+        # Default configs chosen to match the pre-PR 19 ``deserialize`` behaviour.
+        self.assertEqual(f.filter_configurations["has_8bit_output"], "true")
+        self.assertEqual(f.filter_configurations["has_16bit_output"], "false")
+        self.assertEqual(f.filter_configurations["input_method"], "16bit")
+        self.assertEqual(f.filter_configurations["input_method_mixin"], "8bit")
+        # Both dimmer outputs are always declared on the model so the serializer can reason
+        # about them generically; the editor filters pyqtgraph terminals via the node side.
+        self.assertEqual(
+            f.out_data_types,
+            {"dimmer_out8b": DataType.DT_8_BIT, "dimmer_out16b": DataType.DT_16_BIT},
+        )
+        self.assertEqual(f.in_data_types["offset"], DataType.DT_DOUBLE)
+        # input defaults to 16bit per the input_method default, mixin to 8bit.
+        self.assertEqual(f.in_data_types["input"], DataType.DT_16_BIT)
+        self.assertEqual(f.in_data_types["mixin"], DataType.DT_8_BIT)
+
+    def test_dimmer_mixin_input_method_switches_signature(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN,
+            filter_id="d",
+            filter_configurations={"input_method": "8bit", "input_method_mixin": "16bit"},
+        )
+        self.assertEqual(f.in_data_types["input"], DataType.DT_8_BIT)
+        self.assertEqual(f.in_data_types["mixin"], DataType.DT_16_BIT)
+
+    def test_dimmer_mixin_deserialize_still_rebuilds_io(self) -> None:
+        """Backward-compat shim: calling ``deserialize()`` directly must repopulate I/O."""
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, filter_id="d"
+        )
+        f.filter_configurations["input_method"] = "8bit"
+        # Explicit call bypasses update_filter_configuration; the shim must still trigger a rebuild.
+        f.deserialize()
+        self.assertEqual(f.in_data_types["input"], DataType.DT_8_BIT)
+
+    def test_color_brightness_mixin_signature(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, filter_id="c"
+        )
+        self.assertEqual(
+            f.in_data_types,
+            {"color_in": DataType.DT_COLOR, "brightness": DataType.DT_8_BIT},
+        )
+        self.assertEqual(f.out_data_types, {"out": DataType.DT_COLOR})
+
+
 class NodeTerminalsFromFilterTests(unittest.TestCase):
     """When a node passes ``terminals=None``, the base derives terminals from the filter.
 

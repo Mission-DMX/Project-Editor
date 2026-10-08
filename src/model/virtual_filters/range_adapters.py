@@ -136,15 +136,6 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | None = None) -> None:
         """Instantiate a new dimmer brightness mixin vfilter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, pos=pos)
-        self._configuration_supported = True
-        self.filter_configurations.setdefault("has_16bit_output", "true")
-        self.filter_configurations.setdefault("has_8bit_output", "true")
-        self.filter_configurations.setdefault("input_method", "8bit")
-        self.filter_configurations.setdefault("input_method_mixin", "8bit")
-        self._out_data_types["dimmer_out8b"] = DataType.DT_8_BIT
-        self._out_data_types["dimmer_out16b"] = DataType.DT_16_BIT
-        self._in_data_types["offset"] = DataType.DT_DOUBLE
-        self.deserialize()
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -320,21 +311,37 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
         return range_8b_to_float_filter
 
     @override
+    def _rebuild_io(self) -> None:
+        """Derive the per-instance I/O signature from the configured input methods and output flags.
+
+        Reset-then-rebuild so a settings-widget edit followed by
+        :meth:`model.filter.Filter.update_filter_configuration` cleanly picks up the new
+        shape. Keeps the pre-migration semantics of declaring both ``dimmer_out8b`` and
+        ``dimmer_out16b`` outputs unconditionally; the node side filters pyqtgraph terminals
+        according to ``has_*_output`` so the editor UI only shows enabled outputs.
+        """
+        self._in_data_types = {"offset": DataType.DT_DOUBLE}
+        self._out_data_types = {
+            "dimmer_out8b": DataType.DT_8_BIT,
+            "dimmer_out16b": DataType.DT_16_BIT,
+        }
+        self._default_values = {}
+        self._gui_update_keys = {}
+        self._filter_configurations.setdefault("has_8bit_output", "true")
+        self._filter_configurations.setdefault("has_16bit_output", "false")
+        self._filter_configurations.setdefault("input_method", "16bit")
+        self._filter_configurations.setdefault("input_method_mixin", "8bit")
+        self._in_data_types["input"] = (
+            DataType.DT_8_BIT if self._filter_configurations.get("input_method") == "8bit" else DataType.DT_16_BIT
+        )
+        self._in_data_types["mixin"] = (
+            DataType.DT_8_BIT if self._filter_configurations.get("input_method_mixin") == "8bit" else DataType.DT_16_BIT
+        )
+
+    @override
     def deserialize(self) -> None:
-        if self.filter_configurations.get("has_8bit_output") is None:
-            self.filter_configurations["has_8bit_output"] = "true"
-        if self.filter_configurations.get("has_16bit_output") is None:
-            self.filter_configurations["has_16bit_output"] = "false"
-        if self.filter_configurations.get("input_method") is None:
-            self.filter_configurations["input_method"] = "16bit"
-        if self.filter_configurations.get("input_method") == "8bit":
-            self._in_data_types["input"] = DataType.DT_8_BIT
-        else:
-            self._in_data_types["input"] = DataType.DT_16_BIT
-        if self.filter_configurations.get("input_method_mixin") == "8bit":
-            self._in_data_types["mixin"] = DataType.DT_8_BIT
-        else:
-            self._in_data_types["mixin"] = DataType.DT_16_BIT
+        """Backward-compatible shim; the real work now lives in :meth:`_rebuild_io`."""
+        self._rebuild_io()
 
 
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
@@ -343,6 +350,17 @@ class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Instantiate a color global brightness filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, pos=pos)
+
+    @override
+    def _rebuild_io(self) -> None:
+        """Declare the mixin's static I/O: a colour input + optional 8-bit brightness; one colour output."""
+        self._in_data_types = {
+            "color_in": DataType.DT_COLOR,
+            "brightness": DataType.DT_8_BIT,
+        }
+        self._out_data_types = {"out": DataType.DT_COLOR}
+        self._default_values = {}
+        self._gui_update_keys = {}
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
