@@ -168,6 +168,7 @@ class AdapterSubclassTests(unittest.TestCase):
         return scene
 
     def test_adapter_16bit_to_dual_8bit_signature(self) -> None:
+        """16bit-to-dual-8bit adapter has one 16-bit input and lower/upper 8-bit outputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -180,6 +181,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertFalse(f.configuration_supported)
 
     def test_adapter_16bit_to_bool_signature(self) -> None:
+        """16bit-to-bool adapter maps DT_16_BIT in to DT_BOOL out."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -192,6 +194,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertFalse(f.configuration_supported)
 
     def test_adapter_16bit_to_float_signature(self) -> None:
+        """16bit-to-float adapter maps DT_16_BIT in to DT_DOUBLE out."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -203,6 +206,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(f.out_data_types, {"value": DataType.DT_DOUBLE})
 
     def test_adapter_8bit_to_float_signature(self) -> None:
+        """8bit-to-float adapter maps DT_8_BIT in to DT_DOUBLE out."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -214,6 +218,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(f.out_data_types, {"value": DataType.DT_DOUBLE})
 
     def test_adapter_color_to_rgb_signature(self) -> None:
+        """ColorToRGB adapter has one color input and r/g/b 8-bit outputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -228,6 +233,7 @@ class AdapterSubclassTests(unittest.TestCase):
         )
 
     def test_adapter_color_to_rgbw_signature(self) -> None:
+        """ColorToRGBW adapter exposes r/g/b/w output ports."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -238,6 +244,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(set(f.out_data_types.keys()), {"r", "g", "b", "w"})
 
     def test_adapter_color_to_rgbwa_signature(self) -> None:
+        """ColorToRGBWA adapter exposes r/g/b/w/a output ports."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -248,6 +255,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(set(f.out_data_types.keys()), {"r", "g", "b", "w", "a"})
 
     def test_adapter_float_to_color_signature_and_default_value(self) -> None:
+        """FloatToColor adapter has h/s/i float inputs, a color output, and default ``i=1``."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -263,6 +271,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(f.default_values, {"i": "1"})
 
     def test_adapter_color_to_float_signature(self) -> None:
+        """ColorToFloat adapter has one color input and h/s/i float outputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -274,6 +283,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(set(f.out_data_types.keys()), {"h", "s", "i"})
 
     def test_dual_byte_to_16bit_signature(self) -> None:
+        """Dual-byte-to-16bit adapter has lower/upper inputs and a single 16-bit output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -285,6 +295,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(f.out_data_types, {"value": DataType.DT_16_BIT})
 
     def test_8bit_to_16bit_signature(self) -> None:
+        """8bit-to-16bit adapter maps a DT_8_BIT input to a DT_16_BIT output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -296,6 +307,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(f.out_data_types, {"value": DataType.DT_16_BIT})
 
     def test_float_to_float_range_signature_and_defaults(self) -> None:
+        """Float-to-float range adapter exposes a DT_DOUBLE pass-through with 0..1 defaults."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -315,6 +327,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertTrue(f.configuration_supported)  # range adapters allow user config
 
     def test_float_to_8bit_range_defaults(self) -> None:
+        """Float-to-8bit range adapter exposes an 8-bit output with 255 upper default."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -326,6 +339,7 @@ class AdapterSubclassTests(unittest.TestCase):
         self.assertEqual(f.initial_parameters["upper_bound_out"], "255")
 
     def test_float_to_16bit_range_defaults(self) -> None:
+        """Float-to-16bit range adapter exposes a 16-bit output with 65535 upper default."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -372,6 +386,7 @@ class ConstantSubclassTests(unittest.TestCase):
         return scene
 
     def test_constant_8bit_signature(self) -> None:
+        """Constant 8bit exposes a single DT_8_BIT ``value`` output with gui-update binding."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -386,6 +401,7 @@ class ConstantSubclassTests(unittest.TestCase):
         self.assertTrue(f.configuration_supported)
 
     def test_constant_16bit_signature(self) -> None:
+        """Constant 16bit exposes a single DT_16_BIT ``value`` output with ``0`` default."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -397,6 +413,7 @@ class ConstantSubclassTests(unittest.TestCase):
         self.assertEqual(f.initial_parameters["value"], "0")
 
     def test_constant_float_signature(self) -> None:
+        """Constant float exposes a single DT_DOUBLE ``value`` output with ``0.0`` default."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -408,6 +425,7 @@ class ConstantSubclassTests(unittest.TestCase):
         self.assertEqual(f.initial_parameters["value"], "0.0")
 
     def test_constant_color_signature(self) -> None:
+        """Constant color exposes a single DT_COLOR ``value`` output with ``0,0,0`` default."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -470,6 +488,7 @@ class DebugSubclassTests(unittest.TestCase):
         return scene
 
     def test_all_debug_types_have_single_value_input_and_no_output(self) -> None:
+        """Every debug subclass exposes a single typed ``value`` input and no outputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -493,6 +512,7 @@ class DebugSubclassTests(unittest.TestCase):
                 self.assertEqual(int(f.filter_type), int(ft))
 
     def test_debug_local_and_remote_share_class(self) -> None:
+        """Local and remote 8-bit debug filters both resolve to the ``Debug8Bit`` class."""
         from model.filter import FilterTypeEnumeration
         from model.filters.debug import Debug8Bit
         from model.filters.factory import construct_filter_instance
@@ -525,6 +545,7 @@ class ArithmeticSubclassTests(unittest.TestCase):
         return scene
 
     def test_mac_signature_and_defaults(self) -> None:
+        """MAC arithmetic filter has factor1/factor2/summand inputs and standard defaults."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -539,6 +560,7 @@ class ArithmeticSubclassTests(unittest.TestCase):
         self.assertFalse(f.configuration_supported)
 
     def test_float_to_byte_converters(self) -> None:
+        """Float-to-16bit and float-to-8bit converters map a double input to the right int type."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -554,6 +576,7 @@ class ArithmeticSubclassTests(unittest.TestCase):
         self.assertEqual(f8.out_data_types, {"value": DataType.DT_8_BIT})
 
     def test_round_log_exp_signatures(self) -> None:
+        """Round/log/exp arithmetic filters share the single-double-in, single-double-out shape."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -574,6 +597,7 @@ class ArithmeticSubclassTests(unittest.TestCase):
         self.assertEqual(log_f.default_values["value_in"], "1")
 
     def test_min_max_signatures_and_defaults(self) -> None:
+        """Min/max arithmetic filters expose param1/param2 inputs and a double ``value`` output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -603,6 +627,7 @@ class TrigonometricSubclassTests(unittest.TestCase):
         return scene
 
     def test_forward_trig_shared_signature_and_defaults(self) -> None:
+        """Sin/cos/tan subclasses share the five-input signature and defaults."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -633,6 +658,7 @@ class TrigonometricSubclassTests(unittest.TestCase):
                 self.assertFalse(f.configuration_supported)
 
     def test_arc_trig_adds_value_in_default(self) -> None:
+        """Arc-trig filters seed a non-zero ``value_in`` default."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -669,6 +695,7 @@ class WaveSubclassTests(unittest.TestCase):
         return scene
 
     def test_triangle_and_sawtooth_share_trig_signature(self) -> None:
+        """Triangle and sawtooth waves share the five-input trig signature with one double output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -684,6 +711,7 @@ class WaveSubclassTests(unittest.TestCase):
                 self.assertFalse(f.configuration_supported)
 
     def test_square_adds_length_input_with_default(self) -> None:
+        """Square wave adds a ``length`` input with a 180 default on top of the trig signature."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -721,6 +749,7 @@ class TimeSubclassTests(unittest.TestCase):
         return scene
 
     def test_time_input_signature(self) -> None:
+        """TimeInput exposes no inputs and one DT_DOUBLE ``value`` output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -733,6 +762,7 @@ class TimeSubclassTests(unittest.TestCase):
         self.assertFalse(f.configuration_supported)
 
     def test_event_counter_signature_and_default_event_configuration(self) -> None:
+        """EventCounter exposes a time input, two 16-bit outputs, and a default event config."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -746,6 +776,7 @@ class TimeSubclassTests(unittest.TestCase):
         self.assertTrue(f.configuration_supported)
 
     def test_switch_delay_shared_signature_per_data_type(self) -> None:
+        """Each delay subclass maps the ``value_in`` input and ``value`` output to its data type."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -768,6 +799,7 @@ class TimeSubclassTests(unittest.TestCase):
                 self.assertEqual(int(f.filter_type), int(ft))
 
     def test_switch_delay_on_and_off_share_class_per_data_type(self) -> None:
+        """On-delay and off-delay 8bit filters resolve to the same ``TimeDelay8Bit`` subclass."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
         from model.filters.time import TimeDelay8Bit
@@ -783,6 +815,7 @@ class TimeSubclassTests(unittest.TestCase):
         self.assertIsInstance(off_f, TimeDelay8Bit)
 
     def test_delay_configuration_is_preserved_when_loaded(self) -> None:
+        """Loaded ``delay`` and unknown-future configs are preserved on the delay filter."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -814,6 +847,7 @@ class LuaScriptingTests(unittest.TestCase):
         return scene
 
     def test_default_mappings_and_script_applied(self) -> None:
+        """Default Lua filter seeds empty mappings, a stub script, and empty I/O dicts."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -826,6 +860,7 @@ class LuaScriptingTests(unittest.TestCase):
         self.assertEqual(f.out_data_types, {})
 
     def test_mapping_parsing_populates_io(self) -> None:
+        """Parsing ``in_mapping`` / ``out_mapping`` configs populates typed Lua I/O ports."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1000,6 +1035,7 @@ class AggregatingSubclassTests(unittest.TestCase):
         return scene
 
     def test_default_input_count_populates_two_inputs(self) -> None:
+        """Default aggregating sum has two typed inputs and one typed ``value`` output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1013,6 +1049,7 @@ class AggregatingSubclassTests(unittest.TestCase):
         self.assertEqual(f.default_values, {"0": "0", "1": "0"})
 
     def test_data_type_per_subclass(self) -> None:
+        """Each aggregating subclass applies its data type to inputs, output, and defaults."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1033,6 +1070,7 @@ class AggregatingSubclassTests(unittest.TestCase):
                 self.assertEqual(f.default_values["0"], expected_default)
 
     def test_input_count_three_populates_three_inputs(self) -> None:
+        """``input_count=3`` on the aggregating color mixer exposes three typed inputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1049,6 +1087,7 @@ class AggregatingSubclassTests(unittest.TestCase):
             self.assertEqual(f.default_values[key], "0,0,0")
 
     def test_invalid_input_count_falls_back_to_zero(self) -> None:
+        """A non-numeric ``input_count`` config degrades to zero inputs."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1089,6 +1128,7 @@ class EventSchedulerTests(unittest.TestCase):
         return scene
 
     def test_event_scheduler_defaults(self) -> None:
+        """EventScheduler has empty I/O, blank event_data config, and seeded initial parameters."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1121,6 +1161,7 @@ class UniverseOutputTests(unittest.TestCase):
         return scene
 
     def test_empty_config_yields_no_inputs(self) -> None:
+        """A UniverseOutput with no config has empty I/O dicts."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1132,6 +1173,7 @@ class UniverseOutputTests(unittest.TestCase):
         self.assertEqual(f.out_data_types, {})
 
     def test_configs_populate_inputs_excluding_universe_key(self) -> None:
+        """Every non-``universe`` config entry becomes an 8-bit input terminal."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1149,6 +1191,7 @@ class UniverseOutputTests(unittest.TestCase):
             self.assertEqual(f.default_values[key], "0")
 
     def test_fresh_universe_node_seeds_default_universe_id_and_input(self) -> None:
+        """A new UniverseNode seeds universe=1 and one default input_1 terminal."""
         from view.show_mode.editor.nodes.impl.universenode import UniverseNode
 
         scene = self._make_scene()
@@ -1158,6 +1201,7 @@ class UniverseOutputTests(unittest.TestCase):
         self.assertEqual(set(node.inputs().keys()), {"input_1"})
 
     def test_universe_node_add_input_updates_model_and_terminals(self) -> None:
+        """``UniverseNode.addInput`` adds a new input terminal and syncs the backing model."""
         from view.show_mode.editor.nodes.impl.universenode import UniverseNode
 
         scene = self._make_scene()
@@ -1168,6 +1212,7 @@ class UniverseOutputTests(unittest.TestCase):
         self.assertEqual(node.filter.in_data_types["input_2"].value, 1)  # DT_8_BIT
 
     def test_universe_node_remove_terminal_clears_config_and_model(self) -> None:
+        """Removing a universe node input terminal drops it from configs and in_data_types."""
         from view.show_mode.editor.nodes.impl.universenode import UniverseNode
 
         scene = self._make_scene()
@@ -1284,6 +1329,7 @@ class SwitchSubclassTests(unittest.TestCase):
         return scene
 
     def test_default_two_inputs_plus_select(self) -> None:
+        """Default switch has two typed inputs plus a 16-bit ``select`` input and typed ``out``."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1301,6 +1347,7 @@ class SwitchSubclassTests(unittest.TestCase):
         self.assertEqual(f.default_values["0"], "0")
 
     def test_data_type_per_subclass_and_defaults(self) -> None:
+        """Each switch subclass uses its specific data type for inputs, output, and defaults."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1332,6 +1379,7 @@ class SwitchSubclassTests(unittest.TestCase):
         self.assertIn("out", f.out_data_types)
 
     def test_nr_inputs_three_grows_input_set(self) -> None:
+        """Setting ``nr_inputs=3`` adds three numbered typed inputs alongside ``select``."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1348,6 +1396,7 @@ class SwitchSubclassTests(unittest.TestCase):
             self.assertEqual(f.default_values[key], "0,0,0")
 
     def test_invalid_nr_inputs_falls_back_to_zero(self) -> None:
+        """A non-numeric ``nr_inputs`` config leaves only the ``select`` input in place."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1392,6 +1441,7 @@ class FaderSubclassTests(unittest.TestCase):
         return scene
 
     def test_fader_raw_signature_and_defaults(self) -> None:
+        """FaderRaw exposes primary/secondary 16-bit outputs and empty set/column configs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1408,6 +1458,7 @@ class FaderSubclassTests(unittest.TestCase):
         self.assertEqual(f.filter_configurations["column_id"], "")
 
     def test_hsi_faders_signatures_and_default_ignore_main_brightness(self) -> None:
+        """HSI fader subclasses expose the ``color`` output plus optional amber/uv ports."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1428,6 +1479,7 @@ class FaderSubclassTests(unittest.TestCase):
                 self.assertEqual(f.filter_configurations["column_id"], "")
 
     def test_main_brightness_signature(self) -> None:
+        """MainBrightness exposes a single 16-bit ``brightness`` output and no inputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1440,6 +1492,7 @@ class FaderSubclassTests(unittest.TestCase):
         self.assertFalse(f.configuration_supported)
 
     def test_loaded_configs_override_defaults(self) -> None:
+        """Loaded fader configs (set_id, column_id, ignore_main_brightness) must override defaults."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1476,6 +1529,7 @@ class CueFilterTests(unittest.TestCase):
         return scene
 
     def test_default_signature_without_mapping(self) -> None:
+        """Default CueFilter has time inputs, no outputs, and empty mapping/cuelist configs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1494,6 +1548,7 @@ class CueFilterTests(unittest.TestCase):
         self.assertEqual(f.gui_update_keys["run_cue"], DataType.DT_16_BIT)
 
     def test_mapping_populates_typed_outputs(self) -> None:
+        """A cue ``mapping`` config populates typed outputs for each entry."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1559,6 +1614,7 @@ class SequencerFilterTests(unittest.TestCase):
         return scene
 
     def test_default_signature_without_channels(self) -> None:
+        """Default SequencerFilter has time inputs, no outputs, and empty channel/transition configs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1573,6 +1629,7 @@ class SequencerFilterTests(unittest.TestCase):
         self.assertEqual(f.filter_configurations["transitions"], "")
 
     def test_channels_populate_typed_outputs(self) -> None:
+        """Serialised channels in the ``channels`` config populate typed outputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filter_data.sequencer.sequencer_channel import SequencerChannel
         from model.filters.factory import construct_filter_instance
@@ -1594,6 +1651,7 @@ class SequencerFilterTests(unittest.TestCase):
         self.assertEqual(f.out_data_types["hue"], DataType.DT_COLOR)
 
     def test_malformed_channel_entry_is_skipped(self) -> None:
+        """Malformed sequencer channel entries are dropped without raising."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1636,6 +1694,7 @@ class AutoTrackerFilterTests(unittest.TestCase):
         self.assertIn("Tracker0_Tilt", f.out_data_types)
 
     def test_tracker_count_two_adds_more_outputs(self) -> None:
+        """``trackercount=2`` yields pan/tilt outputs for three trackers (preserving the +1 loop)."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1663,6 +1722,7 @@ class EffectsStackTests(unittest.TestCase):
         return scene
 
     def test_effects_stack_constructs_with_empty_io(self) -> None:
+        """EffectsStack v-filter constructs via the factory with empty I/O dicts."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
         from model.virtual_filters.effects_stacks.vfilter import EffectsStack
@@ -1688,6 +1748,7 @@ class ShiftSubclassTests(unittest.TestCase):
         return scene
 
     def test_default_signature_and_defaults(self) -> None:
+        """Default shift filter exposes input/time inputs and zero outputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1705,6 +1766,7 @@ class ShiftSubclassTests(unittest.TestCase):
         self.assertEqual(f.filter_configurations["nr_outputs"], "0")
 
     def test_data_type_per_subclass(self) -> None:
+        """Each shift subclass carries its own data type on the ``input`` terminal."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1722,6 +1784,7 @@ class ShiftSubclassTests(unittest.TestCase):
                 self.assertEqual(int(f.filter_type), int(ft))
 
     def test_nr_outputs_populates_output_set(self) -> None:
+        """``nr_outputs=N`` populates N typed ``output_i`` ports on the shift subclass."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1737,6 +1800,7 @@ class ShiftSubclassTests(unittest.TestCase):
             self.assertEqual(f.out_data_types[key], DataType.DT_COLOR)
 
     def test_invalid_nr_outputs_falls_back_to_zero(self) -> None:
+        """A non-numeric ``nr_outputs`` config results in zero outputs."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1777,6 +1841,7 @@ class ColorChaserTests(unittest.TestCase):
         return scene
 
     def test_default_signature_and_defaults(self) -> None:
+        """Default ColorChaser exposes time inputs and one default pixel output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1799,6 +1864,7 @@ class ColorChaserTests(unittest.TestCase):
         self.assertEqual(f.initial_parameters["config"], "")
 
     def test_dynamic_inputs_and_pixel_outputs(self) -> None:
+        """Pixel count and parameter configs populate numbered color outputs and typed inputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1823,6 +1889,7 @@ class ColorChaserTests(unittest.TestCase):
         self.assertEqual(f.default_values["tint"], "360.0,1.0,1.0")
 
     def test_malformed_pixel_count_clamps_to_zero(self) -> None:
+        """A non-numeric ``number_of_pixels`` config degrades to zero outputs."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1868,6 +1935,7 @@ class PanTiltConstantFilterTests(unittest.TestCase):
         return scene
 
     def test_default_16bit_outputs_and_center_pan_tilt(self) -> None:
+        """Default PanTiltConstant has 16-bit pan/tilt outputs centered at 0.5."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1885,6 +1953,7 @@ class PanTiltConstantFilterTests(unittest.TestCase):
         self.assertEqual(f.gui_update_keys.get("pan"), DataType.DT_DOUBLE)
 
     def test_outputs_eight_bit(self) -> None:
+        """``outputs=8bit`` exposes only the 8-bit pan/tilt output ports."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1901,6 +1970,7 @@ class PanTiltConstantFilterTests(unittest.TestCase):
         )
 
     def test_outputs_both_exposes_all_four(self) -> None:
+        """``outputs=both`` exposes both 8bit and 16bit pan/tilt output ports."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1916,6 +1986,7 @@ class PanTiltConstantFilterTests(unittest.TestCase):
         self.assertEqual(f.out_data_types["pan8bit"], DataType.DT_8_BIT)
 
     def test_outputs_switch_rebuilds_on_update_filter_configuration(self) -> None:
+        """Switching the ``outputs`` config via ``update_filter_configuration`` rebuilds the ports."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1930,6 +2001,7 @@ class PanTiltConstantFilterTests(unittest.TestCase):
         self.assertEqual(set(f.out_data_types.keys()), {"pan8bit", "tilt8bit"})
 
     def test_loaded_initial_parameters_override_defaults(self) -> None:
+        """Loaded pan/tilt values must take precedence over the center defaults."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1956,6 +2028,7 @@ class RangeAdapterVFilterTests(unittest.TestCase):
         return scene
 
     def test_sixteen_bit_to_float_range_signature_and_defaults(self) -> None:
+        """16bit-to-float range adapter maps DT_16_BIT in to DT_DOUBLE out with the full defaults."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -1974,6 +2047,7 @@ class RangeAdapterVFilterTests(unittest.TestCase):
         self.assertIn("limit_range", f.gui_update_keys)
 
     def test_eight_bit_to_float_range_signature_and_defaults(self) -> None:
+        """8bit-to-float range adapter maps DT_8_BIT in to DT_DOUBLE out with 0..255 defaults."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2024,6 +2098,7 @@ class ColorMixerVFilterTests(unittest.TestCase):
         return scene
 
     def test_default_signature_and_method_hsv(self) -> None:
+        """Default ColorMixerVFilter uses HSV with two color inputs and a color output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2040,6 +2115,7 @@ class ColorMixerVFilterTests(unittest.TestCase):
             self.assertEqual(f.default_values[key], "0,0,0")
 
     def test_input_count_three(self) -> None:
+        """Setting ``input_count=3`` on the color mixer exposes three color inputs."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2092,6 +2168,7 @@ class BrightnessMixinVFilterTests(unittest.TestCase):
         return scene
 
     def test_dimmer_mixin_default_signature_matches_default_configs(self) -> None:
+        """Default dimmer-mixin configs produce the pre-PR 19 I/O signature."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2144,6 +2221,7 @@ class BrightnessMixinVFilterTests(unittest.TestCase):
         self.assertEqual(neither.out_data_types, {})
 
     def test_dimmer_mixin_input_method_switches_signature(self) -> None:
+        """``input_method`` / ``input_method_mixin`` configs choose the input terminal data types."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2172,6 +2250,7 @@ class BrightnessMixinVFilterTests(unittest.TestCase):
         self.assertEqual(f.in_data_types["input"], DataType.DT_8_BIT)
 
     def test_color_brightness_mixin_signature(self) -> None:
+        """ColorGlobalBrightnessMixin exposes color_in + brightness inputs and one color output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2198,6 +2277,7 @@ class ImportVFilterTests(unittest.TestCase):
         return scene
 
     def test_default_signature_without_target(self) -> None:
+        """A targetless ImportVFilter exposes no I/O and empty target/rename configs."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2211,6 +2291,7 @@ class ImportVFilterTests(unittest.TestCase):
         self.assertEqual(f.filter_configurations["rename_dict"], "")
 
     def test_mirrors_target_outputs(self) -> None:
+        """ImportVFilter mirrors the output signature of its ``target`` filter."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2229,6 +2310,7 @@ class ImportVFilterTests(unittest.TestCase):
         self.assertEqual(f.out_data_types, {"value": DataType.DT_8_BIT})
 
     def test_rename_dict_renames_and_hides_outputs(self) -> None:
+        """A ``rename_dict`` config must rename, drop, or keep imported outputs as specified."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2261,6 +2343,7 @@ class ColorToColorWheelTests(unittest.TestCase):
         return scene
 
     def test_default_signature_and_configs(self) -> None:
+        """Default ColorToColorWheel exposes only the color input and 8-bit colorwheel output."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2280,6 +2363,7 @@ class ColorToColorWheelTests(unittest.TestCase):
         self.assertEqual(f.out_data_types["colorwheel"], DataType.DT_8_BIT)
 
     def test_dynamic_dimmer_in_and_out(self) -> None:
+        """Enabling dimmer input/output configs adds the typed dimmer ports to the signature."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2299,6 +2383,7 @@ class ColorToColorWheelTests(unittest.TestCase):
         self.assertEqual(f.out_data_types["colorwheel"], DataType.DT_16_BIT)
 
     def test_empty_dimmer_input_drops_in_dimmer_port(self) -> None:
+        """An empty ``dimmer-input`` config must not expose the ``in_dimmer`` port."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2324,6 +2409,7 @@ class ColorDirectorVFilterTests(unittest.TestCase):
         return scene
 
     def test_default_signature_without_color_groups(self) -> None:
+        """A fresh ColordirectorVFilter exposes only time inputs and no outputs."""
         from model.filter import DataType, FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2384,6 +2470,7 @@ class ColorDirectorVFilterTests(unittest.TestCase):
         self.assertEqual(f.out_data_types["stage__left"], DataType.DT_COLOR)
 
     def test_group_removal_shrinks_outputs_on_rebuild(self) -> None:
+        """Removing sub-outputs and groups must drop the corresponding outputs after rebuild."""
         from model.filter import FilterTypeEnumeration
         from model.filters.factory import construct_filter_instance
 
@@ -2422,6 +2509,7 @@ class NodeTerminalsFromFilterTests(unittest.TestCase):
         return scene
 
     def test_adapter_node_derives_terminals_from_filter(self) -> None:
+        """Adapter nodes with no explicit terminals must derive them from the filter's I/O signature."""
         from view.show_mode.editor.nodes.impl.adapters import AdapterColorToRGBWANode
 
         scene = self._make_scene()
@@ -2498,6 +2586,7 @@ class VirtualFilterInstantiationTests(unittest.TestCase):
         return scene
 
     def test_dimmer_brightness_mixin_still_instantiates(self) -> None:
+        """The dimmer brightness mixin v-filter must still produce at least one native filter."""
         from model.virtual_filters.range_adapters import DimmerGlobalBrightnessMixinVFilter
 
         scene = self._make_scene()
@@ -2509,6 +2598,7 @@ class VirtualFilterInstantiationTests(unittest.TestCase):
         self.assertGreater(len(produced), 0, "V-filter must produce at least one native filter")
 
     def test_sixteen_bit_to_float_range_still_instantiates(self) -> None:
+        """The 16bit-to-float range v-filter must still produce two native filters when instantiated."""
         from model.virtual_filters.range_adapters import SixteenBitToFloatRange
 
         scene = self._make_scene()

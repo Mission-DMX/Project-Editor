@@ -1,4 +1,4 @@
-"""Column fader filter nodes"""
+"""Column fader filter nodes."""
 
 from typing import override
 
@@ -18,6 +18,7 @@ class _FaderNode(FilterNode):
     """
 
     def __init__(self, model: Filter | Scene, filter_type: FilterTypeEnumeration, name: str) -> None:
+        """Initialize filter node."""
         self._bankset_model: BankSet | None = None
         super().__init__(model=model, filter_type=filter_type, name=name)
         self._update_bankset_listener()
@@ -61,49 +62,60 @@ class _FaderNode(FilterNode):
 
 
 class FaderRawNode(_FaderNode):
-    """Filter to represent any filter fader"""
+    """Filter to represent any filter fader."""
 
     nodeName = "Raw"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_RAW, name=name)
 
 
 class FaderHSINode(_FaderNode):
-    """Filter to represent a hsi filter fader"""
+    """Filter to represent a hsi filter fader."""
+
     nodeName = "HSI"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSI, name=name)
 
 
 class FaderHSIANode(_FaderNode):
-    """Filter to represent a hsia filter fader"""
+    """Filter to represent a hsia filter fader."""
+
     nodeName = "HSI-A"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIA, name=name)
 
 
 class FaderHSIUNode(_FaderNode):
-    """Filter to represent a hsiu filter fader"""
+    """Filter to represent a hsiu filter fader."""
+
     nodeName = "HSI_U"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIU, name=name)
 
 
 class FaderHSIAUNode(_FaderNode):
-    """Filter to represent a hasiau filter fader"""
+    """Filter to represent a hasiau filter fader."""
+
     nodeName = "HSI-AU"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_FADER_HSIAU, name=name)
 
 
 class FaderMainBrightness(FilterNode):
-    """Filter to the main brightness fader"""
+    """Filter to the main brightness fader."""
+
     nodeName = "global-ilumination"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
         super().__init__(model=model, filter_type=FilterTypeEnumeration.FILTER_TYPE_MAIN_BRIGHTNESS, name=name)

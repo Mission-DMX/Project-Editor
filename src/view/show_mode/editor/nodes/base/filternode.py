@@ -1,4 +1,4 @@
-"""Basic filter node"""
+"""Basic filter node."""
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
@@ -24,6 +24,7 @@ class FilterNode(Node):
                  terminals: dict[str, dict[str, str]] | None = None,
                  allow_add_input: bool = False,
                  allow_add_output: bool = False) -> None:
+        """Initialize filter node."""
         if isinstance(model, Scene):
             self._filter = construct_filter_instance(scene=model, filter_id=name, filter_type=filter_type)
             if self._filter is not None:
@@ -49,19 +50,23 @@ class FilterNode(Node):
 
     @override
     def graphicsItem(self) -> FilterNodeGraphicsItem:
-        """Return the GraphicsItem for this node. Subclasses may re-implement
-        this method to customize their appearance in the flowchart."""
+        """Return the GraphicsItem for this node.
+
+        Subclasses may re-implement this method to customize their appearance in the flowchart.
+        """
         if self._graphicsItem is None:
             self._graphicsItem = FilterNodeGraphicsItem(self)
         return self._graphicsItem
 
     def connected(self, local_term: Terminal, remote_term: Terminal) -> None:
-        """Handles behaviour if terminal was connected. Adds channel link to filter.
-        Could emit signals. See pyqtgraph.flowchart.Node.connected()
+        """Handle behaviour if terminal was connected. Adds channel link to filter.
+
+        Could emit signals. See pyqtgraph.flowchart.Node.connected().
 
         Args:
             local_term: The terminal on the node itself.
             remote_term: The terminal of the other node.
+
         """
         remote_node = remote_term.node()
 
@@ -87,25 +92,29 @@ class FilterNode(Node):
                              ", ".join(remote_node.filter.out_data_types.keys()))
 
     def disconnected(self, local_term: Terminal, remote_term: Terminal) -> None:
-        """Handles behaviour if terminal was disconnected. Removes channel link from filter.
-        Could emit signals. See pyqtgraph.flowchart.Node.disconnected()
+        """Handle behaviour if terminal was disconnected. Removes channel link from filter.
+
+        Could emit signals. See pyqtgraph.flowchart.Node.disconnected().
 
         Args:
             local_term: The terminal on the node itself.
             remote_term: The terminal of the other node.
+
         """
         if local_term.isInput() and remote_term.isOutput():
             self.filter.channel_links[local_term.name()] = ""
 
     def rename(self, name: str) -> None:
-        """Handles behaviour if node was renamed. Changes filter.id.
-        Could emit signals. See pyqtgraph.flowchart.Node.rename()
+        """Handle behaviour if node was renamed. Changes filter.id.
+
+        Could emit signals. See pyqtgraph.flowchart.Node.rename().
 
         Args:
             name: The new name of the filter.
 
         Returns:
-            The return value of pyqtgraph.flowchart.Node.rename()
+            The return value of pyqtgraph.flowchart.Node.rename().
+
         """
         name = name.replace(":", "_")
         # check for name collision
@@ -127,13 +136,13 @@ class FilterNode(Node):
         super().rename(name)
 
     def update_filter_pos(self) -> None:
-        """Saves nodes position inside the ui to registered filter."""
+        """Save the node's position inside the ui to the registered filter."""
         pos = self.graphicsItem().pos()
         self._filter.pos = (pos.x(), pos.y())
 
     @property
     def filter(self) -> Filter:
-        """The corresponding filter"""
+        """The corresponding filter."""
         return self._filter
 
     def update_node_after_settings_changed(self) -> None:
@@ -186,6 +195,6 @@ class FilterNode(Node):
         return terminals
 
     def close(self) -> None:
-        """Closes the node and removes the linked filter from the scene."""
+        """Close the node and remove the linked filter from the scene."""
         self.filter.scene.remove_filter(self.filter)
         super().close()
