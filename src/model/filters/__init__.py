@@ -17,6 +17,7 @@ from . import (  # side-effect import so @register_filter runs
     adapters,
     aggregating,
     arithmetics,
+    chaser,
     constants,
     debug,
     faders,
