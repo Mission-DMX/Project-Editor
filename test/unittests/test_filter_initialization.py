@@ -2102,16 +2102,44 @@ class BrightnessMixinVFilterTests(unittest.TestCase):
         self.assertEqual(f.filter_configurations["has_16bit_output"], "false")
         self.assertEqual(f.filter_configurations["input_method"], "16bit")
         self.assertEqual(f.filter_configurations["input_method_mixin"], "8bit")
-        # Both dimmer outputs are always declared on the model so the serializer can reason
-        # about them generically; the editor filters pyqtgraph terminals via the node side.
-        self.assertEqual(
-            f.out_data_types,
-            {"dimmer_out8b": DataType.DT_8_BIT, "dimmer_out16b": DataType.DT_16_BIT},
-        )
+        # Only enabled outputs are declared so the serializer never walks a port whose
+        # backing native filter isn't materialised by ``instantiate_filters``.
+        self.assertEqual(f.out_data_types, {"dimmer_out8b": DataType.DT_8_BIT})
         self.assertEqual(f.in_data_types["offset"], DataType.DT_DOUBLE)
         # input defaults to 16bit per the input_method default, mixin to 8bit.
         self.assertEqual(f.in_data_types["input"], DataType.DT_16_BIT)
         self.assertEqual(f.in_data_types["mixin"], DataType.DT_8_BIT)
+
+    def test_dimmer_mixin_output_set_follows_has_output_flags(self) -> None:
+        """Toggling ``has_*_output`` adds / removes the corresponding output port."""
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        both = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN,
+            filter_id="d_both",
+            filter_configurations={"has_8bit_output": "true", "has_16bit_output": "true"},
+        )
+        self.assertEqual(
+            both.out_data_types,
+            {"dimmer_out8b": DataType.DT_8_BIT, "dimmer_out16b": DataType.DT_16_BIT},
+        )
+        only16 = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN,
+            filter_id="d_only16",
+            filter_configurations={"has_8bit_output": "false", "has_16bit_output": "true"},
+        )
+        self.assertEqual(only16.out_data_types, {"dimmer_out16b": DataType.DT_16_BIT})
+        neither = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN,
+            filter_id="d_neither",
+            filter_configurations={"has_8bit_output": "false", "has_16bit_output": "false"},
+        )
+        self.assertEqual(neither.out_data_types, {})
 
     def test_dimmer_mixin_input_method_switches_signature(self) -> None:
         from model.filter import DataType, FilterTypeEnumeration
@@ -2154,6 +2182,132 @@ class BrightnessMixinVFilterTests(unittest.TestCase):
             {"color_in": DataType.DT_COLOR, "brightness": DataType.DT_8_BIT},
         )
         self.assertEqual(f.out_data_types, {"out": DataType.DT_COLOR})
+
+
+class ImportVFilterTests(unittest.TestCase):
+    """Per-type assertions for ImportVFilter migrated in PR 20."""
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_default_signature_without_target(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_IMPORT, filter_id="imp"
+        )
+        self.assertEqual(f.in_data_types, {})
+        self.assertEqual(f.out_data_types, {})
+        self.assertEqual(f.filter_configurations["target"], "")
+        self.assertEqual(f.filter_configurations["rename_dict"], "")
+
+    def test_mirrors_target_outputs(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        source = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.FILTER_CONSTANT_8BIT, filter_id="src"
+        )
+        scene.append_filter(source)
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_IMPORT,
+            filter_id="imp",
+            filter_configurations={"target": "src"},
+        )
+        # Constant 8bit exposes {"value": DT_8_BIT}; the import mirrors it.
+        self.assertEqual(f.out_data_types, {"value": DataType.DT_8_BIT})
+
+    def test_rename_dict_renames_and_hides_outputs(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        source = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGB, filter_id="src"
+        )
+        scene.append_filter(source)
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_IMPORT,
+            filter_id="imp",
+            filter_configurations={"target": "src", "rename_dict": "r=red,b="},
+        )
+        # "r" renamed to "red"; "b" hidden; "g" kept as-is.
+        self.assertEqual(set(f.out_data_types.keys()), {"red", "g"})
+        self.assertEqual(f.out_data_types["red"], DataType.DT_8_BIT)
+        self.assertEqual(f.out_data_types["g"], DataType.DT_8_BIT)
+
+
+class ColorToColorWheelTests(unittest.TestCase):
+    """Per-type assertions for ColorToColorWheel migrated in PR 20."""
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_default_signature_and_configs(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, filter_id="ccw"
+        )
+        self.assertEqual(f.filter_configurations["mode"], "automatic")
+        # Both dimmer features default to disabled (empty configuration string).
+        self.assertEqual(f.filter_configurations["dimmer-input"], "")
+        self.assertEqual(f.filter_configurations["dimmer-output"], "")
+        self.assertEqual(f.filter_configurations["colorwheel-datatype"], "8bit")
+        self.assertEqual(f.in_data_types["input"], DataType.DT_COLOR)
+        # Neither dimmer port is exposed until the user opts in via the settings widget.
+        self.assertNotIn("in_dimmer", f.in_data_types)
+        self.assertNotIn("dimmer", f.out_data_types)
+        self.assertEqual(f.out_data_types["colorwheel"], DataType.DT_8_BIT)
+
+    def test_dynamic_dimmer_in_and_out(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL,
+            filter_id="ccw",
+            filter_configurations={
+                "dimmer-input": "float",
+                "dimmer-output": "16bit",
+                "colorwheel-datatype": "16bit",
+            },
+        )
+        self.assertEqual(f.in_data_types["in_dimmer"], DataType.DT_DOUBLE)
+        self.assertEqual(f.out_data_types["dimmer"], DataType.DT_16_BIT)
+        self.assertEqual(f.out_data_types["colorwheel"], DataType.DT_16_BIT)
+
+    def test_empty_dimmer_input_drops_in_dimmer_port(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL,
+            filter_id="ccw",
+            filter_configurations={"dimmer-input": ""},
+        )
+        self.assertNotIn("in_dimmer", f.in_data_types)
 
 
 class NodeTerminalsFromFilterTests(unittest.TestCase):

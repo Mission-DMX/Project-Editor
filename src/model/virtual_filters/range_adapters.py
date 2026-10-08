@@ -316,15 +316,12 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
 
         Reset-then-rebuild so a settings-widget edit followed by
         :meth:`model.filter.Filter.update_filter_configuration` cleanly picks up the new
-        shape. Keeps the pre-migration semantics of declaring both ``dimmer_out8b`` and
-        ``dimmer_out16b`` outputs unconditionally; the node side filters pyqtgraph terminals
-        according to ``has_*_output`` so the editor UI only shows enabled outputs.
+        shape. ``dimmer_out8b`` and ``dimmer_out16b`` are only declared when their
+        respective ``has_*_output`` flag is ``"true"`` so the serializer never walks a port
+        whose backing native filter does not get materialised by :meth:`instantiate_filters`.
         """
         self._in_data_types = {"offset": DataType.DT_DOUBLE}
-        self._out_data_types = {
-            "dimmer_out8b": DataType.DT_8_BIT,
-            "dimmer_out16b": DataType.DT_16_BIT,
-        }
+        self._out_data_types = {}
         self._default_values = {}
         self._gui_update_keys = {}
         self._filter_configurations.setdefault("has_8bit_output", "true")
@@ -337,6 +334,10 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
         self._in_data_types["mixin"] = (
             DataType.DT_8_BIT if self._filter_configurations.get("input_method_mixin") == "8bit" else DataType.DT_16_BIT
         )
+        if self._filter_configurations.get("has_8bit_output") == "true":
+            self._out_data_types["dimmer_out8b"] = DataType.DT_8_BIT
+        if self._filter_configurations.get("has_16bit_output") == "true":
+            self._out_data_types["dimmer_out16b"] = DataType.DT_16_BIT
 
     @override
     def deserialize(self) -> None:
