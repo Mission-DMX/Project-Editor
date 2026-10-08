@@ -1854,6 +1854,94 @@ class ColorChaserTests(unittest.TestCase):
         self.assertEqual(set(node.inputs().keys()), {"time", "time_scale"})
 
 
+class PanTiltConstantFilterTests(unittest.TestCase):
+    """Per-type assertions for PanTiltConstantFilter migrated in PR 17."""
+
+    def _make_scene(self):
+        from model import BoardConfiguration, Scene
+
+        show = BoardConfiguration()
+        scene = Scene(0, "Test scene", show)
+        show._add_scene(scene)
+        return scene
+
+    def test_default_16bit_outputs_and_center_pan_tilt(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, filter_id="pt"
+        )
+        self.assertEqual(f.filter_configurations["outputs"], "16bit")
+        self.assertEqual(f.initial_parameters["pan"], "0.5")
+        self.assertEqual(f.initial_parameters["tilt"], "0.5")
+        self.assertEqual(
+            f.out_data_types,
+            {"pan16bit": DataType.DT_16_BIT, "tilt16bit": DataType.DT_16_BIT},
+        )
+        self.assertEqual(f.gui_update_keys.get("pan"), DataType.DT_DOUBLE)
+
+    def test_outputs_eight_bit(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT,
+            filter_id="pt",
+            filter_configurations={"outputs": "8bit"},
+        )
+        self.assertEqual(
+            f.out_data_types,
+            {"pan8bit": DataType.DT_8_BIT, "tilt8bit": DataType.DT_8_BIT},
+        )
+
+    def test_outputs_both_exposes_all_four(self) -> None:
+        from model.filter import DataType, FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT,
+            filter_id="pt",
+            filter_configurations={"outputs": "both"},
+        )
+        self.assertEqual(set(f.out_data_types.keys()), {"pan16bit", "tilt16bit", "pan8bit", "tilt8bit"})
+        self.assertEqual(f.out_data_types["pan16bit"], DataType.DT_16_BIT)
+        self.assertEqual(f.out_data_types["pan8bit"], DataType.DT_8_BIT)
+
+    def test_outputs_switch_rebuilds_on_update_filter_configuration(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene, filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, filter_id="pt"
+        )
+        self.assertEqual(set(f.out_data_types.keys()), {"pan16bit", "tilt16bit"})
+        f.update_filter_configuration("outputs", "both")
+        self.assertEqual(set(f.out_data_types.keys()), {"pan16bit", "tilt16bit", "pan8bit", "tilt8bit"})
+        f.update_filter_configuration("outputs", "8bit")
+        self.assertEqual(set(f.out_data_types.keys()), {"pan8bit", "tilt8bit"})
+
+    def test_loaded_initial_parameters_override_defaults(self) -> None:
+        from model.filter import FilterTypeEnumeration
+        from model.filters.factory import construct_filter_instance
+
+        scene = self._make_scene()
+        f = construct_filter_instance(
+            scene=scene,
+            filter_type=FilterTypeEnumeration.VFILTER_POSITION_CONSTANT,
+            filter_id="pt",
+            initial_parameters={"pan": "0.25", "tilt": "0.75"},
+        )
+        self.assertEqual(f.initial_parameters["pan"], "0.25")
+        self.assertEqual(f.initial_parameters["tilt"], "0.75")
+
+
 class NodeTerminalsFromFilterTests(unittest.TestCase):
     """When a node passes ``terminals=None``, the base derives terminals from the filter.
 

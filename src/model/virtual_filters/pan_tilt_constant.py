@@ -23,7 +23,6 @@ class PanTiltConstantFilter(VirtualFilter):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_POSITION_CONSTANT, pos=pos)
         self._pan: float = 0.8
         self._tilt: float = 0.8
-        self._filter_configurations: dict[str, str] = {}
         self._pan_delta: float = 0.0
         self._tilt_delta: float = 0.0
         self._joystick = JoystickList.NO_JOYSTICK
@@ -36,6 +35,30 @@ class PanTiltConstantFilter(VirtualFilter):
         self._timer.setInterval(50)
         self._timer.timeout.connect(self._update_time_passed)
         self.observer: dict[PanTiltConstantControlUIWidget, Callable[[], None]] = {}
+
+    @typing.override
+    def _rebuild_io(self) -> None:
+        """Derive outputs from the ``outputs`` configuration and seed pan/tilt defaults.
+
+        Outputs selected via the ``outputs`` string: ``"16bit"`` → ``pan16bit``/``tilt16bit``;
+        ``"8bit"`` → ``pan8bit``/``tilt8bit``; ``"both"`` → all four. Keeping the model's
+        ``out_data_types`` in sync with what :meth:`instantiate_filters` will emit avoids the
+        serializer walking a port whose backing native filter does not get materialised.
+        """
+        self._in_data_types = {}
+        self._out_data_types = {}
+        self._default_values = {}
+        self._gui_update_keys = {"pan": DataType.DT_DOUBLE}
+        self._filter_configurations.setdefault("outputs", "16bit")
+        self._initial_parameters.setdefault("pan", "0.5")
+        self._initial_parameters.setdefault("tilt", "0.5")
+        outputs = self._filter_configurations.get("outputs", "16bit")
+        if outputs in ("both", "16bit"):
+            self._out_data_types["pan16bit"] = DataType.DT_16_BIT
+            self._out_data_types["tilt16bit"] = DataType.DT_16_BIT
+        if outputs in ("both", "8bit"):
+            self._out_data_types["pan8bit"] = DataType.DT_8_BIT
+            self._out_data_types["tilt8bit"] = DataType.DT_8_BIT
 
     @typing.override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
