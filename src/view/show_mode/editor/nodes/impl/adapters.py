@@ -1,6 +1,4 @@
 """Adapters and converters filter nodes."""
-from typing import override
-
 from model import DataType, Scene
 from model.filter import Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
@@ -257,26 +255,6 @@ class DimmerBrightnessMixinNode(FilterNode):
         self.channel_hints["offset"] = "[(-1, 1), optional]"
         self.channel_hints["input"] = "[default: global brightness]"
         self.channel_hints["mixin"] = "[optional]"
-        self._update_output_terminals()
-
-    def _update_output_terminals(self) -> None:
-        """Hide pyqtgraph terminals for disabled outputs.
-
-        The model declares both ``dimmer_out8b`` and ``dimmer_out16b`` so the serializer can
-        reason about them generically; the editor UI only shows the enabled ones.
-        """
-        for setting, term_name in [("has_8bit_output", "dimmer_out8b"), ("has_16bit_output", "dimmer_out16b")]:
-            if self.filter.filter_configurations.get(setting) == "true":
-                if self.outputs().get(term_name) is None:
-                    self.addOutput(term_name)
-            else:
-                if self.outputs().get(term_name) is not None:
-                    self.removeTerminal(term_name)
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        super().update_node_after_settings_changed()
-        self._update_output_terminals()
 
 
 class ColorToColorwheelAdapterNode(FilterNode):
@@ -286,49 +264,4 @@ class ColorToColorwheelAdapterNode(FilterNode):
 
     def __init__(self, model: Filter | Scene, name: str) -> None:
         """Initialize."""
-        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, name=name,
-                         terminals={
-                             "input": {"io": "in"},
-                             "colorwheel": {"io": "out"}
-                         })
-        self.update_node_after_settings_changed()
-
-    @override
-    def update_node_after_settings_changed(self) -> None:
-        self.filter.in_data_types["input"] = DataType.DT_COLOR
-
-        dimmer_input_dt_str = self.filter.filter_configurations.get("dimmer-input", "")
-        if len(dimmer_input_dt_str) > 0:
-            if "in_dimmer" not in self.inputs():
-                self.addInput("in_dimmer")
-            match dimmer_input_dt_str:
-                case "16bit":
-                    self.filter.in_data_types["in_dimmer"] = DataType.DT_16_BIT
-                case "float":
-                    self.filter.in_data_types["in_dimmer"] = DataType.DT_DOUBLE
-                case _:
-                    self.filter.in_data_types["in_dimmer"] = DataType.DT_8_BIT
-        else:
-            if "in_dimmer" in self.inputs():
-                self.removeTerminal("in_dimmer")
-        dimmer_output_dt_str = self.filter.filter_configurations.get("dimmer-output", "")
-        if len(dimmer_output_dt_str) > 0:
-            if "dimmer" not in self.outputs():
-                self.addOutput("dimmer")
-            match dimmer_output_dt_str:
-                case "16bit":
-                    self.filter.out_data_types["dimmer"] = DataType.DT_16_BIT
-                case "float":
-                    self.filter.out_data_types["dimmer"] = DataType.DT_DOUBLE
-                case _:
-                    self.filter.out_data_types["dimmer"] = DataType.DT_8_BIT
-        else:
-            if "dimmer" in self.outputs():
-                self.removeTerminal("dimmer")
-        match self.filter.filter_configurations.get("colorwheel-datatype"):
-            case "16bit":
-                self.filter.out_data_types["colorwheel"] = DataType.DT_16_BIT
-            case "float":
-                self.filter.out_data_types["colorwheel"] = DataType.DT_DOUBLE
-            case _:
-                self.filter.out_data_types["colorwheel"] = DataType.DT_8_BIT
+        super().__init__(model=model, filter_type=FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, name=name)
