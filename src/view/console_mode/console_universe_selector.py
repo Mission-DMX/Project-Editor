@@ -110,9 +110,8 @@ class UniverseSelector(QtWidgets.QTabWidget):
         )
 
     def _clear_all_confirmed(self) -> None:
-        for universe in self._board_configuration.universes:
-            for channel in universe.channels:
-                channel.value = 0
+        for universe_widget in self._universe_widgets:
+            universe_widget.clear_all()
         self.send_all_universe()
 
     def save_to_scene_default_clicked(self, channel: Channel | None = None) -> None:
