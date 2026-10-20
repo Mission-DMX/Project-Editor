@@ -131,7 +131,10 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
                 self,
             )
             layout.addWidget(channel_widget)
+            self._subwidgets.append(channel_widget)
             self._universe.channels[fixture.start_index + channel_index].updated.connect(
                 lambda _, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe)
             )
-        layout.addWidget(QtWidgets.QLabel(fixture.name))
+        label = QtWidgets.QLabel(fixture.name)
+        layout.addWidget(label)
+        self._subwidgets.append(label)
