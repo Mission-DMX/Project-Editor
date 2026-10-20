@@ -98,6 +98,15 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
             self._bank_set.update()  # FIXME activate should suffice
             self._bank_set.push_messages_now()
 
+    def clear_all(self) -> None:
+        """Reset every channel on this universe to 0, pushing to mapped x-touch faders."""
+        for w in self._subwidgets:
+            if isinstance(w, ChannelWidget):
+                w.update_value(0)
+        for channel in self._universe.channels:
+            if channel.value != 0:
+                channel.value = 0
+
     def automap(self) -> None:
         """Automatically map channels to x-touch."""
         index = 0
@@ -131,7 +140,10 @@ class DirectUniverseWidget(QtWidgets.QScrollArea):
                 self,
             )
             layout.addWidget(channel_widget)
+            self._subwidgets.append(channel_widget)
             self._universe.channels[fixture.start_index + channel_index].updated.connect(
                 lambda _, send_universe=self._universe: self._broadcaster.send_universe_value.emit(send_universe)
             )
-        layout.addWidget(QtWidgets.QLabel(fixture.name))
+        label = QtWidgets.QLabel(fixture.name)
+        layout.addWidget(label)
+        self._subwidgets.append(label)
