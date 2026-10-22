@@ -289,6 +289,12 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                         message: proto.Events_pb2.event_sender = proto.Events_pb2.event()
                         message.ParseFromString(bytes(msg))
                         self._broadcaster.fish_event_received.emit(message)
+                    case proto.MessageTypes_pb2.MSGT_CHANNEL_SCOPE:
+                        message: proto.FilterMode_pb2.channel_scope = proto.FilterMode_pb2.channel_scope()
+                        message.ParseFromString(bytes(msg))
+                        self._broadcaster.channel_scope_value_received.emit(
+                            message.channel_id, message.current_value
+                        )
                     case proto.MessageTypes_pb2.MSGT_READYMODE_UPDATE:
                         msg_p: proto.RealTimeControl_pb2.readymode_update = proto.RealTimeControl_pb2.readymode_update()
                         msg_p.ParseFromString(bytes(msg))
@@ -566,6 +572,17 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
     def send_event_message(self, msg: proto.Events_pb2.event) -> None:
         """Send event Message to Fish."""
         self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_EVENT, push_direct=False)
+
+    def request_channel_scope(self, channel_id: str) -> None:
+        """Request the current value of a filter output channel from Fish.
+
+        Fish is expected to reply with a ``channel_scope`` message carrying
+        the same ``channel_id`` and the live value in ``current_value``.
+        """
+        if not self.connection_state():
+            return
+        msg = proto.FilterMode_pb2.channel_scope(channel_id=channel_id, current_value="")
+        self._send_with_format(msg.SerializeToString(), proto.MessageTypes_pb2.MSGT_CHANNEL_SCOPE)
 
     @property
     def current_active_scene_id(self) -> int:

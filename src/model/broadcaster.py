@@ -124,6 +124,11 @@ class Broadcaster(QtCore.QObject, metaclass=QObjectSingletonMeta):
     log_message: QtCore.Signal = QtCore.Signal(str)
     dmx_from_fish: QtCore.Signal = QtCore.Signal(proto.DirectMode_pb2.dmx_output)
     event_sender_update: QtCore.Signal = QtCore.Signal(proto.Events_pb2.event_sender)
+    #################################################################
+    scope_edge_pick_requested: QtCore.Signal = QtCore.Signal()
+    scope_edge_pick_cancelled: QtCore.Signal = QtCore.Signal()
+    scope_edge_picked: QtCore.Signal = QtCore.Signal(str, object)
+    channel_scope_value_received: QtCore.Signal = QtCore.Signal(str, str)
 
     def __new__(cls) -> Self:
         """Override __new__ to implement singleton behavior."""
