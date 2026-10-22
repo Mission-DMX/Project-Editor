@@ -154,6 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._settings_dialog = None
         self._utility_wizard: QWizard | None = None
         self._terminal_widget: ConsoleDockWidget | None = None
+        self._scope_window: QtWidgets.QDialog | None = None
 
         self.setWindowIcon(QPixmap(resource_path(os.path.join("resources", "logo.png"))))
         self._close_now = False
@@ -231,6 +232,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 # ("Scene Wizard", self._open_scene_setup_wizard, None),
                 ("Patch Plan Export", self._open_patch_plan_export_dialog, None),
                 ("Asset Management", self._open_asset_mgmt_dialog, None),
+                ("Scope Window", self._open_scope_window, None),
                 ("---", None, None),
                 ("&Toggle Terminal", self._toggle_terminal, "T"),
             ],
@@ -434,6 +436,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def _open_asset_mgmt_dialog(self) -> None:
         self._settings_dialog = AssetManagementDialog(self, self._board_configuration.file_path)
         self._settings_dialog.show()
+
+    def _open_scope_window(self) -> None:
+        if self._scope_window is None:
+            from view.dialogs.scope_window import ScopeWindow
+
+            self._scope_window = ScopeWindow(self, self._board_configuration)
+        self._scope_window.show()
+        self._scope_window.raise_()
 
     def _open_recent(self) -> None:
         recently_opened_show_files = get_recently_used_files()
