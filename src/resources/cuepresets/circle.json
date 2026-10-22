@@ -1,0 +1,47 @@
+{
+  "name": "Circle",
+  "description": "This effect lets moving heads perform a circle rotation.",
+  "applies_for": "position",
+  "hints": [
+    {"id": "speed", "type": "float", "default": 60},
+    {"id": "size", "type": "float", "default": 1, "min": 0.0}
+  ],
+  "kf_requests": [
+    {
+      "duration": "{{ speed }}",
+      "channels": {
+        "pan_value": "0.0",
+        "pan_curvesel": "1",
+        "tilt_value": "{{ size|mul(128) }}",
+        "tilt_curvesel": "2"
+      }
+    },
+    {
+      "duration": "{{ speed }}",
+      "channels": {
+        "pan_value": "{{ size|mul(128) }}",
+        "pan_curvesel": "2",
+        "tilt_value": "{{ size|mul(255) }}",
+        "tilt_curvesel": "1"
+      }
+    },
+    {
+      "duration": "{{ speed }}",
+      "channels": {
+        "pan_value": "{{ size|mul(255) }}",
+        "pan_curvesel": "1",
+        "tilt_value": "{{ size|mul(128) }}",
+        "tilt_curvesel": "2"
+      }
+    },
+    {
+      "duration": "{{ speed }}",
+      "channels": {
+        "pan_value": "128.0",
+        "pan_curvesel": "2",
+        "tilt_value": "{{ size|mul(128) }}",
+        "tilt_curvesel": "1"
+      }
+    }
+  ]
+}
