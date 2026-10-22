@@ -25,18 +25,25 @@ class DimmerEditor(PropertyEditorBase):
         self._brightness.setDecimals(4)
         self._brightness.setSingleStep(0.05)
         self._strobefreq = JogwheelDoubleSpinBox()
-        self._strobefreq.setRange(0.0, 50.0)
+        self._strobefreq.setRange(0.0, 255.0)
         self._strobefreq.setDecimals(4)
+        self._duty_cycle = JogwheelDoubleSpinBox()
+        self._duty_cycle.setRange(0.0, 255.0)
+        self._duty_cycle.setDecimals(4)
+        self._duty_cycle.setValue(128.0)
         form.addRow("Brightness", self._brightness)
-        form.addRow("Strobe (Hz)", self._strobefreq)
+        form.addRow("Strobe frequency (0-255)", self._strobefreq)
+        form.addRow("Duty cycle (0-255, 128 = balanced)", self._duty_cycle)
         layout.addLayout(form)
 
     def _manual_values(self) -> dict[str, Any]:
         return {
             "brightness": float(self._brightness.value()),
             "strobefreq": float(self._strobefreq.value()),
+            "duty_cycle": float(self._duty_cycle.value()),
         }
 
     def _load_manual_values(self, values: dict[str, Any]) -> None:
         self._brightness.setValue(float(values.get("brightness", 0.0)))
         self._strobefreq.setValue(float(values.get("strobefreq", 0.0)))
+        self._duty_cycle.setValue(float(values.get("duty_cycle", 128.0)))

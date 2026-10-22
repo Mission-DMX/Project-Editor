@@ -46,7 +46,7 @@ _APPLIES_FOR_CHOICES = ("dimmer", "position", "colour", "gobo", "beam", "focus",
 _HINT_TYPE_CHOICES = ("float", "int", "color")
 
 _PROPERTY_CHANNELS: dict[str, tuple[str, ...]] = {
-    "dimmer": ("brightness", "strobefreq"),
+    "dimmer": ("brightness", "strobefreq", "duty_cycle"),
     "position": ("pan_value", "pan_curvesel", "tilt_value", "tilt_curvesel"),
     "colour": ("color",),
     "beam": ("focus", "zoom", "iris"),
@@ -88,12 +88,12 @@ class PresetEditorDialog(QDialog):
         self._hints_table.setHorizontalHeaderLabels(["id", "type", "default", "min", "max", ""])
         self._hints_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self._add_hint_button = QPushButton("+ Add hint")
-        self._add_hint_button.clicked.connect(lambda: self._add_hint_row())
+        self._add_hint_button.clicked.connect(lambda: self._add_hint_row())  # noqa: PLW0108 - prevents Qt passing checked bool as hint_id positional
 
         self._kf_table = QTableWidget(0, 1)
         self._kf_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self._add_kf_button = QPushButton("+ Add keyframe")
-        self._add_kf_button.clicked.connect(lambda: self._add_kf_row())
+        self._add_kf_button.clicked.connect(lambda: self._add_kf_row())  # noqa: PLW0108 - prevents Qt passing checked bool as duration_expr positional
 
         self._buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         self._buttons.accepted.connect(self._save)

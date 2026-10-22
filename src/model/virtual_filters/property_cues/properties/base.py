@@ -16,7 +16,7 @@ TIMESTEPS_PER_SECOND = 40
 
 def seconds_to_timesteps(seconds: float) -> int:
     """Convert a seconds offset to a signed 40 Hz timestep count."""
-    return int(round(seconds * TIMESTEPS_PER_SECOND))
+    return round(seconds * TIMESTEPS_PER_SECOND)
 
 
 def child_start_timestep(

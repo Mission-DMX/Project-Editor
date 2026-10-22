@@ -168,17 +168,57 @@ def _tilt_strategy(ctx: CapabilityContext) -> PostprocessOutput:
     return _position_chain("tilt", ctx.tilt_range, ctx)
 
 
-def _strobe_strategy(ctx: CapabilityContext) -> PostprocessOutput:
-    """Placeholder for the future strobe generator.
+_DEFAULT_SLOWEST_PERIOD_MS = "500.0"
 
-    Warns once per call and falls back to the plain passthrough so unit tests and
-    downstream fixtures still see a usable external port while the real generator
-    is being developed.
+
+def _dimmer_strategy(ctx: CapabilityContext) -> PostprocessOutput:
+    """Gate the raw brightness through the float strobe generator.
+
+    Pulls ``brightness``, ``strobefreq`` and ``duty_cycle`` from the cue filter;
+    converts the two float control inputs into 8-bit values with
+    :class:`FILTER_ARITHMETICS_FLOAT_TO_8BIT`; routes everything into
+    :class:`FILTER_SERIES_STROBE_GENERATOR_FLOAT`. The strobe generator's float
+    ``value`` output is exposed as the fixture's ``brightness`` capability.
     """
-    logger.warning("strobe generator not yet available; passthrough")
-    return _passthrough("strobe", ctx)
+    prefix = ctx.channel_name_prefix
+    cue_fid = ctx.cue_filter_id
+    base_id = f"{cue_fid}__{prefix}__dimmer"
+
+    brightness_src = f"{cue_fid}:{prefix}__brightness"
+    strobefreq_src = f"{cue_fid}:{prefix}__strobefreq"
+    duty_src = f"{cue_fid}:{prefix}__duty_cycle"
+
+    freq8bit_id = f"{base_id}_freq8bit"
+    duty8bit_id = f"{base_id}_duty8bit"
+    strobe_id = f"{base_id}_strobe"
+
+    freq_adapter = Filter(
+        ctx.scene, freq8bit_id,
+        filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT, pos=ctx.pos,
+    )
+    freq_adapter.channel_links["value_in"] = strobefreq_src
+
+    duty_adapter = Filter(
+        ctx.scene, duty8bit_id,
+        filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT, pos=ctx.pos,
+    )
+    duty_adapter.channel_links["value_in"] = duty_src
+
+    strobe_filter = Filter(
+        ctx.scene, strobe_id,
+        filter_type=FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT, pos=ctx.pos,
+        filter_configurations={"slowest_period_ms": _DEFAULT_SLOWEST_PERIOD_MS},
+    )
+    strobe_filter.channel_links["brightness"] = brightness_src
+    strobe_filter.channel_links["frequency"] = f"{freq8bit_id}:value"
+    strobe_filter.channel_links["duty_cycle"] = f"{duty8bit_id}:value"
+
+    return PostprocessOutput(
+        filters=(freq_adapter, duty_adapter, strobe_filter),
+        external_ports={"brightness": (strobe_id, "value")},
+    )
 
 
 register_strategy("pan", _pan_strategy)
 register_strategy("tilt", _tilt_strategy)
-register_strategy("strobe", _strobe_strategy)
+register_strategy("dimmer", _dimmer_strategy)

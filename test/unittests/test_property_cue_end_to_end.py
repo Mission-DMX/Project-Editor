@@ -181,6 +181,19 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         )
         self.assertTrue(range_filter.channel_links["value_in"].endswith(":out"))
 
+        strobe_filters = [
+            f for f in res.postprocess_filters
+            if int(f.filter_type) == int(FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT)
+        ]
+        self.assertEqual(2, len(strobe_filters),
+                         "expected one float strobe generator per fixture")
+        resolved_brightness = self.vfilter.resolve_output_port_id("MH1__brightness")
+        self.assertIsNotNone(resolved_brightness)
+        self.assertTrue(
+            resolved_brightness.endswith("_dimmer_strobe:value"),
+            f"brightness output port must come from strobe generator, got: {resolved_brightness}",
+        )
+
     def test_serialize_deserialize_roundtrip(self) -> None:
         from model.virtual_filters.property_cues.model import (
             ManualPropertyAssignment,
@@ -220,6 +233,7 @@ class PropertyCueEndToEndTests(unittest.TestCase):
                             self.assertEqual(orig.hint_values, rt.hint_values)
 
     def test_consolidation(self) -> None:
+        from model.filter import FilterTypeEnumeration
         from model.virtual_filters.property_cues.model import (
             EnabledCapability,
             FixtureSelection,
@@ -244,12 +258,21 @@ class PropertyCueEndToEndTests(unittest.TestCase):
                 "fixture:MH2": _manual_dimmer(0.5),
             }),
         ]))
-        vfilter._ensure_compiled()
+        res = vfilter._ensure_compiled()
         a = vfilter.resolve_output_port_id("MH1__brightness")
         b = vfilter.resolve_output_port_id("MH2__brightness")
         self.assertIsNotNone(a)
         self.assertIsNotNone(b)
-        self.assertEqual(a, b)
+        # Both fixtures share identical dimmer timelines so the consolidator
+        # collapses them to the MH1 canonical channel on the native cue filter;
+        # the dimmer strategy therefore builds a single float strobe generator
+        # with the MH1 prefix which supplies the gated brightness.
+        strobes = [
+            f for f in res.postprocess_filters
+            if int(f.filter_type) == int(FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT)
+        ]
+        self.assertEqual(1, len(strobes),
+                         "consolidated brightness should drive a single strobe generator")
 
     def test_preview_thread_tick_for_cue(self) -> None:
         from model.virtual_filters.property_cues import preview_runtime

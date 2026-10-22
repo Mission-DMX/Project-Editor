@@ -44,7 +44,7 @@ def _apply_curve(rel_time: float, transition: TransferFunction) -> float:
 
 
 def _clamp_eight_bit(value: float) -> int:
-    rounded = int(round(value))
+    rounded = round(value)
     if rounded < 0:
         return 0
     if rounded > 255:
@@ -53,7 +53,7 @@ def _clamp_eight_bit(value: float) -> int:
 
 
 def _clamp_sixteen_bit(value: float) -> int:
-    rounded = int(round(value))
+    rounded = round(value)
     if rounded < 0:
         return 0
     if rounded > 65535:
@@ -94,9 +94,7 @@ def is_compatible(prev: State, nxt: State) -> bool:
         return False
     prev_is_numeric = isinstance(prev, _NUMERIC_STATES)
     next_is_numeric = isinstance(nxt, _NUMERIC_STATES)
-    if not (prev_is_color or (prev_is_numeric and next_is_numeric)):
-        return False
-    return True
+    return prev_is_color or (prev_is_numeric and next_is_numeric)
 
 
 def _edge_value(t: float, prev: State, nxt: State) -> Union[int, float, ColorHSI]:

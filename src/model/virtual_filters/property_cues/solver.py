@@ -12,7 +12,6 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model.filter_data.cues import curves
-from model.filter_data.cues.cue import KeyFrame
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.solver_helpers import (
     group_rank,
@@ -22,6 +21,7 @@ from model.virtual_filters.property_cues.solver_helpers import (
 )
 
 if TYPE_CHECKING:
+    from model.filter_data.cues.cue import KeyFrame
     from model.virtual_filters.property_cues.channel_spec import ChannelSpec
     from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
 

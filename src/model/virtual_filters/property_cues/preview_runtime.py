@@ -101,7 +101,9 @@ def _pick_cue(vfilter: PropertyBasedCueFilter, index: int) -> Cue | None:
     return cues[index]
 
 
-def _value_at_time(frames: list[KeyFrame], channel_index: int, t: float):
+def _value_at_time(
+    frames: list[KeyFrame], channel_index: int, t: float,
+) -> float | ColorHSI | None:
     """Interpolate the state of ``channel_index`` at timecode ``t``.
 
     Returns None if frames is empty or the channel is not present in the frame.
@@ -132,7 +134,7 @@ def _value_at_time(frames: list[KeyFrame], channel_index: int, t: float):
     return value_at(rel, prev._states[channel_index], nxt._states[channel_index], transition)
 
 
-def _format_value(value, data_type: DataType) -> str:
+def _format_value(value: float | ColorHSI, data_type: DataType) -> str:
     if isinstance(value, ColorHSI):
         return value.format_for_filter()
     if data_type == DataType.DT_DOUBLE:
@@ -198,9 +200,7 @@ class PropertyCuesPreviewThread(QThread):
         canonical_to_index: dict[str, int] = {
             name: i for i, (name, _dt) in enumerate(cue._channel_definitions)
         }
-        canonical_to_dt: dict[str, DataType] = {
-            name: dt for name, dt in cue._channel_definitions
-        }
+        canonical_to_dt: dict[str, DataType] = dict(cue._channel_definitions)
         res = vfilter._last_compile
         if res is None:
             return

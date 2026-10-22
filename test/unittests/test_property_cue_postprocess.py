@@ -137,17 +137,31 @@ class RegisterOverridesTest(unittest.TestCase):
         self.assertIs(marker_b, build_postprocess_chain("frost", _ctx()))
 
 
-class StrobePassthroughTest(unittest.TestCase):
+class DimmerStrategyTest(unittest.TestCase):
 
-    def test_strobe_passthrough_warns(self) -> None:
-        with self.assertLogs(_factory.__name__, level="WARNING") as cm:
-            out = build_postprocess_chain("strobe", _ctx())
-        self.assertTrue(any("strobe" in msg for msg in cm.output))
-        self.assertEqual((), out.filters)
-        self.assertEqual(
-            {"strobe": ("cuef", "MH1__strobe")},
-            out.external_ports,
-        )
+    def test_dimmer_strategy_wires_strobe_chain(self) -> None:
+        out = build_postprocess_chain("dimmer", _ctx())
+        self.assertEqual(3, len(out.filters))
+        adapters = [f for f in out.filters
+                    if int(f.filter_type) == int(FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT)]
+        self.assertEqual(2, len(adapters), "expect one float->8bit adapter each for strobefreq and duty_cycle")
+        strobe_matches = [f for f in out.filters
+                          if int(f.filter_type) == int(FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT)]
+        self.assertEqual(1, len(strobe_matches))
+        strobe_f = strobe_matches[0]
+
+        freq_f = next(f for f in adapters if f.channel_links["value_in"].endswith("__strobefreq"))
+        duty_f = next(f for f in adapters if f.channel_links["value_in"].endswith("__duty_cycle"))
+
+        self.assertEqual("cuef:MH1__strobefreq", freq_f.channel_links["value_in"])
+        self.assertEqual("cuef:MH1__duty_cycle", duty_f.channel_links["value_in"])
+
+        self.assertEqual("cuef:MH1__brightness", strobe_f.channel_links["brightness"])
+        self.assertEqual(f"{freq_f.filter_id}:value", strobe_f.channel_links["frequency"])
+        self.assertEqual(f"{duty_f.filter_id}:value", strobe_f.channel_links["duty_cycle"])
+        self.assertEqual("500.0", strobe_f.filter_configurations["slowest_period_ms"])
+
+        self.assertEqual({"brightness": (strobe_f.filter_id, "value")}, out.external_ports)
 
 
 if __name__ == "__main__":

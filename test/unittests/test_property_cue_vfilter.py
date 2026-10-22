@@ -112,12 +112,12 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         ]))
         resolved = f.resolve_output_port_id("MH1__brightness")
         self.assertIsNotNone(resolved)
-        self.assertEqual(f"{f.filter_id}:MH1__brightness", resolved)
-        # Dimmer capability is not in the postprocess strategy table, so an
-        # explicit capability port name should also resolve via passthrough.
-        resolved_cap = f.resolve_output_port_id("MH1__dimmer")
-        self.assertIsNotNone(resolved_cap)
-        self.assertEqual(f"{f.filter_id}:MH1__dimmer", resolved_cap)
+        # Dimmer capability routes through the strobe generator chain so the
+        # brightness port exposes the strobe filter's float output.
+        self.assertTrue(
+            resolved.endswith("_dimmer_strobe:value"),
+            f"brightness output port must come from strobe generator, got: {resolved}",
+        )
 
     def test_resolve_consolidated(self) -> None:
         scene = _make_scene()
@@ -140,9 +140,23 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         resolved_mh2 = f.resolve_output_port_id("MH2__brightness")
         self.assertIsNotNone(resolved_mh1)
         self.assertIsNotNone(resolved_mh2)
-        self.assertEqual(resolved_mh1, resolved_mh2)
-        # Canonical name picks the alphabetically-earliest channel (MH1).
-        self.assertEqual(f"{f.filter_id}:MH1__brightness", resolved_mh1)
+        # Canonical dimmer chain picks the MH1 prefix for the strobe generator.
+        self.assertTrue(
+            resolved_mh1.endswith("MH1__dimmer_strobe:value"),
+            f"canonical brightness must come from MH1 strobe generator, got: {resolved_mh1}",
+        )
+        # Consolidation collapses MH2 brightness into the MH1 canonical cue
+        # filter output; the non-canonical fallback currently references the
+        # consolidated cue filter channel directly (compiler-level fallback).
+        self.assertIn("MH1__brightness", resolved_mh2)
+        # Only one float strobe generator is instantiated because both
+        # fixtures share the same consolidated brightness timeline.
+        res = f._ensure_compiled()
+        strobe_count = sum(
+            1 for pf in res.postprocess_filters
+            if int(pf.filter_type) == int(FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT)
+        )
+        self.assertEqual(1, strobe_count)
 
     def test_preview_mode_builds_constant_mapping(self) -> None:
         # WP12 replaced the WP9 stub: preview instantiation now delegates to

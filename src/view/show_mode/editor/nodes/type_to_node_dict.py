@@ -70,6 +70,9 @@ from view.show_mode.editor.nodes.impl.effects import (
     Shift16BitNode,
     ShiftColorNode,
     ShiftFloatNode,
+    StrobeGenerator8BitNode,
+    StrobeGenerator16BitNode,
+    StrobeGeneratorFloatNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
     FaderHSIANode,
@@ -198,4 +201,7 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_SWITCH_FLOAT: SwitchFloatNode.nodeName,
     FilterTypeEnumeration.FILTER_SWITCH_COLOR: SwitchColorNode.nodeName,
     FilterTypeEnumeration.FILTER_EVENT_SCHEDULER: EventSchedulerNode.nodeName,
+    FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_8BIT: StrobeGenerator8BitNode.nodeName,
+    FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_16BIT: StrobeGenerator16BitNode.nodeName,
+    FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT: StrobeGeneratorFloatNode.nodeName,
 }
