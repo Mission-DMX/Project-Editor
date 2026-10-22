@@ -25,6 +25,7 @@ from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.chaser_editor.color_chaser_widget import ColorChaserFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
+from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import PropertyCueEditor
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
 
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
@@ -133,6 +134,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return ColumnSelect(filter_)
     if filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
         return CueEditor(f=filter_)
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES:
+        return PropertyCueEditor(f=filter_)
     if filter_.filter_type == 50:
         return LuaScriptConfigWidget()
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:

@@ -21,6 +21,22 @@ class CueListNode(FilterNode):
         self.channel_hints["time"] = " [ms]"
 
 
+class PropertyBasedCuesNode(FilterNode):
+    """Filter node to represent the property-based cue vfilter."""
+
+    nodeName = "Property Cues"  # noqa: N815 nodeName Required for FilterNode
+
+    def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
+        super().__init__(
+            model=model,
+            filter_type=FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES,
+            name=name,
+            allow_add_output=True,
+        )
+        self.channel_hints["time"] = " [ms]"
+
+
 class ShiftFilterNode(FilterNode):
     """Filter node to represent an abstract shift filter."""
 

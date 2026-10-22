@@ -21,6 +21,7 @@ from model.virtual_filters.cue_vfilter import CueFilter
 from model.virtual_filters.effects_stacks.vfilter import EffectsStack
 from model.virtual_filters.import_vfilter import ImportVFilter
 from model.virtual_filters.pan_tilt_constant import PanTiltConstantFilter
+from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
 from model.virtual_filters.range_adapters import (
     ColorGlobalBrightnessMixinVFilter,
     DimmerGlobalBrightnessMixinVFilter,
@@ -47,6 +48,8 @@ def _construct_virtual_filter_instance_legacy(
     if not filter_type < 0:
         raise ValueError("The provided filter is not a virtual description.")
     match filter_type:
+        case FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES:
+            return PropertyBasedCueFilter(scene, filter_id, pos=pos)
         case FilterTypeEnumeration.VFILTER_COMBINED_FILTER_PRESET:
             # TODO return virtual filter that instantiates a preset (as described in issue #48)
             return None
