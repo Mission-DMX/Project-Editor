@@ -17,7 +17,7 @@ from model.virtual_filters.property_cues.presets.model import PresetHintType
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox, JogwheelSpinBox
 
 if TYPE_CHECKING:
-    from model.virtual_filters.property_cues.presets.model import EffectPreset
+    from model.virtual_filters.property_cues.presets.model import EffectPreset, PresetHintSpec
 
 
 class PresetPanel(QGroupBox):
@@ -79,7 +79,7 @@ class PresetPanel(QGroupBox):
             self._hint_widgets[hint.id] = widget
             self._hints_layout.addRow(hint.id, widget)
 
-    def _build_hint_widget(self, hint: Any) -> QWidget:
+    def _build_hint_widget(self, hint: PresetHintSpec) -> QWidget:
         if hint.type is PresetHintType.FLOAT:
             w = JogwheelDoubleSpinBox()
             w.setDecimals(4)

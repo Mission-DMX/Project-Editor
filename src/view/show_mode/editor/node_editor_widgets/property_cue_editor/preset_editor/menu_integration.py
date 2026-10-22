@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtGui import QAction
 
 if TYPE_CHECKING:
-    from PySide6.QtWidgets import QMainWindow
+    from PySide6.QtWidgets import QMainWindow, QWidget
 
 
 def install_main_menu_entry(main_window: QMainWindow) -> None:
@@ -34,7 +34,7 @@ def install_main_menu_entry(main_window: QMainWindow) -> None:
     target_menu.addAction(action)
 
 
-def _open_dialog(parent) -> None:
+def _open_dialog(parent: QWidget | None) -> None:
     from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.dialog import (
         PresetEditorDialog,
     )

@@ -11,13 +11,16 @@ from model.color_hsi import ColorHSI
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
 from model.virtual_filters.property_cues.presets.model import (
-    EffectPreset,
-    PresetHintSpec,
     PresetHintType,
 )
 
 if TYPE_CHECKING:
     from jinja2 import Environment
+
+    from model.virtual_filters.property_cues.presets.model import (
+        EffectPreset,
+        PresetHintSpec,
+    )
 
 
 def evaluate_preset(
@@ -79,10 +82,7 @@ def _merge_hint_values(
     if unknown:
         raise ValueError(f"Unknown hint ids: {sorted(unknown)}")
     for hint in hints:
-        if hint.id in provided:
-            merged[hint.id] = provided[hint.id]
-        else:
-            merged[hint.id] = hint.default
+        merged[hint.id] = provided.get(hint.id, hint.default)
     return merged
 
 

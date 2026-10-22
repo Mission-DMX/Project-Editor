@@ -50,9 +50,11 @@ def validate(blob: dict) -> list[str]:
     errors: list[str] = []
     if not isinstance(blob, dict):
         return ["Preset must be a JSON object at the top level."]
-    for key in ("name", "applies_for", "kf_requests"):
-        if key not in blob:
-            errors.append(f"Missing required field '{key}'.")
+    errors.extend(
+        f"Missing required field '{key}'."
+        for key in ("name", "applies_for", "kf_requests")
+        if key not in blob
+    )
     if "name" in blob and not isinstance(blob["name"], str):
         errors.append("Field 'name' must be a string.")
     if "description" in blob and not isinstance(blob["description"], str):
@@ -80,17 +82,20 @@ def _validate_hint(hint: object, index: int) -> list[str]:
     prefix = f"hints[{index}]"
     if not isinstance(hint, dict):
         return [f"{prefix} must be an object."]
-    errors: list[str] = []
-    for key in ("id", "type", "default"):
-        if key not in hint:
-            errors.append(f"{prefix} missing required field '{key}'.")
+    errors: list[str] = [
+        f"{prefix} missing required field '{key}'."
+        for key in ("id", "type", "default")
+        if key not in hint
+    ]
     if "id" in hint and not isinstance(hint["id"], str):
         errors.append(f"{prefix}.id must be a string.")
     if "type" in hint and hint["type"] not in _ALLOWED_HINT_TYPES:
         errors.append(f"{prefix}.type must be one of {sorted(_ALLOWED_HINT_TYPES)}.")
-    for bound in ("min", "max"):
-        if bound in hint and not isinstance(hint[bound], (int, float)):
-            errors.append(f"{prefix}.{bound} must be a number.")
+    errors.extend(
+        f"{prefix}.{bound} must be a number."
+        for bound in ("min", "max")
+        if bound in hint and not isinstance(hint[bound], (int, float))
+    )
     return errors
 
 
@@ -98,10 +103,11 @@ def _validate_kf_entry(entry: object, index: int) -> list[str]:
     prefix = f"kf_requests[{index}]"
     if not isinstance(entry, dict):
         return [f"{prefix} must be an object."]
-    errors: list[str] = []
-    for key in ("duration", "channels"):
-        if key not in entry:
-            errors.append(f"{prefix} missing required field '{key}'.")
+    errors: list[str] = [
+        f"{prefix} missing required field '{key}'."
+        for key in ("duration", "channels")
+        if key not in entry
+    ]
     if "duration" in entry and not isinstance(entry["duration"], str):
         errors.append(f"{prefix}.duration must be a string expression.")
     if "channels" in entry:

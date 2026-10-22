@@ -1,7 +1,7 @@
 """Filter Nodes for effect filters."""
 
 from model import Scene
-from model.filter import Filter, FilterTypeEnumeration
+from model.filter import DataType, Filter, FilterTypeEnumeration
 from view.show_mode.editor.nodes.base.filternode import FilterNode
 
 
@@ -145,3 +145,60 @@ class ChaserNode(FilterNode):
             allow_add_input=True,
             allow_add_output=True,
         )
+
+
+class _StrobeGeneratorBase(FilterNode):
+    """Shared setup for the series strobe generator filter nodes."""
+
+    _BRIGHTNESS_DT: DataType = DataType.DT_DOUBLE
+
+    def __init__(self, model: Filter, name: str, filter_type: int) -> None:
+        """Initialize strobe generator filter node."""
+        super().__init__(model=model, filter_type=filter_type, name=name)
+        brightness_dt = type(self)._BRIGHTNESS_DT
+        for in_name in ("brightness", "frequency", "duty_cycle"):
+            if in_name not in self.inputs():
+                self.addInput(in_name)
+        if "value" not in self.outputs():
+            self.addOutput("value")
+        self.filter.in_data_types["brightness"] = brightness_dt
+        self.filter.in_data_types["frequency"] = DataType.DT_8_BIT
+        self.filter.in_data_types["duty_cycle"] = DataType.DT_8_BIT
+        self.filter.out_data_types["value"] = brightness_dt
+        self.filter.default_values.setdefault("brightness", "0")
+        self.filter.default_values.setdefault("frequency", "0")
+        self.filter.default_values.setdefault("duty_cycle", "128")
+        self.filter.filter_configurations.setdefault("slowest_period_ms", "500.0")
+
+
+class StrobeGenerator8BitNode(_StrobeGeneratorBase):
+    """Filter node for the 8-bit series strobe generator."""
+
+    nodeName = "Strobe Generator (8bit)"  # noqa: N815
+    _BRIGHTNESS_DT: DataType = DataType.DT_8_BIT
+
+    def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_8BIT)
+
+
+class StrobeGenerator16BitNode(_StrobeGeneratorBase):
+    """Filter node for the 16-bit series strobe generator."""
+
+    nodeName = "Strobe Generator (16bit)"  # noqa: N815
+    _BRIGHTNESS_DT: DataType = DataType.DT_16_BIT
+
+    def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_16BIT)
+
+
+class StrobeGeneratorFloatNode(_StrobeGeneratorBase):
+    """Filter node for the float series strobe generator."""
+
+    nodeName = "Strobe Generator (float)"  # noqa: N815
+    _BRIGHTNESS_DT: DataType = DataType.DT_DOUBLE
+
+    def __init__(self, model: Filter, name: str) -> None:
+        """Initialize filter node."""
+        super().__init__(model, name, FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT)

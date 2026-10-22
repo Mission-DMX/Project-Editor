@@ -17,6 +17,7 @@ from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
 
 if TYPE_CHECKING:
     from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
+    from model.virtual_filters.property_cues.model.property_step import PropertyStep
 
 
 class StepEditor(QWidget):
@@ -60,7 +61,7 @@ class StepEditor(QWidget):
         self._duration.setValue(step.duration_40hz)
         self._fade_in.setValue(step.fade_in_40hz)
 
-    def _current_step(self):
+    def _current_step(self) -> PropertyStep | None:
         if self._cue_index < 0 or self._cue_index >= len(self._model.cues):
             return None
         cue = self._model.cues[self._cue_index]

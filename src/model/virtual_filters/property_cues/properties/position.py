@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from model.filter import DataType
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
-from model.virtual_filters.property_cues.distribution import Distribution
 from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest
 from model.virtual_filters.property_cues.properties.base import Property, child_start_timestep
+
+if TYPE_CHECKING:
+    from model.virtual_filters.property_cues.distribution import Distribution
 
 _PAN_VALUE = "pan_value"
 _PAN_CURVESEL = "pan_curvesel"

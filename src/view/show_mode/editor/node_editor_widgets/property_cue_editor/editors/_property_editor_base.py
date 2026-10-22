@@ -23,6 +23,7 @@ from ._preset_panel import PresetPanel
 
 if TYPE_CHECKING:
     from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
+    from model.virtual_filters.property_cues.model.property_step import PropertyAssignment
 
 
 class PropertyEditorBase(QWidget):
@@ -99,7 +100,7 @@ class PropertyEditorBase(QWidget):
             self._mode.set_manual(True)
             self._stack.setCurrentIndex(0)
 
-    def _current_assignment(self):
+    def _current_assignment(self) -> PropertyAssignment | None:
         if self._cue_index < 0 or self._cue_index >= len(self._model.cues):
             return None
         cue = self._model.cues[self._cue_index]

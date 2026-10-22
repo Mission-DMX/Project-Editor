@@ -31,7 +31,7 @@ def seconds_from_slot(timestep_40hz: int) -> float:
 
 def slot_from_seconds(seconds: float) -> int:
     """Convert a seconds timestamp to a rounded 40 Hz slot index."""
-    return int(round(seconds * 40.0))
+    return round(seconds * 40.0)
 
 
 def make_state(spec: ChannelSpec, transition: TransferFunction, value: Union[float, ColorHSI]) -> State:
@@ -40,7 +40,7 @@ def make_state(spec: ChannelSpec, transition: TransferFunction, value: Union[flo
     transition_str = transition.value if isinstance(transition, TransferFunction) else str(transition)
     if dt == DataType.DT_8_BIT:
         s = StateEightBit(transition_str)
-        clamped = int(round(float(value)))
+        clamped = round(float(value))
         if clamped < 0:
             clamped = 0
         elif clamped > 255:
@@ -49,7 +49,7 @@ def make_state(spec: ChannelSpec, transition: TransferFunction, value: Union[flo
         return s
     if dt == DataType.DT_16_BIT:
         s = StateSixteenBit(transition_str)
-        clamped = int(round(float(value)))
+        clamped = round(float(value))
         if clamped < 0:
             clamped = 0
         elif clamped > 65535:

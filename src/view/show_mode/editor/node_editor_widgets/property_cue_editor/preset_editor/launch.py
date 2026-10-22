@@ -7,7 +7,6 @@ available so WP11 can wire it in without further changes here.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from model.virtual_filters.property_cues.presets import EffectPreset, load_preset_library
@@ -16,6 +15,8 @@ from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from PySide6.QtWidgets import QWidget
 
 

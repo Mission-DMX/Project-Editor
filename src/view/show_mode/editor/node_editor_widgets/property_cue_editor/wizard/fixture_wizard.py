@@ -39,6 +39,8 @@ from model.virtual_filters.property_cues.model.fixture_selection import (
 from ._capability_discovery import discover_capabilities
 
 if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
+
     from model.board_configuration import BoardConfiguration
     from model.ofl.fixture import UsedFixture
 
@@ -160,10 +162,11 @@ class _FixturePickerPage(QWizardPage):
                 if getattr(group, "id", None) in group_ids:
                     fixture_ids.update(getattr(group, "member_ids", []) or [])
 
-        fixtures: list[UsedFixture] = []
-        for fixture in getattr(self._board, "fixtures", []) or []:
-            if _fixture_id(fixture) in fixture_ids:
-                fixtures.append(fixture)
+        fixtures: list[UsedFixture] = [
+            fixture
+            for fixture in getattr(self._board, "fixtures", []) or []
+            if _fixture_id(fixture) in fixture_ids
+        ]
         return fixtures
 
 
@@ -228,9 +231,9 @@ class FixtureSelectionWizard(QWizard):
 
     def __init__(
         self,
-        board,
+        board: BoardConfiguration,
         initial: FixtureSelection | None = None,
-        parent=None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("Configure Fixtures")

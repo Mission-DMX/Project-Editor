@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from model.filter import DataType
 from model.filter_data.cues.cue import Cue, EndAction, KeyFrame
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.filter_data.transfer_function import TransferFunction
@@ -38,6 +37,9 @@ from model.virtual_filters.property_cues.solver_helpers import make_frame
 
 if TYPE_CHECKING:
     from model import Filter, Scene
+    from model.filter import DataType
+    from model.filter_data.cues.cue import State
+    from model.virtual_filters.property_cues.model.property_cue import PropertyCue
     from model.virtual_filters.property_cues.presets import EffectPreset
 
 logger = getLogger(__name__)
@@ -53,7 +55,8 @@ _PROPERTY_CLASS: dict[str, type[Property]] = {
 }
 _CAPABILITY_FROM_LOCAL: dict[str, str] = {
     "pan": "pan", "tilt": "tilt",
-    "brightness": "dimmer", "strobefreq": "dimmer", "color": "colour",
+    "brightness": "dimmer", "strobefreq": "dimmer", "duty_cycle": "dimmer",
+    "color": "colour",
     "focus": "beam", "zoom": "beam", "iris": "beam",
     "prism_selection": "beam", "prism_rotation": "beam",
     "goboslot": "gobo", "goborotation": "gobo", "frost_intensity": "frost",
@@ -157,7 +160,7 @@ def _emit_requests(
     raise ValueError(f"Unknown assignment type: {type(assignment).__name__}")
 
 
-def _collect_cue(cue_index: int, cue, children: list[ResolvedChild],
+def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild],
                  library: dict[str, EffectPreset] | None,
                  ) -> tuple[list[RequestGroup], dict[str, ChannelSpec]]:
     groups: list[RequestGroup] = []
@@ -195,7 +198,7 @@ def _collect_cue(cue_index: int, cue, children: list[ResolvedChild],
     return groups, specs
 
 
-def _state_for(ch_name: str, dt: DataType, ts: float, frames: list[KeyFrame]):
+def _state_for(ch_name: str, dt: DataType, ts: float, frames: list[KeyFrame]) -> State:
     hit = next((kf for kf in frames if round(kf.timestamp, 6) == ts), None)
     if hit is not None and hit._states:
         return hit._states[0].copy()
@@ -241,8 +244,8 @@ def _build_native(model: PropertyCueFilterModel, consolidation: ConsolidationMap
         canonical_frames: dict[str, list[KeyFrame]] = {n: [] for n in canonical_channels}
         for v_name, frames in per_cue_frames[f"cue_{cue_index}"].items():
             canonical_frames.setdefault(consolidation.canonical(v_name), []).extend(frames)
-        for n in canonical_frames:
-            canonical_frames[n].sort(key=lambda kf: kf.timestamp)
+        for frames in canonical_frames.values():
+            frames.sort(key=lambda kf: kf.timestamp)
         native.cues.append(_frames_to_cue(
             cue_name, sorted_channels, canonical_frames, model.general.end_action,
         ))

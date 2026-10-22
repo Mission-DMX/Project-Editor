@@ -14,6 +14,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+if TYPE_CHECKING:
+    from PySide6.QtCore import SignalInstance
+
 from model.virtual_filters.property_cues.distribution import Distribution, DistributionMethod
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
@@ -88,5 +91,5 @@ class ModeToggle(QGroupBox):
             self._preset.setChecked(True)
 
     @property
-    def toggled_signal(self):
+    def toggled_signal(self) -> SignalInstance:
         return self._manual.toggled

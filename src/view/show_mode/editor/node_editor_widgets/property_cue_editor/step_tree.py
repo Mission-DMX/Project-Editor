@@ -14,6 +14,8 @@ from model.virtual_filters.property_cues.model.property_step import (
 )
 
 if TYPE_CHECKING:
+    from PySide6.QtWidgets import QWidget
+
     from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
     from model.virtual_filters.property_cues.model.property_cue import PropertyCue
     from model.virtual_filters.property_cues.model.property_step import PropertyStep
@@ -97,7 +99,7 @@ class StepFixtureTree(QTreeWidget):
 
     selection_changed = Signal(int, str, str)
 
-    def __init__(self, model: PropertyCueFilterModel, parent=None) -> None:
+    def __init__(self, model: PropertyCueFilterModel, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._model = model
         self._current_cue_index: int = -1

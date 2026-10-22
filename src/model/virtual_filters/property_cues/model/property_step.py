@@ -30,7 +30,7 @@ def _distribution_from_json(blob: dict) -> Distribution:
     )
 
 
-def _value_to_json(value: Any) -> Any:
+def _value_to_json(value: ColorHSI | dict | list | float | str | bool | None) -> object:
     if isinstance(value, ColorHSI):
         return {"__kind__": "color_hsi", "value": value.format_for_filter()}
     if isinstance(value, dict):
@@ -40,7 +40,7 @@ def _value_to_json(value: Any) -> Any:
     return value
 
 
-def _value_from_json(blob: Any) -> Any:
+def _value_from_json(blob: dict | list | float | str | bool | None) -> object:
     if isinstance(blob, dict):
         if blob.get("__kind__") == "color_hsi":
             return ColorHSI.from_filter_str(blob["value"], strict=True)

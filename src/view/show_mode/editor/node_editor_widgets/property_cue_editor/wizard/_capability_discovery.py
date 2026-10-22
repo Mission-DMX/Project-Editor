@@ -9,7 +9,6 @@ is logged and the capability is skipped rather than guessed.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from logging import getLogger
 from typing import TYPE_CHECKING
 
@@ -17,6 +16,8 @@ from model.ofl.ofl_fixture import CapabilityType
 from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from model.ofl.fixture import UsedFixture
 
 logger = getLogger(__name__)

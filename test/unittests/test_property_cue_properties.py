@@ -71,10 +71,15 @@ class DimmerPropertyTest(unittest.TestCase):
     def test_channel_specs(self) -> None:
         specs = DimmerProperty().channel_specs
         names_to_types = {s.name: s.data_type for s in specs}
-        self.assertEqual({"brightness": DataType.DT_DOUBLE, "strobefreq": DataType.DT_DOUBLE}, names_to_types)
+        self.assertEqual(
+            {"brightness": DataType.DT_DOUBLE, "strobefreq": DataType.DT_DOUBLE, "duty_cycle": DataType.DT_DOUBLE},
+            names_to_types,
+        )
 
     def test_single_request_at_step_start(self) -> None:
-        prop = DimmerProperty(brightness=0.75, strobefreq=0.0, transition=TransferFunction.LINEAR)
+        prop = DimmerProperty(
+            brightness=0.75, strobefreq=0.0, duty_cycle=200.0, transition=TransferFunction.LINEAR,
+        )
         reqs = prop.generate_requests(step_start_40hz=100, step_duration_40hz=400, child_index=0, distribution=_CONSTANT)
         self.assertIn("brightness", reqs)
         self.assertEqual(1, len(reqs["brightness"]))
@@ -85,6 +90,16 @@ class DimmerPropertyTest(unittest.TestCase):
         strobe_req = reqs["strobefreq"][0]
         self.assertEqual(100, strobe_req.timestep_40hz)
         self.assertEqual(0.0, strobe_req.requested_value)
+        duty_req = reqs["duty_cycle"][0]
+        self.assertEqual(100, duty_req.timestep_40hz)
+        self.assertEqual(200.0, duty_req.requested_value)
+        self.assertIs(TransferFunction.LINEAR, duty_req.transition)
+
+    def test_default_duty_cycle_is_balanced(self) -> None:
+        reqs = DimmerProperty().generate_requests(
+            step_start_40hz=0, step_duration_40hz=40, child_index=0, distribution=_CONSTANT,
+        )
+        self.assertEqual(128.0, reqs["duty_cycle"][0].requested_value)
 
     def test_phase_linear_delays_children(self) -> None:
         prop = DimmerProperty(brightness=1.0)
