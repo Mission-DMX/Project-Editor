@@ -124,6 +124,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._last_cycle_time = [0] * 45
         self._setup_menubar()
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.preset_editor.menu_integration import (
+            install_main_menu_entry,
+        )
+        install_main_menu_entry(self)
         self._setup_status_bar()
 
         self._broadcaster.view_to_console_mode.connect(lambda: self._to_widget(0))
