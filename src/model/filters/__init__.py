@@ -25,6 +25,7 @@ from . import (  # side-effect import so @register_filter runs
     routing,
     scripting,
     shift,
+    strobe,
     time,
     trigonometrics,
     universe,

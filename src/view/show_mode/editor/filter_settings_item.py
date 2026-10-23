@@ -41,6 +41,7 @@ from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSet
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
 from .node_editor_widgets.number_constant_settings_widget import NumberConstantSettingsWidget
 from .node_editor_widgets.sequencer_editor.widget import SequencerEditor
+from .node_editor_widgets.strobe_generator_config_widget import StrobeGeneratorConfigWidget
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QCloseEvent, QFocusEvent, QKeyEvent, QMouseEvent, QPainter
@@ -167,6 +168,10 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return NumberConstantSettingsWidget(filter_)
     if filter_.filter_type == FilterTypeEnumeration.FILTER_EVENT_SCHEDULER:
         return EventSchedulerSettingsWidget()
+    if filter_.filter_type in [FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_8BIT,
+                               FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_16BIT,
+                               FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT]:
+        return StrobeGeneratorConfigWidget(filter_)
     return None
 
 
