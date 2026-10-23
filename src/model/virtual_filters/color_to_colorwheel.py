@@ -203,6 +203,13 @@ class ColorToColorWheel(VirtualFilter):
 
         from model.filters.factory import construct_filter_instance
 
+        time_filter = construct_filter_instance(
+            scene=self.scene,
+            filter_id=f"{self.filter_id}__time_filter",
+            filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT,
+            pos=self.pos,
+        )
+
         in_mapping = "input:color;time:float"
         if input_dimmer_configured:
             in_mapping += f";in_dimmer:{dimmer_input_data_type}"
@@ -217,5 +224,7 @@ class ColorToColorWheel(VirtualFilter):
             filter_configurations={"in_mapping": in_mapping, "out_mapping": out_mapping},
             initial_parameters={"script": script},
         )
+        f.channel_links["time"] = time_filter.filter_id + ":value"
         f.channel_links.update(self.channel_links)
+        filter_list.append(time_filter)
         filter_list.append(f)
