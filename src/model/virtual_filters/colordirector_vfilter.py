@@ -231,12 +231,11 @@ class ColordirectorVFilter(VirtualFilter):
 
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Initializes the virtual filter."""
-        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, pos=pos)
+        # ``_color_groups`` must exist before ``super().__init__`` triggers ``_rebuild_io``.
         self._color_groups: dict[str, list[str]] = {}
+        super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLORDIRECTOR, pos=pos)
         self._presets: list[ColorPreset] = []
         self._recalls: list[list[int]] = []
-        self.in_data_types["time"] = DataType.DT_DOUBLE
-        self.in_data_types["time_scale"] = DataType.DT_DOUBLE
         self._registered_callbacks: list[tuple[int, str]] = []
         self._current_active_colors: list[int] = []
         self._cue_filter_to_group_index_mapping: dict[str, int] = {}
@@ -244,6 +243,23 @@ class ColordirectorVFilter(VirtualFilter):
         self.live_preview_mode: bool = False
         self.live_preview_prompted: bool = False
         self._configuration_format_supported: bool = True
+
+    @override
+    def _rebuild_io(self) -> None:
+        """Declare static time inputs and derive one DT_COLOR output per color-group sub-output.
+
+        Called at construction (empty ``_color_groups`` → inputs only) and again by the loader
+        after ``filter_configurations`` have been populated and ``deserialize()`` has parsed
+        them into ``_color_groups`` (settings-widget edits route back here via
+        :meth:`FilterNode.update_node_after_settings_changed`).
+        """
+        self._in_data_types = {"time": DataType.DT_DOUBLE, "time_scale": DataType.DT_DOUBLE}
+        self._out_data_types = {}
+        self._default_values = {}
+        self._gui_update_keys = {}
+        for group, sub_outs in self._color_groups.items():
+            for sub in sub_outs:
+                self._out_data_types[f"{group}__{sub}"] = DataType.DT_COLOR
 
     @property
     def configuration_format_supported(self) -> bool:
@@ -504,14 +520,13 @@ class ColordirectorVFilter(VirtualFilter):
         return maximum
 
     def _deserialize_color_groups(self) -> None:
-        """Load the color groups and their output data types from the filter configuration.
+        """Load the color groups from the filter configuration.
 
         Channel names are sanitized if possible: Channels that remain invalid or duplicated are skipped with a
-        warning.
-
+        warning. The resulting :attr:`out_data_types` are populated by :meth:`_rebuild_io`, which the
+        containing :meth:`deserialize` invokes after this method completes.
         """
         self._color_groups.clear()
-        self.out_data_types.clear()
         color_group_def = self.filter_configurations.get("colorgroups", "")
         if len(color_group_def) == 0:
             return
@@ -557,8 +572,6 @@ class ColordirectorVFilter(VirtualFilter):
                     continue
                 channels.append(channel_name)
             self._color_groups[group_name] = channels
-            for chan_name in channels:
-                self.out_data_types[f"{group_name}__{chan_name}"] = DataType.DT_COLOR
 
     def _serialize_color_groups(self) -> None:
         """Store the color groups and their sub outputs within the filter configuration."""
@@ -685,6 +698,8 @@ class ColordirectorVFilter(VirtualFilter):
         self._deserialize_color_groups()
         self._deserialize_presets()
         self._deserialize_recalls()
+        # Refresh out_data_types from the freshly-parsed _color_groups.
+        self._rebuild_io()
 
     def _read_format_version(self) -> int | None:
         """Read the format version of the serialized configuration.

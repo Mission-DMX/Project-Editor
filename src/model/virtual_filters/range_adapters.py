@@ -7,7 +7,7 @@ ColorGlobalBrightnessMixinVFilter -- Global Brightness output.
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 
@@ -15,6 +15,15 @@ if TYPE_CHECKING:
     from model import Scene
 
 logger = getLogger(__name__)
+
+
+_RANGE_GUI_UPDATE_KEYS: dict[str, DataType | list[str]] = {
+    "lower_bound_in": DataType.DT_DOUBLE,
+    "upper_bound_in": DataType.DT_DOUBLE,
+    "lower_bound_out": DataType.DT_DOUBLE,
+    "upper_bound_out": DataType.DT_DOUBLE,
+    "limit_range": DataType.DT_BOOL,
+}
 
 
 class SixteenBitToFloatRange(VirtualFilter):
@@ -25,6 +34,19 @@ class SixteenBitToFloatRange(VirtualFilter):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_16BIT_TO_FLOAT_RANGE, pos=pos)
 
     @override
+    def _rebuild_io(self) -> None:
+        """Declare the virtual I/O signature plus the four range-bound initial parameter defaults."""
+        self._in_data_types = {"value_in": DataType.DT_16_BIT}
+        self._out_data_types = {"value": DataType.DT_DOUBLE}
+        self._default_values = {}
+        self._gui_update_keys = dict(_RANGE_GUI_UPDATE_KEYS)
+        self._initial_parameters.setdefault("lower_bound_in", "0")
+        self._initial_parameters.setdefault("upper_bound_in", "65535")
+        self._initial_parameters.setdefault("lower_bound_out", "0.0")
+        self._initial_parameters.setdefault("upper_bound_out", "1.0")
+        self._initial_parameters.setdefault("limit_range", "0")
+
+    @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
             case "value":
@@ -33,37 +55,23 @@ class SixteenBitToFloatRange(VirtualFilter):
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
-        filter_: Filter = Filter(
+        from model.filters.factory import construct_filter_instance
+
+        conv_filter = construct_filter_instance(
+            scene=self.scene,
             filter_id=f"{self.filter_id}_16bit_to_float",
             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_16BIT_TO_FLOAT,
-            scene=self.scene,
         )
-        filter_._initial_parameters = {}
-        filter_._filter_configurations = {}
-        filter_._in_data_types = {}
-        filter_._out_data_types = {}
-        filter_._gui_update_keys = {}
-        filter_._in_data_types = {}
-        filter_._channel_links = {"value_in": self.channel_links["value_in"]}
-        filter_list.append(filter_)
-        filter_ = Filter(
+        conv_filter._channel_links = {"value_in": self.channel_links["value_in"]}
+        filter_list.append(conv_filter)
+        range_filter = construct_filter_instance(
+            scene=self.scene,
             filter_id=f"{self.filter_id}_float_range",
             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE,
-            scene=self.scene,
+            initial_parameters=dict(self.initial_parameters),
         )
-        filter_._initial_parameters = self.initial_parameters
-        filter_._filter_configurations = {}
-        filter_._in_data_types = {"value_in": DataType.DT_DOUBLE}
-        filter_._out_data_types = {"value": DataType.DT_DOUBLE}
-        filter_._gui_update_keys = {
-            "lower_bound_in": DataType.DT_16_BIT,
-            "upper_bound_in": DataType.DT_16_BIT,
-            "lower_bound_out": DataType.DT_DOUBLE,
-            "upper_bound_out": DataType.DT_DOUBLE,
-        }
-        filter_._in_data_types = {}
-        filter_._channel_links = {"value_in": f"{self.filter_id}_16bit_to_float:value"}
-        filter_list.append(filter_)
+        range_filter._channel_links = {"value_in": f"{self.filter_id}_16bit_to_float:value"}
+        filter_list.append(range_filter)
 
 
 class EightBitToFloatRange(VirtualFilter):
@@ -74,6 +82,19 @@ class EightBitToFloatRange(VirtualFilter):
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_FILTER_ADAPTER_8BIT_TO_FLOAT_RANGE, pos=pos)
 
     @override
+    def _rebuild_io(self) -> None:
+        """Declare the virtual I/O signature plus the four range-bound initial parameter defaults."""
+        self._in_data_types = {"value_in": DataType.DT_8_BIT}
+        self._out_data_types = {"value": DataType.DT_DOUBLE}
+        self._default_values = {}
+        self._gui_update_keys = dict(_RANGE_GUI_UPDATE_KEYS)
+        self._initial_parameters.setdefault("lower_bound_in", "0")
+        self._initial_parameters.setdefault("upper_bound_in", "255")
+        self._initial_parameters.setdefault("lower_bound_out", "0.0")
+        self._initial_parameters.setdefault("upper_bound_out", "1.0")
+        self._initial_parameters.setdefault("limit_range", "0")
+
+    @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
         match virtual_port_id:
             case "value":
@@ -82,37 +103,23 @@ class EightBitToFloatRange(VirtualFilter):
 
     @override
     def instantiate_filters(self, filter_list: list[Filter]) -> None:
-        filter_: Filter = Filter(
+        from model.filters.factory import construct_filter_instance
+
+        conv_filter = construct_filter_instance(
+            scene=self.scene,
             filter_id=f"{self.filter_id}_8bit_to_float",
             filter_type=FilterTypeEnumeration.FILTER_TYPE_ADAPTER_8BIT_TO_FLOAT,
-            scene=self.scene,
         )
-        filter_._initial_parameters = {}
-        filter_._filter_configurations = {}
-        filter_._in_data_types = {}
-        filter_._out_data_types = {}
-        filter_._gui_update_keys = {}
-        filter_._in_data_types = {}
-        filter_._channel_links = {"value_in": self.channel_links["value_in"]}
-        filter_list.append(filter_)
-        filter_ = Filter(
+        conv_filter._channel_links = {"value_in": self.channel_links["value_in"]}
+        filter_list.append(conv_filter)
+        range_filter = construct_filter_instance(
+            scene=self.scene,
             filter_id=f"{self.filter_id}_float_range",
             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_FLOAT_RANGE,
-            scene=self.scene,
+            initial_parameters=dict(self.initial_parameters),
         )
-        filter_._initial_parameters = self.initial_parameters
-        filter_._filter_configurations = {}
-        filter_._in_data_types = {"value_in": DataType.DT_DOUBLE}
-        filter_._out_data_types = {"value": DataType.DT_DOUBLE}
-        filter_._gui_update_keys = {
-            "lower_bound_in": DataType.DT_8_BIT,
-            "upper_bound_in": DataType.DT_8_BIT,
-            "lower_bound_out": DataType.DT_DOUBLE,
-            "upper_bound_out": DataType.DT_DOUBLE,
-        }
-        filter_._in_data_types = {}
-        filter_._channel_links = {"value_in": f"{self.filter_id}_8bit_to_float:value"}
-        filter_list.append(filter_)
+        range_filter._channel_links = {"value_in": f"{self.filter_id}_8bit_to_float:value"}
+        filter_list.append(range_filter)
 
 
 class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
@@ -129,15 +136,6 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | None = None) -> None:
         """Instantiate a new dimmer brightness mixin vfilter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_DIMMER_BRIGHTNESS_MIXIN, pos=pos)
-        self._configuration_supported = True
-        self.filter_configurations.setdefault("has_16bit_output", "true")
-        self.filter_configurations.setdefault("has_8bit_output", "true")
-        self.filter_configurations.setdefault("input_method", "8bit")
-        self.filter_configurations.setdefault("input_method_mixin", "8bit")
-        self._out_data_types["dimmer_out8b"] = DataType.DT_8_BIT
-        self._out_data_types["dimmer_out16b"] = DataType.DT_16_BIT
-        self._in_data_types["offset"] = DataType.DT_DOUBLE
-        self.deserialize()
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -313,29 +311,59 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
         return range_8b_to_float_filter
 
     @override
+    def _rebuild_io(self) -> None:
+        """Derive the per-instance I/O signature from the configured input methods and output flags.
+
+        Reset-then-rebuild so a settings-widget edit followed by
+        :meth:`model.filter.Filter.update_filter_configuration` cleanly picks up the new
+        shape. ``dimmer_out8b`` and ``dimmer_out16b`` are only declared when their
+        respective ``has_*_output`` flag is ``"true"`` so the serializer never walks a port
+        whose backing native filter does not get materialised by :meth:`instantiate_filters`.
+        """
+        self._in_data_types = {"offset": DataType.DT_DOUBLE}
+        self._out_data_types = {}
+        self._default_values = {}
+        self._gui_update_keys = {}
+        self._filter_configurations.setdefault("has_8bit_output", "true")
+        self._filter_configurations.setdefault("has_16bit_output", "false")
+        self._filter_configurations.setdefault("input_method", "16bit")
+        self._filter_configurations.setdefault("input_method_mixin", "8bit")
+        self._in_data_types["input"] = (
+            DataType.DT_8_BIT if self._filter_configurations.get("input_method") == "8bit" else DataType.DT_16_BIT
+        )
+        self._in_data_types["mixin"] = (
+            DataType.DT_8_BIT if self._filter_configurations.get("input_method_mixin") == "8bit" else DataType.DT_16_BIT
+        )
+        if self._filter_configurations.get("has_8bit_output") == "true":
+            self._out_data_types["dimmer_out8b"] = DataType.DT_8_BIT
+        if self._filter_configurations.get("has_16bit_output") == "true":
+            self._out_data_types["dimmer_out16b"] = DataType.DT_16_BIT
+
+    @override
     def deserialize(self) -> None:
-        if self.filter_configurations.get("has_8bit_output") is None:
-            self.filter_configurations["has_8bit_output"] = "true"
-        if self.filter_configurations.get("has_16bit_output") is None:
-            self.filter_configurations["has_16bit_output"] = "false"
-        if self.filter_configurations.get("input_method") is None:
-            self.filter_configurations["input_method"] = "16bit"
-        if self.filter_configurations.get("input_method") == "8bit":
-            self._in_data_types["input"] = DataType.DT_8_BIT
-        else:
-            self._in_data_types["input"] = DataType.DT_16_BIT
-        if self.filter_configurations.get("input_method_mixin") == "8bit":
-            self._in_data_types["mixin"] = DataType.DT_8_BIT
-        else:
-            self._in_data_types["mixin"] = DataType.DT_16_BIT
+        """Backward-compatible shim; the real work now lives in :meth:`_rebuild_io`."""
+        self._rebuild_io()
 
 
 class ColorGlobalBrightnessMixinVFilter(VirtualFilter):
     """V-Filter that provides the global brightness property."""
 
+    CONFIGURATION_SUPPORTED: ClassVar[bool] = False
+
     def __init__(self, scene: Scene, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None) -> None:
         """Instantiate a color global brightness filter."""
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN, pos=pos)
+
+    @override
+    def _rebuild_io(self) -> None:
+        """Declare the mixin's static I/O: a colour input + optional 8-bit brightness; one colour output."""
+        self._in_data_types = {
+            "color_in": DataType.DT_COLOR,
+            "brightness": DataType.DT_8_BIT,
+        }
+        self._out_data_types = {"out": DataType.DT_COLOR}
+        self._default_values = {}
+        self._gui_update_keys = {}
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:

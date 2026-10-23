@@ -190,7 +190,12 @@ class MovingHead(StageObject):
             if mv_map.get("tilt_coarse", -1) >= 0:
                 obj.tilt = 0.0
             has_dimmer = mv_map.get("dimmer", -1) >= 0
-            has_color = any(col_map.get(role, -1) >= 0 for role in ("red", "green", "blue", "white"))
+            # The colour comes from any mapped colour role OR a configured wheel —
+            # all three need the beam colour reset to black until the first DMX
+            # frame arrives so stale values from the yaml don't leak through.
+            has_color = any(
+                col_map.get(role, -1) >= 0 for role in ("red", "green", "blue", "white", "amber", "uv")
+            ) or bool((loaded_device_config.get("color") or {}).get("wheel"))
             if has_dimmer:
                 # Dimmer channel mapped: open until the first movement frame arrives.
                 obj.dimmer = 1.0

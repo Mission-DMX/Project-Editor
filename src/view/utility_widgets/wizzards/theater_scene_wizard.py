@@ -30,7 +30,7 @@ from model.filter_data.cues.cue import Cue
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.patching.fixture_channel import FixtureChannelType
-from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
+from model.filters.factory import construct_filter_instance
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 from view.show_mode.editor.show_browser.fixture_to_filter import place_fixture_filters_in_scene
@@ -470,12 +470,12 @@ class TheaterSceneWizard(QWizard):
                         )
 
     def _generate_cue_filter(self, scene: Scene) -> dict[str, str]:
-        time_filter = Filter(
+        time_filter = construct_filter_instance(
             filter_id="Time_Input", filter_type=FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT, scene=scene, pos=(-10, 0)
         )
         scene.append_filter(time_filter, filter_page_index=0)
 
-        cue_filter = construct_virtual_filter_instance(
+        cue_filter = construct_filter_instance(
             scene=scene, filter_type=FilterTypeEnumeration.VFILTER_CUES, filter_id="SceneCueFilter", pos=(0, 0)
         )
         cue_filter.channel_links["time"] = time_filter.filter_id + ":value"

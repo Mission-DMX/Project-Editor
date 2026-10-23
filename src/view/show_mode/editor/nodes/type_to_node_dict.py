@@ -64,11 +64,15 @@ from view.show_mode.editor.nodes.impl.effects import (
     ChaserNode,
     CueListNode,
     EffectsStackNode,
+    PropertyBasedCuesNode,
     SequencerNode,
     Shift8BitNode,
     Shift16BitNode,
     ShiftColorNode,
     ShiftFloatNode,
+    StrobeGenerator8BitNode,
+    StrobeGenerator16BitNode,
+    StrobeGeneratorFloatNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
     FaderHSIANode,
@@ -113,6 +117,7 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN: ColorBrightnessMixinNode.nodeName,
     FilterTypeEnumeration.VFILTER_POSITION_CONSTANT: PanTiltConstant.nodeName,
     FilterTypeEnumeration.VFILTER_CUES: CueListNode.nodeName,
+    FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES: PropertyBasedCuesNode.nodeName,
     FilterTypeEnumeration.VFILTER_AUTOTRACKER: AutoTrackerNode.nodeName,
     FilterTypeEnumeration.VFILTER_EFFECTSSTACK: EffectsStackNode.nodeName,
     FilterTypeEnumeration.FILTER_CONSTANT_8BIT: Constants8BitNode.nodeName,
@@ -196,4 +201,7 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_SWITCH_FLOAT: SwitchFloatNode.nodeName,
     FilterTypeEnumeration.FILTER_SWITCH_COLOR: SwitchColorNode.nodeName,
     FilterTypeEnumeration.FILTER_EVENT_SCHEDULER: EventSchedulerNode.nodeName,
+    FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_8BIT: StrobeGenerator8BitNode.nodeName,
+    FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_16BIT: StrobeGenerator16BitNode.nodeName,
+    FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT: StrobeGeneratorFloatNode.nodeName,
 }
