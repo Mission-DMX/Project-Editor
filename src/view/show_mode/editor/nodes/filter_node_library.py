@@ -64,6 +64,9 @@ from view.show_mode.editor.nodes.impl.effects import (
     Shift16BitNode,
     ShiftColorNode,
     ShiftFloatNode,
+    StrobeGenerator8BitNode,
+    StrobeGenerator16BitNode,
+    StrobeGeneratorFloatNode,
 )
 from view.show_mode.editor.nodes.impl.faders import (
     FaderHSIANode,
@@ -227,6 +230,9 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(AutoTrackerNode, [("Effects",)])
         self.addNodeType(EffectsStackNode, [("Effects",)])
         self.addNodeType(SequencerNode, [("Effects",)])
+        self.addNodeType(StrobeGenerator8BitNode, [("Effects",)])
+        self.addNodeType(StrobeGenerator16BitNode, [("Effects",)])
+        self.addNodeType(StrobeGeneratorFloatNode, [("Effects",)])
 
     def _register_routing_nodes(self) -> None:
         self.addNodeType(Shift8BitNode, [("Routing",)])
