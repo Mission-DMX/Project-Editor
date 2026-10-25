@@ -34,6 +34,7 @@ from .node_editor_widgets.color_to_colorwheel_adapter_settings_widget import Col
 from .node_editor_widgets.colordirector_editor.widget import ColordirectorEditorWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.dimmer_brightness_mixin_config_widget import DimmerBrightnessMixinConfigWidget
+from .node_editor_widgets.dimmer_director_editor import DimmerDirectorEditorWidget
 from .node_editor_widgets.event_scheduler_config_widget.event_scheduler_filter_config_widget import (
     EventSchedulerSettingsWidget,
 )
@@ -157,6 +158,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return DimmerBrightnessMixinConfigWidget()
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_COLORDIRECTOR:
         return ColordirectorEditorWidget(filter_)
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_DIMMER_DIRECTOR:
+        return DimmerDirectorEditorWidget(filter_)
     if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
         return ColorChaserFilterConfigWidget(filter_)
     if filter_.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT,

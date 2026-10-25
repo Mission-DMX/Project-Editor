@@ -59,6 +59,7 @@ from view.show_mode.editor.nodes.impl.debug import (
     DebugRemoteColorNode,
     DebugRemoteFloatNode,
 )
+from view.show_mode.editor.nodes.impl.dimmer_director_node import DimmerDirectorNode
 from view.show_mode.editor.nodes.impl.effects import (
     AutoTrackerNode,
     ChaserNode,
@@ -204,4 +205,5 @@ type_to_node: dict[int, str] = {
     FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_8BIT: StrobeGenerator8BitNode.nodeName,
     FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_16BIT: StrobeGenerator16BitNode.nodeName,
     FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT: StrobeGeneratorFloatNode.nodeName,
+    FilterTypeEnumeration.FILTER_DIMMER_DIRECTOR: DimmerDirectorNode.nodeName,
 }
