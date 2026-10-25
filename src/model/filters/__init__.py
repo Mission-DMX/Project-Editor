@@ -20,6 +20,7 @@ from . import (  # side-effect import so @register_filter runs
     chaser,
     constants,
     debug,
+    dimmer_director,
     faders,
     misc,
     routing,

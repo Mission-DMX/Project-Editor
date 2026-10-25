@@ -20,6 +20,7 @@ from view.show_mode.show_ui_widgets.colordirector.uiwidget import ColorDirectorS
 from view.show_mode.show_ui_widgets.constant_button_list import ConstantNumberButtonList
 from view.show_mode.show_ui_widgets.cue_control import CueControlUIWidget
 from view.show_mode.show_ui_widgets.debug_viz_widgets import ColorDebugVizWidget, NumberDebugVizWidget
+from view.show_mode.show_ui_widgets.dimmer_director import DimmerDirectorShowUIWidget
 from view.show_mode.show_ui_widgets.event_scheduler_ctrl_uiwidget import EventSchedulerCtrlUIWidget
 from view.show_mode.show_ui_widgets.macro_buttons_ui_widget import MacroButtonUIWidget
 from view.show_mode.show_ui_widgets.pan_tilt_constant_show_ui import PanTiltConstantControlUIWidget
@@ -154,6 +155,12 @@ WIDGET_LIBRARY: dict[str, tuple[str, type[UIWidget], list[list[FilterTypeEnumera
         "Color Director",
         ColorDirectorShowUIWidget,
         [[FilterTypeEnumeration.VFILTER_COLORDIRECTOR]],
+        None,
+    ),
+    "dimmer_director": (
+        "Dimmer Director",
+        DimmerDirectorShowUIWidget,
+        [[FilterTypeEnumeration.FILTER_DIMMER_DIRECTOR]],
         None,
     ),
 }

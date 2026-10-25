@@ -54,6 +54,7 @@ from view.show_mode.editor.nodes.impl.debug import (
     DebugRemoteColorNode,
     DebugRemoteFloatNode,
 )
+from view.show_mode.editor.nodes.impl.dimmer_director_node import DimmerDirectorNode
 from view.show_mode.editor.nodes.impl.effects import (
     AutoTrackerNode,
     ChaserNode,
@@ -233,6 +234,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(StrobeGenerator8BitNode, [("Effects",)])
         self.addNodeType(StrobeGenerator16BitNode, [("Effects",)])
         self.addNodeType(StrobeGeneratorFloatNode, [("Effects",)])
+        self.addNodeType(DimmerDirectorNode, [("Effects",)])
 
     def _register_routing_nodes(self) -> None:
         self.addNodeType(Shift8BitNode, [("Routing",)])
