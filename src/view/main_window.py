@@ -242,10 +242,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 ("&About", self._open_about_window, None),
             ],
         }
+        self._top_menus: list[QtWidgets.QMenu] = []
         for name, entries in menus.items():
             menu: QtWidgets.QMenu = QtWidgets.QMenu(name, self.menuBar())
             self._add_entries_to_menu(menu, entries)
             self.menuBar().addAction(menu.menuAction())
+            self._top_menus.append(menu)
 
     def _start_connection(self) -> None:  # TODO rework to signals
         self._fish_connector.start(True)
