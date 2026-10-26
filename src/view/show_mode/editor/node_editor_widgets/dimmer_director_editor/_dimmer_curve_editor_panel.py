@@ -1,4 +1,4 @@
-"""Dimmer curve editor panel: type selector + Bézier params + response preview."""
+"""Dimmer curve editor panel: type selector + per-type params + response preview."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import (
     QComboBox,
-    QDoubleSpinBox,
     QFormLayout,
     QHBoxLayout,
     QLabel,
@@ -16,16 +15,21 @@ from PySide6.QtWidgets import (
 
 from model.filters.dimmer_director import DimmerCurveType
 from view.show_mode.editor.node_editor_widgets.dimmer_director_editor._sample_preview import DimmerResponsePreview
+from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
 if TYPE_CHECKING:
     from model.filters.dimmer_director import DimmerCurve, DimmerDirectorFilter
 
 
+_LIN_DEFAULTS: list[float] = [1.0, 0.0]
+"""Default ``[a, b]`` for a LIN curve — identity, matching the fish-side default."""
+
 _BEZIER_DEFAULTS: list[float] = [0.0, 0.0, 1.0, 1.0]
+"""Default control-point y values for a BEZIER curve — identity."""
 
 
 class DimmerCurveEditorPanel(QWidget):
-    """Edit one dimmer curve: pick type / Bézier params and preview the response."""
+    """Edit one dimmer curve: pick type / per-type params and preview the response."""
 
     def __init__(self, model: DimmerDirectorFilter, parent: QWidget | None = None) -> None:
         """Build the layout. Empty until ``set_curve_index`` is called."""
@@ -44,12 +48,32 @@ class DimmerCurveEditorPanel(QWidget):
         self._type_combo.currentIndexChanged.connect(self._type_changed)
         form.addRow("Curve type:", self._type_combo)
 
+        self._lin_row = QWidget()
+        lin_layout = QHBoxLayout()
+        lin_layout.setContentsMargins(0, 0, 0, 0)
+        self._lin_spins: list[JogwheelDoubleSpinBox] = []
+        for i, (label_text, default) in enumerate((("a", _LIN_DEFAULTS[0]), ("b", _LIN_DEFAULTS[1]))):
+            sb = JogwheelDoubleSpinBox()
+            sb.setRange(-10.0, 10.0)
+            sb.setSingleStep(0.05)
+            sb.setDecimals(3)
+            sb.setValue(default)
+            sb.valueChanged.connect(self._lin_param_changed)
+            lin_layout.addWidget(QLabel(label_text))
+            lin_layout.addWidget(sb)
+            if i == 0:
+                lin_layout.addSpacing(16)
+            self._lin_spins.append(sb)
+        lin_layout.addStretch()
+        self._lin_row.setLayout(lin_layout)
+        form.addRow("Linear a·x + b:", self._lin_row)
+
         self._bezier_row = QWidget()
         bezier_layout = QHBoxLayout()
         bezier_layout.setContentsMargins(0, 0, 0, 0)
-        self._bezier_spins: list[QDoubleSpinBox] = []
+        self._bezier_spins: list[JogwheelDoubleSpinBox] = []
         for i in range(4):
-            sb = QDoubleSpinBox()
+            sb = JogwheelDoubleSpinBox()
             sb.setRange(-10.0, 10.0)
             sb.setSingleStep(0.05)
             sb.setDecimals(3)
@@ -90,6 +114,7 @@ class DimmerCurveEditorPanel(QWidget):
             if curve is None:
                 self._header_label.setText("No dimmer curve selected")
                 self._type_combo.setEnabled(False)
+                self._lin_row.setEnabled(False)
                 self._bezier_row.setEnabled(False)
                 self._preview.set_curve(None)
                 return
@@ -98,8 +123,15 @@ class DimmerCurveEditorPanel(QWidget):
             type_index = self._type_combo.findData(curve.type)
             if type_index >= 0:
                 self._type_combo.setCurrentIndex(type_index)
+            is_lin = curve.type == DimmerCurveType.LIN
             is_bezier = curve.type == DimmerCurveType.BEZIER
+            self._lin_row.setEnabled(is_lin)
             self._bezier_row.setEnabled(is_bezier)
+            if is_lin:
+                a = curve.params[0] if len(curve.params) >= 1 else _LIN_DEFAULTS[0]
+                b = curve.params[1] if len(curve.params) >= 2 else _LIN_DEFAULTS[1]
+                self._lin_spins[0].setValue(a)
+                self._lin_spins[1].setValue(b)
             if is_bezier:
                 params = curve.params if len(curve.params) >= 4 else _BEZIER_DEFAULTS
                 for i, sb in enumerate(self._bezier_spins):
@@ -121,8 +153,24 @@ class DimmerCurveEditorPanel(QWidget):
         if curve.type == new_type:
             return
         curve.type = new_type
-        if new_type == DimmerCurveType.BEZIER and len(curve.params) < 4:
+        # Reseed params to the type-appropriate default so lingering values from the
+        # previous type aren't accidentally reinterpreted.
+        if new_type == DimmerCurveType.LIN:
+            curve.params = list(_LIN_DEFAULTS)
+        elif new_type == DimmerCurveType.BEZIER:
             curve.params = list(_BEZIER_DEFAULTS)
+        else:
+            curve.params = []
+        self._model.configuration_changed.mapped_signal.emit()
+
+    def _lin_param_changed(self, _: float) -> None:
+        """Push the two LIN spin box values (``a``, ``b``) into the model."""
+        if self._applying:
+            return
+        curve = self._current_curve()
+        if curve is None or curve.type != DimmerCurveType.LIN:
+            return
+        curve.params = [sb.value() for sb in self._lin_spins]
         self._model.configuration_changed.mapped_signal.emit()
 
     def _bezier_param_changed(self, _: float) -> None:

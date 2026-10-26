@@ -67,7 +67,10 @@ def _evaluate_dimmer_curve(curve: DimmerCurve, x: np.ndarray) -> np.ndarray:
     """Vectorised evaluation of the configured dimmer response curve."""
     match curve.type:
         case DimmerCurveType.LIN:
-            return x
+            # f(x) = a·x + b, clipped to [0, 1]. Default (a=1, b=0) is the identity.
+            a = curve.params[0] if len(curve.params) >= 1 else 1.0
+            b = curve.params[1] if len(curve.params) >= 2 else 0.0
+            return np.clip(a * x + b, 0.0, 1.0)
         case DimmerCurveType.SIG:
             # steepened logistic centered at 0.5 — matches the fish description
             k = 10.0
