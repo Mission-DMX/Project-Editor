@@ -276,6 +276,7 @@ class DimmerDirectorFilter(Filter):
         self._dimmer_curves: list[DimmerCurve] = []
         self._recalls: list[RecallEntry] = []
         self._configuration_format_supported: bool = True
+        self._dirty: bool = False
 
         self._active_effect_indices: list[int] = []
         self._active_dimmer_indices: list[int] = []
@@ -292,9 +293,32 @@ class DimmerDirectorFilter(Filter):
             initial_parameters=initial_parameters,
         )
         self._deserialize_from_configuration()
-        self._rebuild_io()
-        self.configuration_changed.mapped_signal.connect(self.serialize_to_configuration)
+        self._apply_io_from_state()
+        self.configuration_changed.mapped_signal.connect(self._mark_dirty)
         self._register_feedback_callback()
+
+    def _mark_dirty(self) -> None:
+        """Flag the dataclass state as newer than ``_filter_configurations``.
+
+        The ``filter_configurations`` property picks up this flag on the next external
+        access and runs ``serialize_to_configuration()`` just-in-time.
+        """
+        self._dirty = True
+
+    @property
+    def filter_configurations(self) -> dict[str, str]:
+        """Return the (possibly just-flushed) ``filter_configurations`` dict.
+
+        If any dataclass state has changed since the last serialize, flush it to
+        ``_filter_configurations`` before returning so the show-file writer sees the
+        latest values. During show-file loading no edits occur, ``_dirty`` stays ``False``,
+        and the loader can therefore populate ``_filter_configurations`` incrementally
+        without the getter clobbering its writes.
+        """
+        if getattr(self, "_dirty", False):
+            self.serialize_to_configuration()
+            self._dirty = False
+        return self._filter_configurations
 
     def _register_feedback_callback(self) -> None:
         """Subscribe this filter to its own fish ``update_parameter`` messages.
@@ -314,7 +338,27 @@ class DimmerDirectorFilter(Filter):
 
     @override
     def _rebuild_io(self) -> None:
-        """Derive input and output terminals from the current group / mixin / offset state."""
+        """Framework hook — invoked by base ``Filter.__init__`` and by the show-file loader.
+
+        The loader populates ``_filter_configurations`` by writing into the dict returned
+        from this instance's property, then calls ``_rebuild_io()`` once the writes are
+        complete (see ``controller/file/read.py:467``). We use that call to pull the
+        just-populated dict into the dataclass state before rebuilding the I/O signature.
+        For code paths that modify state directly through the model API (``add_group``,
+        ``update_group``, …), the public helper :meth:`_apply_io_from_state` is called
+        instead so the deserialize branch here is only exercised when the dict is
+        authoritative.
+        """
+        # ``_dirty`` is not guaranteed to exist during the very first call that comes from
+        # the base ``Filter.__init__`` (we initialise it just above super().__init__). The
+        # getattr guards against that early call. Model state attributes are always set
+        # before super().__init__ so ``_apply_io_from_state`` is safe.
+        if getattr(self, "_filter_configurations", None):
+            self._deserialize_from_configuration()
+        self._apply_io_from_state()
+
+    def _apply_io_from_state(self) -> None:
+        """Derive input and output terminals from the current dataclass state."""
         self._in_data_types = {}
         self._out_data_types = {}
         self._default_values = {}
@@ -358,7 +402,7 @@ class DimmerDirectorFilter(Filter):
         if value == self._global_mixin_count:
             return
         self._global_mixin_count = value
-        self._rebuild_io()
+        self._apply_io_from_state()
         self.configuration_changed.mapped_signal.emit()
 
     @property
@@ -372,7 +416,7 @@ class DimmerDirectorFilter(Filter):
         if value == self._global_offset_count:
             return
         self._global_offset_count = value
-        self._rebuild_io()
+        self._apply_io_from_state()
         self.configuration_changed.mapped_signal.emit()
 
     @property
@@ -403,7 +447,7 @@ class DimmerDirectorFilter(Filter):
         self._groups.append(group)
         for recall in self._recalls:
             recall.selections.append((0, 0))
-        self._rebuild_io()
+        self._apply_io_from_state()
         self.configuration_changed.mapped_signal.emit()
         return group
 
@@ -421,7 +465,7 @@ class DimmerDirectorFilter(Filter):
             self._active_dimmer_indices.pop(index)
         if index < len(self._group_paused_states):
             self._group_paused_states.pop(index)
-        self._rebuild_io()
+        self._apply_io_from_state()
         self.configuration_changed.mapped_signal.emit()
         return True
 
@@ -434,7 +478,7 @@ class DimmerDirectorFilter(Filter):
         if any(i != index and other.name == group.name for i, other in enumerate(self._groups)):
             return False
         self._groups[index] = group
-        self._rebuild_io()
+        self._apply_io_from_state()
         self.configuration_changed.mapped_signal.emit()
         return True
 
@@ -651,18 +695,18 @@ class DimmerDirectorFilter(Filter):
             logger.warning(
                 "Ignoring the dimmer director configuration of '%s' because of its unsupported format version %r.",
                 self.filter_id,
-                self.filter_configurations.get("format_version"),
+                self._filter_configurations.get("format_version"),
             )
             return
-        self._global_mixin_count = _parse_int(self.filter_configurations.get("n_mix_global", "0"), 0)
-        self._global_offset_count = _parse_int(self.filter_configurations.get("n_off_global", "0"), 0)
+        self._global_mixin_count = _parse_int(self._filter_configurations.get("n_mix_global", "0"), 0)
+        self._global_offset_count = _parse_int(self._filter_configurations.get("n_off_global", "0"), 0)
         self._deserialize_groups()
         self._deserialize_effect_curves()
         self._deserialize_dimmer_curves()
         self._deserialize_recalls()
 
     def _read_format_version(self) -> int | None:
-        version_str = self.filter_configurations.get("format_version", "")
+        version_str = self._filter_configurations.get("format_version", "")
         if len(version_str) == 0:
             return _FORMAT_VERSION
         try:
@@ -672,7 +716,7 @@ class DimmerDirectorFilter(Filter):
 
     def _deserialize_groups(self) -> None:
         self._groups.clear()
-        raw = self.filter_configurations.get("groups", "")
+        raw = self._filter_configurations.get("groups", "")
         if not raw:
             return
         for group_def in raw.split(";"):
@@ -705,11 +749,13 @@ class DimmerDirectorFilter(Filter):
 
     def _deserialize_effect_curves(self) -> None:
         self._effect_curves.clear()
-        raw = self.filter_configurations.get("effect_curves", "")
-        icons_raw = self.filter_configurations.get("effect_curve_icons", "")
-        keyframes_raw = self.filter_configurations.get("effect_curve_keyframes", "")
+        raw = self._filter_configurations.get("effect_curves", "")
+        icons_raw = self._filter_configurations.get("effect_curve_icons", "")
+        keyframes_raw = self._filter_configurations.get("effect_curve_keyframes", "")
         icons = icons_raw.split(";") if icons_raw else []
-        keyframes = keyframes_raw.split("|") if keyframes_raw else []
+        # ``~`` separates the serialized cues of different curves; it is not used anywhere
+        # in Cue.format_cue (which uses ``:``, ``|``, ``#``, ``&``, ``@``, ``,``).
+        keyframes = keyframes_raw.split("~") if keyframes_raw else []
         if not raw:
             return
         for i, curve_def in enumerate(raw.split(";")):
@@ -749,8 +795,8 @@ class DimmerDirectorFilter(Filter):
 
     def _deserialize_dimmer_curves(self) -> None:
         self._dimmer_curves.clear()
-        raw = self.filter_configurations.get("dimmer_curves", "")
-        icons_raw = self.filter_configurations.get("dimmer_curve_icons", "")
+        raw = self._filter_configurations.get("dimmer_curves", "")
+        icons_raw = self._filter_configurations.get("dimmer_curve_icons", "")
         icons = icons_raw.split(";") if icons_raw else []
         if not raw:
             return
@@ -781,7 +827,7 @@ class DimmerDirectorFilter(Filter):
 
     def _deserialize_recalls(self) -> None:
         self._recalls.clear()
-        raw = self.filter_configurations.get("recalls", "")
+        raw = self._filter_configurations.get("recalls", "")
         if not raw:
             return
         for recall_def in raw.split(";"):
@@ -809,10 +855,10 @@ class DimmerDirectorFilter(Filter):
         """
         if not self._configuration_format_supported:
             return
-        self.filter_configurations["format_version"] = str(_FORMAT_VERSION)
-        self.filter_configurations["n_mix_global"] = str(self._global_mixin_count)
-        self.filter_configurations["n_off_global"] = str(self._global_offset_count)
-        self.filter_configurations["groups"] = ";".join(
+        self._filter_configurations["format_version"] = str(_FORMAT_VERSION)
+        self._filter_configurations["n_mix_global"] = str(self._global_mixin_count)
+        self._filter_configurations["n_off_global"] = str(self._global_offset_count)
+        self._filter_configurations["groups"] = ";".join(
             ":".join(
                 [
                     sanitize_channel_name(g.name),
@@ -846,9 +892,9 @@ class DimmerDirectorFilter(Filter):
             )
             effect_icons.append(curve.icon_asset_uuid())
             effect_keyframes.append(curve.cue.format_cue() if curve.cue is not None else "")
-        self.filter_configurations["effect_curves"] = ";".join(effect_strs)
-        self.filter_configurations["effect_curve_icons"] = ";".join(effect_icons)
-        self.filter_configurations["effect_curve_keyframes"] = "|".join(effect_keyframes)
+        self._filter_configurations["effect_curves"] = ";".join(effect_strs)
+        self._filter_configurations["effect_curve_icons"] = ";".join(effect_icons)
+        self._filter_configurations["effect_curve_keyframes"] = "~".join(effect_keyframes)
 
         dimmer_strs: list[str] = []
         dimmer_icons: list[str] = []
@@ -856,9 +902,9 @@ class DimmerDirectorFilter(Filter):
             params_str = ",".join(_format_float(p) for p in curve.params)
             dimmer_strs.append(f"{curve.name}:{curve.type.value}:{params_str}")
             dimmer_icons.append(curve.icon_asset_uuid())
-        self.filter_configurations["dimmer_curves"] = ";".join(dimmer_strs)
-        self.filter_configurations["dimmer_curve_icons"] = ";".join(dimmer_icons)
+        self._filter_configurations["dimmer_curves"] = ";".join(dimmer_strs)
+        self._filter_configurations["dimmer_curve_icons"] = ";".join(dimmer_icons)
 
-        self.filter_configurations["recalls"] = ";".join(
+        self._filter_configurations["recalls"] = ";".join(
             ",".join(f"{eff}/{dim}" for eff, dim in r.selections) for r in self._recalls
         )

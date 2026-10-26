@@ -63,7 +63,11 @@ def execute_board_configuration(bc: BoardConfiguration, cycles: int = 25, record
     )
     _stall_until_stdout_reached_target(process, "[debug] Entering ev defloop")
     logger.debug("Starting QApplication...")
-    application = QApplication([])
+    # Reuse any existing QApplication: shiboken refuses a second instance in the same
+    # process, which otherwise breaks test files that have to construct one at import
+    # time (e.g. show-file roundtrip tests whose read/write paths pull in view-side
+    # modules that build QIcons at import).
+    application = QApplication.instance() or QApplication([])
     logger.debug("Starting network manager.")
     nm = NetworkManager()
     def fish_error_received(msg: str):

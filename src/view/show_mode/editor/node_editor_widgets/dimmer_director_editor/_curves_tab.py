@@ -10,7 +10,6 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
-    QDoubleSpinBox,
     QHBoxLayout,
     QHeaderView,
     QPushButton,
@@ -56,6 +55,7 @@ class CurvesTab(QWidget):
         super().__init__(parent)
         self._model = model
         self._in_rebuild = False
+        self._in_selection_switch = False
         self._asset_dialog: AssetSelectionDialog | None = None
         self._asset_target: tuple[str, int] | None = None
 
@@ -122,6 +122,7 @@ class CurvesTab(QWidget):
         splitter.addWidget(tables_widget)
 
         self._editor_stack = QStackedWidget()
+        self._editor_stack.setMaximumHeight(256)
         self._empty_page = QWidget()
         self._editor_stack.addWidget(self._empty_page)
         self._effect_panel = EffectCurveEditorPanel(model)
@@ -230,26 +231,43 @@ class CurvesTab(QWidget):
     # ------------------------------------------------------------- selection
 
     def _effect_selection_changed(self) -> None:
-        """Switch the editor stack to the effect-curve panel for the selected row."""
-        if self._in_rebuild:
+        """Switch the editor stack to the effect-curve panel for the selected row.
+
+        The reentrancy flag guards against the sibling table's ``clearSelection`` firing
+        back into this slot and wiping the just-made selection, which would otherwise lock
+        the editor on the empty page.
+        """
+        if self._in_rebuild or self._in_selection_switch:
             return
         row = self._effect_table.currentRow()
-        self._dimmer_table.clearSelection()
         if row < 0:
             self._editor_stack.setCurrentWidget(self._empty_page)
             return
+        self._in_selection_switch = True
+        try:
+            self._dimmer_table.clearSelection()
+            self._dimmer_table.setCurrentCell(-1, -1)
+        finally:
+            self._in_selection_switch = False
+        self._dimmer_panel.set_curve_index(None)
         self._effect_panel.set_curve_index(row)
         self._editor_stack.setCurrentWidget(self._effect_panel)
 
     def _dimmer_selection_changed(self) -> None:
         """Switch the editor stack to the dimmer-curve panel for the selected row."""
-        if self._in_rebuild:
+        if self._in_rebuild or self._in_selection_switch:
             return
         row = self._dimmer_table.currentRow()
-        self._effect_table.clearSelection()
         if row < 0:
             self._editor_stack.setCurrentWidget(self._empty_page)
             return
+        self._in_selection_switch = True
+        try:
+            self._effect_table.clearSelection()
+            self._effect_table.setCurrentCell(-1, -1)
+        finally:
+            self._in_selection_switch = False
+        self._effect_panel.set_curve_index(None)
         self._dimmer_panel.set_curve_index(row)
         self._editor_stack.setCurrentWidget(self._dimmer_panel)
 
@@ -335,8 +353,15 @@ class CurvesTab(QWidget):
         if curves[row].type == new_type:
             return
         curves[row].type = new_type
-        if new_type == DimmerCurveType.BEZIER and len(curves[row].params) < 4:
+        # Reseed params to the type-appropriate default so lingering values from the
+        # previous type aren't accidentally reinterpreted (e.g. BEZIER [0,0,1,1] showing
+        # up as LIN a=0, b=0 after a switch).
+        if new_type == DimmerCurveType.LIN:
+            curves[row].params = [1.0, 0.0]
+        elif new_type == DimmerCurveType.BEZIER:
             curves[row].params = [0.0, 0.0, 1.0, 1.0]
+        else:
+            curves[row].params = []
         self._model.configuration_changed.mapped_signal.emit()
         self.curves_changed.emit()
 
