@@ -60,6 +60,7 @@ from view.show_mode.editor.nodes.impl.effects import (
     ChaserNode,
     CueListNode,
     EffectsStackNode,
+    PropertyBasedCuesNode,
     SequencerNode,
     Shift8BitNode,
     Shift16BitNode,
@@ -228,6 +229,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(ColorDirectorVFilterNode, [("Effects",)])
         self.addNodeType(ChaserNode, [("Effects",)])
         self.addNodeType(CueListNode, [("Effects",)])
+        self.addNodeType(PropertyBasedCuesNode, [("Effects",)])
         self.addNodeType(AutoTrackerNode, [("Effects",)])
         self.addNodeType(EffectsStackNode, [("Effects",)])
         self.addNodeType(SequencerNode, [("Effects",)])
