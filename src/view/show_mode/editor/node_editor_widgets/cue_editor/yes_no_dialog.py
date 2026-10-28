@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QMessageBox, QPushButton, QStyle, QWidget
 
 _ICON_MAP: dict[QMessageBox.Icon, QStyle.StandardPixmap] = {
@@ -63,7 +64,11 @@ class YesNoDialog(QDialog):
 
         self.setLayout(self._layout)
         self._success_action = success_action
-        self.open()
+        # Defer open() so the parent window's surface is mapped before Qt sets the
+        # transient-for relationship. Without this, Wayland compositors like sway
+        # treat the dialog as a top-level window and tile it fullscreen when it is
+        # created from a parent's show-time hook (e.g. parent_opened()).
+        QTimer.singleShot(0, self.open)
 
     def _yes__button_pressed(self) -> None:
         self.close()

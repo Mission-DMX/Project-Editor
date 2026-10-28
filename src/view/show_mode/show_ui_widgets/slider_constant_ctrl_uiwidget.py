@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
 
 from model import Filter, FilterUpdateCallbackMixin, UIPage, UIWidget
 from model.filter import DataType, FilterTypeEnumeration
-from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
 
 if TYPE_CHECKING:
     import proto.FilterMode_pb2
@@ -564,6 +563,10 @@ class SliderConstantUIWidget(FilterUpdateCallbackMixin, UIWidget):
 
     def _notify_size_change(self) -> None:
         """Inform the enclosing widget holders about changed widget dimensions."""
+        # Local import breaks the view-side circular import between _widget_holder, the node
+        # editor widget package, and this module.
+        from view.show_mode.editor.editor_tab_widgets.ui_widget_editor._widget_holder import UIWidgetHolder
+
         for widget in (self._player_widget, self._configuration_widget):
             if widget is None:
                 continue

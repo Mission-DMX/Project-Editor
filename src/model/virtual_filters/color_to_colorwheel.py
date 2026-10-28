@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, override
 
 from jinja2 import Environment
 
-from model.filter import Filter, FilterTypeEnumeration, VirtualFilter
+from model.filter import DataType, Filter, FilterTypeEnumeration, VirtualFilter
 from utility import resource_path
 
 if TYPE_CHECKING:
@@ -18,6 +18,17 @@ if TYPE_CHECKING:
 
 with open(resource_path(os.path.join("resources", "data", "color-to-colorwheel-template.lua.j2")), "r") as f:
     _FILTER_CONTENT_TEMPLATE: Template = Environment().from_string(f.read())  # NOQA: S701 the editor is not a web page.
+
+
+def _parse_data_type_string(dt_str: str) -> DataType:
+    """Map a filter-serialised data type string onto a :class:`DataType`, defaulting to 8-bit."""
+    match dt_str:
+        case "16bit":
+            return DataType.DT_16_BIT
+        case "float":
+            return DataType.DT_DOUBLE
+        case _:
+            return DataType.DT_8_BIT
 
 
 def extract_colorwheel_mappings_from_fixture(f: UsedFixture, selected_slot_index: int = 0) -> str:
@@ -78,24 +89,44 @@ class ColorToColorWheel(VirtualFilter):
 
         """
         super().__init__(scene, filter_id, FilterTypeEnumeration.VFILTER_COLOR_TO_COLORWHEEL, pos=pos)
-        if "mode" not in self._filter_configurations:
-            self.filter_configurations["mode"] = "automatic"
-        if "fixture-uuid" not in self._filter_configurations:
-            self.filter_configurations["fixture-uuid"] = ""
-        if "color-mappings" not in self._filter_configurations:
-            self.filter_configurations["color-mappings"] = ""
-        if "dimmer-input" not in self._filter_configurations:
-            self.filter_configurations["dimmer-input"] = "8bit"
-        if "dimmer-output" not in self._filter_configurations:
-            self.filter_configurations["dimmer-output"] = ""
-        if "colorwheel-datatype" not in self._filter_configurations:
-            self.filter_configurations["colorwheel-datatype"] = "8bit"
-        if "wheel_speed" not in self.filter_configurations:
-            self.filter_configurations["wheel_speed"] = "300"
-        if "dim_when_off" not in self.filter_configurations:
-            self.filter_configurations["dim_when_off"] = "true"
-        if "colorwheel-id" not in self.filter_configurations:
-            self.filter_configurations["colorwheel-id"] = "0"
+
+    @override
+    def _rebuild_io(self) -> None:
+        """Apply configuration defaults then derive the dynamic input / output signature.
+
+        Always declares ``input`` as a colour input and ``colorwheel`` as a typed output.
+        ``in_dimmer`` and ``dimmer`` ports are only present when their respective
+        configuration string is non-empty; the data type of each is taken from the string
+        (``"8bit"`` / ``"16bit"`` / ``"float"``), defaulting to 8-bit for unrecognised values.
+        """
+        self._in_data_types = {"input": DataType.DT_COLOR}
+        self._out_data_types = {}
+        self._default_values = {}
+        self._gui_update_keys = {}
+        self._filter_configurations.setdefault("mode", "automatic")
+        self._filter_configurations.setdefault("fixture-uuid", "")
+        self._filter_configurations.setdefault("color-mappings", "")
+        # Dimmer input/output are opt-in: an empty configuration string hides the port.
+        # The user explicitly selects a data type (``"8bit"`` / ``"16bit"`` / ``"float"``)
+        # in the settings widget to enable each dimmer feature.
+        self._filter_configurations.setdefault("dimmer-input", "")
+        self._filter_configurations.setdefault("dimmer-output", "")
+        self._filter_configurations.setdefault("colorwheel-datatype", "8bit")
+        self._filter_configurations.setdefault("wheel_speed", "300")
+        self._filter_configurations.setdefault("dim_when_off", "true")
+        self._filter_configurations.setdefault("colorwheel-id", "0")
+
+        dimmer_input_dt_str = self._filter_configurations.get("dimmer-input", "")
+        if dimmer_input_dt_str:
+            self._in_data_types["in_dimmer"] = _parse_data_type_string(dimmer_input_dt_str)
+
+        dimmer_output_dt_str = self._filter_configurations.get("dimmer-output", "")
+        if dimmer_output_dt_str:
+            self._out_data_types["dimmer"] = _parse_data_type_string(dimmer_output_dt_str)
+
+        self._out_data_types["colorwheel"] = _parse_data_type_string(
+            self._filter_configurations.get("colorwheel-datatype", "8bit")
+        )
 
     @override
     def resolve_output_port_id(self, virtual_port_id: str) -> str | None:
@@ -170,13 +201,21 @@ class ColorToColorWheel(VirtualFilter):
             "colorwheel_datatype": self.filter_configurations.get("colorwheel-datatype", "8bit"),
         })
 
-        f = Filter(self.scene, self.filter_id, FilterTypeEnumeration.FILTER_SCRIPTING_LUA, pos=self.pos)
-        f.initial_parameters["script"] = script
-        f.filter_configurations["in_mapping"] = "input:color;time:float"
+        from model.filters.factory import construct_filter_instance
+
+        in_mapping = "input:color;time:float"
         if input_dimmer_configured:
-            f.filter_configurations["in_mapping"] += f";in_dimmer:{dimmer_input_data_type}"
-        f.filter_configurations["out_mapping"] = f"colorwheel:{"16bit" if colorwheel_is_16bit else "8bit"}"
+            in_mapping += f";in_dimmer:{dimmer_input_data_type}"
+        out_mapping = f"colorwheel:{'16bit' if colorwheel_is_16bit else '8bit'}"
         if dimmer_output_required:
-            f.filter_configurations["out_mapping"] += f";dimmer:{required_dimmer_output_data_type}"
+            out_mapping += f";dimmer:{required_dimmer_output_data_type}"
+        f = construct_filter_instance(
+            scene=self.scene,
+            filter_id=self.filter_id,
+            filter_type=FilterTypeEnumeration.FILTER_SCRIPTING_LUA,
+            pos=self.pos,
+            filter_configurations={"in_mapping": in_mapping, "out_mapping": out_mapping},
+            initial_parameters={"script": script},
+        )
         f.channel_links.update(self.channel_links)
         filter_list.append(f)

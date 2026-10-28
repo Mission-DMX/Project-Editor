@@ -1,7 +1,9 @@
 """V-Filter factory.
 
-This file provides a factory for v-filter instances. The primary use case is for restoring efforts after loading a
-show file.
+Internal module used exclusively by :func:`model.filters.factory.construct_filter_instance`
+to construct :class:`~model.filter.VirtualFilter` subclasses. External callers should go
+through the unified :func:`construct_filter_instance` entry point rather than importing
+from here directly.
 """
 
 from __future__ import annotations
@@ -30,21 +32,14 @@ if TYPE_CHECKING:
     from model.filter import VirtualFilter
 
 
-def construct_virtual_filter_instance(
+def _construct_virtual_filter_instance_legacy(
     scene: Scene, filter_type: int, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None
 ) -> VirtualFilter | None:
-    """Construct virtual filters.
+    """Match-based v-filter construction.
 
-    This method constructs instances of v-filter based on the provided model for the restoring of show files.
-
-    Args:
-        scene: The parent scene of the filter to be constructed.
-        filter_type: The type of filter to instantiate
-        filter_id: The id of the filter to instantiate
-        pos: The position inside the editor of the filter to instantiate.
-
-    Returns: The generated v-filter
-
+    Used by :func:`model.filters.factory.construct_filter_instance` as the fallback for
+    v-filter type codes that do not yet have a subclass registered under
+    :mod:`model.filters.virtual`.
     """
     if not filter_type < 0:
         raise ValueError("The provided filter is not a virtual description.")
