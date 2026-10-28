@@ -8,14 +8,11 @@ from dataclasses import dataclass, field
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from model.filter_data.cues.cue import Cue, EndAction, KeyFrame
-from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.filter_data.transfer_function import TransferFunction
-from model.virtual_filters.property_cues.channel_consolidator import ConsolidationMap, consolidate
+from model.virtual_filters.property_cues._native_builder import build_native
+from model.virtual_filters.property_cues.channel_consolidator import consolidate
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
 from model.virtual_filters.property_cues.model.fixture_selection import FixtureSelection, SelectionEntryKind
-from model.virtual_filters.property_cues.model.model import EndAction as ModelEndAction
-from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
 from model.virtual_filters.property_cues.model.property_step import (
     ManualPropertyAssignment,
     PresetPropertyAssignment,
@@ -33,12 +30,13 @@ from model.virtual_filters.property_cues.properties import (
     Property,
 )
 from model.virtual_filters.property_cues.solver import KeyframeSolver, RequestGroup, SolveInput
-from model.virtual_filters.property_cues.solver_helpers import make_frame
 
 if TYPE_CHECKING:
     from model import Filter, Scene
-    from model.filter import DataType
-    from model.filter_data.cues.cue import State
+    from model.filter_data.cues.cue import KeyFrame
+    from model.filter_data.cues.cue_filter_model import CueFilterModel
+    from model.virtual_filters.property_cues.channel_consolidator import ConsolidationMap
+    from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
     from model.virtual_filters.property_cues.model.property_cue import PropertyCue
     from model.virtual_filters.property_cues.presets import EffectPreset
 
@@ -61,13 +59,6 @@ _CAPABILITY_FROM_LOCAL: dict[str, str] = {
     "prism_selection": "beam", "prism_rotation": "beam",
     "goboslot": "gobo", "goborotation": "gobo", "frost_intensity": "frost",
 }
-_END_ACTION_MAP = {
-    ModelEndAction.HOLD: EndAction.HOLD,
-    ModelEndAction.START_AGAIN: EndAction.START_AGAIN,
-    ModelEndAction.NEXT_CUE: EndAction.NEXT,
-}
-
-
 @dataclass(slots=True)
 class CompileResult:
     native_model: CueFilterModel
@@ -126,12 +117,24 @@ def _build_property(property_id: str, assignment: ManualPropertyAssignment) -> P
         raise ValueError(f"Cannot build {property_id!r} from {assignment.values!r}: {exc}") from exc
 
 
-def _spec_table_for(property_id: str, prefix: str) -> dict[str, ChannelSpec]:
+def _spec_table_for(
+    property_id: str, prefix: str, assignment: PropertyAssignment | None = None,
+) -> dict[str, ChannelSpec]:
+    """Return channel specs for ``property_id`` prefixed with ``prefix``.
+
+    For manual assignments the property is constructed with the user's own
+    values so dynamic shapes (``GoboProperty.wheel_count``, future per-fixture
+    scales) propagate into the channel list.
+    """
     cls = _PROPERTY_CLASS.get(property_id)
     if cls is None:
         return {}
     try:
-        prop = cls()  # type: ignore[call-arg]
+        if isinstance(assignment, ManualPropertyAssignment):
+            kwargs = {k: v for k, v in assignment.values.items() if k != "transition"}
+            prop = cls(**kwargs)  # type: ignore[arg-type]
+        else:
+            prop = cls()  # type: ignore[call-arg]
     except TypeError:
         return {}
     return {f"{prefix}__{s.name}": ChannelSpec(
@@ -175,7 +178,7 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
             for pid, assignment in assignments.by_property.items():
                 for ci, child in matches:
                     prefix = _prefix(child[0], child[1])
-                    local_specs = _spec_table_for(pid, prefix)
+                    local_specs = _spec_table_for(pid, prefix, assignment)
                     specs.update(local_specs)
                     try:
                         raw = _emit_requests(assignment, pid, step_start,
@@ -196,62 +199,6 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                     ))
         step_start += int(step.duration_40hz)
     return groups, specs
-
-
-def _state_for(ch_name: str, dt: DataType, ts: float, frames: list[KeyFrame]) -> State:
-    hit = next((kf for kf in frames if round(kf.timestamp, 6) == ts), None)
-    if hit is not None and hit._states:
-        return hit._states[0].copy()
-    prior = [kf for kf in frames if kf.timestamp < ts]
-    if prior and prior[-1]._states:
-        return prior[-1]._states[0].copy()
-    return make_frame(ChannelSpec(name=ch_name, data_type=dt), 0,
-                      TransferFunction.LINEAR, 0.0)._states[0]
-
-
-def _frames_to_cue(name: str, channels: list[tuple[str, DataType]],
-                   per_channel: dict[str, list[KeyFrame]],
-                   model_end: ModelEndAction) -> Cue:
-    cue = Cue()
-    cue.name = name or "No Name"
-    for ch_name, dt in channels:
-        cue.add_channel(ch_name, dt)
-    slots: set[float] = {round(kf.timestamp, 6) for frames in per_channel.values() for kf in frames}
-    if not slots:
-        slots.add(0.0)
-    for ts in sorted(slots):
-        combined = KeyFrame(cue)
-        combined.timestamp = ts
-        for ch_name, dt in channels:
-            combined._states.append(_state_for(ch_name, dt, ts, per_channel.get(ch_name, [])))
-        cue.insert_frame(combined)
-    cue.end_action = _END_ACTION_MAP.get(model_end, EndAction.HOLD)
-    return cue
-
-
-def _build_native(model: PropertyCueFilterModel, consolidation: ConsolidationMap,
-                  all_specs: dict[str, ChannelSpec],
-                  per_cue: list[tuple[int, str, list[RequestGroup]]],
-                  per_cue_frames: dict[str, dict[str, list[KeyFrame]]]) -> CueFilterModel:
-    canonical_channels = sorted({consolidation.canonical(n) for n in all_specs})
-    sorted_channels = [(n, all_specs[n].data_type) for n in canonical_channels]
-    native = CueFilterModel()
-    for n, dt in sorted_channels:
-        native.add_channel(n, dt)
-    native.global_restart_on_end = model.general.end_action is ModelEndAction.START_AGAIN
-    native.persistence_enabled = model.general.persistence
-    for cue_index, cue_name, _groups in per_cue:
-        canonical_frames: dict[str, list[KeyFrame]] = {n: [] for n in canonical_channels}
-        for v_name, frames in per_cue_frames[f"cue_{cue_index}"].items():
-            canonical_frames.setdefault(consolidation.canonical(v_name), []).extend(frames)
-        for frames in canonical_frames.values():
-            frames.sort(key=lambda kf: kf.timestamp)
-        native.cues.append(_frames_to_cue(
-            cue_name, sorted_channels, canonical_frames, model.general.end_action,
-        ))
-    if 0 <= model.general.default_cue_index < len(native.cues):
-        native.default_cue = model.general.default_cue_index
-    return native
 
 
 def _build_ports(all_specs: dict[str, ChannelSpec], consolidation: ConsolidationMap,
@@ -300,7 +247,7 @@ def compile_property_model(
     ch_capability = {n: _infer_capability(n.partition("__")[2]) for n in all_specs}
     pp_sigs = {n: f"{ch_capability[n]}:None:None" for n in all_specs}
     consolidation = consolidate(per_cue_frames, all_specs, pp_sigs)
-    native_model = _build_native(model, consolidation, all_specs, per_cue, per_cue_frames)
+    native_model = build_native(model, consolidation, all_specs, per_cue, per_cue_frames)
     pp_filters, external_ports = _build_ports(
         all_specs, consolidation, ch_capability, ch_prefix, cue_filter_id, scene, pos,
     )

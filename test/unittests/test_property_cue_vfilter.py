@@ -99,6 +99,22 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertIsInstance(assign, ManualPropertyAssignment)
         self.assertEqual(0.5, assign.values["brightness"])
 
+    def test_deserialize_preserves_property_model_identity(self) -> None:
+        """Regression: UI widgets cache ``filter.property_model`` at construction time.
+
+        If :meth:`deserialize` replaced the model instance, every editor would
+        silently keep reading the pre-reload model and the user's data would
+        appear to vanish on reopen. In-place mutation keeps the identity stable.
+        """
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_identity")
+        f.property_model.cues.append(PropertyCue(name="C1"))
+        f.serialize()
+        pre_model = f.property_model
+        f.deserialize()
+        self.assertIs(pre_model, f.property_model)
+        self.assertEqual("C1", f.property_model.cues[0].name)
+
     def test_resolve_passthrough(self) -> None:
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_pt")

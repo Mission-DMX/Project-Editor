@@ -51,7 +51,7 @@ _PROPERTY_CHANNELS: dict[str, tuple[str, ...]] = {
     "colour": ("color",),
     "beam": ("focus", "zoom", "iris"),
     "focus": ("focus",),
-    "gobo": ("goboslot_0", "goborotation_0"),
+    "gobo": ("goboslot_0", "goborotation_0", "goboslot_1", "goborotation_1"),
     "frost": ("frost_intensity",),
 }
 

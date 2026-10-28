@@ -113,14 +113,17 @@ class PropertyEditorBase(QWidget):
         return bucket.by_property.get(self._property_id)
 
     def _ensure_bucket(self) -> PropertyAssignments | None:
+        """Return the assignments bucket for the current (step, node) selection.
+
+        ``self._node_path == ""`` represents a step-level assignment that applies to
+        every selected child; the compiler expands it in :func:`_resolve_path_children`.
+        """
         if self._cue_index < 0 or self._cue_index >= len(self._model.cues):
             return None
         cue = self._model.cues[self._cue_index]
         if self._step_index < 0 or self._step_index >= len(cue.steps):
             return None
         step = cue.steps[self._step_index]
-        if self._node_path == "":
-            return None
         bucket = step.assignments.get(self._node_path)
         if bucket is None:
             bucket = PropertyAssignments()

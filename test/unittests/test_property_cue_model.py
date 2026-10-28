@@ -65,13 +65,12 @@ class PropertyCueModelRoundTripTest(unittest.TestCase):
             fade_in_40hz=20,
             assignments={"fixture:MH1": assignments},
         )
-        cue = PropertyCue(name="My cue", steps=[step])
+        cue = PropertyCue(name="My cue", steps=[step],
+                          end_action=EndAction.NEXT_CUE.value, restart_on_play=True)
         model = PropertyCueFilterModel(
             fixture_selection=selection,
             cues=[cue],
         )
-        model.general.end_action = EndAction.NEXT_CUE
-        model.general.restart_on_play = True
         model.general.default_cue_index = 0
 
         blob = model.to_json_str()
@@ -79,6 +78,8 @@ class PropertyCueModelRoundTripTest(unittest.TestCase):
         self.assertEqual(model.general, loaded.general)
         self.assertEqual(model.fixture_selection, loaded.fixture_selection)
         self.assertEqual(len(model.cues), len(loaded.cues))
+        self.assertEqual(cue.end_action, loaded.cues[0].end_action)
+        self.assertEqual(cue.restart_on_play, loaded.cues[0].restart_on_play)
         loaded_step = loaded.cues[0].steps[0]
         self.assertEqual(step.name, loaded_step.name)
         self.assertEqual(step.duration_40hz, loaded_step.duration_40hz)
@@ -100,6 +101,24 @@ class PropertyCueModelRoundTripTest(unittest.TestCase):
         self.assertAlmostEqual(preset.hint_values["color"].hue, loaded_color.hue)
         self.assertAlmostEqual(preset.hint_values["color"].saturation, loaded_color.saturation)
         self.assertAlmostEqual(preset.hint_values["color"].intensity, loaded_color.intensity)
+
+    def test_load_from_json_str_mutates_in_place(self) -> None:
+        """Loading must keep the model's object identity so UI widgets stay bound."""
+        model = PropertyCueFilterModel()
+        original_id = id(model)
+        model.load_from_json_str(
+            '{"version": 1, "fixture_selection": {"entries": [], "enabled_capabilities": []},'
+            ' "general": {}, "cues": [{"name": "Loaded", "steps": []}]}',
+        )
+        self.assertEqual(original_id, id(model))
+        self.assertEqual(1, len(model.cues))
+        self.assertEqual("Loaded", model.cues[0].name)
+
+    def test_load_from_json_str_empty_resets_contents(self) -> None:
+        model = PropertyCueFilterModel()
+        model.cues.append(PropertyCue(name="To be dropped"))
+        model.load_from_json_str("")
+        self.assertEqual([], model.cues)
 
     def test_version_rejects(self) -> None:
         with self.assertRaises(ValueError):

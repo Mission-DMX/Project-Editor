@@ -1,4 +1,4 @@
-"""Editor for step-level attributes (name, duration, fade-in)."""
+"""Editor for step-level timings (name, duration, fade-in). Values are in seconds."""
 
 from __future__ import annotations
 
@@ -13,15 +13,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
+from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
 if TYPE_CHECKING:
     from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
     from model.virtual_filters.property_cues.model.property_step import PropertyStep
 
 
+_TICKS_PER_SECOND = 40.0
+
+
 class StepEditor(QWidget):
-    """Editor for the step row (first column of the tree)."""
+    """Edit the name, duration and fade-in of the selected step (seconds)."""
 
     applied = Signal()
 
@@ -34,14 +37,18 @@ class StepEditor(QWidget):
         layout = QVBoxLayout()
         form = QFormLayout()
         self._name_edit = QLineEdit()
-        self._duration = JogwheelSpinBox()
-        self._duration.setRange(1, 10_000_000)
-        self._duration.setValue(40)
-        self._fade_in = JogwheelSpinBox()
-        self._fade_in.setRange(0, 10_000_000)
+        self._duration = JogwheelDoubleSpinBox()
+        self._duration.setRange(0.025, 100000.0)
+        self._duration.setDecimals(3)
+        self._duration.setSingleStep(0.1)
+        self._duration.setValue(1.0)
+        self._fade_in = JogwheelDoubleSpinBox()
+        self._fade_in.setRange(0.0, 100000.0)
+        self._fade_in.setDecimals(3)
+        self._fade_in.setSingleStep(0.1)
         form.addRow("Name", self._name_edit)
-        form.addRow("Duration (40 Hz)", self._duration)
-        form.addRow("Fade-in (40 Hz)", self._fade_in)
+        form.addRow("Duration (s)", self._duration)
+        form.addRow("Fade-in (s)", self._fade_in)
         layout.addLayout(form)
         self._apply_button = QPushButton("Apply")
         self._apply_button.clicked.connect(self._on_apply)
@@ -54,12 +61,12 @@ class StepEditor(QWidget):
         step = self._current_step()
         if step is None:
             self._name_edit.setText("")
-            self._duration.setValue(40)
-            self._fade_in.setValue(0)
+            self._duration.setValue(1.0)
+            self._fade_in.setValue(0.0)
             return
         self._name_edit.setText(step.name)
-        self._duration.setValue(step.duration_40hz)
-        self._fade_in.setValue(step.fade_in_40hz)
+        self._duration.setValue(step.duration_40hz / _TICKS_PER_SECOND)
+        self._fade_in.setValue(step.fade_in_40hz / _TICKS_PER_SECOND)
 
     def _current_step(self) -> PropertyStep | None:
         if self._cue_index < 0 or self._cue_index >= len(self._model.cues):
@@ -74,6 +81,6 @@ class StepEditor(QWidget):
         if step is None:
             return
         step.name = self._name_edit.text()
-        step.duration_40hz = int(self._duration.value())
-        step.fade_in_40hz = int(self._fade_in.value())
+        step.duration_40hz = max(1, round(self._duration.value() * _TICKS_PER_SECOND))
+        step.fade_in_40hz = max(0, round(self._fade_in.value() * _TICKS_PER_SECOND))
         self.applied.emit()

@@ -25,15 +25,11 @@ class EndAction(Enum):
 
 @dataclass(slots=True)
 class PropertyCueGeneralSettings:
-    end_action: EndAction = EndAction.HOLD
-    restart_on_play: bool = False
     persistence: bool = False
     default_cue_index: int = -1
 
     def to_json(self) -> dict:
         return {
-            "end_action": self.end_action.value,
-            "restart_on_play": self.restart_on_play,
             "persistence": self.persistence,
             "default_cue_index": self.default_cue_index,
         }
@@ -41,8 +37,6 @@ class PropertyCueGeneralSettings:
     @classmethod
     def from_json(cls, blob: dict) -> PropertyCueGeneralSettings:
         return cls(
-            end_action=EndAction(blob.get("end_action", EndAction.HOLD.value)),
-            restart_on_play=bool(blob.get("restart_on_play", False)),
             persistence=bool(blob.get("persistence", False)),
             default_cue_index=int(blob.get("default_cue_index", -1)),
         )
@@ -89,10 +83,19 @@ class PropertyCueFilterModel:
         }
         return json.dumps(blob)
 
-    @classmethod
-    def from_json_str(cls, blob_str: str) -> PropertyCueFilterModel:
+    def load_from_json_str(self, blob_str: str) -> None:
+        """Replace this model's contents from ``blob_str``, keeping the object identity.
+
+        UI widgets cache a reference to this model at construction time; using
+        in-place mutation here avoids the "stale model" trap that follows a
+        plain reassignment (editors would silently read the pre-reload model
+        after a configuration load).
+        """
         if blob_str == "":
-            return cls()
+            self.fixture_selection = FixtureSelection()
+            self.general = PropertyCueGeneralSettings()
+            self.cues.clear()
+            return
         blob = json.loads(blob_str)
         version = blob.get("version")
         if version != CURRENT_SCHEMA_VERSION:
@@ -100,14 +103,15 @@ class PropertyCueFilterModel:
                 f"Unsupported PropertyCueFilterModel schema version: {version!r} "
                 f"(expected {CURRENT_SCHEMA_VERSION})",
             )
-        fixture_selection = FixtureSelection.from_json(blob.get("fixture_selection", {}))
-        general = PropertyCueGeneralSettings.from_json(blob.get("general", {}))
-        cues = [PropertyCue.from_json(cue_blob) for cue_blob in blob.get("cues", [])]
-        return cls(
-            fixture_selection=fixture_selection,
-            general=general,
-            cues=cues,
-        )
+        self.fixture_selection = FixtureSelection.from_json(blob.get("fixture_selection", {}))
+        self.general = PropertyCueGeneralSettings.from_json(blob.get("general", {}))
+        self.cues[:] = [PropertyCue.from_json(cue_blob) for cue_blob in blob.get("cues", [])]
+
+    @classmethod
+    def from_json_str(cls, blob_str: str) -> PropertyCueFilterModel:
+        instance = cls()
+        instance.load_from_json_str(blob_str)
+        return instance
 
     def copy_fixture_from_neighbour(
         self,
