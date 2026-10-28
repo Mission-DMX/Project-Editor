@@ -13,10 +13,8 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLabel, QStackedWidget, QTabWidget, QVBoxLayout, QWidget
 
+from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
 from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
-from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
-    discover_capabilities,
-)
 
 from .editors.beam_editor import BeamEditor
 from .editors.colour_editor import ColourEditor

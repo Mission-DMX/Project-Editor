@@ -73,6 +73,267 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         self.assertEqual({}, f.out_data_types)
         self.assertIn("cues-prop-data", f.filter_configurations)
 
+    def test_rebuild_io_populates_outputs_from_model(self) -> None:
+        """After the model carries a configured fixture + assignment, the
+        vfilter's ``out_data_types`` must reflect the compiled channels so the
+        pyqtgraph node can grow terminals for them."""
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_outputs")
+        f.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+        f.property_model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=40,
+                         assignments={"fixture:MH1": _manual_dimmer(0.5)}),
+        ]))
+        self.assertEqual({}, f.out_data_types)
+        f._rebuild_io()
+        self.assertIn("MH1__brightness", f.out_data_types)
+
+    def test_output_names_use_fixture_stage_name_when_board_knows_it(self) -> None:
+        """When a fixture's UUID resolves to a stage name on the board, output
+        channels should carry that readable name instead of the raw UUID."""
+        from unittest.mock import MagicMock, PropertyMock
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_names")
+        fixture_uuid = "30ed4259-e513-4c9e-87ef-bf822a46b2c5"
+        mock_fixture = MagicMock()
+        mock_fixture.uuid = fixture_uuid
+        mock_fixture.name_on_stage = "Hero Spot 1"
+        # BoardConfiguration.fixtures has no public setter, so patch via descriptor.
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[mock_fixture])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=fixture_uuid)],
+                enabled_capabilities={EnabledCapability.DIMMER},
+            )
+            f.property_model.cues.append(PropertyCue(name="C1", steps=[
+                PropertyStep(name="s0", duration_40hz=40,
+                             assignments={f"fixture:{fixture_uuid}": _manual_dimmer(0.5)}),
+            ]))
+            f._rebuild_io()
+            self.assertIn("Hero_Spot_1__brightness", f.out_data_types)
+            self.assertNotIn("30ed4259_e513_4c9e_87ef_bf822a46b2c5__brightness", f.out_data_types)
+        finally:
+            # Restore so later tests see the real descriptor.
+            del type(scene.board_configuration).fixtures
+
+    def test_enabled_capability_exposes_channels_even_without_assignment(self) -> None:
+        """Enabling POSITION on a fixture must create pan/tilt output channels
+        even when the user hasn't yet dialed in a value."""
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_defaults")
+        f.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
+            enabled_capabilities={EnabledCapability.DIMMER, EnabledCapability.POSITION},
+        )
+        # No cue, no assignment -- just the enabled capabilities.
+        f._rebuild_io()
+        for channel in (
+            "MH1__brightness", "MH1__strobefreq", "MH1__duty_cycle",
+            "MH1__pan_value", "MH1__pan_curvesel",
+            "MH1__tilt_value", "MH1__tilt_curvesel",
+        ):
+            self.assertIn(channel, f.out_data_types, f"missing {channel}")
+
+    def test_capability_lookup_restricts_to_supported_capabilities(self) -> None:
+        """A fixture without a gobo wheel must not expose gobo channels even
+        when the user enabled GOBO on the global selection (wash fixtures)."""
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import WheelSlotType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_wash")
+        wash_uuid = "aaaabbbb-cccc-dddd-eeee-ffff00001111"
+        colour_slot = MagicMock(); colour_slot.type = WheelSlotType.COLOR
+        colour_wheel = MagicMock(); colour_wheel.slots = [colour_slot]
+        wash = MagicMock()
+        wash.uuid = wash_uuid
+        wash.name_on_stage = "Hero Wash"
+        wash.fixture_channels = ()
+        wash._fixture = MagicMock()
+        wash._fixture.wheels = {"Colour Wheel": colour_wheel}
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[wash])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=wash_uuid)],
+                enabled_capabilities={EnabledCapability.COLOUR, EnabledCapability.GOBO},
+            )
+            f._rebuild_io()
+            self.assertIn("Hero_Wash__color", f.out_data_types)
+            self.assertNotIn("Hero_Wash__goboslot_0", f.out_data_types)
+            self.assertNotIn("Hero_Wash__goborotation_0", f.out_data_types)
+        finally:
+            del type(scene.board_configuration).fixtures
+
+    def test_gobo_wheel_count_lookup_feeds_multiple_wheel_pairs(self) -> None:
+        """A Hero-Spot-style fixture with two gobo wheels must expose channels
+        for both wheels, not just wheel 0."""
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import WheelSlotType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_spot")
+        spot_uuid = "11112222-3333-4444-5555-666677778888"
+        gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
+        wheel_a = MagicMock(); wheel_a.slots = [gobo_slot]
+        wheel_b = MagicMock(); wheel_b.slots = [gobo_slot]
+        spot = MagicMock()
+        spot.uuid = spot_uuid
+        spot.name_on_stage = "Hero Spot"
+        spot.fixture_channels = ()
+        spot._fixture = MagicMock()
+        spot._fixture.wheels = {"Gobo Wheel": wheel_a, "Rotatable Gobo Wheel": wheel_b}
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[spot])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=spot_uuid)],
+                enabled_capabilities={EnabledCapability.GOBO},
+            )
+            f._rebuild_io()
+            for channel in (
+                "Hero_Spot__goboslot_0", "Hero_Spot__goborotation_0",
+                "Hero_Spot__goboslot_1", "Hero_Spot__goborotation_1",
+            ):
+                self.assertIn(channel, f.out_data_types, f"missing {channel}")
+        finally:
+            del type(scene.board_configuration).fixtures
+
+    def test_mixed_spot_and_wash_scenario_isolates_per_fixture_channels(self) -> None:
+        """A Hero Spot 230 and a Hero Wash 640FX enabled with every capability must
+        produce only the channels each fixture physically supports:
+        - Both get dimmer/position/colour and the shared BEAM zoom channel.
+        - Only the spot gets focus and gobo wheels.
+        - Neither gets iris (neither physically has one)."""
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_mixed")
+
+        def _ofl_cap(cap_type):
+            cap = MagicMock(); cap.type = cap_type
+            return cap
+
+        def _channel(name: str, caps: list):
+            template = MagicMock(); template.get_capabilities.return_value = caps
+            ch = MagicMock(); ch.name = name; ch.channel_template = template
+            return ch
+
+        spot_uuid = "11111111-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
+        wheel_a = MagicMock(); wheel_a.slots = [gobo_slot]
+        wheel_b = MagicMock(); wheel_b.slots = [gobo_slot]
+        spot = MagicMock()
+        spot.uuid = spot_uuid
+        spot.name_on_stage = "Hero Spot"
+        spot.fixture_channels = (
+            _channel("Pan", [_ofl_cap(CapabilityType.PAN)]),
+            _channel("Tilt", [_ofl_cap(CapabilityType.TILT)]),
+            _channel("Intensity", [_ofl_cap(CapabilityType.INTENSITY)]),
+            _channel("Focus", [_ofl_cap(CapabilityType.FOCUS)]),
+            _channel("Zoom", [_ofl_cap(CapabilityType.ZOOM)]),
+        )
+        spot._fixture = MagicMock()
+        spot._fixture.wheels = {"Gobo Wheel": wheel_a, "Rotatable Gobo Wheel": wheel_b}
+
+        wash_uuid = "22222222-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        wash = MagicMock()
+        wash.uuid = wash_uuid
+        wash.name_on_stage = "Hero Wash"
+        wash.fixture_channels = (
+            _channel("Pan", [_ofl_cap(CapabilityType.PAN)]),
+            _channel("Tilt", [_ofl_cap(CapabilityType.TILT)]),
+            _channel("Intensity", [_ofl_cap(CapabilityType.INTENSITY)]),
+            _channel("R", [_ofl_cap(CapabilityType.COLOR_INTENSITY)]),
+            _channel("G", [_ofl_cap(CapabilityType.COLOR_INTENSITY)]),
+            _channel("B", [_ofl_cap(CapabilityType.COLOR_INTENSITY)]),
+            _channel("W", [_ofl_cap(CapabilityType.COLOR_INTENSITY)]),
+            _channel("Zoom", [_ofl_cap(CapabilityType.ZOOM)]),
+        )
+        wash._fixture = MagicMock(); wash._fixture.wheels = {}
+
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[spot, wash])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=spot_uuid),
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=wash_uuid),
+                ],
+                enabled_capabilities={
+                    EnabledCapability.DIMMER,
+                    EnabledCapability.POSITION,
+                    EnabledCapability.COLOUR,
+                    EnabledCapability.GOBO,
+                    EnabledCapability.BEAM,
+                    EnabledCapability.FOCUS,
+                },
+            )
+            f._rebuild_io()
+            channels = set(f.out_data_types)
+
+            # Both fixtures: dimmer, position and zoom (BEAM shared).
+            for base in ("Hero_Spot", "Hero_Wash"):
+                self.assertIn(f"{base}__brightness", channels)
+                self.assertIn(f"{base}__pan_value", channels)
+                self.assertIn(f"{base}__tilt_value", channels)
+                self.assertIn(f"{base}__zoom", channels)
+
+            # Spot has focus and two gobo wheels.
+            self.assertIn("Hero_Spot__focus", channels)
+            self.assertIn("Hero_Spot__goboslot_0", channels)
+            self.assertIn("Hero_Spot__goborotation_0", channels)
+            self.assertIn("Hero_Spot__goboslot_1", channels)
+            self.assertIn("Hero_Spot__goborotation_1", channels)
+
+            # Wash has colour.
+            self.assertIn("Hero_Wash__color", channels)
+
+            # Wash has no focus and no gobo channels.
+            self.assertNotIn("Hero_Wash__focus", channels)
+            self.assertNotIn("Hero_Wash__goboslot_0", channels)
+            self.assertNotIn("Hero_Wash__goborotation_0", channels)
+
+            # Neither has iris or prism (nothing in the templates).
+            for base in ("Hero_Spot", "Hero_Wash"):
+                self.assertNotIn(f"{base}__iris", channels)
+                self.assertNotIn(f"{base}__prism_selection", channels)
+                self.assertNotIn(f"{base}__prism_rotation", channels)
+        finally:
+            del type(scene.board_configuration).fixtures
+
+    def test_duplicate_stage_names_get_deterministic_uuid_suffix(self) -> None:
+        """Two fixtures with the same stage name must produce distinct output
+        names via a short, deterministic UUID tail suffix."""
+        from unittest.mock import MagicMock, PropertyMock
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_dupnames")
+        uuid_a = "30ed4259-e513-4c9e-87ef-bf822a46b2c5"
+        uuid_b = "9f752ce5-3a25-4ed0-86f8-31ff47d4e5c9"
+        fa = MagicMock(); fa.uuid = uuid_a; fa.name_on_stage = "Hero Spot"
+        fb = MagicMock(); fb.uuid = uuid_b; fb.name_on_stage = "Hero Spot"
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[fa, fb])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=uuid_a),
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=uuid_b),
+                ],
+                enabled_capabilities={EnabledCapability.DIMMER},
+            )
+            f.property_model.cues.append(PropertyCue(name="C1", steps=[
+                PropertyStep(name="s0", duration_40hz=40, assignments={
+                    f"fixture:{uuid_a}": _manual_dimmer(0.5),
+                    f"fixture:{uuid_b}": _manual_dimmer(0.75),
+                }),
+            ]))
+            f._rebuild_io()
+            # Suffix is first 8 hex chars of the dash-stripped UUID.
+            self.assertIn("Hero_Spot_30ed4259__brightness", f.out_data_types)
+            self.assertIn("Hero_Spot_9f752ce5__brightness", f.out_data_types)
+            # Bare "Hero_Spot__brightness" must not appear -- both would collide.
+            self.assertNotIn("Hero_Spot__brightness", f.out_data_types)
+        finally:
+            del type(scene.board_configuration).fixtures
+
     def test_roundtrip_configuration(self) -> None:
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_rt")

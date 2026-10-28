@@ -270,6 +270,11 @@ class PropertyCueEditor(PreviewEditWidget):
     @override
     def parent_closed(self, filter_node: FilterNode) -> None:
         self._stop_preview()
+        # ``NodeEditorFilterConfigWidget.parent_closed`` (reached via super)
+        # calls ``filter_node.update_node_after_settings_changed()``, which in
+        # turn triggers :meth:`PropertyBasedCueFilter._rebuild_io` -- that's
+        # where the vfilter populates ``out_data_types`` from the current
+        # property model so the node grows the configured output terminals.
         super().parent_closed(filter_node)
 
     def _toggle_preview(self) -> None:

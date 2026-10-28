@@ -267,12 +267,11 @@ class GoboPropertyTest(unittest.TestCase):
 
 class BeamPropertyTest(unittest.TestCase):
 
-    def test_channel_specs(self) -> None:
+    def test_channel_specs_default_includes_all_sub_caps(self) -> None:
         specs = BeamProperty().channel_specs
         names_to_types = {s.name: s.data_type for s in specs}
         self.assertEqual(
             {
-                "focus": DataType.DT_8_BIT,
                 "zoom": DataType.DT_8_BIT,
                 "prism_selection": DataType.DT_8_BIT,
                 "prism_rotation": DataType.DT_DOUBLE,
@@ -281,16 +280,36 @@ class BeamPropertyTest(unittest.TestCase):
             names_to_types,
         )
 
+    def test_channel_specs_omits_disabled_sub_caps(self) -> None:
+        """Opting out of iris + prism (e.g. wash fixture with only zoom) drops those channels."""
+        specs = BeamProperty(include_iris=False, include_prism=False).channel_specs
+        names = {s.name for s in specs}
+        self.assertEqual({"zoom"}, names)
+
     def test_values_round_trip(self) -> None:
-        prop = BeamProperty(focus=12, zoom=200, prism_selection=3, prism_rotation=0.9, iris=42)
+        prop = BeamProperty(zoom=200, prism_selection=3, prism_rotation=0.9, iris=42)
         reqs = prop.generate_requests(
             step_start_40hz=0, step_duration_40hz=100, child_index=0, distribution=_CONSTANT,
         )
-        self.assertEqual(12, reqs["focus"][0].requested_value)
         self.assertEqual(200, reqs["zoom"][0].requested_value)
         self.assertEqual(3, reqs["prism_selection"][0].requested_value)
         self.assertEqual(0.9, reqs["prism_rotation"][0].requested_value)
         self.assertEqual(42, reqs["iris"][0].requested_value)
+
+
+class FocusPropertyTest(unittest.TestCase):
+
+    def test_focus_property_has_single_channel(self) -> None:
+        from model.virtual_filters.property_cues.properties import FocusProperty
+
+        specs = FocusProperty().channel_specs
+        self.assertEqual(1, len(specs))
+        self.assertEqual("focus", specs[0].name)
+        self.assertEqual(DataType.DT_8_BIT, specs[0].data_type)
+        reqs = FocusProperty(focus=42).generate_requests(
+            step_start_40hz=0, step_duration_40hz=100, child_index=0, distribution=_CONSTANT,
+        )
+        self.assertEqual(42, reqs["focus"][0].requested_value)
 
 
 class FrostPropertyTest(unittest.TestCase):

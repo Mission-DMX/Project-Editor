@@ -210,6 +210,21 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual(expected, editor._property_pane.minimumHeight())
         self.assertGreaterEqual(editor._property_pane.minimumHeight(), 100)
 
+    def test_parent_closed_triggers_node_terminal_sync(self) -> None:
+        """The super chain calls ``update_node_after_settings_changed`` on the
+        node, which in turn runs ``_rebuild_io`` and syncs pyqtgraph terminals
+        with the vfilter's refreshed ``out_data_types``."""
+        from unittest.mock import MagicMock
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        fake_node = MagicMock()
+        editor.parent_closed(fake_node)
+        fake_node.update_node_after_settings_changed.assert_called()
+
 
 @unittest.skipUnless(_HAS_PYSIDE, "FilterTypeEnumeration import is cheap but keep guard parity")
 class PropertyBasedCuesNodeRegistrationTests(unittest.TestCase):
