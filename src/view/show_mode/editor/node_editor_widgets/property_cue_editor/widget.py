@@ -5,34 +5,41 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING, override
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QFormLayout,
-    QGroupBox,
-    QHBoxLayout,
     QLabel,
     QPushButton,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
-    QVBoxLayout,
     QWidget,
 )
 
 from model.virtual_filters.property_cues.model.model import EndAction
+from model.virtual_filters.property_cues.model.property_cue import PropertyCue
+from model.virtual_filters.property_cues.model.property_step import PropertyStep
 from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
 from view.show_mode.editor.node_editor_widgets.cue_editor.preview_edit_widget import (
     ExternalChannelDefinition,
     PreviewEditWidget,
 )
+from view.show_mode.editor.node_editor_widgets.cue_editor.yes_no_dialog import YesNoDialog
+from view.show_mode.editor.node_editor_widgets.property_cue_editor._board_lookups import (
+    lookup_fixtures,
+    resolve_node_name,
+)
+from view.show_mode.editor.node_editor_widgets.property_cue_editor._builders import build_root_ui
+from view.show_mode.editor.node_editor_widgets.property_cue_editor._settings_panel import (
+    refresh_default_cue_combo,
+    refresh_settings_from_model,
+)
 from view.show_mode.editor.node_editor_widgets.property_cue_editor.preview_control import PreviewController
-from view.show_mode.editor.node_editor_widgets.property_cue_editor.property_pane import PropertyPane
-from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import StepFixtureTree
 
 if TYPE_CHECKING:
     from model import Filter
+    from view.show_mode.editor.node_editor_widgets.property_cue_editor.property_pane import PropertyPane
+    from view.show_mode.editor.node_editor_widgets.property_cue_editor.step_tree import StepFixtureTree
     from view.show_mode.editor.nodes import FilterNode
 
 logger = getLogger(__name__)
@@ -44,9 +51,7 @@ class PropertyCueEditor(PreviewEditWidget):
     def __init__(self, f: Filter | None = None) -> None:
         """Initialize the shell editor widget."""
         super().__init__(f)
-        self._property_filter: PropertyBasedCueFilter | None = (
-            f if isinstance(f, PropertyBasedCueFilter) else None
-        )
+        self._property_filter: PropertyBasedCueFilter | None = f if isinstance(f, PropertyBasedCueFilter) else None
         if self._property_filter is None:
             logger.error("Property-cue editor received invalid filter: %s", f)
         self._root = QWidget()
@@ -57,88 +62,20 @@ class PropertyCueEditor(PreviewEditWidget):
         self._default_cue_combo: QComboBox | None = None
         self._configure_button: QPushButton | None = None
         self._preview_button: QPushButton | None = None
+        self._add_cue_button: QPushButton | None = None
+        self._add_step_button: QPushButton | None = None
         self._splitter: QSplitter | None = None
         self._step_tree_placeholder: QLabel | None = None
         self._property_pane_placeholder: QLabel | None = None
         self._step_tree: StepFixtureTree | None = None
         self._property_pane: PropertyPane | None = None
         self._wizard = None
+        self._preview_prompt: YesNoDialog | None = None
         self._preview_controller: PreviewController | None = (
             PreviewController(self._property_filter) if self._property_filter is not None else None
         )
         self._preview_active = False
-        self._build_ui()
-
-    def _build_ui(self) -> None:
-        layout = QVBoxLayout()
-        self._root.setLayout(layout)
-
-        self._cue_table = QTableWidget(0, 3)
-        self._cue_table.setHorizontalHeaderLabels(["#", "Name", "Steps"])
-        self._cue_table.verticalHeader().setVisible(False)
-        self._cue_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        layout.addWidget(self._cue_table)
-
-        layout.addWidget(self._build_settings_panel())
-
-        button_row = QHBoxLayout()
-        self._configure_button = QPushButton("Configure fixtures...")
-        self._configure_button.clicked.connect(self._launch_wizard)
-        button_row.addWidget(self._configure_button)
-        self._preview_button = QPushButton("Start preview")
-        self._preview_button.clicked.connect(self._toggle_preview)
-        self._preview_button.setEnabled(self._preview_controller is not None)
-        button_row.addWidget(self._preview_button)
-        button_row.addStretch(1)
-        layout.addLayout(button_row)
-
-        self._splitter = QSplitter(Qt.Orientation.Horizontal)
-        self._step_tree_placeholder = QLabel("Step/fixture tree - populated by WP11")
-        self._property_pane_placeholder = QLabel("Property editor - populated by WP11")
-        self._step_tree_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._property_pane_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._splitter.addWidget(self._step_tree_placeholder)
-        self._splitter.addWidget(self._property_pane_placeholder)
-        layout.addWidget(self._splitter, 1)
-        self._install_live_panes()
-
-    def _install_live_panes(self) -> None:
-        if self._property_filter is None or self._splitter is None:
-            return
-        model = self._property_filter.property_model
-        self._step_tree = StepFixtureTree(model)
-        self._property_pane = PropertyPane(model)
-        self._splitter.replaceWidget(0, self._step_tree)
-        self._splitter.replaceWidget(1, self._property_pane)
-        self._step_tree.selection_changed.connect(self._property_pane.show_editor)
-        self._property_pane.assignment_applied.connect(self._step_tree.refresh)
-        self._step_tree.set_current_cue(0)
-        self._property_pane.set_current_cue(0)
-
-    def _build_settings_panel(self) -> QGroupBox:
-        settings_group = QGroupBox("General")
-        form = QFormLayout()
-
-        self._end_action_combo = QComboBox()
-        self._end_action_combo.addItems([a.value for a in EndAction])
-        self._end_action_combo.currentTextChanged.connect(self._end_action_changed)
-        form.addRow("End action", self._end_action_combo)
-
-        self._restart_on_play_cb = QCheckBox("Restart on play")
-        self._restart_on_play_cb.toggled.connect(self._restart_on_play_toggled)
-        form.addRow("", self._restart_on_play_cb)
-
-        self._persistence_cb = QCheckBox("Enable persistence")
-        self._persistence_cb.toggled.connect(self._persistence_toggled)
-        form.addRow("", self._persistence_cb)
-
-        self._default_cue_combo = QComboBox()
-        self._default_cue_combo.addItem("No default cue")
-        self._default_cue_combo.currentIndexChanged.connect(self._default_cue_changed)
-        form.addRow("Default cue", self._default_cue_combo)
-
-        settings_group.setLayout(form)
-        return settings_group
+        build_root_ui(self)
 
     @property
     def step_tree_container(self) -> QWidget:
@@ -149,17 +86,69 @@ class PropertyCueEditor(PreviewEditWidget):
         return self._property_pane_placeholder
 
     def _end_action_changed(self, text: str) -> None:
-        if self._property_filter is None:
+        cue = self._selected_cue()
+        if cue is None:
             return
-        try:
-            self._property_filter.property_model.general.end_action = EndAction(text)
-        except ValueError:
+        if text not in {a.value for a in EndAction}:
             logger.warning("Unknown end action: %s", text)
+            return
+        cue.end_action = text
 
     def _restart_on_play_toggled(self, checked: bool) -> None:
-        if self._property_filter is None:
+        cue = self._selected_cue()
+        if cue is None:
             return
-        self._property_filter.property_model.general.restart_on_play = checked
+        cue.restart_on_play = checked
+
+    def _selected_cue(self) -> PropertyCue | None:
+        if self._property_filter is None or self._cue_table is None:
+            return None
+        idx = self._cue_table.currentRow()
+        cues = self._property_filter.property_model.cues
+        if 0 <= idx < len(cues):
+            return cues[idx]
+        return None
+
+    def _cue_selection_changed(self) -> None:
+        self._apply_cue_selection_state()
+
+    def _apply_cue_selection_state(self) -> None:
+        cue = self._selected_cue()
+        has_cue = cue is not None
+        if self._end_action_combo is not None:
+            self._end_action_combo.setEnabled(has_cue)
+        if self._restart_on_play_cb is not None:
+            self._restart_on_play_cb.setEnabled(has_cue)
+        if self._add_step_button is not None:
+            self._add_step_button.setEnabled(has_cue)
+        self._refresh_settings_from_model()
+        idx = -1
+        if has_cue and self._cue_table is not None:
+            idx = self._cue_table.currentRow()
+        if self._step_tree is not None:
+            self._step_tree.set_current_cue(idx)
+        if self._property_pane is not None:
+            self._property_pane.set_current_cue(idx)
+
+    def _add_cue(self) -> None:
+        if self._property_filter is None or self._cue_table is None:
+            return
+        model = self._property_filter.property_model
+        name = f"Cue {len(model.cues) + 1}"
+        new_cue = PropertyCue(name=name, steps=[PropertyStep(name="Step 1")])
+        model.cues.append(new_cue)
+        self._refresh_cue_table()
+        self._refresh_default_cue_combo()
+        self._cue_table.selectRow(len(model.cues) - 1)
+
+    def _add_step(self) -> None:
+        cue = self._selected_cue()
+        if cue is None:
+            return
+        cue.steps.append(PropertyStep(name=f"Step {len(cue.steps) + 1}"))
+        self._refresh_cue_table()
+        if self._step_tree is not None:
+            self._step_tree.refresh()
 
     def _persistence_toggled(self, checked: bool) -> None:
         if self._property_filter is None:
@@ -171,12 +160,17 @@ class PropertyCueEditor(PreviewEditWidget):
             return
         self._property_filter.property_model.general.default_cue_index = index - 1
 
+    def _board(self):  # noqa: ANN202 — BoardConfiguration imported lazily
+        if self._property_filter is None:
+            return None
+        scene = self._property_filter.scene
+        return getattr(scene, "board_configuration", None) if scene is not None else None
+
     def _launch_wizard(self) -> None:
         if self._property_filter is None:
             logger.error("No filter available; cannot launch wizard.")
             return
-        scene = self._property_filter.scene
-        board = getattr(scene, "board_configuration", None) if scene is not None else None
+        board = self._board()
         if board is None:
             logger.error("No board configuration available; cannot launch wizard.")
             return
@@ -197,7 +191,17 @@ class PropertyCueEditor(PreviewEditWidget):
 
     def _refresh_tree(self) -> None:
         if self._step_tree is not None:
+            self._step_tree.set_name_resolver(self._resolve_node_name)
             self._step_tree.refresh()
+        if self._property_pane is not None:
+            self._property_pane.refresh_capabilities()
+
+    def _resolve_node_name(self, kind: str, raw_id: str) -> str:
+        return resolve_node_name(self._board(), kind, raw_id)
+
+    def _lookup_fixtures(self, node_path: str) -> list:
+        model = self._property_filter.property_model if self._property_filter is not None else None
+        return lookup_fixtures(self._board(), model, node_path)
 
     def _refresh_cue_table(self) -> None:
         if self._cue_table is None or self._property_filter is None:
@@ -210,33 +214,10 @@ class PropertyCueEditor(PreviewEditWidget):
             self._cue_table.setItem(i, 2, QTableWidgetItem(str(len(cue.steps))))
 
     def _refresh_default_cue_combo(self) -> None:
-        if self._default_cue_combo is None or self._property_filter is None:
-            return
-        self._default_cue_combo.blockSignals(True)
-        self._default_cue_combo.clear()
-        self._default_cue_combo.addItem("No default cue")
-        for i, cue in enumerate(self._property_filter.property_model.cues):
-            self._default_cue_combo.addItem(f"Cue {i + 1} - {cue.name}")
-        idx = self._property_filter.property_model.general.default_cue_index
-        self._default_cue_combo.setCurrentIndex(max(0, idx + 1))
-        self._default_cue_combo.blockSignals(False)
+        refresh_default_cue_combo(self)
 
     def _refresh_settings_from_model(self) -> None:
-        if self._property_filter is None:
-            return
-        general = self._property_filter.property_model.general
-        if self._end_action_combo is not None:
-            self._end_action_combo.blockSignals(True)
-            self._end_action_combo.setCurrentText(general.end_action.value)
-            self._end_action_combo.blockSignals(False)
-        if self._restart_on_play_cb is not None:
-            self._restart_on_play_cb.blockSignals(True)
-            self._restart_on_play_cb.setChecked(general.restart_on_play)
-            self._restart_on_play_cb.blockSignals(False)
-        if self._persistence_cb is not None:
-            self._persistence_cb.blockSignals(True)
-            self._persistence_cb.setChecked(general.persistence)
-            self._persistence_cb.blockSignals(False)
+        refresh_settings_from_model(self)
 
     @override
     def get_channel_list(self) -> list[ExternalChannelDefinition]:
@@ -258,7 +239,10 @@ class PropertyCueEditor(PreviewEditWidget):
         self._property_filter.deserialize()
         self._refresh_cue_table()
         self._refresh_default_cue_combo()
-        self._refresh_settings_from_model()
+        if self._cue_table is not None and self._property_filter.property_model.cues:
+            self._cue_table.selectRow(0)
+        else:
+            self._apply_cue_selection_state()
 
     @override
     def _get_parameters(self) -> dict[str, str]:
@@ -274,26 +258,38 @@ class PropertyCueEditor(PreviewEditWidget):
 
     @override
     def parent_opened(self) -> None:
-        return
+        if self._property_filter is not None and not self._property_filter.property_model.fixture_selection.entries:
+            self._launch_wizard()
+        if self._preview_controller is None:
+            return
+        self._preview_prompt = YesNoDialog(
+            self.get_widget(), "Preview", "Would you like to switch to live preview?",
+            self._start_preview,
+        )
 
     @override
     def parent_closed(self, filter_node: FilterNode) -> None:
-        if self._preview_controller is not None:
-            self._preview_controller.stop()
-            self._preview_active = False
-            if self._preview_button is not None:
-                self._preview_button.setText("Start preview")
+        self._stop_preview()
         super().parent_closed(filter_node)
 
     def _toggle_preview(self) -> None:
-        if self._preview_controller is None or self._preview_button is None:
-            return
         if self._preview_active:
-            self._preview_controller.stop()
-            self._preview_active = False
-            self._preview_button.setText("Start preview")
+            self._stop_preview()
+        else:
+            self._start_preview()
+
+    def _start_preview(self) -> None:
+        if self._preview_controller is None or self._preview_button is None or self._preview_active:
             return
         self._preview_controller.set_playing(True)
         self._preview_controller.start()
         self._preview_active = True
         self._preview_button.setText("Stop preview")
+
+    def _stop_preview(self) -> None:
+        if self._preview_controller is None:
+            return
+        self._preview_controller.stop()
+        self._preview_active = False
+        if self._preview_button is not None:
+            self._preview_button.setText("Start preview")

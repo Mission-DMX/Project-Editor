@@ -12,13 +12,14 @@ from __future__ import annotations
 from logging import getLogger
 from typing import TYPE_CHECKING
 
-from model.ofl.ofl_fixture import CapabilityType
+from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
 from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from model.ofl.fixture import UsedFixture
+    from model.ofl.ofl_fixture import Wheel
 
 logger = getLogger(__name__)
 
@@ -47,18 +48,33 @@ _CAPABILITY_TYPE_TO_ENABLED: dict[CapabilityType, EnabledCapability] = {
 }
 
 
-def _resolve_wheel_slot(channel_name: str) -> EnabledCapability | None:
-    """A WHEEL_SLOT capability maps to COLOUR for colour wheels, GOBO otherwise."""
-    lowered = channel_name.lower()
-    if "color" in lowered or "colour" in lowered:
-        return EnabledCapability.COLOUR
-    return EnabledCapability.GOBO
+_GOBO_SLOT_TYPES = frozenset(
+    {WheelSlotType.GOBO, WheelSlotType.ANIMATED_GOBO_START, WheelSlotType.ANIMATED_GOBO_END},
+)
+
+
+def _wheels_of(fixture: UsedFixture) -> dict[str, Wheel]:
+    """Return the fixture's OFL wheel map (private access to the OFL template)."""
+    ofl = getattr(fixture, "_fixture", None)
+    return getattr(ofl, "wheels", {}) if ofl is not None else {}
+
+
+def _capabilities_from_wheels(fixture: UsedFixture) -> set[EnabledCapability]:
+    """Inspect wheel slot types directly: GOBO slots → GOBO; COLOR slots → COLOUR."""
+    caps: set[EnabledCapability] = set()
+    for wheel in _wheels_of(fixture).values():
+        for slot in getattr(wheel, "slots", []):
+            if slot.type in _GOBO_SLOT_TYPES:
+                caps.add(EnabledCapability.GOBO)
+            elif slot.type is WheelSlotType.COLOR:
+                caps.add(EnabledCapability.COLOUR)
+    return caps
 
 
 def _capability_for(cap_type: CapabilityType, channel_name: str) -> EnabledCapability | None:
-    """Return the EnabledCapability for a single OFL capability, or None if unknown."""
+    """Return the EnabledCapability for a single non-wheel OFL capability, or None if unknown."""
     if cap_type == CapabilityType.WHEEL_SLOT:
-        return _resolve_wheel_slot(channel_name)
+        return None  # Handled via wheel-slot-type inspection in _capabilities_from_wheels.
     mapped = _CAPABILITY_TYPE_TO_ENABLED.get(cap_type)
     if mapped is None:
         logger.debug(
@@ -70,15 +86,10 @@ def _capability_for(cap_type: CapabilityType, channel_name: str) -> EnabledCapab
 
 
 def discover_capabilities(fixtures: Iterable[UsedFixture]) -> set[EnabledCapability]:
-    """Walk every channel template of each fixture and union the mapped capabilities.
-
-    Fixtures whose channels have no template or no capabilities are skipped.
-    DIMMER cannot be inferred from a template capability alone (no OFL type
-    corresponds to a dedicated master dimmer that isn't INTENSITY), so this
-    function treats INTENSITY as DIMMER consistently.
-    """
+    """Union per-fixture capabilities derived from channel templates and wheel slot types."""
     result: set[EnabledCapability] = set()
     for fixture in fixtures:
+        result |= _capabilities_from_wheels(fixture)
         channels = getattr(fixture, "fixture_channels", None)
         if not channels:
             continue
@@ -97,3 +108,14 @@ def discover_capabilities(fixtures: Iterable[UsedFixture]) -> set[EnabledCapabil
                 if mapped is not None:
                     result.add(mapped)
     return result
+
+
+def gobo_wheels_of(fixture: UsedFixture) -> list[tuple[str, Wheel]]:
+    """Return ``(wheel_name, wheel)`` tuples for wheels that contain gobo slots."""
+    out: list[tuple[str, Wheel]] = []
+    for name, wheel in _wheels_of(fixture).items():
+        for slot in getattr(wheel, "slots", []):
+            if slot.type in _GOBO_SLOT_TYPES:
+                out.append((name, wheel))
+                break
+    return out

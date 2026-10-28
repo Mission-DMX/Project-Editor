@@ -115,6 +115,67 @@ class DimmerPropertyTest(unittest.TestCase):
         self.assertEqual([0, 20, 40, 60], starts)
 
 
+class CompilerGoboMultiWheelTest(unittest.TestCase):
+    """Verify the compiler enumerates channels per the assignment's wheel_count."""
+
+    def test_two_wheel_assignment_emits_both_channel_pairs(self) -> None:
+        from unittest.mock import patch
+
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.virtual_filters.property_cues.distribution import Distribution
+        from model.virtual_filters.property_cues.model.fixture_selection import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
+        from model.virtual_filters.property_cues.model.property_cue import PropertyCue
+        from model.virtual_filters.property_cues.model.property_step import (
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyStep,
+        )
+
+        selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="FX")],
+            enabled_capabilities={EnabledCapability.GOBO},
+        )
+        step = PropertyStep(name="s0", duration_40hz=40, assignments={
+            "fixture:FX": PropertyAssignments(by_property={
+                "gobo": ManualPropertyAssignment(
+                    values={"wheel_count": 2, "slots": {0: 3, 1: 7}, "rotations": {0: 0.2, 1: -0.4}},
+                    distribution=Distribution(),
+                ),
+            }),
+        })
+        model = PropertyCueFilterModel(
+            fixture_selection=selection,
+            cues=[PropertyCue(name="C1", steps=[step])],
+        )
+        with patch("model.virtual_filters.property_cues.compiler.build_postprocess_chain",
+                   lambda cap, ctx: _passthrough_result(cap, ctx)):
+            result = compile_property_model(model, "cuef", _StubScene())
+        names = [ch for ch, _ in result.native_model.channels]
+        self.assertIn("FX__goboslot_0", names)
+        self.assertIn("FX__goborotation_0", names)
+        self.assertIn("FX__goboslot_1", names)
+        self.assertIn("FX__goborotation_1", names)
+
+
+class _StubScene:
+    pass
+
+
+def _passthrough_result(cap: str, ctx):  # noqa: ANN001 - ad-hoc stub used by patch
+    from model.virtual_filters.property_cues.postprocess import PostprocessOutput
+
+    return PostprocessOutput(
+        filters=(),
+        external_ports={cap: (ctx.cue_filter_id, f"{ctx.channel_name_prefix}__{cap}")},
+    )
+
+
 class PositionPropertyTest(unittest.TestCase):
 
     def test_channel_specs(self) -> None:

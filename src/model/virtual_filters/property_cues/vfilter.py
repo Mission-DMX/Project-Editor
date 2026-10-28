@@ -111,6 +111,8 @@ class PropertyBasedCueFilter(PreviewFilter):
     @override
     def deserialize(self) -> None:
         raw = self._filter_configurations.get("cues-prop-data", "")
-        self._property_model = PropertyCueFilterModel.from_json_str(raw)
+        # Mutate in place -- UI widgets cache a reference to this model and must
+        # observe the loaded data without reinstalling their bindings.
+        self._property_model.load_from_json_str(raw)
         self._last_compile = None
         self._rebuild_io()

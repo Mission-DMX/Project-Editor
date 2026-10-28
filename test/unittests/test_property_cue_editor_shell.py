@@ -132,6 +132,80 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertEqual(1, editor2._cue_table.rowCount())
         self.assertEqual("Beta", editor2._cue_table.item(0, 1).text())
 
+    def test_add_cue_button_appends_cue_with_default_step(self) -> None:
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        self.assertEqual(0, editor._cue_table.rowCount())
+        editor._add_cue()
+        self.assertEqual(1, len(f.property_model.cues))
+        self.assertEqual("Cue 1", f.property_model.cues[0].name)
+        self.assertEqual(1, len(f.property_model.cues[0].steps))
+        self.assertEqual(1, editor._cue_table.rowCount())
+        # Newly added cue should be selected.
+        self.assertEqual(0, editor._cue_table.currentRow())
+
+    def test_cue_settings_disabled_without_selection(self) -> None:
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        # No cues -> per-cue widgets must be disabled.
+        self.assertFalse(editor._end_action_combo.isEnabled())
+        self.assertFalse(editor._restart_on_play_cb.isEnabled())
+        self.assertFalse(editor._add_step_button.isEnabled())
+        editor._add_cue()
+        self.assertTrue(editor._end_action_combo.isEnabled())
+        self.assertTrue(editor._restart_on_play_cb.isEnabled())
+        self.assertTrue(editor._add_step_button.isEnabled())
+
+    def test_end_action_combo_binds_to_selected_cue(self) -> None:
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        editor._add_cue()
+        editor._add_cue()
+        editor._cue_table.selectRow(1)
+        editor._end_action_combo.setCurrentText("next_cue")
+        self.assertEqual("hold", f.property_model.cues[0].end_action)
+        self.assertEqual("next_cue", f.property_model.cues[1].end_action)
+        # Switching selection back to cue 0 must reflect its own values.
+        editor._cue_table.selectRow(0)
+        self.assertEqual("hold", editor._end_action_combo.currentText())
+
+    def test_cue_selection_updates_step_tree(self) -> None:
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        editor._add_cue()
+        editor._add_cue()
+        editor._cue_table.selectRow(1)
+        self.assertEqual(1, editor._step_tree._current_cue_index)
+        editor._cue_table.selectRow(0)
+        self.assertEqual(0, editor._step_tree._current_cue_index)
+
+    def test_splitter_is_vertical_and_property_pane_has_min_height(self) -> None:
+        from PySide6.QtCore import Qt
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
+            PropertyCueEditor,
+        )
+
+        f = self._make_filter()
+        editor = PropertyCueEditor(f=f)
+        self.assertEqual(Qt.Orientation.Vertical, editor._splitter.orientation())
+        self.assertGreaterEqual(editor._property_pane.minimumHeight(), 100)
+
 
 @unittest.skipUnless(_HAS_PYSIDE, "FilterTypeEnumeration import is cheap but keep guard parity")
 class PropertyBasedCuesNodeRegistrationTests(unittest.TestCase):

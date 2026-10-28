@@ -86,23 +86,46 @@ class CapabilityDiscoveryTests(unittest.TestCase):
         )
         self.assertEqual(discover_capabilities([fixture]), {EnabledCapability.COLOUR})
 
-    def test_capability_discovery_wheel_slot_gobo_vs_colour(self) -> None:
-        from model.ofl.ofl_fixture import CapabilityType
+    def test_capability_discovery_gobo_wheel_from_slot_types(self) -> None:
+        """A wheel whose slots are typed GOBO should surface GOBO regardless of name."""
+        from model.ofl.ofl_fixture import WheelSlotType
         from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
             discover_capabilities,
         )
 
-        colour_wheel = self._make_fixture_with_capabilities(
-            [("Color Wheel 1", CapabilityType.WHEEL_SLOT)]
+        colour_slot = MagicMock(); colour_slot.type = WheelSlotType.COLOR
+        gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
+        colour_wheel = MagicMock(); colour_wheel.slots = [colour_slot]
+        gobo_wheel = MagicMock(); gobo_wheel.slots = [gobo_slot]
+
+        fixture_colour = self._make_fixture_with_capabilities([])
+        fixture_colour._fixture = MagicMock(); fixture_colour._fixture.wheels = {"Colour Wheel": colour_wheel}
+        fixture_gobo = self._make_fixture_with_capabilities([])
+        fixture_gobo._fixture = MagicMock(); fixture_gobo._fixture.wheels = {"Gobo Wheel": gobo_wheel}
+        fixture_without_wheel = self._make_fixture_with_capabilities([])
+        fixture_without_wheel._fixture = MagicMock(); fixture_without_wheel._fixture.wheels = {}
+
+        self.assertEqual(discover_capabilities([fixture_colour]), {EnabledCapability.COLOUR})
+        self.assertEqual(discover_capabilities([fixture_gobo]), {EnabledCapability.GOBO})
+        self.assertEqual(discover_capabilities([fixture_without_wheel]), set())
+
+    def test_gobo_wheels_of_returns_only_gobo_wheels(self) -> None:
+        from model.ofl.ofl_fixture import WheelSlotType
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
+            gobo_wheels_of,
         )
-        gobo_wheel = self._make_fixture_with_capabilities(
-            [("Gobo Wheel 1", CapabilityType.WHEEL_SLOT)]
-        )
-        self.assertEqual(
-            discover_capabilities([colour_wheel]), {EnabledCapability.COLOUR}
-        )
-        self.assertEqual(discover_capabilities([gobo_wheel]), {EnabledCapability.GOBO})
+
+        colour_slot = MagicMock(); colour_slot.type = WheelSlotType.COLOR
+        gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
+        colour_wheel = MagicMock(); colour_wheel.slots = [colour_slot]
+        gobo_wheel = MagicMock(); gobo_wheel.slots = [gobo_slot]
+        fixture = MagicMock()
+        fixture._fixture = MagicMock(); fixture._fixture.wheels = {
+            "Colour Wheel": colour_wheel, "Gobo Wheel": gobo_wheel,
+        }
+        wheels = gobo_wheels_of(fixture)
+        self.assertEqual([n for n, _ in wheels], ["Gobo Wheel"])
 
     def test_capability_discovery_unknown_type_skipped(self) -> None:
         from model.ofl.ofl_fixture import CapabilityType
