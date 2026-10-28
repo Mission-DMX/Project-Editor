@@ -1,10 +1,14 @@
-"""Resolve which EnabledCapability values are available for a selection.
+"""Model-layer helpers to classify fixture capabilities for the property-cue vfilter.
 
-Reads the fixture channel types and maps them via the
-``capability_type_to_enabled_capability`` table into the vfilter's
-user-facing capability enum. Keeps the mapping conservative: for
-anything that cannot be categorised unambiguously, a ``DEBUG`` message
-is logged and the capability is skipped rather than guessed.
+Reads the fixture channel types and the OFL wheel slot types and maps them
+to the vfilter's :class:`EnabledCapability` enum. Keeps the mapping
+conservative: for anything that cannot be categorised unambiguously a
+``DEBUG`` message is logged and the capability is skipped rather than
+guessed.
+
+Lives in the model layer so the vfilter / compiler can inspect fixtures
+without pulling view-side code; the editor UI still re-uses these helpers
+by importing them from here.
 """
 
 from __future__ import annotations
@@ -24,9 +28,6 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-# Direct 1:1 mappings from OFL CapabilityType to the vfilter's EnabledCapability.
-# PAN/TILT are both reported as POSITION; WHEEL_SLOT is treated as GOBO when the
-# wheel is not a dedicated colour wheel (see _resolve_wheel_slot below).
 _CAPABILITY_TYPE_TO_ENABLED: dict[CapabilityType, EnabledCapability] = {
     CapabilityType.COLOR_INTENSITY: EnabledCapability.COLOUR,
     CapabilityType.COLOR_PRESET: EnabledCapability.COLOUR,
@@ -119,3 +120,41 @@ def gobo_wheels_of(fixture: UsedFixture) -> list[tuple[str, Wheel]]:
                 out.append((name, wheel))
                 break
     return out
+
+
+_BEAM_SUB_CAPABILITY_BY_TYPE: dict[CapabilityType, str] = {
+    CapabilityType.ZOOM: "zoom",
+    CapabilityType.BEAM_ANGLE: "zoom",
+    CapabilityType.IRIS: "iris",
+    CapabilityType.IRIS_EFFECT: "iris",
+    CapabilityType.PRISM: "prism",
+    CapabilityType.PRISM_ROTATION: "prism",
+}
+
+
+def beam_sub_capabilities(fixture: UsedFixture) -> set[str]:
+    """Return the beam sub-capabilities (``"zoom"``, ``"iris"``, ``"prism"``) a fixture has.
+
+    Used by the compiler to decide which of :class:`BeamProperty`'s channels
+    should be exposed on this specific fixture. Walking the OFL channel
+    templates mirrors :func:`discover_capabilities` but keeps the finer-
+    grained zoom/iris/prism split so a wash fixture with only ``ZOOM``
+    doesn't produce iris or prism output channels.
+    """
+    found: set[str] = set()
+    channels = getattr(fixture, "fixture_channels", None)
+    if not channels:
+        return found
+    for channel in channels:
+        template = getattr(channel, "channel_template", None)
+        if template is None:
+            continue
+        try:
+            capabilities = template.get_capabilities()
+        except AttributeError:
+            continue
+        for capability in capabilities:
+            sub = _BEAM_SUB_CAPABILITY_BY_TYPE.get(capability.type)
+            if sub is not None:
+                found.add(sub)
+    return found

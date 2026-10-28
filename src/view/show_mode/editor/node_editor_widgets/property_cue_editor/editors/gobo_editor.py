@@ -23,9 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
-    gobo_wheels_of,
-)
+from model.virtual_filters.property_cues.capability_discovery import gobo_wheels_of
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
 from ._property_editor_base import PropertyEditorBase

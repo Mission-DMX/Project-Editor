@@ -20,8 +20,6 @@ class BeamEditor(PropertyEditorBase):
 
     def _install_manual_widgets(self, layout: QVBoxLayout) -> None:
         form = QFormLayout()
-        self._focus = JogwheelSpinBox()
-        self._focus.setRange(0, 255)
         self._zoom = JogwheelSpinBox()
         self._zoom.setRange(0, 255)
         self._prism_sel = JogwheelSpinBox()
@@ -31,7 +29,6 @@ class BeamEditor(PropertyEditorBase):
         self._prism_rot.setDecimals(4)
         self._iris = JogwheelSpinBox()
         self._iris.setRange(0, 255)
-        form.addRow("Focus", self._focus)
         form.addRow("Zoom", self._zoom)
         form.addRow("Prism selection", self._prism_sel)
         form.addRow("Prism rotation", self._prism_rot)
@@ -40,7 +37,6 @@ class BeamEditor(PropertyEditorBase):
 
     def _manual_values(self) -> dict[str, Any]:
         return {
-            "focus": int(self._focus.value()),
             "zoom": int(self._zoom.value()),
             "prism_selection": int(self._prism_sel.value()),
             "prism_rotation": float(self._prism_rot.value()),
@@ -48,7 +44,6 @@ class BeamEditor(PropertyEditorBase):
         }
 
     def _load_manual_values(self, values: dict[str, Any]) -> None:
-        self._focus.setValue(int(values.get("focus", 0)))
         self._zoom.setValue(int(values.get("zoom", 0)))
         self._prism_sel.setValue(int(values.get("prism_selection", 0)))
         self._prism_rot.setValue(float(values.get("prism_rotation", 0.0)))

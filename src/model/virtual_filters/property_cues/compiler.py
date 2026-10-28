@@ -9,6 +9,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model.filter_data.transfer_function import TransferFunction
+from model.virtual_filters.property_cues._default_specs import default_specs_for_fixtures
 from model.virtual_filters.property_cues._native_builder import build_native
 from model.virtual_filters.property_cues.channel_consolidator import consolidate
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
@@ -24,6 +25,7 @@ from model.virtual_filters.property_cues.properties import (
     BeamProperty,
     ColourProperty,
     DimmerProperty,
+    FocusProperty,
     FrostProperty,
     GoboProperty,
     PositionProperty,
@@ -44,18 +46,26 @@ logger = getLogger(__name__)
 
 ResolvedChild = tuple[str, int | None]
 FixtureResolver = Callable[[FixtureSelection], list[ResolvedChild]]
+NameResolver = Callable[[str], str]
+# Return the set of enabled-capability string values the fixture supports.
+CapabilityLookup = Callable[[str], set[str]]
+# Return the number of gobo wheels on the fixture (0 if none).
+GoboWheelCountLookup = Callable[[str], int]
+# Return the beam sub-capabilities ("zoom", "iris", "prism") a fixture has.
+BeamSubCapabilityLookup = Callable[[str], set[str]]
 
 _SANITISE = re.compile(r"[^A-Za-z0-9_]")
 _PROPERTY_CLASS: dict[str, type[Property]] = {
     "dimmer": DimmerProperty, "position": PositionProperty,
     "colour": ColourProperty, "color": ColourProperty,
-    "beam": BeamProperty, "gobo": GoboProperty, "frost": FrostProperty,
+    "beam": BeamProperty, "gobo": GoboProperty,
+    "focus": FocusProperty, "frost": FrostProperty,
 }
 _CAPABILITY_FROM_LOCAL: dict[str, str] = {
     "pan": "pan", "tilt": "tilt",
     "brightness": "dimmer", "strobefreq": "dimmer", "duty_cycle": "dimmer",
-    "color": "colour",
-    "focus": "beam", "zoom": "beam", "iris": "beam",
+    "color": "colour", "focus": "focus",
+    "zoom": "beam", "iris": "beam",
     "prism_selection": "beam", "prism_rotation": "beam",
     "goboslot": "gobo", "goborotation": "gobo", "frost_intensity": "frost",
 }
@@ -72,8 +82,19 @@ def _default_resolver(selection: FixtureSelection) -> list[ResolvedChild]:
     return [(e.id, None) for e in selection.entries if e.kind is SelectionEntryKind.FIXTURE]
 
 
-def _prefix(fixture_id: str, segment: int | None) -> str:
-    base = _SANITISE.sub("_", fixture_id)
+def _default_name_resolver(fixture_id: str) -> str:
+    return fixture_id
+
+
+def _prefix(fixture_id: str, segment: int | None, name_resolver: NameResolver) -> str:
+    """Produce a sanitised, human-readable channel prefix for a fixture.
+
+    ``name_resolver`` maps a raw fixture id (typically its UUID) to a stage
+    name (e.g. ``"Hero Spot #3"``). The result is passed through
+    :data:`_SANITISE` so stage names with spaces or punctuation produce a
+    legal filter channel identifier.
+    """
+    base = _SANITISE.sub("_", name_resolver(fixture_id))
     return base if segment is None else f"{base}.segment{int(segment)}"
 
 
@@ -102,15 +123,16 @@ def _infer_capability(local: str) -> str:
     return local
 
 
-def _build_property(property_id: str, assignment: ManualPropertyAssignment) -> Property:
+def _build_property(property_id: str, assignment: ManualPropertyAssignment,
+                    fixture_kwargs: dict[str, object]) -> Property:
     cls = _PROPERTY_CLASS.get(property_id)
     if cls is None:
         raise ValueError(f"Unknown property type: {property_id!r}")
-    kwargs: dict[str, object] = dict(assignment.values)
     try:
-        kwargs["transition"] = TransferFunction(assignment.transition)
+        transition = TransferFunction(assignment.transition)
     except ValueError:
-        kwargs["transition"] = TransferFunction.LINEAR
+        transition = TransferFunction.LINEAR
+    kwargs = {**fixture_kwargs, **assignment.values, "transition": transition}
     try:
         return cls(**kwargs)  # type: ignore[arg-type]
     except TypeError as exc:
@@ -118,23 +140,24 @@ def _build_property(property_id: str, assignment: ManualPropertyAssignment) -> P
 
 
 def _spec_table_for(
-    property_id: str, prefix: str, assignment: PropertyAssignment | None = None,
+    property_id: str, prefix: str, assignment: PropertyAssignment | None,
+    fixture_kwargs: dict[str, object],
 ) -> dict[str, ChannelSpec]:
     """Return channel specs for ``property_id`` prefixed with ``prefix``.
 
-    For manual assignments the property is constructed with the user's own
-    values so dynamic shapes (``GoboProperty.wheel_count``, future per-fixture
-    scales) propagate into the channel list.
+    ``fixture_kwargs`` carries per-fixture shape (gobo wheel_count, beam
+    include_* flags); manual assignments override with the user's values.
     """
     cls = _PROPERTY_CLASS.get(property_id)
     if cls is None:
         return {}
     try:
         if isinstance(assignment, ManualPropertyAssignment):
-            kwargs = {k: v for k, v in assignment.values.items() if k != "transition"}
+            kwargs = {**fixture_kwargs,
+                      **{k: v for k, v in assignment.values.items() if k != "transition"}}
             prop = cls(**kwargs)  # type: ignore[arg-type]
         else:
-            prop = cls()  # type: ignore[call-arg]
+            prop = cls(**fixture_kwargs)  # type: ignore[arg-type]
     except TypeError:
         return {}
     return {f"{prefix}__{s.name}": ChannelSpec(
@@ -146,9 +169,10 @@ def _spec_table_for(
 def _emit_requests(
     assignment: PropertyAssignment, property_id: str, step_start: int, step_duration: int,
     child_index: int, library: dict[str, EffectPreset] | None,
+    fixture_kwargs: dict[str, object],
 ) -> dict[str, list]:
     if isinstance(assignment, ManualPropertyAssignment):
-        prop = _build_property(property_id, assignment)
+        prop = _build_property(property_id, assignment, fixture_kwargs)
         return prop.generate_requests(
             step_start_40hz=step_start, step_duration_40hz=step_duration,
             child_index=child_index, distribution=assignment.distribution,
@@ -165,7 +189,12 @@ def _emit_requests(
 
 def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild],
                  library: dict[str, EffectPreset] | None,
+                 name_resolver: NameResolver,
+                 gobo_wheel_count_lookup: GoboWheelCountLookup | None,
+                 beam_sub_capabilities_lookup: BeamSubCapabilityLookup | None,
                  ) -> tuple[list[RequestGroup], dict[str, ChannelSpec]]:
+    from model.virtual_filters.property_cues._default_specs import property_kwargs_for_fixture
+
     groups: list[RequestGroup] = []
     specs: dict[str, ChannelSpec] = {}
     step_start = 0
@@ -177,12 +206,15 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
             depth = len([p for p in node_path.split("/") if p])
             for pid, assignment in assignments.by_property.items():
                 for ci, child in matches:
-                    prefix = _prefix(child[0], child[1])
-                    local_specs = _spec_table_for(pid, prefix, assignment)
+                    prefix = _prefix(child[0], child[1], name_resolver)
+                    fixture_kwargs = property_kwargs_for_fixture(
+                        pid, child[0], gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
+                    )
+                    local_specs = _spec_table_for(pid, prefix, assignment, fixture_kwargs)
                     specs.update(local_specs)
                     try:
                         raw = _emit_requests(assignment, pid, step_start,
-                                             step.duration_40hz, ci, library)
+                                             step.duration_40hz, ci, library, fixture_kwargs)
                     except ValueError as exc:
                         raise ValueError(
                             f"Cue {cue_index} step {si} property {pid!r}"
@@ -229,13 +261,25 @@ def compile_property_model(
     preset_library: dict[str, EffectPreset] | None = None,
     pos: tuple[int, int] | tuple[float, float] | None = None,
     fixture_resolver: FixtureResolver | None = None,
+    name_resolver: NameResolver | None = None,
+    capability_lookup: CapabilityLookup | None = None,
+    gobo_wheel_count_lookup: GoboWheelCountLookup | None = None,
+    beam_sub_capabilities_lookup: BeamSubCapabilityLookup | None = None,
 ) -> CompileResult:
     """See module docstring."""
     children = (fixture_resolver or _default_resolver)(model.fixture_selection)
-    all_specs: dict[str, ChannelSpec] = {}
+    name_fn = name_resolver or _default_name_resolver
+    all_specs: dict[str, ChannelSpec] = default_specs_for_fixtures(
+        model.fixture_selection, children,
+        lambda fid, segment: _prefix(fid, segment, name_fn),
+        capability_lookup, gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
+    )
     per_cue: list[tuple[int, str, list[RequestGroup]]] = []
     for cue_index, cue in enumerate(model.cues):
-        groups, specs = _collect_cue(cue_index, cue, children, preset_library)
+        groups, specs = _collect_cue(
+            cue_index, cue, children, preset_library, name_fn,
+            gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
+        )
         all_specs.update(specs)
         per_cue.append((cue_index, cue.name or f"Cue {cue_index + 1}", groups))
     solver = KeyframeSolver()

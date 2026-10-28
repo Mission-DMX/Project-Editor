@@ -56,21 +56,111 @@ class PropertyBasedCueFilter(PreviewFilter):
         }
         self._filter_configurations.setdefault("cues-prop-data", "")
         self._out_data_types = {}
+        # Repopulate from the current property model so the filter node knows
+        # which output terminals to show. ``Filter.__init__`` calls this hook
+        # before the subclass has set up ``_property_model``; the getattr
+        # guard skips the compile on that first pre-init call.
+        model = getattr(self, "_property_model", None)
+        if model is None:
+            return
+        if not model.cues and not model.fixture_selection.entries:
+            return
+        self._last_compile = None
+        try:
+            self._ensure_compiled()
+        except (ValueError, KeyError, AttributeError) as exc:
+            logger.warning("Failed to compile property model during I/O refresh: %s", exc)
 
     def _ensure_compiled(self) -> CompileResult:
         """Compile the model if needed and refresh ``self._out_data_types``."""
         if self._last_compile is None:
+            name_map = self._build_fixture_name_map()
             self._last_compile = compile_property_model(
                 self._property_model,
                 cue_filter_id=self.filter_id,
                 scene=self.scene,
                 pos=self.pos,
+                name_resolver=lambda fid: name_map.get(fid, fid),
+                capability_lookup=self._capability_lookup,
+                gobo_wheel_count_lookup=self._gobo_wheel_count_lookup,
+                beam_sub_capabilities_lookup=self._beam_sub_capabilities_lookup,
             )
             self._out_data_types = {
                 virtual_port: self._last_compile.channel_specs[virtual_port].data_type
                 for virtual_port in self._last_compile.channel_specs
             }
         return self._last_compile
+
+    def _find_fixture(self, fixture_id: str):  # noqa: ANN202 — UsedFixture lazy import
+        scene = getattr(self, "scene", None)
+        board = getattr(scene, "board_configuration", None) if scene is not None else None
+        if board is None:
+            return None
+        for fixture in getattr(board, "fixtures", []) or []:
+            if str(getattr(fixture, "uuid", "")) == fixture_id:
+                return fixture
+        return None
+
+    def _capability_lookup(self, fixture_id: str) -> set[str]:
+        """Return the capabilities the fixture actually supports (as string values)."""
+        fixture = self._find_fixture(fixture_id)
+        if fixture is None:
+            # Unknown fixture: permit every enabled capability so the user still
+            # sees output terminals.
+            return {cap.value for cap in self._property_model.fixture_selection.enabled_capabilities}
+        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
+        return {cap.value for cap in discover_capabilities([fixture])}
+
+    def _gobo_wheel_count_lookup(self, fixture_id: str) -> int:
+        """Return the number of gobo wheels on the fixture (0 if none)."""
+        fixture = self._find_fixture(fixture_id)
+        if fixture is None:
+            return 1
+        from model.virtual_filters.property_cues.capability_discovery import gobo_wheels_of
+        return len(gobo_wheels_of(fixture))
+
+    def _beam_sub_capabilities_lookup(self, fixture_id: str) -> set[str]:
+        """Return the beam sub-capabilities (``"zoom"``, ``"iris"``, ``"prism"``) the fixture has."""
+        fixture = self._find_fixture(fixture_id)
+        if fixture is None:
+            return {"zoom", "iris", "prism"}
+        from model.virtual_filters.property_cues.capability_discovery import beam_sub_capabilities
+        return beam_sub_capabilities(fixture)
+
+    def _build_fixture_name_map(self) -> dict[str, str]:
+        """Build ``{fixture_id: display_name}`` with collision-safe suffixes.
+
+        When several fixtures share the same stage name (e.g. two "Hero Spot"
+        instances), each gets an 8-character hex tail from its UUID appended
+        so the resulting output port names remain distinct and deterministic
+        across show reloads. Fixtures whose name is already unique keep the
+        bare name. If the board is detached (tests, headless) the map is
+        empty and the resolver falls back to the raw id.
+        """
+        scene = getattr(self, "scene", None)
+        board = getattr(scene, "board_configuration", None) if scene is not None else None
+        if board is None:
+            return {}
+        bases: dict[str, str] = {}
+        for fixture in getattr(board, "fixtures", []) or []:
+            fid = str(getattr(fixture, "uuid", ""))
+            if not fid:
+                continue
+            bases[fid] = (
+                getattr(fixture, "name_on_stage", None)
+                or getattr(fixture, "name", None)
+                or fid
+            )
+        counts: dict[str, int] = {}
+        for name in bases.values():
+            counts[name] = counts.get(name, 0) + 1
+        result: dict[str, str] = {}
+        for fid, name in bases.items():
+            if counts[name] > 1:
+                result[fid] = f"{name}_{fid.replace('-', '')[:8]}"
+            else:
+                result[fid] = name
+        return result
 
     def invalidate_compile_cache(self) -> None:
         """Drop the cached :class:`CompileResult`; next call recompiles."""

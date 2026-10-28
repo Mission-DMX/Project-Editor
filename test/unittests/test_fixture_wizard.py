@@ -34,7 +34,7 @@ def setUpModule() -> None:  # noqa: N802 — unittest hook naming
 
 @unittest.skipUnless(_PYSIDE6_AVAILABLE, "PySide6 required")
 class CapabilityDiscoveryTests(unittest.TestCase):
-    """Pure-Python coverage of ``_capability_discovery.discover_capabilities``.
+    """Pure-Python coverage of ``capability_discovery.discover_capabilities``.
 
     Fixtures are built as :class:`MagicMock` because a real ``UsedFixture``
     requires a full ``BoardConfiguration``, an ``OflFixture`` and a wired
@@ -61,9 +61,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
     def test_capability_discovery_pan_tilt_maps_to_position(self) -> None:
         from model.ofl.ofl_fixture import CapabilityType
         from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
-        from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
-            discover_capabilities,
-        )
+        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
 
         fixture = self._make_fixture_with_capabilities(
             [("Pan", CapabilityType.PAN), ("Tilt", CapabilityType.TILT)]
@@ -73,9 +71,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
     def test_capability_discovery_colour_only(self) -> None:
         from model.ofl.ofl_fixture import CapabilityType
         from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
-        from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
-            discover_capabilities,
-        )
+        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
 
         fixture = self._make_fixture_with_capabilities(
             [
@@ -90,9 +86,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
         """A wheel whose slots are typed GOBO should surface GOBO regardless of name."""
         from model.ofl.ofl_fixture import WheelSlotType
         from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
-        from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
-            discover_capabilities,
-        )
+        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
 
         colour_slot = MagicMock(); colour_slot.type = WheelSlotType.COLOR
         gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
@@ -112,9 +106,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
 
     def test_gobo_wheels_of_returns_only_gobo_wheels(self) -> None:
         from model.ofl.ofl_fixture import WheelSlotType
-        from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
-            gobo_wheels_of,
-        )
+        from model.virtual_filters.property_cues.capability_discovery import gobo_wheels_of
 
         colour_slot = MagicMock(); colour_slot.type = WheelSlotType.COLOR
         gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
@@ -129,9 +121,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
 
     def test_capability_discovery_unknown_type_skipped(self) -> None:
         from model.ofl.ofl_fixture import CapabilityType
-        from view.show_mode.editor.node_editor_widgets.property_cue_editor.wizard._capability_discovery import (
-            discover_capabilities,
-        )
+        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
 
         fixture = self._make_fixture_with_capabilities(
             [("Fog Out", CapabilityType.FOG)]

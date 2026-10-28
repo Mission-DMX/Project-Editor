@@ -29,14 +29,13 @@ from PySide6.QtWidgets import (
     QWizardPage,
 )
 
+from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
 from model.virtual_filters.property_cues.model.fixture_selection import (
     EnabledCapability,
     FixtureSelection,
     FixtureSelectionEntry,
     SelectionEntryKind,
 )
-
-from ._capability_discovery import discover_capabilities
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget
