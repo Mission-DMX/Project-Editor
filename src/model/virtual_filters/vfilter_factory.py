@@ -3,9 +3,7 @@
 Internal module used exclusively by :func:`model.filters.factory.construct_filter_instance`
 to construct :class:`~model.filter.VirtualFilter` subclasses. External callers should go
 through the unified :func:`construct_filter_instance` entry point rather than importing
-from here directly — v-filter classes aren't registered in the type → subclass map today
-(their constructors use the pre-migration ``(scene, filter_id, pos)`` signature), so this
-module provides the dispatch instead.
+from here directly.
 """
 
 from __future__ import annotations
@@ -37,12 +35,11 @@ if TYPE_CHECKING:
 def _construct_virtual_filter_instance_legacy(
     scene: Scene, filter_type: int, filter_id: str, pos: tuple[int, int] | tuple[float, float] | None = None
 ) -> VirtualFilter | None:
-    """Original match-based v-filter construction.
+    """Match-based v-filter construction.
 
     Used by :func:`model.filters.factory.construct_filter_instance` as the fallback for
     v-filter type codes that do not yet have a subclass registered under
-    :mod:`model.filters.virtual`. Once every v-filter has been migrated this function and
-    its public shim can be deleted.
+    :mod:`model.filters.virtual`.
     """
     if not filter_type < 0:
         raise ValueError("The provided filter is not a virtual description.")

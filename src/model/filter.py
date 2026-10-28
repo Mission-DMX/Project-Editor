@@ -246,8 +246,7 @@ class Filter:
 
         This is the preferred entry point for UI code that mutates ``filter_configurations``
         because it keeps dynamic terminal signatures (e.g. switch inputs, cue list outputs,
-        sequencer channels) in sync with the configuration value. Direct dict mutation
-        remains legal during migration but will not trigger an automatic rebuild.
+        sequencer channels) in sync with the configuration value.
         """
         self._filter_configurations[key] = value
         self._rebuild_io()
@@ -359,21 +358,6 @@ class Filter:
             initial_parameters=self.initial_parameters.copy(),
         )
         f._channel_links = self.channel_links.copy()
-        # The dict copies below are preserved for filter types that have not yet been migrated
-        # to a subclass with a real _rebuild_io() implementation. For those types the factory
-        # returns an instance whose I/O dicts are empty, so we must transfer them from the
-        # source. For migrated types the copies overwrite with identical values. Remove in the
-        # cleanup PR once every FilterTypeEnumeration value has a registered subclass.
-        if not f._in_data_types:
-            f._in_data_types = self._in_data_types.copy()
-        if not f._out_data_types:
-            f._out_data_types = self._out_data_types.copy()
-        if not f._gui_update_keys:
-            f._gui_update_keys = self._gui_update_keys.copy()
-        if not f._default_values:
-            f._default_values = self._default_values.copy()
-        if isinstance(f, VirtualFilter):
-            f.deserialize()
         return f
 
     def __str__(self) -> str:
