@@ -341,7 +341,7 @@ class DimmerGlobalBrightnessMixinVFilter(VirtualFilter):
 
     @override
     def deserialize(self) -> None:
-        """Backward-compatible shim; the real work now lives in :meth:`_rebuild_io`."""
+        """Initialize the filter's I/O signature."""
         self._rebuild_io()
 
 

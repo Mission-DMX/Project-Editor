@@ -3,10 +3,7 @@
 This module owns the registry mapping :class:`~model.filter.FilterTypeEnumeration` values to
 Filter subclasses. :func:`construct_filter_instance` is the single construction entry point
 used by the show-file loader, :meth:`~model.filter.Filter.copy`, and the editor's node base
-class. When a type has no registered subclass yet, the factory falls back to the legacy
-construction path (a bare :class:`~model.filter.Filter` for native types and
-:func:`~model.virtual_filters.vfilter_factory._construct_virtual_filter_instance_legacy` for
-virtual types) so the refactor can land incrementally.
+class.
 """
 
 from __future__ import annotations
@@ -60,12 +57,11 @@ def construct_filter_instance(
     """Construct a :class:`~model.filter.Filter` or :class:`~model.filter.VirtualFilter`.
 
     The call is dispatched to a registered subclass when one exists for ``filter_type``.
-    Otherwise it falls back to the legacy construction path and, for the fallback, applies
-    the provided ``filter_configurations`` and ``initial_parameters`` to the resulting
-    instance after construction (since legacy constructors do not accept them).
+    Otherwise it constructs a base :class:`~model.filter.Filter` instance with the provided
+    configuration and parameters.
 
-    Returns ``None`` for virtual-filter type codes whose legacy factory returns ``None`` to
-    signal "not yet implemented" (e.g. :attr:`FilterTypeEnumeration.VFILTER_UNIVERSE`).
+    Returns ``None`` for virtual-filter type codes that cannot be instantiated
+    (e.g. :attr:`FilterTypeEnumeration.VFILTER_UNIVERSE`).
     """
     type_code = int(filter_type)
     cls = _FILTER_TYPE_TO_CLASS.get(type_code)
@@ -90,17 +86,14 @@ def construct_filter_instance(
                 instance.filter_configurations.update(filter_configurations)
             if initial_parameters:
                 instance.initial_parameters.update(initial_parameters)
-            # The legacy v-filter constructor runs _rebuild_io with empty configs; re-run
-            # it now that the real configuration and parameters are populated so dynamic
-            # subclasses (e.g. CueFilter deriving outputs from "mapping") see the final state.
             instance._rebuild_io()
         return instance
 
-    return Filter(
-        scene=scene,
-        filter_id=filter_id,
-        filter_type=type_code,
-        pos=pos,
-        filter_configurations=filter_configurations,
-        initial_parameters=initial_parameters,
-    )
+        return Filter(
+            scene=scene,
+            filter_id=filter_id,
+            filter_type=type_code,
+            pos=pos,
+            filter_configurations=filter_configurations,
+            initial_parameters=initial_parameters,
+        )
