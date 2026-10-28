@@ -204,6 +204,10 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         f = self._make_filter()
         editor = PropertyCueEditor(f=f)
         self.assertEqual(Qt.Orientation.Vertical, editor._splitter.orientation())
+        # The pane's minimum tracks the tallest property-editor tab (computed at
+        # runtime) and is at least 100 px so very short editors still get space.
+        expected = max(100, editor._property_pane.recommended_minimum_height())
+        self.assertEqual(expected, editor._property_pane.minimumHeight())
         self.assertGreaterEqual(editor._property_pane.minimumHeight(), 100)
 
 

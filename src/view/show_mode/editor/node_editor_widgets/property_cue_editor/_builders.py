@@ -78,11 +78,15 @@ def install_live_panes(editor: PropertyCueEditor) -> None:
     model = editor._property_filter.property_model
     editor._step_tree = StepFixtureTree(model, name_resolver=editor._resolve_node_name)
     editor._property_pane = PropertyPane(model, fixture_lookup=editor._lookup_fixtures)
-    editor._property_pane.setMinimumHeight(100)
+    # The pane's own sizeHint is driven by the placeholder when nothing is
+    # selected, so Qt would otherwise shrink the pane below the tallest
+    # editor's natural size. Ask the pane what each tab actually needs and
+    # cap at a floor of 100 px for environments where sizeHint is 0.
+    editor._property_pane.setMinimumHeight(max(100, editor._property_pane.recommended_minimum_height()))
     editor._splitter.replaceWidget(0, editor._step_tree)
     editor._splitter.replaceWidget(1, editor._property_pane)
-    editor._splitter.setStretchFactor(0, 1)
-    editor._splitter.setStretchFactor(1, 0)
+    editor._splitter.setStretchFactor(0, 2)
+    editor._splitter.setStretchFactor(1, 1)
     editor._step_tree.selection_changed.connect(editor._property_pane.show_editor)
     # Apply only redraws the tree summary columns -- cue count/step count are
     # structural and only change through the Add buttons, so we deliberately do

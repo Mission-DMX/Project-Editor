@@ -283,6 +283,49 @@ class PropertyPaneTests(unittest.TestCase):
         # And the summary column reflects the applied value.
         self.assertEqual("0.60", current.text(2))
 
+    def test_gobo_editor_restores_slots_after_json_roundtrip(self) -> None:
+        """A JSON-roundtripped assignment turns int keys into strings; the editor
+        must still restore the user's slot selection."""
+        from unittest.mock import MagicMock
+        from model.ofl.ofl_fixture import WheelSlotType
+        from model.virtual_filters.property_cues.model.property_step import (
+            ManualPropertyAssignment,
+            PropertyAssignments,
+        )
+        from view.show_mode.editor.node_editor_widgets.property_cue_editor.editors.gobo_editor import GoboEditor
+
+        def _slot(stype: WheelSlotType, name: str) -> MagicMock:
+            s = MagicMock(); s.type = stype; s.name = name; s.pixmap.return_value = None
+            return s
+
+        wheel = MagicMock(); wheel.slots = [
+            _slot(WheelSlotType.OPEN, "Open"),
+            _slot(WheelSlotType.GOBO, "A"),
+            _slot(WheelSlotType.GOBO, "B"),
+            _slot(WheelSlotType.GOBO, "C"),
+        ]
+        fixture = MagicMock()
+        fixture._fixture = MagicMock(); fixture._fixture.wheels = {"W": wheel}
+
+        model = _make_model(fixture_ids=["F1"], cue_specs=[[("s0", 40, 0)]])
+        model.cues[0].steps[0].assignments["fixture:F1"] = PropertyAssignments(
+            by_property={
+                "gobo": ManualPropertyAssignment(
+                    values={
+                        "wheel_count": 1,
+                        # Simulate the JSON-roundtripped shape: str keys.
+                        "slots": {"0": 2},
+                        "rotations": {"0": 0.3},
+                    },
+                ),
+            },
+        )
+        editor = GoboEditor(model)
+        editor.set_fixtures([fixture])
+        editor.load(0, 0, "fixture:F1")
+        self.assertEqual(2, editor._wheel_blocks[0].slot_combo.currentIndex())
+        self.assertAlmostEqual(0.3, editor._wheel_blocks[0].rotation.value(), places=4)
+
     def test_gobo_editor_apply_writes_per_wheel_values(self) -> None:
         """Applying with multiple wheels stores slots/rotations per wheel index."""
         from unittest.mock import MagicMock

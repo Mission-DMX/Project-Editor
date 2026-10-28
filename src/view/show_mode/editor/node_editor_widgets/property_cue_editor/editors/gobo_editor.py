@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
     QGroupBox,
+    QHBoxLayout,
     QVBoxLayout,
     QWidget,
 )
@@ -57,7 +58,9 @@ class GoboEditor(PropertyEditorBase):
         self._fixtures: list[UsedFixture] = []
 
     def _install_manual_widgets(self, layout: QVBoxLayout) -> None:
-        self._wheel_layout = QVBoxLayout()
+        # Horizontal layout: wheel group-boxes are narrow but tall, so they fit
+        # better side by side than stacked.
+        self._wheel_layout = QHBoxLayout()
         layout.addLayout(self._wheel_layout)
         self._wheel_blocks: list[_WheelBlock] = []
         self._rebuild_wheels(wheel_defs=[("Wheel 1", None)])
@@ -98,6 +101,7 @@ class GoboEditor(PropertyEditorBase):
             form.addRow("Rotation", rotation)
             self._wheel_layout.addWidget(group)
             self._wheel_blocks.append(_WheelBlock(group, slot_combo, rotation))
+        self._wheel_layout.addStretch(1)
 
     def set_fixtures(self, fixtures: Iterable[UsedFixture]) -> None:
         """Rebuild one sub-block per gobo wheel of the first gobo-equipped fixture.
@@ -130,13 +134,31 @@ class GoboEditor(PropertyEditorBase):
         }
 
     def _load_manual_values(self, values: dict[str, Any]) -> None:
-        slots = values.get("slots", {})
-        rotations = values.get("rotations", {})
+        slots = _coerce_int_keys(values.get("slots", {}))
+        rotations = _coerce_int_keys(values.get("rotations", {}))
         for i, block in enumerate(self._wheel_blocks):
-            want = int(slots.get(i, 0)) if isinstance(slots, dict) else 0
+            want = int(slots.get(i, 0))
             for idx in range(block.slot_combo.count()):
                 if block.slot_combo.itemData(idx) == want:
                     block.slot_combo.setCurrentIndex(idx)
                     break
-            rot = float(rotations.get(i, 0.0)) if isinstance(rotations, dict) else 0.0
-            block.rotation.setValue(rot)
+            block.rotation.setValue(float(rotations.get(i, 0.0)))
+
+
+def _coerce_int_keys(mapping: Any) -> dict[int, Any]:  # noqa: ANN401
+    """Normalise str/int keys from a JSON-roundtripped dict back to int.
+
+    ``json.dumps`` silently rewrites int keys to strings, so a dict stored as
+    ``{0: 3, 1: 7}`` comes back as ``{"0": 3, "1": 7}``. Downstream lookups
+    with int keys would miss. This helper keeps the loader robust to either
+    shape.
+    """
+    if not isinstance(mapping, dict):
+        return {}
+    out: dict[int, Any] = {}
+    for raw_key, value in mapping.items():
+        try:
+            out[int(raw_key)] = value
+        except (TypeError, ValueError):
+            continue
+    return out

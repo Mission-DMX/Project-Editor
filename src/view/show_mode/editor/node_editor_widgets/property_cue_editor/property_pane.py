@@ -97,6 +97,26 @@ class PropertyPane(QWidget):
     def set_current_cue(self, cue_index: int) -> None:
         self._cue_index = cue_index
 
+    def recommended_minimum_height(self) -> int:
+        """Return the height needed to display the pane without clipping.
+
+        When a step row is selected both the step editor (name/duration/fade-in)
+        and the tab widget are visible side-by-side vertically; this method sums
+        the natural height of both so the pane fits the worst case. For every
+        tab we read ``QWidget.sizeHint().height()`` so there are no magic
+        numbers. The tab bar overhead is already covered by
+        ``QTabWidget.sizeHint`` -- we take the max of the tabs' hint and the
+        editors' individual hints to be defensive against stylesheet
+        differences. Returns 0 when the pane carries no editors yet.
+        """
+        tab_hint = self._tabs.sizeHint().height()
+        editor_hint = max(
+            (editor.sizeHint().height() for editor in self._editors.values()),
+            default=0,
+        )
+        step_hint = self._step_editor.sizeHint().height()
+        return max(tab_hint, editor_hint) + step_hint
+
     def refresh_capabilities(self) -> None:
         """Re-evaluate which tabs are enabled from the current fixture selection."""
         self._apply_capability_filter()
