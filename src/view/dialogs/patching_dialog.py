@@ -1,4 +1,4 @@
-"""Dialog for Patching Fixture"""
+"""Dialog for Patching Fixture."""
 
 import re
 from dataclasses import dataclass
@@ -13,9 +13,10 @@ from model.ofl.ofl_fixture import OflFixture
 
 @dataclass
 class PatchingInformation:
-    """Information for Patching"""
+    """Information for Patching."""
 
     def __init__(self, fixture: OflFixture) -> None:
+        """Initialize patching information structure."""
         self._fixture: OflFixture = fixture
         self.count: int = 0
         self.universe: int = 0
@@ -24,16 +25,17 @@ class PatchingInformation:
 
     @property
     def fixture(self) -> OflFixture:
-        """property of the Fixture"""
+        """Property of the Fixture."""
         return self._fixture
 
 
 class PatchingDialog(QtWidgets.QDialog):
-    """Dialog for Patching Fixture"""
+    """Dialog for Patching Fixture."""
 
     def __init__(
         self, board_configuration: BoardConfiguration, fixture: tuple[OflFixture, int], parent: object = None
     ) -> None:
+        """Initialize a patching dialog for the provided fixture template."""
         super().__init__(parent)
         # Create widgets
         self._board_configuration = board_configuration
@@ -93,19 +95,18 @@ class PatchingDialog(QtWidgets.QDialog):
 
     @property
     def patching_information(self) -> PatchingInformation:
-        """property of used Fixture"""
+        """Property of used Fixture."""
         return self._patching_information
 
     def set_error(self, text: str) -> None:
-        """update Error Label"""
+        """Update Error Label."""
         self._error_label.setText(text)
 
     def _update_used_fixture(self) -> None:
         self._validate_input()
 
     def generate_fixtures(self) -> None:
-        """generate a used Fixture list from Patching information"""
-
+        """Generate a used Fixture list from Patching information."""
         start_index = self.patching_information.channel
         for _ in range(self.patching_information.count):
             used_fixture = make_used_fixture(
@@ -114,6 +115,8 @@ class PatchingDialog(QtWidgets.QDialog):
                 self._select_mode.currentIndex(),
                 self.patching_information.universe,
                 start_index,
+                None,
+                None
             )
 
             if self._patching_information.offset == 0:
@@ -122,15 +125,15 @@ class PatchingDialog(QtWidgets.QDialog):
                 start_index += self._patching_information.offset
 
     def _accept(self) -> None:
-        """accept the Fixture"""
+        """Accept the Fixture."""
         self.accept()
 
     def _reject(self) -> None:
-        """cancel Patching"""
+        """Cancel Patching."""
         self.reject()
 
     def _validate_input(self) -> None:
-        """validate the patching String and update count, universe, channel and offset"""
+        """Validate the patching String and update count, universe, channel and offset."""
         patching = self._patching.text()
         if patching == "":
             patching = "1"

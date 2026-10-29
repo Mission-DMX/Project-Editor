@@ -25,6 +25,7 @@ from utility import resource_path
 from view.show_mode.editor.node_editor_widgets.chaser_editor.color_chaser_widget import ColorChaserFilterConfigWidget
 from view.show_mode.editor.node_editor_widgets.cue_editor import CueEditor
 from view.show_mode.editor.node_editor_widgets.pan_tilt_constant.pan_tilt_constant_widget import PanTiltConstantWidget
+from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import PropertyCueEditor
 from view.show_mode.effect_stacks.filter_config_widget import EffectsStackFilterConfigWidget
 
 from .node_editor_widgets.autotracker_settings import AutotrackerSettingsWidget
@@ -33,6 +34,7 @@ from .node_editor_widgets.color_to_colorwheel_adapter_settings_widget import Col
 from .node_editor_widgets.colordirector_editor.widget import ColordirectorEditorWidget
 from .node_editor_widgets.column_select import ColumnSelect
 from .node_editor_widgets.dimmer_brightness_mixin_config_widget import DimmerBrightnessMixinConfigWidget
+from .node_editor_widgets.dimmer_director_editor import DimmerDirectorEditorWidget
 from .node_editor_widgets.event_scheduler_config_widget.event_scheduler_filter_config_widget import (
     EventSchedulerSettingsWidget,
 )
@@ -40,6 +42,7 @@ from .node_editor_widgets.import_vfilter_settings_widget import ImportVFilterSet
 from .node_editor_widgets.lua_widget import LuaScriptConfigWidget
 from .node_editor_widgets.number_constant_settings_widget import NumberConstantSettingsWidget
 from .node_editor_widgets.sequencer_editor.widget import SequencerEditor
+from .node_editor_widgets.strobe_generator_config_widget import StrobeGeneratorConfigWidget
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QCloseEvent, QFocusEvent, QKeyEvent, QMouseEvent, QPainter
@@ -133,6 +136,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return ColumnSelect(filter_)
     if filter_.filter_type in [FilterTypeEnumeration.FILTER_TYPE_CUES, FilterTypeEnumeration.VFILTER_CUES]:
         return CueEditor(f=filter_)
+    if filter_.filter_type == FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES:
+        return PropertyCueEditor(f=filter_)
     if filter_.filter_type == 50:
         return LuaScriptConfigWidget()
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_POSITION_CONSTANT:
@@ -153,6 +158,8 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return DimmerBrightnessMixinConfigWidget()
     if filter_.filter_type == FilterTypeEnumeration.VFILTER_COLORDIRECTOR:
         return ColordirectorEditorWidget(filter_)
+    if filter_.filter_type == FilterTypeEnumeration.FILTER_DIMMER_DIRECTOR:
+        return DimmerDirectorEditorWidget(filter_)
     if filter_.filter_type == FilterTypeEnumeration.FILTER_COLOR_CHASER:
         return ColorChaserFilterConfigWidget(filter_)
     if filter_.filter_type in [FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
@@ -164,6 +171,10 @@ def check_if_filter_has_special_widget(filter_: Filter) -> NodeEditorFilterConfi
         return NumberConstantSettingsWidget(filter_)
     if filter_.filter_type == FilterTypeEnumeration.FILTER_EVENT_SCHEDULER:
         return EventSchedulerSettingsWidget()
+    if filter_.filter_type in [FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_8BIT,
+                               FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_16BIT,
+                               FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT]:
+        return StrobeGeneratorConfigWidget(filter_)
     return None
 
 
