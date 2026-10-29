@@ -119,9 +119,24 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             # Restore so later tests see the real descriptor.
             del type(scene.board_configuration).fixtures
 
+    def test_synthesized_pan_tilt_outputs_are_16bit(self) -> None:
+        """``pan`` and ``tilt`` on the node come from the 16-bit range adapter
+        in the post-processing chain -- not from the raw ``*_value`` float."""
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_pantype")
+        f.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
+            enabled_capabilities={EnabledCapability.POSITION},
+        )
+        f._rebuild_io()
+        self.assertEqual(DataType.DT_16_BIT, f.out_data_types["MH1__pan"])
+        self.assertEqual(DataType.DT_16_BIT, f.out_data_types["MH1__tilt"])
+
     def test_enabled_capability_exposes_channels_even_without_assignment(self) -> None:
         """Enabling POSITION on a fixture must create pan/tilt output channels
-        even when the user hasn't yet dialed in a value."""
+        even when the user hasn't yet dialed in a value. The internal raw
+        channels (pan_value/pan_curvesel/strobefreq/...) stay hidden -- they
+        exist to drive post-processing filters only."""
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_defaults")
         f.property_model.fixture_selection = FixtureSelection(
@@ -130,12 +145,14 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         )
         # No cue, no assignment -- just the enabled capabilities.
         f._rebuild_io()
-        for channel in (
-            "MH1__brightness", "MH1__strobefreq", "MH1__duty_cycle",
+        for channel in ("MH1__brightness", "MH1__pan", "MH1__tilt"):
+            self.assertIn(channel, f.out_data_types, f"missing {channel}")
+        for internal in (
+            "MH1__strobefreq", "MH1__duty_cycle",
             "MH1__pan_value", "MH1__pan_curvesel",
             "MH1__tilt_value", "MH1__tilt_curvesel",
         ):
-            self.assertIn(channel, f.out_data_types, f"missing {channel}")
+            self.assertNotIn(internal, f.out_data_types, f"{internal} should be hidden")
 
     def test_capability_lookup_restricts_to_supported_capabilities(self) -> None:
         """A fixture without a gobo wheel must not expose gobo channels even
@@ -272,15 +289,14 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             self.assertEqual(bravo_block, names[bravo_start:bravo_start + len(bravo_block)])
 
             # Alpha has dimmer -> position -> gobo -> beam -> focus (no colour).
+            # Raw plumbing (strobefreq, duty_cycle, pan_value, pan_curvesel,
+            # tilt_value, tilt_curvesel) is hidden; the post-processed pan/tilt
+            # terminals appear instead.
             self.assertEqual(
                 [
                     "Alpha__brightness",
-                    "Alpha__strobefreq",
-                    "Alpha__duty_cycle",
-                    "Alpha__pan_value",
-                    "Alpha__pan_curvesel",
-                    "Alpha__tilt_value",
-                    "Alpha__tilt_curvesel",
+                    "Alpha__pan",
+                    "Alpha__tilt",
                     "Alpha__goboslot_0",
                     "Alpha__goborotation_0",
                     "Alpha__zoom",
@@ -293,12 +309,8 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             self.assertEqual(
                 [
                     "Bravo__brightness",
-                    "Bravo__strobefreq",
-                    "Bravo__duty_cycle",
-                    "Bravo__pan_value",
-                    "Bravo__pan_curvesel",
-                    "Bravo__tilt_value",
-                    "Bravo__tilt_curvesel",
+                    "Bravo__pan",
+                    "Bravo__tilt",
                     "Bravo__color",
                 ],
                 bravo_block,
@@ -378,12 +390,18 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             f._rebuild_io()
             channels = set(f.out_data_types)
 
-            # Both fixtures: dimmer, position and zoom (BEAM shared).
+            # Both fixtures: dimmer, position (post-processed) and zoom (BEAM shared).
             for base in ("Hero_Spot", "Hero_Wash"):
                 self.assertIn(f"{base}__brightness", channels)
-                self.assertIn(f"{base}__pan_value", channels)
-                self.assertIn(f"{base}__tilt_value", channels)
+                self.assertIn(f"{base}__pan", channels)
+                self.assertIn(f"{base}__tilt", channels)
                 self.assertIn(f"{base}__zoom", channels)
+                # Raw plumbing never surfaces on the node.
+                self.assertNotIn(f"{base}__pan_value", channels)
+                self.assertNotIn(f"{base}__pan_curvesel", channels)
+                self.assertNotIn(f"{base}__tilt_value", channels)
+                self.assertNotIn(f"{base}__strobefreq", channels)
+                self.assertNotIn(f"{base}__duty_cycle", channels)
 
             # Spot has focus and two gobo wheels.
             self.assertIn("Hero_Spot__focus", channels)

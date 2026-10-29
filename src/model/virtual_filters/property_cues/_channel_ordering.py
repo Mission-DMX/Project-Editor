@@ -8,6 +8,41 @@ hunting for related channels.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model.filter import DataType
+
+
+# Local-channel names that only exist to drive post-processing filters.  The
+# vfilter already exposes their post-processed outputs ("pan", "tilt",
+# "brightness") so operators don't need to see the raw plumbing on the node.
+INTERNAL_LOCAL_NAMES: frozenset[str] = frozenset({
+    "strobefreq", "duty_cycle",
+    "pan_value", "pan_curvesel",
+    "tilt_value", "tilt_curvesel",
+})
+
+# Which raw local names imply which post-processed external output.  Also
+# records the data type of that external output so the FilterNode's terminal
+# gets the right-shaped socket.
+_SYNTHESIZED_FROM_LOCAL: dict[str, tuple[str, str]] = {
+    # (raw local)  -> (exposed local, DataType attribute name on model.filter.DataType)
+    "pan_value": ("pan", "DT_16_BIT"),
+    "tilt_value": ("tilt", "DT_16_BIT"),
+}
+
+
+def synthesized_output(local: str) -> tuple[str, DataType] | None:
+    """If ``local`` triggers a post-processed output, return ``(name, data_type)``."""
+    hit = _SYNTHESIZED_FROM_LOCAL.get(local)
+    if hit is None:
+        return None
+    syn_local, dt_name = hit
+    from model.filter import DataType  # local import keeps this module import-cheap
+    return syn_local, getattr(DataType, dt_name)
+
+
 _PROPERTY_GROUPS = (
     "dimmer",
     "position",

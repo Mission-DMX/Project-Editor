@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING, override
 
 from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.virtual_filters.cue_vfilter import PreviewFilter
-from model.virtual_filters.property_cues._channel_ordering import channel_sort_key
+from model.virtual_filters.property_cues._channel_ordering import (
+    INTERNAL_LOCAL_NAMES,
+    channel_sort_key,
+    synthesized_output,
+)
 from model.virtual_filters.property_cues.compiler import (
     CompileResult,
     compile_property_model,
@@ -18,6 +22,29 @@ if TYPE_CHECKING:
     from model import Scene
 
 logger = getLogger(__name__)
+
+
+def _user_facing_outputs(channel_specs: dict) -> dict:
+    """Return ``{name: DataType}`` for the output terminals the node should expose.
+
+    Hides the raw channels that only exist to feed post-processing filters
+    (``strobefreq``, ``duty_cycle``, ``pan_value``, ``pan_curvesel``,
+    ``tilt_value``, ``tilt_curvesel``) and synthesises the post-processed
+    outputs they drive (``pan``, ``tilt`` -- 16-bit; ``brightness`` already
+    shares a name with its raw counterpart since the strobe generator preserves
+    the float type). Order follows :func:`channel_sort_key`.
+    """
+    full: dict[str, object] = {}
+    for name, spec in channel_specs.items():
+        prefix, _, local = name.partition("__")
+        syn = synthesized_output(local)
+        if syn is not None:
+            syn_local, syn_type = syn
+            full.setdefault(f"{prefix}__{syn_local}", syn_type)
+        if local in INTERNAL_LOCAL_NAMES:
+            continue
+        full[name] = spec.data_type
+    return {name: full[name] for name in sorted(full.keys(), key=channel_sort_key)}
 
 
 class PropertyBasedCueFilter(PreviewFilter):
@@ -86,14 +113,7 @@ class PropertyBasedCueFilter(PreviewFilter):
                 gobo_wheel_count_lookup=self._gobo_wheel_count_lookup,
                 beam_sub_capabilities_lookup=self._beam_sub_capabilities_lookup,
             )
-            # Terminal order follows (fixture prefix, property group, within-
-            # property order) so the node reads top-to-bottom in a way humans
-            # can scan quickly.
-            sorted_names = sorted(self._last_compile.channel_specs.keys(), key=channel_sort_key)
-            self._out_data_types = {
-                name: self._last_compile.channel_specs[name].data_type
-                for name in sorted_names
-            }
+            self._out_data_types = _user_facing_outputs(self._last_compile.channel_specs)
         return self._last_compile
 
     def _find_fixture(self, fixture_id: str):  # noqa: ANN202 — UsedFixture lazy import
