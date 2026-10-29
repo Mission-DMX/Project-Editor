@@ -165,6 +165,7 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         self.assertTrue(editor._add_step_button.isEnabled())
 
     def test_end_action_combo_binds_to_selected_cue(self) -> None:
+        from model.filter_data.cues.cue import EndAction
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (
             PropertyCueEditor,
         )
@@ -174,12 +175,12 @@ class PropertyCueEditorShellTests(unittest.TestCase):
         editor._add_cue()
         editor._add_cue()
         editor._cue_table.selectRow(1)
-        editor._end_action_combo.setCurrentText("next_cue")
-        self.assertEqual("hold", f.property_model.cues[0].end_action)
-        self.assertEqual("next_cue", f.property_model.cues[1].end_action)
+        editor._end_action_combo.setCurrentText("NEXT")
+        self.assertEqual(EndAction.HOLD, f.property_model.cues[0].end_action)
+        self.assertEqual(EndAction.NEXT, f.property_model.cues[1].end_action)
         # Switching selection back to cue 0 must reflect its own values.
         editor._cue_table.selectRow(0)
-        self.assertEqual("hold", editor._end_action_combo.currentText())
+        self.assertEqual("HOLD", editor._end_action_combo.currentText())
 
     def test_cue_selection_updates_step_tree(self) -> None:
         from view.show_mode.editor.node_editor_widgets.property_cue_editor.widget import (

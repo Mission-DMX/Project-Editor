@@ -23,6 +23,13 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model.filter import Filter, FilterTypeEnumeration
+from model.virtual_filters.property_cues.capability_wiring import (
+    BRIGHTNESS,
+    DUTY_CYCLE,
+    POSITION_CURVESEL_SUFFIX,
+    POSITION_VALUE_SUFFIX,
+    STROBEFREQ,
+)
 
 if TYPE_CHECKING:
     from model import Scene
@@ -113,8 +120,8 @@ def _position_chain(capability: str, raw_range: tuple[int, int] | None,
     cue_fid = ctx.cue_filter_id
     base_id = f"{cue_fid}__{prefix}__{capability}"
 
-    value_src = f"{cue_fid}:{prefix}__{capability}_value"
-    curvesel_src = f"{cue_fid}:{prefix}__{capability}_curvesel"
+    value_src = f"{cue_fid}:{prefix}__{capability}{POSITION_VALUE_SUFFIX}"
+    curvesel_src = f"{cue_fid}:{prefix}__{capability}{POSITION_CURVESEL_SUFFIX}"
 
     sin_id = f"{base_id}_sin"
     cos_id = f"{base_id}_cos"
@@ -184,9 +191,9 @@ def _dimmer_strategy(ctx: CapabilityContext) -> PostprocessOutput:
     cue_fid = ctx.cue_filter_id
     base_id = f"{cue_fid}__{prefix}__dimmer"
 
-    brightness_src = f"{cue_fid}:{prefix}__brightness"
-    strobefreq_src = f"{cue_fid}:{prefix}__strobefreq"
-    duty_src = f"{cue_fid}:{prefix}__duty_cycle"
+    brightness_src = f"{cue_fid}:{prefix}__{BRIGHTNESS}"
+    strobefreq_src = f"{cue_fid}:{prefix}__{STROBEFREQ}"
+    duty_src = f"{cue_fid}:{prefix}__{DUTY_CYCLE}"
 
     freq8bit_id = f"{base_id}_freq8bit"
     duty8bit_id = f"{base_id}_duty8bit"

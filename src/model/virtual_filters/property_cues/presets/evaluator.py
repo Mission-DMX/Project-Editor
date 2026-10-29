@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from jinja2 import TemplateError
 
-from controller.cli.connect_command import get_math_enabled_jinja_env
+from controller.utils.jinja_math import get_math_enabled_jinja_env
 from model.color_hsi import ColorHSI
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.keyframe_request import KeyframeRequest

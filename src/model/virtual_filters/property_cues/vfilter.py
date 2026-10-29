@@ -127,21 +127,21 @@ class PropertyBasedCueFilter(PreviewFilter):
         return None
 
     def _capability_lookup(self, fixture_id: str) -> set[str]:
-        """Return the capabilities the fixture actually supports (as string values)."""
+        """Return the capability tags the fixture actually supports."""
         fixture = self._find_fixture(fixture_id)
         if fixture is None:
             # Unknown fixture: permit every enabled capability so the user still
             # sees output terminals.
             return {cap.value for cap in self._property_model.fixture_selection.enabled_capabilities}
-        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
-        return {cap.value for cap in discover_capabilities([fixture])}
+        from model.ofl.capability_discovery import discover_capabilities
+        return discover_capabilities([fixture])
 
     def _gobo_wheel_count_lookup(self, fixture_id: str) -> int:
         """Return the number of gobo wheels on the fixture (0 if none)."""
         fixture = self._find_fixture(fixture_id)
         if fixture is None:
             return 1
-        from model.virtual_filters.property_cues.capability_discovery import gobo_wheels_of
+        from model.ofl.capability_discovery import gobo_wheels_of
         return len(gobo_wheels_of(fixture))
 
     def _beam_sub_capabilities_lookup(self, fixture_id: str) -> set[str]:
@@ -149,7 +149,7 @@ class PropertyBasedCueFilter(PreviewFilter):
         fixture = self._find_fixture(fixture_id)
         if fixture is None:
             return {"zoom", "iris", "prism"}
-        from model.virtual_filters.property_cues.capability_discovery import beam_sub_capabilities
+        from model.ofl.capability_discovery import beam_sub_capabilities
         return beam_sub_capabilities(fixture)
 
     def _build_fixture_name_map(self) -> dict[str, str]:

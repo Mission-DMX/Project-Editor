@@ -60,18 +60,16 @@ class CapabilityDiscoveryTests(unittest.TestCase):
 
     def test_capability_discovery_pan_tilt_maps_to_position(self) -> None:
         from model.ofl.ofl_fixture import CapabilityType
-        from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
-        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
+        from model.ofl.capability_discovery import discover_capabilities
 
         fixture = self._make_fixture_with_capabilities(
             [("Pan", CapabilityType.PAN), ("Tilt", CapabilityType.TILT)]
         )
-        self.assertEqual(discover_capabilities([fixture]), {EnabledCapability.POSITION})
+        self.assertEqual(discover_capabilities([fixture]), {"position"})
 
     def test_capability_discovery_colour_only(self) -> None:
         from model.ofl.ofl_fixture import CapabilityType
-        from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
-        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
+        from model.ofl.capability_discovery import discover_capabilities
 
         fixture = self._make_fixture_with_capabilities(
             [
@@ -80,13 +78,12 @@ class CapabilityDiscoveryTests(unittest.TestCase):
                 ("Blue", CapabilityType.COLOR_INTENSITY),
             ]
         )
-        self.assertEqual(discover_capabilities([fixture]), {EnabledCapability.COLOUR})
+        self.assertEqual(discover_capabilities([fixture]), {"colour"})
 
     def test_capability_discovery_gobo_wheel_from_slot_types(self) -> None:
         """A wheel whose slots are typed GOBO should surface GOBO regardless of name."""
         from model.ofl.ofl_fixture import WheelSlotType
-        from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
-        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
+        from model.ofl.capability_discovery import discover_capabilities
 
         colour_slot = MagicMock(); colour_slot.type = WheelSlotType.COLOR
         gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
@@ -100,13 +97,13 @@ class CapabilityDiscoveryTests(unittest.TestCase):
         fixture_without_wheel = self._make_fixture_with_capabilities([])
         fixture_without_wheel._fixture = MagicMock(); fixture_without_wheel._fixture.wheels = {}
 
-        self.assertEqual(discover_capabilities([fixture_colour]), {EnabledCapability.COLOUR})
-        self.assertEqual(discover_capabilities([fixture_gobo]), {EnabledCapability.GOBO})
+        self.assertEqual(discover_capabilities([fixture_colour]), {"colour"})
+        self.assertEqual(discover_capabilities([fixture_gobo]), {"gobo"})
         self.assertEqual(discover_capabilities([fixture_without_wheel]), set())
 
     def test_gobo_wheels_of_returns_only_gobo_wheels(self) -> None:
         from model.ofl.ofl_fixture import WheelSlotType
-        from model.virtual_filters.property_cues.capability_discovery import gobo_wheels_of
+        from model.ofl.capability_discovery import gobo_wheels_of
 
         colour_slot = MagicMock(); colour_slot.type = WheelSlotType.COLOR
         gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
@@ -121,7 +118,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
 
     def test_capability_discovery_unknown_type_skipped(self) -> None:
         from model.ofl.ofl_fixture import CapabilityType
-        from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
+        from model.ofl.capability_discovery import discover_capabilities
 
         fixture = self._make_fixture_with_capabilities(
             [("Fog Out", CapabilityType.FOG)]

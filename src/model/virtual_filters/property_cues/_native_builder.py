@@ -8,7 +8,6 @@ from model.filter_data.cues.cue import Cue, EndAction, KeyFrame
 from model.filter_data.cues.cue_filter_model import CueFilterModel
 from model.filter_data.transfer_function import TransferFunction
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
-from model.virtual_filters.property_cues.model.model import EndAction as ModelEndAction
 from model.virtual_filters.property_cues.solver_helpers import make_frame
 
 if TYPE_CHECKING:
@@ -17,17 +16,6 @@ if TYPE_CHECKING:
     from model.virtual_filters.property_cues.channel_consolidator import ConsolidationMap
     from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
     from model.virtual_filters.property_cues.solver import RequestGroup
-
-_END_ACTION_MAP = {ModelEndAction.HOLD: EndAction.HOLD,
-                   ModelEndAction.START_AGAIN: EndAction.START_AGAIN,
-                   ModelEndAction.NEXT_CUE: EndAction.NEXT}
-
-
-def _parse_end(value: str) -> ModelEndAction:
-    try:
-        return ModelEndAction(value)
-    except ValueError:
-        return ModelEndAction.HOLD
 
 
 def _state_for(ch_name: str, dt: DataType, ts: float, frames: list[KeyFrame]) -> State:
@@ -43,7 +31,7 @@ def _state_for(ch_name: str, dt: DataType, ts: float, frames: list[KeyFrame]) ->
 
 def _frames_to_cue(name: str, channels: list[tuple[str, DataType]],
                    per_channel: dict[str, list[KeyFrame]],
-                   end_action: ModelEndAction, restart_on_play: bool) -> Cue:
+                   end_action: EndAction, restart_on_play: bool) -> Cue:
     cue = Cue()
     cue.name = name or "No Name"
     for ch_name, dt in channels:
@@ -57,7 +45,7 @@ def _frames_to_cue(name: str, channels: list[tuple[str, DataType]],
         for ch_name, dt in channels:
             combined._states.append(_state_for(ch_name, dt, ts, per_channel.get(ch_name, [])))
         cue.insert_frame(combined)
-    cue.end_action = _END_ACTION_MAP.get(end_action, EndAction.HOLD)
+    cue.end_action = end_action
     cue.restart_on_another_play_press = restart_on_play
     return cue
 
@@ -81,7 +69,7 @@ def build_native(model: PropertyCueFilterModel, consolidation: ConsolidationMap,
             frames.sort(key=lambda kf: kf.timestamp)
         native.cues.append(_frames_to_cue(
             cue_name, sorted_channels, canonical_frames,
-            _parse_end(src_cue.end_action), src_cue.restart_on_play,
+            src_cue.end_action, src_cue.restart_on_play,
         ))
     if 0 <= model.general.default_cue_index < len(native.cues):
         native.default_cue = model.general.default_cue_index

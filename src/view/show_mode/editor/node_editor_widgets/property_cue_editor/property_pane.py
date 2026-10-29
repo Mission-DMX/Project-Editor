@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QLabel, QStackedWidget, QTabWidget, QVBoxLayout, QWidget
 
-from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
+from model.ofl.capability_discovery import discover_capabilities
 from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
 
 from .editors.beam_editor import BeamEditor
@@ -155,11 +155,13 @@ class PropertyPane(QWidget):
         clicked.
         """
         enabled = set(self._model.fixture_selection.enabled_capabilities)
+        # ``discover_capabilities`` returns capability tags (strings) so the
+        # OFL helper does not depend on the vfilter's EnabledCapability enum.
         per_selection = discover_capabilities(fixtures) if fixtures else None
         for prop_id, _label, cap in _PROPERTY_ORDER:
             allowed = cap in enabled
             if allowed and per_selection is not None:
-                allowed = cap in per_selection
+                allowed = cap.value in per_selection
             self._tabs.setTabEnabled(self._tab_indices[prop_id], allowed)
 
 

@@ -9,6 +9,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model.filter_data.transfer_function import TransferFunction
+from model.virtual_filters.property_cues import capability_wiring as _capability_wiring
 from model.virtual_filters.property_cues._default_specs import default_specs_for_fixtures
 from model.virtual_filters.property_cues._native_builder import build_native
 from model.virtual_filters.property_cues.channel_consolidator import consolidate
@@ -61,14 +62,7 @@ _PROPERTY_CLASS: dict[str, type[Property]] = {
     "beam": BeamProperty, "gobo": GoboProperty,
     "focus": FocusProperty, "frost": FrostProperty,
 }
-_CAPABILITY_FROM_LOCAL: dict[str, str] = {
-    "pan": "pan", "tilt": "tilt",
-    "brightness": "dimmer", "strobefreq": "dimmer", "duty_cycle": "dimmer",
-    "color": "colour", "focus": "focus",
-    "zoom": "beam", "iris": "beam",
-    "prism_selection": "beam", "prism_rotation": "beam",
-    "goboslot": "gobo", "goborotation": "gobo", "frost_intensity": "frost",
-}
+_CAPABILITY_FROM_LOCAL = _capability_wiring.RAW_TO_CAPABILITY
 @dataclass(slots=True)
 class CompileResult:
     native_model: CueFilterModel

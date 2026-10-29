@@ -66,7 +66,7 @@ class PropertyCueModelRoundTripTest(unittest.TestCase):
             assignments={"fixture:MH1": assignments},
         )
         cue = PropertyCue(name="My cue", steps=[step],
-                          end_action=EndAction.NEXT_CUE.value, restart_on_play=True)
+                          end_action=EndAction.NEXT, restart_on_play=True)
         model = PropertyCueFilterModel(
             fixture_selection=selection,
             cues=[cue],

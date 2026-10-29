@@ -17,7 +17,7 @@ def build_settings_panel(editor: PropertyCueEditor) -> QGroupBox:
     form = QFormLayout()
 
     editor._end_action_combo = QComboBox()
-    editor._end_action_combo.addItems([a.value for a in EndAction])
+    editor._end_action_combo.addItems([a.name for a in EndAction])
     editor._end_action_combo.currentTextChanged.connect(editor._end_action_changed)
     form.addRow("End action", editor._end_action_combo)
 
@@ -58,7 +58,7 @@ def refresh_settings_from_model(editor: PropertyCueEditor) -> None:
     cue = editor._selected_cue()
     if editor._end_action_combo is not None:
         editor._end_action_combo.blockSignals(True)
-        editor._end_action_combo.setCurrentText(cue.end_action if cue else EndAction.HOLD.value)
+        editor._end_action_combo.setCurrentText(cue.end_action.name if cue else EndAction.HOLD.name)
         editor._end_action_combo.blockSignals(False)
     if editor._restart_on_play_cb is not None:
         editor._restart_on_play_cb.blockSignals(True)
