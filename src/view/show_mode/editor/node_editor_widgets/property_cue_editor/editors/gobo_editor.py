@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from model.virtual_filters.property_cues.capability_discovery import gobo_wheels_of
+from model.ofl.capability_discovery import gobo_wheels_of
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
 from ._property_editor_base import PropertyEditorBase

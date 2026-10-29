@@ -29,12 +29,17 @@ from PySide6.QtWidgets import (
     QWizardPage,
 )
 
-from model.virtual_filters.property_cues.capability_discovery import discover_capabilities
+from model.ofl.capability_discovery import discover_capabilities
 from model.virtual_filters.property_cues.model.fixture_selection import (
     EnabledCapability,
     FixtureSelection,
     FixtureSelectionEntry,
     SelectionEntryKind,
+)
+from view.show_mode.editor.node_editor_widgets.property_cue_editor._board_lookups import (
+    iter_fixtures,
+    iter_groups,
+    resolve_fixtures_from_entries,
 )
 
 if TYPE_CHECKING:
@@ -67,16 +72,6 @@ def _fixture_id(fixture: UsedFixture) -> str:
     return str(getattr(fixture, "uuid", ""))
 
 
-def _collect_groups(board: BoardConfiguration) -> list:
-    """Collect fixture groups from the board. Groups live on the stage config,
-    which is not always wired up to BoardConfiguration; fall back to an empty
-    list rather than erroring if the attribute isn't present."""
-    stage = getattr(board, "stage_config", None)
-    if stage is None:
-        return []
-    return list(getattr(stage, "groups", []) or [])
-
-
 class _FixturePickerPage(QWizardPage):
     """Page 1: pick fixtures and/or fixture groups via a check-tree."""
 
@@ -102,7 +97,7 @@ class _FixturePickerPage(QWizardPage):
         self._fixture_root = QTreeWidgetItem(self._tree, ["Fixtures"])
         self._fixture_root.setFlags(self._fixture_root.flags() & ~Qt.ItemFlag.ItemIsSelectable)
         self._fixture_root.setExpanded(True)
-        for fixture in getattr(board, "fixtures", []) or []:
+        for fixture in iter_fixtures(board):
             fid = _fixture_id(fixture)
             item = QTreeWidgetItem(self._fixture_root, [_fixture_label(fixture)])
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
@@ -119,7 +114,7 @@ class _FixturePickerPage(QWizardPage):
         self._group_root = QTreeWidgetItem(self._tree, ["Groups"])
         self._group_root.setFlags(self._group_root.flags() & ~Qt.ItemFlag.ItemIsSelectable)
         self._group_root.setExpanded(True)
-        for group in _collect_groups(board):
+        for group in iter_groups(board):
             gid = getattr(group, "id", None)
             if gid is None:
                 continue
@@ -152,21 +147,7 @@ class _FixturePickerPage(QWizardPage):
     def selected_fixtures(self) -> list[UsedFixture]:
         """Return the UsedFixture objects for the current fixture selection,
         including fixtures reached transitively through selected groups."""
-        selected_entries = self.selected_entries()
-        fixture_ids = {e.id for e in selected_entries if e.kind == SelectionEntryKind.FIXTURE}
-        group_ids = {e.id for e in selected_entries if e.kind == SelectionEntryKind.GROUP}
-
-        if group_ids:
-            for group in _collect_groups(self._board):
-                if getattr(group, "id", None) in group_ids:
-                    fixture_ids.update(getattr(group, "member_ids", []) or [])
-
-        fixtures: list[UsedFixture] = [
-            fixture
-            for fixture in getattr(self._board, "fixtures", []) or []
-            if _fixture_id(fixture) in fixture_ids
-        ]
-        return fixtures
+        return resolve_fixtures_from_entries(self._board, self.selected_entries())
 
 
 class _CapabilityPickerPage(QWizardPage):
@@ -202,8 +183,9 @@ class _CapabilityPickerPage(QWizardPage):
             return
         self._hint.setText("Tick the capabilities you want to control.")
         # Preserve EnabledCapability declaration order for stable UI.
+        # ``discover_capabilities`` returns capability tags (strings); match by value.
         for cap in EnabledCapability:
-            if cap not in available:
+            if cap.value not in available:
                 continue
             item = QListWidgetItem(cap.value.capitalize(), self._list)
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)

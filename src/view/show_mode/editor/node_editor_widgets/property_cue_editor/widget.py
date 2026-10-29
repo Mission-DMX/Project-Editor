@@ -89,10 +89,10 @@ class PropertyCueEditor(PreviewEditWidget):
         cue = self._selected_cue()
         if cue is None:
             return
-        if text not in {a.value for a in EndAction}:
+        try:
+            cue.end_action = EndAction[text]
+        except KeyError:
             logger.warning("Unknown end action: %s", text)
-            return
-        cue.end_action = text
 
     def _restart_on_play_toggled(self, checked: bool) -> None:
         cue = self._selected_cue()

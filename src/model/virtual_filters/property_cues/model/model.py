@@ -5,9 +5,9 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import dataclass, field
-from enum import Enum
 from logging import getLogger
 
+from model.filter_data.cues.cue import EndAction
 from model.virtual_filters.property_cues.model.fixture_selection import FixtureSelection
 from model.virtual_filters.property_cues.model.property_cue import PropertyCue
 from model.virtual_filters.property_cues.model.property_step import PropertyAssignments
@@ -16,11 +16,12 @@ logger = getLogger(__name__)
 
 CURRENT_SCHEMA_VERSION = 1
 
-
-class EndAction(Enum):
-    HOLD = "hold"
-    START_AGAIN = "start_again"
-    NEXT_CUE = "next_cue"
+__all__ = [
+    "CURRENT_SCHEMA_VERSION",
+    "EndAction",
+    "PropertyCueFilterModel",
+    "PropertyCueGeneralSettings",
+]
 
 
 @dataclass(slots=True)

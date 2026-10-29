@@ -1,14 +1,10 @@
-"""Model-layer helpers to classify fixture capabilities for the property-cue vfilter.
+"""Classify fixture capabilities from an OFL definition.
 
-Reads the fixture channel types and the OFL wheel slot types and maps them
-to the vfilter's :class:`EnabledCapability` enum. Keeps the mapping
-conservative: for anything that cannot be categorised unambiguously a
-``DEBUG`` message is logged and the capability is skipped rather than
-guessed.
-
-Lives in the model layer so the vfilter / compiler can inspect fixtures
-without pulling view-side code; the editor UI still re-uses these helpers
-by importing them from here.
+Returns string tags (``"dimmer"``, ``"position"``, ``"colour"``, ``"gobo"``,
+``"beam"``, ``"focus"``, ``"frost"``) so callers in different layers can map
+them onto whichever enum they use (e.g. the property-cue vfilter's
+``EnabledCapability``). Lives in the OFL model package so the discovery
+sits next to the OFL types it inspects.
 """
 
 from __future__ import annotations
@@ -17,7 +13,6 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
-from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -28,24 +23,24 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-_CAPABILITY_TYPE_TO_ENABLED: dict[CapabilityType, EnabledCapability] = {
-    CapabilityType.COLOR_INTENSITY: EnabledCapability.COLOUR,
-    CapabilityType.COLOR_PRESET: EnabledCapability.COLOUR,
-    CapabilityType.COLOR_TEMPERATURE: EnabledCapability.COLOUR,
-    CapabilityType.PAN: EnabledCapability.POSITION,
-    CapabilityType.PAN_CONTINUOUS: EnabledCapability.POSITION,
-    CapabilityType.TILT: EnabledCapability.POSITION,
-    CapabilityType.TILT_CONTINUOUS: EnabledCapability.POSITION,
-    CapabilityType.INTENSITY: EnabledCapability.DIMMER,
-    CapabilityType.FOCUS: EnabledCapability.FOCUS,
-    CapabilityType.ZOOM: EnabledCapability.BEAM,
-    CapabilityType.IRIS: EnabledCapability.BEAM,
-    CapabilityType.IRIS_EFFECT: EnabledCapability.BEAM,
-    CapabilityType.PRISM: EnabledCapability.BEAM,
-    CapabilityType.PRISM_ROTATION: EnabledCapability.BEAM,
-    CapabilityType.BEAM_ANGLE: EnabledCapability.BEAM,
-    CapabilityType.FROST: EnabledCapability.FROST,
-    CapabilityType.FROST_EFFECT: EnabledCapability.FROST,
+_CAPABILITY_TYPE_TO_TAG: dict[CapabilityType, str] = {
+    CapabilityType.COLOR_INTENSITY: "colour",
+    CapabilityType.COLOR_PRESET: "colour",
+    CapabilityType.COLOR_TEMPERATURE: "colour",
+    CapabilityType.PAN: "position",
+    CapabilityType.PAN_CONTINUOUS: "position",
+    CapabilityType.TILT: "position",
+    CapabilityType.TILT_CONTINUOUS: "position",
+    CapabilityType.INTENSITY: "dimmer",
+    CapabilityType.FOCUS: "focus",
+    CapabilityType.ZOOM: "beam",
+    CapabilityType.IRIS: "beam",
+    CapabilityType.IRIS_EFFECT: "beam",
+    CapabilityType.PRISM: "beam",
+    CapabilityType.PRISM_ROTATION: "beam",
+    CapabilityType.BEAM_ANGLE: "beam",
+    CapabilityType.FROST: "frost",
+    CapabilityType.FROST_EFFECT: "frost",
 }
 
 
@@ -60,35 +55,35 @@ def _wheels_of(fixture: UsedFixture) -> dict[str, Wheel]:
     return getattr(ofl, "wheels", {}) if ofl is not None else {}
 
 
-def _capabilities_from_wheels(fixture: UsedFixture) -> set[EnabledCapability]:
-    """Inspect wheel slot types directly: GOBO slots → GOBO; COLOR slots → COLOUR."""
-    caps: set[EnabledCapability] = set()
+def _capabilities_from_wheels(fixture: UsedFixture) -> set[str]:
+    """Inspect wheel slot types directly: GOBO slots → "gobo"; COLOR slots → "colour"."""
+    caps: set[str] = set()
     for wheel in _wheels_of(fixture).values():
         for slot in getattr(wheel, "slots", []):
             if slot.type in _GOBO_SLOT_TYPES:
-                caps.add(EnabledCapability.GOBO)
+                caps.add("gobo")
             elif slot.type is WheelSlotType.COLOR:
-                caps.add(EnabledCapability.COLOUR)
+                caps.add("colour")
     return caps
 
 
-def _capability_for(cap_type: CapabilityType, channel_name: str) -> EnabledCapability | None:
-    """Return the EnabledCapability for a single non-wheel OFL capability, or None if unknown."""
+def _tag_for(cap_type: CapabilityType, channel_name: str) -> str | None:
+    """Return the capability tag for a single non-wheel OFL capability, or None if unknown."""
     if cap_type == CapabilityType.WHEEL_SLOT:
         return None  # Handled via wheel-slot-type inspection in _capabilities_from_wheels.
-    mapped = _CAPABILITY_TYPE_TO_ENABLED.get(cap_type)
+    mapped = _CAPABILITY_TYPE_TO_TAG.get(cap_type)
     if mapped is None:
         logger.debug(
-            "Capability type %s on channel %r has no EnabledCapability mapping; skipping.",
+            "Capability type %s on channel %r has no capability tag; skipping.",
             cap_type,
             channel_name,
         )
     return mapped
 
 
-def discover_capabilities(fixtures: Iterable[UsedFixture]) -> set[EnabledCapability]:
-    """Union per-fixture capabilities derived from channel templates and wheel slot types."""
-    result: set[EnabledCapability] = set()
+def discover_capabilities(fixtures: Iterable[UsedFixture]) -> set[str]:
+    """Union of capability tags derived from channel templates and wheel slot types."""
+    result: set[str] = set()
     for fixture in fixtures:
         result |= _capabilities_from_wheels(fixture)
         channels = getattr(fixture, "fixture_channels", None)
@@ -105,7 +100,7 @@ def discover_capabilities(fixtures: Iterable[UsedFixture]) -> set[EnabledCapabil
                 logger.debug("Channel %r template has no get_capabilities(); skipping.", channel.name)
                 continue
             for capability in capabilities:
-                mapped = _capability_for(capability.type, channel.name)
+                mapped = _tag_for(capability.type, channel.name)
                 if mapped is not None:
                     result.add(mapped)
     return result
@@ -135,11 +130,9 @@ _BEAM_SUB_CAPABILITY_BY_TYPE: dict[CapabilityType, str] = {
 def beam_sub_capabilities(fixture: UsedFixture) -> set[str]:
     """Return the beam sub-capabilities (``"zoom"``, ``"iris"``, ``"prism"``) a fixture has.
 
-    Used by the compiler to decide which of :class:`BeamProperty`'s channels
-    should be exposed on this specific fixture. Walking the OFL channel
-    templates mirrors :func:`discover_capabilities` but keeps the finer-
-    grained zoom/iris/prism split so a wash fixture with only ``ZOOM``
-    doesn't produce iris or prism output channels.
+    Walks the OFL channel templates to produce the finer-grained zoom/iris/
+    prism split so a wash fixture with only ``ZOOM`` doesn't produce iris or
+    prism output channels downstream.
     """
     found: set[str] = set()
     channels = getattr(fixture, "fixture_channels", None)

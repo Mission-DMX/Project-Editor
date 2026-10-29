@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from controller.cli.connect_command import get_math_enabled_jinja_env
+from controller.utils.jinja_math import get_math_enabled_jinja_env
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedTreeWidgetItem
 
 if TYPE_CHECKING:
