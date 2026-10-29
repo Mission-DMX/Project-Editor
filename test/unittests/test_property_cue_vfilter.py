@@ -198,6 +198,114 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         finally:
             del type(scene.board_configuration).fixtures
 
+    def test_out_data_types_ordered_by_fixture_then_property(self) -> None:
+        """Output terminals must be grouped alphabetically by fixture, then by
+        property group (dimmer, position, colour, gobo, beam, focus, frost),
+        then within property by the natural channel order so a human can scan
+        them top-to-bottom."""
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_ordering")
+
+        def _ofl_cap(cap_type):
+            cap = MagicMock(); cap.type = cap_type
+            return cap
+
+        def _channel(name: str, caps: list):
+            template = MagicMock(); template.get_capabilities.return_value = caps
+            ch = MagicMock(); ch.name = name; ch.channel_template = template
+            return ch
+
+        alpha_uuid = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        bravo_uuid = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
+        wheel = MagicMock(); wheel.slots = [gobo_slot]
+
+        alpha = MagicMock(); alpha.uuid = alpha_uuid; alpha.name_on_stage = "Alpha"
+        alpha.fixture_channels = (
+            _channel("Pan", [_ofl_cap(CapabilityType.PAN)]),
+            _channel("Tilt", [_ofl_cap(CapabilityType.TILT)]),
+            _channel("Intensity", [_ofl_cap(CapabilityType.INTENSITY)]),
+            _channel("Zoom", [_ofl_cap(CapabilityType.ZOOM)]),
+            _channel("Focus", [_ofl_cap(CapabilityType.FOCUS)]),
+        )
+        alpha._fixture = MagicMock(); alpha._fixture.wheels = {"Gobo Wheel": wheel}
+
+        bravo = MagicMock(); bravo.uuid = bravo_uuid; bravo.name_on_stage = "Bravo"
+        bravo.fixture_channels = (
+            _channel("Pan", [_ofl_cap(CapabilityType.PAN)]),
+            _channel("Tilt", [_ofl_cap(CapabilityType.TILT)]),
+            _channel("Intensity", [_ofl_cap(CapabilityType.INTENSITY)]),
+            _channel("R", [_ofl_cap(CapabilityType.COLOR_INTENSITY)]),
+        )
+        bravo._fixture = MagicMock(); bravo._fixture.wheels = {}
+
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[alpha, bravo])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[
+                    # Deliberately out-of-order to prove the sort kicks in.
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=bravo_uuid),
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=alpha_uuid),
+                ],
+                enabled_capabilities={
+                    EnabledCapability.DIMMER,
+                    EnabledCapability.POSITION,
+                    EnabledCapability.COLOUR,
+                    EnabledCapability.GOBO,
+                    EnabledCapability.BEAM,
+                    EnabledCapability.FOCUS,
+                },
+            )
+            f._rebuild_io()
+            names = list(f.out_data_types.keys())
+
+            # Alpha's block appears before Bravo's (alphabetical by prefix).
+            alpha_block = [n for n in names if n.startswith("Alpha__")]
+            bravo_block = [n for n in names if n.startswith("Bravo__")]
+            alpha_start = names.index(alpha_block[0])
+            bravo_start = names.index(bravo_block[0])
+            self.assertLess(alpha_start, bravo_start)
+            # And they are contiguous (no interleaving).
+            self.assertEqual(alpha_block, names[alpha_start:alpha_start + len(alpha_block)])
+            self.assertEqual(bravo_block, names[bravo_start:bravo_start + len(bravo_block)])
+
+            # Alpha has dimmer -> position -> gobo -> beam -> focus (no colour).
+            self.assertEqual(
+                [
+                    "Alpha__brightness",
+                    "Alpha__strobefreq",
+                    "Alpha__duty_cycle",
+                    "Alpha__pan_value",
+                    "Alpha__pan_curvesel",
+                    "Alpha__tilt_value",
+                    "Alpha__tilt_curvesel",
+                    "Alpha__goboslot_0",
+                    "Alpha__goborotation_0",
+                    "Alpha__zoom",
+                    "Alpha__focus",
+                ],
+                alpha_block,
+            )
+
+            # Bravo: dimmer, position, colour (no gobo/focus/beam).
+            self.assertEqual(
+                [
+                    "Bravo__brightness",
+                    "Bravo__strobefreq",
+                    "Bravo__duty_cycle",
+                    "Bravo__pan_value",
+                    "Bravo__pan_curvesel",
+                    "Bravo__tilt_value",
+                    "Bravo__tilt_curvesel",
+                    "Bravo__color",
+                ],
+                bravo_block,
+            )
+        finally:
+            del type(scene.board_configuration).fixtures
+
     def test_mixed_spot_and_wash_scenario_isolates_per_fixture_channels(self) -> None:
         """A Hero Spot 230 and a Hero Wash 640FX enabled with every capability must
         produce only the channels each fixture physically supports:

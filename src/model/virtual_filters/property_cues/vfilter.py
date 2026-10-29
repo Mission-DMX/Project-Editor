@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, override
 
 from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.virtual_filters.cue_vfilter import PreviewFilter
+from model.virtual_filters.property_cues._channel_ordering import channel_sort_key
 from model.virtual_filters.property_cues.compiler import (
     CompileResult,
     compile_property_model,
@@ -85,9 +86,13 @@ class PropertyBasedCueFilter(PreviewFilter):
                 gobo_wheel_count_lookup=self._gobo_wheel_count_lookup,
                 beam_sub_capabilities_lookup=self._beam_sub_capabilities_lookup,
             )
+            # Terminal order follows (fixture prefix, property group, within-
+            # property order) so the node reads top-to-bottom in a way humans
+            # can scan quickly.
+            sorted_names = sorted(self._last_compile.channel_specs.keys(), key=channel_sort_key)
             self._out_data_types = {
-                virtual_port: self._last_compile.channel_specs[virtual_port].data_type
-                for virtual_port in self._last_compile.channel_specs
+                name: self._last_compile.channel_specs[name].data_type
+                for name in sorted_names
             }
         return self._last_compile
 
