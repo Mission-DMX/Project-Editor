@@ -40,6 +40,9 @@ if __name__ == "__main__":
     )
     app.processEvents()
 
+    from controller.xtouch_option_right_click_filter import XTouchOptionRightClickFilter
+    app.installEventFilter(XTouchOptionRightClickFilter.instance())
+
     import atexit
     import json
     import logging.config
