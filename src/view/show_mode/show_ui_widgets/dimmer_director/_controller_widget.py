@@ -12,8 +12,7 @@ from model.filters.dimmer_director import EffectCurveMode
 from view.utility_widgets.jogwheel_spinbox import JogwheelSpinBox
 
 if TYPE_CHECKING:
-    from model.filters.dimmer_director import DimmerDirectorFilter
-    from model.media_assets.image import AbstractImageAsset
+    from model.filters.dimmer_director import DimmerCurve, DimmerDirectorFilter, EffectCurve
 
 _BUTTON_SIZE = 64
 _LABEL_WIDTH = 100
@@ -71,10 +70,10 @@ class ControllerWidget(QWidget):
         dimmer_curves = self._model.dimmer_curves
 
         for i, curve in enumerate(effect_curves):
-            btn = QPushButton(_APPLY_COLUMN_TEXT)
+            btn = QPushButton()
             btn.setToolTip(f"Apply effect curve '{curve.name}' to every group.")
             btn.setFixedSize(_BUTTON_SIZE, _BUTTON_SIZE)
-            _apply_curve_icon(btn, curve.icon_asset)
+            _apply_curve_label(btn, curve, apply_all_prefix=_APPLY_COLUMN_TEXT)
             if self._update_list is not None:
                 btn.clicked.connect(lambda _checked=False, ii=i: self._apply_effect_column(ii))
             self._effect_apply_all_buttons.append(btn)
@@ -82,10 +81,10 @@ class ControllerWidget(QWidget):
         effect_offset = 1 + self._effect_count
 
         for i, curve in enumerate(dimmer_curves):
-            btn = QPushButton(_APPLY_COLUMN_TEXT)
+            btn = QPushButton()
             btn.setToolTip(f"Apply dimmer curve '{curve.name}' to every group.")
             btn.setFixedSize(_BUTTON_SIZE, _BUTTON_SIZE)
-            _apply_curve_icon(btn, curve.icon_asset)
+            _apply_curve_label(btn, curve, apply_all_prefix=_APPLY_COLUMN_TEXT)
             if self._update_list is not None:
                 btn.clicked.connect(lambda _checked=False, ii=i: self._apply_dimmer_column(ii))
             self._dimmer_apply_all_buttons.append(btn)
@@ -105,7 +104,7 @@ class ControllerWidget(QWidget):
                 btn = QPushButton()
                 btn.setFixedSize(_BUTTON_SIZE, _BUTTON_SIZE)
                 btn.setToolTip(f"{group.name} → effect '{curve.name}'")
-                _apply_curve_icon(btn, curve.icon_asset)
+                _apply_curve_label(btn, curve)
                 if self._update_list is not None:
                     btn.clicked.connect(
                         lambda _checked=False, g=group.name, ii=i: self._apply_effect_cell(g, ii),
@@ -119,7 +118,7 @@ class ControllerWidget(QWidget):
                 btn = QPushButton()
                 btn.setFixedSize(_BUTTON_SIZE, _BUTTON_SIZE)
                 btn.setToolTip(f"{group.name} → dimmer '{curve.name}'")
-                _apply_curve_icon(btn, curve.icon_asset)
+                _apply_curve_label(btn, curve)
                 if self._update_list is not None:
                     btn.clicked.connect(
                         lambda _checked=False, g=group.name, ii=i: self._apply_dimmer_cell(g, ii),
@@ -238,18 +237,35 @@ class ControllerWidget(QWidget):
             btn.blockSignals(False)
 
 
-def _apply_curve_icon(button: QPushButton, asset: AbstractImageAsset | None) -> None:
-    """Set the button's icon from the configured image asset, if any."""
-    if asset is None:
+def _apply_curve_label(
+    button: QPushButton,
+    curve: EffectCurve | DimmerCurve,
+    apply_all_prefix: str = "",
+) -> None:
+    """Set the button's visual representation from the curve.
+
+    If the curve has an image asset the button renders the asset as its icon and no text
+    is shown (except an optional ``apply_all_prefix`` prepended to the fallback text).
+    If no asset is configured the button falls back to showing the curve's name as its
+    text so operators can still tell the buttons apart. The optional ``apply_all_prefix``
+    (typically the apply-all arrow) is prepended to the fallback text on the
+    column-apply buttons so their intent remains visible.
+    """
+    icon_set = False
+    asset = curve.icon_asset
+    if asset is not None:
+        try:
+            image = asset.get_image_for_ui()
+        except Exception:
+            image = None
+        if image is not None:
+            pixmap = QPixmap.fromImage(image)
+            if not pixmap.isNull():
+                button.setIcon(QIcon(pixmap))
+                button.setIconSize(button.size() * 0.75)
+                icon_set = True
+    if icon_set:
+        button.setText(apply_all_prefix)
         return
-    try:
-        image = asset.get_image_for_ui()
-    except Exception:
-        return
-    if image is None:
-        return
-    pixmap = QPixmap.fromImage(image)
-    if pixmap.isNull():
-        return
-    button.setIcon(QIcon(pixmap))
-    button.setIconSize(button.size() * 0.75)
+    name = (curve.name or "").strip() or "?"
+    button.setText(f"{apply_all_prefix}\n{name}" if apply_all_prefix else name)
