@@ -114,6 +114,34 @@ class State(ABC):
         """Get a copy of the state."""
         raise NotImplementedError
 
+    @classmethod
+    def from_value(cls, data_type: DataType, transition: TransferFunction | str,
+                   value: float | int | ColorHSI) -> State:
+        """Create the ``State`` subclass matching ``data_type`` and populate it.
+
+        ``transition`` may be either a :class:`TransferFunction` member or its
+        string value (``"lin"`` etc.) -- both are accepted so callers from the
+        solver (``TransferFunction``) and from JSON (``str``) share this path.
+        """
+        transition_str = transition.value if isinstance(transition, TransferFunction) else str(transition)
+        if data_type == DataType.DT_8_BIT:
+            s = StateEightBit(transition_str)
+            s._value = max(0, min(255, round(float(value))))
+            return s
+        if data_type == DataType.DT_16_BIT:
+            s = StateSixteenBit(transition_str)
+            s._value = max(0, min(65535, round(float(value))))
+            return s
+        if data_type == DataType.DT_DOUBLE:
+            s = StateDouble(transition_str)
+            s._value = float(value)
+            return s
+        if data_type == DataType.DT_COLOR:
+            s = StateColor(transition_str)
+            s._value = value.copy() if isinstance(value, ColorHSI) else ColorHSI(float(value), 0.0, 0.0)
+            return s
+        raise ValueError(f"Unsupported data type: {data_type}")
+
 
 class StateEightBit(State):
     """State for 8bit channel."""
@@ -266,6 +294,21 @@ class KeyFrame:
         self.timestamp: float = 0.0
         self._parent = parent_cue
         self.only_on_channel: str | None = None
+
+    @classmethod
+    def at(cls, timestamp_seconds: float, parent_cue: Cue | None = None,
+           states: list[State] | tuple[State, ...] = ()) -> KeyFrame:
+        """Construct a key frame at ``timestamp_seconds`` with the given states.
+
+        Convenience factory used by callers that build frames programmatically
+        (notably the property-based cue vfilter's solver). Equivalent to
+        ``KeyFrame(parent) → kf.timestamp = …`` plus a loop of ``append_state``.
+        """
+        kf = cls(parent_cue)
+        kf.timestamp = float(timestamp_seconds)
+        for s in states:
+            kf.append_state(s)
+        return kf
 
     def get_data_types(self) -> list[DataType]:
         """Get data types of associated channels."""

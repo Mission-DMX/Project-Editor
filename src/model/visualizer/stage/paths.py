@@ -16,6 +16,7 @@ DEFAULT_MODEL_PATHS: dict[str, str] = {
     "truss_medium": resource_path(os.path.join("resources", "3dmodels", "truss medium.glb")),
     "platform": resource_path(os.path.join("resources", "3dmodels", "platform.glb")),
     "moving_head": resource_path(os.path.join("resources", "3dmodels", "movinghead.glb")),
+    "par_can": resource_path(os.path.join("resources", "3dmodels", "par_can.glb")),
 }
 
 # User-local stage directory (XDG).

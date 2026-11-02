@@ -146,3 +146,37 @@ class CueFilter(PreviewFilter):
         super().__init__(
             scene, filter_id, FilterTypeEnumeration.VFILTER_CUES, FilterTypeEnumeration.FILTER_TYPE_CUES, pos=pos
         )
+
+    @override
+    def _rebuild_io(self) -> None:
+        """Reset I/O to the base signature and derive outputs from the ``mapping`` configuration.
+
+        Called from :meth:`Filter.__init__` at construction time (with empty configs) and again
+        from the loader once ``filter_configurations`` have been populated from XML, so a
+        constructed cue filter is fully usable without the editor view opening.
+        """
+        self._in_data_types = {"time": DataType.DT_DOUBLE, "time_scale": DataType.DT_DOUBLE}
+        self._out_data_types = {}
+        self._default_values = {"time_scale": "1.0"}
+        self._gui_update_keys = {
+            "run_mode": ["play", "pause", "to_next_cue", "stop"],
+            "run_cue": DataType.DT_16_BIT,
+            "next_cue": DataType.DT_16_BIT,
+        }
+        self._filter_configurations.setdefault("mapping", "")
+        self._filter_configurations.setdefault("end_handling", "")
+        self._filter_configurations.setdefault("cuelist", "")
+        for entry in self._filter_configurations.get("mapping", "").split(";"):
+            if not entry:
+                continue
+            parts = entry.split(":")
+            if len(parts) < 2:
+                logger.warning("CueFilter %s: malformed mapping entry %r, skipping", self._filter_id, entry)
+                continue
+            try:
+                self._out_data_types[parts[0]] = DataType.from_filter_str(parts[1])
+            except ValueError:
+                logger.warning(
+                    "CueFilter %s: unknown data type %r for channel %r, skipping",
+                    self._filter_id, parts[1], parts[0],
+                )

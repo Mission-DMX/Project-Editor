@@ -32,6 +32,7 @@ class PatchPlanExportWizard(QWizard):
     """Wizard guides the user to export the patching configuration as a CSV file.
 
     Provide a power distribution guide in the process.
+
     """
 
     def __init__(self, parent: QWidget, show_data: BoardConfiguration) -> None:
@@ -93,6 +94,7 @@ class PatchPlanExportWizard(QWizard):
         """Handle export button click.
 
         Prompts the user to select an CSV file export destination.
+
         """
         self._file_selection_dialog.show()
 
@@ -105,6 +107,7 @@ class PatchPlanExportWizard(QWizard):
         """Load all available fixtures into the list widget.
 
         Prompting the user to select the one desired for export.
+
         """
         for fixture in self._show.fixtures:
             item = AnnotatedListWidgetItem(self._fixture_list)
@@ -172,7 +175,7 @@ class PatchPlanExportWizard(QWizard):
                         fixture.name_on_stage or fixture.name,
                         fixture.fixture_file,
                         str(fixture.universe_id),
-                        str(fixture.start_index),
+                        str(fixture.start_index + 1),
                         f"L{fixture_phase + 1}",
                         str(fixture.power),
                         str(phases[fixture_phase]),
@@ -191,7 +194,7 @@ class PatchPlanExportWizard(QWizard):
 
         """
         number_of_phases = self._number_phases_sb.value()
-        fixtures.sort(key=lambda f: f.physical.power, reverse=True)
+        fixtures.sort(key=lambda f: f.power, reverse=True)
         for fixture in fixtures:
             selected_phase = 0
             for i in range(number_of_phases):

@@ -5,10 +5,10 @@ from typing import Union
 
 from model import Filter
 from model.filter import FilterTypeEnumeration
+from model.filters.factory import construct_filter_instance
 from model.ofl.fixture import ColorSupport, UsedFixture
 from model.scene import FilterPage
 from model.virtual_filters.range_adapters import DimmerGlobalBrightnessMixinVFilter
-from model.virtual_filters.vfilter_factory import construct_virtual_filter_instance
 
 logger = getLogger(__name__)
 
@@ -94,29 +94,27 @@ def place_fixture_filters_in_scene(
         max_y = max(max_y, filter_.pos[1] or 0)
     avg_x /= max(avg_count, 1)
 
-    filter_ = Filter(
-        filter_id=f"universe-output_{_sanitize_name(name)}",
-        filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
-        pos=(avg_x, max_y + (_filter_channel_height * fixture.channel_length) / 2),
-        scene=scene,
-    )
-
-    filter_.filter_configurations["universe"] = str(fixture.parent_universe)
-    already_added_filters = [filter_]
-
-    used_names = set(filter_.filter_configurations)
-
+    universe_configs: dict[str, str] = {"universe": str(fixture.parent_universe)}
     for index in range(fixture.channel_length):
         base_name = _sanitize_name(fixture.get_fixture_channel(index).name or str(index))
         selected_name = base_name
         suffix = 1
-
-        while selected_name in used_names:
+        while selected_name in universe_configs:
             selected_name = f"{base_name}_{suffix}"
             suffix += 1
+        universe_configs[selected_name] = str(fixture.start_index + index + 1)
 
-        filter_.filter_configurations[selected_name] = str(fixture.start_index + index + 1)
-        used_names.add(selected_name)
+    # Route through the factory so UniverseOutput._rebuild_io populates in_data_types /
+    # default_values from the configs. A direct Filter(...) call would land as a bare Filter
+    # with empty I/O dicts and leave the resulting editor node without ports.
+    filter_ = construct_filter_instance(
+        scene=scene,
+        filter_type=FilterTypeEnumeration.FILTER_UNIVERSE_OUTPUT,
+        filter_id=f"universe-output_{_sanitize_name(name)}",
+        pos=(avg_x, max_y + (_filter_channel_height * fixture.channel_length) / 2),
+        filter_configurations=universe_configs,
+    )
+    already_added_filters = [filter_]
 
     scene.append_filter(filter_)
     filter_page.filters.append(filter_)
@@ -164,7 +162,7 @@ def _check_and_add_auxiliary_filters(
                 and (_get_channel_name_at(fixture, index - 1) or "").lower() == "tilt"
             ):
                 adapter_name = _sanitize_name(f"pos2channel_{i}_{name}")
-                split_filter = Filter(
+                split_filter = construct_filter_instance(
                     scene=fp.parent_scene,
                     filter_id=adapter_name,
                     filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
@@ -188,7 +186,7 @@ def _check_and_add_auxiliary_filters(
                 ).startswith("Blue"):
                     if fixture.channel_length > index + 3 and fixture.get_fixture_channel(index + 3).name == "White":
                         adapter_name = _sanitize_name(f"color2rgbw_{i}_{name}")
-                        rgbw_filter = Filter(
+                        rgbw_filter = construct_filter_instance(
                             scene=fp.parent_scene,
                             filter_id=adapter_name,
                             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGBW,
@@ -212,7 +210,7 @@ def _check_and_add_auxiliary_filters(
                         already_added_filters.append(rgbw_filter)
                     else:
                         adapter_name = _sanitize_name(f"color2rgb_{i}_{name}")
-                        rgb_filter = Filter(
+                        rgb_filter = construct_filter_instance(
                             scene=fp.parent_scene,
                             filter_id=adapter_name,
                             filter_type=FilterTypeEnumeration.FILTER_ADAPTER_COLOR_TO_RGB,
@@ -262,7 +260,7 @@ def _check_and_add_auxiliary_filters(
 
                 if double_channel_dimmer_required:
                     adapter_name = _sanitize_name(f"dimmer2byte_{i}_{name}")
-                    dimmer_to_byte_filter = Filter(
+                    dimmer_to_byte_filter = construct_filter_instance(
                         scene=fp.parent_scene,
                         filter_id=adapter_name,
                         filter_type=FilterTypeEnumeration.FILTER_ADAPTER_16BIT_TO_DUAL_8BIT,
@@ -296,7 +294,7 @@ def _check_and_add_auxiliary_filters(
         and str(fp.parent_scene.board_configuration.ui_hints.get("color-mixin-auto-add-disabled")).lower() != "true"
     ):
         for color_input_filter in color_inputs:
-            brightness_mixin_filter = construct_virtual_filter_instance(
+            brightness_mixin_filter = construct_filter_instance(
                 scene=fp.parent_scene,
                 filter_type=FilterTypeEnumeration.VFILTER_COLOR_GLOBAL_BRIGHTNESS_MIXIN,
                 filter_id=color_input_filter.filter_id + "__brightness_mixin",

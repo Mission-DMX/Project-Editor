@@ -443,11 +443,12 @@ class UsedFixture(QtCore.QObject):
 
 
 def make_used_fixture(
-    board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int
+    board_configuration: BoardConfiguration, fixture: OflFixture, mode_index: int, universe_id: int, start_index: int,
+    uuid: UUID | None, color: str | None
 ) -> UsedFixture:
     """Generate a new Used Fixture from a oflFixture."""
     try:
-        return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index)
+        return UsedFixture(board_configuration, fixture, mode_index, universe_id, start_index, uuid, color)
     except ValueError as e:
         logger.error(e)
         raise FixtureDefNotFoundError(fixture.fileName, str(e)) from e
