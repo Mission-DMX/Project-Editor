@@ -1,4 +1,12 @@
-"""Dimmer property for the property-based cue vfilter (WP4)."""
+"""Dimmer property for the property-based cue vfilter (WP4).
+
+The raw brightness channel is named ``brightness_raw`` so it cannot collide
+with the user-facing ``brightness`` port the dimmer post-processing strategy
+exposes after wiring it through the float strobe generator. ``_user_facing_outputs``
+hides ``brightness_raw`` and synthesises ``brightness`` with the right data
+type; the strobe strategy reads from ``…__brightness_raw`` and publishes on
+``…__brightness``. See pan/tilt for the same pattern.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +22,7 @@ from model.virtual_filters.property_cues.properties.base import Property, child_
 if TYPE_CHECKING:
     from model.virtual_filters.property_cues.distribution import Distribution
 
-_BRIGHTNESS = "brightness"
+_BRIGHTNESS_RAW = "brightness_raw"
 _STROBEFREQ = "strobefreq"
 _DUTY_CYCLE = "duty_cycle"
 
@@ -37,7 +45,7 @@ class DimmerProperty(Property):
     @property
     def channel_specs(self) -> tuple[ChannelSpec, ...]:
         return (
-            ChannelSpec(name=_BRIGHTNESS, data_type=DataType.DT_DOUBLE),
+            ChannelSpec(name=_BRIGHTNESS_RAW, data_type=DataType.DT_DOUBLE),
             ChannelSpec(name=_STROBEFREQ, data_type=DataType.DT_DOUBLE),
             ChannelSpec(name=_DUTY_CYCLE, data_type=DataType.DT_DOUBLE, default_value="128"),
         )
@@ -52,7 +60,7 @@ class DimmerProperty(Property):
         del step_duration_40hz
         start = child_start_timestep(step_start_40hz, distribution, child_index)
         return {
-            _BRIGHTNESS: [
+            _BRIGHTNESS_RAW: [
                 KeyframeRequest(
                     timestep_40hz=start,
                     requested_value=float(self.brightness),

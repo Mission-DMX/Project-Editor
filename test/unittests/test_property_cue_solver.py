@@ -166,6 +166,16 @@ class KeyframeSolverTest(unittest.TestCase):
 class ChannelConsolidatorTest(unittest.TestCase):
 
     def test_identical_channels_collapse_to_alphabet_earliest(self) -> None:
+        """Same local name on different prefixes consolidates on identical streams.
+
+        The consolidator only collapses channels that share the same local
+        port name (the segment after ``__``) so that semantically distinct
+        ports on one fixture -- e.g. ``brightness_raw`` vs ``strobefreq`` --
+        can never merge even when their frame streams happen to match.
+        Here both ``MH1__brightness`` and ``MH2__brightness`` carry the
+        same value (7.0) at the same slot, so they collapse onto the
+        alphabetically-earliest ``MH1__brightness``.
+        """
         solver = KeyframeSolver()
 
         def _run(channel_name: str, value: float) -> list:
@@ -183,34 +193,67 @@ class ChannelConsolidatorTest(unittest.TestCase):
 
         per_cue_frames = {
             "cue_1": {
-                "beta": _run("beta", 7.0),
-                "alpha": _run("alpha", 7.0),
-                "gamma": _run("gamma", 42.0),
+                "MH2__brightness": _run("MH2__brightness", 7.0),
+                "MH1__brightness": _run("MH1__brightness", 7.0),
+                "MH1__pan": _run("MH1__pan", 42.0),
             },
         }
         specs = {
-            "alpha": _spec("alpha"),
-            "beta": _spec("beta"),
-            "gamma": _spec("gamma"),
+            "MH1__brightness": _spec("MH1__brightness"),
+            "MH2__brightness": _spec("MH2__brightness"),
+            "MH1__pan": _spec("MH1__pan"),
         }
-        post = {"alpha": "pp", "beta": "pp", "gamma": "pp"}
+        post = {"MH1__brightness": "pp", "MH2__brightness": "pp", "MH1__pan": "pp"}
         mapping = consolidate(per_cue_frames, specs, post)
-        self.assertEqual("alpha", mapping.canonical("alpha"))
-        self.assertEqual("alpha", mapping.canonical("beta"))
-        self.assertEqual("gamma", mapping.canonical("gamma"))
+        self.assertEqual("MH1__brightness", mapping.canonical("MH1__brightness"))
+        self.assertEqual("MH1__brightness", mapping.canonical("MH2__brightness"))
+        self.assertEqual("MH1__pan", mapping.canonical("MH1__pan"))
+
+    def test_same_prefix_different_locals_never_merge(self) -> None:
+        """Two DT_DOUBLE channels on the same fixture must stay separate.
+
+        Regression for the dimmer configure failure observed on fish:
+        ``brightness_raw``, ``strobefreq`` and ``duty_cycle`` are all
+        DT_DOUBLE and carry empty frame streams when the user has not
+        dialed any dimmer assignments, but they MUST remain declared as
+        three distinct output channels on the native cue filter because
+        the strobe post-processing chain references each by its specific
+        local name.
+        """
+        per_cue_frames = {
+            "cue_1": {
+                "MH1__brightness_raw": [],
+                "MH1__strobefreq": [],
+                "MH1__duty_cycle": [],
+            },
+        }
+        specs = {
+            "MH1__brightness_raw": _spec("MH1__brightness_raw"),
+            "MH1__strobefreq": _spec("MH1__strobefreq"),
+            "MH1__duty_cycle": _spec("MH1__duty_cycle"),
+        }
+        post = {
+            "MH1__brightness_raw": "dimmer:None:None",
+            "MH1__strobefreq": "dimmer:None:None",
+            "MH1__duty_cycle": "dimmer:None:None",
+        }
+        mapping = consolidate(per_cue_frames, specs, post)
+        self.assertEqual("MH1__brightness_raw", mapping.canonical("MH1__brightness_raw"))
+        self.assertEqual("MH1__strobefreq", mapping.canonical("MH1__strobefreq"))
+        self.assertEqual("MH1__duty_cycle", mapping.canonical("MH1__duty_cycle"))
 
     def test_different_postprocess_keeps_channels_separate(self) -> None:
         per_cue_frames = {
             "cue_1": {
-                "alpha": [],
-                "beta": [],
+                "MH1__brightness": [],
+                "MH2__brightness": [],
             },
         }
-        specs = {"alpha": _spec("alpha"), "beta": _spec("beta")}
-        post = {"alpha": "pp_a", "beta": "pp_b"}
+        specs = {"MH1__brightness": _spec("MH1__brightness"), "MH2__brightness": _spec("MH2__brightness")}
+        post = {"MH1__brightness": "pp_a", "MH2__brightness": "pp_b"}
         mapping = consolidate(per_cue_frames, specs, post)
-        self.assertEqual("alpha", mapping.canonical("alpha"))
-        self.assertEqual("beta", mapping.canonical("beta"))
+        self.assertEqual("MH1__brightness", mapping.canonical("MH1__brightness"))
+        self.assertEqual("MH2__brightness", mapping.canonical("MH2__brightness"))
 
 
 if __name__ == "__main__":

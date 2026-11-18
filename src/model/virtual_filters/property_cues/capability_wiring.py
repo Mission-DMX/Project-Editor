@@ -33,7 +33,15 @@ PAN_EXPOSED = "pan"
 TILT_EXPOSED = "tilt"
 
 # Raw channels used by the dimmer property + the strobe-generator chain.
+# ``BRIGHTNESS_RAW`` feeds the strobe generator from the native cue filter;
+# the strobe generator then publishes the user-facing ``BRIGHTNESS`` port.
+# Keeping the raw and exposed names distinct is essential: if both were
+# ``"brightness"``, ``filter_serialization.py``'s override dictionary would
+# rewrite the strobe filter's own brightness input to point at the strobe
+# filter's value output, producing a self-link that stalls fish scheduling.
+# Pan/tilt follow the same split (``pan_value`` raw, ``pan`` exposed).
 BRIGHTNESS = "brightness"
+BRIGHTNESS_RAW = "brightness_raw"
 STROBEFREQ = "strobefreq"
 DUTY_CYCLE = "duty_cycle"
 
@@ -57,10 +65,14 @@ class ExposedOutput:
 RAW_TO_CAPABILITY: dict[str, str] = {
     "pan": "pan",
     "tilt": "tilt",
+    # ``brightness_raw`` is matched before ``brightness`` so the raw-channel
+    # lookup never mistakes the exposed name for a raw one; ``startswith``
+    # covers both via the ``BRIGHTNESS`` entry below.
+    BRIGHTNESS_RAW: "dimmer",
     BRIGHTNESS: "dimmer",
     STROBEFREQ: "dimmer",
     DUTY_CYCLE: "dimmer",
-    "color": "colour",
+    "color": "color",
     "focus": "focus",
     "zoom": "beam",
     "iris": "beam",
@@ -75,17 +87,18 @@ RAW_TO_CAPABILITY: dict[str, str] = {
 # Raw channels that only exist to drive post-processing filters; the vfilter
 # hides them on the node and exposes the result of the chain instead.
 INTERNAL_LOCAL_NAMES: frozenset[str] = frozenset({
-    STROBEFREQ, DUTY_CYCLE,
+    BRIGHTNESS_RAW, STROBEFREQ, DUTY_CYCLE,
     PAN_VALUE, PAN_CURVESEL,
     TILT_VALUE, TILT_CURVESEL,
 })
 
 
 # Raw channel -> ``ExposedOutput`` for cases where the post-processed port has
-# a different name/type than the raw channel. ``brightness`` isn't in here
-# because the strobe generator preserves the float type and reuses the name
-# (``resolve_output_port_id`` re-routes it to the generator's output).
+# a different name/type than the raw channel. The dimmer entry mirrors the
+# pan/tilt split: the native cue filter emits ``brightness_raw`` (hidden),
+# the strobe generator exposes ``brightness`` as the user-facing port.
 SYNTHESIZED_OUTPUTS: dict[str, ExposedOutput] = {
     PAN_VALUE: ExposedOutput(PAN_EXPOSED, "DT_16_BIT"),
     TILT_VALUE: ExposedOutput(TILT_EXPOSED, "DT_16_BIT"),
+    BRIGHTNESS_RAW: ExposedOutput(BRIGHTNESS, "DT_DOUBLE"),
 }

@@ -17,7 +17,7 @@ from model.ofl.capability_discovery import discover_capabilities
 from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
 
 from .editors.beam_editor import BeamEditor
-from .editors.colour_editor import ColourEditor
+from .editors.color_editor import ColorEditor
 from .editors.dimmer_editor import DimmerEditor
 from .editors.focus_editor import FocusEditor
 from .editors.frost_editor import FrostEditor
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 _PROPERTY_ORDER: tuple[tuple[str, str, EnabledCapability], ...] = (
     ("dimmer", "Dimmer", EnabledCapability.DIMMER),
     ("position", "Position", EnabledCapability.POSITION),
-    ("colour", "Colour", EnabledCapability.COLOUR),
+    ("color", "Color", EnabledCapability.COLOR),
     ("gobo", "Gobo", EnabledCapability.GOBO),
     ("beam", "Beam", EnabledCapability.BEAM),
     ("focus", "Focus", EnabledCapability.FOCUS),
@@ -137,6 +137,7 @@ class PropertyPane(QWidget):
             self._top_stack.setVisible(False)
         fixtures = self._fixture_lookup(node_path)
         self._editors["gobo"].set_fixtures(fixtures)
+        self._editors["color"].set_fixtures(fixtures)
         self._apply_capability_filter(fixtures)
         for prop_id, editor in self._editors.items():
             editor.load(self._cue_index, step_index, node_path)
@@ -170,8 +171,8 @@ def _build_editor(prop_id: str, model: PropertyCueFilterModel) -> QWidget:
         return DimmerEditor(model)
     if prop_id == "position":
         return PositionEditor(model)
-    if prop_id == "colour":
-        return ColourEditor(model)
+    if prop_id == "color":
+        return ColorEditor(model)
     if prop_id == "gobo":
         return GoboEditor(model)
     if prop_id == "beam":

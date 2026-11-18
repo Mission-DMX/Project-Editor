@@ -65,8 +65,8 @@ def _manual_colour(hue: float, saturation: float, intensity: float):
 
     return PropertyAssignments(
         by_property={
-            "colour": ManualPropertyAssignment(
-                values={"color": ColorHSI(hue, saturation, intensity)},
+            "color": ManualPropertyAssignment(
+                values={"colors": {0: ColorHSI(hue, saturation, intensity)}},
             ),
         },
     )
@@ -116,7 +116,7 @@ def _make_vfilter_single_colour(scene):
     f = PropertyBasedCueFilter(scene, "pcf_colour")
     f.property_model.fixture_selection = FixtureSelection(
         entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
-        enabled_capabilities={EnabledCapability.COLOUR},
+        enabled_capabilities={EnabledCapability.COLOR},
     )
     f.property_model.cues.append(
         PropertyCue(name="C1", steps=[

@@ -17,7 +17,7 @@ class SelectionEntryKind(Enum):
 class EnabledCapability(Enum):
     DIMMER = "dimmer"
     POSITION = "position"
-    COLOUR = "colour"
+    COLOR = "color"
     GOBO = "gobo"
     BEAM = "beam"
     FOCUS = "focus"

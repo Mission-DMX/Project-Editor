@@ -78,7 +78,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
                 ("Blue", CapabilityType.COLOR_INTENSITY),
             ]
         )
-        self.assertEqual(discover_capabilities([fixture]), {"colour"})
+        self.assertEqual(discover_capabilities([fixture]), {"color"})
 
     def test_capability_discovery_gobo_wheel_from_slot_types(self) -> None:
         """A wheel whose slots are typed GOBO should surface GOBO regardless of name."""
@@ -97,7 +97,7 @@ class CapabilityDiscoveryTests(unittest.TestCase):
         fixture_without_wheel = self._make_fixture_with_capabilities([])
         fixture_without_wheel._fixture = MagicMock(); fixture_without_wheel._fixture.wheels = {}
 
-        self.assertEqual(discover_capabilities([fixture_colour]), {"colour"})
+        self.assertEqual(discover_capabilities([fixture_colour]), {"color"})
         self.assertEqual(discover_capabilities([fixture_gobo]), {"gobo"})
         self.assertEqual(discover_capabilities([fixture_without_wheel]), set())
 
@@ -179,7 +179,7 @@ class WizardHeadlessTests(unittest.TestCase):
                 FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="fixture-a"),
                 FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="fixture-b"),
             ],
-            enabled_capabilities={EnabledCapability.COLOUR},
+            enabled_capabilities={EnabledCapability.COLOR},
         )
 
         wizard = FixtureSelectionWizard(board, initial=initial)
@@ -220,7 +220,7 @@ class WizardHeadlessTests(unittest.TestCase):
                 FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="fixture-a"),
                 FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="fixture-b"),
             ],
-            enabled_capabilities={EnabledCapability.COLOUR},
+            enabled_capabilities={EnabledCapability.COLOR},
         )
 
         wizard = FixtureSelectionWizard(board, initial=initial)

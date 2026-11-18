@@ -112,6 +112,7 @@ class PropertyBasedCueFilter(PreviewFilter):
                 capability_lookup=self._capability_lookup,
                 gobo_wheel_count_lookup=self._gobo_wheel_count_lookup,
                 beam_sub_capabilities_lookup=self._beam_sub_capabilities_lookup,
+                color_segment_count_lookup=self._color_segment_count_lookup,
             )
             self._out_data_types = _user_facing_outputs(self._last_compile.channel_specs)
         return self._last_compile
@@ -151,6 +152,14 @@ class PropertyBasedCueFilter(PreviewFilter):
             return {"zoom", "iris", "prism"}
         from model.ofl.capability_discovery import beam_sub_capabilities
         return beam_sub_capabilities(fixture)
+
+    def _color_segment_count_lookup(self, fixture_id: str) -> int:
+        """Return the number of HSI colour segments on the fixture (1 if none)."""
+        fixture = self._find_fixture(fixture_id)
+        if fixture is None:
+            return 1
+        from model.ofl.capability_discovery import color_segment_count_of
+        return color_segment_count_of(fixture)
 
     def _build_fixture_name_map(self) -> dict[str, str]:
         """Build ``{fixture_id: display_name}`` with collision-safe suffixes.
@@ -215,7 +224,19 @@ class PropertyBasedCueFilter(PreviewFilter):
         res = self._ensure_compiled()
         native = Filter(self.scene, self.filter_id,
                         FilterTypeEnumeration.FILTER_TYPE_CUES, self.pos)
+        # ``res.native_model.get_as_configuration()`` fills the cue-specific
+        # ``cuelist`` / ``mapping`` / ``end_handling`` / ``default_cue`` /
+        # ``persistence`` entries. Everything else -- including the user's
+        # ``time`` / ``time_scale`` channel_links and the gui_update_keys
+        # fish needs to accept the configuration -- has to come from the
+        # vfilter itself; the editor-only ``cues-prop-data`` blob is left
+        # out so fish doesn't see it.
         native.filter_configurations.update(res.native_model.get_as_configuration())
+        native.channel_links.update(self.channel_links)
+        native.gui_update_keys.update(self.gui_update_keys)
+        native.initial_parameters.update(self.initial_parameters)
+        native.in_data_types.update(self.in_data_types)
+        native.default_values.update(self.default_values)
         filter_list.append(native)
         filter_list.extend(res.postprocess_filters)
 

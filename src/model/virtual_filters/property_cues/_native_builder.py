@@ -53,8 +53,23 @@ def _frames_to_cue(name: str, channels: list[tuple[str, DataType]],
 def build_native(model: PropertyCueFilterModel, consolidation: ConsolidationMap,
                  all_specs: dict[str, ChannelSpec],
                  per_cue: list[tuple[int, str, list[RequestGroup]]],
-                 per_cue_frames: dict[str, dict[str, list[KeyFrame]]]) -> CueFilterModel:
-    canonical_channels = sorted({consolidation.canonical(n) for n in all_specs})
+                 per_cue_frames: dict[str, dict[str, list[KeyFrame]]],
+                 skip_canonicals: set[str] | None = None,
+                 ) -> CueFilterModel:
+    """Build the native CueFilterModel.
+
+    ``skip_canonicals`` lists canonical channel names that must NOT appear
+    on the native cue filter. The compiler passes defaulted canonicals so
+    those channels get materialised as standalone ``FILTER_CONSTANT_*``
+    filters instead of carrying an all-zero keyframe stream through the
+    cue filter. The native cue filter stays smaller and fish does not see
+    a channel it would have to validate without any post-processing
+    consumer.
+    """
+    skip = skip_canonicals or set()
+    canonical_channels = sorted(
+        {consolidation.canonical(n) for n in all_specs} - skip,
+    )
     sorted_channels = [(n, all_specs[n].data_type) for n in canonical_channels]
     native = CueFilterModel()
     for n, dt in sorted_channels:
@@ -64,7 +79,10 @@ def build_native(model: PropertyCueFilterModel, consolidation: ConsolidationMap,
     for (cue_index, cue_name, _groups), src_cue in zip(per_cue, model.cues, strict=True):
         canonical_frames: dict[str, list[KeyFrame]] = {n: [] for n in canonical_channels}
         for v_name, frames in per_cue_frames[f"cue_{cue_index}"].items():
-            canonical_frames.setdefault(consolidation.canonical(v_name), []).extend(frames)
+            canonical = consolidation.canonical(v_name)
+            if canonical in skip:
+                continue  # defaulted channel is materialised as a constant filter
+            canonical_frames.setdefault(canonical, []).extend(frames)
         for frames in canonical_frames.values():
             frames.sort(key=lambda kf: kf.timestamp)
         native.cues.append(_frames_to_cue(

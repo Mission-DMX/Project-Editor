@@ -141,7 +141,7 @@ class PresetEditorDialogTests(unittest.TestCase):
         user_dir = self._tmpdir()
         dialog = PresetEditorDialog(user_dir=user_dir)
         items = [dialog._applies_combo.itemText(i) for i in range(dialog._applies_combo.count())]
-        for expected in ("dimmer", "position", "colour"):
+        for expected in ("dimmer", "position", "color"):
             self.assertIn(expected, items)
 
     def test_keyframe_entry_round_trips(self) -> None:

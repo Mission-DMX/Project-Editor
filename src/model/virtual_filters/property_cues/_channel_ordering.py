@@ -32,7 +32,7 @@ def synthesized_output(local: str) -> tuple[str, DataType] | None:
 _PROPERTY_GROUPS = (
     "dimmer",
     "position",
-    "colour",
+    "color",
     "gobo",
     "beam",
     "focus",
@@ -43,6 +43,7 @@ _UNKNOWN_INDEX = len(_PROPERTY_GROUPS)
 
 _LOCAL_NAME_TO_PROPERTY: dict[str, str] = {
     "brightness": "dimmer",
+    "brightness_raw": "dimmer",
     "strobefreq": "dimmer",
     "duty_cycle": "dimmer",
     "pan": "position",
@@ -51,7 +52,7 @@ _LOCAL_NAME_TO_PROPERTY: dict[str, str] = {
     "tilt": "position",
     "tilt_value": "position",
     "tilt_curvesel": "position",
-    "color": "colour",
+    "color": "color",
     "zoom": "beam",
     "prism_selection": "beam",
     "prism_rotation": "beam",
@@ -61,9 +62,9 @@ _LOCAL_NAME_TO_PROPERTY: dict[str, str] = {
 }
 
 _WITHIN_PROPERTY_ORDER: dict[str, tuple[str, ...]] = {
-    "dimmer": ("brightness", "strobefreq", "duty_cycle"),
+    "dimmer": ("brightness", "brightness_raw", "strobefreq", "duty_cycle"),
     "position": ("pan", "pan_value", "pan_curvesel", "tilt", "tilt_value", "tilt_curvesel"),
-    "colour": ("color",),
+    "color": ("color",),
     "beam": ("zoom", "prism_selection", "prism_rotation", "iris"),
     "focus": ("focus",),
     "frost": ("frost_intensity",),
@@ -74,7 +75,8 @@ def _local_sort_tuple(local: str) -> tuple[int, int, int, str]:
     """Return ``(property_index, within_prop_order_a, within_prop_order_b, local)``.
 
     Gobo channels are keyed off their wheel index so ``goboslot_0`` precedes
-    ``goborotation_0`` which precedes ``goboslot_1``, etc.
+    ``goborotation_0`` which precedes ``goboslot_1``, etc. Colour segment
+    channels (``color_0``, ``color_1``, …) sort by their segment index.
     """
     if local.startswith("goboslot_"):
         wheel = local[len("goboslot_"):]
@@ -82,6 +84,9 @@ def _local_sort_tuple(local: str) -> tuple[int, int, int, str]:
     if local.startswith("goborotation_"):
         wheel = local[len("goborotation_"):]
         return (_PROPERTY_INDEX["gobo"], int(wheel) if wheel.isdigit() else 9999, 1, local)
+    if local.startswith("color_"):
+        seg = local[len("color_"):]
+        return (_PROPERTY_INDEX["color"], int(seg) if seg.isdigit() else 9999, 0, local)
     prop = _LOCAL_NAME_TO_PROPERTY.get(local)
     if prop is None:
         return (_UNKNOWN_INDEX, 0, 0, local)

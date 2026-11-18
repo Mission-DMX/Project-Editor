@@ -34,9 +34,9 @@ if TYPE_CHECKING:
     from model.virtual_filters.property_cues.model.property_step import PropertyStep
 
 
-_COLUMNS = ("Name", "Fade-in", "Dimmer", "Position", "Gobo", "Colour", "Beam", "Focus")
+_COLUMNS = ("Name", "Fade-in", "Dimmer", "Position", "Gobo", "Color", "Beam", "Focus")
 _PROPERTY_COLUMNS: dict[int, str] = {
-    2: "dimmer", 3: "position", 4: "gobo", 5: "colour", 6: "beam", 7: "focus",
+    2: "dimmer", 3: "position", 4: "gobo", 5: "color", 6: "beam", 7: "focus",
 }
 _ROLE_STEP_INDEX = Qt.ItemDataRole.UserRole + 1
 _ROLE_NODE_PATH = Qt.ItemDataRole.UserRole + 2
@@ -61,9 +61,12 @@ def _summary_for(property_id: str, assignment: object) -> str:
                 return f"{float(values.get('pan_value', 0.0)):.2f}/{float(values.get('tilt_value', 0.0)):.2f}"
             except (TypeError, ValueError):
                 return "?"
-        if property_id == "colour":
-            colour = values.get("color")
-            return str(colour) if colour is not None else "set"
+        if property_id == "color":
+            colors = values.get("colors") or {}
+            if isinstance(colors, dict) and colors:
+                first_key = next(iter(sorted(colors.keys())))
+                return f"{colors[first_key]}" if len(colors) == 1 else f"{len(colors)} colors"
+            return "-"
         if property_id == "gobo":
             slots = values.get("slots", {})
             if isinstance(slots, dict) and slots:

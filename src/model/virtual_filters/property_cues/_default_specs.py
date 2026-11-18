@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from model.virtual_filters.property_cues.channel_spec import ChannelSpec
 from model.virtual_filters.property_cues.properties import (
     BeamProperty,
-    ColourProperty,
+    ColorProperty,
     DimmerProperty,
     FocusProperty,
     FrostProperty,
@@ -30,10 +30,11 @@ NameResolver = Callable[[str], str]
 CapabilityLookup = Callable[[str], set[str]]
 GoboWheelCountLookup = Callable[[str], int]
 BeamSubCapabilityLookup = Callable[[str], set[str]]
+ColorSegmentCountLookup = Callable[[str], int]
 
 _PROPERTY_CLASS: dict[str, type[Property]] = {
     "dimmer": DimmerProperty, "position": PositionProperty,
-    "colour": ColourProperty, "color": ColourProperty,
+    "color": ColorProperty,
     "beam": BeamProperty, "gobo": GoboProperty,
     "focus": FocusProperty, "frost": FrostProperty,
 }
@@ -43,6 +44,7 @@ def property_kwargs_for_fixture(
     property_id: str, fixture_id: str,
     gobo_wheel_count_lookup: GoboWheelCountLookup | None,
     beam_sub_capabilities_lookup: BeamSubCapabilityLookup | None,
+    color_segment_count_lookup: ColorSegmentCountLookup | None = None,
 ) -> dict[str, object]:
     """Return constructor kwargs that shape the property to the fixture's physical caps.
 
@@ -60,6 +62,10 @@ def property_kwargs_for_fixture(
         kwargs["include_zoom"] = "zoom" in subs
         kwargs["include_iris"] = "iris" in subs
         kwargs["include_prism"] = "prism" in subs
+    if property_id == "color" and color_segment_count_lookup is not None:
+        segment_count = color_segment_count_lookup(fixture_id)
+        if segment_count > 0:
+            kwargs["segment_count"] = segment_count
     return kwargs
 
 
@@ -70,6 +76,7 @@ def default_specs_for_fixtures(
     capability_lookup: CapabilityLookup | None,
     gobo_wheel_count_lookup: GoboWheelCountLookup | None,
     beam_sub_capabilities_lookup: BeamSubCapabilityLookup | None = None,
+    color_segment_count_lookup: ColorSegmentCountLookup | None = None,
 ) -> dict[str, ChannelSpec]:
     """Return default channel specs for every (fixture, enabled capability) pair.
 
@@ -81,6 +88,9 @@ def default_specs_for_fixtures(
     the subset of beam sub-capabilities (``"zoom"``, ``"iris"``, ``"prism"``)
     a fixture actually supports so wash fixtures with only ``ZOOM`` get just
     the zoom channel and no spurious iris / prism channels.
+    ``color_segment_count_lookup`` returns the number of independent HSI
+    colour segments on the fixture, so multi-pixel LED bars expose one
+    ``color_N`` output per segment.
     """
     specs: dict[str, ChannelSpec] = {}
     enabled = {cap.value for cap in selection.enabled_capabilities}
@@ -92,7 +102,9 @@ def default_specs_for_fixtures(
             if cls is None:
                 continue
             kwargs = property_kwargs_for_fixture(
-                property_id, fid, gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
+                property_id, fid,
+                gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
+                color_segment_count_lookup,
             )
             try:
                 prop = cls(**kwargs)  # type: ignore[arg-type]

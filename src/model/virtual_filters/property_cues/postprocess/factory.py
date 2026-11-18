@@ -23,8 +23,10 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model.filter import Filter, FilterTypeEnumeration
+from model.filters.factory import construct_filter_instance
 from model.virtual_filters.property_cues.capability_wiring import (
     BRIGHTNESS,
+    BRIGHTNESS_RAW,
     DUTY_CYCLE,
     POSITION_CURVESEL_SUFFIX,
     POSITION_VALUE_SUFFIX,
@@ -41,7 +43,17 @@ PositionTuple = tuple[int, int] | tuple[float, float] | None
 
 @dataclass(slots=True)
 class CapabilityContext:
-    """Everything a strategy needs to build its chain for ONE instance."""
+    """Everything a strategy needs to build its chain for ONE instance.
+
+    ``constant_inputs`` maps local raw-channel names (e.g. ``"brightness_raw"``)
+    to the string value that will be emitted on the native cue filter for
+    that channel. The compiler only populates an entry when the channel is
+    DEFAULTED across every cue -- i.e. no cue dialed a keyframe for it --
+    so a strategy can tell whether its input is "definitely this static
+    value for the life of the show" or "a live stream coming from the cue
+    filter". Strategies may use this to fold their whole chain down to a
+    single constant filter (see the dimmer strategy for the pattern).
+    """
 
     scene: Scene
     cue_filter_id: str
@@ -50,6 +62,7 @@ class CapabilityContext:
     tilt_range: tuple[int, int] | None = None
     pos: PositionTuple = None
     extra_params: dict[str, str] = field(default_factory=dict)
+    constant_inputs: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(slots=True, frozen=True)
@@ -128,26 +141,34 @@ def _position_chain(capability: str, raw_range: tuple[int, int] | None,
     switch_id = f"{base_id}_switch"
     range_id = f"{base_id}_range"
 
-    sin_filter = Filter(ctx.scene, sin_id,
-                        filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN, pos=ctx.pos)
+    # ``construct_filter_instance`` returns the registered Filter subclass
+    # when one exists; that subclass's ``_rebuild_io`` populates ``in_data_types``
+    # and ``default_values`` so fish's serialiser can wire default nodes for
+    # every input the filter declares (trig filters in particular take a
+    # ``factor_outer`` / ``factor_inner`` / ``phase`` / ``offset`` quartet
+    # that fish will otherwise reject at configure time).
+    sin_filter = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_SIN), sin_id, pos=ctx.pos,
+    )
     sin_filter.channel_links["value_in"] = value_src
 
-    cos_filter = Filter(ctx.scene, cos_id,
-                        filter_type=FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN, pos=ctx.pos)
+    cos_filter = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_TRIGONOMETRICS_COSIN), cos_id, pos=ctx.pos,
+    )
     cos_filter.channel_links["value_in"] = value_src
 
-    switch_filter = Filter(ctx.scene, switch_id,
-                           filter_type=FilterTypeEnumeration.FILTER_SWITCH_FLOAT, pos=ctx.pos,
-                           filter_configurations={"nr_inputs": "3"})
+    switch_filter = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_SWITCH_FLOAT), switch_id, pos=ctx.pos,
+        filter_configurations={"nr_inputs": "3"},
+    )
     switch_filter.channel_links["select"] = curvesel_src
     switch_filter.channel_links["0"] = value_src
     switch_filter.channel_links["1"] = f"{sin_id}:value"
     switch_filter.channel_links["2"] = f"{cos_id}:value"
 
     low, high = raw_range if raw_range is not None else _DEFAULT_16BIT_RANGE
-    range_filter = Filter(
-        ctx.scene, range_id,
-        filter_type=FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE,
+    range_filter = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_ADAPTER_FLOAT_TO_16BIT_RANGE), range_id,
         pos=ctx.pos,
         filter_configurations={
             "lower_bound_in": "0.0",
@@ -178,20 +199,73 @@ def _tilt_strategy(ctx: CapabilityContext) -> PostprocessOutput:
 _DEFAULT_SLOWEST_PERIOD_MS = "500.0"
 
 
+def _try_fold_dimmer(ctx: CapabilityContext, base_id: str) -> PostprocessOutput | None:
+    """If every raw dimmer input is a known constant and the strobe is OFF,
+    emit a single float constant as the ``brightness`` port.
+
+    Returns ``None`` when the fold isn't safe; the caller then builds the
+    full freq/duty/strobe chain. The strobe generator with
+    ``frequency == 0`` is a bit-exact passthrough of brightness, which is
+    why dropping the chain is semantically equivalent.
+    """
+    const_inputs = ctx.constant_inputs
+    if not const_inputs:
+        return None
+    br = const_inputs.get(BRIGHTNESS_RAW)
+    sf = const_inputs.get(STROBEFREQ)
+    if br is None or sf is None:
+        return None
+    try:
+        if float(sf) != 0.0:
+            return None
+    except (TypeError, ValueError):
+        return None
+    folded_id = f"{base_id}_folded"
+    folded = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_CONSTANT_FLOAT), folded_id,
+        pos=ctx.pos,
+    )
+    folded.initial_parameters["value"] = br
+    return PostprocessOutput(
+        filters=(folded,),
+        external_ports={"brightness": (folded_id, "value")},
+    )
+
+
 def _dimmer_strategy(ctx: CapabilityContext) -> PostprocessOutput:
     """Gate the raw brightness through the float strobe generator.
 
-    Pulls ``brightness``, ``strobefreq`` and ``duty_cycle`` from the cue filter;
-    converts the two float control inputs into 8-bit values with
+    Pulls ``brightness_raw``, ``strobefreq`` and ``duty_cycle`` from the cue
+    filter; converts the two float control inputs into 8-bit values with
     :class:`FILTER_ARITHMETICS_FLOAT_TO_8BIT`; routes everything into
     :class:`FILTER_SERIES_STROBE_GENERATOR_FLOAT`. The strobe generator's float
     ``value`` output is exposed as the fixture's ``brightness`` capability.
+
+    The *raw* input name is ``brightness_raw`` (not ``brightness``) because
+    this strategy publishes the external port named ``brightness``. If the
+    raw and exposed names matched, the serialiser's channel-override
+    dictionary (``filter_serialization.py::_create_filter_element_for_fish``)
+    would rewrite the strobe filter's own brightness input to point at its
+    own value output, creating a self-link that fish's scheduler rejects.
+    Pan/tilt follow the same split.
+
+    When every raw input is known to be a constant (``ctx.constant_inputs``
+    carries a value for all three) **and** the constant strobe frequency
+    is zero, the strategy folds the whole chain down to a single
+    ``FILTER_CONSTANT_FLOAT`` exposed as ``brightness``. The strobe
+    generator with ``frequency == 0`` is a bit-exact passthrough of its
+    brightness input, so this is correct: no freq adapter, no duty
+    adapter, no strobe filter.
     """
     prefix = ctx.channel_name_prefix
     cue_fid = ctx.cue_filter_id
     base_id = f"{cue_fid}__{prefix}__dimmer"
 
-    brightness_src = f"{cue_fid}:{prefix}__{BRIGHTNESS}"
+    folded = _try_fold_dimmer(ctx, base_id)
+    if folded is not None:
+        return folded
+
+    brightness_src = f"{cue_fid}:{prefix}__{BRIGHTNESS_RAW}"
     strobefreq_src = f"{cue_fid}:{prefix}__{STROBEFREQ}"
     duty_src = f"{cue_fid}:{prefix}__{DUTY_CYCLE}"
 
@@ -199,21 +273,25 @@ def _dimmer_strategy(ctx: CapabilityContext) -> PostprocessOutput:
     duty8bit_id = f"{base_id}_duty8bit"
     strobe_id = f"{base_id}_strobe"
 
-    freq_adapter = Filter(
-        ctx.scene, freq8bit_id,
-        filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT, pos=ctx.pos,
+    # Use the factory so each native filter picks up the registered
+    # subclass's I/O signature + default values; otherwise fish rejects
+    # the serialised show at configure time with "channel mapping does
+    # not contain channel X of type Y".
+    freq_adapter = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT), freq8bit_id,
+        pos=ctx.pos,
     )
     freq_adapter.channel_links["value_in"] = strobefreq_src
 
-    duty_adapter = Filter(
-        ctx.scene, duty8bit_id,
-        filter_type=FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT, pos=ctx.pos,
+    duty_adapter = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT), duty8bit_id,
+        pos=ctx.pos,
     )
     duty_adapter.channel_links["value_in"] = duty_src
 
-    strobe_filter = Filter(
-        ctx.scene, strobe_id,
-        filter_type=FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT, pos=ctx.pos,
+    strobe_filter = construct_filter_instance(
+        ctx.scene, int(FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT), strobe_id,
+        pos=ctx.pos,
         filter_configurations={"slowest_period_ms": _DEFAULT_SLOWEST_PERIOD_MS},
     )
     strobe_filter.channel_links["brightness"] = brightness_src

@@ -95,12 +95,25 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         """When a fixture's UUID resolves to a stage name on the board, output
         channels should carry that readable name instead of the raw UUID."""
         from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_names")
         fixture_uuid = "30ed4259-e513-4c9e-87ef-bf822a46b2c5"
         mock_fixture = MagicMock()
         mock_fixture.uuid = fixture_uuid
         mock_fixture.name_on_stage = "Hero Spot 1"
+        # Give the fixture a single INTENSITY channel so capability discovery
+        # reports DIMMER -- the per-fixture-capability filter in ``_collect_cue``
+        # now requires that the physical fixture actually supports a property
+        # before emitting channels for it.
+        _intensity_cap = MagicMock(); _intensity_cap.type = CapabilityType.INTENSITY
+        _intensity_template = MagicMock()
+        _intensity_template.get_capabilities.return_value = [_intensity_cap]
+        _intensity_channel = MagicMock()
+        _intensity_channel.name = "Intensity"
+        _intensity_channel.channel_template = _intensity_template
+        mock_fixture.fixture_channels = (_intensity_channel,)
+        mock_fixture._fixture = MagicMock(); mock_fixture._fixture.wheels = {}
         # BoardConfiguration.fixtures has no public setter, so patch via descriptor.
         type(scene.board_configuration).fixtures = PropertyMock(return_value=[mock_fixture])
         try:
@@ -174,7 +187,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         try:
             f.property_model.fixture_selection = FixtureSelection(
                 entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=wash_uuid)],
-                enabled_capabilities={EnabledCapability.COLOUR, EnabledCapability.GOBO},
+                enabled_capabilities={EnabledCapability.COLOR, EnabledCapability.GOBO},
             )
             f._rebuild_io()
             self.assertIn("Hero_Wash__color", f.out_data_types)
@@ -269,7 +282,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
                 enabled_capabilities={
                     EnabledCapability.DIMMER,
                     EnabledCapability.POSITION,
-                    EnabledCapability.COLOUR,
+                    EnabledCapability.COLOR,
                     EnabledCapability.GOBO,
                     EnabledCapability.BEAM,
                     EnabledCapability.FOCUS,
@@ -381,7 +394,7 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
                 enabled_capabilities={
                     EnabledCapability.DIMMER,
                     EnabledCapability.POSITION,
-                    EnabledCapability.COLOUR,
+                    EnabledCapability.COLOR,
                     EnabledCapability.GOBO,
                     EnabledCapability.BEAM,
                     EnabledCapability.FOCUS,
@@ -426,16 +439,277 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         finally:
             del type(scene.board_configuration).fixtures
 
+    def test_step_level_gobo_skips_fixtures_without_gobo_wheels(self) -> None:
+        """A step-level gobo assignment (``node_path=""``) must only create
+        gobo channels on fixtures that physically have gobo wheels.
+
+        Regression test for a bug where a Hero Spot + Hero Wash setup with a
+        step-level gobo assignment (wheel_count=2 dialed in on the spot)
+        would also produce ``goboslot_0 / goborotation_0 / goboslot_1 /
+        goborotation_1`` on the wash because ``_collect_cue`` did not re-apply
+        the per-fixture capability filter."""
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_step_gobo")
+
+        def _ofl_cap(cap_type):
+            cap = MagicMock(); cap.type = cap_type
+            return cap
+
+        def _channel(name: str, caps: list):
+            template = MagicMock(); template.get_capabilities.return_value = caps
+            ch = MagicMock(); ch.name = name; ch.channel_template = template
+            return ch
+
+        spot_uuid = "33333333-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        gobo_slot = MagicMock(); gobo_slot.type = WheelSlotType.GOBO
+        wheel_a = MagicMock(); wheel_a.slots = [gobo_slot]
+        wheel_b = MagicMock(); wheel_b.slots = [gobo_slot]
+        spot = MagicMock()
+        spot.uuid = spot_uuid
+        spot.name_on_stage = "Hero Spot"
+        spot.fixture_channels = (
+            _channel("Intensity", [_ofl_cap(CapabilityType.INTENSITY)]),
+        )
+        spot._fixture = MagicMock()
+        spot._fixture.wheels = {"Gobo Wheel": wheel_a, "Rotatable Gobo Wheel": wheel_b}
+
+        wash_uuid = "44444444-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        wash = MagicMock()
+        wash.uuid = wash_uuid
+        wash.name_on_stage = "Hero Wash"
+        wash.fixture_channels = (
+            _channel("Intensity", [_ofl_cap(CapabilityType.INTENSITY)]),
+        )
+        wash._fixture = MagicMock(); wash._fixture.wheels = {}
+
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[spot, wash])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=spot_uuid),
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=wash_uuid),
+                ],
+                enabled_capabilities={EnabledCapability.DIMMER, EnabledCapability.GOBO},
+            )
+            # Step-level gobo assignment mirroring what the editor emits when
+            # the user dials in both wheels of the spot and applies at step
+            # level: wheel_count=2 is carried in ``values`` and would normally
+            # override the per-fixture wheel_count=0 for the wash.
+            step_level_gobo = PropertyAssignments(
+                by_property={
+                    "gobo": ManualPropertyAssignment(
+                        values={
+                            "wheel_count": 2,
+                            "slots": {0: 0, 1: 3},
+                            "rotations": {0: 0.0, 1: 0.0},
+                        },
+                    ),
+                },
+            )
+            f.property_model.cues.append(PropertyCue(name="C1", steps=[
+                PropertyStep(name="s0", duration_40hz=40, assignments={
+                    "": step_level_gobo,
+                }),
+            ]))
+            f._rebuild_io()
+            channels = set(f.out_data_types)
+            # Spot has both gobo wheel pairs.
+            self.assertIn("Hero_Spot__goboslot_0", channels)
+            self.assertIn("Hero_Spot__goborotation_0", channels)
+            self.assertIn("Hero_Spot__goboslot_1", channels)
+            self.assertIn("Hero_Spot__goborotation_1", channels)
+            # Wash must NOT gain gobo channels just because it shared the
+            # step-level assignment with the spot.
+            self.assertNotIn("Hero_Wash__goboslot_0", channels)
+            self.assertNotIn("Hero_Wash__goborotation_0", channels)
+            self.assertNotIn("Hero_Wash__goboslot_1", channels)
+            self.assertNotIn("Hero_Wash__goborotation_1", channels)
+        finally:
+            del type(scene.board_configuration).fixtures
+
+    def test_single_segment_color_fixture_keeps_bare_color_channel(self) -> None:
+        """A one-RGB-segment fixture must expose the compact ``color`` port.
+
+        Single-pixel colour fixtures keep the historical bare ``color``
+        output name so existing channel-link bindings resolve.
+        """
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_1seg")
+        fid = "55555555-cccc-cccc-cccc-cccccccccccc"
+
+        def _channel(name: str, cap_type):
+            cap = MagicMock(); cap.type = cap_type
+            template = MagicMock(); template.get_capabilities.return_value = [cap]
+            ch = MagicMock(); ch.name = name; ch.channel_template = template
+            return ch
+
+        fixture = MagicMock()
+        fixture.uuid = fid
+        fixture.name_on_stage = "RGB Par"
+        fixture.fixture_channels = (
+            _channel("Red", CapabilityType.COLOR_INTENSITY),
+            _channel("Green", CapabilityType.COLOR_INTENSITY),
+            _channel("Blue", CapabilityType.COLOR_INTENSITY),
+        )
+        fixture._fixture = MagicMock(); fixture._fixture.wheels = {}
+        # One RGB segment: one entry in each of the RED/GREEN/BLUE arrays.
+        fixture.get_segment_in_universe_by_type = lambda t: (0,) if t.name in ("RED", "GREEN", "BLUE") else ()
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[fixture])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=fid)],
+                enabled_capabilities={EnabledCapability.COLOR},
+            )
+            f._rebuild_io()
+            self.assertIn("RGB_Par__color", f.out_data_types)
+            self.assertNotIn("RGB_Par__color_0", f.out_data_types)
+        finally:
+            del type(scene.board_configuration).fixtures
+
+    def test_multi_segment_color_fixture_emits_color_n_channels(self) -> None:
+        """A 3-segment RGB fixture must expose ``color_0 .. color_2`` and
+        not the bare ``color`` name."""
+        from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_3seg")
+        fid = "66666666-dddd-dddd-dddd-dddddddddddd"
+
+        def _channel(name: str, cap_type):
+            cap = MagicMock(); cap.type = cap_type
+            template = MagicMock(); template.get_capabilities.return_value = [cap]
+            ch = MagicMock(); ch.name = name; ch.channel_template = template
+            return ch
+
+        fixture = MagicMock()
+        fixture.uuid = fid
+        fixture.name_on_stage = "LED Bar"
+        fixture.fixture_channels = (
+            _channel("Red 1", CapabilityType.COLOR_INTENSITY),
+            _channel("Green 1", CapabilityType.COLOR_INTENSITY),
+            _channel("Blue 1", CapabilityType.COLOR_INTENSITY),
+            _channel("Red 2", CapabilityType.COLOR_INTENSITY),
+            _channel("Green 2", CapabilityType.COLOR_INTENSITY),
+            _channel("Blue 2", CapabilityType.COLOR_INTENSITY),
+            _channel("Red 3", CapabilityType.COLOR_INTENSITY),
+            _channel("Green 3", CapabilityType.COLOR_INTENSITY),
+            _channel("Blue 3", CapabilityType.COLOR_INTENSITY),
+        )
+        fixture._fixture = MagicMock(); fixture._fixture.wheels = {}
+        # Three segments per RGB colour.
+        fixture.get_segment_in_universe_by_type = (
+            lambda t: (0, 3, 6) if t.name in ("RED", "GREEN", "BLUE") else ()
+        )
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[fixture])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=fid)],
+                enabled_capabilities={EnabledCapability.COLOR},
+            )
+            f._rebuild_io()
+            channels = set(f.out_data_types)
+            self.assertIn("LED_Bar__color_0", channels)
+            self.assertIn("LED_Bar__color_1", channels)
+            self.assertIn("LED_Bar__color_2", channels)
+            self.assertNotIn("LED_Bar__color", channels)
+        finally:
+            del type(scene.board_configuration).fixtures
+
+    def test_step_level_color_skips_fixtures_without_color(self) -> None:
+        """A step-level (``node_path=""``) colour assignment with a mixed
+        selection must only emit ``color*`` channels on colour-capable
+        fixtures. Regression analogue of the step-level gobo fix."""
+        from unittest.mock import MagicMock, PropertyMock
+        from model.color_hsi import ColorHSI
+        from model.ofl.ofl_fixture import CapabilityType
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_step_color")
+
+        def _channel(name: str, cap_type):
+            cap = MagicMock(); cap.type = cap_type
+            template = MagicMock(); template.get_capabilities.return_value = [cap]
+            ch = MagicMock(); ch.name = name; ch.channel_template = template
+            return ch
+
+        rgb_uuid = "77777777-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        rgb = MagicMock()
+        rgb.uuid = rgb_uuid
+        rgb.name_on_stage = "RGB Par"
+        rgb.fixture_channels = (
+            _channel("Red", CapabilityType.COLOR_INTENSITY),
+            _channel("Green", CapabilityType.COLOR_INTENSITY),
+            _channel("Blue", CapabilityType.COLOR_INTENSITY),
+        )
+        rgb._fixture = MagicMock(); rgb._fixture.wheels = {}
+        rgb.get_segment_in_universe_by_type = (
+            lambda t: (0,) if t.name in ("RED", "GREEN", "BLUE") else ()
+        )
+
+        dim_uuid = "88888888-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        dim = MagicMock()
+        dim.uuid = dim_uuid
+        dim.name_on_stage = "Blinder"
+        dim.fixture_channels = (_channel("Intensity", CapabilityType.INTENSITY),)
+        dim._fixture = MagicMock(); dim._fixture.wheels = {}
+        dim.get_segment_in_universe_by_type = lambda _t: ()
+
+        type(scene.board_configuration).fixtures = PropertyMock(return_value=[rgb, dim])
+        try:
+            f.property_model.fixture_selection = FixtureSelection(
+                entries=[
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=rgb_uuid),
+                    FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=dim_uuid),
+                ],
+                enabled_capabilities={EnabledCapability.DIMMER, EnabledCapability.COLOR},
+            )
+            step_level_color = PropertyAssignments(
+                by_property={
+                    "color": ManualPropertyAssignment(
+                        values={"colors": {0: ColorHSI(0.0, 1.0, 1.0)}},
+                    ),
+                },
+            )
+            f.property_model.cues.append(PropertyCue(name="C1", steps=[
+                PropertyStep(name="s0", duration_40hz=40, assignments={
+                    "": step_level_color,
+                }),
+            ]))
+            f._rebuild_io()
+            channels = set(f.out_data_types)
+            # RGB fixture gains the colour channel.
+            self.assertIn("RGB_Par__color", channels)
+            # Dimmer-only fixture must NOT gain a colour channel.
+            self.assertNotIn("Blinder__color", channels)
+            self.assertNotIn("Blinder__color_0", channels)
+        finally:
+            del type(scene.board_configuration).fixtures
+
     def test_duplicate_stage_names_get_deterministic_uuid_suffix(self) -> None:
         """Two fixtures with the same stage name must produce distinct output
         names via a short, deterministic UUID tail suffix."""
         from unittest.mock import MagicMock, PropertyMock
+        from model.ofl.ofl_fixture import CapabilityType
         scene = _make_scene()
         f = PropertyBasedCueFilter(scene, "pcf_dupnames")
         uuid_a = "30ed4259-e513-4c9e-87ef-bf822a46b2c5"
         uuid_b = "9f752ce5-3a25-4ed0-86f8-31ff47d4e5c9"
+
+        def _intensity_channel() -> MagicMock:
+            cap = MagicMock(); cap.type = CapabilityType.INTENSITY
+            template = MagicMock(); template.get_capabilities.return_value = [cap]
+            ch = MagicMock(); ch.name = "Intensity"; ch.channel_template = template
+            return ch
+
         fa = MagicMock(); fa.uuid = uuid_a; fa.name_on_stage = "Hero Spot"
+        fa.fixture_channels = (_intensity_channel(),)
+        fa._fixture = MagicMock(); fa._fixture.wheels = {}
         fb = MagicMock(); fb.uuid = uuid_b; fb.name_on_stage = "Hero Spot"
+        fb.fixture_channels = (_intensity_channel(),)
+        fb._fixture = MagicMock(); fb._fixture.wheels = {}
         type(scene.board_configuration).fixtures = PropertyMock(return_value=[fa, fb])
         try:
             f.property_model.fixture_selection = FixtureSelection(
@@ -543,15 +817,20 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
         resolved_mh2 = f.resolve_output_port_id("MH2__brightness")
         self.assertIsNotNone(resolved_mh1)
         self.assertIsNotNone(resolved_mh2)
-        # Canonical dimmer chain picks the MH1 prefix for the strobe generator.
+        # Both fixtures' brightness ports resolve to the one canonical strobe
+        # generator. Previously MH2's port fell through to the native cue
+        # filter channel, which quietly bypassed strobe gating for the
+        # consolidated sibling -- the rename of the raw channel to
+        # ``brightness_raw`` (plus the external-port sharing in ``_build_ports``)
+        # routes both prefixes through the MH1 strobe instead.
         self.assertTrue(
             resolved_mh1.endswith("MH1__dimmer_strobe:value"),
             f"canonical brightness must come from MH1 strobe generator, got: {resolved_mh1}",
         )
-        # Consolidation collapses MH2 brightness into the MH1 canonical cue
-        # filter output; the non-canonical fallback currently references the
-        # consolidated cue filter channel directly (compiler-level fallback).
-        self.assertIn("MH1__brightness", resolved_mh2)
+        self.assertEqual(
+            resolved_mh1, resolved_mh2,
+            "consolidated sibling brightness must share the canonical strobe output",
+        )
         # Only one float strobe generator is instantiated because both
         # fixtures share the same consolidated brightness timeline.
         res = f._ensure_compiled()
@@ -591,6 +870,173 @@ class PropertyBasedCueVFilterTests(unittest.TestCase):
             scene, int(FilterTypeEnumeration.VFILTER_PROPERTY_BASED_CUES), "test_id",
         )
         self.assertIsInstance(instance, PropertyBasedCueFilter)
+
+    def test_postprocess_filters_have_no_self_links_after_serialisation(self) -> None:
+        """Regression + invariant guard.
+
+        Reproduces the self-link bug uncovered in
+        ``/tmp/fish_scene_parsing_failure.log``: a show-file containing the
+        property-cue vfilter wired to a native downstream filter failed to
+        schedule in fish because the dimmer strobe filter ended up with its
+        own ``:value`` output as one of its inputs. The cause was
+        ``filter_serialization.py``'s channel-override dictionary rewriting
+        the strategy's internal reference
+        ``Property Cues.0:<prefix>__brightness`` to the strategy's own
+        output, since the raw channel name and the exposed port name were
+        identical.
+
+        The test enables DIMMER + POSITION on a bare fixture id, elaborates
+        the vfilter into native filters, replays the exact override rule
+        that ``controller.file.serializing.filter_serialization`` applies at
+        show-file write time, and asserts that no instantiated filter has a
+        ``channel_link`` whose rewritten source references its own
+        ``filter_id``. This catches **any** future strategy that accidentally
+        publishes an external port name that collides with a raw channel
+        name on the native cue filter -- not just the specific dimmer case.
+        """
+        scene = _make_scene()
+        fid = "FX"
+        pcf = PropertyBasedCueFilter(scene, "PCF.0")
+        pcf.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id=fid)],
+            enabled_capabilities={EnabledCapability.DIMMER, EnabledCapability.POSITION},
+        )
+        pcf.property_model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=40, assignments={
+                f"fixture:{fid}": _manual_dimmer(0.5),
+            }),
+        ]))
+        pcf._rebuild_io()
+
+        # Elaborate the vfilter into its native filter list, exactly as the
+        # serializer does in ``_create_filter_element_for_fish``.
+        instantiated: list = []
+        pcf.instantiate_filters(instantiated)
+
+        # Build the channel_override_dict the same way the serializer does:
+        # one entry per output port exposed on the vfilter node.
+        override: dict[str, str] = {}
+        for output_port in pcf.out_data_types:
+            resolved = pcf.resolve_output_port_id(output_port)
+            self.assertIsNotNone(
+                resolved,
+                f"vfilter must resolve each exposed output port; "
+                f"{output_port!r} returned None",
+            )
+            override[f"{pcf.filter_id}:{output_port}"] = resolved
+
+        # Walk every instantiated filter's channel_links, apply the override
+        # that the serializer would apply at write time, and record any
+        # filter that ends up with a source reference pointing at itself.
+        offenders: list[tuple[str, str, str]] = []
+        for filt in instantiated:
+            for input_port, source in filt.channel_links.items():
+                rewritten = override.get(source, source)
+                src_filter = rewritten.partition(":")[0]
+                if src_filter == filt.filter_id:
+                    offenders.append((filt.filter_id, input_port, rewritten))
+        self.assertEqual(
+            [], offenders,
+            "Found post-processing filters whose channel_links resolve to their "
+            "own output after the vfilter's channel_override_dict is applied. "
+            "Each entry is (filter_id, input_port, rewritten_source). This means "
+            "a strategy publishes an external port name that collides with a raw "
+            "channel name on the native cue filter -- the serializer rewrites the "
+            "strategy's own internal input to point at its own output, which fish "
+            "then rejects at schedule time. Rename the raw channel, add it to "
+            "INTERNAL_LOCAL_NAMES, and expose the external name via "
+            "SYNTHESIZED_OUTPUTS (see brightness_raw/brightness or "
+            "pan_value/pan for the pattern).",
+        )
+
+    def test_native_cue_filter_inherits_vfilter_input_wiring(self) -> None:
+        """The native cue filter must carry the vfilter's ``time`` /
+        ``time_scale`` channel_links, gui_update_keys and in_data_types,
+        or fish rejects configuration with
+        'channel mapping does not contain channel time of type double'.
+        The vfilter's editor-only ``cues-prop-data`` blob must NOT leak
+        into the native filter configuration sent to fish.
+        """
+        scene = _make_scene()
+        f = PropertyBasedCueFilter(scene, "pcf_wire")
+        f.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+        f.property_model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=40,
+                         assignments={"fixture:MH1": _manual_dimmer(0.5)}),
+        ]))
+        f.channel_links["time"] = "Time.0:value"
+        f.channel_links["time_scale"] = "ConstScale.0:value"
+        f._rebuild_io()
+
+        instantiated: list = []
+        f.instantiate_filters(instantiated)
+        native = next(
+            (flt for flt in instantiated if flt.filter_id == f.filter_id),
+            None,
+        )
+        self.assertIsNotNone(native, "the native cue filter must be in the instantiated list")
+        self.assertEqual("Time.0:value", native.channel_links.get("time"))
+        self.assertEqual("ConstScale.0:value", native.channel_links.get("time_scale"))
+        self.assertEqual(DataType.DT_DOUBLE, native.in_data_types.get("time"))
+        self.assertEqual(DataType.DT_DOUBLE, native.in_data_types.get("time_scale"))
+        self.assertIn("run_mode", native.gui_update_keys)
+        self.assertIn("run_cue", native.gui_update_keys)
+        # The native cue configuration carries fish-facing entries only.
+        self.assertIn("cuelist", native.filter_configurations)
+        self.assertIn("mapping", native.filter_configurations)
+        # The editor-only payload must not travel to fish.
+        self.assertNotIn("cues-prop-data", native.filter_configurations)
+
+    def test_compiler_rejects_strategy_that_shadows_raw_channel(self) -> None:
+        """Direct check on the compile-time invariant that catches the class
+        of bug.
+
+        If a post-processing strategy publishes an external port with the
+        same local name as a raw channel on the native cue filter,
+        ``_build_ports`` must refuse to produce a ``CompileResult``. Without
+        this invariant, the bug slips through to the serialiser and manifests
+        only when fish rejects the show.
+        """
+        from unittest.mock import patch
+
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.virtual_filters.property_cues.postprocess import PostprocessOutput
+
+        selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="FX")],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+        scene = _make_scene()
+        pcf = PropertyBasedCueFilter(scene, "PCF.0")
+        pcf.property_model.fixture_selection = selection
+
+        def _shadowing_strategy(cap: str, ctx):
+            if cap != "dimmer":
+                # Fall back to passthrough for any other capability.
+                return PostprocessOutput(
+                    filters=(),
+                    external_ports={cap: (ctx.cue_filter_id, f"{ctx.channel_name_prefix}__{cap}")},
+                )
+            # Build a token filter and expose a port named ``brightness_raw``
+            # which collides with the native cue filter's raw channel.
+            from model.filter import Filter as _Filter
+            from model.filter import FilterTypeEnumeration as _FTE
+            token = _Filter(
+                ctx.scene, f"{ctx.cue_filter_id}__{ctx.channel_name_prefix}__bad",
+                filter_type=_FTE.FILTER_CONSTANT_FLOAT, pos=ctx.pos,
+            )
+            return PostprocessOutput(
+                filters=(token,),
+                external_ports={"brightness_raw": (token.filter_id, "value")},
+            )
+
+        with patch("model.virtual_filters.property_cues.compiler.build_postprocess_chain",
+                   _shadowing_strategy):
+            with self.assertRaisesRegex(ValueError, "brightness_raw"):
+                compile_property_model(pcf.property_model, "PCF.0", pcf.scene)
 
 
 if __name__ == "__main__":

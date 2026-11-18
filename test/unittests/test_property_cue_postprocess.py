@@ -156,7 +156,10 @@ class DimmerStrategyTest(unittest.TestCase):
         self.assertEqual("cuef:MH1__strobefreq", freq_f.channel_links["value_in"])
         self.assertEqual("cuef:MH1__duty_cycle", duty_f.channel_links["value_in"])
 
-        self.assertEqual("cuef:MH1__brightness", strobe_f.channel_links["brightness"])
+        # The strobe strategy reads from the raw channel ``brightness_raw`` (not
+        # ``brightness``) so the serializer's channel_override_dict cannot
+        # rewrite the strobe's own input to point at its own output.
+        self.assertEqual("cuef:MH1__brightness_raw", strobe_f.channel_links["brightness"])
         self.assertEqual(f"{freq_f.filter_id}:value", strobe_f.channel_links["frequency"])
         self.assertEqual(f"{duty_f.filter_id}:value", strobe_f.channel_links["duty_cycle"])
         self.assertEqual("500.0", strobe_f.filter_configurations["slowest_period_ms"])

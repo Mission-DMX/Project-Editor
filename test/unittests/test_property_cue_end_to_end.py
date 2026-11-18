@@ -145,7 +145,12 @@ class PropertyCueEndToEndTests(unittest.TestCase):
 
         res = self.vfilter._ensure_compiled()
         native_channels = {name for name, _dt in res.native_model.channels}
-        for ch in ("MH1__brightness", "MH2__brightness",
+        # The native cue filter emits ``brightness_raw`` (not ``brightness``):
+        # the strobe post-process strategy publishes ``brightness`` externally,
+        # and distinct raw/exposed names prevent the serializer's override
+        # dictionary from rewriting the strobe filter's own input onto its
+        # own output.
+        for ch in ("MH1__brightness_raw", "MH2__brightness_raw",
                    "MH1__pan_value", "MH2__pan_value",
                    "MH1__pan_curvesel", "MH2__pan_curvesel",
                    "MH1__tilt_value", "MH2__tilt_value",

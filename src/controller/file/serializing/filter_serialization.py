@@ -88,7 +88,11 @@ def create_channel_mappings_for_filter_set_for_fish(
     om.wrap_up(scene_element)
     channel_links_to_be_created: list[tuple[Filter, ET.SubElement]] = om.channel_link_list
     override_port_mapping: dict[str, str] = om.channel_override_dict
-    default_nodes: dict[DataType, list] = {}
+    # Seed the defaults tracker with constants the optimizer already committed
+    # to during ``wrap_up`` -- currently just the 8-bit zero that
+    # ``_emplace_universe_filters`` wires unlinked DMX inputs to -- so the
+    # single constant filter is emitted in the final pass instead of twice.
+    default_nodes: dict[DataType, list] = {dt: list(vals) for dt, vals in om.extra_default_values.items()}
     time_node = None
     for f_entry in channel_links_to_be_created:
         if f_entry[0].filter_type == FilterTypeEnumeration.FILTER_TYPE_TIME_INPUT:

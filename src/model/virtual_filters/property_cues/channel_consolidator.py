@@ -66,19 +66,29 @@ def consolidate(
     """Collapse channels whose frames are byte-for-byte identical across ALL cues AND
     whose post-processing signatures match. Pick the alphabetically-earliest channel
     name as the canonical survivor in each equivalence class.
+
+    Only channels sharing the **same local port name** (the segment after
+    ``__``) are candidates for consolidation -- the fingerprint includes the
+    local name so e.g. ``MH1__brightness_raw`` and ``MH1__strobefreq`` are
+    never collapsed merely because both carry the same data type and
+    happen to have empty frame streams in this cue. Collapsing across
+    different semantic ports would silently drop the native cue filter's
+    output declaration for the loser, and the post-processing strategy's
+    native filters would then reference a port that fish can't find.
     """
     channel_names = sorted(channel_specs.keys())
     cue_ids = sorted(per_cue_frames.keys())
 
     def channel_fingerprint(name: str) -> tuple:
         spec = channel_specs[name]
+        local = name.partition("__")[2] or name
         post = postprocess_signatures.get(name, "")
         per_cue: list = []
         for cue_id in cue_ids:
             cue_map = per_cue_frames.get(cue_id, {})
             frames = cue_map.get(name, [])
             per_cue.append((cue_id, _stream_signature(frames)))
-        return (spec.data_type, post, tuple(per_cue))
+        return (local, spec.data_type, post, tuple(per_cue))
 
     buckets: dict[tuple, list[str]] = {}
     for name in channel_names:

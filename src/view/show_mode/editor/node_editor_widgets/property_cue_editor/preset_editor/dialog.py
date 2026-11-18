@@ -42,13 +42,13 @@ from model.virtual_filters.property_cues.presets import (
 from model.virtual_filters.property_cues.presets.schema import validate
 from view.utility_widgets.jogwheel_spinbox import JogwheelDoubleSpinBox
 
-_APPLIES_FOR_CHOICES = ("dimmer", "position", "colour", "gobo", "beam", "focus", "frost")
+_APPLIES_FOR_CHOICES = ("dimmer", "position", "color", "gobo", "beam", "focus", "frost")
 _HINT_TYPE_CHOICES = ("float", "int", "color")
 
 _PROPERTY_CHANNELS: dict[str, tuple[str, ...]] = {
     "dimmer": ("brightness", "strobefreq", "duty_cycle"),
     "position": ("pan_value", "pan_curvesel", "tilt_value", "tilt_curvesel"),
-    "colour": ("color",),
+    "color": ("color",),
     "beam": ("focus", "zoom", "iris"),
     "focus": ("focus",),
     "gobo": ("goboslot_0", "goborotation_0", "goboslot_1", "goborotation_1"),

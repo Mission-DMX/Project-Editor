@@ -158,9 +158,9 @@ class PropertyPaneTests(unittest.TestCase):
 
     def test_capability_filter_disables_unavailable_tabs(self) -> None:
         from model.virtual_filters.property_cues.model.fixture_selection import EnabledCapability
-        _, pane = self._make_pane(enabled_capabilities={EnabledCapability.DIMMER, EnabledCapability.COLOUR})
+        _, pane = self._make_pane(enabled_capabilities={EnabledCapability.DIMMER, EnabledCapability.COLOR})
         self.assertTrue(pane._tabs.isTabEnabled(pane._tab_indices["dimmer"]))
-        self.assertTrue(pane._tabs.isTabEnabled(pane._tab_indices["colour"]))
+        self.assertTrue(pane._tabs.isTabEnabled(pane._tab_indices["color"]))
         self.assertFalse(pane._tabs.isTabEnabled(pane._tab_indices["position"]))
         self.assertFalse(pane._tabs.isTabEnabled(pane._tab_indices["beam"]))
 
@@ -185,7 +185,7 @@ class PropertyPaneTests(unittest.TestCase):
         spot_fixture.fixture_channels = ()
 
         model = _make_model(fixture_ids=["WASH", "SPOT"], cue_specs=[[("s0", 40, 0)]])
-        model.fixture_selection.enabled_capabilities = {EnabledCapability.GOBO, EnabledCapability.COLOUR}
+        model.fixture_selection.enabled_capabilities = {EnabledCapability.GOBO, EnabledCapability.COLOR}
 
         def lookup(node_path: str):
             if node_path == "fixture:WASH":
@@ -199,11 +199,11 @@ class PropertyPaneTests(unittest.TestCase):
 
         pane.show_editor(0, "fixture:WASH")
         self.assertFalse(pane._tabs.isTabEnabled(pane._tab_indices["gobo"]))
-        self.assertTrue(pane._tabs.isTabEnabled(pane._tab_indices["colour"]))
+        self.assertTrue(pane._tabs.isTabEnabled(pane._tab_indices["color"]))
 
         pane.show_editor(0, "fixture:SPOT")
         self.assertTrue(pane._tabs.isTabEnabled(pane._tab_indices["gobo"]))
-        self.assertFalse(pane._tabs.isTabEnabled(pane._tab_indices["colour"]))
+        self.assertFalse(pane._tabs.isTabEnabled(pane._tab_indices["color"]))
 
     def test_gobo_editor_rebuilt_from_fixture_slots(self) -> None:
         """set_fixtures replaces the fallback with one sub-block per gobo wheel."""

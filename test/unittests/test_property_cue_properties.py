@@ -13,11 +13,12 @@ from model.virtual_filters.property_cues.distribution import Distribution, Distr
 from model.virtual_filters.property_cues.properties import (
     CURVE_SIN,
     BeamProperty,
-    ColourProperty,
+    ColorProperty,
     DimmerProperty,
     FrostProperty,
     GoboProperty,
     PositionProperty,
+    distribute_colors,
     seconds_to_timesteps,
 )
 
@@ -69,10 +70,17 @@ class DistributionTest(unittest.TestCase):
 class DimmerPropertyTest(unittest.TestCase):
 
     def test_channel_specs(self) -> None:
+        """The raw brightness channel is named ``brightness_raw`` so it cannot
+        collide with the ``brightness`` port the strobe post-processing strategy
+        publishes (see the self-link bug fixed in ``_dimmer_strategy``)."""
         specs = DimmerProperty().channel_specs
         names_to_types = {s.name: s.data_type for s in specs}
         self.assertEqual(
-            {"brightness": DataType.DT_DOUBLE, "strobefreq": DataType.DT_DOUBLE, "duty_cycle": DataType.DT_DOUBLE},
+            {
+                "brightness_raw": DataType.DT_DOUBLE,
+                "strobefreq": DataType.DT_DOUBLE,
+                "duty_cycle": DataType.DT_DOUBLE,
+            },
             names_to_types,
         )
 
@@ -81,9 +89,9 @@ class DimmerPropertyTest(unittest.TestCase):
             brightness=0.75, strobefreq=0.0, duty_cycle=200.0, transition=TransferFunction.LINEAR,
         )
         reqs = prop.generate_requests(step_start_40hz=100, step_duration_40hz=400, child_index=0, distribution=_CONSTANT)
-        self.assertIn("brightness", reqs)
-        self.assertEqual(1, len(reqs["brightness"]))
-        req = reqs["brightness"][0]
+        self.assertIn("brightness_raw", reqs)
+        self.assertEqual(1, len(reqs["brightness_raw"]))
+        req = reqs["brightness_raw"][0]
         self.assertEqual(100, req.timestep_40hz)
         self.assertEqual(0.75, req.requested_value)
         self.assertIs(TransferFunction.LINEAR, req.transition)
@@ -109,7 +117,7 @@ class DimmerPropertyTest(unittest.TestCase):
             reqs = prop.generate_requests(
                 step_start_40hz=0, step_duration_40hz=400, child_index=child, distribution=dist,
             )
-            starts.append(reqs["brightness"][0].timestep_40hz)
+            starts.append(reqs["brightness_raw"][0].timestep_40hz)
         expected = [seconds_to_timesteps(0.5 * i) for i in range(4)]
         self.assertEqual(expected, starts)
         self.assertEqual([0, 20, 40, 60], starts)
@@ -176,6 +184,275 @@ def _passthrough_result(cap: str, ctx):  # noqa: ANN001 - ad-hoc stub used by pa
     )
 
 
+class CompilerDefaultedChannelsTest(unittest.TestCase):
+    """Defaulted channels are extracted to ``FILTER_CONSTANT_*`` filters.
+
+    Verifies two layers of the optimization:
+
+      1. A channel with no keyframes in any cue leaves the native cue
+         filter's channel list entirely; a constant filter driven by
+         the spec's ``default_value`` takes its place.
+      2. When **every** raw input a post-processing strategy would read
+         is defaulted and the strategy supports it, the whole chain
+         folds down to a single constant. The dimmer strategy folds to
+         one ``FILTER_CONSTANT_FLOAT`` when ``strobefreq`` is defaulted
+         to zero (strobe generator with f=0 is a passthrough of
+         brightness).
+    """
+
+    def _build_defaulted_dimmer_model(self):
+        from model.virtual_filters.property_cues.model.fixture_selection import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
+        from model.virtual_filters.property_cues.model.property_cue import PropertyCue
+        from model.virtual_filters.property_cues.model.property_step import PropertyStep
+
+        selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="FX")],
+            enabled_capabilities={EnabledCapability.DIMMER},
+        )
+        # Cue with a step that doesn't dial any assignments; every dimmer
+        # channel therefore stays at its spec default across all cues.
+        return PropertyCueFilterModel(
+            fixture_selection=selection,
+            cues=[PropertyCue(name="C1", steps=[PropertyStep(name="s0", duration_40hz=40)])],
+        )
+
+    def test_defaulted_canonicals_leave_native_cue_filter(self) -> None:
+        """Every dimmer channel stays at its default → native cue carries nothing dimmer-related."""
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+
+        model = self._build_defaulted_dimmer_model()
+        result = compile_property_model(model, "cuef", _StubScene())
+        native_names = [ch for ch, _ in result.native_model.channels]
+        for stripped in ("FX__brightness_raw", "FX__strobefreq", "FX__duty_cycle"):
+            self.assertNotIn(
+                stripped, native_names,
+                f"defaulted channel {stripped!r} should not appear on the native cue filter; "
+                f"it should have been replaced by a standalone constant filter",
+            )
+
+    def test_fully_defaulted_dimmer_folds_to_one_constant(self) -> None:
+        """Strobe chain collapses to a single float constant."""
+        from model.filter import FilterTypeEnumeration
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+
+        model = self._build_defaulted_dimmer_model()
+        result = compile_property_model(model, "cuef", _StubScene())
+        # No freq / duty adapters, no strobe generator -- the fold replaces
+        # the whole three-filter chain with one constant.
+        strobe_count = sum(
+            1 for f in result.postprocess_filters
+            if int(f.filter_type) == int(FilterTypeEnumeration.FILTER_SERIES_STROBE_GENERATOR_FLOAT)
+        )
+        self.assertEqual(0, strobe_count, "folded dimmer must not instantiate a strobe generator")
+        adapter_count = sum(
+            1 for f in result.postprocess_filters
+            if int(f.filter_type) == int(FilterTypeEnumeration.FILTER_ARITHMETICS_FLOAT_TO_8BIT)
+        )
+        self.assertEqual(0, adapter_count, "folded dimmer must not instantiate freq/duty adapters")
+        float_constants = [
+            f for f in result.postprocess_filters
+            if int(f.filter_type) == int(FilterTypeEnumeration.FILTER_CONSTANT_FLOAT)
+        ]
+        self.assertGreaterEqual(
+            len(float_constants), 1,
+            "expected at least one float constant to carry the folded brightness value",
+        )
+        # The vfilter's ``brightness`` external port must resolve to one
+        # of the emitted constant filters rather than the native cue filter.
+        port = result.external_ports.get("FX__brightness")
+        self.assertIsNotNone(port)
+        const_ids = {f.filter_id for f in float_constants}
+        self.assertIn(
+            port[0], const_ids,
+            f"expected brightness to resolve to a folded constant, got {port!r}",
+        )
+
+    def test_defaulted_passthrough_capability_redirects_to_constant(self) -> None:
+        """Passthrough strategies (focus / frost / gobo / colour) that end
+        up referencing a defaulted cue-filter channel must have their
+        exposed external port rewritten onto the constant filter the
+        compiler emitted. Without the redirect, the serializer's
+        channel_override_dict would map ``cue_fid:channel`` to itself and
+        fish would reject the show with
+        ``E006: ... corresponding output channel wasn't found``.
+        """
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.virtual_filters.property_cues.model.fixture_selection import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
+        from model.virtual_filters.property_cues.model.property_cue import PropertyCue
+        from model.virtual_filters.property_cues.model.property_step import PropertyStep
+
+        selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="FX")],
+            enabled_capabilities={EnabledCapability.FOCUS},
+        )
+        model = PropertyCueFilterModel(
+            fixture_selection=selection,
+            cues=[PropertyCue(name="C1", steps=[PropertyStep(name="s0", duration_40hz=40)])],
+        )
+        result = compile_property_model(model, "cuef", _StubScene())
+        # The native cue filter must not carry the defaulted focus channel.
+        native_names = {ch for ch, _ in result.native_model.channels}
+        self.assertNotIn("FX__focus", native_names)
+        # The exposed ``FX__focus`` port must resolve to the constant
+        # filter the compiler emitted, not back to the (now-absent)
+        # native cue filter channel.
+        port = result.external_ports.get("FX__focus")
+        self.assertIsNotNone(port)
+        self.assertNotEqual("cuef", port[0],
+                            "defaulted focus port leaked back to the native cue filter")
+        constant_ids = {f.filter_id for f in result.postprocess_filters}
+        self.assertIn(
+            port[0], constant_ids,
+            f"defaulted focus port should resolve to a constant filter, got {port!r}",
+        )
+
+
+class CompilerColorSegmentTest(unittest.TestCase):
+    """Verify the compiler threads ``color_segment_count_lookup`` all the way through."""
+
+    def test_multi_segment_manual_assignment_emits_per_segment_channels(self) -> None:
+        from unittest.mock import patch
+
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.virtual_filters.property_cues.distribution import Distribution
+        from model.virtual_filters.property_cues.model.fixture_selection import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
+        from model.virtual_filters.property_cues.model.property_cue import PropertyCue
+        from model.virtual_filters.property_cues.model.property_step import (
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyStep,
+        )
+
+        selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="FX")],
+            enabled_capabilities={EnabledCapability.COLOR},
+        )
+        step = PropertyStep(name="s0", duration_40hz=40, assignments={
+            "fixture:FX": PropertyAssignments(by_property={
+                "color": ManualPropertyAssignment(
+                    values={"colors": {0: ColorHSI(0.0, 1.0, 1.0), 1: ColorHSI(240.0, 1.0, 1.0)}},
+                    distribution=Distribution(),
+                ),
+            }),
+        })
+        model = PropertyCueFilterModel(
+            fixture_selection=selection,
+            cues=[PropertyCue(name="C1", steps=[step])],
+        )
+        with patch("model.virtual_filters.property_cues.compiler.build_postprocess_chain",
+                   lambda cap, ctx: _passthrough_result(cap, ctx)):
+            result = compile_property_model(
+                model, "cuef", _StubScene(),
+                color_segment_count_lookup=lambda _fid: 3,
+            )
+        # ``channel_specs`` holds the virtual (pre-consolidation) channels
+        # that surface on the vfilter node; ``native_model.channels`` is
+        # already collapsed by the channel consolidator and will drop
+        # byte-identical streams.
+        virtual = set(result.channel_specs.keys())
+        self.assertIn("FX__color_0", virtual)
+        self.assertIn("FX__color_1", virtual)
+        self.assertIn("FX__color_2", virtual)
+        self.assertNotIn("FX__color", virtual)
+
+    def test_color_preset_replicates_across_segments(self) -> None:
+        """A single-channel colour preset applied to a 3-segment fixture
+        must produce three identical ``color_N`` keyframe streams."""
+        from unittest.mock import patch
+
+        from model.virtual_filters.property_cues.compiler import compile_property_model
+        from model.virtual_filters.property_cues.distribution import Distribution
+        from model.virtual_filters.property_cues.model.fixture_selection import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.model.model import PropertyCueFilterModel
+        from model.virtual_filters.property_cues.model.property_cue import PropertyCue
+        from model.virtual_filters.property_cues.model.property_step import (
+            PresetPropertyAssignment,
+            PropertyAssignments,
+            PropertyStep,
+        )
+        from model.virtual_filters.property_cues.presets import (
+            EffectPreset,
+            PresetKeyFrameEntry,
+        )
+
+        preset = EffectPreset(
+            name="OneShotRed",
+            description="",
+            applies_for="color",
+            hints=(),
+            kf_requests=(
+                PresetKeyFrameEntry(duration_expr="1.0", channel_exprs={"color": "0.0,1.0,1.0"}),
+            ),
+            source_path="",
+            is_builtin=False,
+        )
+
+        selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="BAR")],
+            enabled_capabilities={EnabledCapability.COLOR},
+        )
+        step = PropertyStep(name="s0", duration_40hz=40, assignments={
+            "fixture:BAR": PropertyAssignments(by_property={
+                "color": PresetPropertyAssignment(
+                    preset_id="OneShotRed",
+                    hint_values={},
+                    distribution=Distribution(),
+                ),
+            }),
+        })
+        model = PropertyCueFilterModel(
+            fixture_selection=selection,
+            cues=[PropertyCue(name="C1", steps=[step])],
+        )
+        with patch("model.virtual_filters.property_cues.compiler.build_postprocess_chain",
+                   lambda cap, ctx: _passthrough_result(cap, ctx)):
+            result = compile_property_model(
+                model, "cuef", _StubScene(),
+                preset_library={preset.name: preset},
+                color_segment_count_lookup=lambda _fid: 3,
+            )
+        # The vfilter exposes one virtual port per segment, and the preset's
+        # single colour stream is expanded onto each. Consolidation keeps
+        # the three segments as distinct native channels because they are
+        # semantically different ports on the same fixture; the
+        # consolidator refuses to merge different local names even when
+        # the streams happen to be byte-identical (otherwise the dimmer
+        # strategy's internal references to raw channel names like
+        # ``strobefreq`` would be collapsed away and fish would fail to
+        # resolve them).
+        virtual = set(result.channel_specs.keys())
+        self.assertIn("BAR__color_0", virtual)
+        self.assertIn("BAR__color_1", virtual)
+        self.assertIn("BAR__color_2", virtual)
+        # Each segment is its own canonical; the preset stream is replicated
+        # onto each so downstream consumers can address them independently.
+        for seg in ("BAR__color_0", "BAR__color_1", "BAR__color_2"):
+            self.assertEqual(seg, result.consolidation.canonical(seg))
+
+
 class PositionPropertyTest(unittest.TestCase):
 
     def test_channel_specs(self) -> None:
@@ -205,16 +482,20 @@ class PositionPropertyTest(unittest.TestCase):
             self.assertEqual(expected_slot, reqs["pan_value"][0].timestep_40hz)
 
 
-class ColourPropertyTest(unittest.TestCase):
+class ColorPropertyTest(unittest.TestCase):
 
-    def test_channel_specs(self) -> None:
-        specs = ColourProperty().channel_specs
+    def test_channel_specs_single_segment(self) -> None:
+        specs = ColorProperty().channel_specs
         self.assertEqual(("color",), tuple(s.name for s in specs))
         self.assertEqual(DataType.DT_COLOR, specs[0].data_type)
 
+    def test_channel_specs_multi_segment(self) -> None:
+        specs = ColorProperty(segment_count=3).channel_specs
+        self.assertEqual(("color_0", "color_1", "color_2"), tuple(s.name for s in specs))
+
     def test_discrete_value_unchanged_across_children(self) -> None:
         colour = ColorHSI(120.0, 1.0, 0.5)
-        prop = ColourProperty(color=colour, transition=TransferFunction.EDGE)
+        prop = ColorProperty(colors={0: colour}, transition=TransferFunction.EDGE)
         dist = Distribution(method=DistributionMethod.PHASE_SIN, phase_offset=math.pi / 2, amplitude=1.0)
         values: list = []
         slots: list[int] = []
@@ -225,9 +506,70 @@ class ColourPropertyTest(unittest.TestCase):
             self.assertEqual(1, len(reqs["color"]))
             values.append(reqs["color"][0].requested_value)
             slots.append(reqs["color"][0].timestep_40hz)
-        self.assertTrue(all(v is colour for v in values))
+        self.assertTrue(all(v == colour for v in values))
         # Delay is applied to the slot even on discrete channels.
         self.assertNotEqual(slots[0], slots[1])
+
+
+class ColorDistributionTest(unittest.TestCase):
+    """Verify the K colours → N segments spread rule.
+
+    Per the user-specified behaviour:
+      * K == 1       → same colour on every segment
+      * 1 < K < N    → segment i gets ``authored[i * K // N]``
+      * K >= N       → first N authored colours used
+      * K == 0       → black everywhere
+    """
+
+    def test_empty_authored_fills_black(self) -> None:
+        result = distribute_colors({}, 3)
+        self.assertEqual(3, len(result))
+        # ``ColorHSI`` has no ``__eq__``, so compare field-by-field to
+        # confirm each slot is a black HSI triple.
+        for c in result:
+            self.assertEqual(0.0, c.hue)
+            self.assertEqual(0.0, c.saturation)
+            self.assertEqual(0.0, c.intensity)
+
+    def test_single_to_many_replicates_same_color(self) -> None:
+        red = ColorHSI(0.0, 1.0, 1.0)
+        result = distribute_colors({0: red}, 4)
+        self.assertEqual([red, red, red, red], result)
+
+    def test_two_to_four_blocks_even(self) -> None:
+        red = ColorHSI(0.0, 1.0, 1.0)
+        blue = ColorHSI(240.0, 1.0, 1.0)
+        result = distribute_colors({0: red, 1: blue}, 4)
+        self.assertEqual([red, red, blue, blue], result)
+
+    def test_three_to_four_floor_distribution(self) -> None:
+        red = ColorHSI(0.0, 1.0, 1.0)
+        green = ColorHSI(120.0, 1.0, 1.0)
+        blue = ColorHSI(240.0, 1.0, 1.0)
+        result = distribute_colors({0: red, 1: green, 2: blue}, 4)
+        # floor(i * 3 / 4): 0, 0, 1, 2
+        self.assertEqual([red, red, green, blue], result)
+
+    def test_more_authored_than_segments_uses_first_n(self) -> None:
+        red = ColorHSI(0.0, 1.0, 1.0)
+        green = ColorHSI(120.0, 1.0, 1.0)
+        blue = ColorHSI(240.0, 1.0, 1.0)
+        white = ColorHSI(0.0, 0.0, 1.0)
+        result = distribute_colors({0: red, 1: green, 2: blue, 3: white}, 2)
+        self.assertEqual([red, green], result)
+
+    def test_color_property_multi_segment_requests(self) -> None:
+        red = ColorHSI(0.0, 1.0, 1.0)
+        blue = ColorHSI(240.0, 1.0, 1.0)
+        prop = ColorProperty(segment_count=4, colors={0: red, 1: blue})
+        reqs = prop.generate_requests(
+            step_start_40hz=0, step_duration_40hz=40, child_index=0, distribution=_CONSTANT,
+        )
+        self.assertEqual({"color_0", "color_1", "color_2", "color_3"}, set(reqs.keys()))
+        self.assertEqual(red, reqs["color_0"][0].requested_value)
+        self.assertEqual(red, reqs["color_1"][0].requested_value)
+        self.assertEqual(blue, reqs["color_2"][0].requested_value)
+        self.assertEqual(blue, reqs["color_3"][0].requested_value)
 
 
 class GoboPropertyTest(unittest.TestCase):

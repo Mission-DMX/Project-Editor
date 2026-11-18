@@ -7,7 +7,11 @@ from model.virtual_filters.property_cues.properties.base import (
     seconds_to_timesteps,
 )
 from model.virtual_filters.property_cues.properties.beam import BeamProperty
-from model.virtual_filters.property_cues.properties.colour import ColourProperty
+from model.virtual_filters.property_cues.properties.color import (
+    ColorProperty,
+    color_channel_name,
+    distribute_colors,
+)
 from model.virtual_filters.property_cues.properties.dimmer import DimmerProperty
 from model.virtual_filters.property_cues.properties.focus import FocusProperty
 from model.virtual_filters.property_cues.properties.frost import FrostProperty
@@ -25,7 +29,7 @@ __all__ = [
     "CURVE_SIN",
     "TIMESTEPS_PER_SECOND",
     "BeamProperty",
-    "ColourProperty",
+    "ColorProperty",
     "DimmerProperty",
     "FocusProperty",
     "FrostProperty",
@@ -33,5 +37,7 @@ __all__ = [
     "PositionProperty",
     "Property",
     "child_start_timestep",
+    "color_channel_name",
+    "distribute_colors",
     "seconds_to_timesteps",
 ]

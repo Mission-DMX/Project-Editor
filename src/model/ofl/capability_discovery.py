@@ -1,6 +1,6 @@
 """Classify fixture capabilities from an OFL definition.
 
-Returns string tags (``"dimmer"``, ``"position"``, ``"colour"``, ``"gobo"``,
+Returns string tags (``"dimmer"``, ``"position"``, ``"color"``, ``"gobo"``,
 ``"beam"``, ``"focus"``, ``"frost"``) so callers in different layers can map
 them onto whichever enum they use (e.g. the property-cue vfilter's
 ``EnabledCapability``). Lives in the OFL model package so the discovery
@@ -13,6 +13,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from model.ofl.ofl_fixture import CapabilityType, WheelSlotType
+from model.patching.fixture_channel import FixtureChannelType
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -24,9 +25,9 @@ logger = getLogger(__name__)
 
 
 _CAPABILITY_TYPE_TO_TAG: dict[CapabilityType, str] = {
-    CapabilityType.COLOR_INTENSITY: "colour",
-    CapabilityType.COLOR_PRESET: "colour",
-    CapabilityType.COLOR_TEMPERATURE: "colour",
+    CapabilityType.COLOR_INTENSITY: "color",
+    CapabilityType.COLOR_PRESET: "color",
+    CapabilityType.COLOR_TEMPERATURE: "color",
     CapabilityType.PAN: "position",
     CapabilityType.PAN_CONTINUOUS: "position",
     CapabilityType.TILT: "position",
@@ -56,14 +57,14 @@ def _wheels_of(fixture: UsedFixture) -> dict[str, Wheel]:
 
 
 def _capabilities_from_wheels(fixture: UsedFixture) -> set[str]:
-    """Inspect wheel slot types directly: GOBO slots → "gobo"; COLOR slots → "colour"."""
+    """Inspect wheel slot types directly: GOBO slots → "gobo"; COLOR slots → "color"."""
     caps: set[str] = set()
     for wheel in _wheels_of(fixture).values():
         for slot in getattr(wheel, "slots", []):
             if slot.type in _GOBO_SLOT_TYPES:
                 caps.add("gobo")
             elif slot.type is WheelSlotType.COLOR:
-                caps.add("colour")
+                caps.add("color")
     return caps
 
 
@@ -151,3 +152,25 @@ def beam_sub_capabilities(fixture: UsedFixture) -> set[str]:
             if sub is not None:
                 found.add(sub)
     return found
+
+
+def color_segment_count_of(fixture: UsedFixture) -> int:
+    """Return the number of independent HSI colour segments the fixture exposes.
+
+    For RGB(W/A/UV) matrix fixtures this is the RGB channel repetition count
+    read from the per-channel-type segment map: a 3-segment LED bar carries
+    three RED, three GREEN and three BLUE channels, so the return value is
+    3. Colour-wheel-only fixtures (no RGB channels at all) fall back to 1
+    so the existing ``ColorToColorWheel`` chain keeps materialising a
+    single ``color`` channel.
+    """
+    try:
+        counts = [
+            len(fixture.get_segment_in_universe_by_type(c))
+            for c in (FixtureChannelType.RED, FixtureChannelType.GREEN, FixtureChannelType.BLUE)
+        ]
+    except (AttributeError, KeyError, TypeError):
+        return 1
+    if any(counts):
+        return max(counts)
+    return 1

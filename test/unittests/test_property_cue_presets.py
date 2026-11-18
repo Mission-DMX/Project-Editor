@@ -125,7 +125,7 @@ class PresetEvaluatorTest(unittest.TestCase):
         preset = EffectPreset(
             name="ColorBlink",
             description="",
-            applies_for="colour",
+            applies_for="color",
             hints=(
                 PresetHintSpec(
                     id="start_color",
