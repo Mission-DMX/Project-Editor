@@ -268,6 +268,24 @@ class PropertyCueEditor(PreviewEditWidget):
         )
 
     @override
+    def _update_terminals(self, filter_node: FilterNode) -> None:
+        """No-op override: the property-cue vfilter owns its own output signature.
+
+        The base-class :meth:`PreviewEditWidget._update_terminals` compares the
+        vfilter's current pyqtgraph outputs to ``self.channels`` (sourced from
+        :meth:`get_channel_list`) and removes every terminal not in that list.
+        :class:`PropertyCueEditor` returns ``[]`` from :meth:`get_channel_list`
+        -- its outputs come from the compiled :class:`PropertyCueFilterModel`,
+        not from a user-curated preview-channel list -- so letting the base
+        run would strip every output on dialog close and cascade pyqtgraph
+        disconnects that blank every peer's ``channel_links``.
+        :meth:`FilterNode.update_node_after_settings_changed` (reached later via
+        ``super().parent_closed``) performs the correct sync by diffing the
+        pyqtgraph terminals against :attr:`out_data_types` from the vfilter's
+        own ``_rebuild_io``, so there is nothing for this override to do.
+        """
+
+    @override
     def parent_closed(self, filter_node: FilterNode) -> None:
         self._stop_preview()
         # ``NodeEditorFilterConfigWidget.parent_closed`` (reached via super)

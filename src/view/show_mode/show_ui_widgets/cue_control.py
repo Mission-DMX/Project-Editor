@@ -24,7 +24,8 @@ from PySide6.QtWidgets import (
 from model import Filter, FilterUpdateCallbackMixin, UIPage, UIWidget
 from model.file_support.cue_state import CueState
 from model.filter_data.cues.cue_filter_model import CueFilterModel
-from model.virtual_filters.cue_vfilter import CueFilter
+from model.virtual_filters.cue_vfilter import CueFilter, PreviewFilter
+from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
 from utility import resource_path
 from view.show_mode.editor.show_browser.annotated_item import AnnotatedListWidgetItem
 
@@ -93,12 +94,16 @@ class CueControlUIWidget(FilterUpdateCallbackMixin, UIWidget):
     def set_filter(self, f: Filter, i: int) -> None:
         if not f:
             return
-        if isinstance(self._filter, CueFilter):
+        # Both ``CueFilter`` and ``PropertyBasedCueFilter`` carry
+        # ``linked_ui_widgets`` through their shared ``PreviewFilter`` base; the
+        # widget subscribes against the base so either flavour can drive the
+        # show-mode cue control without duplicating registration logic.
+        if isinstance(self._filter, PreviewFilter):
             self._filter.linked_ui_widgets.remove(self)
         super().set_filter(f, i)
         self.associated_filters["cue_filter"] = f.filter_id
         self._filter = f
-        if isinstance(self._filter, CueFilter):
+        if isinstance(self._filter, PreviewFilter):
             self._filter.linked_ui_widgets.append(self)
         self._register_fish_callback(f)
         self.update_model(clear_model=False)
@@ -117,23 +122,37 @@ class CueControlUIWidget(FilterUpdateCallbackMixin, UIWidget):
 
     def _migrate_name_list(self) -> None:
         cue_list_str = self.configuration.get("cue_names")
-        if cue_list_str:
-            logger.info("Migrating old cue name model")
-            for entry_text in cue_list_str.split(";"):
-                name, id_string = entry_text.split(":")
-                id_: int = int(id_string)
-                cue = self._model.cues[id_]
-                if len(cue.name) == 0 or cue.name == "":
-                    logger.info("Updating cue name %s to %s.", cue.name, name)
-                    cue.name = name
-            if isinstance(self._filter, Filter):
-                logger.info("Saving cue model.")
-                self.configuration.pop("cue_names")
-                self._filter.filter_configurations.update(self._model.get_as_configuration())
-                self.update_model()
+        if not cue_list_str:
+            return
+        # ``cue_names`` was an older ``CueFilter`` configuration key; the
+        # property-based cue filter never carried it, so skip migration
+        # entirely when wrapping that flavour -- ``self._model`` is ``None``
+        # for it and the loop below would crash on first access.
+        if self._model is None:
+            logger.debug("Ignoring stale cue_names configuration on %s.", type(self._filter).__name__)
+            return
+        logger.info("Migrating old cue name model")
+        for entry_text in cue_list_str.split(";"):
+            name, id_string = entry_text.split(":")
+            id_: int = int(id_string)
+            cue = self._model.cues[id_]
+            if len(cue.name) == 0 or cue.name == "":
+                logger.info("Updating cue name %s to %s.", cue.name, name)
+                cue.name = name
+        if isinstance(self._filter, Filter):
+            logger.info("Saving cue model.")
+            self.configuration.pop("cue_names")
+            self._filter.filter_configurations.update(self._model.get_as_configuration())
+            self.update_model()
 
     def update_model(self, clear_model: bool = True) -> None:
         """Reload the cue model after the configuration has changed in the filter.
+
+        For the property-based cue vfilter the live ``PropertyCueFilterModel``
+        is the source of truth (not a serialized ``cuelist`` blob), so the
+        widget reads cue names straight off it and leaves ``self._model``
+        unset -- ``_migrate_name_list`` is skipped in that branch because the
+        migration path writes to a ``CueFilterModel`` that doesn't exist here.
 
         Args:
             clear_model: Should the loaded model be unloaded afterward?
@@ -141,12 +160,15 @@ class CueControlUIWidget(FilterUpdateCallbackMixin, UIWidget):
         """
         self._cues.clear()
         if self._filter:
-            self._model = CueFilterModel()
-            self._model.load_from_configuration(self._filter.filter_configurations)
-            self._cues.clear()
-            for c in self._model.cues:
-                cf = (c.name, len(self._cues))
-                self._cues.append(cf)
+            if isinstance(self._filter, PropertyBasedCueFilter):
+                self._model = None
+                for c in self._filter.property_model.cues:
+                    self._cues.append((c.name, len(self._cues)))
+            else:
+                self._model = CueFilterModel()
+                self._model.load_from_configuration(self._filter.filter_configurations)
+                for c in self._model.cues:
+                    self._cues.append((c.name, len(self._cues)))
         self._repopulate_lists()
         if clear_model:
             self._model = None
