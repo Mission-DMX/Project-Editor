@@ -85,7 +85,20 @@ class PreviewController(QObject):
         thread.start()
 
     def stop(self, timeout_ms: int = _DEFAULT_SHUTDOWN_TIMEOUT_MS) -> None:
-        """Interrupt the preview thread and wait briefly for it to exit."""
+        """Interrupt the preview thread and wait briefly for it to exit.
+
+        Flipping ``in_preview_mode`` back to False here is what lets the
+        editor re-serialise the show to fish in production mode: without
+        it, :meth:`PropertyBasedCueFilter.instantiate_filters` keeps
+        emitting the preview constant graph (including every
+        ``__PREVIEW_CONST__…`` input of the postprocess chain) even
+        after the preview thread is gone, and fish rejects the resulting
+        scene because the cloned switch expects a uint8 ``select`` while
+        the preview constant for ``pan_curvesel`` is still around.
+        """
+        if self._vfilter is not None:
+            self._vfilter.in_preview_mode = False
+            self._vfilter._channel_mapping = {}
         thread = self._thread
         if thread is None:
             return

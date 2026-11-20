@@ -124,9 +124,34 @@ class PresetPanel(QGroupBox):
                 out[hint.id] = widget.text()
         return out
 
-    def set_selected_preset(self, name: str) -> None:
+    def set_selected_preset(self, name: str, hint_values: dict[str, Any] | None = None) -> None:
+        """Restore the saved preset selection AND its saved hint values.
+
+        Without ``hint_values`` the hint widgets keep whatever the combo's
+        ``currentIndexChanged`` hook produced -- i.e. each hint's ``default``
+        from the preset spec. That defeats editing: the user dials
+        ``speed = 30``, hits Apply (the model stores ``speed = 30``), re-opens
+        the step and sees ``speed = 60`` again because
+        :meth:`_rebuild_hints` seeded the spin boxes from
+        ``PresetHintSpec.default`` instead of the stored assignment.
+        """
         for i in range(self._combo.count()):
             preset = self._combo.itemData(i)
             if preset is not None and preset.name == name:
                 self._combo.setCurrentIndex(i)
-                return
+                break
+        else:
+            return
+        if hint_values is None:
+            return
+        for hint_id, value in hint_values.items():
+            widget = self._hint_widgets.get(hint_id)
+            if widget is None:
+                continue
+            if isinstance(widget, (JogwheelDoubleSpinBox, JogwheelSpinBox)):
+                try:
+                    widget.setValue(type(widget.value())(value))
+                except (TypeError, ValueError):
+                    continue
+            elif isinstance(widget, QLineEdit):
+                widget.setText(str(value))

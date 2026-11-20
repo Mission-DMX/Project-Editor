@@ -1,46 +1,182 @@
 {
   "name": "Circle",
-  "description": "This effect lets moving heads perform a circle rotation.",
+  "description": "Projects a circle of radius `size` (same units as `distance`) onto a surface `distance` units away. One full rotation takes `seconds`. `pan_range_deg` / `tilt_range_deg` describe the fixture's full mechanical range (defaults to 540/270, matching most moving heads); the generated motion is automatically clamped to half of the smaller of the two ranges so the fixture never hits a hard stop.",
   "applies_for": "position",
   "hints": [
-    {"id": "speed", "type": "float", "default": 60},
-    {"id": "size", "type": "float", "default": 1, "min": 0.0}
+    {
+      "id": "seconds",
+      "type": "float",
+      "default": 10,
+      "min": 0.1
+    },
+    {
+      "id": "size",
+      "type": "float",
+      "default": 1,
+      "min": 0.0
+    },
+    {
+      "id": "distance",
+      "type": "float",
+      "default": 10,
+      "min": 0.1
+    },
+    {
+      "id": "pan_range_deg",
+      "type": "float",
+      "default": 540,
+      "min": 1
+    },
+    {
+      "id": "tilt_range_deg",
+      "type": "float",
+      "default": 270,
+      "min": 1
+    }
   ],
   "kf_requests": [
     {
-      "duration": "{{ speed }}",
+      "duration": "{{ seconds / 16 }}",
       "channels": {
-        "pan_value": "0.0",
-        "pan_curvesel": "1",
-        "tilt_value": "{{ size|mul(128) }}",
-        "tilt_curvesel": "2"
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * 1.0 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 0.0 }}",
+        "tilt_curvesel": "0"
       }
     },
     {
-      "duration": "{{ speed }}",
+      "duration": "{{ seconds / 16 }}",
       "channels": {
-        "pan_value": "{{ size|mul(128) }}",
-        "pan_curvesel": "2",
-        "tilt_value": "{{ size|mul(255) }}",
-        "tilt_curvesel": "1"
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * 0.92388 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 0.382683 }}",
+        "tilt_curvesel": "0"
       }
     },
     {
-      "duration": "{{ speed }}",
+      "duration": "{{ seconds / 16 }}",
       "channels": {
-        "pan_value": "{{ size|mul(255) }}",
-        "pan_curvesel": "1",
-        "tilt_value": "{{ size|mul(128) }}",
-        "tilt_curvesel": "2"
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * 0.707107 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 0.707107 }}",
+        "tilt_curvesel": "0"
       }
     },
     {
-      "duration": "{{ speed }}",
+      "duration": "{{ seconds / 16 }}",
       "channels": {
-        "pan_value": "128.0",
-        "pan_curvesel": "2",
-        "tilt_value": "{{ size|mul(128) }}",
-        "tilt_curvesel": "1"
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * 0.382683 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 0.92388 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * 0.0 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 1.0 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * -0.382683 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 0.92388 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * -0.707107 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 0.707107 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * -0.92388 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 0.382683 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * -1.0 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * 0.0 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * -0.92388 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * -0.382683 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * -0.707107 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * -0.707107 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * -0.382683 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * -0.92388 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * -0.0 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * -1.0 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * 0.382683 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * -0.92388 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * 0.707107 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * -0.707107 }}",
+        "tilt_curvesel": "0"
+      }
+    },
+    {
+      "duration": "{{ seconds / 16 }}",
+      "channels": {
+        "pan_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / pan_range_deg) * 0.92388 }}",
+        "pan_curvesel": "0",
+        "tilt_value": "{{ 0.5 + (([size * 57.2958 / distance, pan_range_deg / 2, tilt_range_deg / 2] | min) / tilt_range_deg) * -0.382683 }}",
+        "tilt_curvesel": "0"
       }
     }
   ]

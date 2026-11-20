@@ -124,7 +124,16 @@ def _build_populated_filter(scene):
     ])
     cue2 = PropertyCue(name="Cue 2", steps=[
         PropertyStep(name="s0", duration_40hz=80, assignments={
-            "fixture:MH1": _preset_position("Circle", {"speed": 40.0, "size": 1.0}),
+            "fixture:MH1": _preset_position(
+                "Circle",
+                {
+                    "seconds": 40.0,
+                    "size": 1.0,
+                    "distance": 10.0,
+                    "pan_range_deg": 540.0,
+                    "tilt_range_deg": 270.0,
+                },
+            ),
             "fixture:MH2": _manual_position(0.5, 0.75),
         }),
     ])
@@ -150,12 +159,26 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         # and distinct raw/exposed names prevent the serializer's override
         # dictionary from rewriting the strobe filter's own input onto its
         # own output.
+        # ``brightness_raw`` / ``pan_value`` / ``tilt_value`` differ per fixture
+        # (MH1 is on a circle, MH2 sits at 0.5/0.75; MH1 is at brightness 1.0,
+        # MH2 at 0.75) so neither pair consolidates and both fixtures keep
+        # their own channel.
         for ch in ("MH1__brightness_raw", "MH2__brightness_raw",
                    "MH1__pan_value", "MH2__pan_value",
-                   "MH1__pan_curvesel", "MH2__pan_curvesel",
-                   "MH1__tilt_value", "MH2__tilt_value",
-                   "MH1__tilt_curvesel", "MH2__tilt_curvesel"):
+                   "MH1__tilt_value", "MH2__tilt_value"):
             self.assertIn(ch, native_channels, f"missing native channel: {ch}")
+        # The Circle preset selects raw passthrough (``curvesel=0``) and the
+        # manual MH2 assignment does the same, so the two fixtures share the
+        # same constant curvesel stream and the consolidator collapses them
+        # onto a single canonical channel per axis.
+        self.assertTrue(
+            any(ch.endswith("__pan_curvesel") for ch in native_channels),
+            f"expected at least one pan_curvesel channel, got {sorted(native_channels)}",
+        )
+        self.assertTrue(
+            any(ch.endswith("__tilt_curvesel") for ch in native_channels),
+            f"expected at least one tilt_curvesel channel, got {sorted(native_channels)}",
+        )
 
         resolved_pan = self.vfilter.resolve_output_port_id("MH1__pan")
         self.assertIsNotNone(resolved_pan)
@@ -341,6 +364,68 @@ class PropertyCueEndToEndTests(unittest.TestCase):
         # Compiling the vfilter already exercises the Circle reference in cue 2.
         self.vfilter.invalidate_compile_cache()
         self.vfilter._ensure_compiled()
+
+    def test_pan_sweep_writes_pan_and_brightness_channels(self) -> None:
+        """Pan Sweep is registered under ``position`` but also drives dimmer.
+
+        The compiler must widen the request group's ``channel_names`` to
+        include every raw channel the preset emits that the fixture
+        actually supports -- otherwise the brightness stream the preset
+        sends is dropped by the solver and the moving head never dims.
+        """
+        from model.virtual_filters.property_cues.distribution import Distribution
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            PresetPropertyAssignment,
+            PropertyAssignments,
+            PropertyCue,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
+
+        f = PropertyBasedCueFilter(self.scene, "sweep_only")
+        f.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
+            enabled_capabilities={EnabledCapability.POSITION, EnabledCapability.DIMMER},
+        )
+        f.property_model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=4 * 40, assignments={
+                "fixture:MH1": PropertyAssignments(by_property={
+                    "position": PresetPropertyAssignment(
+                        preset_id="Pan Sweep",
+                        hint_values={
+                            "angle_a": 0.2, "angle_b": 0.8,
+                            "dimmer_a": 1.0, "dimmer_b": 0.3,
+                            "seconds": 4.0,
+                        },
+                        distribution=Distribution(),
+                    ),
+                }),
+            }),
+        ]))
+        res = f._ensure_compiled()
+        native_channels = {name for name, _dt in res.native_model.channels}
+        self.assertIn("MH1__pan_value", native_channels)
+        self.assertIn("MH1__brightness_raw", native_channels,
+                      "Pan Sweep must drive brightness_raw even though its "
+                      "applies_for is position; the solver's channel_names "
+                      "set widens to include cross-property emissions.")
+
+        # Dump the brightness_raw frames and confirm the preset's dimmer_a/dimmer_b
+        # actually landed on the keyframe stream.
+        cue = res.native_model.cues[0]
+        brightness_idx = next(
+            i for i, (name, _dt) in enumerate(cue._channel_definitions)
+            if name == "MH1__brightness_raw"
+        )
+        brightness_values = sorted(
+            float(kf._states[brightness_idx]._value) for kf in cue._frames
+        )
+        self.assertAlmostEqual(0.3, brightness_values[0], places=5)
+        self.assertAlmostEqual(1.0, brightness_values[-1], places=5)
 
 
 if __name__ == "__main__":

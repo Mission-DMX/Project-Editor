@@ -18,6 +18,7 @@ from model.color_hsi import ColorHSI
 from model.filter import DataType, Filter, FilterTypeEnumeration
 from model.filter_data.cues.curves import value_at
 from model.filter_data.transfer_function import TransferFunction
+from model.filters.factory import construct_filter_instance
 
 if TYPE_CHECKING:
     from model import Scene
@@ -42,11 +43,26 @@ def shutdown_all_preview_threads(timeout_ms: int = 500) -> None:
 
 
 _CONSTANT_FILTER_TYPE: dict[DataType, FilterTypeEnumeration] = {
-    DataType.DT_8_BIT: FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+    # Each spec's data type picks a *same-width* constant so the cloned
+    # postprocess chain's typed inputs still line up with fish's expected
+    # widths. Previously ``DT_8_BIT`` was mapped to the 16-bit constant and
+    # fish rejected the pan/tilt switch with ``channel mapping does not
+    # contain channel 'select' of type 'uint8_t'`` -- the switch's select
+    # input is uint8 but the preview_const feeding it was uint16.
+    DataType.DT_8_BIT: FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
     DataType.DT_16_BIT: FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
     DataType.DT_DOUBLE: FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
-    DataType.DT_BOOL: FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
+    DataType.DT_BOOL: FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
     DataType.DT_COLOR: FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
+}
+
+
+_DEFAULT_VALUE_FOR_DT: dict[DataType, str] = {
+    DataType.DT_8_BIT: "0",
+    DataType.DT_16_BIT: "0",
+    DataType.DT_DOUBLE: "0.0",
+    DataType.DT_BOOL: "0",
+    DataType.DT_COLOR: "0,0,0",
 }
 
 
@@ -55,38 +71,104 @@ def build_preview_filters(
     scene: Scene,
     filter_list: list[Filter],
 ) -> dict[str, str]:
-    """Instantiate FILTER_CONSTANT_* filters for every output channel.
+    """Instantiate the preview filter graph and return the output-port mapping.
 
-    Returns a mapping ``virtual_port_id -> f"{constant_filter_id}:value"`` that
-    the vfilter must store in its ``_channel_mapping`` so
-    :meth:`PreviewFilter.resolve_output_port_id` keeps working during preview.
+    For every virtual output port that the production serializer would resolve
+    to a channel on the native cue filter, a ``FILTER_CONSTANT_*`` with id
+    ``{cue_fid}__PREVIEW_CONST__{canonical}`` takes the cue filter's place and
+    the preview thread writes per-tick values into it. The postprocess chain
+    (sin/cos/switch/range for pan/tilt, strobe-fold for dimmer, etc.) is
+    *cloned* into the preview scene with its channel_links rewritten to read
+    from those PREVIEW_CONSTs, so synthesized outputs like ``X__pan`` keep
+    being produced by the same chain the production show runs -- the only
+    difference is that the chain's raw inputs now come from the preview
+    constants rather than the native cue filter.
+
+    The returned mapping covers **both** raw virtual names (``X__color``,
+    ``X__pan_value``, ...) and synthesized virtual names (``X__pan``,
+    ``X__brightness``, ...), so ``PreviewFilter.resolve_output_port_id``
+    always finds a downstream-visible filter to point to.
     """
     res = vfilter._ensure_compiled()
+    cue_fid = vfilter.filter_id
     specs = res.channel_specs
     consolidation = res.consolidation
-    # One constant per canonical channel, reused by every virtual port that
-    # consolidates onto it.
-    canonical_to_const_id: dict[str, str] = {}
-    for virtual_name in sorted(specs.keys()):
-        canonical = consolidation.canonical(virtual_name)
-        if canonical in canonical_to_const_id:
-            continue
-        spec = specs[canonical] if canonical in specs else specs[virtual_name]
-        const_type = _CONSTANT_FILTER_TYPE.get(spec.data_type,
-                                               FilterTypeEnumeration.FILTER_CONSTANT_FLOAT)
-        const_id = f"{vfilter.filter_id}__PREVIEW_CONST__{canonical}"
-        const_filter = Filter(scene, const_id, filter_type=int(const_type), pos=vfilter.pos)
-        filter_list.append(const_filter)
-        canonical_to_const_id[canonical] = const_id
 
+    # Pass 1 — walk the compile's external_ports. Entries that still point at
+    # the native cue filter (``port_fid == cue_fid``) materialise a
+    # PREVIEW_CONST on demand; everything else (defaulted CONSTs, strategy
+    # outputs) already resolves to something we're going to emit, so we
+    # just copy the reference through unchanged.
+    canonical_to_const_id: dict[str, str] = {}
     mapping: dict[str, str] = {}
-    for virtual_name in specs:
-        canonical = consolidation.canonical(virtual_name)
-        const_id = canonical_to_const_id.get(canonical)
-        if const_id is None:
+    for virtual_name, (port_fid, port_ch) in res.external_ports.items():
+        if port_fid != cue_fid:
+            mapping[virtual_name] = f"{port_fid}:{port_ch}"
             continue
-        mapping[virtual_name] = f"{const_id}:value"
+        canonical = port_ch
+        if canonical not in canonical_to_const_id:
+            spec = specs.get(canonical) or specs.get(virtual_name)
+            if spec is None:
+                continue
+            const_type = _CONSTANT_FILTER_TYPE.get(
+                spec.data_type, FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
+            )
+            const_id = f"{cue_fid}__PREVIEW_CONST__{canonical}"
+            const_filter = Filter(scene, const_id, filter_type=int(const_type), pos=vfilter.pos)
+            # Seed with the spec's default (or a sensible per-type zero) so
+            # fish accepts the filter at configure time. Live cues override
+            # this on the first preview tick anyway.
+            const_filter.initial_parameters["value"] = (
+                spec.default_value or _DEFAULT_VALUE_FOR_DT.get(spec.data_type, "0")
+            )
+            filter_list.append(const_filter)
+            canonical_to_const_id[canonical] = const_id
+        mapping[virtual_name] = f"{canonical_to_const_id[canonical]}:value"
+
+    # Pass 2 — clone the postprocess chain into the preview scene and rewrite
+    # every ``{cue_fid}:{canonical}`` channel_link to read from the matching
+    # PREVIEW_CONST we just created. References to the compile's ``CONST``
+    # filters (defaulted canonicals) start with ``{cue_fid}__CONST__``, not
+    # ``{cue_fid}:``, so the startswith guard leaves them untouched.
+    for pp_src in res.postprocess_filters:
+        pp_clone = construct_filter_instance(
+            scene=scene,
+            filter_type=int(pp_src.filter_type),
+            filter_id=pp_src.filter_id,
+            pos=pp_src.pos,
+            filter_configurations=dict(pp_src.filter_configurations),
+            initial_parameters=dict(pp_src.initial_parameters),
+        )
+        if pp_clone is None:
+            # The factory returns None for legacy virtual-filter types that
+            # haven't been migrated. Fall back to a plain Filter so the chain
+            # at least keeps its shape.
+            pp_clone = Filter(scene, pp_src.filter_id, filter_type=int(pp_src.filter_type), pos=pp_src.pos)
+            pp_clone.filter_configurations.update(pp_src.filter_configurations)
+            pp_clone.initial_parameters.update(pp_src.initial_parameters)
+        for input_port, source in pp_src.channel_links.items():
+            pp_clone.channel_links[input_port] = _preview_rewrite(
+                source, cue_fid, consolidation, canonical_to_const_id,
+            )
+        filter_list.append(pp_clone)
+
     return mapping
+
+
+def _preview_rewrite(
+    source: str, cue_fid: str,
+    consolidation, canonical_to_const_id: dict[str, str],
+) -> str:
+    """Rewrite one strategy channel_link from cue-filter ref to PREVIEW_CONST ref."""
+    if not source:
+        return source
+    prefix = f"{cue_fid}:"
+    if not source.startswith(prefix):
+        return source
+    local = source[len(prefix):]
+    canonical = consolidation.canonical(local)
+    const_id = canonical_to_const_id.get(canonical)
+    return f"{const_id}:value" if const_id else source
 
 
 def _pick_cue(vfilter: PropertyBasedCueFilter, index: int) -> Cue | None:

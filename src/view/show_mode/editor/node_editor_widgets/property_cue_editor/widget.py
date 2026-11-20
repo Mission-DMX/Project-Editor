@@ -305,14 +305,39 @@ class PropertyCueEditor(PreviewEditWidget):
         if self._preview_controller is None or self._preview_button is None or self._preview_active:
             return
         self._preview_controller.set_playing(True)
+        # ``start`` builds the ``PREVIEW_CONST`` filters, installs the
+        # virtual_name → ``PREVIEW_CONST:value`` mapping on the vfilter and
+        # flips ``in_preview_mode = True``. Fish needs to see the show with
+        # those constants as scene filters before the preview thread starts
+        # pumping GUI updates addressed to them, otherwise every tick triggers
+        # ``The requested scene does not contain the requested filter
+        # 'Property Cues.0__PREVIEW_CONST__...'`` on the fish side.
         self._preview_controller.start()
+        self._transmit_scene_to_fish()
         self._preview_active = True
         self._preview_button.setText("Stop preview")
 
     def _stop_preview(self) -> None:
         if self._preview_controller is None:
             return
+        was_active = self._preview_active
         self._preview_controller.stop()
         self._preview_active = False
         if self._preview_button is not None:
             self._preview_button.setText("Start preview")
+        if was_active:
+            # The vfilter is back to non-preview mode; re-transmit so fish
+            # drops the ``PREVIEW_CONST`` filters and picks the real native
+            # cue filter back up before the user runs a normal cue.
+            self._transmit_scene_to_fish()
+
+    def _transmit_scene_to_fish(self) -> None:
+        """Re-send the show after flipping the vfilter's preview mode on or off."""
+        if self._property_filter is None:
+            return
+        scene = getattr(self._property_filter, "scene", None)
+        board = getattr(scene, "board_configuration", None) if scene is not None else None
+        if board is None:
+            return
+        from controller.file.transmitting_to_fish import transmit_to_fish
+        transmit_to_fish(board, False)

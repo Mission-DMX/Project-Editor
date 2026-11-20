@@ -399,6 +399,55 @@ class PropertyPaneTests(unittest.TestCase):
         self.assertIsInstance(assignment, PresetPropertyAssignment)
         self.assertEqual("SwellTest", assignment.preset_id)
 
+    def test_preset_hint_values_survive_reload(self) -> None:
+        """Regression: editing a preset hint used to revert to the spec default.
+
+        ``PresetPanel.set_selected_preset`` only moved the combo cursor; the
+        ``_rebuild_hints`` slot then seeded every hint widget from
+        :attr:`PresetHintSpec.default`, so the saved ``hint_values`` from the
+        model were silently overridden with the spec default (e.g. ``speed=60``)
+        on every re-open of the step. The panel now takes the saved hint values
+        and writes them into the widgets after the rebuild.
+        """
+        from model.virtual_filters.property_cues.model.property_step import PresetPropertyAssignment
+        from model.virtual_filters.property_cues.presets.loader import load_preset_library
+        with tempfile.TemporaryDirectory() as tmp:
+            preset_blob = {
+                "name": "SwellTest",
+                "description": "test",
+                "applies_for": "dimmer",
+                "hints": [{"id": "speed", "type": "float", "default": 60.0}],
+                "kf_requests": [
+                    {"duration": "{{ speed }}", "channels": {"brightness": "1.0"}},
+                ],
+            }
+            with open(f"{tmp}/swell.json", "w", encoding="utf-8") as fh:
+                json.dump(preset_blob, fh)
+            library = load_preset_library(builtin_dir=tmp, user_dir=tmp)
+            model, pane = self._make_pane()
+
+            pane.show_editor(0, "fixture:F1")
+            editor = pane._editors["dimmer"]
+            editor._preset_panel.set_library(library)
+            editor._mode.set_manual(False)
+            editor._preset_panel.set_selected_preset("SwellTest")
+            # Simulate the user dialing the hint away from its default.
+            editor._preset_panel._hint_widgets["speed"].setValue(30.0)
+            editor._on_apply()
+
+            bucket = model.cues[0].steps[0].assignments["fixture:F1"]
+            assignment = bucket.by_property["dimmer"]
+            self.assertIsInstance(assignment, PresetPropertyAssignment)
+            self.assertEqual({"speed": 30.0}, assignment.hint_values)
+
+            # Navigate away and back: loading the step must restore the saved
+            # 30.0 into the widget, not the hint's default 60.0.
+            pane.show_editor(0, "")
+            pane.show_editor(0, "fixture:F1")
+            self.assertEqual(
+                30.0, editor._preset_panel._hint_widgets["speed"].value(),
+            )
+
     def test_distribution_controls_write(self) -> None:
         from model.virtual_filters.property_cues.distribution import DistributionMethod
         model, pane = self._make_pane()
@@ -423,9 +472,35 @@ class PropertyPaneTests(unittest.TestCase):
         editor = pane._step_editor
         editor._duration.setValue(3.0)
         editor._fade_in.setValue(0.5)
-        editor._on_apply()
+        # No manual apply call: the editor auto-applies on every
+        # ``valueChanged`` so the model picks the edits up straight away.
         self.assertEqual(120, model.cues[0].steps[0].duration_40hz)
         self.assertEqual(20, model.cues[0].steps[0].fade_in_40hz)
+
+    def test_step_editor_auto_applies_without_apply_button(self) -> None:
+        """Regression: ``_duration`` / ``_fade_in`` / ``_name_edit`` auto-persist.
+
+        The former behaviour required the user to click an Apply button;
+        closing the dialog without pressing it left ``duration_40hz`` at the
+        default (1 s) even after the user had typed, e.g., ``10`` into the
+        duration spinbox. This test pins the model-side effect of each of the
+        three signals the editor now connects.
+        """
+        model, pane = self._make_pane()
+        pane.show_editor(0, "")
+        editor = pane._step_editor
+
+        editor._duration.setValue(10.0)
+        self.assertEqual(400, model.cues[0].steps[0].duration_40hz)
+
+        editor._fade_in.setValue(0.25)
+        self.assertEqual(10, model.cues[0].steps[0].fade_in_40hz)
+
+        editor._name_edit.setText("Entry")
+        # ``editingFinished`` only fires on focus-out / Enter, so emit it
+        # explicitly here to mirror the Qt side of a committed edit.
+        editor._name_edit.editingFinished.emit()
+        self.assertEqual("Entry", model.cues[0].steps[0].name)
 
     def test_step_level_dimmer_writes_assignment(self) -> None:
         from model.virtual_filters.property_cues.model.property_step import ManualPropertyAssignment

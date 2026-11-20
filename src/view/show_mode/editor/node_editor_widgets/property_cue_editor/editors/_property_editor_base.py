@@ -89,7 +89,7 @@ class PropertyEditorBase(QWidget):
         if isinstance(assignment, PresetPropertyAssignment):
             self._mode.set_manual(False)
             self._stack.setCurrentIndex(1)
-            self._preset_panel.set_selected_preset(assignment.preset_id)
+            self._preset_panel.set_selected_preset(assignment.preset_id, assignment.hint_values)
             self._distribution.set_distribution(assignment.distribution)
         elif isinstance(assignment, ManualPropertyAssignment):
             self._mode.set_manual(True)

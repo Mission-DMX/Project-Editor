@@ -231,6 +231,7 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                  gobo_wheel_count_lookup: GoboWheelCountLookup | None,
                  beam_sub_capabilities_lookup: BeamSubCapabilityLookup | None,
                  color_segment_count_lookup: ColorSegmentCountLookup | None,
+                 all_specs: dict[str, ChannelSpec],
                  ) -> tuple[list[RequestGroup], dict[str, ChannelSpec]]:
     from model.virtual_filters.property_cues._default_specs import property_kwargs_for_fixture
 
@@ -274,10 +275,19 @@ def _collect_cue(cue_index: int, cue: PropertyCue, children: list[ResolvedChild]
                     prefixed = {f"{prefix}__{n}": r for n, r in raw.items()}
                     if not prefixed:
                         continue
+                    # A preset may emit channels for properties *other* than its
+                    # ``applies_for`` (``pan_sweep`` writes the dimmer on top of
+                    # pan, for instance). Accept those extras as long as the
+                    # fixture actually has specs for them -- otherwise they stay
+                    # out of ``channel_names`` and the solver drops them, which
+                    # is how an unsupported dimmer ask on a gobo-only fixture
+                    # goes away silently.
+                    claimed = set(local_specs.keys())
+                    claimed.update(name for name in prefixed if name in all_specs)
                     groups.append(RequestGroup(
                         origin_label=f"c{cue_index}.s{si}.{pid}.{node_path}",
                         tree_depth=depth,
-                        channel_names=frozenset(local_specs.keys()),
+                        channel_names=frozenset(claimed),
                         requests=prefixed,
                     ))
         step_start += int(step.duration_40hz)
@@ -507,6 +517,7 @@ def compile_property_model(
             cue_index, cue, children, preset_library, name_fn,
             capability_lookup, gobo_wheel_count_lookup, beam_sub_capabilities_lookup,
             color_segment_count_lookup,
+            all_specs,
         )
         all_specs.update(specs)
         per_cue.append((cue_index, cue.name or f"Cue {cue_index + 1}", groups))

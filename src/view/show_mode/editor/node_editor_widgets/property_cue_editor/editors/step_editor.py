@@ -8,7 +8,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QFormLayout,
     QLineEdit,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -24,7 +23,14 @@ _TICKS_PER_SECOND = 40.0
 
 
 class StepEditor(QWidget):
-    """Edit the name, duration and fade-in of the selected step (seconds)."""
+    """Edit the name, duration and fade-in of the selected step (seconds).
+
+    All three fields auto-apply as soon as the user commits them (text
+    editing-finished for the name, ``valueChanged`` for the spin boxes).
+    The former Apply button was easy to miss -- users would set a duration,
+    close the dialog, and find the step still at its default 1 s because the
+    change had never been written to the model.
+    """
 
     applied = Signal()
 
@@ -33,6 +39,7 @@ class StepEditor(QWidget):
         self._model = model
         self._cue_index = 0
         self._step_index = 0
+        self._loading = False
 
         layout = QVBoxLayout()
         form = QFormLayout()
@@ -50,23 +57,31 @@ class StepEditor(QWidget):
         form.addRow("Duration (s)", self._duration)
         form.addRow("Fade-in (s)", self._fade_in)
         layout.addLayout(form)
-        self._apply_button = QPushButton("Apply")
-        self._apply_button.clicked.connect(self._on_apply)
-        layout.addWidget(self._apply_button)
         self.setLayout(layout)
+
+        self._name_edit.editingFinished.connect(self._persist)
+        self._duration.valueChanged.connect(self._persist)
+        self._fade_in.valueChanged.connect(self._persist)
 
     def load(self, cue_index: int, step_index: int) -> None:
         self._cue_index = cue_index
         self._step_index = step_index
-        step = self._current_step()
-        if step is None:
-            self._name_edit.setText("")
-            self._duration.setValue(1.0)
-            self._fade_in.setValue(0.0)
-            return
-        self._name_edit.setText(step.name)
-        self._duration.setValue(step.duration_40hz / _TICKS_PER_SECOND)
-        self._fade_in.setValue(step.fade_in_40hz / _TICKS_PER_SECOND)
+        # Disable the auto-apply slot while we seed the widgets from the model
+        # so the value-changed signals don't bounce the same values straight
+        # back out as a spurious "user edit".
+        self._loading = True
+        try:
+            step = self._current_step()
+            if step is None:
+                self._name_edit.setText("")
+                self._duration.setValue(1.0)
+                self._fade_in.setValue(0.0)
+                return
+            self._name_edit.setText(step.name)
+            self._duration.setValue(step.duration_40hz / _TICKS_PER_SECOND)
+            self._fade_in.setValue(step.fade_in_40hz / _TICKS_PER_SECOND)
+        finally:
+            self._loading = False
 
     def _current_step(self) -> PropertyStep | None:
         if self._cue_index < 0 or self._cue_index >= len(self._model.cues):
@@ -76,7 +91,9 @@ class StepEditor(QWidget):
             return None
         return cue.steps[self._step_index]
 
-    def _on_apply(self) -> None:
+    def _persist(self) -> None:
+        if self._loading:
+            return
         step = self._current_step()
         if step is None:
             return

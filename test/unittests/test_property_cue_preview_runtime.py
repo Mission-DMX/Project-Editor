@@ -146,17 +146,170 @@ class BuildPreviewFiltersTests(unittest.TestCase):
         mapping = build_preview_filters(vfilter, scene, collected)
 
         self.assertGreaterEqual(len(collected), 2)
+        # Preview emits two kinds of filters: PREVIEW_CONSTs (one per
+        # canonical raw channel feeding the postprocess chain) and the
+        # cloned postprocess chain itself (strobe-generator, pan/tilt
+        # sin/cos/switch/range). The constants seed the chain with the
+        # preview thread's per-tick values; the chain reproduces the
+        # production synthesis so downstream adapters still read
+        # ``X__pan`` etc. from the same ``_range:value`` port fish will
+        # see in production.
         constant_types = {
             FilterTypeEnumeration.FILTER_CONSTANT_8BIT,
             FilterTypeEnumeration.FILTER_CONSTANT_16_BIT,
             FilterTypeEnumeration.FILTER_CONSTANT_FLOAT,
             FilterTypeEnumeration.FILTER_CONSTANT_COLOR,
         }
-        for f in collected:
-            self.assertIn(int(f.filter_type), {int(t) for t in constant_types})
+        constants = [f for f in collected if int(f.filter_type) in {int(t) for t in constant_types}]
+        self.assertGreater(len(constants), 0, "No PREVIEW_CONST filters were emitted.")
+        for f in constants:
+            self.assertIn(
+                "__PREVIEW_CONST__", f.filter_id,
+                f"Unexpected constant filter id {f.filter_id!r}",
+            )
         self.assertGreater(len(mapping), 0)
         for mapped in mapping.values():
             self.assertTrue(mapped.endswith(":value"))
+
+    def test_8bit_spec_gets_8bit_preview_const(self) -> None:
+        """Regression: DT_8_BIT specs must produce FILTER_CONSTANT_8BIT.
+
+        Fish rejected the preview scene with
+        ``channel mapping does not contain channel 'select' of type 'uint8_t'``
+        because every PREVIEW_CONST was 16-bit regardless of the spec's
+        actual width; the cloned pan/tilt ``switch`` filter's ``select``
+        input is uint8 so the type mismatch broke scheduling.
+        """
+        from model.filter import FilterTypeEnumeration
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            ManualPropertyAssignment,
+            PropertyAssignments,
+            PropertyCue,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.preview_runtime import (
+            build_preview_filters,
+        )
+        from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
+
+        scene = _make_scene()
+        vfilter = PropertyBasedCueFilter(scene, "pcf_8bit")
+        vfilter.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
+            enabled_capabilities={EnabledCapability.POSITION},
+        )
+        vfilter.property_model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=80, assignments={
+                "fixture:MH1": PropertyAssignments(by_property={
+                    "position": ManualPropertyAssignment(values={
+                        "pan_value": 0.5, "pan_curvesel": 1,
+                        "tilt_value": 0.5, "tilt_curvesel": 2,
+                    }),
+                }),
+            }),
+        ]))
+
+        collected: list = []
+        build_preview_filters(vfilter, scene, collected)
+
+        curvesel_consts = [
+            f for f in collected
+            if "curvesel" in f.filter_id and "__PREVIEW_CONST__" in f.filter_id
+        ]
+        self.assertGreater(len(curvesel_consts), 0,
+                           "No PREVIEW_CONST filters for curvesel channels were emitted.")
+        for f in curvesel_consts:
+            self.assertEqual(
+                int(FilterTypeEnumeration.FILTER_CONSTANT_8BIT),
+                int(f.filter_type),
+                f"curvesel PREVIEW_CONST {f.filter_id!r} must be 8-bit so it "
+                f"matches the switch 'select' input type on fish's side.",
+            )
+
+    def test_synthesized_pan_resolves_to_a_live_filter(self) -> None:
+        """Regression: ``X__pan`` must map to a filter that actually exists.
+
+        Fish rejected the preview scene with
+        ``The requested scene does not contain the requested filter
+        'Property Cues.0__PREVIEW_CONST__..._pan_value'`` because the earlier
+        implementation only populated the mapping for the raw channel names
+        in ``channel_specs`` (``pan_value``, ``pan_curvesel`` …) and left the
+        synthesized port ``X__pan`` out. ``resolve_output_port_id`` then
+        returned ``None`` for every adapter's ``Property Cues.0:X__pan``
+        channel_link, and the serializer kept the unresolved string.
+
+        The fix emits the postprocess chain (sin/cos/switch/range) into the
+        preview filter graph and keys the mapping off ``external_ports`` so
+        both raw and synthesized virtual ports resolve. Every value in the
+        mapping must therefore reference a filter id that appears in the
+        emitted filter list (or one of the compile's ``__CONST__`` filters
+        already present in ``postprocess_filters``).
+        """
+        from model.virtual_filters.property_cues.model import (
+            EnabledCapability,
+            FixtureSelection,
+            FixtureSelectionEntry,
+            PropertyCue,
+            PropertyStep,
+            SelectionEntryKind,
+        )
+        from model.virtual_filters.property_cues.preview_runtime import (
+            build_preview_filters,
+        )
+        from model.virtual_filters.property_cues.vfilter import PropertyBasedCueFilter
+
+        scene = _make_scene()
+        vfilter = PropertyBasedCueFilter(scene, "pcf_preview_pos")
+        vfilter.property_model.fixture_selection = FixtureSelection(
+            entries=[FixtureSelectionEntry(kind=SelectionEntryKind.FIXTURE, id="MH1")],
+            enabled_capabilities={EnabledCapability.POSITION},
+        )
+        # Give the fixture a live position stream so the strategy chain stays
+        # in the compile (the default-fold path would otherwise collapse it
+        # to a single constant).
+        from model.virtual_filters.property_cues.model import (
+            ManualPropertyAssignment,
+            PropertyAssignments,
+        )
+        vfilter.property_model.cues.append(PropertyCue(name="C1", steps=[
+            PropertyStep(name="s0", duration_40hz=80, assignments={
+                "fixture:MH1": PropertyAssignments(by_property={
+                    "position": ManualPropertyAssignment(values={
+                        "pan_value": 0.3, "pan_curvesel": 0,
+                        "tilt_value": 0.7, "tilt_curvesel": 0,
+                    }),
+                }),
+            }),
+        ]))
+
+        collected: list = []
+        mapping = build_preview_filters(vfilter, scene, collected)
+
+        # Every virtual port the serializer will query must have a
+        # downstream-visible target. The compile emits some ``__CONST__``
+        # filters (defaulted canonicals) as part of ``postprocess_filters``;
+        # we accept those as well as anything we emitted ourselves.
+        emitted_filter_ids = {f.filter_id for f in collected}
+        emitted_filter_ids.update(
+            f.filter_id for f in vfilter._last_compile.postprocess_filters
+        )
+        for virtual_port, mapped in mapping.items():
+            filter_id = mapped.split(":", 1)[0]
+            self.assertIn(
+                filter_id, emitted_filter_ids,
+                f"mapping['{virtual_port}'] = '{mapped}' points at a filter the "
+                f"preview did not emit; downstream adapter channel_links would "
+                f"dangle. Emitted: {sorted(emitted_filter_ids)}",
+            )
+        # The synthesized ``X__pan`` and ``X__tilt`` ports specifically must
+        # be in the mapping -- those are the ones the fish log complained
+        # about.
+        self.assertIn("MH1__pan", mapping)
+        self.assertIn("MH1__tilt", mapping)
 
 
 @unittest.skipUnless(_HAS_PYSIDE, "Preview runtime requires PySide6")
