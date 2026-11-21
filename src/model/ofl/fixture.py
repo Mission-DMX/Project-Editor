@@ -358,7 +358,10 @@ class UsedFixture(QtCore.QObject):
                     repetition_list = self._fixture.matrix.generate_repetition_list(channel_name.repeatFor)
                 for repeated_name in repetition_list:
                     for template_name in channel_name.templateChannels:
-                        append_channel(template_name.replace("$pixelKey", "{}").format(repeated_name), index)
+                        if template_name is None:
+                            append_channel("", index)
+                        else:
+                            append_channel(template_name.replace("$pixelKey", "{}").format(repeated_name), index)
                         index += 1
             else:
                 append_channel(channel_name if channel_name is not None else "", index)

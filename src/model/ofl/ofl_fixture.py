@@ -22,7 +22,7 @@ class MatrixChannelInsert(BaseModel):
     repeatFor: str | list[str]
 
     channelOrder: Literal["perPixel", "perChannel"]
-    templateChannels: list[str]
+    templateChannels: list[str | None]
 
     model_config = ConfigDict(frozen=True)
 

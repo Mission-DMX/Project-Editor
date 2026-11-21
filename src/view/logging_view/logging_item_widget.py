@@ -2,7 +2,7 @@
 from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
 
-from src.view.dialogs.fish_exception_dialog import FishExceptionsDialog, error_dict
+from view.dialogs.fish_exception_dialog import FishExceptionsDialog, error_dict
 
 from .search import Operation, Search
 
