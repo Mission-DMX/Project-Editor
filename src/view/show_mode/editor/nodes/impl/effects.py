@@ -267,7 +267,7 @@ class SequencerNode(FilterNode):
 class ChaserNode(FilterNode):
     """Filter node for color chaser filter."""
 
-    nodeName = "chase_filter"  # noqa: N815
+    nodeName = "Chase Filter"  # noqa: N815
 
     def __init__(self, model: Filter, name: str) -> None:
         """Initialize filter node."""
