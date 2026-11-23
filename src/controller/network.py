@@ -21,6 +21,7 @@ import proto.RealTimeControl_pb2
 import proto.UniverseControl_pb2
 import varint
 import x_touch
+from controller.xtouch_option_right_click_filter import XTouchOptionRightClickFilter
 from model.broadcaster import Broadcaster, QObjectSingletonMeta
 from model.filter import FilterTypeEnumeration
 
@@ -379,6 +380,8 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
                     self._broadcaster.view_to_file_editor.emit()
                 case proto.Console_pb2.ButtonCode.BTN_EQ_SHOWUI:
                     self._broadcaster.view_to_show_player.emit()
+                case proto.Console_pb2.ButtonCode.BTN_OPTION:
+                    XTouchOptionRightClickFilter.instance().set_option_held(True)
                 case btn if btn in [
                     proto.Console_pb2.ButtonCode.BTN_F1_F1,
                     proto.Console_pb2.ButtonCode.BTN_F2_F2,
@@ -398,6 +401,8 @@ class NetworkManager(QtCore.QObject, metaclass=QObjectSingletonMeta):
             match msg.button:
                 case proto.Console_pb2.ButtonCode.BTN_SCRUB_JOGWHEELMODESWITCH:
                     self._broadcaster.desk_media_scrub_released.emit()
+                case proto.Console_pb2.ButtonCode.BTN_OPTION:
+                    XTouchOptionRightClickFilter.instance().set_option_held(False)
                 case _:
                     pass
 
