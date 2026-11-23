@@ -1,3 +1,5 @@
+"""Povides a clock UI widget."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -30,7 +32,10 @@ def _configure_label(w: QLabel) -> QLabel:
 
 
 class ClockUIWidget(UIWidget):
+    """Widget displaying a large clock"""
+
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
+        """Initialize the UI widget provider"""
         super().__init__(parent, configuration)
         self._widget: QLabel | None = None
         self._timer: QTimer | None = None
