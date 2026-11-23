@@ -11,6 +11,7 @@ from model import Filter
 
 class State(Enum):
     """The state an active cue might be in."""
+
     STOP = 1
     PLAY = 2
     PAUSE = 3

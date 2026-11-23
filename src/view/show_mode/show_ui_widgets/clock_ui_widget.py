@@ -32,10 +32,10 @@ def _configure_label(w: QLabel) -> QLabel:
 
 
 class ClockUIWidget(UIWidget):
-    """Widget displaying a large clock"""
+    """Widget displaying a large clock."""
 
     def __init__(self, parent: UIPage, configuration: dict[str, str]) -> None:
-        """Initialize the UI widget provider"""
+        """Initialize the UI widget provider."""
         super().__init__(parent, configuration)
         self._widget: QLabel | None = None
         self._timer: QTimer | None = None
