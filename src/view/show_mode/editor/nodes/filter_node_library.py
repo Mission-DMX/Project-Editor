@@ -146,7 +146,7 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(DebugRemoteColorNode, [("Debug",)])
 
     def _register_adapters_nodes(self) -> None:
-        """Register all the constants nodes."""
+        """Register all the adapter nodes."""
         # Add Node -> Adapters sub menu
         self.addNodeType(Adapter16BitTo8BitNode, [("Adapters", "From 16 Bit",)])
         self.addNodeType(Adapter16BitToBoolNode, [("Adapters", "From 16 Bit",)])
