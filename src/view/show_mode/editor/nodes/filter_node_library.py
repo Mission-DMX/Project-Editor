@@ -150,11 +150,7 @@ class FilterNodeLibrary(NodeLibrary):
         # Add Node -> Adapters sub menu
         self.addNodeType(Adapter16BitTo8BitNode, [("Adapters", "From 16 Bit",)])
         self.addNodeType(Adapter16BitToBoolNode, [("Adapters", "From 16 Bit",)])
-        self.addNodeType(AdapterColorToRGBNode, [("Adapters", "From Color",)])
-        self.addNodeType(AdapterColorToRGBWNode, [("Adapters", "From Color",)])
-        self.addNodeType(AdapterColorToRGBWANode, [("Adapters", "From Color",)])
         self.addNodeType(AdapterFloatToColorNode, [("Adapters", "From Float",)])
-        self.addNodeType(AdapterColorToFloatsNode, [("Adapters", "From Color",)])
         self.addNodeType(Adapter8bitToFloat, [("Adapters", "From 8 Bit",)])
         self.addNodeType(Adapter16bitToFloat, [("Adapters", "From 16 Bit",)])
         self.addNodeType(AdapterFloatTo8BitRange, [("Adapters", "From Float",)])
@@ -166,9 +162,13 @@ class FilterNodeLibrary(NodeLibrary):
         self.addNodeType(Adapter8BitToRangeFloat, [("Adapters", "From 8 Bit",)])
         self.addNodeType(CombineTwo8BitToSingle16Bit, [("Adapters", "From 8 Bit",)])
         self.addNodeType(Map8BitTo16Bit, [("Adapters", "From 8 Bit",)])
+        self.addNodeType(AdapterColorToRGBNode, [("Adapters", "From Color",)])
+        self.addNodeType(AdapterColorToRGBWNode, [("Adapters", "From Color",)])
+        self.addNodeType(AdapterColorToRGBWANode, [("Adapters", "From Color",)])
+        self.addNodeType(ColorToColorwheelAdapterNode, [("Adapters", "From Color",)])
+        self.addNodeType(AdapterColorToFloatsNode, [("Adapters", "From Color",)])
         self.addNodeType(ColorBrightnessMixinNode, [("Adapters",)])
         self.addNodeType(DimmerBrightnessMixinNode, [("Adapters",)])
-        self.addNodeType(ColorToColorwheelAdapterNode, [("Adapters", "From Color",)])
         self.addNodeType(UniverseNode, [("Adapters",)])
 
     def _register_arithmetic_nodes(self) -> None:
